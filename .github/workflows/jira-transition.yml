@@ -1,0 +1,93 @@
+name: Jira — PR merged → Done
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  close-story:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract Jira issue key from branch or PR title
+        id: extract
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          TITLE="${{ github.event.pull_request.title }}"
+          KEY=$(echo "$BRANCH" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          if [ -z "$KEY" ]; then
+            KEY=$(echo "$TITLE" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          fi
+          echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "Found Jira key: $KEY"
+
+      - name: Transition Jira story → Done (ID 31)
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          # Transition map: To Do=11, In Development=5, In Review=3, Approved=4, Done=31
+          HTTP_STATUS=$(curl -s -o /tmp/jira_transition_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$BASE/rest/api/3/issue/$ISSUE_KEY/transitions" \
+            -d '{"transition":{"id":"31"}}')
+          cat /tmp/jira_transition_resp.json
+          echo "Transition to Done: HTTP $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ $ISSUE_KEY → Done"
+          else
+            echo "⚠️  Transition returned HTTP $HTTP_STATUS"
+          fi
+
+      - name: Post merge summary comment on Jira
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          # Escape values for safe JSON embedding
+          SAFE_TITLE=$(echo "$PR_TITLE" | sed 's/\\/\\\\/g; s/"/\\"/g')
+          SAFE_URL=$(echo "$PR_URL" | sed 's/\\/\\\\/g; s/"/\\"/g')
+          BODY=$(printf '{
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [
+                {"type":"paragraph","content":[{"type":"text","text":"✅ PR #%s merged to main by @%s — story closed."}]},
+                {"type":"paragraph","content":[{"type":"text","text":"Title: %s"}]},
+                {"type":"paragraph","content":[{"type":"text","text":"Link: %s"}]},
+                {"type":"paragraph","content":[{"type":"text","text":"Flow: In Development → In Review → Approved → Done ✅"}]}
+              ]
+            }
+          }' "$PR_NUMBER" "$MERGED_BY" "$SAFE_TITLE" "$SAFE_URL")
+
+          HTTP_STATUS=$(curl -s -o /tmp/jira_comment_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$BASE/rest/api/3/issue/$ISSUE_KEY/comment" \
+            -d "$BODY")
+
+          cat /tmp/jira_comment_resp.json
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Merge summary posted to $ISSUE_KEY"
+          else
+            echo "⚠️  Comment returned HTTP $HTTP_STATUS"
+            exit 1
+          fi

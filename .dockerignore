@@ -1,5 +1,6 @@
 # Dependencies — rebuilt inside container
 node_modules/
+**/node_modules/
 npm-debug.log*
 
 # Secrets — never bake into image
@@ -12,6 +13,14 @@ output/
 tmp/
 logs/
 data/jobs.json
+
+# Next.js build artifacts (frontend is a separate Render service)
+app/.next/
+app/out/
+
+# Large local asset directories not needed in API container
+The_Wrangler_Video_frames/
+Twitch Brand/
 
 # Dev / test artifacts
 .vscode/

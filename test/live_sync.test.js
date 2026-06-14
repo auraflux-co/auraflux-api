@@ -1,4 +1,7 @@
 jest.mock('axios');
+jest.mock('../lib/live_grid/file_sources', () => ({
+  hasFreshNewsVod: jest.fn(() => ({ fresh: true, ageHours: 2, maxAgeHours: 24 })),
+}));
 jest.mock('../lib/calendar/master_plan', () => ({
   buildBroadcastToday: jest.fn(() => ({ youtubeNow: { mode: 'event_night' } })),
 }));

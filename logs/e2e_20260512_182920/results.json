@@ -1,0 +1,283 @@
+[
+  {
+    "id": "O-T1",
+    "tier": "operate",
+    "streamer": "stableronaldo",
+    "profile": "vertical_reel",
+    "format": "short",
+    "platform": "tiktok",
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/1080/index.mp4?sig=fee19eb746f17b6dc9cca5a3d9a453442e00ce62&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22ModernEasyLapwingBCWarrior-FZTCQ5rmbrQmpVZC%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696960%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "nahh (22s)"
+    ],
+    "job_id": null,
+    "output_url": null,
+    "passed": false,
+    "error": "Submit failed: HTTP 500 \u2014 auth_error",
+    "started_at": "2026-05-12T22:29:20.034573+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "vertical_reel",
+      "format": "short",
+      "contentType": "clips",
+      "platforms": [
+        "tiktok"
+      ],
+      "targetPlatform": "tiktok",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/1080/index.mp4?sig=fee19eb746f17b6dc9cca5a3d9a453442e00ce62&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22ModernEasyLapwingBCWarrior-FZTCQ5rmbrQmpVZC%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696960%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/1080/index.mp4?sig=fee19eb746f17b6dc9cca5a3d9a453442e00ce62&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/9b9fde7e-b7c0-425f-9654-08c6f77f138b/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22ModernEasyLapwingBCWarrior-FZTCQ5rmbrQmpVZC%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696960%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "High-energy TikTok from a gaming clip. TTS voiceover calls out the highlight.",
+      "tone": "engaging, platform-appropriate",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        }
+      }
+    }
+  },
+  {
+    "id": "O-T2",
+    "tier": "operate",
+    "streamer": "hasanabi",
+    "profile": "broadcast_desk",
+    "format": "long",
+    "platform": "youtube",
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/1080/index.mp4?sig=afb7e4f82a913142df166fb5849ca0dc4f034097&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PlainBusyMallardMrDestructoid--c0NSLsZAmCS8uiR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696961%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/0252c9d3-2c08-4170-b4bd-83987eec0a55/landscape/avc/1080/index.mp4?sig=b9c73621ae3f18a8ed903ed8a2ae22da54450198&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/0252c9d3-2c08-4170-b4bd-83987eec0a55/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696961%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/07ebf438-49cb-4ac9-adc8-2626c68dcc2a/landscape/avc/1080/index.mp4?sig=94684611af4005a431b7312aa95b55f8b0ef4a63&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/07ebf438-49cb-4ac9-adc8-2626c68dcc2a/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696961%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/15cebc17-aa43-4997-97cb-42a4d2ce837d/landscape/avc/1080/index.mp4?sig=aa78914b0cefe2966aa9f71c9b530158ad8eac8d&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/15cebc17-aa43-4997-97cb-42a4d2ce837d/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696961%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "? (35s)",
+      "irl ban (51s)",
+      "Emiru calls out streamers for exploiting the situation (43s)",
+      "Hasan gets flashbanged (32s)"
+    ],
+    "job_id": null,
+    "output_url": null,
+    "passed": false,
+    "error": "Submit failed: HTTP 500 \u2014 auth_error",
+    "started_at": "2026-05-12T22:29:20.767546+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "broadcast_desk",
+      "format": "long",
+      "contentType": "clips",
+      "platforms": [
+        "youtube"
+      ],
+      "targetPlatform": "youtube",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/1080/index.mp4?sig=afb7e4f82a913142df166fb5849ca0dc4f034097&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PlainBusyMallardMrDestructoid--c0NSLsZAmCS8uiR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696961%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/1080/index.mp4?sig=afb7e4f82a913142df166fb5849ca0dc4f034097&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/a9a0256e-301a-489c-88a2-8f6c14230278/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PlainBusyMallardMrDestructoid--c0NSLsZAmCS8uiR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696961%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/0252c9d3-2c08-4170-b4bd-83987eec0a55/landscape/avc/1080/index.mp4?sig=b9c73621ae3f18a8ed903ed8a2ae22da54450198&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/0252c9d3-2c08-4170-b4bd-83987eec0a55/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696961%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/07ebf438-49cb-4ac9-adc8-2626c68dcc2a/landscape/avc/1080/index.mp4?sig=94684611af4005a431b7312aa95b55f8b0ef4a63&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/07ebf438-49cb-4ac9-adc8-2626c68dcc2a/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696961%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/15cebc17-aa43-4997-97cb-42a4d2ce837d/landscape/avc/1080/index.mp4?sig=aa78914b0cefe2966aa9f71c9b530158ad8eac8d&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/15cebc17-aa43-4997-97cb-42a4d2ce837d/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696961%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "Long-form YouTube highlight reel: 4 Hasan clips woven into a broadcast commentary show.",
+      "tone": "engaging, platform-appropriate",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        }
+      }
+    }
+  },
+  {
+    "id": "O-T3",
+    "tier": "operate",
+    "streamer": "hasanabi",
+    "profile": "broadcast_desk",
+    "format": "long",
+    "platform": "youtube",
+    "clip_urls": [],
+    "clip_titles": [],
+    "job_id": null,
+    "output_url": null,
+    "passed": false,
+    "error": "Submit failed: HTTP 500 \u2014 auth_error",
+    "started_at": "2026-05-12T22:29:22.215220+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "research",
+      "productionProfile": "broadcast_desk",
+      "format": "long",
+      "contentType": "news",
+      "platforms": [
+        "youtube"
+      ],
+      "targetPlatform": "youtube",
+      "url": "",
+      "urls": [],
+      "topic": "Research-based news segment on Hasan's most discussed political topics this week. TTS-narrated.",
+      "tone": "engaging, platform-appropriate",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        }
+      },
+      "query": "Hasan Piker political commentary streaming politics 2026"
+    }
+  },
+  {
+    "id": "O-T4",
+    "tier": "operate",
+    "streamer": "extraemily",
+    "profile": "vertical_reel",
+    "format": "short",
+    "platform": "instagram",
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/1080/index.mp4?sig=3d7c4dfa909f94b65e7661dd5d03007ce853e976&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PiliableKnottyLeopardOSfrog-9AfrgWqhjMCyflR4%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696962%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "Emily with the XXXTentacion performance  (39s)"
+    ],
+    "job_id": null,
+    "output_url": null,
+    "passed": false,
+    "error": "Submit failed: HTTP 500 \u2014 auth_error",
+    "started_at": "2026-05-12T22:29:22.680100+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "vertical_reel",
+      "format": "short",
+      "contentType": "clips",
+      "platforms": [
+        "instagram"
+      ],
+      "targetPlatform": "instagram",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/1080/index.mp4?sig=3d7c4dfa909f94b65e7661dd5d03007ce853e976&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PiliableKnottyLeopardOSfrog-9AfrgWqhjMCyflR4%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696962%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/1080/index.mp4?sig=3d7c4dfa909f94b65e7661dd5d03007ce853e976&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/d3f12f8f-a436-4e5d-8927-3824217d8560/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22PiliableKnottyLeopardOSfrog-9AfrgWqhjMCyflR4%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696962%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "Short Instagram Reel from ExtraEmily's IRL content. TTS voiceover sets the scene.",
+      "tone": "engaging, platform-appropriate",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        }
+      }
+    }
+  },
+  {
+    "id": "O-T5",
+    "tier": "operate",
+    "streamer": "maya",
+    "profile": "broadcast_desk",
+    "format": "short",
+    "platform": "youtube",
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/1080/index.mp4?sig=12ea25f640d4803896b7433aec1314f6f08ee48f&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22AgitatedLovelyPorcupinePicoMause-tWseFjDNod8y4fJA%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696963%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/1080/index.mp4?sig=2ec26b0b99bb064fefe24eb537d0fa851fa3fe07&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CharmingSlickSwordBrainSlug-MhFkvDFU4fhmlt8r%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696964%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "Push Pop (21s)",
+      "Ragequit (37s)"
+    ],
+    "job_id": null,
+    "output_url": null,
+    "passed": false,
+    "error": "Submit failed: HTTP 500 \u2014 auth_error",
+    "started_at": "2026-05-12T22:29:23.498870+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "broadcast_desk",
+      "format": "short",
+      "contentType": "show_commentary",
+      "platforms": [
+        "youtube"
+      ],
+      "targetPlatform": "youtube",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/1080/index.mp4?sig=12ea25f640d4803896b7433aec1314f6f08ee48f&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22AgitatedLovelyPorcupinePicoMause-tWseFjDNod8y4fJA%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696963%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/1080/index.mp4?sig=12ea25f640d4803896b7433aec1314f6f08ee48f&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/68f493c5-48f4-4c1c-8eca-e41e77b9c561/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22AgitatedLovelyPorcupinePicoMause-tWseFjDNod8y4fJA%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696963%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/1080/index.mp4?sig=2ec26b0b99bb064fefe24eb537d0fa851fa3fe07&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/6b6d9358-9f5c-4878-beb9-1f4ddd4479e2/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22CharmingSlickSwordBrainSlug-MhFkvDFU4fhmlt8r%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696964%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "Show commentary segment \u2014 host narrates over Maya clips. Script + TTS drives the whole piece.",
+      "tone": "engaging, platform-appropriate",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        }
+      }
+    }
+  },
+  {
+    "id": "O-T6",
+    "tier": "operate",
+    "streamer": "lacy",
+    "profile": "vertical_reel",
+    "format": "short",
+    "platform": [
+      "youtube",
+      "instagram"
+    ],
+    "clip_urls": [
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4?sig=c513648c19f5de173683d68583cf439fc9643340&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22SneakySpineyHummingbirdMrDestructoid-SgkpkbBM6u39qU7j%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696964%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/bf4cf979-0e2f-415f-aa0b-31b0ef0f3e57/landscape/avc/1080/index.mp4?sig=361346c3b8c46735450e70dbac599cda34e02950&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/bf4cf979-0e2f-415f-aa0b-31b0ef0f3e57/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22WrongMuddyHerdPoooound-92-NjTb-8Mp7joJR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696964%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "https://d1ndex63qxojbr.cloudfront.net/nauth/c9880058-3744-46cc-98d8-8a98bbe1b317/landscape/avc/1080/index.mp4?sig=88303eaa1dbe43114cb18e21887afbd73bcf0696&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/c9880058-3744-46cc-98d8-8a98bbe1b317/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22EphemeralCaringNikudonRlyTho-5DrZbdGP_NHRvT9Z%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696965%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+    ],
+    "clip_titles": [
+      "dd (48s)",
+      "Lacy texting and driving without seatbelt driving Adapts E-wagon after he stole it (30s)",
+      "cpr (60s)"
+    ],
+    "job_id": null,
+    "output_url": null,
+    "passed": false,
+    "error": "Submit failed: HTTP 500 \u2014 auth_error",
+    "started_at": "2026-05-12T22:29:24.420760+00:00",
+    "collab_reply": "",
+    "job_spec": {
+      "entry": "fetch",
+      "productionProfile": "vertical_reel",
+      "format": "short",
+      "contentType": "clips",
+      "platforms": [
+        "youtube",
+        "instagram"
+      ],
+      "targetPlatform": "youtube",
+      "url": "https://d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4?sig=c513648c19f5de173683d68583cf439fc9643340&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22SneakySpineyHummingbirdMrDestructoid-SgkpkbBM6u39qU7j%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696964%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+      "urls": [
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4?sig=c513648c19f5de173683d68583cf439fc9643340&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/5cdf0d7e-4189-498c-994c-00361bb908bf/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22SneakySpineyHummingbirdMrDestructoid-SgkpkbBM6u39qU7j%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696964%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/bf4cf979-0e2f-415f-aa0b-31b0ef0f3e57/landscape/avc/1080/index.mp4?sig=361346c3b8c46735450e70dbac599cda34e02950&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/bf4cf979-0e2f-415f-aa0b-31b0ef0f3e57/landscape/avc/1080/index.mp4%22%2C%22clip_slug%22%3A%22WrongMuddyHerdPoooound-92-NjTb-8Mp7joJR%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696964%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D",
+        "https://d1ndex63qxojbr.cloudfront.net/nauth/c9880058-3744-46cc-98d8-8a98bbe1b317/landscape/avc/1080/index.mp4?sig=88303eaa1dbe43114cb18e21887afbd73bcf0696&token=%7B%22authorization%22%3A%7B%22forbidden%22%3Afalse%2C%22reason%22%3A%22%22%7D%2C%22clip_uri%22%3A%22https%3A//d1ndex63qxojbr.cloudfront.net/nauth/c9880058-3744-46cc-98d8-8a98bbe1b317/landscape/avc/360/index.mp4%22%2C%22clip_slug%22%3A%22EphemeralCaringNikudonRlyTho-5DrZbdGP_NHRvT9Z%22%2C%22device_id%22%3Anull%2C%22expires%22%3A1778696965%2C%22user_id%22%3A%22%22%2C%22version%22%3A3%7D"
+      ],
+      "topic": "Gaming highlights reel for both YouTube Shorts and Instagram. Energy and personality.",
+      "tone": "engaging, platform-appropriate",
+      "addOns": {
+        "tts": {
+          "active": true
+        },
+        "thumbnail": {
+          "active": true
+        }
+      }
+    }
+  }
+]

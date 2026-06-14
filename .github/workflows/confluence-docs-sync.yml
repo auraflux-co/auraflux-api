@@ -1,0 +1,98 @@
+name: Confluence — sync docs commit to GitHub PR
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '*.md'
+
+jobs:
+  docs-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Extract Jira key from commit message
+        id: extract
+        run: |
+          MSG=$(git log -1 --format="%s %b")
+          KEY=$(echo "$MSG" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          FILES=$(git diff --name-only HEAD~1 HEAD | grep -E '\.(md|txt)$' | head -10 | tr '\n' ',')
+          echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          echo "commit_msg=$(git log -1 --format='%s')" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create Confluence docs page
+        id: confluence
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+          FILES: ${{ steps.extract.outputs.files }}
+          COMMIT_MSG: ${{ steps.extract.outputs.commit_msg }}
+          COMMIT_SHA: ${{ steps.extract.outputs.commit_sha }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          DATE=$(date -u +"%Y-%m-%d")
+          REPO_URL="https://github.com/${{ github.repository }}"
+
+          TITLE="${ISSUE_KEY}: Docs — ${DATE}"
+          BODY=$(printf "## %s\n\n| Field | Value |\n|---|---|\n| **Jira** | [%s](%s/browse/%s) |\n| **Commit** | [%s](%s/commit/${{ github.sha }}) |\n| **Files** | %s |\n| **Date** | %s |" \
+            "$COMMIT_MSG" "$ISSUE_KEY" "$BASE" "$ISSUE_KEY" "$COMMIT_SHA" "$REPO_URL" "$FILES" "$DATE")
+
+          PAYLOAD=$(jq -n \
+            --arg spaceId "819202" \
+            --arg parentId "5537793" \
+            --arg title "$TITLE" \
+            --arg body "$BODY" \
+            '{spaceId: $spaceId, parentId: $parentId, title: $title, body: {representation: "wiki", value: $body}}')
+
+          HTTP_STATUS=$(curl -s -o /tmp/conf_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+            "${BASE}/wiki/api/v2/pages" \
+            -d "$PAYLOAD")
+
+          cat /tmp/conf_resp.json
+          echo "HTTP $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            PAGE_ID=$(jq -r '.id // empty' /tmp/conf_resp.json)
+            echo "page_id=$PAGE_ID" >> "$GITHUB_OUTPUT"
+            echo "Confluence docs page created: $PAGE_ID"
+          else
+            echo "Confluence page creation returned HTTP $HTTP_STATUS"
+          fi
+
+      - name: Post Confluence docs link on Jira issue
+        if: steps.confluence.outputs.page_id != '' && steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+          PAGE_ID: ${{ steps.confluence.outputs.page_id }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          CONF_URL="${BASE}/wiki/spaces/CP/pages/${PAGE_ID}"
+
+          BODY=$(jq -n \
+            --arg url "$CONF_URL" \
+            '{body: {type: "doc", version: 1, content: [{type: "paragraph", content: [{type: "text", text: "Docs committed and synced to Confluence: "}, {type: "text", text: $url, marks: [{type: "link", attrs: {href: $url}}]}]}]}}')
+
+          curl -s -o /dev/null -w "Jira comment: HTTP %{http_code}\n" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+            "${BASE}/rest/api/3/issue/${ISSUE_KEY}/comment" \
+            -d "$BODY"

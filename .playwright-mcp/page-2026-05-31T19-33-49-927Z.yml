@@ -1,0 +1,233 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e7]:
+      - generic [ref=e8]:
+        - link [ref=e10] [cursor=pointer]:
+          - /url: ./
+        - generic [ref=e13]:
+          - paragraph [ref=e15]:
+            - link "Roadmap" [ref=e16] [cursor=pointer]:
+              - /url: ./roadmap
+          - paragraph [ref=e18]:
+            - link "Pricing" [ref=e19] [cursor=pointer]:
+              - /url: ./pricing
+          - paragraph [ref=e21]:
+            - link "Blog" [ref=e22] [cursor=pointer]:
+              - /url: ./blog
+          - paragraph [ref=e24]:
+            - link "Contact" [ref=e25] [cursor=pointer]:
+              - /url: ./contact
+      - generic [ref=e26]:
+        - paragraph [ref=e32]: Online now
+        - link "Get Started" [ref=e34] [cursor=pointer]:
+          - /url: ./contact
+          - paragraph [ref=e36]: Get Started
+    - generic [ref=e37]:
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - link "New Fully automated content workflows" [ref=e44] [cursor=pointer]:
+              - /url: ./pricing
+              - paragraph [ref=e47]: New
+              - generic [ref=e48]:
+                - paragraph [ref=e50]: Fully automated content workflows
+                - img [ref=e53]
+            - heading "Run Your Content Without a a Team." [level=1] [ref=e57]
+            - paragraph [ref=e59]: AuraFlux runs your content production from start to finish — transforming raw clips, videos, and ideas into polished, published content automatically.
+          - generic [ref=e60]:
+            - link "Start Producing" [ref=e62] [cursor=pointer]:
+              - /url: ./contact
+              - paragraph [ref=e64]: Start Producing
+            - link "See How It Works ->" [ref=e66] [cursor=pointer]:
+              - /url: ./contact
+              - paragraph [ref=e68]: See How It Works
+              - paragraph [ref=e70]: "->"
+        - generic [ref=e71]:
+          - heading "Fully automated workflows" [level=6] [ref=e76]
+          - heading "No team required" [level=6] [ref=e82]
+          - heading "Consistent publishing" [level=6] [ref=e88]
+        - generic [ref=e94]:
+          - paragraph [ref=e96]: Trusted by companies around the world
+          - list [ref=e99]:
+            - listitem [ref=e100]:
+              - img [ref=e104]
+            - listitem [ref=e106]:
+              - img [ref=e110]
+            - listitem [ref=e112]:
+              - img [ref=e116]
+            - listitem [ref=e118]:
+              - img [ref=e122]
+            - listitem [ref=e124]:
+              - img [ref=e128]
+      - generic [ref=e130]:
+        - generic [ref=e131]:
+          - paragraph [ref=e135]: The Problem
+          - heading "Creating Content Isn’t The Hard Part, Running It Is." [level=2] [ref=e138]
+          - paragraph [ref=e140]: Clipping, editing, structuring, and posting content every day quickly becomes overwhelming and hard to sustain.
+          - paragraph [ref=e142]: Most creators either waste hours doing it themselves or pay thousands to manageteams.
+        - generic [ref=e143]:
+          - generic [ref=e149]:
+            - heading "Time-Draining Workflows" [level=3] [ref=e151]
+            - paragraph [ref=e153]: Managing the daily production process quickly becomes overwhelming and time-consuming.
+          - generic [ref=e159]:
+            - heading "High Operational Costs" [level=3] [ref=e161]
+            - paragraph [ref=e163]: Hiring editors, managers, and teams quickly adds up without guaranteeing consistent output.
+          - generic [ref=e169]:
+            - heading "Inconsistent Publishing" [level=3] [ref=e171]
+            - paragraph [ref=e173]: Access our dedicated support team 24/7 to resolve any issues quickly and keep your operations running smoothly.
+      - generic [ref=e174]:
+        - generic [ref=e175]:
+          - paragraph [ref=e179]: The Solution
+          - paragraph [ref=e181]: AuraFlux Runs Your Content For You
+          - paragraph [ref=e183]: From input to publish, everything is handled so you can focus on growth, not production.
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - generic [ref=e188]:
+              - img "close-up photography of black metal gears" [ref=e190]
+              - generic [ref=e195]:
+                - heading "Smart Clip Selection" [level=3] [ref=e197]
+                - paragraph [ref=e199]: Automatically finds the best moments from your raw content — no manual sorting required.
+            - generic [ref=e202]:
+              - img "Crescent earth seen from space against black background" [ref=e204]
+              - img "gridicons" [ref=e208]
+              - generic [ref=e210]:
+                - heading "Full Video Production" [level=3] [ref=e212]
+                - paragraph [ref=e214]: Turns clips into polished, high-quality videos without needing editors or tools.
+          - generic [ref=e217]:
+            - img "Geometric shadows cast on a textured wall" [ref=e219]
+            - generic [ref=e224]:
+              - heading "Auto Publishing" [level=3] [ref=e226]
+              - paragraph [ref=e228]: Publishes your content across platforms — consistently and without manual effort.
+      - generic [ref=e230]:
+        - paragraph [ref=e234]: How it works
+        - paragraph [ref=e236]: From Idea to Published Content Automatically
+        - paragraph [ref=e238]:
+          - text: A simple, automated workflow that takes you from raw input
+          - text: to published content — without manual effort.
+        - generic [ref=e240]:
+          - generic [ref=e241]:
+            - heading "01" [level=3] [ref=e243]
+            - heading "Start With Anything" [level=3] [ref=e246]
+            - paragraph [ref=e248]: Clips, a video, a link, or just an idea — bring whatever you have.
+          - generic [ref=e249]:
+            - heading "02" [level=3] [ref=e251]
+            - heading "AuraFlux Builds the Plan" [level=3] [ref=e254]
+            - paragraph [ref=e256]: Your content is structured and prepared before production begins.
+          - generic [ref=e257]:
+            - heading "03" [level=3] [ref=e259]
+            - heading "Automatic Production" [level=3] [ref=e262]
+            - paragraph [ref=e264]: Scenes, edits, visuals, and validation happen through a multi-stage system.
+          - generic [ref=e265]:
+            - heading "04" [level=3] [ref=e267]
+            - heading "Content Is Published" [level=3] [ref=e270]
+            - paragraph [ref=e272]: Short-form and long-form content is delivered and posted for you.
+      - generic [ref=e274]:
+        - generic [ref=e275]:
+          - paragraph [ref=e279]: What you can create
+          - paragraph [ref=e282]: From Shorts To Full Productions.
+          - paragraph [ref=e285]: AuraFlux produces short-form clips, long-form videos, and fully generated content workflows automatically.
+        - generic [ref=e291]:
+          - paragraph [ref=e293]: Short-form content
+          - generic [ref=e294]:
+            - paragraph [ref=e295]: TikTok, YouTube Shorts, Instagram Reels
+            - paragraph [ref=e296]
+        - generic [ref=e302]:
+          - paragraph [ref=e304]: Long-form content
+          - paragraph [ref=e306]: YouTube videos, compilations, reaction formats
+        - generic [ref=e312]:
+          - paragraph [ref=e314]: Idea to video
+          - generic [ref=e315]:
+            - paragraph [ref=e316]: Start from nothing, AuraFlux generates and produces
+            - paragraph [ref=e317]
+      - generic [ref=e325]:
+        - paragraph [ref=e329]: replace your workflow
+        - paragraph [ref=e331]: Work Smarter, Not Harder
+        - paragraph [ref=e333]:
+          - text: Replace manual workflows with a system that
+          - text: runs your content for you.
+        - generic [ref=e335]:
+          - generic [ref=e336]:
+            - paragraph [ref=e338]: "INSTEAD OF:"
+            - paragraph [ref=e344]: Editing Everything Yourself
+            - paragraph [ref=e350]: Managing Freelancers
+            - paragraph [ref=e356]: Inconsistent Output
+          - generic [ref=e357]:
+            - paragraph [ref=e359]: "USE AURAFLUX TO:"
+            - paragraph [ref=e365]: Post Consistently
+            - paragraph [ref=e371]: Scale Across Platforms
+            - paragraph [ref=e377]: Focus on Creating
+      - generic [ref=e383]:
+        - paragraph [ref=e387]: Who it is for
+        - paragraph [ref=e390]: Built for Creators and Teams Who Are Serious About Growth
+        - paragraph [ref=e393]: AuraFlux is designed for people who need consistent content output without managing complex workflows.
+        - paragraph [ref=e399]: Streamers
+        - paragraph [ref=e405]: YouTubers
+        - paragraph [ref=e411]: Clip Channels
+        - paragraph [ref=e417]: Content Teams
+      - generic [ref=e419]:
+        - img "a blurry image of a yellow object in the dark" [ref=e422]
+        - generic [ref=e423]:
+          - generic [ref=e425]:
+            - paragraph [ref=e426]: Stop Managing Content.
+            - paragraph [ref=e427]: Start running it.
+            - paragraph [ref=e428]
+            - paragraph [ref=e429]
+          - paragraph [ref=e431]: "AuraFlux handles the entire process from idea to published content so you can focus on what matters most: growing your brand."
+          - link "Start Producing" [ref=e433] [cursor=pointer]:
+            - /url: ./contact
+            - paragraph [ref=e435]: Start Producing
+    - contentinfo [ref=e438]:
+      - generic [ref=e440]:
+        - generic [ref=e441]:
+          - generic [ref=e442]:
+            - paragraph [ref=e444]:
+              - link "Home" [ref=e445] [cursor=pointer]:
+                - /url: ./
+            - paragraph [ref=e447]:
+              - link "Roadmap" [ref=e448] [cursor=pointer]:
+                - /url: ./roadmap
+            - paragraph [ref=e450]:
+              - link "Pricing" [ref=e451] [cursor=pointer]:
+                - /url: ./pricing
+            - paragraph [ref=e453]:
+              - link "Blog" [ref=e454] [cursor=pointer]:
+                - /url: ./blog
+            - paragraph [ref=e456]:
+              - link "Contact" [ref=e457] [cursor=pointer]:
+                - /url: ./contact
+          - generic [ref=e458]:
+            - link [ref=e459] [cursor=pointer]:
+              - /url: ./
+            - paragraph [ref=e462]: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.
+            - generic [ref=e463]:
+              - paragraph [ref=e465]:
+                - link "Privacy Policy" [ref=e466] [cursor=pointer]:
+                  - /url: ./privacy-policy
+              - paragraph [ref=e468]: •
+              - paragraph [ref=e470]:
+                - link "Terms & Conditions" [ref=e471] [cursor=pointer]:
+                  - /url: ./terms-and-conditions
+          - generic [ref=e472]:
+            - link "Facebook" [ref=e474] [cursor=pointer]:
+              - /url: https://facebook.com
+              - paragraph [ref=e476]: Facebook
+            - link "Instagram" [ref=e480] [cursor=pointer]:
+              - /url: https://instagram.com
+              - paragraph [ref=e482]: Instagram
+            - link "LinkedIn" [ref=e486] [cursor=pointer]:
+              - /url: https://linkedin.com
+              - paragraph [ref=e488]: LinkedIn
+        - generic [ref=e493]:
+          - paragraph [ref=e495]: © 2023 Equinox. All rights reserved.
+          - paragraph [ref=e497]:
+            - text: Website by
+            - link "Wize" [ref=e498] [cursor=pointer]:
+              - /url: https://wizetemplates.com
+  - generic:
+    - link "Create a free website with Framer, the website builder loved by startups, designers and agencies.":
+      - /url: https://www.framer.com
+      - paragraph [ref=e499] [cursor=pointer]: Create a free website with Framer, the website builder loved by startups, designers and agencies.
+  - img [ref=e500]
+  - img [ref=e502]
+  - img [ref=e513]
+  - img [ref=e517]

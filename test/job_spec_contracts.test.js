@@ -23,50 +23,53 @@ jest.mock('../lib/job_spec', () => ({
     const next = mockDeepMerge(current, patch || {});
     mockSpecStore[jobId] = next;
     return next;
-  }
+  },
 }));
 
 const {
   persistJobSpecGateContracts,
   preflightGateExecution,
-  auditAndRecordGateResult
+  auditAndRecordGateResult,
 } = require('../lib/job_spec_contracts');
 
 function seedSpec(overrides = {}) {
   const jobId = overrides.jobId || 'job_contract_test_1';
-  mockSpecStore[jobId] = mockDeepMerge({
-    jobId,
-    customerId: 'c0',
-    templateId: 'long-form',
-    contentType: 'news',
-    order: {
-      inputs: {
-        sourceType: 'url_list',
-        items: [],
-        itemCount: 0
+  mockSpecStore[jobId] = mockDeepMerge(
+    {
+      jobId,
+      customerId: 'c0',
+      templateId: 'long-form',
+      contentType: 'news',
+      order: {
+        inputs: {
+          sourceType: 'url_list',
+          items: [],
+          itemCount: 0,
+        },
+        output: {
+          aspectRatio: '16:9',
+          resolution: { width: 1920, height: 1080 },
+        },
       },
-      output: {
-        aspectRatio: '16:9',
-        resolution: { width: 1920, height: 1080 }
-      }
+      designSpec: {
+        expectedClipCount: 3,
+        chrome: { skin: 'news' },
+        qaThresholds: { gate1: { pass: 90 } },
+        sceneStructure: {
+          items: [
+            { label: 'Story A', data: { title: 'Story A' } },
+            { label: 'Story B', data: { title: 'Story B' } },
+          ],
+        },
+      },
+      deliverySpec: { platforms: ['youtube'] },
+      state: {
+        gateResults: {},
+        savedOutputs: {},
+      },
     },
-    designSpec: {
-      expectedClipCount: 3,
-      chrome: { skin: 'news' },
-      qaThresholds: { gate1: { pass: 90 } },
-      sceneStructure: {
-        items: [
-          { label: 'Story A', data: { title: 'Story A' } },
-          { label: 'Story B', data: { title: 'Story B' } }
-        ]
-      }
-    },
-    deliverySpec: { platforms: ['youtube'] },
-    state: {
-      gateResults: {},
-      savedOutputs: {}
-    }
-  }, overrides);
+    overrides
+  );
   return jobId;
 }
 
@@ -79,7 +82,7 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
     const jobId = seedSpec();
     const updated = persistJobSpecGateContracts(mockSpecStore[jobId], {
       gate0: { ready: true, commitment: { summary: 'source confirmed' } },
-      gate1: { ready: true, commitment: { summary: 'script qa ready' } }
+      gate1: { ready: true, commitment: { summary: 'script qa ready' } },
     });
 
     expect(updated.state.gateContracts).toBeTruthy();
@@ -113,17 +116,17 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
           gate1: { passed: true, outcome: 'pass' },
           gate2: { passed: true, outcome: 'pass' },
           gate3a: { passed: true, outcome: 'pass' },
-          gate3b: { passed: true, outcome: 'pass' }
+          gate3b: { passed: true, outcome: 'pass' },
         },
-        savedOutputs: {}
-      }
+        savedOutputs: {},
+      },
     });
     persistJobSpecGateContracts(mockSpecStore[jobId], {});
 
     const r = auditAndRecordGateResult({
       jobId,
       gate: 'gate4',
-      result: { gate: 'gate4', passed: false, outcome: 'hard_fail' }
+      result: { gate: 'gate4', passed: false, outcome: 'hard_fail' },
     });
 
     expect(r.status).toBe('fail');
@@ -136,12 +139,12 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
       jobId: 'job_happy_path',
       order: {
         inputs: { sourceType: 'url_list', items: [{ title: 'T1' }], itemCount: 1 },
-        output: { aspectRatio: '16:9', resolution: { width: 1920, height: 1080 } }
+        output: { aspectRatio: '16:9', resolution: { width: 1920, height: 1080 } },
       },
       state: {
         savedOutputs: { assembledPath: '/tmp/out/final.mp4' },
-        gateResults: {}
-      }
+        gateResults: {},
+      },
     });
     persistJobSpecGateContracts(mockSpecStore[jobId], {});
 
@@ -151,7 +154,7 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
       auditAndRecordGateResult({
         jobId,
         gate: g,
-        result: { gate: g, passed: true, outcome: 'pass', score: 95 }
+        result: { gate: g, passed: true, outcome: 'pass', score: 95 },
       });
     }
 
@@ -170,9 +173,9 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
           gate2: { passed: true, outcome: 'pass' },
           gate3a: { passed: true, outcome: 'pass' },
           gate3b: { passed: true, outcome: 'pass' },
-          gate4: { passed: true, outcome: 'pass' }
-        }
-      }
+          gate4: { passed: true, outcome: 'pass' },
+        },
+      },
     });
     persistJobSpecGateContracts(mockSpecStore[jobId], {});
     mockSpecStore[jobId].deliverySpec = { platforms: ['youtube', 'tiktok'] };
@@ -180,11 +183,11 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
     const r = auditAndRecordGateResult({
       jobId,
       gate: 'gate5',
-      result: { gate: 'gate5', passed: true, outcome: 'pass' }
+      result: { gate: 'gate5', passed: true, outcome: 'pass' },
     });
 
     expect(r.status).toBe('warn');
-    expect(r.issues.some(i => i.includes('platforms drifted'))).toBe(true);
+    expect(r.issues.some((i) => i.includes('platforms drifted'))).toBe(true);
     expect(mockSpecStore[jobId].state.gateContracts.cumulative.status).toBe('warn');
   });
 
@@ -195,12 +198,12 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
         expectedClipCount: 1,
         chrome: { skin: 'news' },
         qaThresholds: {},
-        sceneStructure: { items: [] }
+        sceneStructure: { items: [] },
       },
       order: {
         inputs: { sourceType: 'url_list', items: [], itemCount: 0 },
-        output: { aspectRatio: '16:9', resolution: { width: 1920, height: 1080 } }
-      }
+        output: { aspectRatio: '16:9', resolution: { width: 1920, height: 1080 } },
+      },
     });
     persistJobSpecGateContracts(mockSpecStore[jobId], {});
 
@@ -218,17 +221,17 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
           gate1: { passed: true, outcome: 'pass' },
           gate2: { passed: true, outcome: 'pass' },
           gate3a: { passed: true, outcome: 'pass' },
-          gate3b: { passed: true, outcome: 'pass' }
+          gate3b: { passed: true, outcome: 'pass' },
         },
-        savedOutputs: {}
-      }
+        savedOutputs: {},
+      },
     });
     persistJobSpecGateContracts(mockSpecStore[jobId], {});
 
     auditAndRecordGateResult({
       jobId,
       gate: 'gate4',
-      result: { gate: 'gate4', passed: false, outcome: 'hard_fail' }
+      result: { gate: 'gate4', passed: false, outcome: 'hard_fail' },
     });
     expect(mockSpecStore[jobId].state.gateContracts.cumulative.status).toBe('fail');
 
@@ -238,7 +241,7 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
     auditAndRecordGateResult({
       jobId,
       gate: 'gate5',
-      result: { gate: 'gate5', passed: true, outcome: 'pass' }
+      result: { gate: 'gate5', passed: true, outcome: 'pass' },
     });
 
     expect(mockSpecStore[jobId].state.gateContracts.qaByGate.gate5.status).toBe('pass');
@@ -251,13 +254,13 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
       'JSON jobSpec is self-consistent (no partial DB rows or stale PM2 memory)',
       'No concurrent writers mutating jobSpec between gates',
       'No external APIs (Gemini/Claude/HeyGen/ffprobe) — scores and paths are injected',
-      'Soft-heal only covers known gaps (e.g. items vs sceneStructure), not CDN or auth failures'
+      'Soft-heal only covers known gaps (e.g. items vs sceneStructure), not CDN or auth failures',
     ];
     const onlineRiskFactors = [
       'Race: script job vs semantic job id handoff can desync gateResults visibility',
       'Env: AUTO_PUBLISH_PLATFORMS or similar can change deliverySpec after baseline',
       'Flaky vision QA: same pixel output can score differently across model calls',
-      'Assembly continues on some gate2 hard-fails — audit warns while video still renders'
+      'Assembly continues on some gate2 hard-fails — audit warns while video still renders',
     ];
     expect(offlineAssumptions.length).toBeGreaterThan(0);
     expect(onlineRiskFactors.length).toBeGreaterThan(0);
@@ -269,17 +272,17 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
       state: {
         gateResults: {
           gate0: { passed: true, outcome: 'pass' },
-          gate1: { passed: true, outcome: 'pass' }
+          gate1: { passed: true, outcome: 'pass' },
         },
-        savedOutputs: {}
-      }
+        savedOutputs: {},
+      },
     });
     const semanticJobId = seedSpec({
       jobId: 'c0_COMPACT_FETCH_news_1001',
       state: {
         gateResults: {},
-        savedOutputs: {}
-      }
+        savedOutputs: {},
+      },
     });
 
     persistJobSpecGateContracts(mockSpecStore[semanticJobId], {});
@@ -287,10 +290,11 @@ describe('job_spec_contracts (offline artifact simulation)', () => {
     expect(beforeCopy.ready).toBe(false);
     expect(beforeCopy.reasons.join(';')).toContain('prerequisite gate1');
 
-    mockSpecStore[semanticJobId].state.gateResults = { ...mockSpecStore[scriptJobId].state.gateResults };
+    mockSpecStore[semanticJobId].state.gateResults = {
+      ...mockSpecStore[scriptJobId].state.gateResults,
+    };
     const afterCopy = preflightGateExecution({ jobId: semanticJobId, gate: 'gate2' });
     expect(afterCopy.ready).toBe(true);
     expect(afterCopy.reasons.length).toBe(0);
   });
 });
-

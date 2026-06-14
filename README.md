@@ -1,321 +1,161 @@
-# CWN Production — ClipzWorld News
-**Channel:** [@clipznashite](https://youtube.com/@clipznashite) · **Host:** Bobby G · **Brand:** Navy `#22304b` / Gold `#c7af4f`
+# AuraFlux — AI Video Production Platform
 
-> **AI-powered news and reaction show featuring Bobby G**
+**AuraFlux** is an AI-powered video production backend that takes a content brief from intake to published video through a spec-driven portal pipeline.
 
----
-
-## Quick Start — 3 Terminals Required
-
-```bash
-# Terminal 1 — Static file server (dashboard)
-cd ~/cwn-production && python3 -m http.server 8765
-
-# Terminal 2 — Node API server (auto-restarts on save)
-cd ~/cwn-production && nodemon server.js
-
-# Terminal 3 — VectCut API (video editing)
-cd ~/cwn-production/VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py
-```
-
-Dashboard: [http://localhost:8765/cwn_production.html](http://localhost:8765/cwn_production.html)
+- **API** — Node.js / Express, deployed on Render (`auraflux-api`)
+- **App** — Next.js 16 dashboard, deployed on Render (`auraflux-app`)
+- **Database** — PostgreSQL (Render managed) — sole database for all environments (CPD-94)
+- **Storage** — Cloudflare R2 for video output and media assets
+- **Auth** — Clerk (JWT, role-based: customer / operator / admin)
+- **Payments** — Stripe (credit packs + plan subscriptions)
 
 ---
 
-## Contributing & deploy
+## Portal Pipeline
 
-For forks and external contributors, see **[CONTRIBUTING.md](CONTRIBUTING.md)** (local setup, what not to commit, tests).
+Jobs flow through a sequence of portals. Each portal has a worker (does the work) and a QA agent (marks compliant or non-compliant). Portals not declared in the job spec are skipped — skipped ≠ failed.
 
-Typical maintainer workflow:
+```
+Portal 0  — Job intake, source fetch, preflight validation
+Portal 1  — Script generation (Gemini → Claude QA)
+Portal 1b — HeyGen avatar render (async poll)
+Portal 2  — Segment structure QA
+Portal 3a — Assembly (FFmpeg: normalize → chrome → clips → output)
+Portal 3b — Assembly commitment check
+Portal 4  — Full video QA (Gemini visual review)
+Portal 5  — Publish (Upload-Post → platform; video stored in R2)
+```
+
+Extensions (HeyGen, Shoppable) run between specific portals only when `jobSpec.addOns.<name>.active: true`. Default is OFF.
+
+---
+
+## Plan Tiers
+
+| Tier | Credits/mo | Target |
+|---|---|---|
+| `diy` | 50 | Self-serve |
+| `dwy` | 200 | AI-assisted (VectCut, TTS, scheduling) |
+| `dfy` | 1000 | Full done-for-you (HeyGen, Imagen 3, direct publish) |
+| `custom` | unlimited | Enterprise / white-label |
+
+Feature availability per tier is defined in `lib/services/feature_gate.js`.
+
+---
+
+## Development Setup
 
 ```bash
-git add -p   # review hunks — avoid committing .env, data/*.db, logs/
-git commit -m "your message"
-git push
+git clone https://github.com/clipzworldnews/auraflux-api
+cd auraflux-api
+npm install
+cp .env.example .env       # fill in keys — see docs/ops/REQUIRED_API_KEYS.md
+npm test                   # 395 tests, should all pass
+node server.js             # API on http://localhost:3000
 ```
+
+The Next.js app lives in `app/`:
+
+```bash
+cd app
+npm install
+cp .env.local.example .env.local   # set NEXT_PUBLIC_API_URL etc.
+npm run dev                         # App on http://localhost:3001
+```
+
+---
+
+## Key API Endpoints
+
+### Jobs
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/jobs` | customer+ | Submit a new job |
+| `GET` | `/jobs` | customer+ | List jobs for authenticated user |
+| `GET` | `/jobs/:jobId` | customer+ | Job detail + portal pipeline status |
+
+### Credits & Plans
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/credits/balance` | customer+ | Current credit balance |
+| `GET` | `/credits/history` | customer+ | Ledger entries (paginated) |
+| `GET` | `/credits/packs` | customer+ | Available credit packs |
+| `POST` | `/credits/packs/purchase` | customer+ | Stripe checkout for credit pack |
+| `GET` | `/plans` | public | Available subscription plans |
+| `POST` | `/plans/subscribe` | customer+ | Stripe checkout for plan |
+
+### Health & Admin
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | none | Server health + version |
+| `GET` | `/admin/errors` | admin | Recent error log |
+| `POST` | `/admin/cleanup` | admin | Disk cleanup |
+
+---
+
+## Environment Variables
+
+All required variables are documented in `.env.example`. Production values live in Render's environment panel (`sync: false` for secrets — values must be set in the Render dashboard, not committed).
+
+Never use local `.env` as the source of truth for production secrets. Use a password manager as the canonical store.
 
 ---
 
 ## Architecture
 
 ```
-cwn_production.html   ← Dashboard UI (port 8765, static)
-server.js             ← Node.js API (port 3000)
-streamers.json        ← Streamer roster + card text
-cwn_style_guides.json ← Bobby G style + production learning log
-.env                  ← All API keys (never committed)
-output/               ← Assembled MP4s + thumbs
-tmp/                  ← Segments, intro cards, gate samples (auto-cleaned)
+auraflux-api/
+├── server.js                  Express entry point
+├── render.yaml                Render Blueprint (auraflux-api, auraflux-app, auraflux-backup)
+├── lib/
+│   ├── portals/               portal0.js … portal5.js
+│   ├── routes/                jobs_c1.js, credits.js, admin.js, …
+│   ├── services/              feature_gate.js, stripe_billing.js, gemini.js, …
+│   ├── db/                    postgres.js (C1+), db.js (SQLite local dev)
+│   ├── storage.js             R2 upload abstraction (uploadFile / uploadToR2)
+│   └── assembly.js            FFmpeg pipeline orchestration
+├── app/                       Next.js 16 dashboard
+│   └── src/app/dashboard/     jobs, credits, plans pages
+├── scripts/
+│   └── migrate_sqlite_to_pg.js  One-time SQLite → PostgreSQL migration
+└── test/                      Jest suites (395 tests)
 ```
 
----
-
-## Content Types & Dimensions
-
-| Content Type | Form | Platform | Aspect | Avatar |
-|---|---|---|---|---|
-| Twitch Clips | Compilation | YouTube | 16:9 | `19c1d4adf890...` |
-| NBA Highlights | Compilation | YouTube | 16:9 | `19c1d4adf890...` |
-| News Reaction | Compilation | YouTube | 16:9 | `19c1d4adf890...` |
-| Any type | Short | TikTok / Reels / Shorts | 9:16 | `ed57439c9c3d...` |
-
-**Voice ID:** `2e598f1a6022448cb6710e5d44665325` ("cw")  
-**Speed:** 0.85 (compilations) · 0.95 (shorts/reactions)
+**C0 / localhost code** (Canva, CapCut, Google Drive, static file server) lives in `lib/routes/c0_*.js` and is NOT mounted on the Render deployment. It is gated by `if (!process.env.DATABASE_URL)` in `server.js`.
 
 ---
 
-## Production Pipeline
+## Deployment
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  1. SCRIPT GENERATION                                            │
-│     Dashboard → Content Type → Streamers/Topic → Generate       │
-│     Gemini fills scaffold → Bobby G dialogue (style from config)   │
-│                                                                   │
-│  ▼ GATE 1: Script QA (Claude / Anthropic) ≥90 / 70-89 / <70      │
-│                                                                   │
-│  2. HEYGEN RENDER                                                 │
-│     Segments queued → HeyGen renders Bobby G avatar              │
-│     16:9 or 9:16 based on form type                              │
-│                                                                   │
-│  ▼ GATE 2: Segment structure QA (code + gate reports)              │
-│                                                                   │
-│  3. ASSEMBLY                                                      │
-│     FFmpeg: normalize → intro cards → clips → ticker bake        │
-│     Node Canvas: intro card PNG (circle, gold ring, 3 lines)     │
-│     Ticker: baked into video (80px/sec, 24 stocks + 10 indices)  │
-│                                                                   │
-│  ▼ GATES 3a/3b: Assembly QA (Gemini samples) + commitment check  │
-│                                                                   │
-│  4. POST-ASSEMBLY LEARNING                                        │
-│     Gemini watches 60s → extracts 6 insights → cwn_style_guides  │
-│                                                                   │
-│  5. PUBLISH PREP                                                  │
-│     Generate title / description / hashtags / pinned comment     │
-│     Canva thumbnail auto-generated (Option 3 or 4 template)      │
-│     Upload-Post → YouTube / TikTok / Instagram                   │
-│                                                                   │
-│  ▼ GATE 4: Confirm job_id received from Upload-Post              │
-└─────────────────────────────────────────────────────────────────┘
-```
+The repo deploys via Render Blueprint (`render.yaml`):
 
----
-
-## QA Gates
-
-| Gate | What | Tool | Pass | Manual | Fail |
-|---|---|---|---|---|---|
-| 1 | Script style QA (after Gemini writes script) | **Claude** (Anthropic) | ≥90 | 70–89 | <70 |
-| 2 | Segment structure / duration | **Code** (+ upstream gate reports) | — | — | hard_fail on bad structure |
-| 3a / 3b | Assembly QA + commitment check | **Gemini** (samples) + code (3b) | varies | varies | varies |
-| 4 | Broadcast-ready video QA | **Gemini** (full video) | — | — | — |
-
-**Script generation** uses **Gemini** (`lib/script_gen.js`), then **Gate 1** uses **Claude** (`ANTHROPIC_API_KEY`). For a full list of env **names** and which AI provider each uses (shareable with people who do not have `.env`), see **`docs/ops/REQUIRED_API_KEYS.md`**.
-
-**Gate 5 / publish** use Upload-Post and related config — see `lib/gates/gate5.js` and `PUBLISH_COPY_SPEC.md`.
-
-**QA logs:** stored locally at `output/qa_failures/` — NOT uploaded to Drive
-
----
-
-## API Keys (`.env`)
-
-```
-ANTHROPIC_API_KEY=
-GEMINI_API_KEY=
-HEYGEN_API_KEY=          # pay-as-you-go, ~$0.038/segment avg 8.5s
-TWITCH_CLIENT_ID=
-TWITCH_CLIENT_TOKEN=     # hardcoded in twitch tool for OBS Browser Source
-DRIVE_FOLDER_ID=         # Videos go here
-DRIVE_CLIENT_ID=
-DRIVE_CLIENT_SECRET=
-DRIVE_REFRESH_TOKEN=
-UPLOADPOST_API_KEY=      # Professional $50/mo, profile=clipznashite
-PORT=3000
-DASHBOARD_PORT=8765
-```
-
----
-
-## API Endpoints
-
-### Script Generation
-| Endpoint | Method | Body |
+| Service | Type | What |
 |---|---|---|
-| `/generate-script` | POST | `{ contentType, formType, streamers[], topic }` |
+| `auraflux-api` | Web service (Docker) | Express API |
+| `auraflux-app` | Web service (Docker) | Next.js dashboard |
+| `auraflux-backup` | Cron job | Nightly SQLite → R2 backup |
 
-`contentType`: `twitch` · `nba` · `news`  
-`formType`: `compilation` · `short`
-
-### HeyGen
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/heygen-generate` | POST | Queue segment for rendering |
-| `/heygen-status/:videoId` | GET | Poll render status |
-
-### Assembly
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/start-assembly` | POST | `{ asmId, segments[], contentType, formType }` |
-| `/assembly-status/:asmId` | GET | Progress + gate results |
-
-### Gate QA
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/gate1-script-qa` | POST | Script review before HeyGen |
-| `/gate2-segment-qa` | POST | Samples first/middle/last segment |
-| `/gate3-assembly-qa` | POST | Reviews assembled video |
-
-### Publish
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/generate-publish-copy` | POST | Title, description, hashtags via Claude |
-| `/generate-thumbnail` | POST | Auto-fills Canva template |
-| `/publish` | POST | Sends to Upload-Post API |
-
-### Utility
-| Endpoint | Method | Notes |
-|---|---|---|
-| `/cleanup` | POST | `{ keepCount, cleanTmp, cleanQaLogs }` |
-| `/disk-usage` | GET | Report current disk use |
-| `/burn-streamer-intro` | POST | Test intro card for one streamer |
+Push to `main` triggers auto-deploy. Required env vars are listed in `render.yaml` as `sync: false` — set them once in the Render dashboard.
 
 ---
 
-## Streamer Roster (`streamers.json`)
+## Contributing
 
-| Key | Display | Origin | Card Fact |
-|---|---|---|---|
-| jasontheween | Jason | Arlington | Dep Gai guy |
-| hasanabi | Hasan | NB/Istanbul | Hank Pecker bestie |
-| adapt | Adapt | Phoenix | Never faked a trickshot |
-| stableronaldo | Ron | Cherry Hill | At least he's stable |
-| lacy | Lacy | Erie | Married to Drew |
-| marlon | Marlon | Malmö | Fooled the Internet |
-| cinna | Cinna | VA | Rosi's Contract Extended....Again |
-| yonnajay | Yonna | Brevard | Number one roaster |
-| jaycinco | Jay Cinco | Watts | Retired his jersey |
-| maya | Maya | NorCal | The Gen Z Jane Goodall |
-| extraemily | Emily | Omaha | Engaged to Maya |
-
----
-
-## Intro Card Design (Node Canvas)
-
-- **Shape:** Circle, 160px radius, gold ring (#c7af4f), drop shadow
-- **Profile image:** 300px Twitch CDN URL, clipped to circle
-- **Line 1:** Streamer name — 68pt gold (#c7af4f), bold
-- **Line 2:** Origin — 44pt white, normal
-- **Line 3:** Fact — 36pt grey (#aaaaaa), italic
-- **Position:** Top-right, `x=1460 y=40` (16:9 frame)
-- **Duration:** First 3.5 seconds of each streamer segment
-- **No background box** — floating circle on video
-
----
-
-## Thumbnail Templates (Canva)
-
-| Option | Design ID | URL |
-|---|---|---|
-| 3 — Ghostly Bobby G Navy | `DAHGB0qZod4` | [Open in Canva](https://www.canva.com/d/4yOalMvJrkVO1wD) |
-| 4 — Eerie Bobby G + Streamer Circles | `DAHGB-hGwds` | [Open in Canva](https://www.canva.com/d/lnXWvdOkQW6DPSF) |
-
-Auto-fill: `/generate-thumbnail` uploads streamer profile images, hook line, and date automatically.
-
----
-
-## Market Ticker
-
-- **Stocks:** 24 symbols (US large caps + crypto)
-- **Indices:** 10 global (S&P, DOW, NASDAQ, FTSE, DAX, Nikkei, etc.)
-- **Speed:** 80px/sec via `requestAnimationFrame` delta timing (OBS-compatible)
-- **Data:** FMP API (Financial Modeling Prep)
-- **Location:** `http://localhost:8765/` (also serves as OBS Browser Source)
-- **Ticker baked into video** during assembly (not a live overlay in final MP4)
-
----
-
-## Platform Publishing
-
-| Platform | Format | Privacy | Notes |
-|---|---|---|---|
-| YouTube | MP4 16:9 or 9:16 | Public | Thumbnail + pinned comment |
-| TikTok | MP4 9:16 | Public (DIRECT_POST) | |
-| Instagram Reels | MP4 9:16 | Public | |
-
-**Upload-Post profile:** `clipznashite`  
-**Thumbnail:** extracted at 15s mark by FFmpeg, stored as `_thumb.jpg`
-
----
-
-## Disk Management
-
-Assembled MP4s are ~500MB each. Use **Settings → Disk Cleanup** in dashboard or:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch conventions, commit message format, and the pre-commit hook requirements (`STATUS.md` must be updated with every code commit).
 
 ```bash
-# Keep 2 most recent, clean tmp, don't touch QA logs
-curl -X POST http://localhost:3000/cleanup \
-  -H "Content-Type: application/json" \
-  -d '{"keepCount":2,"cleanTmp":true,"cleanQaLogs":false}'
-```
-
-Everything published is backed up to Google Drive before cleanup.
-
----
-
-## Cost Model
-
-| Item | Rate | Monthly (60 long + 180 shorts) |
-|---|---|---|
-| HeyGen segments | ~$0.038/seg avg 8.5s | ~$311 |
-| Upload-Post | $50/mo Professional | $50 |
-| FMP API | included | $0 |
-| Anthropic/Gemini | pay-per-use | ~$20 est |
-| **Total est.** | | **~$381/mo** |
-
----
-
-## Bobby G Script Style
-
-Three reference shows (in order of influence):
-
-1. **Jon Stewart / Daily Show** — flat delivery + one devastating observation + immediate pivot
-2. **Norm MacDonald Weekend Update** — short sentences, `[beat]` pauses, NEVER explain the joke
-3. **Space Ghost Coast to Coast** — non-sequitur cold opens, confident self-contradiction
-
-`[beat]` serves dual purpose: delivery pause guide AND HeyGen segment edit point.
-
-**Always ends with:** *"I'm Bobby G. See you tomorrow."*
-
----
-
-## Known Issues / Pending
-
-- [ ] Intro card position top-right — verify `x=1460 y=40` lands correctly after next assembly
-- [ ] Jay Cinco sometimes gets 2 clips instead of 3 (one clip expired on Twitch)
-- [ ] Bobby G photo swap in Canva thumbnail (hooded silhouette → actual photo)
-- [ ] Gate 2 detail output was truncated — fixed in latest commit (verify next run)
-- [ ] CapCut headless render not yet deployed to Railway (runs locally only)
-
----
-
-## File Reference
-
-```
-cwn-production/
-├── server.js                  Main Node.js API
-├── cwn_production.html        Dashboard UI
-├── streamers.json             Streamer roster + card data
-├── cwn_style_guides.json      Bobby G style + Gemini learning log
-├── package.json               Node deps (express, canvas, axios, etc.)
-├── .env                       API keys (gitignored)
-├── output/                    Final MP4s + thumbnails
-│   └── qa_failures/           Gate failure logs (local only)
-└── tmp/                       Working files (auto-cleaned)
-    ├── cwn_font.ttf            Font for ticker/overlays
-    └── profile_*.png           Cached Twitch profile images
+git checkout -b feat/your-feature
+# make changes
+npm test                  # must pass
+# update STATUS.md → Last Agent Action table
+git add -p
+git commit -m "feat: description"
+gh pr create
 ```
 
 ---
 
-*Last updated: April 6, 2026 — Session 4*
+*For architecture decisions, portal specs, and sprint state — see `cursor.md`, `STATUS.md`, and `AGENT_FILE_REGISTRY.md`.*

@@ -1,0 +1,29 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]: This XML file does not appear to have any style information associated with it. The document tree is shown below.
+  - generic [ref=e4]:
+    - generic [ref=e7]:
+      - text: <urlset
+      - generic [ref=e8]: xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      - generic [ref=e9]: xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+      - generic [ref=e10]: generatedBy="WIX"
+      - text: ">"
+    - generic [ref=e12]:
+      - generic [ref=e15]: <url>
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: <loc>
+          - text: https://www.learningwithlumi.com/service-page/free-phone-consultation
+          - generic [ref=e19]: </loc>
+        - generic [ref=e20]:
+          - generic [ref=e21]: <lastmod>
+          - text: 2026-05-30
+          - generic [ref=e22]: </lastmod>
+        - generic [ref=e23]:
+          - generic [ref=e26]: <image:image>
+          - generic [ref=e28]:
+            - generic [ref=e29]: <image:loc>
+            - text: https://static.wixstatic.com/media/abb7d1_cab06acc2854408ba9f0f6e71f26231e~mv2.jpg
+            - generic [ref=e30]: </image:loc>
+          - generic [ref=e32]: </image:image>
+      - generic [ref=e34]: </url>
+    - generic [ref=e36]: </urlset>

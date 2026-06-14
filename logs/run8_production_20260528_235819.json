@@ -1,0 +1,72 @@
+{
+  "ts": "20260528_235819",
+  "submitted": 3,
+  "total": 3,
+  "at_100": 1,
+  "avg_grade": 53.3,
+  "grades": [
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        }
+      ],
+      "summary": "Grade: 30/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780027099778",
+      "status": "failed",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP",
+        "title": "xqc makes the wrong choice",
+        "duration_s": 45
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        }
+      ],
+      "summary": "Grade: 30/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780027102102",
+      "status": "failed",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/NimbleProductiveAsparagusHeyGuys-s77ZvN10Yr-O2sfo",
+        "title": "wow",
+        "duration_s": 26
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 100,
+      "passed": true,
+      "gaps": [],
+      "summary": "Grade: 100/100 | PASSED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780027104254",
+      "status": "published",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/ConsiderateColdbloodedBeaverRickroll-NHbTiYQlzwHVvvVf",
+        "title": "xqc kisses nyyxxii",
+        "duration_s": 42
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780027104254/1780027117715_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780027104254.mp4"
+    }
+  ]
+}

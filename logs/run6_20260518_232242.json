@@ -1,0 +1,185 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/hasanabi"
+    },
+    {
+      "id": "O-Tw2",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": true,
+      "job_id": "e2e-operate-test_COMPACT_FETCH_clips_1779146308662",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed overall, preventing clipSpec assembly and output generation, despite successfully fetching source clips and using the correct API authentication surface.",
+      "source_count": 3
+    },
+    {
+      "id": "O-K1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "O-K2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "O-YT1",
+      "tier": "operate",
+      "platform_src": "youtube",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779146334261",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed to complete and produced no output URL, indicating critical failures. It successfully identified and fetched source clips from YouTube and used the correct API authentication surface.",
+      "source_count": 1
+    },
+    {
+      "id": "O-YT2",
+      "tier": "operate",
+      "platform_src": "youtube",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": true,
+      "job_id": "e2e-operate-test_COMPACT_FETCH_clips_1779146361790",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed to complete, resulting in no output URL and unhonored clipSpec assembly. However, source clips were successfully fetched, and the correct API authentication method was used.",
+      "source_count": 3
+    },
+    {
+      "id": "G-Tw1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/stableronaldo"
+    },
+    {
+      "id": "G-Tw2",
+      "tier": "guided",
+      "platform_src": "twitch",
+      "account": "stableronaldo",
+      "auth_surface": "dashboard",
+      "use_clip_spec": true,
+      "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_show_commentary_1779146392430",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed, preventing clipSpec assembly and output generation. While source clips were resolved from Twitch and the correct authentication surface was used, the overall failure led to 0 points for completion, clipSpec honouring, and output URL.",
+      "source_count": 3
+    },
+    {
+      "id": "G-K1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/trainwreckstv"
+    },
+    {
+      "id": "G-K2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/trainwreckstv"
+    },
+    {
+      "id": "G-YT1",
+      "tier": "guided",
+      "platform_src": "youtube",
+      "account": "markiplier",
+      "auth_surface": "dashboard",
+      "use_clip_spec": false,
+      "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1779146420748",
+      "status": "failed",
+      "output_url": "",
+      "score": 50,
+      "pass": false,
+      "notes": "The job failed to complete and no output URL was generated, leading to significant point deductions. However, it successfully resolved source clips from YouTube, used the correct dashboard authentication surface, and correctly handled the absence of a ClipSpec as specified.",
+      "source_count": 1
+    },
+    {
+      "id": "G-YT2",
+      "tier": "guided",
+      "platform_src": "youtube",
+      "account": "markiplier",
+      "auth_surface": "dashboard",
+      "use_clip_spec": true,
+      "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_show_commentary_1779146449228",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed to complete, meaning the ClipSpec was not honored and no output URL was generated. However, source clips were successfully fetched, and the correct dashboard authentication method was used.",
+      "source_count": 3
+    },
+    {
+      "id": "M-Tw1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/hasanabi"
+    },
+    {
+      "id": "M-Tw2",
+      "tier": "managed",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "dashboard",
+      "use_clip_spec": true,
+      "job_id": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_FETCH_show_commentary_1779146478635",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed to complete, resulting in no output URL and no clipSpec assembly. While source clips were correctly fetched from Twitch and the dashboard auth was properly used, the fundamental failure to process the job prevents a passing score.",
+      "source_count": 3
+    },
+    {
+      "id": "M-K1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "M-K2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "M-YT1",
+      "tier": "managed",
+      "platform_src": "youtube",
+      "account": "hasanabi",
+      "auth_surface": "dashboard",
+      "use_clip_spec": false,
+      "job_id": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1779146507733",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed entirely, resulting in no output URL and preventing any assembly (ClipSpec or otherwise) from being honored. However, the system successfully resolved and fetched the source clip from YouTube and utilized the correct dashboard authentication surface.",
+      "source_count": 1
+    },
+    {
+      "id": "M-YT2",
+      "tier": "managed",
+      "platform_src": "youtube",
+      "account": "hasanabi",
+      "auth_surface": "dashboard",
+      "use_clip_spec": true,
+      "job_id": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_FETCH_show_commentary_1779146543917",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed to complete, resulting in no output URL and the clipSpec assembly not being honored. While source clips were correctly resolved from YouTube and the correct dashboard authentication was used, the core failure prevents a passing score.",
+      "source_count": 3
+    }
+  ],
+  "elapsed_s": 261.7831611633301
+}

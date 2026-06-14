@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779750805246",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1779750805246/1779750949254_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1779750805246_final.mp4",
+      "score": 100,
+      "pass": true,
+      "notes": "All scoring criteria met. The job completed successfully, sourced clips from Twitch, used the correct authentication for an 'operate' tier job, and produced a valid output URL.",
+      "source_count": 1,
+      "template_id": null
+    },
+    {
+      "id": "O-Tw2",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": true,
+      "job_id": "e2e-operate-test_COMPACT_FETCH_clips_1779750997212",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1779750997212/1779751314206_assembled_e2e-operate-test_COMPACT_FETCH_clips_1779750997212_final.mp4",
+      "score": 100,
+      "pass": true,
+      "notes": "All criteria met. The job completed successfully, sourced clips from Twitch, used COMPACT ClipSpec as indicated, utilized the correct API authentication for the 'operate' tier, and produced a valid output URL.",
+      "source_count": 3,
+      "template_id": null
+    }
+  ],
+  "elapsed_s": 574.5819799900055
+}

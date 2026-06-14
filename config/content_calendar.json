@@ -9,7 +9,7 @@
   "guidelines": {
     "live": [
       "Twitch TV: transformative produced video only (Bobby G commentary VODs + news desk). No streamer clip comps, no 4-up grid rebroadcast.",
-      "YouTube Live: follow dayparts from this calendar — event_night → news_desk → grid. Event Q0 = allowlisted live feed (not old VOD). Co-streams on Q2–4.",
+      "YouTube Live: follow dayparts from this calendar — event_night → news_desk (when day-fresh VOD exists) → grid.",
       "Live overrides require owner PIN — agents and automation cannot change the calendar without it."
     ],
     "vod": [
@@ -249,9 +249,9 @@
         "label": "Native YT/TikTok scheduled publish time",
         "category": "vod",
         "status": "partial",
-        "why": "Gate 5 uploads with YouTube publishAt / Upload-Post scheduled_date when calendar slot is in the future; TikTok still immediate-only",
+        "why": "Gate 5 uploads with YouTube publishAt / Upload-Post scheduled_date when calendar slot is in the future (YouTube + TikTok + Instagram)",
         "operatorPath": "Calendar links job → assemble before slot → native schedule on Gate 5 pass",
-        "repairsNeeded": ["TikTok native schedule when Upload-Post supports it"],
+        "repairsNeeded": [],
         "env": ["UPLOADPOST_*", "YOUTUBE_DIRECT_PUBLISH"]
       },
       {

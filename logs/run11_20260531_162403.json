@@ -1,0 +1,56 @@
+{
+  "run": "run_11_20260531_162403",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780259044144",
+      "label": "Post Everywhere",
+      "tier": "operate",
+      "status": "timeout",
+      "output_url": null,
+      "grade": 0,
+      "grade_detail": null,
+      "twelve_labs_qa": {},
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job ended in 'timeout' status with no output URL generated, indicating a complete pipeline failure before video rendering could complete.",
+          "suggested_change": "Investigate pipeline timeout thresholds and add checkpointing to identify which stage (rendering, encoding, upload) caused the hang. Implement pipeline stage monitoring with alerts at 50%, 75%, and 90% of max execution time."
+        },
+        {
+          "area": "quality",
+          "severity": "critical",
+          "observation": "Twelve Labs QA returned 'no result' \u2014 without a produced video, automated quality assessment could not run, leaving zero quality validation for this job.",
+          "suggested_change": "Implement fallback QA logging that captures partial artifacts or last-known-good frame for forensic analysis even on failed jobs. Add a 'QA skipped: no output' distinct status versus 'QA failed'."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "Six add-ons activated simultaneously (captions, audio, branding, colorGrade, effects, layout) for a 'Post Everywhere' template \u2014 this heavy combination may contribute to processing timeouts.",
+          "suggested_change": "Analyze job duration correlation with add-on count. Consider sequential processing for 4+ add-ons or implementing a complexity score that triggers extended timeout thresholds automatically."
+        },
+        {
+          "area": "flow",
+          "severity": "high",
+          "observation": "OPERATE tier users expect reliable, hands-off execution. A timeout with no output and no partial delivery represents a complete failure of the tier's value proposition.",
+          "suggested_change": "Implement graceful degradation: if timeout is imminent, render a lower-fidelity version or skip non-essential add-ons (e.g., effects, colorGrade) to deliver something rather than nothing."
+        },
+        {
+          "area": "output",
+          "severity": "high",
+          "observation": "No output URL means the user received nothing actionable \u2014 no video, no preview, no error artifact to troubleshoot.",
+          "suggested_change": "Generate a failure summary asset (thumbnail + error report PDF or status page link) and deliver to output URL so users have immediate visibility into what went wrong without checking dashboards."
+        }
+      ],
+      "ran_at": "2026-05-31T20:54:35.812098+00:00",
+      "jira_ticket": "CPD-470"
+    }
+  ],
+  "saved_templates": []
+}

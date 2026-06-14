@@ -1,0 +1,27 @@
+{
+  "_comment": "WAN 2.7 T2V workflow — ComfyUI Partner Nodes (CPD-79). ComfyUI 0.18.5+ required. SCAFFOLD: validate node inputs against actual ComfyUI Partner Node schema on pod before production use. Auth: ComfyUI pod must be logged in with COMFYUI_API_KEY (Comfy account, not RunPod key). Patches applied by runpod.js: node['1'].inputs.{prompt,negative_prompt,resolution,ratio,duration,seed}",
+  "1": {
+    "class_type": "Wan2TextToVideoApi",
+    "_meta": { "title": "Wan 2.7 Text to Video" },
+    "inputs": {
+      "model": "wan2.7-t2v",
+      "prompt": "a scenic landscape with flowing water",
+      "negative_prompt": "blurry, low quality, distorted, watermark, text, logo",
+      "resolution": "720P",
+      "ratio": "16:9",
+      "duration": 5,
+      "seed": 42,
+      "prompt_extend": true
+    }
+  },
+  "2": {
+    "class_type": "SaveVideo",
+    "_meta": { "title": "Save Video" },
+    "inputs": {
+      "video": ["1", 0],
+      "filename_prefix": "wan27_t2v",
+      "format": "video/h264-mp4",
+      "save_output": true
+    }
+  }
+}

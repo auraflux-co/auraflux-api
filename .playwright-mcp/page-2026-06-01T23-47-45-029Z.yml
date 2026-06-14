@@ -1,0 +1,117 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "AuraFlux home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "AuraFlux" [ref=e5]
+      - generic [ref=e6]:
+        - button "Menu" [ref=e7] [cursor=pointer]
+        - link "Get Started" [ref=e11] [cursor=pointer]:
+          - /url: /plans
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - heading "What's Coming to AuraFlux" [level=1] [ref=e14]
+      - paragraph [ref=e15]: We ship fast. Features move from Future → Next → Now as engineering capacity opens. This is a live view of our product pipeline.
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: In Development
+          - generic [ref=e21]: Q2 2026
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]: Publishing
+            - heading "Subscription Platforms" [level=3] [ref=e25]
+            - generic [ref=e28]: "ENGINE STAGE: PROCESSING"
+            - paragraph [ref=e29]:
+              - text: Direct publish to
+              - strong [ref=e30]: OnlyFans
+              - text: ","
+              - strong [ref=e31]: Fansly
+              - text: ", and"
+              - strong [ref=e32]: Patreon
+              - text: — same pipeline as YouTube and TikTok.
+          - generic [ref=e33]:
+            - generic [ref=e34]: Production
+            - heading "Compilation Carousel" [level=3] [ref=e35]
+            - generic [ref=e38]: "ENGINE STAGE: PROCESSING"
+            - paragraph [ref=e39]: Auto-generate side-by-side clip grids, batch compilations, and image carousels from your short-form library.
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - generic [ref=e42]: 🔵 Planned Pipeline
+          - generic [ref=e43]: Q3 2026
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]: Production
+            - heading "Show & Film Engine" [level=3] [ref=e47]
+            - paragraph [ref=e48]: Fair-use sourcing algorithm generating narrated video from TV and movie scene libraries.
+          - generic [ref=e49]:
+            - generic [ref=e50]: AI
+            - heading "AI Avatar Video" [level=3] [ref=e51]
+            - paragraph [ref=e52]: On-camera presenter videos generated from your script — full control over voice, appearance, and background.
+          - generic [ref=e53]:
+            - generic [ref=e54]: Monetisation
+            - heading "Shoppable Video" [level=3] [ref=e55]
+            - paragraph [ref=e56]: Embed product tags and tappable CTAs into short-form videos for social commerce on TikTok and Instagram.
+      - generic [ref=e57]:
+        - generic [ref=e59]: ⚪ Future Horizons
+        - generic [ref=e61]:
+          - generic [ref=e62]: Monetisation
+          - heading "Paid Ad Creative" [level=3] [ref=e63]
+          - paragraph [ref=e64]: Aspect ratio and copy overlay optimization for Meta, TikTok, and Google — production-ready ad formats built in.
+    - generic [ref=e65]:
+      - paragraph [ref=e66]: Have a feature request? We read every message — the best ideas go straight to the board.
+      - link "Send a request →" [ref=e67] [cursor=pointer]:
+        - /url: /contact-us
+  - contentinfo [ref=e68]:
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - navigation "Footer navigation" [ref=e71]:
+          - generic [ref=e72]:
+            - generic [ref=e73]: Platform
+            - link "Our Story" [ref=e74] [cursor=pointer]:
+              - /url: /our-story
+            - link "Our System" [ref=e75] [cursor=pointer]:
+              - /url: /our-system
+            - link "Roadmap" [ref=e76] [cursor=pointer]:
+              - /url: /roadmap
+          - generic [ref=e77]:
+            - generic [ref=e78]: Resources
+            - link "Plans" [ref=e79] [cursor=pointer]:
+              - /url: /pricing
+            - link "Blog" [ref=e80] [cursor=pointer]:
+              - /url: /blog
+            - link "Contact Us" [ref=e81] [cursor=pointer]:
+              - /url: /contact-us
+        - generic [ref=e82]:
+          - link "AuraFlux home" [ref=e83] [cursor=pointer]:
+            - /url: /
+            - img "AuraFlux" [ref=e84]
+          - paragraph [ref=e85]: Automated content production from source to publish. No team required.
+          - generic [ref=e86]:
+            - link "Privacy Policy" [ref=e87] [cursor=pointer]:
+              - /url: /privacy
+            - generic [ref=e88]: ·
+            - link "Terms" [ref=e89] [cursor=pointer]:
+              - /url: /terms
+            - generic [ref=e90]: ·
+            - link "AUP" [ref=e91] [cursor=pointer]:
+              - /url: /aup
+            - generic [ref=e92]: ·
+            - link "Cookies" [ref=e93] [cursor=pointer]:
+              - /url: /cookies
+        - generic [ref=e94]:
+          - link [ref=e95] [cursor=pointer]:
+            - /url: https://linkedin.com/company/auraflux
+            - img [ref=e97]
+          - link [ref=e99] [cursor=pointer]:
+            - /url: https://instagram.com/auraflux
+            - img [ref=e101]
+          - link [ref=e103] [cursor=pointer]:
+            - /url: https://tiktok.com/@auraflux
+            - img [ref=e105]
+          - link [ref=e107] [cursor=pointer]:
+            - /url: https://youtube.com/@auraflux
+            - img [ref=e109]
+      - paragraph [ref=e112]: © 2026 AuraFlux. All rights reserved.
+  - generic "Chat with us" [ref=e113] [cursor=pointer]:
+    - img [ref=e114]

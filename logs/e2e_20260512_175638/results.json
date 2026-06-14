@@ -1,0 +1,80 @@
+[
+  {
+    "id": "O-T1",
+    "tier": "operate",
+    "streamer": "hasanabi",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-hasanabi.mp4",
+    "clip_title": "Hasan gets left with a 50/50 with AOC and Ilhan Omar",
+    "started_at": "2026-05-12T21:56:38.939242+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "O-T2",
+    "tier": "operate",
+    "streamer": "stableronaldo",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-stableronaldo.mp4",
+    "clip_title": "hey!",
+    "started_at": "2026-05-12T21:56:41.360283+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "O-T3",
+    "tier": "operate",
+    "streamer": "extraemily",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-extraemily.mp4",
+    "clip_title": "Emily with the XXXTentacion performance ",
+    "started_at": "2026-05-12T21:56:43.622548+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "O-T4",
+    "tier": "operate",
+    "streamer": "maya",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-maya.mp4",
+    "clip_title": "maya fell for it",
+    "started_at": "2026-05-12T21:56:45.591692+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "O-T5",
+    "tier": "operate",
+    "streamer": "jasontheween",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-jasontheween.mp4",
+    "clip_title": "W Auntie",
+    "started_at": "2026-05-12T21:56:48.280570+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  },
+  {
+    "id": "O-T6",
+    "tier": "operate",
+    "streamer": "lacy",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-lacy-v2.mp4",
+    "clip_title": "dd",
+    "started_at": "2026-05-12T21:56:50.721784+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 500 \u2014 auth_error"
+  }
+]

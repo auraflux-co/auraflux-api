@@ -4,7 +4,7 @@
 
 **Relationship:** The **current** product and internal operator story (layers, content stages, three entry paths, monitoring) lives in **`SYSTEM_ARCHITECTURE.md`**. This file covers the **GPU / ComfyUI / SVD** extension only.
 
-**Last updated:** 2026-04-21
+**Last updated:** 2026-04-27
 
 ---
 
@@ -104,3 +104,130 @@ Typical path: **SDXL still** → **SVD img2vid** (14–25 frames) → **FFmpeg**
 - **`.cursor/rules`** (or project rules) for: no shelling to raw user strings in FFmpeg, `fluent-ffmpeg` or audited args only.
 
 This repository’s **current** development rules remain in `cursor.md` and `AGENT_FILE_REGISTRY.md`.
+
+---
+
+## AI Generation Workflows — C1+ "Start From Idea"
+
+These workflows are **Phase 4** (not required for Customer 0 launch). They extend the product into GPU-driven generation and automated long-to-short conversion.
+
+---
+
+### SVD pipeline (Stability Video Diffusion + ComfyUI)
+
+Full path: **text prompt → SDXL still → SVD img2vid → FFmpeg post-process**.
+
+**Step 1 — Image generation (SDXL)**
+
+Generate a high-quality base frame from a text prompt using Stable Diffusion XL. ComfyUI handles this via a SDXL checkpoint node.
+
+**Step 2 — Video generation (SVD)**
+
+SVD takes the SDXL frame and injects motion:
+- `svd.safetensors` — 14 frames (~2s at 7fps)
+- `svd_xt.safetensors` — 25 frames (~4s at 6fps)
+
+Key parameters:
+- `motion_bucket_id` — low (10–50) = subtle camera drift; high (100–200) = active motion
+- `fps` — controls playback speed of the generated frames
+- VRAM constraint: start at 512x512 if GPU < 24 GB; upscale in FFmpeg afterwards
+
+**Step 3 — FFmpeg post-process**
+
+Convert SVD frame sequence to MP4, upscale, and stitch scenes:
+
+```bash
+# Frame sequence → MP4
+ffmpeg -r 6 -i frame_%03d.png -vcodec libx264 -crf 15 -pix_fmt yuv420p output.mp4
+
+# Upscale SVD 1024x576 → 1920x1080
+ffmpeg -i input_svd.mp4 -vf "scale=1920:1080:flags=lanczos" -c:v libx264 -crf 10 output_1080p.mp4
+
+# Stitch multiple generated scenes (list.txt: file 'scene_01.mp4' per line)
+ffmpeg -f concat -safe 0 -i list.txt -c copy output_final.mp4
+```
+
+**Key tools:**
+- **ComfyUI** — node graph editor that chains SDXL → SVD → output; runs on RunPod
+- **EBSynth** — apply SVD keyframes to a longer sequence for consistent extended clips
+- **`thecooltechguy/ComfyUI-Stable-Video-Diffusion`** — ComfyUI node pack for SVD
+
+---
+
+### Gemini + FFmpeg — long-to-short (without Pegasus)
+
+Gemini analyzes the video and returns timestamps and crop suggestions. FFmpeg executes the cuts.
+
+**Step 1 — Gemini video analysis**
+
+Send the video file (or URL) to Gemini with a prompt such as:
+> "Identify the top 3 most engaging 15-second clips for TikTok. Provide start/end timestamps (HH:MM:SS) and suggest a subject-centered 9:16 crop region."
+
+Gemini returns structured timestamps (e.g., `01:15-01:30`) that feed directly to FFmpeg.
+
+**Step 2 — FFmpeg cuts**
+
+```bash
+# Fast lossless cut (snaps to nearest keyframe — instant, no quality loss)
+ffmpeg -ss 00:01:15 -i long_video.mp4 -to 00:01:30 -c copy short_clip.mp4
+
+# Accurate cut + vertical reframe (re-encodes — slower but frame-precise)
+ffmpeg -i long_video.mp4 -ss 00:01:15 -to 00:01:30 \
+  -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920" \
+  short_vertical.mp4
+
+# Find keyframe cut points (for lossless -c copy cuts)
+ffprobe -select_streams v -skip_frame nokey -show_frames \
+  -show_entries frame=pts_time -of csv=p=0 input.mp4
+```
+
+**In this repo today:** `lib/assembly.js` already uses `-ss` seek + `SHORT_CLIP_WINDOW_MAX_SEC` for short-form clip trimming. `lib/gates/gate3a.js` uses `clipTimingTargets[0].start` from Gemini's analysis for seek offset. The C1+ long-to-short path extends this same pattern to arbitrary long-form uploads.
+
+---
+
+### CTA overlay with FFmpeg
+
+Burn a visual CTA (e.g., "Shop Now" button image) onto a video for a timed window. FFmpeg creates a visual overlay only — clickability requires an external player or HTML wrapper.
+
+```bash
+# Overlay cta.png centered near the bottom from second 5 to 15
+ffmpeg -i input.mp4 -i cta.png -filter_complex \
+  "[1:v]scale=iw/2:-2[scaled_cta]; \
+   [0:v][scaled_cta]overlay=x=(main_w-overlay_w)/2:y=(main_h-overlay_h-20):enable='between(t,5,15)'" \
+  -c:a copy output.mp4
+```
+
+**Making it clickable (after FFmpeg):**
+- **Mindstamp / FastPix** — upload video, define a hotspot at the same coordinates + timing window
+- **HTML/CSS overlay** — place video in a div with a transparent anchor button over the CTA region, matching FFmpeg x/y/timing values
+- **Mobile note** — set z-index correctly on the overlay button to prevent player chrome from blocking taps
+
+---
+
+### RunPod setup (Phase 4 prerequisites)
+
+1. Create account at runpod.io; add credits ($20–$50 to start)
+2. Launch a **ComfyUI pod** — select RTX 4090 template with Stable Video Diffusion (`thecooltechguy/ComfyUI-Stable-Video-Diffusion`)
+3. Use **serverless endpoints** for on-demand generation (pay per second, auto-scales to zero when idle)
+4. Store `RUNPOD_API_KEY` and `RUNPOD_ENDPOINT_ID` in the **Render environment panel** — never in frontend
+5. **Pause pods when idle** to control cost; prefer serverless for bursty workloads
+
+**Backend call pattern (Node.js on Render):**
+
+```javascript
+const response = await fetch(
+  `https://api.runpod.ai/v2/${process.env.RUNPOD_ENDPOINT_ID}/run`,
+  {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.RUNPOD_API_KEY}` },
+    body: JSON.stringify({ input: { workflow: comfyWorkflow, seed: Date.now() } }),
+  }
+);
+const { id } = await response.json();
+// Poll GET /v2/:endpointId/status/:id until status === 'COMPLETED', then read output URL
+```
+
+**New files needed (Phase 4):**
+- `lib/ai/runpod.js` — RunPod API client (POST workflow, poll status, return R2 URL)
+- `lib/ai/svd_workflow.json` — ComfyUI workflow definition (SDXL + SVD nodes)
+- `lib/ai/svd_pipeline.js` — orchestrates prompt → SDXL image → SVD clip → FFmpeg stitch

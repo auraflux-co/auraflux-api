@@ -1,0 +1,131 @@
+{
+  "run": "run_11_20260531_143846",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 2,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780252727255",
+      "label": "Viral Clip",
+      "tier": "operate",
+      "status": "staged",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780252727255/1780252739716_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780252727255.mp4",
+      "grade": 100,
+      "grade_detail": {
+        "grade": 100,
+        "passed": true,
+        "gaps": [],
+        "summary": "Grade: 100/100 | PASSED"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "add_ons",
+          "severity": "info",
+          "observation": "Comprehensive add-on combination activated (captions, audio, branding, colorGrade, effects, layout) aligns well with viral clip template goals requiring polished, shareable content with strong visual identity.",
+          "suggested_change": "None required - add-on selection is appropriate for the Viral Clip template at OPERATE tier."
+        },
+        {
+          "area": "pipeline",
+          "severity": "medium",
+          "observation": "Job final status is 'staged' rather than 'completed' or 'delivered', indicating the output may not have been finalized or pushed to the user. This creates ambiguity about whether the clip is ready for use.",
+          "suggested_change": "Clarify pipeline state transitions - ensure 'staged' jobs either auto-promote to 'completed' after QA pass or surface clear action items to move forward."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result', meaning automated content quality checks (scene detection, engagement scoring, brand safety) were not executed. For OPERATE tier, QA should be mandatory before staging.",
+          "suggested_change": "Implement QA gating for OPERATE tier jobs - block 'staged' status until Twelve Labs analysis completes, or flag jobs with failed/missing QA for manual review."
+        },
+        {
+          "area": "output",
+          "severity": "medium",
+          "observation": "Output URL structure appears valid and follows expected naming convention (user ID, job type, timestamps), but without QA confirmation or ability to verify asset existence, delivery integrity cannot be confirmed.",
+          "suggested_change": "Add automated asset verification step (HTTP HEAD check or CDN confirmation) before marking jobs as staged, with result logged in job metadata."
+        },
+        {
+          "area": "flow",
+          "severity": "low",
+          "observation": "Timestamp gap between job creation (1780252727255) and assembly (1780252739716) is ~12.5 seconds, which is reasonable for a clip with 6 add-ons. However, lack of QA integration extends effective completion time indefinitely.",
+          "suggested_change": "Include QA processing in SLA tracking for OPERATE tier to set accurate user expectations on total turnaround time."
+        }
+      ],
+      "ran_at": "2026-05-31T18:55:42.751170+00:00",
+      "template_id": null
+    },
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780253743375",
+      "label": "YouTube Short",
+      "tier": "operate",
+      "status": "failed",
+      "output_url": null,
+      "grade": 30,
+      "grade_detail": {
+        "grade": 30,
+        "passed": false,
+        "gaps": [
+          {
+            "checkId": "status",
+            "reason": "expected ('staged', 'complete', 'published'), got failed"
+          },
+          {
+            "checkId": "output_exists",
+            "reason": "no outputUrl"
+          }
+        ],
+        "summary": "Grade: 30/100 | GAPS:2"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job failed with no output URL produced, indicating a complete pipeline breakdown before video rendering could complete.",
+          "suggested_change": "Investigate pipeline logs to identify failure point - check for resource allocation issues, timeout errors, or add-on initialization failures. Implement automatic retry logic for transient failures."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' which means quality assessment never ran - expected since no video was produced, but also indicates QA is correctly gated behind successful output.",
+          "suggested_change": "Add pre-flight validation checks that can catch potential failures before full pipeline execution to reduce wasted compute and improve user feedback time."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "Six add-ons activated simultaneously (captions, tts, audio, branding, effects, layout) - this is a heavy combination for YouTube Shorts that may have contributed to pipeline overload or conflicts.",
+          "suggested_change": "Review add-on dependency chain for conflicts, especially between 'tts' and 'audio' which may compete for audio track. Consider sequential processing or add-on compatibility validation."
+        },
+        {
+          "area": "flow",
+          "severity": "high",
+          "observation": "OPERATE tier jobs should have higher reliability SLAs, yet this job failed completely with no graceful degradation or partial output.",
+          "suggested_change": "Implement fallback rendering with reduced add-ons (e.g., drop effects/branding first) to deliver at least a base video rather than complete failure for paying tier users."
+        },
+        {
+          "area": "output",
+          "severity": "medium",
+          "observation": "No error classification provided in job status - 'failed' alone gives insufficient context for debugging or user communication.",
+          "suggested_change": "Enhance job status to include failure_reason field with categories (e.g., 'addon_conflict', 'render_timeout', 'resource_exhaustion') for faster triage and clearer user messaging."
+        }
+      ],
+      "ran_at": "2026-05-31T19:09:03.152981+00:00",
+      "jira_ticket": null
+    }
+  ],
+  "saved_templates": []
+}

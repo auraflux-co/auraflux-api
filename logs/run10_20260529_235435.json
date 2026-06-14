@@ -1,0 +1,44 @@
+{
+  "run": "run10_feature_matrix",
+  "ts": "20260529_235435",
+  "total": 3,
+  "at_100": 0,
+  "avg_grade": 0.0,
+  "templates_saved": 0,
+  "results": [
+    {
+      "label": "Audio clean (loudnorm + denoise)",
+      "tier": "operate",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    },
+    {
+      "label": "Portrait layout + blur-pad",
+      "tier": "operate",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    },
+    {
+      "label": "Cinematic colour grade (LUT + grain + vignette)",
+      "tier": "operate",
+      "grade": 0,
+      "gaps": [
+        {
+          "checkId": "submit_failed",
+          "reason": "?"
+        }
+      ]
+    }
+  ],
+  "templates": []
+}

@@ -1,0 +1,138 @@
+{
+  "customerId": "c1_default",
+  "showId": "auraflux",
+  "showName": "AuraFlux",
+  "notes": "Universal C1+ defaults. Customer-specific configs override these values. This file is the baseline for all new customers onboarded to the platform.",
+  "templates": {
+    "long-form": {
+      "contentTypes": ["news", "sports", "clips", "custom", "show_commentary"],
+      "sceneFormulas": {
+        "news": "1 + (items * 4) + 1",
+        "sports": "1 + (items * 4) + 1",
+        "clips": "1 + (items * 7) + 1",
+        "custom": "1 + (items * 4) + 1",
+        "show_commentary": "1 + (items * 4) + 1"
+      },
+      "maxItems": {
+        "news": 5,
+        "sports": 5,
+        "clips": 10,
+        "custom": 5,
+        "show_commentary": 5
+      },
+      "providers": {
+        "fetch": "url_ingest",
+        "script": "gemini",
+        "avatar": null,
+        "assembly": "internal",
+        "upload": "r2"
+      },
+      "qaThresholds": {
+        "gate1": { "pass": 60, "manualReview": 40 },
+        "gate3a": { "pass": 55, "manualReview": 35 },
+        "gate4": { "pass": 60, "manualReview": 35 }
+      },
+      "designDefaults": {
+        "chrome": {
+          "name": "AuraFlux",
+          "colors": {
+            "primary": "#0f172a",
+            "accent": "#6366f1",
+            "active": "#ef4444",
+            "text": "#ffffff",
+            "background": "#0f172a"
+          },
+          "topBar": {
+            "height": 48,
+            "episodePrefix": "Episode"
+          }
+        },
+        "overlay": {
+          "showBranding": true,
+          "showEpisodeNumber": true,
+          "showDate": true
+        }
+      }
+    },
+    "short-form": {
+      "contentTypes": ["news", "sports", "clips", "custom", "show_commentary"],
+      "maxItems": {
+        "news": 3,
+        "sports": 3,
+        "clips": 5,
+        "custom": 3
+      },
+      "providers": {
+        "fetch": "url_ingest",
+        "script": "gemini",
+        "avatar": null,
+        "assembly": "internal",
+        "upload": "r2"
+      },
+      "qaThresholds": {
+        "gate1": { "pass": 60, "manualReview": 40 },
+        "gate3a": { "pass": 55, "manualReview": 35 },
+        "gate4": { "pass": 60, "manualReview": 35 }
+      },
+      "designDefaults": {
+        "chrome": {
+          "name": "AuraFlux",
+          "colors": {
+            "primary": "#0f172a",
+            "accent": "#6366f1",
+            "active": "#ef4444",
+            "text": "#ffffff",
+            "background": "#0f172a"
+          }
+        }
+      }
+    }
+  },
+  "qaMode": "suggestive",
+  "voice": {
+    "speakerName": "Host",
+    "ttsProvider": "gemini",
+    "style": "professional",
+    "outroLine": "",
+    "prohibitedWords": []
+  },
+  "qa": {
+    "gate1": {
+      "minScore": 70,
+      "maxRetries": 2
+    },
+    "gate3a": {
+      "minScore": 65
+    },
+    "gate4": {
+      "minScore": 70
+    }
+  },
+  "thumbnail": {
+    "news": {
+      "templateType": "html",
+      "templatePath": "templates/cwn_news_tool.html",
+      "viewport": { "width": 1280, "height": 720 }
+    },
+    "sports": {
+      "templateType": "html",
+      "templatePath": "templates/nba_thumbnail_generator.html",
+      "viewport": { "width": 1280, "height": 720 }
+    },
+    "clips": {
+      "templateType": "overlay",
+      "viewport": { "width": 1280, "height": 720 }
+    },
+    "custom": {
+      "templateType": "html",
+      "templatePath": "templates/cwn_news_tool.html",
+      "viewport": { "width": 1280, "height": 720 }
+    }
+  },
+  "storage": {
+    "provider": "r2",
+    "outputBucket": "auraflux-video-output",
+    "thumbnailFolder": "thumbnails",
+    "videoFolder": "output"
+  }
+}

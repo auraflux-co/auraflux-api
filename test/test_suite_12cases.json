@@ -21,11 +21,11 @@
         "date": "Tuesday, April 8, 2026",
         "clipsPerStreamer": 3,
         "items": [
-          {"streamer": "jasontheween", "displayName": "Jason", "clips": []},
-          {"streamer": "hasanabi", "displayName": "Hasan", "clips": []},
-          {"streamer": "adapt", "displayName": "Adapt", "clips": []},
-          {"streamer": "stableronaldo", "displayName": "Ron", "clips": []},
-          {"streamer": "lacy", "displayName": "Lacy", "clips": []}
+          { "streamer": "jasontheween", "displayName": "Jason", "clips": [] },
+          { "streamer": "hasanabi", "displayName": "Hasan", "clips": [] },
+          { "streamer": "adapt", "displayName": "Adapt", "clips": [] },
+          { "streamer": "stableronaldo", "displayName": "Ron", "clips": [] },
+          { "streamer": "lacy", "displayName": "Lacy", "clips": [] }
         ]
       }
     },
@@ -41,11 +41,11 @@
         "date": "Tuesday, April 8, 2026",
         "clipsPerStreamer": 3,
         "items": [
-          {"streamer": "marlon", "displayName": "Marlon", "clips": []},
-          {"streamer": "cinna", "displayName": "Cinna", "clips": []},
-          {"streamer": "yonnajay", "displayName": "Yonna", "clips": []},
-          {"streamer": "jaycinco", "displayName": "Jay Cinco", "clips": []},
-          {"streamer": "extraemily", "displayName": "Emily", "clips": []}
+          { "streamer": "marlon", "displayName": "Marlon", "clips": [] },
+          { "streamer": "cinna", "displayName": "Cinna", "clips": [] },
+          { "streamer": "yonnajay", "displayName": "Yonna", "clips": [] },
+          { "streamer": "jaycinco", "displayName": "Jay Cinco", "clips": [] },
+          { "streamer": "extraemily", "displayName": "Emily", "clips": [] }
         ]
       }
     },
@@ -60,11 +60,11 @@
         "type": "nba",
         "date": "Tuesday, April 8, 2026",
         "items": [
-          {"home": "Lakers", "away": "Celtics", "score": "112-108"},
-          {"home": "Warriors", "away": "Nets", "score": "125-118"},
-          {"home": "Heat", "away": "Bucks", "score": "103-99"},
-          {"home": "Suns", "away": "Mavericks", "score": "118-115"},
-          {"home": "Nuggets", "away": "Clippers", "score": "122-110"}
+          { "home": "Lakers", "away": "Celtics", "score": "112-108" },
+          { "home": "Warriors", "away": "Nets", "score": "125-118" },
+          { "home": "Heat", "away": "Bucks", "score": "103-99" },
+          { "home": "Suns", "away": "Mavericks", "score": "118-115" },
+          { "home": "Nuggets", "away": "Clippers", "score": "122-110" }
         ]
       }
     },
@@ -79,11 +79,11 @@
         "type": "nba",
         "date": "Tuesday, April 8, 2026",
         "items": [
-          {"home": "76ers", "away": "Knicks", "score": "108-102"},
-          {"home": "Grizzlies", "away": "Pelicans", "score": "115-109"},
-          {"home": "Rockets", "away": "Spurs", "score": "98-95"},
-          {"home": "Trail Blazers", "away": "Jazz", "score": "107-104"},
-          {"home": "Kings", "away": "Timberwolves", "score": "119-112"}
+          { "home": "76ers", "away": "Knicks", "score": "108-102" },
+          { "home": "Grizzlies", "away": "Pelicans", "score": "115-109" },
+          { "home": "Rockets", "away": "Spurs", "score": "98-95" },
+          { "home": "Trail Blazers", "away": "Jazz", "score": "107-104" },
+          { "home": "Kings", "away": "Timberwolves", "score": "119-112" }
         ]
       }
     },
@@ -98,11 +98,11 @@
         "type": "news",
         "date": "Tuesday, April 8, 2026",
         "items": [
-          {"headline": "Major Tech Announcement", "source": "TechCrunch"},
-          {"headline": "Political Development", "source": "Reuters"},
-          {"headline": "Scientific Breakthrough", "source": "Nature"},
-          {"headline": "Sports Victory", "source": "ESPN"},
-          {"headline": "Economic Update", "source": "Bloomberg"}
+          { "headline": "Major Tech Announcement", "source": "TechCrunch" },
+          { "headline": "Political Development", "source": "Reuters" },
+          { "headline": "Scientific Breakthrough", "source": "Nature" },
+          { "headline": "Sports Victory", "source": "ESPN" },
+          { "headline": "Economic Update", "source": "Bloomberg" }
         ]
       }
     },
@@ -117,11 +117,11 @@
         "type": "news",
         "date": "Tuesday, April 8, 2026",
         "items": [
-          {"headline": "Environmental News", "source": "National Geographic"},
-          {"headline": "Entertainment Release", "source": "Variety"},
-          {"headline": "Health Discovery", "source": "Medical News Today"},
-          {"headline": "Space Exploration", "source": "NASA"},
-          {"headline": "Cultural Event", "source": "Associated Press"}
+          { "headline": "Environmental News", "source": "National Geographic" },
+          { "headline": "Entertainment Release", "source": "Variety" },
+          { "headline": "Health Discovery", "source": "Medical News Today" },
+          { "headline": "Space Exploration", "source": "NASA" },
+          { "headline": "Cultural Event", "source": "Associated Press" }
         ]
       }
     },
@@ -137,9 +137,9 @@
         "date": "Tuesday, April 8, 2026",
         "clipsPerStreamer": 1,
         "items": [
-          {"streamer": "jasontheween", "displayName": "Jason", "clips": []},
-          {"streamer": "hasanabi", "displayName": "Hasan", "clips": []},
-          {"streamer": "adapt", "displayName": "Adapt", "clips": []}
+          { "streamer": "jasontheween", "displayName": "Jason", "clips": [] },
+          { "streamer": "hasanabi", "displayName": "Hasan", "clips": [] },
+          { "streamer": "adapt", "displayName": "Adapt", "clips": [] }
         ]
       }
     },
@@ -155,9 +155,9 @@
         "date": "Tuesday, April 8, 2026",
         "clipsPerStreamer": 1,
         "items": [
-          {"streamer": "stableronaldo", "displayName": "Ron", "clips": []},
-          {"streamer": "lacy", "displayName": "Lacy", "clips": []},
-          {"streamer": "marlon", "displayName": "Marlon", "clips": []}
+          { "streamer": "stableronaldo", "displayName": "Ron", "clips": [] },
+          { "streamer": "lacy", "displayName": "Lacy", "clips": [] },
+          { "streamer": "marlon", "displayName": "Marlon", "clips": [] }
         ]
       }
     },
@@ -172,9 +172,9 @@
         "type": "nba",
         "date": "Tuesday, April 8, 2026",
         "items": [
-          {"home": "Lakers", "away": "Celtics", "score": "112-108"},
-          {"home": "Warriors", "away": "Nets", "score": "125-118"},
-          {"home": "Heat", "away": "Bucks", "score": "103-99"}
+          { "home": "Lakers", "away": "Celtics", "score": "112-108" },
+          { "home": "Warriors", "away": "Nets", "score": "125-118" },
+          { "home": "Heat", "away": "Bucks", "score": "103-99" }
         ]
       }
     },
@@ -189,9 +189,9 @@
         "type": "nba",
         "date": "Tuesday, April 8, 2026",
         "items": [
-          {"home": "Suns", "away": "Mavericks", "score": "118-115"},
-          {"home": "Nuggets", "away": "Clippers", "score": "122-110"},
-          {"home": "76ers", "away": "Knicks", "score": "108-102"}
+          { "home": "Suns", "away": "Mavericks", "score": "118-115" },
+          { "home": "Nuggets", "away": "Clippers", "score": "122-110" },
+          { "home": "76ers", "away": "Knicks", "score": "108-102" }
         ]
       }
     },
@@ -206,9 +206,9 @@
         "type": "news",
         "date": "Tuesday, April 8, 2026",
         "items": [
-          {"headline": "Major Tech Announcement", "source": "TechCrunch"},
-          {"headline": "Political Development", "source": "Reuters"},
-          {"headline": "Scientific Breakthrough", "source": "Nature"}
+          { "headline": "Major Tech Announcement", "source": "TechCrunch" },
+          { "headline": "Political Development", "source": "Reuters" },
+          { "headline": "Scientific Breakthrough", "source": "Nature" }
         ]
       }
     },
@@ -223,9 +223,9 @@
         "type": "news",
         "date": "Tuesday, April 8, 2026",
         "items": [
-          {"headline": "Sports Victory", "source": "ESPN"},
-          {"headline": "Economic Update", "source": "Bloomberg"},
-          {"headline": "Environmental News", "source": "National Geographic"}
+          { "headline": "Sports Victory", "source": "ESPN" },
+          { "headline": "Economic Update", "source": "Bloomberg" },
+          { "headline": "Environmental News", "source": "National Geographic" }
         ]
       }
     }

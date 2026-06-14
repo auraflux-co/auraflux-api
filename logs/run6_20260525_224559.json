@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "id": "O-Tw2",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": true,
+      "job_id": "e2e-operate-test_COMPACT_FETCH_clips_1779749079411",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed, resulting in no output URL and preventing the clipSpec assembly from being honored. However, source clips were successfully fetched, and the correct API authentication method was used for the 'operate' tier.",
+      "source_count": 3
+    }
+  ],
+  "elapsed_s": 87.89965605735779
+}

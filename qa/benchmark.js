@@ -34,7 +34,7 @@ const RUN_CONCURRENT = process.argv.includes('--concurrent');
 const TARGETS = {
   thumbnail: 3000,
   api: 500,
-  health: 200
+  health: 200,
 };
 
 if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -48,17 +48,17 @@ function httpRequest(url, options = {}) {
     const lib = url.startsWith('https') ? https : http;
     const reqOptions = {
       method: options.method || 'GET',
-      headers: { 'Content-Type': 'application/json', ...options.headers }
+      headers: { 'Content-Type': 'application/json', ...options.headers },
     };
 
     const req = lib.request(url, reqOptions, (res) => {
       let body = '';
-      res.on('data', chunk => body += chunk);
+      res.on('data', (chunk) => (body += chunk));
       res.on('end', () => {
         resolve({
           statusCode: res.statusCode,
           body,
-          durationMs: Date.now() - start
+          durationMs: Date.now() - start,
         });
       });
     });
@@ -92,7 +92,7 @@ async function benchmark(name, fn, runs = 3) {
       break;
     }
     // Small gap between runs
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200));
   }
 
   if (error) {
@@ -102,9 +102,12 @@ async function benchmark(name, fn, runs = 3) {
   const avg = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
   const min = Math.min(...durations);
   const max = Math.max(...durations);
-  const target = name.includes('thumbnail') || name.includes('generate') ? TARGETS.thumbnail
-    : name === 'health' ? TARGETS.health
-    : TARGETS.api;
+  const target =
+    name.includes('thumbnail') || name.includes('generate')
+      ? TARGETS.thumbnail
+      : name === 'health'
+        ? TARGETS.health
+        : TARGETS.api;
 
   return {
     name,
@@ -114,7 +117,7 @@ async function benchmark(name, fn, runs = 3) {
     max,
     target,
     passed: avg <= target,
-    statusCode: lastResult?.statusCode
+    statusCode: lastResult?.statusCode,
   };
 }
 
@@ -126,7 +129,7 @@ function getMemoryMB() {
   return {
     rss: Math.round(mem.rss / 1024 / 1024),
     heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
-    heapTotal: Math.round(mem.heapTotal / 1024 / 1024)
+    heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
   };
 }
 
@@ -136,13 +139,13 @@ function getMemoryMB() {
 async function concurrencyTest(n = 10) {
   console.log(`\n⚡ Concurrency Test — ${n} simultaneous requests to /health`);
   const start = Date.now();
-  const promises = Array.from({ length: n }, () =>
-    httpRequest(`${BASE_URL}/health`)
-  );
+  const promises = Array.from({ length: n }, () => httpRequest(`${BASE_URL}/health`));
 
   const results = await Promise.allSettled(promises);
   const totalMs = Date.now() - start;
-  const succeeded = results.filter(r => r.status === 'fulfilled' && r.value.statusCode === 200).length;
+  const succeeded = results.filter(
+    (r) => r.status === 'fulfilled' && r.value.statusCode === 200
+  ).length;
   const failed = n - succeeded;
 
   console.log(`   Completed in ${totalMs}ms — ${succeeded}/${n} succeeded, ${failed} failed`);
@@ -152,7 +155,9 @@ async function concurrencyTest(n = 10) {
 async function runBenchmarks() {
   console.log('\n⏱️  CWN Performance Benchmarking Suite');
   console.log(`   Server: ${BASE_URL}`);
-  console.log(`   Targets: thumbnail<${TARGETS.thumbnail}ms, api<${TARGETS.api}ms, health<${TARGETS.health}ms\n`);
+  console.log(
+    `   Targets: thumbnail<${TARGETS.thumbnail}ms, api<${TARGETS.api}ms, health<${TARGETS.health}ms\n`
+  );
 
   const memBefore = getMemoryMB();
   const allResults = [];
@@ -161,26 +166,42 @@ async function runBenchmarks() {
   console.log('📡 Fast Endpoints (3 runs each):');
 
   const healthResult = await benchmark('health', () => httpRequest(`${BASE_URL}/health`));
-  console.log(`   /health          avg:${healthResult.avg}ms  min:${healthResult.min}ms  max:${healthResult.max}ms  ${healthResult.passed ? '✅' : '❌'} (target: <${healthResult.target}ms)`);
+  console.log(
+    `   /health          avg:${healthResult.avg}ms  min:${healthResult.min}ms  max:${healthResult.max}ms  ${healthResult.passed ? '✅' : '❌'} (target: <${healthResult.target}ms)`
+  );
   allResults.push(healthResult);
 
-  const tickerResult = await benchmark('ticker-status', () => httpRequest(`${BASE_URL}/ticker-status`));
-  console.log(`   /ticker-status   avg:${tickerResult.avg}ms  min:${tickerResult.min}ms  max:${tickerResult.max}ms  ${tickerResult.passed ? '✅' : '❌'} (target: <${tickerResult.target}ms)`);
+  const tickerResult = await benchmark('ticker-status', () =>
+    httpRequest(`${BASE_URL}/ticker-status`)
+  );
+  console.log(
+    `   /ticker-status   avg:${tickerResult.avg}ms  min:${tickerResult.min}ms  max:${tickerResult.max}ms  ${tickerResult.passed ? '✅' : '❌'} (target: <${tickerResult.target}ms)`
+  );
   allResults.push(tickerResult);
 
   const diskResult = await benchmark('disk-usage', () => httpRequest(`${BASE_URL}/disk-usage`));
-  console.log(`   /disk-usage      avg:${diskResult.avg}ms  min:${diskResult.min}ms  max:${diskResult.max}ms  ${diskResult.passed ? '✅' : '❌'} (target: <${diskResult.target}ms)`);
+  console.log(
+    `   /disk-usage      avg:${diskResult.avg}ms  min:${diskResult.min}ms  max:${diskResult.max}ms  ${diskResult.passed ? '✅' : '❌'} (target: <${diskResult.target}ms)`
+  );
   allResults.push(diskResult);
 
   // ── Page loads ──────────────────────────────────────────────────
   console.log('\n🌐 Page Loads (3 runs each):');
 
-  const newsToolResult = await benchmark('news-tool-page', () => httpRequest(`${BASE_URL}/news-tool`));
-  console.log(`   /news-tool       avg:${newsToolResult.avg}ms  min:${newsToolResult.min}ms  max:${newsToolResult.max}ms  ${newsToolResult.passed ? '✅' : '❌'}`);
+  const newsToolResult = await benchmark('news-tool-page', () =>
+    httpRequest(`${BASE_URL}/news-tool`)
+  );
+  console.log(
+    `   /news-tool       avg:${newsToolResult.avg}ms  min:${newsToolResult.min}ms  max:${newsToolResult.max}ms  ${newsToolResult.passed ? '✅' : '❌'}`
+  );
   allResults.push(newsToolResult);
 
-  const twitchToolResult = await benchmark('twitch-tool-page', () => httpRequest(`${BASE_URL}/twitch-tool`));
-  console.log(`   /twitch-tool     avg:${twitchToolResult.avg}ms  min:${twitchToolResult.min}ms  max:${twitchToolResult.max}ms  ${twitchToolResult.passed ? '✅' : '❌'}`);
+  const twitchToolResult = await benchmark('twitch-tool-page', () =>
+    httpRequest(`${BASE_URL}/twitch-tool`)
+  );
+  console.log(
+    `   /twitch-tool     avg:${twitchToolResult.avg}ms  min:${twitchToolResult.min}ms  max:${twitchToolResult.max}ms  ${twitchToolResult.passed ? '✅' : '❌'}`
+  );
   allResults.push(twitchToolResult);
 
   // ── Memory snapshot ─────────────────────────────────────────────
@@ -189,8 +210,12 @@ async function runBenchmarks() {
   const memPassed = memPeak < 512;
 
   console.log(`\n💾 Memory Usage:`);
-  console.log(`   Before: RSS ${memBefore.rss}MB  Heap ${memBefore.heapUsed}/${memBefore.heapTotal}MB`);
-  console.log(`   After:  RSS ${memAfter.rss}MB  Heap ${memAfter.heapUsed}/${memAfter.heapTotal}MB`);
+  console.log(
+    `   Before: RSS ${memBefore.rss}MB  Heap ${memBefore.heapUsed}/${memBefore.heapTotal}MB`
+  );
+  console.log(
+    `   After:  RSS ${memAfter.rss}MB  Heap ${memAfter.heapUsed}/${memAfter.heapTotal}MB`
+  );
   console.log(`   Peak RSS: ${memPeak}MB  ${memPassed ? '✅' : '❌'} (target: <512MB)`);
 
   // ── Concurrency test ────────────────────────────────────────────
@@ -203,17 +228,19 @@ async function runBenchmarks() {
   }
 
   // ── Summary ─────────────────────────────────────────────────────
-  const passed = allResults.filter(r => r.passed).length;
-  const failed = allResults.filter(r => !r.passed).length;
+  const passed = allResults.filter((r) => r.passed).length;
+  const failed = allResults.filter((r) => !r.passed).length;
   const passRate = ((passed / allResults.length) * 100).toFixed(1);
 
   console.log(`\n${'─'.repeat(55)}`);
   console.log(`📊 Results: ${passed}/${allResults.length} passed (${passRate}%)`);
   if (failed > 0) {
     console.log(`❌ ${failed} benchmark(s) exceeded targets`);
-    allResults.filter(r => !r.passed).forEach(r => {
-      console.log(`   • ${r.name}: avg ${r.avg}ms (target: <${r.target}ms)`);
-    });
+    allResults
+      .filter((r) => !r.passed)
+      .forEach((r) => {
+        console.log(`   • ${r.name}: avg ${r.avg}ms (target: <${r.target}ms)`);
+      });
   } else {
     console.log(`✅ All benchmarks within targets`);
   }
@@ -226,7 +253,7 @@ async function runBenchmarks() {
     memory: { before: memBefore, after: memAfter, peakRssMB: memPeak, memPassed },
     summary: { total: allResults.length, passed, failed, passRate: `${passRate}%` },
     results: allResults,
-    railwayReady: failed === 0 && memPassed
+    railwayReady: failed === 0 && memPassed,
   };
 
   const reportPath = path.join(OUTPUT_DIR, `benchmark_${TIMESTAMP}.json`);
@@ -240,10 +267,12 @@ async function runBenchmarks() {
 }
 
 function writePerfDoc(report) {
-  const rows = report.results.map(r => {
-    if (r.error) return `| ${r.name} | ERROR | — | — | — | ❌ |`;
-    return `| ${r.name} | ${r.avg}ms | ${r.min}ms | ${r.max}ms | <${r.target}ms | ${r.passed ? '✅' : '❌'} |`;
-  }).join('\n');
+  const rows = report.results
+    .map((r) => {
+      if (r.error) return `| ${r.name} | ERROR | — | — | — | ❌ |`;
+      return `| ${r.name} | ${r.avg}ms | ${r.min}ms | ${r.max}ms | <${r.target}ms | ${r.passed ? '✅' : '❌'} |`;
+    })
+    .join('\n');
 
   const md = `# CWN Performance Benchmarks
 
@@ -298,7 +327,7 @@ ${rows}
   console.log(`📄 PERFORMANCE.md updated`);
 }
 
-runBenchmarks().catch(err => {
+runBenchmarks().catch((err) => {
   console.error('Fatal error in benchmark:', err);
   process.exit(1);
 });

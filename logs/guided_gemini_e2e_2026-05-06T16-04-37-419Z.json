@@ -1,0 +1,228 @@
+{
+  "tier": "guided",
+  "timestamp": "2026-05-06T16-04-37-419Z",
+  "summary": {
+    "passed": 0,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "G-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports. Hype energy. Going on TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "extreme sports highlights",
+        "tone": "hype",
+        "platform": "TikTok",
+        "templateId": "short-form"
+      },
+      "copilotMsg": "Hey Copilot, I'm putting together a new TikTok project. I want a short-form vertical highlights reel about extreme sports, with really hype energy. Does selecting 'Short-form', 'Fetch and enhance', 'extreme sports highlights', 'hype' tone, and 'TikTok' align perfectly with that, or would you recommend any tweaks?",
+      "copilotResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "jobId": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_GEN_custom_1778080869287",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Copilot provided a generic, boilerplate response instead of addressing the user's specific question about the alignment of wizard choices with the brief.",
+          "No video was produced."
+        ],
+        "notes": "The wizard choices accurately captured the user's intent from the brief. However, the Copilot completely failed to understand the context of the user's query, responding with a generic offer of help instead of evaluating the provided selections. Furthermore, a critical failure occurred as no video was produced, preventing an E2E pass."
+      },
+      "passed": false,
+      "score": 20,
+      "issues": [
+        "Copilot provided a generic, boilerplate response instead of addressing the user's specific question about the alignment of wizard choices with the brief.",
+        "No video was produced."
+      ]
+    },
+    {
+      "id": "G-T2",
+      "brief": "Professional 3-minute news desk segment about AI in healthcare 2026. Informative. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "AI in healthcare 2026 news desk segment",
+        "tone": "informative",
+        "platform": "YouTube",
+        "templateId": "long-form"
+      },
+      "copilotMsg": "Hi Copilot, I'm setting up a project for a 3-minute professional news desk segment about AI in healthcare 2026 for YouTube. I've selected 'Long-form' format, 'Produce from source' path, 'informative' tone, and the topic as 'AI in healthcare 2026 news desk segment'. Does this look correct for my goal, or would you recommend any adjustments?",
+      "copilotResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "jobId": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_GEN_custom_1778081316916",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 25,
+        "issues": [
+          "Copilot did not address the user's specific question regarding the selected project parameters and offered no guidance or adjustments.",
+          "No video was produced (outputUrl present: false).",
+          "Video was not accessible (HTTP 200/206: false)."
+        ],
+        "notes": "The wizard choices correctly reflected the brief. However, the Copilot provided a generic, unhelpful response that did not engage with the user's specific query about their project setup. Crucially, no video was produced, resulting in a complete failure of the end-to-end process."
+      },
+      "passed": false,
+      "score": 25,
+      "issues": [
+        "Copilot did not address the user's specific question regarding the selected project parameters and offered no guidance or adjustments.",
+        "No video was produced (outputUrl present: false).",
+        "Video was not accessible (HTTP 200/206: false)."
+      ]
+    },
+    {
+      "id": "G-T3",
+      "brief": "Short casual video about morning productivity — coffee, exercise, mindset. Instagram Reels.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Morning productivity: coffee, exercise, mindset",
+        "tone": "casual",
+        "platform": "Instagram",
+        "templateId": "short-form"
+      },
+      "copilotMsg": "Hey Copilot, I'm getting ready to create a short casual Instagram Reel about morning productivity, covering coffee, exercise, and mindset. I've selected short-form, fetch and enhance, and a casual tone in the wizard. Does this setup sound right for what I'm trying to achieve, or are there any adjustments you'd suggest?",
+      "copilotResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "jobId": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_GEN_custom_1778082273531",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Copilot did not understand the user's specific query about the wizard setup and provided a generic, unhelpful response.",
+          "No video was produced."
+        ],
+        "notes": "The wizard choices correctly reflected the content brief. However, the Copilot failed to understand the user's request for feedback on the setup, giving a canned reply. Crucially, no video was produced, leading to an overall failure of the interaction."
+      },
+      "passed": false,
+      "score": 20,
+      "issues": [
+        "Copilot did not understand the user's specific query about the wizard setup and provided a generic, unhelpful response.",
+        "No video was produced."
+      ]
+    },
+    {
+      "id": "G-T4",
+      "brief": "Long-form product launch announcement for a new AI analytics platform. Professional. YouTube.",
+      "choices": {
+        "format": "Long-form",
+        "path": "Produce from source",
+        "topic": "AI analytics platform product launch announcement",
+        "tone": "professional",
+        "platform": "YouTube",
+        "templateId": "long-form"
+      },
+      "copilotMsg": "Hey Copilot, just want to double-check I've set this up correctly. I'm looking for a long-form, professional product launch announcement for our new AI analytics platform, specifically for YouTube. Does that align with what I've picked, or are there any adjustments you'd suggest for the best outcome?",
+      "copilotResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "jobId": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_GEN_custom_1778083204090",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Copilot did not understand the user's specific query about the setup.",
+          "Copilot provided a generic canned response instead of relevant guidance.",
+          "Video was not produced.",
+          "Video was not accessible."
+        ],
+        "notes": "The wizard choices accurately reflected the content brief for a long-form, professional YouTube announcement for an AI analytics platform. However, the Copilot failed to understand the user's explicit request to double-check the settings and offer adjustments, instead giving a generic, unhelpful response. Critically, no video was produced, resulting in a complete failure of the end-to-end process."
+      },
+      "passed": false,
+      "score": 20,
+      "issues": [
+        "Copilot did not understand the user's specific query about the setup.",
+        "Copilot provided a generic canned response instead of relevant guidance.",
+        "Video was not produced.",
+        "Video was not accessible."
+      ]
+    },
+    {
+      "id": "G-T5",
+      "brief": "Breaking news — urgent coverage of a major economic development. Short and direct. YouTube.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Urgent: Breaking news on a major economic development",
+        "tone": "urgent",
+        "platform": "YouTube",
+        "templateId": "short-form"
+      },
+      "copilotMsg": "Hi Copilot, I need to get urgent, short-form coverage out quickly on YouTube about a major economic development. I've set the topic as 'Urgent: Breaking news' with an urgent tone and the 'Fetch and enhance' path. Does this setup look solid for hitting that brief effectively, or are there any refinements you'd suggest for maximum impact?",
+      "copilotResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "jobId": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_GEN_custom_1778083309867",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Copilot provided a generic, canned response that did not address the user's specific question or acknowledge the provided context.",
+          "No video was produced."
+        ],
+        "notes": "The wizard choices perfectly matched the content brief. However, the Copilot failed to understand the user's specific request for feedback on the setup, giving a generic opening statement instead. Crucially, no video was produced, leading to a complete failure in the end-to-end process despite the correct initial configuration."
+      },
+      "passed": false,
+      "score": 20,
+      "issues": [
+        "Copilot provided a generic, canned response that did not address the user's specific question or acknowledge the provided context.",
+        "No video was produced."
+      ]
+    },
+    {
+      "id": "G-T6",
+      "brief": "Short entertainment pop culture trends clip. Energetic, fun, youthful. TikTok.",
+      "choices": {
+        "format": "Short-form",
+        "path": "Fetch and enhance",
+        "topic": "Pop culture trends",
+        "tone": "energetic",
+        "platform": "TikTok",
+        "templateId": "short-form"
+      },
+      "copilotMsg": "Hi Copilot, I'm setting up a project for a short, energetic TikTok clip about pop culture trends. I've selected Short-form, Fetch & Enhance, Pop Culture Trends, Energetic tone, and TikTok as the platform. Does that sound like the right combination, or do you have any suggestions to really nail that fun, youthful vibe?",
+      "copilotResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "jobId": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_GEN_custom_1778083416699",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "wizardCorrect": true,
+        "copilotUnderstood": false,
+        "passed": false,
+        "score": 30,
+        "issues": [
+          "Copilot did not understand the specific user query about the combination of choices and suggestions for a fun/youthful vibe, instead providing a generic introductory message.",
+          "No video was produced.",
+          "Video was not accessible."
+        ],
+        "notes": "The wizard choices correctly matched the content brief. However, the Copilot failed to understand the user's specific question and provided a canned response. Crucially, no video was produced, which is a major failure for an E2E pass, making the overall interaction a failure."
+      },
+      "passed": false,
+      "score": 30,
+      "issues": [
+        "Copilot did not understand the specific user query about the combination of choices and suggestions for a fun/youthful vibe, instead providing a generic introductory message.",
+        "No video was produced.",
+        "Video was not accessible."
+      ]
+    }
+  ]
+}

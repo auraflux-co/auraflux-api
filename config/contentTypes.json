@@ -31,9 +31,7 @@
       },
       "publish": {
         "pinnedCommentKey": "twitch",
-        "platforms": [
-          "youtube"
-        ]
+        "platforms": ["youtube"]
       }
     },
     "nba": {
@@ -66,9 +64,7 @@
       },
       "publish": {
         "pinnedCommentKey": "nba",
-        "platforms": [
-          "youtube"
-        ]
+        "platforms": ["youtube"]
       }
     },
     "news": {
@@ -101,9 +97,7 @@
       },
       "publish": {
         "pinnedCommentKey": "news",
-        "platforms": [
-          "youtube"
-        ]
+        "platforms": ["youtube"]
       }
     },
     "twitch-short": {
@@ -137,11 +131,7 @@
       },
       "publish": {
         "pinnedCommentKey": "twitch",
-        "platforms": [
-          "youtube",
-          "tiktok",
-          "instagram"
-        ]
+        "platforms": ["youtube", "tiktok", "instagram"]
       }
     },
     "nba-short": {
@@ -175,11 +165,7 @@
       },
       "publish": {
         "pinnedCommentKey": "nba",
-        "platforms": [
-          "youtube",
-          "tiktok",
-          "instagram"
-        ]
+        "platforms": ["youtube", "tiktok", "instagram"]
       }
     },
     "news-short": {
@@ -213,11 +199,7 @@
       },
       "publish": {
         "pinnedCommentKey": "news",
-        "platforms": [
-          "youtube",
-          "tiktok",
-          "instagram"
-        ]
+        "platforms": ["youtube", "tiktok", "instagram"]
       }
     }
   }

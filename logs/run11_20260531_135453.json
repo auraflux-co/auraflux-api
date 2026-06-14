@@ -1,0 +1,75 @@
+{
+  "run": "run_11_20260531_135453",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780250093606",
+      "label": "Viral Clip",
+      "tier": "operate",
+      "status": "failed",
+      "output_url": null,
+      "grade": 30,
+      "grade_detail": {
+        "grade": 30,
+        "passed": false,
+        "gaps": [
+          {
+            "checkId": "status",
+            "reason": "expected ('staged', 'complete', 'published'), got failed"
+          },
+          {
+            "checkId": "output_exists",
+            "reason": "no outputUrl"
+          }
+        ],
+        "summary": "Grade: 30/100 | GAPS:2"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "output",
+          "severity": "critical",
+          "observation": "Output URL is NONE with job status 'failed' - the viral_clip job produced no deliverable despite having all 6 add-ons activated. This is a complete production failure for an OPERATE tier customer.",
+          "suggested_change": "Implement immediate failure alerting for OPERATE tier jobs and trigger automatic retry with fallback rendering settings before marking as failed."
+        },
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Pipeline failed silently with no Twelve Labs QA result, indicating the job crashed before reaching the quality assessment stage. Root cause is unknown - could be rendering, encoding, or upstream asset issue.",
+          "suggested_change": "Add granular pipeline stage logging (asset ingestion \u2192 processing \u2192 rendering \u2192 encoding \u2192 QA) with failure point identification. Surface specific error codes in job metadata."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "All 6 add-ons were activated simultaneously (captions, audio, branding, colorGrade, effects, layout). For viral_clip template, this is a heavy processing load that may have contributed to pipeline failure.",
+          "suggested_change": "Evaluate if viral_clip template requires all add-ons or if some are redundant. Consider staged/sequential add-on processing vs. parallel to reduce failure risk."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' - without QA data, there's no diagnostic information to determine if source content, add-on conflicts, or rendering caused the failure.",
+          "suggested_change": "Run Twelve Labs QA on input assets before full processing to catch source quality issues early. Implement pre-flight validation checkpoint."
+        },
+        {
+          "area": "flow",
+          "severity": "high",
+          "observation": "OPERATE tier expects reliable, hands-off production. A failed job with no output and no actionable error messaging creates poor customer experience and likely requires manual support intervention.",
+          "suggested_change": "For OPERATE tier failures, auto-generate incident report with diagnostic summary, estimated resolution time, and proactive customer notification before they discover the failure."
+        }
+      ],
+      "ran_at": "2026-05-31T18:06:18.384773+00:00",
+      "jira_ticket": null
+    }
+  ],
+  "saved_templates": []
+}

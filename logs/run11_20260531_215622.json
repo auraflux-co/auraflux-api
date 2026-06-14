@@ -1,0 +1,85 @@
+{
+  "run": "run_11_20260531_215622",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_DIRECT_clips_1780278986056",
+      "label": "YouTube Deep Dive",
+      "tier": "operate",
+      "status": "failed",
+      "output_url": null,
+      "grade": 0,
+      "grade_detail": {
+        "grade": 0,
+        "passed": false,
+        "gaps": [
+          {
+            "checkId": "status",
+            "reason": "expected ('staged', 'complete', 'published'), got failed"
+          },
+          {
+            "checkId": "output_exists",
+            "reason": "no outputUrl"
+          },
+          {
+            "checkId": "portal_scores",
+            "reason": "no portal scores"
+          }
+        ],
+        "summary": "Grade: 0/100 | GAPS:3"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "branding",
+          "severity": "critical",
+          "observation": "Branding add-on is active but both chrome_show_name and chrome_streamer_name are empty strings. This causes 'AuraFlux' to appear in the top bar AND lower-third simultaneously, making the output look like platform advertising rather than creator content.",
+          "suggested_change": "Block branding add-on from activating when both chrome fields are empty. Require at least one of show_name or streamer_name (e.g., 'Greek Reacts' or '@Greekgodx') before branding can proceed."
+        },
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job status is 'failed' with no output URL, yet the system still processed this through QA review. Twelve Labs QA shows 'no result (extension did not run)' \u2014 the pipeline broke before producing anything reviewable.",
+          "suggested_change": "Add pre-QA gate: if status=failed and output_url=NONE, route to engineering triage instead of QA review. Log the failure point from the add-on execution chain."
+        },
+        {
+          "area": "source_fit",
+          "severity": "medium",
+          "observation": "380s gaming_reaction content is within template bounds (300-3600s) but sits at the extreme low end for a 'YouTube Deep Dive' which implies substantial, edited long-form content. A 6-minute reaction clip is more suited to Shorts compilation or standard highlight format.",
+          "suggested_change": "Add soft warning when source duration is <600s for youtube_deep_dive template. Suggest 'YouTube Highlight' template instead for sub-10-minute reaction content."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "Six add-ons stacked for a simple reaction clip: captions, audio, branding, colorGrade, effects, layout. The 'effects' add-on on gaming_reaction content risks obscuring the source material the streamer is reacting to, and colorGrade may conflict with the original game footage aesthetic.",
+          "suggested_change": "Create add-on preset for gaming_reaction that excludes effects and colorGrade by default. Let creator opt-in rather than requiring manual removal."
+        },
+        {
+          "area": "output_value",
+          "severity": "high",
+          "observation": "Even if the pipeline had succeeded, the output would be a 6-minute clip with platform branding plastered on it and no streamer identity. Greekgodx would not post this \u2014 it promotes AuraFlux, not his channel.",
+          "suggested_change": "Implement pre-flight validation: if tier=OPERATE and branding=true, require non-empty streamer_name. Fail fast with actionable error message before burning compute."
+        },
+        {
+          "area": "pipeline",
+          "severity": "high",
+          "observation": "Add-on execution order shows branding ran (position 3) but Twelve Labs QA never executed. Failure likely occurred during effects or layout add-ons (positions 5-6), but no granular failure logging is surfaced in the QA report.",
+          "suggested_change": "Add per-add-on execution status to QA results (e.g., 'captions: success, audio: success, branding: success, colorGrade: success, effects: failed'). Surface the specific breakpoint."
+        }
+      ],
+      "ran_at": "2026-06-01T02:10:23.430794+00:00",
+      "jira_ticket": "CPD-476"
+    }
+  ],
+  "saved_templates": []
+}

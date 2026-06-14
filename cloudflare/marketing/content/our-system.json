@@ -1,0 +1,80 @@
+{
+  "hero_headline": "From Raw Content to Published Video",
+  "hero_sub": "AuraFlux is a six-stage automated production pipeline. You submit a job. The pipeline handles clip selection, scripting, editing, QA, brand application, and direct publish. without a single manual step.",
+  "portals": [
+    {
+      "badge": "P0",
+      "name": "Content Intelligence",
+      "description": "Source video analysis, segment detection, and clip scoring. The system identifies which moments are worth producing before any editing begins.",
+      "tag": "ALWAYS ON"
+    },
+    {
+      "badge": "P1",
+      "name": "Script & Voice",
+      "description": "Script tailored to your content type and platform format. ElevenLabs TTS voiceover produced at broadcast quality.",
+      "tag": "OPTIONAL"
+    },
+    {
+      "badge": "P2",
+      "name": "Edit & Assembly",
+      "description": "Automated cutting, reframing, captions, and timeline assembly. Every clip assembled to spec without manual intervention.",
+      "tag": "ALWAYS ON"
+    },
+    {
+      "badge": "P3",
+      "name": "Quality Assurance",
+      "description": "Automated QA gates check for brand compliance, audio quality, caption accuracy, and platform spec conformance before publish.",
+      "tag": "QA GATE"
+    },
+    {
+      "badge": "P4",
+      "name": "Brand & Effects",
+      "description": "Lower thirds, watermarks, background music, and colour grading applied from your brand preset. Consistent across every output.",
+      "tag": "OPTIONAL"
+    },
+    {
+      "badge": "P5",
+      "name": "Publish",
+      "description": "Direct publish to TikTok, YouTube, Instagram, Twitch, or Kick via secure OAuth. Metadata, captions, and scheduling handled automatically.",
+      "tag": "DIRECT PUBLISH"
+    }
+  ],
+  "content_types": [
+    {
+      "icon": "🎮",
+      "name": "Highlight Clips",
+      "description": "Best moments from streams and VODs. Auto-cut, captioned, and formatted for short-form."
+    },
+    {
+      "icon": "🎙️",
+      "name": "Gameplay Commentary",
+      "description": "Automated narration over gameplay clips, personalised to your style and audience."
+    },
+    {
+      "icon": "🎬",
+      "name": "Show & Film Analysis",
+      "description": "Narrated breakdowns from TV and movie clips, fair-use formatted and ready to publish."
+    },
+    {
+      "icon": "📡",
+      "name": "Live Event Recap",
+      "description": "Sports, news, and live events turned into structured recap videos within minutes of the event."
+    }
+  ],
+  "pipeline_title": "The Production Pipeline",
+  "pipeline_sub": "Six portals. Each one checks the work before the next begins.",
+  "content_types_title": "What You Can Produce",
+  "content_types_sub": "Four content formats, each with its own production logic.",
+  "features_title": "Every Feature, Explained In App",
+  "features_sub": "Every capability available inside the AuraFlux platform.",
+  "credits_title": "How Credits Work",
+  "credits_body": "One credit = one complete production job. Credits are consumed when a job starts and refund automatically if the job fails.",
+  "publish_title": "Where AuraFlux Publishes",
+  "publish_sub": "Connect your accounts once. AuraFlux handles the rest via OAuth.",
+  "hero_cta_label": "View Plans",
+  "hero_cta_url": "/plans",
+  "hero_cta_style": "primary",
+  "bottom_cta_label": "Compare Plans",
+  "bottom_cta_url": "/plans",
+  "bottom_cta_style": "primary"
+}

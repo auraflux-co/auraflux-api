@@ -1,0 +1,29 @@
+{
+  "ts": "20260529_004020",
+  "submitted": 1,
+  "total": 1,
+  "at_100": 0,
+  "avg_grade": 87.0,
+  "grades": [
+    {
+      "grade": 87,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "portal_score_avg",
+          "reason": "avg score 59 < 80"
+        }
+      ],
+      "summary": "Grade: 87/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780029621135",
+      "status": "complete",
+      "clip": {
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP",
+        "title": "xqc makes the wrong choice",
+        "duration_s": 45
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780029621135/1780029996841_1780029996839_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780029621135_final.mp4"
+    }
+  ]
+}

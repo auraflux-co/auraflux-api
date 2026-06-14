@@ -1,0 +1,135 @@
+name: Jira — track every push
+
+# Fires on every push to main (not just PR merges).
+# For each new commit:
+#   - If it references a CPD ticket → transition to In Development
+#   - If it has no ticket reference → create a Jira task immediately
+# This means Jira is always current; session_close.sh becomes a safety net only.
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  track:
+    name: Track commits → Jira
+    runs-on: ubuntu-latest
+    # Skip [skip ci] pushes from the in-app marketing editor (content-only)
+    if: ${{ github.event.head_commit != null && !contains(github.event.head_commit.message, '[skip ci]') }}
+    steps:
+      - name: Checkout (with full history for this push)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Process commits
+        env:
+          JIRA_BASE_URL:   ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN:  ${{ secrets.JIRA_API_TOKEN }}
+          BEFORE_SHA:      ${{ github.event.before }}
+          AFTER_SHA:       ${{ github.event.after }}
+          REPO:            ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          normalize_base() {
+            local b="${1%/}"
+            [[ -z "$b" ]] && return 1
+            [[ "$b" != http* ]] && b="https://${b}"
+            b="${b/http:\/\//https:\/\/}"
+            b="${b%/wiki}"
+            b="${b%/jira}"
+            printf '%s' "$b"
+          }
+
+          BASE="$(normalize_base "$JIRA_BASE_URL")"
+          if [[ "$BASE" == *"id.atlassian.com"* ]]; then
+            echo "::error::JIRA_BASE_URL must be https://<site>.atlassian.net (got id.atlassian.com)" >&2
+            exit 1
+          fi
+          AUTH="$JIRA_USER_EMAIL:$JIRA_API_TOKEN"
+          BEFORE_SHA="${BEFORE_SHA}"
+          AFTER_SHA="${AFTER_SHA}"
+
+          if [[ -z "$BASE" || -z "$JIRA_USER_EMAIL" || -z "$JIRA_API_TOKEN" ]]; then
+            echo "Missing Jira credentials — skipping"
+            exit 0
+          fi
+
+          jira_post() {
+            local path="$1" payload="$2"
+            local http body
+            body=$(curl -sS --max-time 15 -u "$AUTH" \
+              -H "Content-Type: application/json" \
+              -H "Accept: application/json" \
+              -X POST "$BASE/rest/api/3/$path" \
+              -d "$payload" -w "\n__HTTP__:%{http_code}")
+            http="${body##*__HTTP__:}"
+            body="${body%__HTTP__:*}"
+            if [[ ! "$http" =~ ^2 ]]; then
+              echo "  Jira POST $path: HTTP $http — ${body:0:200}" >&2
+            fi
+            echo "$body"
+          }
+
+          ZERO="$(printf '0%.0s' {1..40})"
+          if [[ "$BEFORE_SHA" == "$ZERO" ]]; then
+            RANGE="${AFTER_SHA}~1..${AFTER_SHA}"
+          else
+            RANGE="${BEFORE_SHA}..${AFTER_SHA}"
+          fi
+
+          mapfile -t RAW < <(git log "$RANGE" --format='%H|||%s' --no-merges)
+          if [[ ${#RAW[@]} -eq 0 ]]; then
+            echo "No commits to process."
+            exit 0
+          fi
+
+          echo "Processing ${#RAW[@]} commit(s)"
+
+          for line in "${RAW[@]}"; do
+            FULL_SHA="${line%%|||*}"
+            MSG="${line#*|||}"
+            SHA="${FULL_SHA:0:8}"
+
+            if [[ "$MSG" == *"[skip ci]"* ]]; then
+              echo "  $SHA — skipping [skip ci]"
+              continue
+            fi
+
+            mapfile -t TICKETS < <(grep -oiE 'CPD-[0-9]+' <<< "$MSG" | tr '[:lower:]' '[:upper:]' | awk '!seen[$0]++')
+            if [[ ${#TICKETS[@]} -gt 0 ]]; then
+              for tid in "${TICKETS[@]}"; do
+                printf '  %s → %s: transitioning to In Development… ' "$SHA" "$tid"
+                HTTP=$(curl -sS -o /tmp/jira_trans.json -w "%{http_code}" --max-time 15 -u "$AUTH" \
+                  -H "Content-Type: application/json" \
+                  -X POST "$BASE/rest/api/3/issue/$tid/transitions" \
+                  -d '{"transition":{"id":"5"}}')
+                if [[ "$HTTP" =~ ^2 ]]; then echo "✅"; else echo "⚠️ HTTP $HTTP"; fi
+              done
+              continue
+            fi
+
+            FIRST_WORD="$(sed -E 's/^([^(: ]+).*/\1/' <<< "$MSG" | tr '[:upper:]' '[:lower:]')"
+            case "$FIRST_WORD" in
+              chore|docs|style|test|refactor|ci)
+                echo "  $SHA — no ticket, skipping ($FIRST_WORD commit)"
+                continue
+                ;;
+            esac
+
+            SUMMARY="[Untracked] ${MSG:0:100}"
+            printf '  %s — no ticket, creating story: %s… ' "$SHA" "${SUMMARY:0:60}"
+            PAYLOAD=$(jq -n \
+              --arg summary "$SUMMARY" \
+              --arg sha "$SHA" \
+              --arg full "$FULL_SHA" \
+              --arg repo "$REPO" \
+              '{fields:{project:{key:"CPD"},summary:$summary,issuetype:{name:"Story"},labels:["auto-created","on-push"],description:{type:"doc",version:1,content:[{type:"paragraph",content:[{type:"text",text:("Auto-created on push — no Jira ticket in commit message.\n\nCommit: "+$sha+"\nFull SHA: "+$full+"\nRepo: https://github.com/"+$repo+"/commit/"+$full)}]}]}}}')
+            BODY=$(jira_post "issue" "$PAYLOAD")
+            KEY=$(echo "$BODY" | jq -r '.key // empty' 2>/dev/null || true)
+            if [[ -n "$KEY" ]]; then echo "→ $KEY"; else echo "⚠️ failed"; fi
+          done
+
+          echo "Done."

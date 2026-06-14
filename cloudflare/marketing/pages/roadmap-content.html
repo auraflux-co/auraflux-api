@@ -1,0 +1,224 @@
+<style>
+/* ── Roadmap Kanban ─────────────────────────────────────────────────── */
+/* Override the LEGAL_SHELL .wrap container so the 3-column board has full width */
+.wrap{max-width:1280px !important;padding-left:24px !important;padding-right:24px !important;}
+.rdm-hero{text-align:center;margin-bottom:56px;}
+.rdm-hero h1{letter-spacing:-.03em;}
+.rdm-hero p{max-width:42rem;margin:16px auto 0;color:#8f9bb7;line-height:1.7;}
+
+.rdm-board{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
+  max-width:1200px;
+  margin:0 auto;
+  padding:0 16px;
+  align-items:start;
+}
+@media(max-width:900px){.rdm-board{grid-template-columns:1fr;}}
+
+/* Column containers */
+.rdm-col{
+  border-radius:16px;
+  padding:24px;
+  position:relative;
+  overflow:hidden;
+}
+.rdm-col-now{
+  border:1px solid rgba(199,175,79,.4);
+  background:rgba(15,23,42,.6);
+  backdrop-filter:blur(8px);
+}
+.rdm-col-next{
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(15,23,42,.3);
+}
+.rdm-col-future{
+  border:1px solid rgba(255,255,255,.04);
+  background:rgba(15,23,42,.15);
+}
+
+/* Column header */
+.rdm-col-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;padding-bottom:16px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.rdm-col-label{
+  display:flex;align-items:center;gap:8px;
+  font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  font-family:'Satoshi','Inter',sans-serif;
+}
+.rdm-pulse{
+  width:8px;height:8px;border-radius:50%;background:#f5c542;
+  animation:rdm-pulse 2s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes rdm-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
+.rdm-col-now .rdm-col-label{color:#f5c542;}
+.rdm-col-next .rdm-col-label{color:#60a5fa;}
+.rdm-col-future .rdm-col-label{color:#a78bfa;}
+.rdm-col-quarter{
+  font-size:.65rem;font-family:'Satoshi','Inter',monospace;
+  color:#555580;letter-spacing:.04em;
+}
+
+/* Cards */
+.rdm-cards{display:flex;flex-direction:column;gap:12px;}
+.rdm-card{
+  padding:16px;border-radius:12px;
+  background:#0b1220;
+  border:1px solid rgba(199,175,79,.08);
+  transition:border-color .2s,transform .15s;
+  cursor:default;
+}
+.rdm-card:hover{border-color:#c7af4f;transform:translateY(-2px);box-shadow:0 0 20px rgba(199,175,79,.12);}
+.rdm-col-next .rdm-card,
+.rdm-col-future .rdm-card{opacity:.75;border-color:rgba(255,255,255,.04);}
+.rdm-col-next:hover .rdm-card,
+.rdm-col-future:hover .rdm-card{opacity:1;}
+
+.rdm-tag{
+  display:inline-block;
+  font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  font-family:'Satoshi','Inter',monospace;
+  padding:2px 8px;border-radius:4px;margin-bottom:10px;
+}
+.rdm-tag-publish{background:rgba(16,185,129,.12);color:#10b981;}
+.rdm-tag-prod{background:rgba(245,197,66,.1);color:#f5c542;}
+.rdm-tag-mono{background:rgba(99,102,241,.12);color:#818cf8;}
+
+.rdm-card h3{
+  font-size:.95rem;font-weight:700;color:#fff;
+  letter-spacing:-.01em;margin-bottom:6px;
+  font-family:'Satoshi','Inter',sans-serif;
+}
+.rdm-card p{
+  font-size:.82rem;color:#8f9bb7;line-height:1.6;
+  font-family:'Satoshi','Inter',sans-serif;
+}
+
+.rdm-progress{height:3px;background:rgba(245,197,66,.12);border-radius:2px;margin:10px 0 4px;overflow:hidden;}
+.rdm-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#c7af4f,#f5c542);animation:rdm-scan 2.5s ease-in-out infinite;}
+@keyframes rdm-scan{0%{width:60%;opacity:.8;}50%{width:78%;opacity:1;}100%{width:60%;opacity:.8;}}
+.rdm-progress-label{font-size:.6rem;font-family:'Satoshi','Inter',monospace;letter-spacing:.08em;text-transform:uppercase;color:#c7af4f;margin-bottom:8px;}
+.rdm-request{
+  max-width:1200px;margin:32px auto 0;
+  padding:20px 24px;
+  border:1px solid rgba(255,255,255,.06);border-radius:12px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  flex-wrap:wrap;
+}
+.rdm-request p{font-size:.88rem;color:#8f9bb7;margin:0;}
+.rdm-request a{
+  display:inline-block;padding:8px 20px;
+  background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.25);
+  border-radius:8px;color:#f5c542;font-size:.85rem;font-weight:700;
+  text-decoration:none;white-space:nowrap;transition:background .15s;
+}
+.rdm-request a:hover{background:rgba(245,197,66,.18);text-decoration:none;}
+</style>
+
+<div class="rdm-hero">
+  <h1>What's Coming to AuraFlux</h1>
+  <p data-editable="hero_subtext">We ship fast. Features move from Future to Next to Now as engineering capacity opens. This is a live view of our product pipeline.</p>
+</div>
+
+<div class="rdm-board">
+
+  <!-- NOW -->
+  <div class="rdm-col rdm-col-now">
+    <div class="rdm-col-header">
+      <div class="rdm-col-label">
+        <span class="rdm-pulse"></span>
+        In Development
+      </div>
+      <span class="rdm-col-quarter">Q2 2026</span>
+    </div>
+    <div class="rdm-cards">
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-publish">Publishing</span>
+        <h3>Subscription Platforms</h3>
+        <div class="rdm-progress"><div class="rdm-progress-fill"></div></div>
+        <div class="rdm-progress-label">ENGINE STAGE: PROCESSING</div>
+        <p>Direct publish to OnlyFans, Fansly, and Patreon using secure OAuth. same pipeline as YouTube and TikTok.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-prod">Production</span>
+        <h3>Compilation Carousel</h3>
+        <div class="rdm-progress"><div class="rdm-progress-fill"></div></div>
+        <div class="rdm-progress-label">ENGINE STAGE: PROCESSING</div>
+        <p>Auto-generate side-by-side clip grids, batch compilations, and image carousels from your short-form library.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEXT -->
+  <div class="rdm-col rdm-col-next">
+    <div class="rdm-col-header">
+      <div class="rdm-col-label">
+        🔵 Planned Pipeline
+      </div>
+      <span class="rdm-col-quarter">Q3 2026</span>
+    </div>
+    <div class="rdm-cards">
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-prod">Production</span>
+        <h3>Show &amp; Film Engine</h3>
+        <p>Fair-use sourcing algorithm generating narrated video from TV and movie scene libraries.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-mono">Automation</span>
+        <h3>Avatar Video</h3>
+        <p>On-camera presenter videos generated from your script. full control over voice, appearance, and background.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-mono">Monetisation</span>
+        <h3>Shoppable Video</h3>
+        <p>Embed product tags and tappable CTAs into short-form videos for social commerce on TikTok and Instagram.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-prod">Production</span>
+        <h3>Image-to-Video</h3>
+        <p>Upload a still image and generate a short-form video clip from it. Managed tier feature powered by WAN i2v.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-prod">Production</span>
+        <h3>AI Thumbnails</h3>
+        <p>Photorealistic thumbnails generated by Imagen 3. Managed tier feature with full brand style control.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-prod">Production</span>
+        <h3>Face-Cam Overlay</h3>
+        <p>Upload a face-cam clip and the pipeline composites it into the final video as a picture-in-picture overlay.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FUTURE -->
+  <div class="rdm-col rdm-col-future">
+    <div class="rdm-col-header">
+      <div class="rdm-col-label">
+        ⚪ Future Horizons
+      </div>
+    </div>
+    <div class="rdm-cards">
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-mono">Monetisation</span>
+        <h3>Paid Ad Creative</h3>
+        <p>Aspect ratio and copy overlay optimization for Meta, TikTok, and Google. production-ready ad formats built in.</p>
+      </div>
+      <div class="rdm-card">
+        <span class="rdm-tag rdm-tag-mono">Platform</span>
+        <h3>Mobile App</h3>
+        <p>Native iOS and Android app. Review jobs, approve outputs, and trigger productions from your phone.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="rdm-request">
+  <p>Have a feature request? We read every message. The best ideas go straight to the board.</p>
+  <a href="/contact-us">Send a request →</a>
+</div>

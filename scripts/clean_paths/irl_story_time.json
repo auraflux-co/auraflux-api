@@ -1,0 +1,16 @@
+{
+  "templateId": "irl_story_time",
+  "label": "IRL Story Time",
+  "format": "portrait",
+  "platforms": [
+    "tiktok",
+    "instagram"
+  ],
+  "lastCleanRun": {
+    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780701816427",
+    "grade": 100,
+    "gitHash": "033b25bc",
+    "runDate": "2026-06-05T23:29:23.216455+00:00"
+  },
+  "cleanRunCount": 3
+}

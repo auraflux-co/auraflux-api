@@ -27,37 +27,37 @@ async function recordSession() {
 
   const browser = await chromium.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
   const context = await browser.newContext({
     viewport: { width: 1920, height: 1080 },
     recordVideo: {
       dir: OUTPUT_DIR,
-      size: { width: 1920, height: 1080 }
-    }
+      size: { width: 1920, height: 1080 },
+    },
   });
 
   const page = await context.newPage();
 
   // Track console errors
   const consoleErrors = [];
-  page.on('console', msg => {
+  page.on('console', (msg) => {
     if (msg.type() === 'error') {
       consoleErrors.push({
         text: msg.text(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   });
 
   // Track page errors
   const pageErrors = [];
-  page.on('pageerror', error => {
+  page.on('pageerror', (error) => {
     pageErrors.push({
       message: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   });
 
@@ -70,7 +70,7 @@ async function recordSession() {
     await page.waitForTimeout(1000);
     await page.screenshot({
       path: path.join(OUTPUT_DIR, `health_${TIMESTAMP}.png`),
-      fullPage: true
+      fullPage: true,
     });
 
     // 2. Test News Thumbnail Generation
@@ -80,8 +80,8 @@ async function recordSession() {
         contentType: 'news',
         title: 'QA Test: Breaking News Story',
         source: 'REACTION',
-        storyImage: 'https://via.placeholder.com/1280x720/333/fff?text=QA+Test'
-      }
+        storyImage: 'https://via.placeholder.com/1280x720/333/fff?text=QA+Test',
+      },
     });
     console.log(`      Status: ${newsResponse.status()}`);
 
@@ -93,9 +93,9 @@ async function recordSession() {
         title: 'QA Test: Twitch Highlights',
         streamers: [
           { displayName: 'TestStreamer1', name: 'test1' },
-          { displayName: 'TestStreamer2', name: 'test2' }
-        ]
-      }
+          { displayName: 'TestStreamer2', name: 'test2' },
+        ],
+      },
     });
     console.log(`      Status: ${twitchResponse.status()}`);
 
@@ -110,10 +110,10 @@ async function recordSession() {
             homeTeam: 'Lakers',
             awayTeam: 'Celtics',
             homeScore: 108,
-            awayScore: 102
-          }
-        ]
-      }
+            awayScore: 102,
+          },
+        ],
+      },
     });
     console.log(`      Status: ${nbaResponse.status()}`);
 
@@ -123,7 +123,7 @@ async function recordSession() {
     await page.waitForTimeout(2000); // Let animations play
     await page.screenshot({
       path: path.join(OUTPUT_DIR, `newscast_overlay_${TIMESTAMP}.png`),
-      fullPage: true
+      fullPage: true,
     });
 
     console.log('   → Testing news tool...');
@@ -131,7 +131,7 @@ async function recordSession() {
     await page.waitForTimeout(1000);
     await page.screenshot({
       path: path.join(OUTPUT_DIR, `news_tool_${TIMESTAMP}.png`),
-      fullPage: true
+      fullPage: true,
     });
 
     console.log('   → Testing NBA thumbnail generator...');
@@ -139,24 +139,23 @@ async function recordSession() {
     await page.waitForTimeout(1000);
     await page.screenshot({
       path: path.join(OUTPUT_DIR, `nba_generator_${TIMESTAMP}.png`),
-      fullPage: true
+      fullPage: true,
     });
 
     console.log('\n✅ Session recording complete!');
-
   } catch (error) {
     console.error('\n❌ Error during session:', error.message);
     pageErrors.push({
       message: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString(),
-      critical: true
+      critical: true,
     });
 
     // Capture error screenshot
     await page.screenshot({
       path: path.join(OUTPUT_DIR, `error_${TIMESTAMP}.png`),
-      fullPage: true
+      fullPage: true,
     });
   } finally {
     // Save error logs if any
@@ -164,13 +163,15 @@ async function recordSession() {
       const errorReport = {
         consoleErrors,
         pageErrors,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
       fs.writeFileSync(
         path.join(OUTPUT_DIR, `errors_${TIMESTAMP}.json`),
         JSON.stringify(errorReport, null, 2)
       );
-      console.log(`\n⚠️  Errors detected: ${consoleErrors.length} console, ${pageErrors.length} page`);
+      console.log(
+        `\n⚠️  Errors detected: ${consoleErrors.length} console, ${pageErrors.length} page`
+      );
     }
 
     // Close and save video
@@ -179,14 +180,11 @@ async function recordSession() {
     await browser.close();
 
     // Get video path
-    const videoFiles = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.webm'));
+    const videoFiles = fs.readdirSync(OUTPUT_DIR).filter((f) => f.endsWith('.webm'));
     if (videoFiles.length > 0) {
       const latestVideo = videoFiles[videoFiles.length - 1];
       const renamedVideo = `session_${TIMESTAMP}.webm`;
-      fs.renameSync(
-        path.join(OUTPUT_DIR, latestVideo),
-        path.join(OUTPUT_DIR, renamedVideo)
-      );
+      fs.renameSync(path.join(OUTPUT_DIR, latestVideo), path.join(OUTPUT_DIR, renamedVideo));
       console.log(`\n📹 Video saved: ${renamedVideo}`);
     }
 
@@ -254,10 +252,7 @@ Generated: ${new Date().toISOString()}
 - Next milestone: Add automated visual regression tests
 `;
 
-  fs.writeFileSync(
-    path.join(OUTPUT_DIR, `QA_HANDOFF_${TIMESTAMP}.md`),
-    handoff
-  );
+  fs.writeFileSync(path.join(OUTPUT_DIR, `QA_HANDOFF_${TIMESTAMP}.md`), handoff);
   console.log(`\n📝 QA Handoff summary generated`);
 }
 

@@ -1,0 +1,34 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]: This XML file does not appear to have any style information associated with it. The document tree is shown below.
+  - generic [ref=e4]:
+    - generic [ref=e7]:
+      - text: <sitemapindex
+      - generic [ref=e8]: xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      - generic [ref=e9]: generatedBy="WIX"
+      - text: ">"
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e14]: <sitemap>
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - generic [ref=e17]: <loc>
+            - text: https://www.learningwithlumi.com/booking-services-sitemap.xml
+            - generic [ref=e18]: </loc>
+          - generic [ref=e19]:
+            - generic [ref=e20]: <lastmod>
+            - text: 2026-05-12
+            - generic [ref=e21]: </lastmod>
+        - generic [ref=e23]: </sitemap>
+      - generic [ref=e24]:
+        - generic [ref=e27]: <sitemap>
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - generic [ref=e30]: <loc>
+            - text: https://www.learningwithlumi.com/pages-sitemap.xml
+            - generic [ref=e31]: </loc>
+          - generic [ref=e32]:
+            - generic [ref=e33]: <lastmod>
+            - text: 2026-05-19
+            - generic [ref=e34]: </lastmod>
+        - generic [ref=e36]: </sitemap>
+    - generic [ref=e38]: </sitemapindex>

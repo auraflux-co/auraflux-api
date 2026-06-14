@@ -1,0 +1,15 @@
+[
+  {
+    "id": "O-T1",
+    "tier": "operate",
+    "streamer": "hasanabi",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-hasanabi.mp4",
+    "clip_title": "Hasan gets left with a 50/50 with AOC and Ilhan Omar",
+    "started_at": "2026-05-12T17:08:06.456931+00:00",
+    "job_id": null,
+    "output_url": null,
+    "validation": null,
+    "passed": false,
+    "error": "Job submit failed: HTTP 404 \u2014 <!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</tit"
+  }
+]

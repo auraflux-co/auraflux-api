@@ -1,0 +1,153 @@
+{
+  "run_at": "20260528_233522",
+  "submitted": 3,
+  "skipped": 0,
+  "graded": 3,
+  "at_100": 0,
+  "avg_grade": 0.0,
+  "grades": [
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1780025723085",
+      "status": "failed",
+      "video": {
+        "streamer": "xQc",
+        "platform": "youtube",
+        "url": "https://www.youtube.com/watch?v=tYEO4oHy0UM",
+        "title": "When Stealing Your Mom&#39;s Car Ends in Disaster | xQc Reacts",
+        "duration_s": 721,
+        "is_short": false,
+        "format": "long",
+        "content_type": "reaction"
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1780025725409",
+      "status": "failed",
+      "video": {
+        "streamer": "xQc",
+        "platform": "youtube",
+        "url": "https://www.youtube.com/watch?v=CeA2JJXtOMw",
+        "title": "xQc is James Bond | 007 First Light",
+        "duration_s": 8786,
+        "is_short": false,
+        "format": "long",
+        "content_type": "gaming_highlight"
+      },
+      "outputUrl": null
+    },
+    {
+      "grade": 0,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status_complete",
+          "reason": "status is failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl"
+        },
+        {
+          "checkId": "portal_score_avg",
+          "reason": "no portal scores recorded"
+        }
+      ],
+      "summary": "Grade: 0/100 | FAILED",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1780025727737",
+      "status": "failed",
+      "video": {
+        "streamer": "xQc",
+        "platform": "youtube",
+        "url": "https://www.youtube.com/watch?v=-WBcxtoHz84",
+        "title": "INSANE $60,000+ CS2 Trade-Ups with ArrowCS!",
+        "duration_s": 4518,
+        "is_short": false,
+        "format": "long",
+        "content_type": "gaming_highlight"
+      },
+      "outputUrl": null
+    }
+  ],
+  "submitted_jobs": [
+    {
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1780025723085",
+      "submitted": true,
+      "video": {
+        "streamer": "xQc",
+        "platform": "youtube",
+        "url": "https://www.youtube.com/watch?v=tYEO4oHy0UM",
+        "title": "When Stealing Your Mom&#39;s Car Ends in Disaster | xQc Reacts",
+        "duration_s": 721,
+        "is_short": false,
+        "format": "long",
+        "content_type": "reaction"
+      },
+      "form_factor": "long"
+    },
+    {
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1780025725409",
+      "submitted": true,
+      "video": {
+        "streamer": "xQc",
+        "platform": "youtube",
+        "url": "https://www.youtube.com/watch?v=CeA2JJXtOMw",
+        "title": "xQc is James Bond | 007 First Light",
+        "duration_s": 8786,
+        "is_short": false,
+        "format": "long",
+        "content_type": "gaming_highlight"
+      },
+      "form_factor": "long"
+    },
+    {
+      "jobId": "e2e-operate-test_COMPACT_FETCH_news_1780025727737",
+      "submitted": true,
+      "video": {
+        "streamer": "xQc",
+        "platform": "youtube",
+        "url": "https://www.youtube.com/watch?v=-WBcxtoHz84",
+        "title": "INSANE $60,000+ CS2 Trade-Ups with ArrowCS!",
+        "duration_s": 4518,
+        "is_short": false,
+        "format": "long",
+        "content_type": "gaming_highlight"
+      },
+      "form_factor": "long"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 **Status:** Authoritative product-facing architecture. Aligns design PDFs, launch plan, and this repository.  
 **Audience:** Product, engineering, agents.  
-**Last updated:** 2026-04-21  
+**Last updated:** 2026-04-27  
 **Related:** `AURAFLUX_SYSTEM_OVERVIEW.md` (runtime detail), `GATED_PIPELINE_ARCHITECTURE.md` (gate mechanics), `PLATFORM_ARCHITECTURE.md` (two-sided platform), `DECOUPLED_VIDEO_PRODUCT_STACK.md` (future GPU / ComfyUI line), `docs/ops/LAUNCH_PLAN_2026.md` (pre-launch blocks).
 
 ---
@@ -115,7 +115,21 @@ These blocks do not change the diagram above; they **prove** it under load and i
 
 ---
 
-## 9. Document map (read order)
+## 9. AuraFlux output formats
+
+From the product design system (matches *AuraFlux Output Formats* diagram):
+
+| Format | Platforms | Description |
+|--------|-----------|-------------|
+| **Short-form vertical** | TikTok, YouTube Shorts, IG Reels | 9:16 clips, captions, trending-ready. Max 60s. |
+| **Long-form horizontal** | YouTube | Full-length reactions, compilations, narrated episodes. |
+| **Compilations** | YouTube | Best-of / highlight reels from multiple clips or games. |
+
+All formats produced by the same **Assembly service** (`lib/assembly.js`); aspect ratio and chrome skin come from `order.designSpec` in the job spec.
+
+---
+
+## 10. Document map (read order)
 
 1. **This file** — one-page system view for PO and new engineers.  
 2. **`AURAFLUX_SYSTEM_OVERVIEW.md`** — current stack version, job IDs, queue names, MCP list.  
@@ -124,3 +138,4 @@ These blocks do not change the diagram above; they **prove** it under load and i
 5. **`CWN_ENVIRONMENT_MAP.md`** — every external service and port (operator detail).  
 6. **`PLATFORM_ARCHITECTURE.md`** — ICP, layers, two-sided model.  
 7. **`DECOUPLED_VIDEO_PRODUCT_STACK.md`** — when building the separate GPU/Next product line.
+8. **`docs/strategy/BUSINESS_STRATEGY.md`** — positioning, pricing model, offer structure.

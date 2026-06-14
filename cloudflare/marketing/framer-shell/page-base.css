@@ -1,0 +1,117 @@
+/* ── AuraFlux Sub-page Base Styles ─────────────────────────────────────────
+ * Computed values extracted directly from live homepage via getComputedStyle:
+ *   body bg       → rgb(11,18,32)  = #0b1220
+ *   nav height    → 84px
+ *   nav bg        → rgba(0,0,0,0)  transparent (Framer canvas bg shows through)
+ *   nav backdrop  → none
+ * ──────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --af-bg:        #0b1220;
+  --af-bg-card:   #0f172a;
+  --af-gold:      #f5c542;
+  --af-text:      #ffffff;
+  --af-muted:     #8f9bb7;
+  --af-faint:     #a0a0b8;
+  --af-border:    rgba(255,255,255,.08);
+  --af-border-hi: rgba(255,255,255,.14);
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────── */
+html, body { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  background: #0b1220 !important;
+  color: var(--af-text) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Display headings: heavy sans per spec ─────────────────────────────── */
+h1, h2 {
+  font-family: 'Satoshi', 'Inter', -apple-system, sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.1 !important;
+}
+
+/* ── Body line-height ───────────────────────────────────────────────────── */
+p { line-height: 1.7 !important; }
+
+/* Nav is now #af-nav: fixed 84px, handled entirely in nav.html.
+   Keep Framer class overrides only for homepage compatibility. */
+:where(.framer-frJN9) {
+  background: rgba(0,0,0,0) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  height: 84px !important;
+  border-bottom: none !important;
+}
+:where(.framer-1k32ijd) {
+  height: 84px !important;
+  width: 126px !important;
+}
+
+/* Push page content below the fixed 84px nav */
+body { padding-top: 84px; }
+
+/* ── Section/card backgrounds ───────────────────────────────────────────── */
+.stats, .cta-section, .diff-card, .team-card, .step, .post-card, .plan {
+  background-color: var(--af-bg-card) !important;
+}
+
+/* ── Links and accent ───────────────────────────────────────────────────── */
+a { color: var(--af-gold); text-decoration: none; }
+a:hover { text-decoration: underline; opacity: .85; }
+
+/* .primary is the class Framer/CMS exports use; btn-primary is legacy (both styled) */
+.btn-primary, .cta-primary, .nav-cta, .primary {
+  display: inline-block;
+  background: var(--af-gold) !important;
+  color: #0b1220 !important;
+  font-weight: 700 !important;
+  padding: .6em 1.4em;
+  border-radius: 6px;
+  text-decoration: none !important;
+}
+.btn-primary:hover, .cta-primary:hover, .primary:hover { opacity: .88; }
+/* .secondary is the class Framer/CMS exports use for outline buttons */
+.btn-secondary, .secondary {
+  display: inline-block;
+  background: transparent !important;
+  color: var(--af-gold) !important;
+  font-weight: 600 !important;
+  padding: .6em 1.4em;
+  border-radius: 6px;
+  border: 1.5px solid rgba(245,197,66,.45) !important;
+  text-decoration: none !important;
+}
+.btn-secondary:hover, .secondary:hover {
+  border-color: var(--af-gold) !important;
+  opacity: .88;
+}
+
+/* ── Eyebrow labels ─────────────────────────────────────────────────────── */
+.hero-eyebrow {
+  font-size: .7rem !important;
+  letter-spacing: .14em !important;
+}
+
+/* ── Muted text ─────────────────────────────────────────────────────────── */
+.hero p, .diff-sub, .tech-sub, .team-sub, .mission p,
+.diff-card p, .step-body p, .team-bio {
+  color: var(--af-muted) !important;
+}
+
+/* ── Stat numbers ───────────────────────────────────────────────────────── */
+.stat-num  { color: var(--af-gold) !important; }
+.stat-label { color: var(--af-faint) !important; }
+
+/* ── Step badges ────────────────────────────────────────────────────────── */
+.step-num { background: var(--af-gold) !important; color: #0b1220 !important; }
+
+/* ── Team roles ─────────────────────────────────────────────────────────── */
+.team-role { color: var(--af-gold) !important; }
+
+/* ── Card borders ───────────────────────────────────────────────────────── */
+.diff-card, .team-card { border-color: var(--af-border-hi) !important; }

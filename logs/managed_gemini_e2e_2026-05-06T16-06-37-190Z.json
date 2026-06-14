@@ -1,0 +1,266 @@
+{
+  "tier": "managed",
+  "timestamp": "2026-05-06T16-06-37-190Z",
+  "summary": {
+    "passed": 0,
+    "total": 6
+  },
+  "results": [
+    {
+      "id": "M-T1",
+      "brief": "I want a short-form vertical highlights reel about extreme sports. Hype energy. TikTok.",
+      "firstMsg": "Hey Copilot, I need a new short-form vertical video produced for TikTok. I'm looking for a highlights reel showcasing various extreme sports. Please make sure the energy is super high, with a really hype-driven tone to get viewers excited and engaged.",
+      "firstResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "followupMsg": "I'd like to proceed with creating the short-form vertical highlights reel for TikTok that I just outlined. Please help me build the job spec for that video.",
+      "followupResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "extractedParams": {
+        "topic": "Extreme sports highlights reel",
+        "tone": "hype",
+        "templateId": "short-form",
+        "platforms": [
+          "tiktok"
+        ],
+        "prompt": "A dynamic highlights reel showcasing various extreme sports activities, captured in a vertical format."
+      },
+      "jobId": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_GEN_custom_1778080935379",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "copilotUnderstood": true,
+        "managedResponse": false,
+        "wrongTierResponse": false,
+        "paramsAccurate": true,
+        "passed": false,
+        "score": 45,
+        "issues": [
+          "Copilot failed to manage the conversation, getting stuck in a repetitive loop instead of guiding the user.",
+          "No video was produced.",
+          "The video was not accessible."
+        ],
+        "notes": "The Copilot successfully identified and extracted all key job parameters (content type, format, tone, platform) from the brief, indicating an understanding of the request. However, its conversational interface was poor, repeating a generic greeting and question even after the user explicitly stated their intent to proceed. Crucially, no video was produced or accessible, leading to a complete failure of the end-to-end process."
+      },
+      "passed": false,
+      "score": 45,
+      "issues": [
+        "Copilot failed to manage the conversation, getting stuck in a repetitive loop instead of guiding the user.",
+        "No video was produced.",
+        "The video was not accessible."
+      ]
+    },
+    {
+      "id": "M-T2",
+      "brief": "Professional 3-minute news desk segment about AI in healthcare 2026. Informative. YouTube.",
+      "firstMsg": "Hi Copilot, I need a new video produced. I'm looking for a three-minute, professional news desk segment that's purely informative, focusing on AI in healthcare and what to expect by 2026. This will be published on YouTube.",
+      "firstResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "followupMsg": "I'd like to produce a 3-minute professional news desk segment for YouTube, focusing on AI in healthcare and expectations for 2026. It needs to be purely informative.",
+      "followupResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "extractedParams": {
+        "topic": "AI in healthcare in 2026",
+        "tone": "informative",
+        "templateId": "long-form",
+        "platforms": [
+          "youtube"
+        ],
+        "prompt": "Visuals of a news desk setting with a presenter delivering an informative segment on the advancements and future expectations of AI in healthcare by 2026, accompanied by relevant on-screen data and imagery."
+      },
+      "jobId": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_GEN_custom_1778081381928",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "copilotUnderstood": true,
+        "managedResponse": true,
+        "wrongTierResponse": false,
+        "paramsAccurate": true,
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Copilot is stuck in a conversational loop, repeating its initial greeting and offer to help without progressing the interaction.",
+          "No video was produced, indicating a failure to complete the job, despite extracted parameters.",
+          "The specific 3-minute duration for the video was not explicitly captured in the extracted job parameters, although 'long-form' and the prompt infer a longer format."
+        ],
+        "notes": "The Copilot correctly identified the core aspects of the request (topic, tone, platform) as evidenced by the extracted parameters and its responses were characteristic of a management system. However, it failed to advance the conversation, resulting in an unrecoverable loop and no video production. This is a critical failure despite initial parameter understanding."
+      },
+      "passed": false,
+      "score": 20,
+      "issues": [
+        "Copilot is stuck in a conversational loop, repeating its initial greeting and offer to help without progressing the interaction.",
+        "No video was produced, indicating a failure to complete the job, despite extracted parameters.",
+        "The specific 3-minute duration for the video was not explicitly captured in the extracted job parameters, although 'long-form' and the prompt infer a longer format."
+      ]
+    },
+    {
+      "id": "M-T3",
+      "brief": "Short casual video about morning productivity — coffee, exercise, mindset. Instagram Reels.",
+      "firstMsg": "Hi AuraFlux Copilot, I'm looking for a short, casual video for Instagram Reels. The theme is morning productivity, focusing on practical tips like coffee, a quick exercise routine, and cultivating a positive mindset. I want it to feel really relatable and inspiring for a daily boost.",
+      "firstResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "followupMsg": "It seems like there might have been a misunderstanding. I'm looking for help creating a short, casual Instagram Reel about morning productivity, as described in my first message.",
+      "followupResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "extractedParams": {
+        "topic": "Morning productivity: coffee, exercise, mindset",
+        "tone": "casual",
+        "templateId": "short-form",
+        "platforms": [
+          "instagram"
+        ],
+        "prompt": "A relatable person demonstrates a morning routine: brewing and drinking coffee, performing a quick exercise, and practicing mindfulness to cultivate a positive mindset."
+      },
+      "jobId": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_GEN_custom_1778082331748",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "copilotUnderstood": true,
+        "managedResponse": false,
+        "wrongTierResponse": false,
+        "paramsAccurate": true,
+        "passed": false,
+        "score": 40,
+        "issues": [
+          "Copilot failed to engage with the specific request, instead offering generic assistance.",
+          "Copilot repeated the same generic response twice despite customer clarification.",
+          "No video was produced."
+        ],
+        "notes": "While the Copilot correctly parsed the user's intent into accurate job parameters, its conversational responses were unhelpful and repetitive, failing to acknowledge the specific request or initiate the production process. Consequently, no video was produced, leading to a failed end-to-end outcome."
+      },
+      "passed": false,
+      "score": 40,
+      "issues": [
+        "Copilot failed to engage with the specific request, instead offering generic assistance.",
+        "Copilot repeated the same generic response twice despite customer clarification.",
+        "No video was produced."
+      ]
+    },
+    {
+      "id": "M-T4",
+      "brief": "Long-form product launch announcement for a new AI analytics platform. Professional. YouTube.",
+      "firstMsg": "Alright Copilot, we need a comprehensive, long-form product launch announcement video for our new AI analytics platform. The tone should be highly professional and authoritative, specifically tailored for a YouTube audience. Please leverage our brand guidelines and let me know if you need any further assets to kick things off.",
+      "firstResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "followupMsg": "It seems there was a misunderstanding. I'm looking for assistance in drafting the comprehensive, long-form product launch announcement video script for our new AI analytics platform, as outlined in my initial message.",
+      "followupResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "extractedParams": {
+        "topic": "New AI analytics platform product launch announcement",
+        "tone": "professional",
+        "templateId": "long-form",
+        "platforms": [
+          "youtube"
+        ],
+        "prompt": "Showcase a sleek, modern AI analytics platform interface with dynamic data visualizations. Feature abstract representations of artificial intelligence, data processing, and user interaction in a professional and authoritative style."
+      },
+      "jobId": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_COMPACT_GEN_custom_1778083279680",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "copilotUnderstood": false,
+        "managedResponse": true,
+        "wrongTierResponse": false,
+        "paramsAccurate": false,
+        "passed": false,
+        "score": 15,
+        "issues": [
+          "Copilot failed to understand the user's explicit request for 'script drafting assistance', instead providing a generic, repetitive workflow response.",
+          "The Copilot entered a conversational loop, repeating the same canned response despite user clarification.",
+          "The extracted job parameters were for producing a full video (including a visual prompt), not for assisting with the requested 'script' itself.",
+          "No video was produced (outputUrl present: false).",
+          "The expected video was not accessible (HTTP 200/206: false)."
+        ],
+        "notes": "The Copilot completely failed the interaction, misunderstanding the user's request for script drafting assistance and instead offering a generic, repetitive workflow response. While some keywords were likely extracted for video production, this did not align with the user's explicit request for a script. Ultimately, no video was produced or made accessible, leading to a complete failure of the task."
+      },
+      "passed": false,
+      "score": 15,
+      "issues": [
+        "Copilot failed to understand the user's explicit request for 'script drafting assistance', instead providing a generic, repetitive workflow response.",
+        "The Copilot entered a conversational loop, repeating the same canned response despite user clarification.",
+        "The extracted job parameters were for producing a full video (including a visual prompt), not for assisting with the requested 'script' itself.",
+        "No video was produced (outputUrl present: false).",
+        "The expected video was not accessible (HTTP 200/206: false)."
+      ]
+    },
+    {
+      "id": "M-T5",
+      "brief": "Breaking news — urgent coverage of a major economic development. Short and direct. YouTube.",
+      "firstMsg": "Hey Copilot, we have urgent breaking news on a major economic development that needs immediate video production. Please create a short, direct, and factual piece with an urgent tone, optimized for YouTube. Get it live as quickly as possible once it's ready.",
+      "firstResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "followupMsg": "It seems there's a misunderstanding. I need you to *produce* the urgent breaking news video I described for YouTube, not help with job specs or configuration. Please proceed with immediate video production based on my previous message.",
+      "followupResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "extractedParams": {
+        "topic": "Breaking news: Urgent coverage of major economic development",
+        "tone": "urgent",
+        "templateId": "short-form",
+        "platforms": [
+          "youtube"
+        ],
+        "prompt": "Fast-paced, dynamic visuals depicting urgent breaking news about a major economic development, incorporating relevant charts, newsroom imagery, and financial symbols."
+      },
+      "jobId": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_GEN_custom_1778083427615",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "copilotUnderstood": true,
+        "managedResponse": false,
+        "wrongTierResponse": false,
+        "paramsAccurate": true,
+        "passed": false,
+        "score": 30,
+        "issues": [
+          "Copilot failed to initiate video production despite understanding the core request parameters.",
+          "Copilot provided repeated canned responses focused on building job specs and configuration, failing to act as a production management system.",
+          "No video was produced, which is a critical failure for an E2E pass."
+        ],
+        "notes": "While the extracted job parameters indicate the Copilot's underlying system correctly identified the content, format, tone, and platform, the conversational interface failed to proceed with production. Instead, it offered boilerplate assistance for job specification and configuration, even after the customer clarified their intent twice. The complete lack of video production leads to a failing score."
+      },
+      "passed": false,
+      "score": 30,
+      "issues": [
+        "Copilot failed to initiate video production despite understanding the core request parameters.",
+        "Copilot provided repeated canned responses focused on building job specs and configuration, failing to act as a production management system.",
+        "No video was produced, which is a critical failure for an E2E pass."
+      ]
+    },
+    {
+      "id": "M-T6",
+      "brief": "Short entertainment pop culture trends clip. Energetic, fun, youthful. TikTok.",
+      "firstMsg": "Hey Copilot, I need a short, energetic pop culture trends video for TikTok. Please make it fun, fast-paced, and really lean into a youthful, engaging style. Let's cover some of the hottest trends right now to keep it super current.",
+      "firstResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "followupMsg": "It seems there's a misunderstanding. I'm looking for you to help *create* the pop culture trends video I described, not assist with pipeline configuration or job specs.",
+      "followupResponse": "Hi! I'm your AuraFlux assistant. I can help you build a job spec, check what's required for each pipeline portal, and guide you toward a submission-ready configuration.\n\nWhat would you like help with today?",
+      "extractedParams": {
+        "topic": "Pop Culture Trends",
+        "tone": "energetic",
+        "templateId": "short-form",
+        "platforms": [
+          "tiktok"
+        ],
+        "prompt": "Visually engaging and energetic scenes depicting various current pop culture trends, presented in a fast-paced, youthful style."
+      },
+      "jobId": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_GEN_custom_1778083567461",
+      "finalStatus": "failed",
+      "outputUrl": null,
+      "outputUrlOk": false,
+      "audit": {
+        "copilotUnderstood": true,
+        "managedResponse": false,
+        "wrongTierResponse": false,
+        "paramsAccurate": true,
+        "passed": false,
+        "score": 20,
+        "issues": [
+          "Copilot did not act as a production manager; it repeatedly offered configuration assistance rather than initiating video creation.",
+          "No video was produced.",
+          "No video was accessible."
+        ],
+        "notes": "Despite accurately extracting job parameters from the brief, the Copilot failed to engage as a production manager, instead offering boilerplate assistance for job configuration. This led to no video being produced, failing the end-to-end process."
+      },
+      "passed": false,
+      "score": 20,
+      "issues": [
+        "Copilot did not act as a production manager; it repeatedly offered configuration assistance rather than initiating video creation.",
+        "No video was produced.",
+        "No video was accessible."
+      ]
+    }
+  ]
+}

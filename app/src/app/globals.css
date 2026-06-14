@@ -1,0 +1,296 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Inlined from shadcn/tailwind.css — shadcn is a devDependency (CLI only) */
+@theme inline {
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height, var(--accordion-panel-height, auto)); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height, var(--accordion-panel-height, auto)); }
+    to { height: 0; }
+  }
+}
+@custom-variant data-open {
+  &:where([data-state="open"]), &:where([data-open]:not([data-open="false"])) { @slot; }
+}
+@custom-variant data-closed {
+  &:where([data-state="closed"]), &:where([data-closed]:not([data-closed="false"])) { @slot; }
+}
+@custom-variant data-checked {
+  &:where([data-state="checked"]), &:where([data-checked]:not([data-checked="false"])) { @slot; }
+}
+@custom-variant data-unchecked {
+  &:where([data-state="unchecked"]), &:where([data-unchecked]:not([data-unchecked="false"])) { @slot; }
+}
+@custom-variant data-selected { &:where([data-selected="true"]) { @slot; } }
+@custom-variant data-disabled {
+  &:where([data-disabled="true"]), &:where([data-disabled]:not([data-disabled="false"])) { @slot; }
+}
+@custom-variant data-active {
+  &:where([data-state="active"]), &:where([data-active]:not([data-active="false"])) { @slot; }
+}
+@custom-variant data-horizontal { &:where([data-orientation="horizontal"]) { @slot; } }
+@custom-variant data-vertical { &:where([data-orientation="vertical"]) { @slot; } }
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ── AuraFlux Brand Theme ─────────────────────────────────────────────────────
+ *  Palette:
+ *    Dark Navy   #0B1220  — sidebar / nav anchor
+ *    Workspace   #070C15  — main canvas background
+ *    Card        #0F1929  — elevated surfaces
+ *    Gold        #F5C542  — primary actions (CTA buttons, active states)
+ *    Prod Gold   #C7AF4F  — hover / interactive states
+ *    Emerald     #10B981  — success / positive data (never use gold for success)
+ *    Border      #1A2540  — subtle dividers
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* Light fallback — not the primary mode for this app */
+:root {
+  --background:              oklch(0.97 0.005 265);
+  --foreground:              oklch(0.213 0.035 259.5);
+  --card:                    oklch(1 0 0);
+  --card-foreground:         oklch(0.213 0.035 259.5);
+  --popover:                 oklch(1 0 0);
+  --popover-foreground:      oklch(0.213 0.035 259.5);
+  --primary:                 oklch(0.844 0.151 87.9);   /* Gold #F5C542 */
+  --primary-foreground:      oklch(0.183 0.031 263.4);  /* Dark Navy on gold */
+  --secondary:               oklch(0.935 0.01 265);
+  --secondary-foreground:    oklch(0.213 0.035 259.5);
+  --muted:                   oklch(0.935 0.01 265);
+  --muted-foreground:        oklch(0.56 0.051 264.6);   /* Text Muted — raised for legibility on light bg */
+  --accent:                  oklch(0.756 0.119 95.4);   /* Prod Gold #C7AF4F */
+  --accent-foreground:       oklch(0.183 0.031 263.4);
+  --destructive:             oklch(0.577 0.245 27.325);
+  --success:                 oklch(0.696 0.149 162.5);  /* Emerald #10B981 */
+  --success-foreground:      oklch(1 0 0);
+  --border:                  oklch(0.922 0 0);
+  --input:                   oklch(0.922 0 0);
+  --ring:                    oklch(0.844 0.151 87.9);   /* Gold focus ring */
+  --chart-1:                 oklch(0.844 0.151 87.9);   /* Gold */
+  --chart-2:                 oklch(0.696 0.149 162.5);  /* Emerald */
+  --chart-3:                 oklch(0.756 0.119 95.4);   /* Prod Gold */
+  --chart-4:                 oklch(0.568 0.092 92.3);   /* Gold Muted */
+  --chart-5:                 oklch(0.579 0.051 264.6);  /* Muted Blue */
+  --radius: 0.625rem;
+  --sidebar:                 oklch(0.183 0.031 263.4);  /* Dark Navy */
+  --sidebar-foreground:      oklch(0.937 0.008 271.3);
+  --sidebar-primary:         oklch(0.844 0.151 87.9);   /* Gold */
+  --sidebar-primary-foreground: oklch(0.183 0.031 263.4);
+  --sidebar-accent:          oklch(0.269 0.053 266.2);
+  --sidebar-accent-foreground: oklch(0.937 0.008 271.3);
+  --sidebar-border:          oklch(0.269 0.053 266.2);
+  --sidebar-ring:            oklch(0.844 0.151 87.9);
+}
+
+/* Dark mode — the primary AuraFlux application theme */
+.dark {
+  --background:              oklch(0.154 0.021 260.7);  /* Workspace Canvas #070C15 */
+  --foreground:              oklch(0.937 0.008 271.3);  /* Text Primary #E8EAF0 */
+  --card:                    oklch(0.213 0.035 259.5);  /* Card Surface #0F1929 */
+  --card-foreground:         oklch(0.937 0.008 271.3);
+  --popover:                 oklch(0.213 0.035 259.5);
+  --popover-foreground:      oklch(0.937 0.008 271.3);
+  --primary:                 oklch(0.844 0.151 87.9);   /* Gold #F5C542 — CTAs */
+  --primary-foreground:      oklch(0.183 0.031 263.4);  /* Dark Navy on gold */
+  --secondary:               oklch(0.269 0.053 266.2);  /* Border Subtle */
+  --secondary-foreground:    oklch(0.937 0.008 271.3);
+  --muted:                   oklch(0.269 0.053 266.2);
+  --muted-foreground:        oklch(0.72 0.032 264.6);   /* Text Muted — raised for legibility, ~7.5:1 on canvas */
+  --accent:                  oklch(0.756 0.119 95.4);   /* Prod Gold #C7AF4F — hover */
+  --accent-foreground:       oklch(0.183 0.031 263.4);
+  --destructive:             oklch(0.704 0.191 22.216);
+  --success:                 oklch(0.696 0.149 162.5);  /* Emerald #10B981 — success only */
+  --success-foreground:      oklch(0.154 0.021 260.7);
+  --border:                  oklch(0.269 0.053 266.2);  /* Border Subtle #1A2540 */
+  --input:                   oklch(0.269 0.053 266.2 / 70%);
+  --ring:                    oklch(0.844 0.151 87.9);   /* Gold focus ring */
+  --chart-1:                 oklch(0.844 0.151 87.9);   /* Gold */
+  --chart-2:                 oklch(0.696 0.149 162.5);  /* Emerald */
+  --chart-3:                 oklch(0.756 0.119 95.4);   /* Prod Gold */
+  --chart-4:                 oklch(0.568 0.092 92.3);   /* Gold Muted */
+  --chart-5:                 oklch(0.579 0.051 264.6);  /* Blue Muted */
+  --sidebar:                 oklch(0.183 0.031 263.4);  /* Dark Navy #0B1220 */
+  --sidebar-foreground:      oklch(0.937 0.008 271.3);
+  --sidebar-primary:         oklch(0.844 0.151 87.9);   /* Gold — active nav item */
+  --sidebar-primary-foreground: oklch(0.183 0.031 263.4);
+  --sidebar-accent:          oklch(0.269 0.053 266.2);  /* Hover bg in sidebar */
+  --sidebar-accent-foreground: oklch(0.937 0.008 271.3);
+  --sidebar-border:          oklch(0.269 0.053 266.2);
+  --sidebar-ring:            oklch(0.844 0.151 87.9);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 15px;
+  }
+  html {
+    @apply font-sans;
+    /* Bump from browser default 16px to ensure rem-based sizes read clearly */
+    font-size: 16px;
+  }
+}
+
+/* ── AuraFlux Design Tokens ───────────────────────────────────────────────────
+ *
+ *  TEXT SCALE — use these instead of text-xs / text-sm / text-base etc.
+ *
+ *  .af-caption   11px  muted-foreground   — timestamps, helper hints, fine print
+ *  .af-label     13px  muted-foreground   — form labels, table column headers
+ *  .af-body      15px  foreground         — default body copy (matches body {})
+ *  .af-lead      17px  foreground         — intro sentences, card descriptions
+ *  .af-subhead   13px  foreground/semibold — KPI labels above numbers
+ *  .af-metric    28px  foreground/bold    — KPI numbers (e.g. "247 credits")
+ *  .af-h3        18px  foreground/semibold — section headings inside pages
+ *  .af-h2        22px  foreground/bold    — page section headings
+ *  .af-h1        28px  foreground/bold    — page title (used in PageHeader)
+ *
+ *  SURFACE LAYERS — use these instead of custom bg/border combos
+ *
+ *  .af-surface          — standard card surface (bg-card border-border)
+ *  .af-surface-raised   — pop-over / modal surface (card + shadow)
+ *  .af-surface-inset    — muted inset panels (e.g. code blocks, sub-sections)
+ *
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+@utility af-caption {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+}
+
+@utility af-label {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+@utility af-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+@utility af-lead {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+@utility af-subhead {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+@utility af-metric {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+@utility af-h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+@utility af-h2 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+@utility af-h1 {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--foreground);
+}
+
+@utility af-surface {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+@utility af-surface-raised {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px oklch(0 0 0 / 0.18);
+}
+
+@utility af-surface-inset {
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}

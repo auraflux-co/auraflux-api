@@ -1,6 +1,11 @@
-const { validatePrePublish } = require('../lib/gates/gate5');
+jest.mock('../lib/publish', () => ({
+  canPublishDirect: jest.fn(async () => ({ canDirect: false })),
+  publishDirect: jest.fn(),
+}));
 
-describe('gate5 native scheduling metadata', () => {
+const { validatePrePublish } = require('../lib/portals/portal5');
+
+describe('portal5 native scheduling metadata', () => {
   test('future scheduledAt sets private for YouTube', () => {
     const future = new Date(Date.now() + 3600000).toISOString();
     const r = validatePrePublish({
@@ -12,6 +17,17 @@ describe('gate5 native scheduling metadata', () => {
     });
     expect(r.passed).toBe(true);
     expect(r.corrected.privacyStatus).toBe('private');
+  });
+
+  test('future scheduledAt passes for TikTok + YouTube shorts bundle', () => {
+    const future = new Date(Date.now() + 3600000).toISOString();
+    const r = validatePrePublish({
+      title: 'Short',
+      description: 'Caption #news',
+      platforms: ['youtube', 'tiktok', 'instagram'],
+      scheduledAt: future,
+    });
+    expect(r.passed).toBe(true);
   });
 
   test('past scheduledAt fails validation', () => {

@@ -1,0 +1,629 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e7]:
+      - generic [ref=e8]:
+        - link [ref=e10] [cursor=pointer]:
+          - /url: ./
+        - generic [ref=e13]:
+          - paragraph [ref=e15]:
+            - link "Roadmap" [ref=e16] [cursor=pointer]:
+              - /url: ./roadmap
+          - paragraph [ref=e18]:
+            - link "Pricing" [ref=e19] [cursor=pointer]:
+              - /url: ./pricing
+          - paragraph [ref=e21]:
+            - link "Blog" [ref=e22] [cursor=pointer]:
+              - /url: ./blog
+          - paragraph [ref=e24]:
+            - link "Contact" [ref=e25] [cursor=pointer]:
+              - /url: ./contact
+      - generic [ref=e26]:
+        - paragraph [ref=e32]: Online now
+        - link "Get Started" [ref=e34] [cursor=pointer]:
+          - /url: ./contact
+          - paragraph [ref=e36]: Get Started
+    - generic [ref=e37]:
+      - generic [ref=e40]:
+        - generic [ref=e42]:
+          - paragraph [ref=e47]: Pricing
+          - heading "Run Your Content at Scale." [level=1] [ref=e50]
+          - paragraph [ref=e52]: AuraFlux replaces manual workflows, editors, and posting — with one system.
+        - generic [ref=e56]:
+          - generic [ref=e58]:
+            - generic [ref=e59]:
+              - generic [ref=e61]:
+                - heading "Content System" [level=4] [ref=e63]
+                - paragraph [ref=e65]: For creators scaling their content without a team
+              - generic [ref=e70]:
+                - paragraph [ref=e72]: $750 - $1,250
+                - paragraph [ref=e74]: /month
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - heading "Includes:" [level=6] [ref=e78]
+                - generic [ref=e79]:
+                  - img [ref=e82]
+                  - paragraph [ref=e86]: Short-form & long-form production
+                - generic [ref=e87]:
+                  - img [ref=e90]
+                  - paragraph [ref=e94]: Clip, video, and source-based workflows
+                - generic [ref=e95]:
+                  - img [ref=e98]
+                  - paragraph [ref=e102]: Multi-platform publishing
+                - generic [ref=e103]:
+                  - img [ref=e106]
+                  - paragraph [ref=e110]: Structured production pipeline
+                - generic [ref=e111]:
+                  - img [ref=e114]
+                  - paragraph [ref=e118]: automated content output
+              - generic [ref=e119]:
+                - heading "Best for:" [level=6] [ref=e121]
+                - generic [ref=e122]:
+                  - img [ref=e125]
+                  - paragraph [ref=e129]: Creators who want consistent content without managing editing
+              - link "Get Started" [ref=e131] [cursor=pointer]:
+                - /url: ./contact
+                - paragraph [ref=e133]: Get Started
+          - generic [ref=e135]:
+            - generic [ref=e136]:
+              - generic [ref=e137]:
+                - generic [ref=e138]:
+                  - heading "Content Engine" [level=4] [ref=e140]
+                  - paragraph [ref=e142]: For creators and operators producing at scale
+                - img [ref=e147]
+              - generic [ref=e151]:
+                - paragraph [ref=e153]: $1,500 - $3,000
+                - paragraph [ref=e155]: /month
+            - generic [ref=e156]:
+              - generic [ref=e157]:
+                - heading "Includes:" [level=6] [ref=e159]
+                - generic [ref=e160]:
+                  - img [ref=e163]
+                  - paragraph [ref=e167]: Everything in Content System
+                - generic [ref=e168]:
+                  - img [ref=e171]
+                  - paragraph [ref=e175]: Higher output capacity
+                - generic [ref=e176]:
+                  - img [ref=e179]
+                  - paragraph [ref=e183]: Faster processing
+                - generic [ref=e184]:
+                  - img [ref=e187]
+                  - paragraph [ref=e191]: multi-channel workflows
+                - generic [ref=e192]:
+                  - img [ref=e195]
+                  - paragraph [ref=e199]: advanced production formats
+              - generic [ref=e200]:
+                - heading "Best for:" [level=6] [ref=e202]
+                - generic [ref=e203]:
+                  - img [ref=e206]
+                  - paragraph [ref=e210]: Agencies, media operators, and top creators
+              - link "Get Started" [ref=e212] [cursor=pointer]:
+                - /url: ./contact
+                - paragraph [ref=e214]: Get Started
+          - generic [ref=e216]:
+            - generic [ref=e217]:
+              - generic [ref=e218]:
+                - generic [ref=e219]:
+                  - heading "Content Infrastructure" [level=4] [ref=e221]
+                  - paragraph [ref=e223]: For organizations running full content operations
+                - img [ref=e228]
+              - generic [ref=e232]:
+                - paragraph [ref=e234]: Custom ($5,000+)
+                - paragraph [ref=e236]: /month
+            - generic [ref=e237]:
+              - generic [ref=e238]:
+                - heading "Includes:" [level=6] [ref=e240]
+                - generic [ref=e241]:
+                  - img [ref=e244]
+                  - paragraph [ref=e248]: Custom pipelines
+                - generic [ref=e249]:
+                  - img [ref=e252]
+                  - paragraph [ref=e256]: dedicated resources
+                - generic [ref=e257]:
+                  - img [ref=e260]
+                  - paragraph [ref=e264]: advanced QA control
+                - generic [ref=e265]:
+                  - img [ref=e268]
+                  - paragraph [ref=e272]: priority execution
+                - generic [ref=e273]:
+                  - img [ref=e276]
+                  - paragraph [ref=e280]: integration and customization
+              - generic [ref=e281]:
+                - heading "Best for:" [level=6] [ref=e283]
+                - generic [ref=e284]:
+                  - img [ref=e287]
+                  - paragraph [ref=e291]: Teams, clip channels, and creators scaling across platforms
+              - link "Get Started" [ref=e293] [cursor=pointer]:
+                - /url: ./contact
+                - paragraph [ref=e295]: Get Started
+      - generic [ref=e296]:
+        - paragraph [ref=e300]: Compare Our Plans & Features
+        - generic [ref=e301]:
+          - generic [ref=e303]:
+            - generic [ref=e304]:
+              - heading "Basic Plan" [level=3] [ref=e307]
+              - paragraph [ref=e309]: Best for personal use.
+            - generic [ref=e312] [cursor=pointer]:
+              - paragraph [ref=e314]: Request a Demo
+              - paragraph [ref=e316]: "->"
+          - generic [ref=e317]:
+            - generic [ref=e318]:
+              - heading "Pro Plan" [level=3] [ref=e321]
+              - paragraph [ref=e323]: Best for business owners
+            - generic [ref=e326] [cursor=pointer]:
+              - paragraph [ref=e328]: Request a Demo
+              - paragraph [ref=e330]: "->"
+        - generic [ref=e331]:
+          - generic [ref=e332]:
+            - paragraph [ref=e336]: Key details
+            - paragraph [ref=e340]: Monthly Fee
+            - paragraph [ref=e344]: Plan details
+            - paragraph [ref=e348]: Unlimited Device Connections
+            - paragraph [ref=e352]: AI Recommendations
+            - paragraph [ref=e356]: Enhanced Security Protocols
+            - paragraph [ref=e360]: Offline Mode Available
+            - paragraph [ref=e364]: Customizable User Interface
+            - paragraph [ref=e368]: Advanced Analytics and Insights
+            - paragraph [ref=e372]: Platform details
+            - paragraph [ref=e376]: Team Collaboration Features
+            - paragraph [ref=e380]: Dynamic Workflow Automation
+            - paragraph [ref=e384]: Scheduled Data Exports
+            - paragraph [ref=e388]: Multi-Factor Authentication
+            - paragraph [ref=e392]: API Access for Developers
+            - paragraph [ref=e396]: Cross-Platform Notifications
+            - paragraph [ref=e400]: Support details
+            - paragraph [ref=e404]: Community Forum
+            - paragraph [ref=e408]: Live Webinars
+            - paragraph [ref=e412]: Specialized Technical Consultants
+            - paragraph [ref=e416]: Issue Resolution Service
+            - paragraph [ref=e420]: Video calls
+            - paragraph [ref=e424]: Dedicated point of contact
+          - generic [ref=e425]:
+            - paragraph [ref=e431]: $17
+            - img [ref=e438]
+            - img [ref=e446]
+            - img [ref=e454]
+            - img [ref=e462]
+            - img [ref=e470]
+            - img [ref=e478]
+            - img [ref=e487]
+            - img [ref=e495]
+            - img [ref=e503]
+            - img [ref=e511]
+            - img [ref=e519]
+            - img [ref=e537]
+            - img [ref=e545]
+            - img [ref=e553]
+          - generic [ref=e559]:
+            - paragraph [ref=e565]: $27
+            - img [ref=e572]
+            - img [ref=e580]
+            - img [ref=e588]
+            - img [ref=e596]
+            - img [ref=e604]
+            - img [ref=e612]
+            - img [ref=e621]
+            - img [ref=e629]
+            - img [ref=e637]
+            - img [ref=e645]
+            - img [ref=e653]
+            - img [ref=e661]
+            - img [ref=e670]
+            - img [ref=e678]
+            - img [ref=e686]
+            - img [ref=e694]
+            - img [ref=e702]
+            - img [ref=e710]
+      - generic [ref=e715]:
+        - generic [ref=e716]:
+          - generic [ref=e717]:
+            - paragraph [ref=e721]: Testimonials
+            - paragraph [ref=e723]: Customer Testimonials
+            - paragraph [ref=e725]: See how our SaaS platform has transformed businesses just like yours. Hear from our satisfied customers and discover the impact we've made.
+          - link "Get Started" [ref=e728] [cursor=pointer]:
+            - /url: ./contact
+            - paragraph [ref=e730]: Get Started
+        - generic [ref=e731]:
+          - list [ref=e734]:
+            - listitem [ref=e735]:
+              - generic [ref=e737]:
+                - generic [ref=e738]:
+                  - generic [ref=e741]:
+                    - img [ref=e744]
+                    - img [ref=e748]
+                    - img [ref=e752]
+                    - img [ref=e756]
+                    - img [ref=e760]
+                  - paragraph [ref=e763]: "\"Real-time analytics has given us the insights we need to make informed decisions quickly.\""
+                - generic [ref=e767]:
+                  - heading "Michael Lee" [level=6] [ref=e769]
+                  - paragraph [ref=e771]: Head of Data, Analytics Pros
+            - listitem [ref=e772]:
+              - generic [ref=e774]:
+                - generic [ref=e775]:
+                  - generic [ref=e778]:
+                    - img [ref=e781]
+                    - img [ref=e785]
+                    - img [ref=e789]
+                    - img [ref=e793]
+                    - img [ref=e797]
+                  - paragraph [ref=e800]: “Loved working with Equinox. They did everything exactly how I wished for and the results couldn’t’ve been better.
+                - generic [ref=e804]:
+                  - heading "John Adams" [level=6] [ref=e806]
+                  - paragraph [ref=e808]: Marketing Director @ XYZ
+            - listitem [ref=e809]:
+              - generic [ref=e811]:
+                - generic [ref=e812]:
+                  - generic [ref=e815]:
+                    - img [ref=e818]
+                    - img [ref=e822]
+                    - img [ref=e826]
+                    - img [ref=e830]
+                    - img [ref=e834]
+                  - paragraph [ref=e837]: "\"Equinox was a pleasure to work with. They followed my instructions to the letter, and the end results were absolutely outstanding.\""
+                - generic [ref=e841]:
+                  - heading "Jane Doe" [level=6] [ref=e843]
+                  - paragraph [ref=e845]: Marketing Director @ ABC
+            - listitem [ref=e846]:
+              - generic [ref=e848]:
+                - generic [ref=e849]:
+                  - generic [ref=e852]:
+                    - img [ref=e855]
+                    - img [ref=e859]
+                    - img [ref=e863]
+                    - img [ref=e867]
+                    - img [ref=e871]
+                  - paragraph [ref=e874]: "\"Real-time analytics has given us the insights we need to make informed decisions quickly.\""
+                - generic [ref=e878]:
+                  - heading [level=6] [ref=e880]: Michael Lee
+                  - paragraph [ref=e882]: Head of Data, Analytics Pros
+            - listitem [ref=e883]:
+              - generic [ref=e885]:
+                - generic [ref=e886]:
+                  - generic [ref=e889]:
+                    - img [ref=e892]
+                    - img [ref=e896]
+                    - img [ref=e900]
+                    - img [ref=e904]
+                    - img [ref=e908]
+                  - paragraph [ref=e911]: “Loved working with Equinox. They did everything exactly how I wished for and the results couldn’t’ve been better.
+                - generic [ref=e915]:
+                  - heading [level=6] [ref=e917]: John Adams
+                  - paragraph [ref=e919]: Marketing Director @ XYZ
+            - listitem [ref=e920]:
+              - generic [ref=e922]:
+                - generic [ref=e923]:
+                  - generic [ref=e926]:
+                    - img [ref=e929]
+                    - img [ref=e933]
+                    - img [ref=e937]
+                    - img [ref=e941]
+                    - img [ref=e945]
+                  - paragraph [ref=e948]: "\"Equinox was a pleasure to work with. They followed my instructions to the letter, and the end results were absolutely outstanding.\""
+                - generic [ref=e952]:
+                  - heading [level=6] [ref=e954]: Jane Doe
+                  - paragraph [ref=e956]: Marketing Director @ ABC
+            - listitem [ref=e957]:
+              - generic [ref=e959]:
+                - generic [ref=e960]:
+                  - generic [ref=e963]:
+                    - img [ref=e966]
+                    - img [ref=e970]
+                    - img [ref=e974]
+                    - img [ref=e978]
+                    - img [ref=e982]
+                  - paragraph [ref=e985]: "\"Real-time analytics has given us the insights we need to make informed decisions quickly.\""
+                - generic [ref=e989]:
+                  - heading [level=6] [ref=e991]: Michael Lee
+                  - paragraph [ref=e993]: Head of Data, Analytics Pros
+            - listitem [ref=e994]:
+              - generic [ref=e996]:
+                - generic [ref=e997]:
+                  - generic [ref=e1000]:
+                    - img [ref=e1003]
+                    - img [ref=e1007]
+                    - img [ref=e1011]
+                    - img [ref=e1015]
+                    - img [ref=e1019]
+                  - paragraph [ref=e1022]: “Loved working with Equinox. They did everything exactly how I wished for and the results couldn’t’ve been better.
+                - generic [ref=e1026]:
+                  - heading [level=6] [ref=e1028]: John Adams
+                  - paragraph [ref=e1030]: Marketing Director @ XYZ
+            - listitem [ref=e1031]:
+              - generic [ref=e1033]:
+                - generic [ref=e1034]:
+                  - generic [ref=e1037]:
+                    - img [ref=e1040]
+                    - img [ref=e1044]
+                    - img [ref=e1048]
+                    - img [ref=e1052]
+                    - img [ref=e1056]
+                  - paragraph [ref=e1059]: "\"Equinox was a pleasure to work with. They followed my instructions to the letter, and the end results were absolutely outstanding.\""
+                - generic [ref=e1063]:
+                  - heading [level=6] [ref=e1065]: Jane Doe
+                  - paragraph [ref=e1067]: Marketing Director @ ABC
+            - listitem [ref=e1068]:
+              - generic [ref=e1070]:
+                - generic [ref=e1071]:
+                  - generic [ref=e1074]:
+                    - img [ref=e1077]
+                    - img [ref=e1081]
+                    - img [ref=e1085]
+                    - img [ref=e1089]
+                    - img [ref=e1093]
+                  - paragraph [ref=e1096]: "\"Real-time analytics has given us the insights we need to make informed decisions quickly.\""
+                - generic [ref=e1100]:
+                  - heading [level=6] [ref=e1102]: Michael Lee
+                  - paragraph [ref=e1104]: Head of Data, Analytics Pros
+            - listitem [ref=e1105]:
+              - generic [ref=e1107]:
+                - generic [ref=e1108]:
+                  - generic [ref=e1111]:
+                    - img [ref=e1114]
+                    - img [ref=e1118]
+                    - img [ref=e1122]
+                    - img [ref=e1126]
+                    - img [ref=e1130]
+                  - paragraph [ref=e1133]: “Loved working with Equinox. They did everything exactly how I wished for and the results couldn’t’ve been better.
+                - generic [ref=e1137]:
+                  - heading [level=6] [ref=e1139]: John Adams
+                  - paragraph [ref=e1141]: Marketing Director @ XYZ
+            - listitem [ref=e1142]:
+              - generic [ref=e1144]:
+                - generic [ref=e1145]:
+                  - generic [ref=e1148]:
+                    - img [ref=e1151]
+                    - img [ref=e1155]
+                    - img [ref=e1159]
+                    - img [ref=e1163]
+                    - img [ref=e1167]
+                  - paragraph [ref=e1170]: "\"Equinox was a pleasure to work with. They followed my instructions to the letter, and the end results were absolutely outstanding.\""
+                - generic [ref=e1174]:
+                  - heading [level=6] [ref=e1176]: Jane Doe
+                  - paragraph [ref=e1178]: Marketing Director @ ABC
+          - list [ref=e1181]:
+            - listitem [ref=e1182]:
+              - generic [ref=e1184]:
+                - generic [ref=e1185]:
+                  - generic [ref=e1188]:
+                    - img [ref=e1191]
+                    - img [ref=e1195]
+                    - img [ref=e1199]
+                    - img [ref=e1203]
+                    - img [ref=e1207]
+                  - paragraph [ref=e1210]: "\"Real-time analytics has given us the insights we need to make informed decisions quickly.\""
+                - generic [ref=e1214]:
+                  - heading "Michael Lee" [level=6] [ref=e1216]
+                  - paragraph [ref=e1218]: Head of Data, Analytics Pros
+            - listitem [ref=e1219]:
+              - generic [ref=e1221]:
+                - generic [ref=e1222]:
+                  - generic [ref=e1225]:
+                    - img [ref=e1228]
+                    - img [ref=e1232]
+                    - img [ref=e1236]
+                    - img [ref=e1240]
+                    - img [ref=e1244]
+                  - paragraph [ref=e1247]: “Loved working with Equinox. They did everything exactly how I wished for and the results couldn’t’ve been better.
+                - generic [ref=e1251]:
+                  - heading "John Adams" [level=6] [ref=e1253]
+                  - paragraph [ref=e1255]: Marketing Director @ XYZ
+            - listitem [ref=e1256]:
+              - generic [ref=e1258]:
+                - generic [ref=e1259]:
+                  - generic [ref=e1262]:
+                    - img [ref=e1265]
+                    - img [ref=e1269]
+                    - img [ref=e1273]
+                    - img [ref=e1277]
+                    - img [ref=e1281]
+                  - paragraph [ref=e1284]: "\"Equinox was a pleasure to work with. They followed my instructions to the letter, and the end results were absolutely outstanding.\""
+                - generic [ref=e1288]:
+                  - heading "Jane Doe" [level=6] [ref=e1290]
+                  - paragraph [ref=e1292]: Marketing Director @ ABC
+            - listitem [ref=e1293]:
+              - generic [ref=e1295]:
+                - generic [ref=e1296]:
+                  - generic [ref=e1299]:
+                    - img [ref=e1302]
+                    - img [ref=e1306]
+                    - img [ref=e1310]
+                    - img [ref=e1314]
+                    - img [ref=e1318]
+                  - paragraph [ref=e1321]: "\"Real-time analytics has given us the insights we need to make informed decisions quickly.\""
+                - generic [ref=e1325]:
+                  - heading [level=6] [ref=e1327]: Michael Lee
+                  - paragraph [ref=e1329]: Head of Data, Analytics Pros
+            - listitem [ref=e1330]:
+              - generic [ref=e1332]:
+                - generic [ref=e1333]:
+                  - generic [ref=e1336]:
+                    - img [ref=e1339]
+                    - img [ref=e1343]
+                    - img [ref=e1347]
+                    - img [ref=e1351]
+                    - img [ref=e1355]
+                  - paragraph [ref=e1358]: “Loved working with Equinox. They did everything exactly how I wished for and the results couldn’t’ve been better.
+                - generic [ref=e1362]:
+                  - heading [level=6] [ref=e1364]: John Adams
+                  - paragraph [ref=e1366]: Marketing Director @ XYZ
+            - listitem [ref=e1367]:
+              - generic [ref=e1369]:
+                - generic [ref=e1370]:
+                  - generic [ref=e1373]:
+                    - img [ref=e1376]
+                    - img [ref=e1380]
+                    - img [ref=e1384]
+                    - img [ref=e1388]
+                    - img [ref=e1392]
+                  - paragraph [ref=e1395]: "\"Equinox was a pleasure to work with. They followed my instructions to the letter, and the end results were absolutely outstanding.\""
+                - generic [ref=e1399]:
+                  - heading [level=6] [ref=e1401]: Jane Doe
+                  - paragraph [ref=e1403]: Marketing Director @ ABC
+            - listitem [ref=e1404]:
+              - generic [ref=e1406]:
+                - generic [ref=e1407]:
+                  - generic [ref=e1410]:
+                    - img [ref=e1413]
+                    - img [ref=e1417]
+                    - img [ref=e1421]
+                    - img [ref=e1425]
+                    - img [ref=e1429]
+                  - paragraph [ref=e1432]: "\"Real-time analytics has given us the insights we need to make informed decisions quickly.\""
+                - generic [ref=e1436]:
+                  - heading [level=6] [ref=e1438]: Michael Lee
+                  - paragraph [ref=e1440]: Head of Data, Analytics Pros
+            - listitem [ref=e1441]:
+              - generic [ref=e1443]:
+                - generic [ref=e1444]:
+                  - generic [ref=e1447]:
+                    - img [ref=e1450]
+                    - img [ref=e1454]
+                    - img [ref=e1458]
+                    - img [ref=e1462]
+                    - img [ref=e1466]
+                  - paragraph [ref=e1469]: “Loved working with Equinox. They did everything exactly how I wished for and the results couldn’t’ve been better.
+                - generic [ref=e1473]:
+                  - heading [level=6] [ref=e1475]: John Adams
+                  - paragraph [ref=e1477]: Marketing Director @ XYZ
+            - listitem [ref=e1478]:
+              - generic [ref=e1480]:
+                - generic [ref=e1481]:
+                  - generic [ref=e1484]:
+                    - img [ref=e1487]
+                    - img [ref=e1491]
+                    - img [ref=e1495]
+                    - img [ref=e1499]
+                    - img [ref=e1503]
+                  - paragraph [ref=e1506]: "\"Equinox was a pleasure to work with. They followed my instructions to the letter, and the end results were absolutely outstanding.\""
+                - generic [ref=e1510]:
+                  - heading [level=6] [ref=e1512]: Jane Doe
+                  - paragraph [ref=e1514]: Marketing Director @ ABC
+            - listitem [ref=e1515]:
+              - generic [ref=e1517]:
+                - generic [ref=e1518]:
+                  - generic [ref=e1521]:
+                    - img [ref=e1524]
+                    - img [ref=e1528]
+                    - img [ref=e1532]
+                    - img [ref=e1536]
+                    - img [ref=e1540]
+                  - paragraph [ref=e1543]: "\"Real-time analytics has given us the insights we need to make informed decisions quickly.\""
+                - generic [ref=e1547]:
+                  - heading [level=6] [ref=e1549]: Michael Lee
+                  - paragraph [ref=e1551]: Head of Data, Analytics Pros
+            - listitem [ref=e1552]:
+              - generic [ref=e1554]:
+                - generic [ref=e1555]:
+                  - generic [ref=e1558]:
+                    - img [ref=e1561]
+                    - img [ref=e1565]
+                    - img [ref=e1569]
+                    - img [ref=e1573]
+                    - img [ref=e1577]
+                  - paragraph [ref=e1580]: “Loved working with Equinox. They did everything exactly how I wished for and the results couldn’t’ve been better.
+                - generic [ref=e1584]:
+                  - heading [level=6] [ref=e1586]: John Adams
+                  - paragraph [ref=e1588]: Marketing Director @ XYZ
+            - listitem [ref=e1589]:
+              - generic [ref=e1591]:
+                - generic [ref=e1592]:
+                  - generic [ref=e1595]:
+                    - img [ref=e1598]
+                    - img [ref=e1602]
+                    - img [ref=e1606]
+                    - img [ref=e1610]
+                    - img [ref=e1614]
+                  - paragraph [ref=e1617]: "\"Equinox was a pleasure to work with. They followed my instructions to the letter, and the end results were absolutely outstanding.\""
+                - generic [ref=e1621]:
+                  - heading [level=6] [ref=e1623]: Jane Doe
+                  - paragraph [ref=e1625]: Marketing Director @ ABC
+      - generic [ref=e1627]:
+        - generic [ref=e1628]:
+          - paragraph [ref=e1630]: "Replace this:"
+          - paragraph [ref=e1636]: Editing Everything Yourself
+          - paragraph [ref=e1642]: Managing Freelancers
+          - paragraph [ref=e1648]: Inconsistent Output
+        - generic [ref=e1649]:
+          - paragraph [ref=e1651]: "With This:"
+          - paragraph [ref=e1657]: Post Consistently
+          - paragraph [ref=e1663]: Scale Across Platforms
+          - paragraph [ref=e1669]: Focus on Creating
+      - generic [ref=e1671]:
+        - img "a blurry image of a yellow object in the dark" [ref=e1674]
+        - generic [ref=e1675]:
+          - paragraph [ref=e1678]: Run your content like a system.
+          - link "Start Producing" [ref=e1681] [cursor=pointer]:
+            - /url: ./contact
+            - paragraph [ref=e1683]: Start Producing
+    - contentinfo [ref=e1686]:
+      - generic [ref=e1688]:
+        - generic [ref=e1689]:
+          - generic [ref=e1690]:
+            - paragraph [ref=e1692]:
+              - link "Home" [ref=e1693] [cursor=pointer]:
+                - /url: ./
+            - paragraph [ref=e1695]:
+              - link "Roadmap" [ref=e1696] [cursor=pointer]:
+                - /url: ./roadmap
+            - paragraph [ref=e1698]:
+              - link "Pricing" [ref=e1699] [cursor=pointer]:
+                - /url: ./pricing
+            - paragraph [ref=e1701]:
+              - link "Blog" [ref=e1702] [cursor=pointer]:
+                - /url: ./blog
+            - paragraph [ref=e1704]:
+              - link "Contact" [ref=e1705] [cursor=pointer]:
+                - /url: ./contact
+          - generic [ref=e1706]:
+            - link [ref=e1707] [cursor=pointer]:
+              - /url: ./
+            - paragraph [ref=e1710]: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.
+            - generic [ref=e1711]:
+              - paragraph [ref=e1713]:
+                - link "Privacy Policy" [ref=e1714] [cursor=pointer]:
+                  - /url: ./privacy-policy
+              - paragraph [ref=e1716]: •
+              - paragraph [ref=e1718]:
+                - link "Terms & Conditions" [ref=e1719] [cursor=pointer]:
+                  - /url: ./terms-and-conditions
+          - generic [ref=e1720]:
+            - link "Facebook" [ref=e1722] [cursor=pointer]:
+              - /url: https://facebook.com
+              - paragraph [ref=e1724]: Facebook
+              - img [ref=e1728]
+            - link "Instagram" [ref=e1731] [cursor=pointer]:
+              - /url: https://instagram.com
+              - paragraph [ref=e1733]: Instagram
+              - img [ref=e1737]
+            - link "LinkedIn" [ref=e1740] [cursor=pointer]:
+              - /url: https://linkedin.com
+              - paragraph [ref=e1742]: LinkedIn
+              - img [ref=e1746]
+        - generic [ref=e1750]:
+          - paragraph [ref=e1752]: © 2023 Equinox. All rights reserved.
+          - paragraph [ref=e1754]:
+            - text: Website by
+            - link "Wize" [ref=e1755] [cursor=pointer]:
+              - /url: https://wizetemplates.com
+  - link "Create a free website with Framer, the website builder loved by startups, designers and agencies." [ref=e1756] [cursor=pointer]:
+    - /url: https://www.framer.com
+    - paragraph [ref=e1761]: Create a free website with Framer, the website builder loved by startups, designers and agencies.
+  - generic [ref=e1777] [cursor=pointer]:
+    - generic "Edit Framer Content": Edit Content
+    - button "Edit Framer Content" [ref=e1778]:
+      - img [ref=e1779]
+  - iframe [ref=e1781]:
+    - generic [active] [ref=f18e1]:
+      - generic [ref=f18e4]:
+        - img [ref=f18e6] [cursor=pointer]
+        - generic [ref=f18e10]:
+          - img "Framer Logo" [ref=f18e11]
+          - generic [ref=f18e12]:
+            - generic [ref=f18e13]: Edit Page
+            - paragraph [ref=f18e14]: Edit the page directly in the browser, without opening the app.
+        - generic [ref=f18e15]:
+          - button "Learn More" [ref=f18e17] [cursor=pointer]
+          - button "Continue" [ref=f18e19] [cursor=pointer]
+      - iframe [ref=f18e20]:
+        - generic [active]:
+          - main

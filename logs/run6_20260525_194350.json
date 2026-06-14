@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779738055631",
+      "status": "complete",
+      "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1779738055631/1779738190533_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1779738055631_final.mp4",
+      "score": 100,
+      "pass": true,
+      "notes": "The AuraFlux job completed successfully with all specified criteria met. Clips were sourced from Twitch, API authentication was correctly utilized, and a valid output URL was generated. The content type and format align with the specification.",
+      "source_count": 1,
+      "template_id": null
+    }
+  ],
+  "elapsed_s": 180.16520023345947
+}

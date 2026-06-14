@@ -1,11 +1,15 @@
-# syntax=docker/dockerfile:1
 # ── Stage 1: Build native deps ────────────────────────────────────────────────
 # canvas (Cairo), sharp, and puppeteer all need system libs that aren't in
 # Alpine. Debian slim has them via apt and avoids Alpine's musl libc issues.
+# BuildKit cache mounts keep apt and npm caches on the builder between runs —
+# cuts build time from 30+ min → ~3 min for code-only changes.
 FROM node:22-bookworm-slim AS builder
 
 # Cairo (canvas), libvips (sharp), and build tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# --mount=type=cache persists /var/cache/apt between builds on the same host
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3 \
     pkg-config \
@@ -14,18 +18,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg-dev \
     libgif-dev \
     librsvg2-dev \
-    libvips-dev \
-  && rm -rf /var/lib/apt/lists/*
+    libvips-dev
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+# --mount=type=cache persists ~/.npm tarball cache between builds
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev
 
 # ── Stage 2: Runtime image ────────────────────────────────────────────────────
 FROM node:22-bookworm-slim AS runtime
 
 # Runtime-only system libs for canvas, sharp, puppeteer Chromium
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
@@ -33,7 +40,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgif7 librsvg2-2 \
     libvips \
     ffmpeg \
-    # Puppeteer/Chromium deps
+    python3 \
+    python3-pip \
     chromium \
     ca-certificates \
     fonts-liberation \
@@ -53,7 +61,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxfixes3 \
     libxrandr2 \
     xdg-utils \
-  && rm -rf /var/lib/apt/lists/*
+    curl \
+    gnupg2
+
+# Install PostgreSQL 18 client to match Render managed PG 18.3.
+# Bookworm apt only ships pg_dump 15 which causes "server version mismatch" in backups.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+    apt-get update && apt-get install -y --no-install-recommends postgresql-client-18
+
+# Install Python deps: yt-dlp for VOD extract, curl-cffi + tls-client for Kick Cloudflare bypass
+RUN pip3 install --break-system-packages yt-dlp curl-cffi tls-client 2>/dev/null || \
+    pip3 install yt-dlp curl-cffi tls-client
 
 # Tell puppeteer to use the system Chromium, not download its own
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
@@ -73,13 +94,12 @@ RUN mkdir -p output tmp logs data
 RUN chown -R node:node /app
 USER node
 
-EXPOSE 3000
+EXPOSE 10000
 
 ENV NODE_ENV=production \
-    PORT=3000 \
-    NEW_RELIC_NO_CONFIG_FILE=true
+    PORT=10000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 10000) + '/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
 CMD ["node", "server.js"]

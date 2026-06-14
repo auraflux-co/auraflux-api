@@ -1,0 +1,146 @@
+[
+  {
+    "id": "O-T1",
+    "tier": "operate",
+    "streamer": "hasanabi",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-hasanabi.mp4",
+    "clip_title": "Hasan gets left with a 50/50 with AOC and Ilhan Omar",
+    "started_at": "2026-05-12T17:19:32.571955+00:00",
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_news_1778606375405",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_news_1778606375405/1778606394080_assembled_e2e-operate-test_EXTRACT_FETCH_news_1778606375405.mp4",
+    "validation": {
+      "passed": false,
+      "score": 20,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job status is 'running', indicating the job has not completed.",
+        "Job spec 'platforms' array is empty [], but the brief expected 'youtube'."
+      ],
+      "notes": "The job is still running and has not reached a final state. The job specification also failed to include 'youtube' in its 'platforms' array, which was an explicit expectation from the brief. An output URL is present, but the test's core requirements were not met."
+    },
+    "passed": false,
+    "error": null,
+    "finished_at": "2026-05-12T17:20:03.060905+00:00"
+  },
+  {
+    "id": "O-T2",
+    "tier": "operate",
+    "streamer": "stableronaldo",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-stableronaldo.mp4",
+    "clip_title": "hey!",
+    "started_at": "2026-05-12T17:20:03.062004+00:00",
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1778606405503",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1778606405503/1778606426549_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1778606405503.mp4",
+    "validation": {
+      "passed": false,
+      "score": 50,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job spec 'platforms' array is empty, but 'tiktok' was expected.",
+        "Job status is 'running'; expected a 'completed' or 'success' status for a final test result validation."
+      ],
+      "notes": "The job successfully generated a script and an output video. However, the job specification did not include 'tiktok' in its 'platforms' array as expected, indicating a targeting issue. Furthermore, the job status is still 'running', suggesting the process may not be fully complete, which is unusual for a validated test result."
+    },
+    "passed": false,
+    "error": null,
+    "finished_at": "2026-05-12T17:20:44.573286+00:00"
+  },
+  {
+    "id": "O-T3",
+    "tier": "operate",
+    "streamer": "extraemily",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-extraemily.mp4",
+    "clip_title": "Emily with the XXXTentacion performance ",
+    "started_at": "2026-05-12T17:20:44.574152+00:00",
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1778606446739",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1778606446739/1778606468745_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1778606446739.mp4",
+    "validation": {
+      "passed": false,
+      "score": 65,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job spec 'platforms' array is empty, but the expected platform is 'instagram'.",
+        "Job status is 'running', despite a valid 'outputUrl' being present, which suggests the job might not have completed all expected processing or final status updates."
+      ],
+      "notes": "The job successfully generated a script ('filledScript' is present) and produced a video output with a valid URL. The 'productionProfile' ('vertical_reel') and 'format' ('short') are appropriate for the expected 'instagram' platform, and 'contentType' ('clips') also aligns. However, the critical issue is that the 'platforms' field in the job spec is empty, failing to meet the expected platform target. Additionally, the job status is still 'running', indicating it may not have fully completed all steps, despite an output URL being available."
+    },
+    "passed": false,
+    "error": null,
+    "finished_at": "2026-05-12T17:21:27.194124+00:00"
+  },
+  {
+    "id": "O-T4",
+    "tier": "operate",
+    "streamer": "maya",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-maya.mp4",
+    "clip_title": "maya fell for it",
+    "started_at": "2026-05-12T17:21:27.195216+00:00",
+    "job_id": "e2e-operate-test_COMPACT_FETCH_news_1778606489727",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_news_1778606489727/1778606502874_assembled_e2e-operate-test_COMPACT_FETCH_news_1778606489727.mp4",
+    "validation": {
+      "passed": false,
+      "score": 50,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job spec 'platforms' field is empty, but expected output specifies 'youtube' as the target platform."
+      ],
+      "notes": "The test successfully generated content, indicated by a filled script and an output URL. However, the job specification for 'platforms' is empty, which directly conflicts with the expected output's requirement for 'youtube'. The 'productionProfile' and 'format' from the job spec are not specified in the expected output, so no direct mismatch can be determined for those fields. The job 'status' being 'running' despite an output URL being present is an observation, but not a critical failure for output generation itself in this context."
+    },
+    "passed": false,
+    "error": null,
+    "finished_at": "2026-05-12T17:22:00.832105+00:00"
+  },
+  {
+    "id": "O-T5",
+    "tier": "operate",
+    "streamer": "jasontheween",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-jasontheween.mp4",
+    "clip_title": "W Auntie",
+    "started_at": "2026-05-12T17:22:00.833661+00:00",
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1778606523573",
+    "output_url": "https://assets.auraflux.co/outputs/e2e-operate-test_EXTRACT_FETCH_clips_1778606523573/1778606543381_assembled_e2e-operate-test_EXTRACT_FETCH_clips_1778606523573.mp4",
+    "validation": {
+      "passed": false,
+      "score": 30,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job status is 'running', expected 'completed' or 'succeeded' for a finished E2E test result.",
+        "Job spec 'platforms' array is empty, but the expected platform is 'tiktok'."
+      ],
+      "notes": "The E2E test job is still in a 'running' state, indicating it has not completed successfully. Additionally, the job specification did not include 'tiktok' in its 'platforms' array, which was an explicit expectation for this test. While the script was filled and an output URL exists, the fundamental completion and platform targeting aspects failed."
+    },
+    "passed": false,
+    "error": null,
+    "finished_at": "2026-05-12T17:22:42.741860+00:00"
+  },
+  {
+    "id": "O-T6",
+    "tier": "operate",
+    "streamer": "lacy",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/operate-lacy.mp4",
+    "clip_title": "o7 L BMW",
+    "started_at": "2026-05-12T17:22:42.742499+00:00",
+    "job_id": "e2e-operate-test_EXTRACT_FETCH_sports_1778606565541",
+    "output_url": null,
+    "validation": {
+      "passed": false,
+      "score": 0,
+      "spec_matches_brief": false,
+      "has_output": false,
+      "issues": [
+        "Job spec is empty and does not provide any information to match against the expected brief for profile, format, or platform.",
+        "Output URL is missing, preventing any evaluation of the actual generated content against the expected output.",
+        "Without a job spec or output, it's impossible to verify if the content type (video with script) was actually produced for the target platform (Instagram)."
+      ],
+      "notes": "Critical failures: The job specification is empty and the output URL is missing. This test cannot be evaluated or passed."
+    },
+    "passed": false,
+    "error": null,
+    "finished_at": "2026-05-12T17:32:58.256502+00:00"
+  }
+]

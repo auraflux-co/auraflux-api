@@ -60,12 +60,12 @@ const { parseScriptIntoScenes } = require('../lib/qa');
  * Returns { violated, score, outcome } — mirrors the real return shape.
  */
 function runContractCheck({ expectedClips, downloadedClipCount, clipCount }) {
-  const _contractExpected  = expectedClips || 0;
+  const _contractExpected = expectedClips || 0;
   const _contractDelivered = downloadedClipCount || clipCount || 0;
   const violated = _contractExpected > 0 && _contractDelivered === 0;
   return violated
-    ? { violated: true,  score: 0,   outcome: 'fail' }
-    : { violated: false, score: null, outcome: null   };
+    ? { violated: true, score: 0, outcome: 'fail' }
+    : { violated: false, score: null, outcome: null };
 }
 
 /**
@@ -82,7 +82,12 @@ function runGate3WithErrorFallback(qaFn, MAX_QA_RETRIES = 3) {
     }
   }
   // Matches assembly.js:2806 — auto-pass fallback
-  return { score: 70, outcome: 'pass', passed: true, report: `QA check errored: ${lastErr.message} (auto-passed)` };
+  return {
+    score: 70,
+    outcome: 'pass',
+    passed: true,
+    report: `QA check errored: ${lastErr.message} (auto-passed)`,
+  };
 }
 
 /**
@@ -94,9 +99,8 @@ function computeGate2Result(scores, PASS_THRESHOLD = 85, MANUAL_THRESHOLD = 65) 
     return { score: 0, outcome: 'fail', outcomeLabel: '❌ HARD FAIL — no segments' };
   }
   const avg = Math.round(scores.reduce((s, v) => s + v, 0) / scores.length);
-  const outcome = avg >= PASS_THRESHOLD  ? 'pass'
-                : avg >= MANUAL_THRESHOLD ? 'manual_review'
-                : 'fail';
+  const outcome =
+    avg >= PASS_THRESHOLD ? 'pass' : avg >= MANUAL_THRESHOLD ? 'manual_review' : 'fail';
   return { score: avg, outcome };
 }
 
@@ -107,12 +111,14 @@ test('F1 — Gate 3 error fallback: ReferenceError auto-passes at 70/100', () =>
   // Catch block must auto-pass, not rethrow or hard-fail.
   const result = runGate3WithErrorFallback(() => {
     // Simulate the real error: variable used before it was in scope
-    const val = (() => { throw new ReferenceError('downloadedClipCount is not defined'); })();
+    const val = (() => {
+      throw new ReferenceError('downloadedClipCount is not defined');
+    })();
     return { score: val, outcome: 'pass' };
   });
 
-  assert.strictEqual(result.outcome, 'pass',  'Fallback should be outcome=pass');
-  assert.strictEqual(result.score,   70,       'Fallback score should be exactly 70');
+  assert.strictEqual(result.outcome, 'pass', 'Fallback should be outcome=pass');
+  assert.strictEqual(result.score, 70, 'Fallback score should be exactly 70');
   assert(result.report.includes('auto-passed'), 'Report should mention auto-passed');
 });
 
@@ -135,27 +141,38 @@ test('F2 — NBA 0-clip bypass: contractExpectedClips=0 means no contract check 
   // so Gate 3 contract check never triggered even though 0 clips were in the video.
   const result = runContractCheck({ expectedClips: 0, downloadedClipCount: 0 });
 
-  assert.strictEqual(result.violated, false,
-    'Contract should NOT fire when expectedClips=0 — but this lets 0-clip NBA videos through');
+  assert.strictEqual(
+    result.violated,
+    false,
+    'Contract should NOT fire when expectedClips=0 — but this lets 0-clip NBA videos through'
+  );
 
   // Confirm: if it HAD been set correctly (e.g. NBA with 3 games = 3 clips),
   // the contract WOULD have caught it.
   const corrected = runContractCheck({ expectedClips: 3, downloadedClipCount: 0 });
-  assert.strictEqual(corrected.violated, true,
-    'Contract MUST fire when expectedClips=3 and 0 clips delivered');
+  assert.strictEqual(
+    corrected.violated,
+    true,
+    'Contract MUST fire when expectedClips=3 and 0 clips delivered'
+  );
 });
 
 test('F2b — NBA: missing expectedClips field in payload defaults to 0 (silent bypass)', () => {
   // In assembly.js:873, destructuring uses `expectedClips: contractExpectedClips = 0`
   // If the dashboard sends a payload without expectedClips, it silently defaults to 0.
   const payload = {
-    segments: ['seg1.mp4'], contentType: 'nba', jobId: 'script_nba_123'
+    segments: ['seg1.mp4'],
+    contentType: 'nba',
+    jobId: 'script_nba_123',
     // expectedClips intentionally missing — older job card
   };
 
   const contractExpectedClips = payload.expectedClips ?? 0; // mirrors assembly.js:873
-  assert.strictEqual(contractExpectedClips, 0,
-    'Missing expectedClips in payload defaults to 0 — Gate 3 contract is silently disabled');
+  assert.strictEqual(
+    contractExpectedClips,
+    0,
+    'Missing expectedClips in payload defaults to 0 — Gate 3 contract is silently disabled'
+  );
 });
 
 // ── F3: Gate 2 freeze-frame masked by average ─────────────────────────────────
@@ -166,16 +183,19 @@ test('F3 — Gate 2: freeze-frame middle segment (score 20) masked by avg → ma
 
   const result = computeGate2Result(segmentScores);
 
-  assert.strictEqual(result.score, 72,           'Avg of [100,20,95] should be 72');
+  assert.strictEqual(result.score, 72, 'Avg of [100,20,95] should be 72');
   assert.strictEqual(result.outcome, 'manual_review', 'Should be manual_review, not hard fail');
 
   // The problem: a 100% freeze-frame segment did NOT trigger a hard fail.
   // Current system uses average — a single VIDEO FREEZE at 20 is diluted.
   // A score of 20 for VIDEO FREEZE should arguably hard-fail Gate 2 alone.
   const FREEZE_HARD_FAIL_THRESHOLD = 50; // if any single segment scores below this, hard fail
-  const hasFreezeFail = segmentScores.some(s => s < FREEZE_HARD_FAIL_THRESHOLD);
-  assert.strictEqual(hasFreezeFail, true,
-    'At least one segment scored below 50 — individual freeze detection is needed');
+  const hasFreezeFail = segmentScores.some((s) => s < FREEZE_HARD_FAIL_THRESHOLD);
+  assert.strictEqual(
+    hasFreezeFail,
+    true,
+    'At least one segment scored below 50 — individual freeze detection is needed'
+  );
 });
 
 test('F3b — Gate 2: all-clean segments correctly auto-pass', () => {
@@ -198,17 +218,23 @@ test('F4 — Contract check: undefined downloadedClipCount coerces to 0 via || c
   // passed as undefined to geminiQACheck. undefined || 0 = 0 → contract fires.
   let downloadedClipCount; // declared but never assigned — simulates scope bug
 
-  const _contractExpected  = 5;
+  const _contractExpected = 5;
   const _contractDelivered = downloadedClipCount || 0; // mirrors qa.js:72
 
-  assert.strictEqual(_contractDelivered, 0,
-    'undefined coerces to 0 via || — contract check sees 0 delivered');
+  assert.strictEqual(
+    _contractDelivered,
+    0,
+    'undefined coerces to 0 via || — contract check sees 0 delivered'
+  );
 
   // This means: if expectedClips=5 and downloadedClipCount is undefined,
   // the contract correctly hard-fails (good behavior, but only if Gate 3 runs at all).
   const violated = _contractExpected > 0 && _contractDelivered === 0;
-  assert.strictEqual(violated, true,
-    'Contract should catch undefined downloadedClipCount as 0-clip delivery');
+  assert.strictEqual(
+    violated,
+    true,
+    'Contract should catch undefined downloadedClipCount as 0-clip delivery'
+  );
 });
 
 test('F4b — Contract blind spot: when Gate 3 errors first, contract never runs', () => {
@@ -225,10 +251,16 @@ test('F4b — Contract blind spot: when Gate 3 errors first, contract never runs
     contractChecked = true; // eslint-disable-line no-unreachable
   });
 
-  assert.strictEqual(contractChecked, false,
-    'Contract assertion never ran — error fallback fired first');
-  assert.strictEqual(result.outcome, 'pass',
-    'Auto-pass fired despite 0-clip delivery — this is the production failure mode');
+  assert.strictEqual(
+    contractChecked,
+    false,
+    'Contract assertion never ran — error fallback fired first'
+  );
+  assert.strictEqual(
+    result.outcome,
+    'pass',
+    'Auto-pass fired despite 0-clip delivery — this is the production failure mode'
+  );
 });
 
 // ── F5: expectedClips not on job card for older jobs ─────────────────────────
@@ -245,11 +277,17 @@ test('F5 — Job card missing expectedClips: contract disabled for legacy jobs',
   };
 
   const contractExpectedClips = legacyJobCard.expectedClips ?? 0;
-  const contractCheck = runContractCheck({ expectedClips: contractExpectedClips, downloadedClipCount: 0 });
+  const contractCheck = runContractCheck({
+    expectedClips: contractExpectedClips,
+    downloadedClipCount: 0,
+  });
 
   assert.strictEqual(contractExpectedClips, 0, 'Legacy card has no expectedClips — defaults to 0');
-  assert.strictEqual(contractCheck.violated, false,
-    'Legacy job silently bypasses Gate 3 contract — clips field was never written to card');
+  assert.strictEqual(
+    contractCheck.violated,
+    false,
+    'Legacy job silently bypasses Gate 3 contract — clips field was never written to card'
+  );
 });
 
 // ── F6: Single freeze-frame should hard-fail Gate 2 (design gap) ─────────────
@@ -267,8 +305,12 @@ test('F6 — Gate 2 design gap: min-score check catches what avg hides', () => {
   const wouldPassByAvg = avg >= 65; // above manual_review threshold
   const wouldCatchByMin = minScore <= FREEZE_THRESHOLD;
 
-  assert.strictEqual(wouldPassByAvg,   true,  'Avg (72) clears manual_review threshold — job proceeds');
-  assert.strictEqual(wouldCatchByMin,  true,  'Min-score check (20) would catch the freeze-frame');
+  assert.strictEqual(
+    wouldPassByAvg,
+    true,
+    'Avg (72) clears manual_review threshold — job proceeds'
+  );
+  assert.strictEqual(wouldCatchByMin, true, 'Min-score check (20) would catch the freeze-frame');
 
   // Confirms: the current avg-based Gate 2 cannot catch a single freeze-frame segment
   // when the other segments are clean. A min-score guard would catch it.
@@ -291,13 +333,19 @@ test('F7 — parseScriptIntoScenes: space in header makes scene completely invis
   while ((m = oldRegex.exec(rawScript)) !== null) names.push(m[1]);
 
   // Pre-fix: spaces in header = 0 matches. Both scenes are invisible to the parser.
-  assert.strictEqual(names.length, 0,
-    'Pre-fix: space in header produces NO regex match — scene is completely invisible');
+  assert.strictEqual(
+    names.length,
+    0,
+    'Pre-fix: space in header produces NO regex match — scene is completely invisible'
+  );
 
   // Consequence: parseScriptIntoScenes returns an empty array for this script
   const scenes = parseScriptIntoScenes(rawScript);
-  assert.strictEqual(scenes.length, 0,
-    'parseScriptIntoScenes returns empty — Jay Cinco\'s scenes are silently dropped');
+  assert.strictEqual(
+    scenes.length,
+    0,
+    "parseScriptIntoScenes returns empty — Jay Cinco's scenes are silently dropped"
+  );
 });
 
 test('F7b — parseScriptIntoScenes: post-fix normalization prevents name truncation', () => {
@@ -312,12 +360,12 @@ test('F7b — parseScriptIntoScenes: post-fix normalization prevents name trunca
   });
 
   const scenes = parseScriptIntoScenes(normalized);
-  const names = scenes.map(s => s.name);
+  const names = scenes.map((s) => s.name);
 
   assert(names.includes('JAY_CINCO_INTRO'), `Expected JAY_CINCO_INTRO, got: ${names}`);
-  assert(names.includes('JAY_CINCO_CLIP'),  `Expected JAY_CINCO_CLIP, got: ${names}`);
+  assert(names.includes('JAY_CINCO_CLIP'), `Expected JAY_CINCO_CLIP, got: ${names}`);
 
-  const clipScene = scenes.find(s => s.name === 'JAY_CINCO_CLIP');
+  const clipScene = scenes.find((s) => s.name === 'JAY_CINCO_CLIP');
   assert(clipScene, 'JAY_CINCO_CLIP scene must exist');
   assert.strictEqual(clipScene.type, 'source_clip');
 });
@@ -330,20 +378,28 @@ test('F8 — Contract: clipCount fallback used when downloadedClipCount is 0', (
   // the || chain uses clipCount=5 as delivered — contract does NOT fire.
   // This is a silent bypass: 0 clips actually in the video, but contract sees 5.
   const downloadedClipCount = 0; // real: nothing downloaded
-  const clipCount = 5;           // requested count (not delivered)
+  const clipCount = 5; // requested count (not delivered)
 
   const _contractDelivered = downloadedClipCount || clipCount || 0;
-  assert.strictEqual(_contractDelivered, 5,
-    'clipCount fallback masks 0-clip delivery — contract never fires');
+  assert.strictEqual(
+    _contractDelivered,
+    5,
+    'clipCount fallback masks 0-clip delivery — contract never fires'
+  );
 
   const violated = 5 > 0 && _contractDelivered === 0;
-  assert.strictEqual(violated, false,
-    'Contract does NOT fire — 5 clips appear delivered even though 0 were downloaded');
+  assert.strictEqual(
+    violated,
+    false,
+    'Contract does NOT fire — 5 clips appear delivered even though 0 were downloaded'
+  );
 
   // The fix: use downloadedClipCount directly, not clipCount as fallback.
   // clipCount = "requested", downloadedClipCount = "actually in the file" — different things.
   const properCheck = downloadedClipCount === 0 && 5 > 0;
-  assert.strictEqual(properCheck, true,
-    'Proper check: downloadedClipCount=0 with expectedClips=5 is a contract violation');
+  assert.strictEqual(
+    properCheck,
+    true,
+    'Proper check: downloadedClipCount=0 with expectedClips=5 is a contract violation'
+  );
 });
-

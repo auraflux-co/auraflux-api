@@ -1,0 +1,119 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                    - generic [ref=e55]: Contact Us
+            - img "Teacher Engaging Students" [ref=e61]
+      - main:
+        - generic [ref=e63]:
+          - group:
+            - heading "Contact Us" [level=1] [ref=e67]
+            - heading "Let's Work Together" [level=3] [ref=e69]
+            - heading "We can help with:" [level=5] [ref=e71]
+            - list [ref=e73]:
+              - listitem [ref=e74]: Program recommendations based on grade and goals
+              - listitem [ref=e75]: Scheduling tutoring sessions•
+              - listitem [ref=e76]: Summer Programs details and registration
+              - listitem [ref=e77]: Special learning needs or customized plans
+            - heading "Contact info" [level=5] [ref=e79]
+            - paragraph [ref=e81]: "Phone: (571) 207-8373 Email: contact.us@learningwithlumi.com"
+            - form "Learning Center Contact Form" [ref=e88]:
+              - group [ref=e89]:
+                - generic [ref=e90]:
+                  - generic [ref=e91]:
+                    - generic [ref=e93]:
+                      - generic [ref=e95]:
+                        - text: First Name
+                        - generic [ref=e96]: "*"
+                      - textbox "First Name" [ref=e101]
+                      - generic [ref=e103]:
+                        - text: Last Name
+                        - generic [ref=e104]: "*"
+                      - textbox "Last Name" [ref=e109]
+                    - generic [ref=e111]:
+                      - generic [ref=e113]:
+                        - text: Email
+                        - generic [ref=e114]: "*"
+                      - textbox "Email" [ref=e119]
+                      - generic [ref=e121]: Phone Number
+                      - generic [ref=e126]:
+                        - button "Phone Number. Phone. Select a country code" [ref=e130] [cursor=pointer]:
+                          - generic [ref=e133]:
+                            - img [ref=e135]
+                            - img [ref=e138]
+                        - textbox "Phone Number. Phone" [ref=e140]
+                    - generic [ref=e142]:
+                      - generic [ref=e144]: Comments/Message
+                      - textbox "Comments/Message" [ref=e149]:
+                        - /placeholder: How can we help you?
+                    - button "Send Message" [ref=e154] [cursor=pointer]:
+                      - generic [ref=e155]: Send Message
+                  - region
+      - contentinfo:
+        - generic [ref=e157]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e161] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e163]
+            - heading "Quick Links" [level=3] [ref=e165]
+            - paragraph [ref=e167]:
+              - link "About Us" [ref=e169] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e171]:
+              - link "Summer Programs" [ref=e173] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e175]:
+              - link "Tutoring" [ref=e177] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e179]:
+              - link "Join Our Team" [ref=e181] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e183]:
+              - link "Contact Us" [ref=e185] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/contact-us
+            - heading "Contact Info" [level=3] [ref=e187]
+            - paragraph [ref=e189]:
+              - link "(571) 207-8373" [ref=e191] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e193]:
+              - link "contact.us@learningwithlumi.com" [ref=e195] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e197]: © 2026 Lumi Education
+            - paragraph [ref=e199]:
+              - link "Privacy Policy" [ref=e201] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/privacy-policy
+  - region "bottom of page"

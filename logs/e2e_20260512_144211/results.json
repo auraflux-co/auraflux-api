@@ -1,0 +1,28 @@
+[
+  {
+    "id": "G-T3",
+    "tier": "guided",
+    "streamer": "extraemily",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/guided-extraemily-1778611285.mp4",
+    "clip_title": "Parking lot crackhead",
+    "started_at": "2026-05-12T18:42:11.753793+00:00",
+    "job_id": "user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778611335209",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778611335209/1778611347418_assembled_user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1778611335209.mp4",
+    "validation": {
+      "passed": false,
+      "score": 45,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job status is 'running'; expected 'completed' or 'success' for a finalized test result.",
+        "Job spec 'platforms' array is empty; expected 'instagram' to match the brief.",
+        "Job spec 'sourceType' is null, indicating potentially incomplete metadata for the content source."
+      ],
+      "notes": "The job spec correctly defines 'productionProfile' and 'format' consistent with an Instagram reel, and an output URL is present indicating a video was generated along with a script. However, the job is still marked as 'running' which means it hasn't successfully completed according to the spec, and the 'platforms' field is empty, failing to specify 'instagram' as expected. The 'sourceType' also lacks specific information despite streamer and clip details being provided."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T18:42:47.523971+00:00"
+  }
+]

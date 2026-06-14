@@ -1,0 +1,141 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "AuraFlux home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "AuraFlux" [ref=e5]
+      - generic [ref=e7]:
+        - link "Home" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - link "Our Story" [ref=e9] [cursor=pointer]:
+          - /url: /our-story
+        - link "Our System" [ref=e10] [cursor=pointer]:
+          - /url: /our-system
+        - link "Plans" [ref=e11] [cursor=pointer]:
+          - /url: /pricing
+        - link "Roadmap" [ref=e12] [cursor=pointer]:
+          - /url: /roadmap
+        - link "Contact Us" [ref=e13] [cursor=pointer]:
+          - /url: /contact-us
+      - link "Get Started" [ref=e15] [cursor=pointer]:
+        - /url: /pricing
+  - generic [ref=e16]:
+    - heading "Get in Touch" [level=1] [ref=e17]
+    - paragraph [ref=e18]: Sales, support, partnerships, or feedback — we read every message.
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - heading "Send a message" [level=2] [ref=e21]
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]: Name
+            - textbox "Name" [ref=e25]:
+              - /placeholder: Your name
+          - generic [ref=e26]:
+            - generic [ref=e27]: Email *
+            - textbox "Email *" [ref=e28]:
+              - /placeholder: you@example.com
+          - generic [ref=e29]:
+            - generic [ref=e30]: Topic
+            - combobox "Topic" [ref=e31]:
+              - option "— Select a topic —" [selected]
+              - option "Sales & pricing"
+              - option "Technical support"
+              - option "Partnership or integration"
+              - option "Product feedback"
+              - option "Other"
+          - generic [ref=e32]:
+            - generic [ref=e33]: Message *
+            - textbox "Message *" [ref=e34]:
+              - /placeholder: Tell us what's on your mind…
+          - button "Send message" [ref=e35] [cursor=pointer]
+      - generic [ref=e36]:
+        - heading "Other ways to reach us" [level=2] [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - text: 📧
+            - generic [ref=e40]:
+              - text: "Email:"
+              - link "support@auraflux.co" [ref=e41] [cursor=pointer]:
+                - /url: mailto:support@auraflux.co
+          - generic [ref=e42]:
+            - text: 📞
+            - generic [ref=e43]:
+              - text: "Phone / SMS:"
+              - link "+1 (571) 600-2835" [ref=e44] [cursor=pointer]:
+                - /url: tel:+15716002835
+        - heading "Frequently asked questions" [level=2] [ref=e45]
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - term [ref=e48]: What's the difference between Operate and Guided?
+            - definition [ref=e49]: Both plans include the full AuraFlux platform. Operate is self-serve — you run everything yourself via API or the dashboard. Guided includes Collab-powered monitoring and guidance from the AuraFlux team.
+          - generic [ref=e50]:
+            - term [ref=e51]: How do credits work?
+            - definition [ref=e52]: Each plan includes a monthly credit allowance. One credit = one short-form job. Long-form and multi-clip jobs use 2 credits. Unused credits roll over and additional packs are available any time.
+          - generic [ref=e53]:
+            - term [ref=e54]: Can I connect multiple social accounts?
+            - definition [ref=e55]:
+              - text: Yes — you can connect all major platforms. Each job can be targeted to one or more simultaneously.
+              - generic [ref=e56]:
+                - generic [ref=e57]: ▶ YouTube
+                - generic [ref=e58]: ♪ TikTok
+                - generic [ref=e59]: ◈ Instagram
+                - generic [ref=e60]: ▣ Twitch
+                - generic [ref=e61]: ◉ Kick
+          - generic [ref=e62]:
+            - term [ref=e63]: Do I need technical knowledge to use AuraFlux?
+            - definition [ref=e64]: No. The dashboard guides you through every step. If you prefer direct API access, full developer documentation is available at app.auraflux.co/developer.
+  - contentinfo [ref=e65]:
+    - generic [ref=e66]:
+      - generic [ref=e67]:
+        - navigation "Footer navigation" [ref=e68]:
+          - link "Home" [ref=e69] [cursor=pointer]:
+            - /url: /
+          - link "Our Story" [ref=e70] [cursor=pointer]:
+            - /url: /our-story
+          - link "Our System" [ref=e71] [cursor=pointer]:
+            - /url: /our-system
+          - link "Plans" [ref=e72] [cursor=pointer]:
+            - /url: /pricing
+          - link "Roadmap" [ref=e73] [cursor=pointer]:
+            - /url: /roadmap
+          - link "Blog" [ref=e74] [cursor=pointer]:
+            - /url: /blog
+          - link "Contact Us" [ref=e75] [cursor=pointer]:
+            - /url: /contact-us
+        - generic [ref=e76]:
+          - link "AuraFlux home" [ref=e77] [cursor=pointer]:
+            - /url: /
+            - img "AuraFlux" [ref=e78]
+          - paragraph [ref=e79]: Automated content production from source to publish. No team required.
+          - generic [ref=e80]:
+            - link "Privacy Policy" [ref=e81] [cursor=pointer]:
+              - /url: /privacy
+            - generic [ref=e82]: ·
+            - link "Terms" [ref=e83] [cursor=pointer]:
+              - /url: /terms
+            - generic [ref=e84]: ·
+            - link "AUP" [ref=e85] [cursor=pointer]:
+              - /url: /aup
+            - generic [ref=e86]: ·
+            - link "Cookies" [ref=e87] [cursor=pointer]:
+              - /url: /cookies
+        - generic [ref=e88]:
+          - link "LinkedIn" [ref=e89] [cursor=pointer]:
+            - /url: https://linkedin.com/company/auraflux
+            - generic [ref=e90]: LinkedIn
+            - img [ref=e92]
+          - link "Instagram" [ref=e94] [cursor=pointer]:
+            - /url: https://instagram.com/auraflux
+            - generic [ref=e95]: Instagram
+            - img [ref=e97]
+          - link "TikTok" [ref=e99] [cursor=pointer]:
+            - /url: https://tiktok.com/@auraflux
+            - generic [ref=e100]: TikTok
+            - img [ref=e102]
+          - link "YouTube" [ref=e104] [cursor=pointer]:
+            - /url: https://youtube.com/@auraflux
+            - generic [ref=e105]: YouTube
+            - img [ref=e107]
+      - paragraph [ref=e110]: © 2026 AuraFlux. All rights reserved.
+  - generic "Chat with us" [ref=e111] [cursor=pointer]:
+    - img [ref=e112]

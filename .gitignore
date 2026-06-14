@@ -135,3 +135,4 @@ env/
 ENV/
 venv-*/
 data/youtube_tokens.json
+.env.bak*

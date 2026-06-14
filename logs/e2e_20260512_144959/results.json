@@ -1,0 +1,28 @@
+[
+  {
+    "id": "M-T6",
+    "tier": "managed",
+    "streamer": "lacy",
+    "clip_url": "https://assets.auraflux.co/e2e-fixtures/managed-lacy-1778611450.mp4",
+    "clip_title": "cpr",
+    "started_at": "2026-05-12T18:49:59.989217+00:00",
+    "job_id": "user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611803120",
+    "output_url": "https://assets.auraflux.co/outputs/user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611803120/1778611817680_assembled_user_3DBm0RZNiq9T6qCILNQkMuWo8o2_EXTRACT_FETCH_clips_1778611803120.mp4",
+    "validation": {
+      "passed": false,
+      "score": 15,
+      "spec_matches_brief": false,
+      "has_output": true,
+      "issues": [
+        "Job status is 'running', indicating the job has not completed. This prevents full validation of final results.",
+        "The 'platforms' field in the job spec is empty, but the expected platform is 'instagram'.",
+        "The 'sourceType' field in the job spec is null."
+      ],
+      "notes": "The job spec correctly indicates a script (filledScript is present) and a video output (outputUrl is an MP4), matching the 'has_script: true' and 'has_video: true' expectations. A valid output URL is present, and the content type ('clips'), production profile ('vertical_reel'), and format ('short') are appropriate for an Instagram clip. However, the job is still in a 'running' state, which means the results are not final. Furthermore, the 'platforms' array in the spec is empty, despite 'instagram' being the expected platform, and the 'sourceType' field is null."
+    },
+    "passed": true,
+    "error": null,
+    "gemini_passed": false,
+    "finished_at": "2026-05-12T18:50:48.617513+00:00"
+  }
+]

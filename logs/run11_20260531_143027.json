@@ -1,0 +1,75 @@
+{
+  "run": "run_11_20260531_143027",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 1,
+  "templates_saved": 0,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780252227775",
+      "label": "Viral Clip",
+      "tier": "operate",
+      "status": "failed",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780252227775/1780252490779_1780252490777_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780252227775_final.mp4",
+      "grade": 45,
+      "grade_detail": {
+        "grade": 45,
+        "passed": false,
+        "gaps": [
+          {
+            "checkId": "status",
+            "reason": "expected ('staged', 'complete', 'published'), got failed"
+          },
+          {
+            "checkId": "portal_scores",
+            "reason": "avg 50 < 60"
+          }
+        ],
+        "summary": "Grade: 45/100 | GAPS:2"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job final status is 'failed' with no output generated despite reaching the assembly stage (filename shows 'assembled...final.mp4'). The pipeline failed late in execution, likely during final rendering or upload, wasting prior compute on captions, audio, branding, colorGrade, effects, and layout processing.",
+          "suggested_change": "Implement checkpoint recovery so late-stage failures can resume from the last successful step rather than requiring full re-processing. Add detailed failure reason logging to identify the exact failure point."
+        },
+        {
+          "area": "output",
+          "severity": "critical",
+          "observation": "Output URL points to a non-existent file. The 'failed' status confirms the asset was never successfully written to storage, indicating either a rendering crash, storage write failure, or timeout during final export.",
+          "suggested_change": "Add pre-flight storage permission checks and implement atomic writes with rollback. Surface the specific error (OOM, timeout, codec failure, S3 permission) in job metadata for debugging."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA shows 'no result' \u2014 QA validation never ran because there was no output to analyze. This means the quality gate is entirely bypassed on failed jobs, providing no diagnostic insights.",
+          "suggested_change": "For failed jobs, run Twelve Labs QA on intermediate artifacts (if available) or source footage to capture baseline metrics. Log why QA was skipped to distinguish 'no output' from 'QA service failure'."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "Six add-ons were activated simultaneously (captions, audio, branding, colorGrade, effects, layout) for a viral_clip job. This is appropriate for the template goal but represents high processing complexity that increases failure probability.",
+          "suggested_change": "For OPERATE tier with multiple add-ons, implement sequential processing with intermediate saves rather than monolithic rendering. Consider add-on dependency ordering to fail fast on incompatible combinations."
+        },
+        {
+          "area": "flow",
+          "severity": "high",
+          "observation": "OPERATE tier users expect reliable, hands-off production. A complete job failure with no partial output or actionable error message delivered to the user creates a poor experience and erodes trust in automated workflows.",
+          "suggested_change": "Implement user-facing failure notifications with: (1) plain-language error reason, (2) auto-retry option, (3) fallback to simpler add-on configuration, and (4) credit refund or job priority queue placement."
+        }
+      ],
+      "ran_at": "2026-05-31T18:36:46.011397+00:00",
+      "jira_ticket": null
+    }
+  ],
+  "saved_templates": []
+}

@@ -1,0 +1,95 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "status": "FAIL",
+      "reason": "Submit HTTP 202: {'jobId': 'e2e-operate-test_EXTRACT_FETCH_clips_1779123798213', 'status': 'queued', 'staging': False, 'planTier': 'operate', 'createdAt': '2026-05-18T17:03:18.404Z', 'pollUrl': 'https://auraflux-api.onrender.com/v1/jobs/e2e-operate-test_EXTRACT_FETCH_clips_1779123798213', 'estimatedMinutes': 5, 'queuePosition': 1, 'webhookHint': 'Register POST /v1/webhooks to receive completion callbacks instead of polling'}"
+    },
+    {
+      "id": "O-Tw2",
+      "status": "FAIL",
+      "reason": "Submit HTTP 202: {'jobId': 'e2e-operate-test_COMPACT_FETCH_clips_1779123804412', 'status': 'queued', 'staging': False, 'planTier': 'operate', 'createdAt': '2026-05-18T17:03:24.520Z', 'pollUrl': 'https://auraflux-api.onrender.com/v1/jobs/e2e-operate-test_COMPACT_FETCH_clips_1779123804412', 'estimatedMinutes': 5, 'queuePosition': 1, 'webhookHint': 'Register POST /v1/webhooks to receive completion callbacks instead of polling'}"
+    },
+    {
+      "id": "O-K1",
+      "status": "FAIL",
+      "reason": "Submit HTTP 202: {'jobId': 'e2e-operate-test_EXTRACT_FETCH_clips_1779123810605', 'status': 'queued', 'staging': False, 'planTier': 'operate', 'createdAt': '2026-05-18T17:03:30.715Z', 'pollUrl': 'https://auraflux-api.onrender.com/v1/jobs/e2e-operate-test_EXTRACT_FETCH_clips_1779123810605', 'estimatedMinutes': 5, 'queuePosition': 1, 'webhookHint': 'Register POST /v1/webhooks to receive completion callbacks instead of polling'}"
+    },
+    {
+      "id": "O-K2",
+      "status": "FAIL",
+      "reason": "Submit HTTP 202: {'jobId': 'e2e-operate-test_COMPACT_FETCH_clips_1779123817514', 'status': 'queued', 'staging': False, 'planTier': 'operate', 'createdAt': '2026-05-18T17:03:37.808Z', 'pollUrl': 'https://auraflux-api.onrender.com/v1/jobs/e2e-operate-test_COMPACT_FETCH_clips_1779123817514', 'estimatedMinutes': 5, 'queuePosition': 1, 'webhookHint': 'Register POST /v1/webhooks to receive completion callbacks instead of polling'}"
+    },
+    {
+      "id": "O-YT1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/hasanabi"
+    },
+    {
+      "id": "O-YT2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/hasanabi"
+    },
+    {
+      "id": "G-Tw1",
+      "status": "FAIL",
+      "reason": "Submit HTTP 202: {'jobId': 'user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1779123829711', 'status': 'queued', 'staging': False, 'planTier': 'guided', 'createdAt': '2026-05-18T17:03:49.907Z', 'pollUrl': 'https://auraflux-api.onrender.com/v1/jobs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_EXTRACT_FETCH_clips_1779123829711', 'estimatedMinutes': 5, 'queuePosition': 1, 'webhookHint': 'Register POST /v1/webhooks to receive completion callbacks instead of polling'}"
+    },
+    {
+      "id": "G-Tw2",
+      "status": "FAIL",
+      "reason": "Submit HTTP 202: {'jobId': 'user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_show_commentary_1779123839425', 'status': 'queued', 'staging': False, 'planTier': 'guided', 'createdAt': '2026-05-18T17:03:59.435Z', 'pollUrl': 'https://auraflux-api.onrender.com/v1/jobs/user_3DBm0Nzn7YIWxSh1WqCllxA6fLc_COMPACT_FETCH_show_commentary_1779123839425', 'estimatedMinutes': 8, 'queuePosition': 1, 'webhookHint': 'Register POST /v1/webhooks to receive completion callbacks instead of polling'}"
+    },
+    {
+      "id": "G-K1",
+      "status": "FAIL",
+      "reason": "Submit HTTP 502: {'error': 'HTTP Error 502: Bad Gateway'}"
+    },
+    {
+      "id": "G-K2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/trainwreckstv"
+    },
+    {
+      "id": "G-YT1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/markiplier"
+    },
+    {
+      "id": "G-YT2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/markiplier"
+    },
+    {
+      "id": "M-Tw1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/hasanabi"
+    },
+    {
+      "id": "M-Tw2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for twitch/hasanabi"
+    },
+    {
+      "id": "M-K1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "M-K2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for kick/xqc"
+    },
+    {
+      "id": "M-YT1",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/hasanabi"
+    },
+    {
+      "id": "M-YT2",
+      "status": "SKIP",
+      "reason": "Source Library returned no clips for youtube/hasanabi"
+    }
+  ],
+  "elapsed_s": 60.902637004852295
+}

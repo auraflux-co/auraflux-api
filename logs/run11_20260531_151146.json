@@ -1,0 +1,181 @@
+{
+  "run": "run_11_20260531_151146",
+  "phase": "0",
+  "passed": false,
+  "jobs_run": 3,
+  "templates_saved": 2,
+  "results": [
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780254707179",
+      "label": "YouTube Short",
+      "tier": "operate",
+      "status": "staged",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780254707179/1780254726029_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780254707179.mp4",
+      "grade": 100,
+      "grade_detail": {
+        "grade": 100,
+        "passed": true,
+        "gaps": [],
+        "summary": "Grade: 100/100 | PASSED"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "add_ons",
+          "severity": "info",
+          "observation": "The add-on combination (captions, tts, audio, branding, effects, layout) is comprehensive and well-suited for a YouTube Short. All essential components for a polished short-form video are activated.",
+          "suggested_change": "None needed - add-on selection is appropriate for the template goal."
+        },
+        {
+          "area": "pipeline",
+          "severity": "medium",
+          "observation": "Job status is 'staged' rather than 'completed' or 'delivered', indicating the output was generated but not finalized or pushed to final delivery. This may leave users uncertain about whether their content is ready.",
+          "suggested_change": "Implement automatic status progression from 'staged' to 'completed' once assembly is verified, or provide clear user-facing guidance on what 'staged' means and next steps."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result', meaning automated quality validation did not execute or failed silently. For OPERATE tier, QA should be mandatory to ensure baseline quality standards.",
+          "suggested_change": "Add pipeline checkpoint that blocks 'staged' status until Twelve Labs QA completes successfully, or implement fallback QA mechanism when primary service is unavailable."
+        },
+        {
+          "area": "output",
+          "severity": "medium",
+          "observation": "Output URL structure contains raw internal identifiers (user ID, timestamp hashes) which are functional but create lengthy, non-shareable URLs that may cause issues in some platforms with URL length limits.",
+          "suggested_change": "Generate shortened or aliased public URLs for user-facing outputs while retaining internal identifiers for backend tracking."
+        },
+        {
+          "area": "flow",
+          "severity": "low",
+          "observation": "The pipeline successfully assembled the video with all 6 add-ons activated, demonstrating the OPERATE tier's automation capabilities are functioning for content generation.",
+          "suggested_change": "Consider adding a completion webhook or notification to inform users when staged content is ready for review."
+        }
+      ],
+      "ran_at": "2026-05-31T19:31:11.423264+00:00",
+      "template_id": "a6b59d7f-c4e9-427d-aaa0-167af544e14c"
+    },
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780255872049",
+      "label": "Instagram Reel",
+      "tier": "operate",
+      "status": "staged",
+      "output_url": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780255872049/1780255886672_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780255872049.mp4",
+      "grade": 100,
+      "grade_detail": {
+        "grade": 100,
+        "passed": true,
+        "gaps": [],
+        "summary": "Grade: 100/100 | PASSED"
+      },
+      "twelve_labs_qa": {
+        "score": null,
+        "pass": null,
+        "issues": [],
+        "summary": "No Twelve Labs QA result (extension may not have run)"
+      },
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "add_ons",
+          "severity": "info",
+          "observation": "Comprehensive add-on combination activated (captions, audio, branding, colorGrade, effects, layout) aligns well with Instagram Reel requirements for the OPERATE tier, covering all essential production elements.",
+          "suggested_change": "None needed - add-on selection is appropriate for professional Instagram Reel output."
+        },
+        {
+          "area": "pipeline",
+          "severity": "medium",
+          "observation": "Job final status is 'staged' rather than 'completed' or 'delivered', indicating the output may be pending final approval or handoff step. This could cause delays in content delivery workflows.",
+          "suggested_change": "Implement auto-progression from 'staged' to 'completed' for OPERATE tier jobs after successful assembly, or clarify what manual action is required to advance status."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' - this means no automated quality validation was performed on the output video, leaving potential issues (audio sync, visual artifacts, content compliance) undetected.",
+          "suggested_change": "Investigate why Twelve Labs QA failed to process this job. Implement fallback QA mechanism or retry logic, and add alerting when QA service returns null results."
+        },
+        {
+          "area": "output",
+          "severity": "medium",
+          "observation": "Output URL structure contains redundant user ID and job identifiers (user_3DeZEr79TWcmvEvCMlu8lmM1FdU appears twice in path), suggesting potential path construction inefficiency. Cannot confirm file accessibility without direct verification.",
+          "suggested_change": "Simplify output URL path structure and implement automated URL validation ping after assembly to confirm asset accessibility before marking job as staged."
+        },
+        {
+          "area": "flow",
+          "severity": "low",
+          "observation": "For OPERATE tier, the workflow completed assembly but lacks confirmation of final QA gate passage, creating ambiguity about production readiness for client delivery.",
+          "suggested_change": "Add explicit QA pass/fail status as a required field before allowing 'staged' status, ensuring OPERATE tier deliverables meet quality SLA before client visibility."
+        }
+      ],
+      "ran_at": "2026-05-31T19:52:37.035213+00:00",
+      "template_id": "b03f5f83-20b4-4779-a785-aa602cceaa9a"
+    },
+    {
+      "phase": "0",
+      "job_id": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_COMPACT_FETCH_clips_1780257157576",
+      "label": "Post Everywhere",
+      "tier": "operate",
+      "status": "timeout",
+      "output_url": null,
+      "grade": 0,
+      "grade_detail": null,
+      "twelve_labs_qa": {},
+      "gpt4o_qa": {},
+      "ux_observations": [
+        {
+          "area": "pipeline",
+          "severity": "critical",
+          "observation": "Job terminated with 'timeout' status and no output URL was generated, indicating the pipeline failed to complete video production entirely.",
+          "suggested_change": "Investigate timeout thresholds for the OPERATE tier with 6 add-ons active. Consider implementing progressive rendering checkpoints to salvage partial outputs and identify which stage caused the hang."
+        },
+        {
+          "area": "add_ons",
+          "severity": "medium",
+          "observation": "Six add-ons activated simultaneously (captions, audio, branding, colorGrade, effects, layout) for a 'Post Everywhere' template may create excessive processing load contributing to timeout.",
+          "suggested_change": "Profile resource consumption per add-on combination. For social distribution templates, consider a leaner default preset (e.g., captions + branding + layout) with optional enhancement tiers."
+        },
+        {
+          "area": "quality",
+          "severity": "high",
+          "observation": "Twelve Labs QA returned 'no result' \u2014 without a produced asset, no quality validation was possible, leaving a blind spot in the feedback loop.",
+          "suggested_change": "Implement pre-render validation checkpoints so QA can flag issues (e.g., missing assets, incompatible settings) before full pipeline execution begins."
+        },
+        {
+          "area": "flow",
+          "severity": "high",
+          "observation": "OPERATE tier users expect reliable, hands-off production. A silent timeout with no output or actionable error messaging severely undermines this tier's value proposition.",
+          "suggested_change": "Add user-facing timeout alerts with estimated retry times, root cause hints, and an option to auto-retry with reduced add-ons or lower resolution fallback."
+        },
+        {
+          "area": "pipeline",
+          "severity": "medium",
+          "observation": "No diagnostic data available to determine if timeout occurred during asset assembly, rendering, encoding, or upload phase.",
+          "suggested_change": "Implement granular stage-level telemetry logging (with timestamps) to pinpoint bottleneck stages for failed jobs and enable faster incident triage."
+        }
+      ],
+      "ran_at": "2026-05-31T20:23:07.707473+00:00",
+      "jira_ticket": "CPD-469"
+    }
+  ],
+  "saved_templates": [
+    {
+      "templateId": "a6b59d7f-c4e9-427d-aaa0-167af544e14c",
+      "name": "[Run11] YouTube Short",
+      "tier": "operate",
+      "round_trip": true
+    },
+    {
+      "templateId": "b03f5f83-20b4-4779-a785-aa602cceaa9a",
+      "name": "[Run11] Instagram Reel",
+      "tier": "operate",
+      "round_trip": true
+    }
+  ]
+}

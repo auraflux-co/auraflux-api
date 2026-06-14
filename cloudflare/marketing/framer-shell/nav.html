@@ -1,0 +1,99 @@
+<style>
+#af-nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  height:84px;
+  background:rgba(11,18,32,0.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;
+  padding:0 32px;
+  font-family:'Satoshi','Inter',-apple-system,sans-serif;
+}
+#af-nav-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  width:100%;max-width:1320px;margin:0 auto;
+}
+#af-nav-logo{
+  display:block;width:100px;height:67px;flex-shrink:0;text-decoration:none;
+}
+#af-nav-logo img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;}
+#af-nav-divider{
+  width:1px;height:28px;background:rgba(255,255,255,0.12);
+  margin:0 24px 0 20px;flex-shrink:0;
+}
+#af-nav-links{
+  display:flex;align-items:center;gap:28px;flex:1;
+}
+#af-nav-links a{
+  font-size:15px;font-weight:400;color:rgba(255,255,255,0.85);
+  text-decoration:none;letter-spacing:0.01em;white-space:nowrap;
+  transition:color .15s;
+}
+#af-nav-links a:hover{color:#ffffff;text-decoration:none;}
+#af-nav-right{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+#af-nav-phone{
+  display:flex;align-items:center;gap:6px;
+  padding:9px 16px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px;
+  color:rgba(255,255,255,0.85);
+  text-decoration:none;
+  font-size:14px;font-weight:500;letter-spacing:0.01em;white-space:nowrap;
+  transition:background .15s;
+}
+#af-nav-phone:hover{background:rgba(255,255,255,0.1);text-decoration:none;color:#fff;}
+#af-nav-cta{
+  display:inline-block;
+  padding:9px 20px;
+  background:#f5c542;
+  border-radius:10px;
+  color:#0b1220;
+  font-size:14px;font-weight:700;letter-spacing:-0.01em;white-space:nowrap;
+  text-decoration:none;transition:opacity .15s;
+  font-family:inherit;
+}
+#af-nav-cta:hover{opacity:.88;text-decoration:none;}
+@media(max-width:900px){
+  #af-nav-links{gap:18px;}
+  #af-nav-links a{font-size:14px;}
+  #af-nav-phone span{display:none;}
+  #af-nav-divider{margin:0 16px 0 14px;}
+}
+@media(max-width:680px){
+  #af-nav-links{display:none;}
+  #af-nav-divider{display:none;}
+  #af-nav-cta{padding:7px 14px;font-size:13px;}
+}
+@media(max-width:400px){
+  #af-nav-cta{display:none;}
+}
+</style>
+
+<nav id="af-nav">
+  <div id="af-nav-inner">
+
+    <a id="af-nav-logo" href="/" aria-label="AuraFlux home">
+      <img src="https://assets.auraflux.co/marketing/images/QbVUbsjpCzrLC1gPNNNGcQzwPp8.png" alt="AuraFlux" width="100" height="67">
+    </a>
+
+    <div id="af-nav-divider"></div>
+
+    <div id="af-nav-links">
+      <a href="/">Home</a>
+      <a href="/our-story">Our Story</a>
+      <a href="/our-system">Our System</a>
+      <a href="/pricing">Plans</a>
+      <a href="/roadmap">Roadmap</a>
+      <a href="/contact-us">Contact Us</a>
+    </div>
+
+    <div id="af-nav-right">
+      <a id="af-nav-cta" href="/plans">Get Started</a>
+    </div>
+
+  </div>
+</nav>

@@ -1,0 +1,105 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e9]:
+    - banner [ref=e10]:
+      - generic [ref=e16]:
+        - generic:
+          - generic:
+            - link "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e18] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "LUMI EDUCATION LOGO 01 (1) (1).png" [ref=e19]
+            - generic [ref=e25]:
+              - generic:
+                - generic:
+                  - navigation "Site" [ref=e30]:
+                    - list [ref=e31]:
+                      - listitem [ref=e32]:
+                        - link "Home" [ref=e33] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com
+                          - paragraph [ref=e37]: Home
+                      - listitem [ref=e38]:
+                        - link "About Us" [ref=e39] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/about-us
+                          - paragraph [ref=e43]: About Us
+                      - listitem [ref=e44]:
+                        - link "Summer Camps 2026" [ref=e45] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/summer-camps-2026
+                          - paragraph [ref=e49]: Summer Camps 2026
+                      - listitem [ref=e50]:
+                        - link "Tutoring" [ref=e51] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/tutoring
+                          - paragraph [ref=e55]: Tutoring
+                      - listitem [ref=e56]:
+                        - link "Become a Lumi-nary" [ref=e57] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                          - paragraph [ref=e61]: Become a Lumi-nary
+                  - link "Call (571) 207-8373" [ref=e63] [cursor=pointer]:
+                    - /url: tel:+15712078373
+                    - generic [ref=e65]: Call (571) 207-8373
+    - main [ref=e66]:
+      - generic [ref=e71]:
+        - generic:
+          - generic:
+            - generic:
+              - generic [ref=e72]:
+                - generic:
+                  - generic:
+                    - heading "About Us" [level=1] [ref=e76]:
+                      - generic [ref=e80]: About Us
+                    - generic:
+                      - paragraph [ref=e81]:
+                        - generic [ref=e85]: The word "Lumi" is derived from the Latin noun "Luminis" meaning "light".
+                      - paragraph [ref=e86]
+                      - paragraph [ref=e87]:
+                        - generic [ref=e91]: At Lumi, we transform education into an immersive learning experience. Through innovative technology, hands-on exploration, and interactive learning environments, we are hoping to ignite curiosity and build real-world skills for our children. We don't just teach concepts - we create moments of discovery and innovation.
+              - generic [ref=e100]:
+                - img "Child Building Robot" [ref=e106]
+                - generic [ref=e107]:
+                  - generic:
+                    - generic:
+                      - heading "Our Mission" [level=2] [ref=e111]:
+                        - generic [ref=e115]: Our Mission
+                      - generic:
+                        - paragraph [ref=e116]:
+                          - generic [ref=e120]: To ignite curiosity and build lifelong learners by delivering innovative, immersive, and hands-on educational experiences that make learning meaningful and fun.
+                        - paragraph [ref=e121]
+              - generic [ref=e130]:
+                - generic [ref=e131]:
+                  - generic:
+                    - generic:
+                      - heading "Our Vision" [level=2] [ref=e135]:
+                        - generic [ref=e139]: Our Vision
+                      - paragraph [ref=e140]:
+                        - generic [ref=e143]: To create a generation of confident, curious, and capable learners who approach the world with creativity, critical thinking, and a love for innovation.
+                - img "Colorful Educational Toys" [ref=e149]
+    - contentinfo [ref=e151]:
+      - generic [ref=e162]:
+        - generic [ref=e163]:
+          - generic:
+            - generic:
+              - 'heading "Call Now: +1 (571) 207-8373" [level=5] [ref=e167]':
+                - 'link "Call Now: +1 (571) 207-8373" [ref=e172] [cursor=pointer]':
+                  - /url: tel:+15712078373
+              - paragraph [ref=e173]:
+                - link "contact.us@learningwithlumi.com" [ref=e176] [cursor=pointer]:
+                  - /url: mailto:contact.us@learningwithlumi.com
+                  - generic [ref=e177]: contact.us@learningwithlumi.com
+        - paragraph [ref=e182]: Copyright © 2026 Lumi Education
+        - generic [ref=e183]:
+          - generic:
+            - generic:
+              - heading "Quick Links" [level=5] [ref=e187]:
+                - generic [ref=e190]: Quick Links
+              - heading "About Us Summer Camp 1:1 Tutoring Contact Us Careers" [level=6] [ref=e191]:
+                - generic [ref=e194]:
+                  - link "About Us" [ref=e195] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                  - link "Summer Camp" [ref=e196] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/summer-camps-2026
+                  - link "1:1 Tutoring" [ref=e197] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                  - link "Contact Us" [ref=e198] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                  - link "Careers" [ref=e199] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/comming-soon
+  - region "bottom of page"

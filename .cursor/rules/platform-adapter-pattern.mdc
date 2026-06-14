@@ -1,0 +1,45 @@
+---
+description: Enforce the AuraFlux platform adapter pattern for all platform integrations (publish, shoppable, content sources, etc.)
+alwaysApply: true
+---
+
+# Platform Adapter Pattern
+
+All platform integrations (publish, shoppable, content sources, video gen) MUST follow this structure:
+
+```
+lib/<feature>/index.js        ← core logic, platform-agnostic contract
+lib/<feature>/adapters/
+  youtube.js                  ← YouTube-specific implementation
+  tiktok.js                   ← TikTok-specific implementation
+  instagram.js                ← Instagram-specific implementation
+```
+
+## Rules
+
+**✅ Core layer (`index.js`) MUST:**
+- Define the input/output contract (what params in, what shape out)
+- Select and invoke the correct adapter based on customer config
+- Own retry logic, error normalisation, and logging
+- Know nothing about platform-specific auth, payloads, or APIs
+
+**✅ Adapter layer MUST:**
+- Implement only one platform
+- Own all platform-specific API calls, auth headers, and payload shapes
+- Export a single named function matching the core contract
+
+**❌ NEVER:**
+- Put `if (platform === 'youtube')` blocks inside core logic
+- Put retry/error normalisation inside an adapter
+- Add a new platform by editing existing files — add a new adapter file only
+
+## Adding a new platform
+
+1. Create `lib/<feature>/adapters/<platform>.js`
+2. Implement the contract interface
+3. Register it in `lib/<feature>/index.js` adapter map
+4. No other files change
+
+## PR review check
+
+Flag any PR that adds platform names, platform API URLs, or platform auth logic outside an `adapters/` directory.

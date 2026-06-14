@@ -1,0 +1,26 @@
+{
+  "experimentalServices": {
+    "auraflux-api": {
+      "type": "web",
+      "routePrefix": "/_/auraflux-api"
+    },
+    "auraflux-app": {
+      "type": "web",
+      "root": "app",
+      "routePrefix": "/",
+      "framework": "nextjs",
+      "buildCommand": "npm install --include=dev && npm run build && (pip3 install -U yt-dlp curl-cffi tls-client --quiet 2>/dev/null || python3 -m pip install -U yt-dlp curl-cffi tls-client --quiet 2>/dev/null || true)"
+    },
+    "auraflux-api-staging": {
+      "type": "web",
+      "routePrefix": "/_/auraflux-api-staging"
+    },
+    "auraflux-app-staging": {
+      "type": "web",
+      "root": "app",
+      "routePrefix": "/_/auraflux-app-staging",
+      "framework": "nextjs",
+      "buildCommand": "npm install && npm run build"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "hero_headline": "Blog",
+  "hero_sub": "Insights on automated video production, content automation, and building a streaming-to-revenue pipeline.",
+  "posts": [
+    {
+      "tag": "Guide",
+      "title": "From Twitch Clip to Published Video in Under 5 Minutes",
+      "description": "How AuraFlux's portal pipeline handles sourcing, scripting, voiceover, thumbnails, and direct publishing. automatically.",
+      "status": "Coming soon",
+      "url": ""
+    },
+    {
+      "tag": "Monetization",
+      "title": "The Multi-Platform Content Strategy for Streamers",
+      "description": "How top streamers on Twitch and Kick maximise revenue by cross-posting to YouTube, TikTok, and subscription platforms.",
+      "status": "Coming soon",
+      "url": ""
+    },
+    {
+      "tag": "Platform",
+      "title": "Direct Publishing to TikTok and YouTube: A Deep Dive",
+      "description": "OAuth-based direct publish means no manual uploads. Here's how the AuraFlux publish portal handles both platforms.",
+      "status": "Coming soon",
+      "url": ""
+    },
+    {
+      "tag": "Automation",
+      "title": "Inside AuraFlux's Portal Pipeline: How 6 Portals Turn a Clip Into a Published Video",
+      "description": "A detailed walkthrough of each production stage. from Portal 0 (intake) through Portal 5 (publish).",
+      "status": "Coming soon",
+      "url": ""
+    }
+  ]
+}

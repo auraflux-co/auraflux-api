@@ -20,7 +20,9 @@ const path = require('path');
 
 const BASE_URL = 'http://localhost:3000';
 const RESULTS_FILE = path.join(__dirname, 'output', 'concurrent_results.json');
-const TWITCH_TOKEN = process.env.TWITCH_TOKEN || require('dotenv').config({ path: path.join(__dirname, '../.env') }) && process.env.TWITCH_TOKEN;
+const TWITCH_TOKEN =
+  process.env.TWITCH_TOKEN ||
+  (require('dotenv').config({ path: path.join(__dirname, '../.env') }) && process.env.TWITCH_TOKEN);
 const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 
 // Parse CLI args
@@ -39,8 +41,8 @@ let _nbaCache = null;
 async function fetchTwitchItems(streamerName, clipsPerStreamer = 1) {
   try {
     const userResp = await axios.get(`https://api.twitch.tv/helix/users?login=${streamerName}`, {
-      headers: { 'Client-Id': TWITCH_CLIENT_ID, 'Authorization': `Bearer ${TWITCH_TOKEN}` },
-      timeout: 8000
+      headers: { 'Client-Id': TWITCH_CLIENT_ID, Authorization: `Bearer ${TWITCH_TOKEN}` },
+      timeout: 8000,
     });
     const user = userResp.data?.data?.[0];
     if (!user) return null;
@@ -48,7 +50,10 @@ async function fetchTwitchItems(streamerName, clipsPerStreamer = 1) {
     const since = new Date(Date.now() - 86400000 * 2).toISOString();
     const clipsResp = await axios.get(
       `https://api.twitch.tv/helix/clips?broadcaster_id=${user.id}&first=20&started_at=${since}`,
-      { headers: { 'Client-Id': TWITCH_CLIENT_ID, 'Authorization': `Bearer ${TWITCH_TOKEN}` }, timeout: 8000 }
+      {
+        headers: { 'Client-Id': TWITCH_CLIENT_ID, Authorization: `Bearer ${TWITCH_TOKEN}` },
+        timeout: 8000,
+      }
     );
     const clips = (clipsResp.data?.data || []).slice(0, clipsPerStreamer);
     if (!clips.length) return null;
@@ -64,13 +69,13 @@ async function fetchTwitchItems(streamerName, clipsPerStreamer = 1) {
         url: c.url,
         views: c.view_count,
         game: c.game_name || '',
-        thumbnailUrl: c.thumbnail_url || ''
+        thumbnailUrl: c.thumbnail_url || '',
       })),
       title: clips[0].title,
       url: clips[0].url,
       views: clips[0].view_count,
       game: clips[0].game_name || '',
-      thumbnailUrl: clips[0].thumbnail_url || ''
+      thumbnailUrl: clips[0].thumbnail_url || '',
     };
   } catch (e) {
     return null;
@@ -88,35 +93,44 @@ async function fetchNbaItems() {
       `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${dateKey}`,
       { timeout: 15000 }
     );
-    const events = (espnResp.data?.events || []).filter(ev => ev.status?.type?.completed).slice(0, 1);
+    const events = (espnResp.data?.events || [])
+      .filter((ev) => ev.status?.type?.completed)
+      .slice(0, 1);
     if (!events.length) return [];
 
     const ev = events[0];
     const comp = (ev.competitions || [])[0] || {};
     const competitors = comp.competitors || [];
-    const away = competitors.find(c => c.homeAway === 'away') || competitors[0] || {};
-    const home = competitors.find(c => c.homeAway === 'home') || competitors[1] || {};
+    const away = competitors.find((c) => c.homeAway === 'away') || competitors[0] || {};
+    const home = competitors.find((c) => c.homeAway === 'home') || competitors[1] || {};
 
     // Step 2: scrape highlight clip via backend
-    const scrapeResp = await axios.post(`${BASE_URL}/nba/scrape-game-highlight`,
-      { gameId: ev.id }, { timeout: 60000 }
+    const scrapeResp = await axios.post(
+      `${BASE_URL}/nba/scrape-game-highlight`,
+      { gameId: ev.id },
+      { timeout: 60000 }
     );
 
-    if (!scrapeResp.data?.ok || !scrapeResp.data?.videoUrl) { _nbaCache = []; return []; }
+    if (!scrapeResp.data?.ok || !scrapeResp.data?.videoUrl) {
+      _nbaCache = [];
+      return [];
+    }
 
-    _nbaCache = [{
-      gameId: ev.id,
-      away: away.team?.displayName || 'Away',
-      home: home.team?.displayName || 'Home',
-      awayAbbr: away.team?.abbreviation || 'AWY',
-      homeAbbr: home.team?.abbreviation || 'HME',
-      awayScore: away.score || '',
-      homeScore: home.score || '',
-      clipUrl: scrapeResp.data.videoUrl,
-      clipDuration: scrapeResp.data.duration || null,
-      thumbnailUrl: scrapeResp.data.thumbnail || '',
-      localPath: scrapeResp.data.localPath || ''
-    }];
+    _nbaCache = [
+      {
+        gameId: ev.id,
+        away: away.team?.displayName || 'Away',
+        home: home.team?.displayName || 'Home',
+        awayAbbr: away.team?.abbreviation || 'AWY',
+        homeAbbr: home.team?.abbreviation || 'HME',
+        awayScore: away.score || '',
+        homeScore: home.score || '',
+        clipUrl: scrapeResp.data.videoUrl,
+        clipDuration: scrapeResp.data.duration || null,
+        thumbnailUrl: scrapeResp.data.thumbnail || '',
+        localPath: scrapeResp.data.localPath || '',
+      },
+    ];
     return _nbaCache;
   } catch (e) {
     _nbaCache = [];
@@ -130,15 +144,17 @@ async function fetchNewsItems(count = 1) {
     const resp = await axios.get(`${BASE_URL}/news/us-canada-videos`, { timeout: 90000 }); // Puppeteer scraper takes 30-60s
     // endpoint returns { videos: [...] } not { items: [...] }
     const videos = resp.data?.videos || resp.data?.items || [];
-    _newsCache = videos.map(it => ({
-      title: (it.title || '').trim(),
-      desc: (it.description || '').replace(/<[^>]+>/g, '').slice(0, 1200),
-      source: 'Al Jazeera',
-      link: it.link || it.url || '',
-      thumbnailUrl: it.thumbnail || '',
-      videoUrl: it.hlsUrl || it.videoUrl || '',
-      pubDate: it.pubDate || ''
-    })).filter(it => it.videoUrl);
+    _newsCache = videos
+      .map((it) => ({
+        title: (it.title || '').trim(),
+        desc: (it.description || '').replace(/<[^>]+>/g, '').slice(0, 1200),
+        source: 'Al Jazeera',
+        link: it.link || it.url || '',
+        thumbnailUrl: it.thumbnail || '',
+        videoUrl: it.hlsUrl || it.videoUrl || '',
+        pubDate: it.pubDate || '',
+      }))
+      .filter((it) => it.videoUrl);
     return _newsCache.slice(0, count);
   } catch (e) {
     _newsCache = [];
@@ -149,8 +165,18 @@ async function fetchNewsItems(count = 1) {
 // ─── Test case builders ──────────────────────────────────────────────────────
 
 const STREAMERS = [
-  'jasontheween','hasanabi','stableronaldo','jaycinco','yonnajay',
-  'adapt','lacy','marlon','cinna','maya','extraemily','yourragegaming'
+  'jasontheween',
+  'hasanabi',
+  'stableronaldo',
+  'jaycinco',
+  'yonnajay',
+  'adapt',
+  'lacy',
+  'marlon',
+  'cinna',
+  'maya',
+  'extraemily',
+  'yourragegaming',
 ];
 
 async function buildTwitchTest(id) {
@@ -163,9 +189,14 @@ async function buildTwitchTest(id) {
     form: 'long',
     payload: {
       type: 'twitch',
-      date: new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' }),
-      items: [item]
-    }
+      date: new Date().toLocaleDateString([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      items: [item],
+    },
   };
 }
 
@@ -179,9 +210,14 @@ async function buildTwitchShortTest(id) {
     form: 'short',
     payload: {
       type: 'twitch-short',
-      date: new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' }),
-      items: [item]
-    }
+      date: new Date().toLocaleDateString([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      items: [item],
+    },
   };
 }
 
@@ -194,9 +230,14 @@ async function buildNbaTest(id) {
     form: 'long',
     payload: {
       type: 'nba',
-      date: new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' }),
-      items
-    }
+      date: new Date().toLocaleDateString([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      items,
+    },
   };
 }
 
@@ -209,9 +250,14 @@ async function buildNbaShortTest(id) {
     form: 'short',
     payload: {
       type: 'nba-short',
-      date: new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' }),
-      items: items.slice(0, 1)
-    }
+      date: new Date().toLocaleDateString([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      items: items.slice(0, 1),
+    },
   };
 }
 
@@ -224,9 +270,14 @@ async function buildNewsTest(id) {
     form: 'long',
     payload: {
       type: 'news',
-      date: new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' }),
-      items
-    }
+      date: new Date().toLocaleDateString([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      items,
+    },
   };
 }
 
@@ -239,9 +290,14 @@ async function buildNewsShortTest(id) {
     form: 'short',
     payload: {
       type: 'news-short',
-      date: new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' }),
-      items
-    }
+      date: new Date().toLocaleDateString([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      items,
+    },
   };
 }
 
@@ -258,13 +314,13 @@ async function runTest(testCase) {
     gate1: null,
     status: 'running',
     error: null,
-    durationMs: null
+    durationMs: null,
   };
 
   try {
     const resp = await axios.post(`${BASE_URL}/generate-full-script`, testCase.payload, {
       timeout: 300000, // 5 min — NBA long-form Gemini analysis takes 2-3 min
-      validateStatus: () => true // don't throw on 4xx/5xx
+      validateStatus: () => true, // don't throw on 4xx/5xx
     });
 
     result.durationMs = Date.now() - start;
@@ -292,12 +348,18 @@ async function runTest(testCase) {
       // 'pass' = ≥90 = auto-proceed
       // 'fail' = <70 = hard fail
       const outcome = qa?.outcome;
-      result.gate1 = outcome === 'pass' ? 'PASS' :
-                     (outcome === 'sendback' || outcome === 'manual') ? 'SENDBACK' :
-                     outcome === 'fail' ? 'HARD_FAIL' : 'PASS'; // no score = gate1 not wired, treat as pass
+      result.gate1 =
+        outcome === 'pass'
+          ? 'PASS'
+          : outcome === 'sendback' || outcome === 'manual'
+            ? 'SENDBACK'
+            : outcome === 'fail'
+              ? 'HARD_FAIL'
+              : 'PASS'; // no score = gate1 not wired, treat as pass
       result.gate1Score = qa?.score || null;
       result.wordCount = resp.data?.wordCount;
-      result.status = (result.gate1 === 'PASS' || result.gate1 === 'SENDBACK') ? 'pass' : 'gate1_fail';
+      result.status =
+        result.gate1 === 'PASS' || result.gate1 === 'SENDBACK' ? 'pass' : 'gate1_fail';
     } else {
       result.gate0 = 'ERROR';
       result.gate1 = 'SKIPPED';
@@ -312,11 +374,19 @@ async function runTest(testCase) {
     result.gate1 = 'SKIPPED';
   }
 
-  const icon = result.status === 'pass' ? '✅' :
-               result.status === 'gate0_fail' ? '❌G0' :
-               result.status === 'gate1_fail' ? '❌G1' :
-               result.status === 'gate1_review' ? '🟡G1' : '💥';
-  console.log(`${icon} [${result.id}] ${result.status} | G0:${result.gate0} G1:${result.gate1}${result.gate1Score ? ' score:'+result.gate1Score : ''} | ${result.durationMs}ms${result.error ? ' | '+result.error.slice(0,80) : ''}`);
+  const icon =
+    result.status === 'pass'
+      ? '✅'
+      : result.status === 'gate0_fail'
+        ? '❌G0'
+        : result.status === 'gate1_fail'
+          ? '❌G1'
+          : result.status === 'gate1_review'
+            ? '🟡G1'
+            : '💥';
+  console.log(
+    `${icon} [${result.id}] ${result.status} | G0:${result.gate0} G1:${result.gate1}${result.gate1Score ? ' score:' + result.gate1Score : ''} | ${result.durationMs}ms${result.error ? ' | ' + result.error.slice(0, 80) : ''}`
+  );
 
   return result;
 }
@@ -327,9 +397,10 @@ async function buildTestQueue(total) {
   console.log(`\nBuilding ${total} test cases — fetching real clips from live sources...`);
 
   const builders = [];
-  const types = contentFilter === 'all'
-    ? ['twitch', 'twitch-short', 'nba', 'nba-short', 'news', 'news-short']
-    : [contentFilter];
+  const types =
+    contentFilter === 'all'
+      ? ['twitch', 'twitch-short', 'nba', 'nba-short', 'news', 'news-short']
+      : [contentFilter];
 
   for (let i = 0; i < total; i++) {
     const type = types[i % types.length];
@@ -345,7 +416,9 @@ async function buildTestQueue(total) {
   // Build all test cases concurrently (just fetching metadata, not running pipeline)
   const cases = await Promise.all(builders);
   const valid = cases.filter(Boolean);
-  console.log(`Built ${valid.length}/${total} test cases (${total - valid.length} skipped — no clips available)`);
+  console.log(
+    `Built ${valid.length}/${total} test cases (${total - valid.length} skipped — no clips available)`
+  );
   return valid;
 }
 
@@ -402,7 +475,9 @@ async function main() {
   // Pre-fetch shared sources once to avoid hammering scrapers with 100 concurrent requests
   console.log('Pre-fetching shared sources (news, NBA)...');
   await Promise.all([fetchNewsItems(1), fetchNbaItems()]);
-  console.log(`  News: ${_newsCache?.length || 0} stories | NBA: ${_nbaCache?.length || 0} games\n`);
+  console.log(
+    `  News: ${_newsCache?.length || 0} stories | NBA: ${_nbaCache?.length || 0} games\n`
+  );
 
   const testCases = await buildTestQueue(concurrency);
   if (!testCases.length) {
@@ -422,26 +497,28 @@ async function main() {
     const batchResults = await Promise.all(batch.map(runTest));
     results.push(...batchResults);
     const done = Math.min(i + BATCH_SIZE, testCases.length);
-    const batchErrors = batchResults.filter(r => r.status === 'error').length;
-    console.log(`  Batch ${Math.ceil(done/BATCH_SIZE)}/${Math.ceil(testCases.length/BATCH_SIZE)} complete (${done}/${testCases.length} jobs)\n`);
+    const batchErrors = batchResults.filter((r) => r.status === 'error').length;
+    console.log(
+      `  Batch ${Math.ceil(done / BATCH_SIZE)}/${Math.ceil(testCases.length / BATCH_SIZE)} complete (${done}/${testCases.length} jobs)\n`
+    );
     // If batch had errors (possible server crash), wait for PM2 to recover before next batch
     if (batchErrors > 0 && i + BATCH_SIZE < testCases.length) {
       console.log(`  ⚠️  ${batchErrors} errors in batch — waiting 8s for server recovery...\n`);
-      await new Promise(r => setTimeout(r, 8000));
+      await new Promise((r) => setTimeout(r, 8000));
     }
   }
 
   const totalMs = Date.now() - startAll;
 
   // ─── Summary ───────────────────────────────────────────────────────────────
-  const passed    = results.filter(r => r.status === 'pass').length;
-  const g0fail    = results.filter(r => r.status === 'gate0_fail').length;
-  const g1fail    = results.filter(r => r.status === 'gate1_fail').length;
-  const g1review  = results.filter(r => r.status === 'gate1_review').length;
-  const errors    = results.filter(r => r.status === 'error').length;
+  const passed = results.filter((r) => r.status === 'pass').length;
+  const g0fail = results.filter((r) => r.status === 'gate0_fail').length;
+  const g1fail = results.filter((r) => r.status === 'gate1_fail').length;
+  const g1review = results.filter((r) => r.status === 'gate1_review').length;
+  const errors = results.filter((r) => r.status === 'error').length;
 
   const byType = {};
-  results.forEach(r => {
+  results.forEach((r) => {
     if (!byType[r.type]) byType[r.type] = { pass: 0, g0fail: 0, g1fail: 0, review: 0, error: 0 };
     if (r.status === 'pass') byType[r.type].pass++;
     else if (r.status === 'gate0_fail') byType[r.type].g0fail++;
@@ -450,54 +527,75 @@ async function main() {
     else byType[r.type].error++;
   });
 
-  const avgDuration = Math.round(results.reduce((s, r) => s + (r.durationMs || 0), 0) / results.length);
-  const g1scores = results.filter(r => r.gate1Score).map(r => r.gate1Score);
-  const avgG1Score = g1scores.length ? Math.round(g1scores.reduce((a, b) => a + b, 0) / g1scores.length) : null;
+  const avgDuration = Math.round(
+    results.reduce((s, r) => s + (r.durationMs || 0), 0) / results.length
+  );
+  const g1scores = results.filter((r) => r.gate1Score).map((r) => r.gate1Score);
+  const avgG1Score = g1scores.length
+    ? Math.round(g1scores.reduce((a, b) => a + b, 0) / g1scores.length)
+    : null;
 
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('📊 RESULTS SUMMARY');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`Total:     ${results.length} jobs in ${(totalMs/1000).toFixed(1)}s`);
-  console.log(`✅ Pass:    ${passed} (${Math.round(passed/results.length*100)}%)`);
-  console.log(`❌ Gate 0:  ${g0fail} (${Math.round(g0fail/results.length*100)}%)`);
-  console.log(`❌ Gate 1:  ${g1fail} (${Math.round(g1fail/results.length*100)}%)`);
-  console.log(`🟡 Review:  ${g1review} (${Math.round(g1review/results.length*100)}%)`);
-  console.log(`💥 Error:   ${errors} (${Math.round(errors/results.length*100)}%)`);
+  console.log(`Total:     ${results.length} jobs in ${(totalMs / 1000).toFixed(1)}s`);
+  console.log(`✅ Pass:    ${passed} (${Math.round((passed / results.length) * 100)}%)`);
+  console.log(`❌ Gate 0:  ${g0fail} (${Math.round((g0fail / results.length) * 100)}%)`);
+  console.log(`❌ Gate 1:  ${g1fail} (${Math.round((g1fail / results.length) * 100)}%)`);
+  console.log(`🟡 Review:  ${g1review} (${Math.round((g1review / results.length) * 100)}%)`);
+  console.log(`💥 Error:   ${errors} (${Math.round((errors / results.length) * 100)}%)`);
   console.log(`Avg time:  ${avgDuration}ms per job`);
   if (avgG1Score) console.log(`Avg G1 score: ${avgG1Score}/100`);
   console.log('\nBy content type:');
   Object.entries(byType).forEach(([type, counts]) => {
-    console.log(`  ${type.padEnd(12)} pass:${counts.pass} g0:${counts.g0fail} g1:${counts.g1fail} review:${counts.review} err:${counts.error}`);
+    console.log(
+      `  ${type.padEnd(12)} pass:${counts.pass} g0:${counts.g0fail} g1:${counts.g1fail} review:${counts.review} err:${counts.error}`
+    );
   });
 
   // Top errors
   const errorGroups = {};
-  results.filter(r => r.error).forEach(r => {
-    const key = (r.error || '').slice(0, 80);
-    errorGroups[key] = (errorGroups[key] || 0) + 1;
-  });
+  results
+    .filter((r) => r.error)
+    .forEach((r) => {
+      const key = (r.error || '').slice(0, 80);
+      errorGroups[key] = (errorGroups[key] || 0) + 1;
+    });
   if (Object.keys(errorGroups).length) {
     console.log('\nTop errors:');
-    Object.entries(errorGroups).sort((a,b) => b[1]-a[1]).slice(0, 5).forEach(([msg, count]) => {
-      console.log(`  ${count}x: ${msg}`);
-    });
+    Object.entries(errorGroups)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .forEach(([msg, count]) => {
+        console.log(`  ${count}x: ${msg}`);
+      });
   }
 
   // Write results
   fs.mkdirSync(path.dirname(RESULTS_FILE), { recursive: true });
-  fs.writeFileSync(RESULTS_FILE, JSON.stringify({
-    runAt: new Date().toISOString(),
-    concurrency,
-    contentFilter,
-    totalMs,
-    summary: { passed, g0fail, g1fail, g1review, errors, avgDuration, avgG1Score },
-    byType,
-    results
-  }, null, 2));
+  fs.writeFileSync(
+    RESULTS_FILE,
+    JSON.stringify(
+      {
+        runAt: new Date().toISOString(),
+        concurrency,
+        contentFilter,
+        totalMs,
+        summary: { passed, g0fail, g1fail, g1review, errors, avgDuration, avgG1Score },
+        byType,
+        results,
+      },
+      null,
+      2
+    )
+  );
   console.log(`\nFull results: test/output/concurrent_results.json`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
   process.exit(passed === results.length ? 0 : 1);
 }
 
-main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });
+main().catch((e) => {
+  console.error('Fatal:', e.message);
+  process.exit(1);
+});

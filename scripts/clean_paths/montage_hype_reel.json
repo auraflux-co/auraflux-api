@@ -1,0 +1,16 @@
+{
+  "templateId": "montage_hype_reel",
+  "label": "Montage Hype Reel",
+  "format": "portrait",
+  "platforms": [
+    "tiktok",
+    "youtube"
+  ],
+  "lastCleanRun": {
+    "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1780702164156",
+    "grade": 100,
+    "gitHash": "033b25bc",
+    "runDate": "2026-06-05T23:34:11.387064+00:00"
+  },
+  "cleanRunCount": 3
+}

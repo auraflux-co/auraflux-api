@@ -1,0 +1,82 @@
+{
+  "_comment": "WAN 2.2 T2V workflow — upgraded from WAN 2.1 per CPD-78. Model: Wan-AI/Wan2.2-T2V-A14B (FP8). Same node graph structure — only model/VAE filenames changed.",
+  "1": {
+    "class_type": "WanVideoModelLoader",
+    "inputs": {
+      "model": "Wan2.2-T2V-A14B-FP8.safetensors",
+      "base_precision": "fp8_e4m3fn",
+      "quantization": "disabled",
+      "load_device": "main_device",
+      "attention_mode": "sdpa"
+    }
+  },
+  "2": {
+    "class_type": "LoadWanVideoT5TextEncoder",
+    "inputs": {
+      "model_name": "umt5_xxl_fp8_e4m3fn.safetensors",
+      "precision": "bf16"
+    }
+  },
+  "3": {
+    "class_type": "WanVideoTextEncode",
+    "inputs": {
+      "t5": ["2", 0],
+      "positive_prompt": "{{POSITIVE_PROMPT}}",
+      "negative_prompt": "{{NEGATIVE_PROMPT}}",
+      "force_offload": true
+    }
+  },
+  "4": {
+    "class_type": "WanVideoEmptyEmbeds",
+    "inputs": {
+      "width": "{{WIDTH}}",
+      "height": "{{HEIGHT}}",
+      "num_frames": "{{NUM_FRAMES}}"
+    }
+  },
+  "5": {
+    "class_type": "WanVideoSampler",
+    "inputs": {
+      "model": ["1", 0],
+      "image_embeds": ["4", 0],
+      "text_embeds": ["3", 0],
+      "steps": 20,
+      "cfg": 6.0,
+      "shift": 5.0,
+      "seed": "{{SEED}}",
+      "force_offload": true,
+      "scheduler": "unipc",
+      "riflex_freq_index": 0
+    }
+  },
+  "6": {
+    "class_type": "WanVideoVAELoader",
+    "inputs": {
+      "model_name": "wan2.2_vae.safetensors",
+      "precision": "bf16"
+    }
+  },
+  "7": {
+    "class_type": "WanVideoDecode",
+    "inputs": {
+      "vae": ["6", 0],
+      "samples": ["5", 0],
+      "enable_vae_tiling": true,
+      "tile_x": 272,
+      "tile_y": 272,
+      "tile_stride_x": 144,
+      "tile_stride_y": 144
+    }
+  },
+  "8": {
+    "class_type": "SaveAnimatedWEBP",
+    "inputs": {
+      "images": ["7", 0],
+      "filename_prefix": "{{OUTPUT_PREFIX}}",
+      "fps": 16,
+      "lossless": false,
+      "quality": 85,
+      "method": "default"
+    }
+  }
+}

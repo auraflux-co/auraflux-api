@@ -242,3 +242,64 @@ Once fully decoupled:
 4. **Cloud deploy** — dashboard becomes a static file on CDN, server is the only thing that needs to be on Railway/Render
 5. **Mobile monitoring** — any browser can watch a job in progress
 6. **Automated test harness** — test scripts can POST generate, subscribe to SSE, assert gate scores without a browser
+
+---
+
+## C0→C1+ Component Mapping — 2026-04-27 Assessment
+
+This section maps each major `cwn_production.html` UI component to its C1+ Next.js/Shadcn equivalent. Use this when building `apps/web/` in Phase 3.
+
+### Component map
+
+| Current (cwn_production.html) | C1+ equivalent | Shadcn component | Notes |
+|-------------------------------|---------------|-----------------|-------|
+| Content type selector (NBA/News/Twitch dropdown) | Job creation form — "input mode" selector | `RadioGroup` or `Tabs` | Becomes Use My Content / Link Content / Start From Idea |
+| GENERATE SCRIPT button | "Create Job" primary CTA | `Button` (variant=default) | POSTs to `POST /api/jobs` with order.services |
+| Job card (title, stage indicator, segment list) | Job status card | `Card` + `Badge` + `Progress` | Reads from `GET /api/jobs/:id` on load, SSE for live updates |
+| Segment status list (rendering/completed/failed) | Segment timeline | `ScrollArea` + `Badge` (color-coded) | Driven by SSE `segment_complete` events |
+| Gate score display (Gate 1: 95/100) | Gate result badge | `Badge` + `Tooltip` | Driven by SSE `gate_score` events |
+| Clip picker (PICK CLIPS / PICK STORIES) | Content confirmation modal | `Dialog` + `Checkbox` + `AspectRatio` | Implements Stage 0b from DECOUPLED_VIDEO_PRODUCT_STACK.md |
+| Batch shorts selector (x1/x3/x5) | Format selector | `Select` or `ToggleGroup` | Part of job creation form |
+| ASSEMBLE button (to be removed per spec) | Auto-triggered by server | — | Phase C of decoupling plan |
+| FORCE ADVANCE / ROLLBACK | Operator-only escape hatch (curl, no UI) | — | Remove from C1+ dashboard |
+| Publish copy editor | Review + edit panel | `Textarea` + `Tabs` (per platform) | Preflight output review before Upload |
+| Drive URL / output video | Video preview | `AspectRatio` + `video` element | R2 URL streamed to player |
+| Queue / job list (sidebar) | Jobs list with status filter | `Table` or `List` + `Filter` | Polls `GET /api/jobs` |
+
+### What gets removed (C0-specific, not in C1+)
+
+- HeyGen segment cards (manual workflow) — C0 only
+- REFRESH IDs button — C0 only (HeyGen polling)
+- Restore from server / localStorage sync — replaced by server SSE
+- Manual upload of avatar segments — C0 only
+
+### Page structure comparison
+
+```
+C0 (cwn_production.html)              C1+ (app.auraflux.co/dashboard)
+-------------------------------        --------------------------------
+Single HTML file, 8000+ lines         Next.js app, modular components
+localStorage primary state             Server primary state (SSE)
+Polling-based updates                  SSE real-time updates
+C0 operator tool                       Multi-tenant customer dashboard
+Manual HeyGen workflow controls        No HeyGen — customer uploads or AI gen
+```
+
+### Equinox assessment
+
+**Equinox** refers to the Shadcn/Radix-based component system for the AuraFlux frontend. Key assessment:
+
+| Capability | Equinox / Shadcn covers? | Notes |
+|-----------|--------------------------|-------|
+| Job cards with status | Yes — `Card` + `Badge` | Standard pattern |
+| SSE / real-time updates | Via React `EventSource` hook | Not a UI component — server-driven |
+| Video preview | `AspectRatio` + native `<video>` | No Shadcn video player — use native |
+| File upload (Use My Content) | `Input type=file` + `Button` | Consider `react-dropzone` for drag-drop |
+| Content confirmation modal | `Dialog` + `Checkbox` | Standard Shadcn pattern |
+| Progress bars (pipeline stages) | `Progress` | Direct Shadcn component |
+| Platform selector (YT/TikTok/IG) | `ToggleGroup` or `CheckboxGroup` | Custom implementation on Radix |
+| Job creation wizard (3-step) | `Stepper` pattern | Not in Shadcn core — build with `Tabs` + state |
+
+**Migration gap:** The largest gap is the job creation wizard (3-step: choose entry mode → confirm content → configure output). Shadcn does not have a native Stepper — build it as a stateful `Tabs` component with disabled tabs for uncompleted steps.
+
+**Recommended first component to build:** Job status card (reads from `GET /api/jobs`, renders Card + Badge + Progress). It's the most visible element and drives the SSE integration pattern for everything else.

@@ -1,0 +1,95 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/blank
+                    - generic [ref=e55]: Contact Us
+      - main:
+        - generic [ref=e57]:
+          - group:
+            - heading "Cancellation & Refund Policy" [level=1] [ref=e61]
+            - heading "Introduction" [level=6] [ref=e63]:
+              - strong [ref=e64]: Introduction
+            - paragraph [ref=e66]: Thank you for registering for the Lumi Education Summer Programs. At Lumi Education, we understand that plans can change.
+            - heading "Cancellation & Refund Schedule" [level=6] [ref=e68]:
+              - strong [ref=e69]: Cancellation & Refund Schedule
+            - paragraph [ref=e71]: "By May 31, 2026: Families who cancel their registration on or before May 31, 2026 will receive a full refund of all camp fees paid."
+            - paragraph [ref=e73]: "June 1–15, 2026: Families who cancel their registration between June 1, 2026 and June 15, 2026 will receive a 50% refund of camp fees paid."
+            - paragraph [ref=e75]: "After June 15, 2026: Cancellations made after June 15, 2026 are non-refundable."
+            - heading "Cancellation Requests" [level=6] [ref=e77]:
+              - strong [ref=e78]: Cancellation Requests
+            - paragraph [ref=e80]: All cancellation requests must be submitted in writing via email to Lumi Education at contact.us@learningwithlumi.com.
+            - heading "Acknowledgment" [level=6] [ref=e82]:
+              - strong [ref=e83]: Acknowledgment
+            - paragraph [ref=e85]: By registering for a Lumi Education Summer Programs program, families acknowledge and agree to the cancellation policy outlined above.
+            - heading "Exceptions" [level=6] [ref=e87]:
+              - strong [ref=e88]: Exceptions
+            - paragraph [ref=e90]: Lumi Education reserves the right to make exceptions in cases involving documented medical emergencies or other extraordinary circumstances.
+            - paragraph [ref=e94]: Phone (571) 207-8373 · Email contact.us@learningwithlumi.com
+      - contentinfo:
+        - generic [ref=e96]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e100] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e102]
+            - heading "Quick Links" [level=3] [ref=e104]
+            - paragraph [ref=e106]:
+              - link "About Us" [ref=e108] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e110]:
+              - link "Summer Programs" [ref=e112] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e114]:
+              - link "Tutoring" [ref=e116] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e118]:
+              - link "Join Our Team" [ref=e120] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e122]:
+              - link "Contact Us" [ref=e124] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/blank
+            - heading "Contact Info" [level=3] [ref=e126]
+            - paragraph [ref=e128]:
+              - link "(571) 207-8373" [ref=e130] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e132]:
+              - link "contact.us@learningwithlumi.com" [ref=e134] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e136]: © 2026 Lumi Education
+            - paragraph [ref=e138]:
+              - link "Privacy Policy" [ref=e140] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/blank-7
+  - region "bottom of page"

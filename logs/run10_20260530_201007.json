@@ -1,0 +1,466 @@
+{
+  "run": "run10_feature_matrix",
+  "ts": "20260530_201007",
+  "total": 10,
+  "at_100": 5,
+  "avg_grade": 71.0,
+  "templates_saved": 0,
+  "results": [
+    {
+      "grade": 100,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        }
+      ],
+      "summary": "Grade: 100/100 | GAPS:1",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780186207812",
+      "status": "staged",
+      "tier": "operate",
+      "label": "Audio master suite (all audio effects)",
+      "qa_gate": "audio_master",
+      "features_covered": [
+        "audio.loudnorm",
+        "audio.dynorm",
+        "audio.compress",
+        "audio.limit",
+        "audio.denoise",
+        "audio.deess",
+        "audio.eq",
+        "audio.tone",
+        "audio.mono",
+        "audio.reverb",
+        "audio.pitch",
+        "audio.speed",
+        "audio.mix_original",
+        "clip.silence_trim",
+        "tts.elevenlabs"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP",
+        "title": "xQc wrong choice",
+        "duration_s": 45,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780186207812/1780186245530_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780186207812.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 100,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        },
+        {
+          "checkId": "portrait_applied",
+          "reason": "savedOutputs.layoutPortraitApplied not set"
+        }
+      ],
+      "summary": "Grade: 100/100 | GAPS:2",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780187196722",
+      "status": "staged",
+      "tier": "operate",
+      "label": "Portrait layout + branding overlays",
+      "qa_gate": "portrait_branding",
+      "features_covered": [
+        "layout.portrait",
+        "layout.blur_pad",
+        "layout.letterbox",
+        "overlay.intro_outro",
+        "overlay.animated_logo",
+        "overlay.social_badge",
+        "overlay.progress_bar",
+        "overlay.ticker",
+        "captions.burnin",
+        "audio.bgmusic",
+        "audio.duck",
+        "publish.metadata"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg",
+        "title": "IRL ban",
+        "duration_s": 51,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780187196722/1780187215154_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780187196722.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 100,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        }
+      ],
+      "summary": "Grade: 100/100 | GAPS:1",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780188215893",
+      "status": "staged",
+      "tier": "operate",
+      "label": "Cinematic colour grade (full colour suite)",
+      "qa_gate": "color_grade",
+      "features_covered": [
+        "color.lut",
+        "color.film_grain",
+        "color.vignette",
+        "color.eq",
+        "color.curves",
+        "color.balance",
+        "color.sharpen",
+        "color.blur",
+        "color.denoise",
+        "color.stabilize",
+        "video.fade",
+        "encode.h265",
+        "encode.two_pass"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "Markiplier",
+        "url": "https://www.twitch.tv/markiplier/clip/PlausibleApatheticLouseMrDestructoid",
+        "title": "Wade's Romantic Cruise",
+        "duration_s": 51,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780188215893/1780188231062_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780188215893.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 30,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status",
+          "reason": "expected ('staged', 'complete', 'published'), got failed"
+        },
+        {
+          "checkId": "output_exists",
+          "reason": "no outputUrl / cleanVideoUrl"
+        },
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        }
+      ],
+      "summary": "Grade: 30/100 | GAPS:3",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780189234465",
+      "status": "failed",
+      "tier": "operate",
+      "label": "Captions + overlays + thumbnail suite",
+      "qa_gate": "captions_overlays",
+      "features_covered": [
+        "captions.whisper",
+        "captions.styled",
+        "overlay.cta",
+        "overlay.qr_code",
+        "overlay.pip",
+        "overlay.fullscreen_image",
+        "overlay.timer",
+        "lower_thirds",
+        "chapter_markers",
+        "ai.whisper_captions",
+        "thumbnail.frame",
+        "thumbnail.designed",
+        "thumbnail.gemini_ranking",
+        "thumbnail.sprite",
+        "thumbnail.gif_animated",
+        "thumbnail.chapter_previews"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP",
+        "title": "Finish Halo 2",
+        "duration_s": 45,
+        "source": "inventory"
+      },
+      "outputUrl": null,
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 45,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status",
+          "reason": "expected ('staged', 'complete', 'published'), got failed"
+        },
+        {
+          "checkId": "portal_scores",
+          "reason": "avg 50 < 60"
+        },
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        }
+      ],
+      "summary": "Grade: 45/100 | GAPS:3",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780189919938",
+      "status": "failed",
+      "tier": "operate",
+      "label": "Motion + temporal effects (B&W slow-mo)",
+      "qa_gate": "motion_temporal",
+      "features_covered": [
+        "color.bw",
+        "video.slow_motion",
+        "video.speed_ramp",
+        "video.freeze_frame",
+        "video.ken_burns",
+        "clip.reverse",
+        "clip.loop",
+        "video.flip_h",
+        "video.flip_v",
+        "video.rotate",
+        "video.motion_blur",
+        "scene_transitions",
+        "zoom_punch",
+        "sound_effects",
+        "animated_text_effects"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "StableRonaldo",
+        "url": "https://www.twitch.tv/stableronaldo/clip/RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK",
+        "title": "hey!",
+        "duration_s": 47,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780189919938/1780190153512_1780190153511_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780189919938_final.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 100,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        }
+      ],
+      "summary": "Grade: 100/100 | GAPS:1",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780190517678",
+      "status": "staged",
+      "tier": "operate",
+      "label": "Square format + social exports + AI grading",
+      "qa_gate": "square_social",
+      "features_covered": [
+        "layout.square",
+        "layout.grid",
+        "transitions.wipe",
+        "transitions.slide",
+        "transitions.circle",
+        "transitions.creative",
+        "export.audio_only",
+        "export.gif",
+        "visual.waveform",
+        "visual.spectrum",
+        "ai.scene_aware_grade",
+        "ai.beat_sync",
+        "thumbnail.vectcut"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "hasanabi",
+        "url": "https://www.twitch.tv/hasanabi/clip/CarelessInnocentCamelPanicBasket-gdOqsu7YcQ-zA9NF",
+        "title": "Emiru calls out streamers",
+        "duration_s": 43,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780190517678/1780190745994_1780190745993_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780190517678_final.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 45,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status",
+          "reason": "expected ('staged', 'complete', 'published'), got failed"
+        },
+        {
+          "checkId": "portal_scores",
+          "reason": "avg 50 < 60"
+        },
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        },
+        {
+          "checkId": "gpt4o_score",
+          "reason": "gpt4o_qa_ext returned no score"
+        }
+      ],
+      "summary": "Grade: 45/100 | GAPS:4",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780192021656",
+      "status": "failed",
+      "tier": "operate",
+      "label": "GPT-4o QA extension + portal quality gates",
+      "qa_gate": "gpt4o_portal",
+      "features_covered": [
+        "portal.full_video_qa",
+        "portal.web_research",
+        "concierge",
+        "clip.sourcing",
+        "content.show_commentary",
+        "content.custom",
+        "source.library",
+        "api.developer_access"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CredulousThirstyCaterpillarWOOP",
+        "title": "Train Halo 2 v2",
+        "duration_s": 45,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780192021656/1780192219083_1780192219082_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780192021656_final.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 45,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status",
+          "reason": "expected ('staged', 'complete', 'published'), got failed"
+        },
+        {
+          "checkId": "portal_scores",
+          "reason": "avg 50 < 60"
+        },
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        },
+        {
+          "checkId": "portrait_applied",
+          "reason": "savedOutputs.layoutPortraitApplied not set"
+        }
+      ],
+      "summary": "Grade: 45/100 | GAPS:4",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780192527956",
+      "status": "failed",
+      "tier": "operate",
+      "label": "TTS + portrait + captions (full lite stack)",
+      "qa_gate": "tts_portrait_captions",
+      "features_covered": [
+        "tts.elevenlabs",
+        "layout.portrait",
+        "layout.blur_pad",
+        "captions.whisper",
+        "captions.burnin",
+        "overlay.social_badge",
+        "thumbnail.gemini_ranking",
+        "publish.direct_youtube"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/DeliciousDelightfulPicklesWOOP",
+        "title": "xQc wrong v2",
+        "duration_s": 45,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780192527956/1780192935612_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780192527956_final.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 100,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        }
+      ],
+      "summary": "Grade: 100/100 | GAPS:1",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780193187521",
+      "status": "staged",
+      "tier": "operate",
+      "label": "Advanced video transforms + degrade recovery",
+      "qa_gate": "advanced_video",
+      "features_covered": [
+        "video.delogo",
+        "video.chromakey",
+        "color.stabilize",
+        "video.speed_ramp",
+        "video.freeze_frame",
+        "video.flip_h",
+        "clip.reverse",
+        "clip.loop",
+        "video.rotate",
+        "video.ken_burns"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "xQc",
+        "url": "https://www.twitch.tv/xqc/clip/EntertainingTsunderePicklesSaltBae-_znCL0KuMwXadfP1",
+        "title": "xQc DRAMA NEWS",
+        "duration_s": 60,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780193187521/1780193577013_1780193577012_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780193187521_final.mp4",
+      "cleanVideoUrl": ""
+    },
+    {
+      "grade": 45,
+      "passed": false,
+      "gaps": [
+        {
+          "checkId": "status",
+          "reason": "expected ('staged', 'complete', 'published'), got failed"
+        },
+        {
+          "checkId": "portal_scores",
+          "reason": "avg 50 < 60"
+        },
+        {
+          "checkId": "loudnorm_applied",
+          "reason": "savedOutputs.loudnormApplied not set"
+        },
+        {
+          "checkId": "portrait_applied",
+          "reason": "savedOutputs.layoutPortraitApplied not set"
+        },
+        {
+          "checkId": "gpt4o_score",
+          "reason": "gpt4o_qa_ext returned no score"
+        }
+      ],
+      "summary": "Grade: 45/100 | GAPS:5",
+      "jobId": "e2e-operate-test_COMPACT_FETCH_clips_1780194421160",
+      "status": "failed",
+      "tier": "operate",
+      "label": "Full stack \u2014 all features combined",
+      "qa_gate": "full_stack",
+      "features_covered": [
+        "scheduling",
+        "credits.packs",
+        "credits.overage",
+        "video.wan_t2v",
+        "dynamicOverlays"
+      ],
+      "clip": {
+        "platform": "twitch",
+        "streamer": "trainwreckstv",
+        "url": "https://www.twitch.tv/trainwreckstv/clip/CogentClearTurnipDancingBanana",
+        "title": "Shameless Mod Defends",
+        "duration_s": 43,
+        "source": "inventory"
+      },
+      "outputUrl": "https://assets.auraflux.co/outputs/e2e-operate-test_COMPACT_FETCH_clips_1780194421160/1780194934228_assembled_e2e-operate-test_COMPACT_FETCH_clips_1780194421160_final.mp4",
+      "cleanVideoUrl": ""
+    }
+  ],
+  "templates": []
+}

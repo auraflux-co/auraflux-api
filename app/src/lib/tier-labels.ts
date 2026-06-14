@@ -1,0 +1,39 @@
+/**
+ * Tier label mapping — internal tier IDs → user-facing display names.
+ *
+ * Internal tier IDs (diy, dwy, dfy, custom) are API identifiers and must never
+ * be shown to users. Use these helpers everywhere a tier name is displayed.
+ */
+
+export const TIER_LABELS: Record<string, string> = {
+  operate:    'Operate',
+  guided:     'Guided',
+  managed:    'Managed',
+  custom:     'Enterprise',
+  // Legacy aliases — diy/dwy/dfy were the old internal keys
+  diy:        'Operate',
+  dwy:        'Guided',
+  dfy:        'Managed',
+};
+
+export const TIER_LABEL_LOWER: Record<string, string> = {
+  operate:    'operate',
+  guided:    'guided',
+  managed:    'managed',
+  custom: 'enterprise',
+};
+
+/** Returns the display name for a tier ID (e.g. "operate" → "Operate"). */
+export function tierLabel(tier: string | null | undefined): string {
+  return TIER_LABELS[tier ?? ''] ?? 'Operate';
+}
+
+/** Returns the display name, title-cased, for use in sentences. */
+export function tierLabelLower(tier: string | null | undefined): string {
+  return TIER_LABEL_LOWER[tier ?? ''] ?? 'operate';
+}
+
+/** Returns the display name with "plan" appended (e.g. "Operate plan"). */
+export function tierPlanLabel(tier: string | null | undefined): string {
+  return `${tierLabel(tier)} plan`;
+}

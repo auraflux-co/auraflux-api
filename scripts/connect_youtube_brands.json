@@ -1,0 +1,26 @@
+{
+  "brands": [
+    {"name": "natashaughey", "brand_id": "e561b5bc-d10e-4045-8aa8-1162d636c50a", "youtube_url": "https://www.youtube.com/channel/UCDRStcb-DK8M6jYcPlLEJSg"},
+    {"name": "martinezofwonkru", "brand_id": "310c354b-b04e-4554-b77e-2538ae849d0f", "youtube_url": "https://www.youtube.com/channel/UCDRStcb-DK8M6jYcPlLEJSg"},
+    {"name": "thevarietygurl", "brand_id": "bbe31325-659c-4c39-8c19-c32a63fc6f47", "youtube_url": "https://www.youtube.com/@auraflux-thevarietygurl"},
+    {"name": "millkberry", "brand_id": "76a24965-7036-46df-9f41-96ff750a9901", "youtube_url": "https://www.youtube.com/channel/UCvhma94HTcCQOYHyoYvDH5w"},
+    {"name": "lettucek", "brand_id": "4032fadd-ecdf-46bc-9432-c53c7eaf64e0", "youtube_url": "https://www.youtube.com/@auraflux-lettucek"},
+    {"name": "fuzzyness", "brand_id": "ac338165-9680-4eef-ae1d-61c7e496d3e7", "youtube_url": "https://www.youtube.com/@auraflux-lettucek"},
+    {"name": "hana", "brand_id": "7bb7fa9f-e514-4dfc-bb5b-e31fdcda28e4", "youtube_url": "https://www.youtube.com/@auraflux-hana"},
+    {"name": "wanderbot", "brand_id": "e2bbdd10-5c16-4b72-86fa-94b648012be3", "youtube_url": "https://www.youtube.com/@auraflux-wanderbot"},
+    {"name": "somarcus", "brand_id": "62cb5199-7d44-414f-b710-878944e5421b", "youtube_url": "https://www.youtube.com/@auraflux-somarcus"},
+    {"name": "rockleesmile", "brand_id": "69026a46-84d3-4063-ab4d-c8c02e671dc6", "youtube_url": "https://www.youtube.com/@auraflux-rockleesmile"},
+    {"name": "clintus", "brand_id": "f0a87d3f-805f-42fc-a370-b03c00ff467b", "youtube_url": "https://www.youtube.com/@auraflux-clintus"},
+    {"name": "ninuschk", "brand_id": "ff734c6d-3ef9-4570-98f8-1b6e99c4a74a", "youtube_url": "https://www.youtube.com/@auraflux-ninuschk"},
+    {"name": "alluux", "brand_id": "dab14ea6-ec0a-47b0-b22f-8d4bb6b9e601", "youtube_url": "https://www.youtube.com/@auraflux-alluux"},
+    {"name": "patterrz", "brand_id": "610e5d06-5e90-49db-9bf4-3fbb103eb3af", "youtube_url": "https://www.youtube.com/@aurafflux-patterrz"},
+    {"name": "supermcgamer", "brand_id": "a9db4f44-962f-4bd5-a302-686ee1e5729d", "youtube_url": "https://www.youtube.com/@auraflux-supermcgamer"},
+    {"name": "t10nat", "brand_id": "077b4356-6be6-41f1-ae17-6ed1a1714ae2", "youtube_url": "https://www.youtube.com/@auraflux-t10nat"},
+    {"name": "guhrl", "brand_id": "02771263-927c-4f27-9d40-31a36af2f9ba", "youtube_url": "https://www.youtube.com/@auraflux-guhrl"},
+    {"name": "tenshi", "brand_id": "79064ec5-d232-4d21-9fd4-32a8dc6052ec", "youtube_url": "https://www.youtube.com/@auraflux-tenshi"},
+    {"name": "bogur", "brand_id": "6a45ab1e-9ba5-45a0-be7a-14eeb12daf17", "youtube_url": "https://www.youtube.com/@auraflux-bogur"},
+    {"name": "nixstah", "brand_id": "f3689caa-27a2-491a-b427-7dbf3c99cf9", "youtube_url": "https://www.youtube.com/@auraflux-nixstah"}
+  ],
+  "google_account": "robert@auraflux.co",
+  "api_base": "https://auraflux-api.onrender.com"
+}

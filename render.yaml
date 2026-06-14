@@ -1,0 +1,384 @@
+# render.yaml — AuraFlux API Blueprint
+# Deploy: connect this repo in the Render dashboard → "New → Blueprint"
+# Render will provision the web service, backup cron, Postgres database, Redis, and persistent disk.
+#
+# BEFORE FIRST DEPLOY:
+#   1. Set all envVars marked sync: false in the Render environment panel (secrets only — never commit)
+#   2. Confirm /health returns ok: true after first deploy
+#   3. Run: node scripts/smoke_test_render.js https://<your-service>.onrender.com
+#
+# See docs/ops/RENDER_DEPLOY_CHECKLIST.md for the full checklist.
+# Last updated: 2026-04-30 (CPD-92 — added auraflux-app Next.js web service)
+
+services:
+  - type: web
+    name: auraflux-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: no  # Deploys are triggered manually via [deploy] in commit message (render-deploy.yml)
+
+    # Marketing site lives in cloudflare/ and deploys only via GitHub Actions → Cloudflare Pages.
+    # Commits that touch ONLY cloudflare/** must NOT restart the API — that orphans running jobs.
+    # Render's buildFilter.ignoredPaths suppresses auto-deploy when the diff is entirely in these paths.
+    buildFilter:
+      ignoredPaths:
+        - cloudflare/**
+        - docs/**
+        - logs/**
+        - scripts/run_*.py
+
+    # Persistent disk — keeps SQLite job pipeline data (data/cwn.db) and JSON
+    # state files across deploys. Billing/credits/voice use Postgres (see DATABASE_URL).
+    # Full pipeline migration to Postgres (job_spec.js async refactor) is CPD-51 phase 2.
+    # Nightly backup to R2 (scripts/backup_to_r2.js) covers both cwn.db and *.json.
+    disk:
+      name: auraflux-data
+      mountPath: /app/data
+      sizeGB: 10
+
+    envVars:
+      # ── Runtime config (non-secret, set inline) ──────────────────────────────
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: TZ
+        value: UTC
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
+      # CPD-325: Cap Node heap to 1.5GB, leaving ~500MB for OS + ffmpeg child processes
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=1536
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: 'true'
+      - key: GATE_TEST_MODE
+        value: 'false'
+      # New Relic removed — not installed; AGENT_ENABLED=false set in Render panel as safety guard
+      - key: SHORT_FORM_LOGO_SIZE
+        value: '80'
+      - key: SHORT_FORM_AUDIO_MIX
+        value: both
+      - key: USE_LOCAL_FFMPEG
+        value: 'false'
+      - key: VECTCUT_API_URL
+        value: ''
+
+      # ── Secrets — set values in Render environment panel (sync: false) ────────
+      # AI APIs
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
+      # HeyGen — avatar rendering (C0 path only; C1+ optional add-on)
+      - key: HEYGEN_API_KEY
+        sync: false
+      - key: HEYGEN_AVATAR_ID
+        sync: false
+      - key: HEYGEN_AVATAR_SHORT_ID
+        sync: false
+      - key: HEYGEN_AVATAR_SHORT_NBA_ID
+        sync: false
+      - key: HEYGEN_AVATAR_SHORT_NEWS_ID
+        sync: false
+      - key: HEYGEN_AVATAR_SHORT_TWITCH_ID
+        sync: false
+      - key: HEYGEN_VOICE_ID
+        sync: false
+      - key: HEYGEN_SPEAK_SPEED
+        sync: false
+      - key: HEYGEN_TEMPLATE_LANDSCAPE
+        sync: false
+      - key: HEYGEN_TEMPLATE_PORTRAIT
+        sync: false
+      - key: HEYGEN_FOLDER_ID_NBA_NFL
+        sync: false
+      - key: HEYGEN_FOLDER_ID_NEWS
+        sync: false
+      - key: HEYGEN_FOLDER_ID_TWITCH
+        sync: false
+
+      # Twitch
+      - key: TWITCH_CLIENT_ID
+        sync: false
+      - key: TWITCH_TOKEN
+        sync: false
+
+      # Google Drive (C0 upload path)
+      - key: DRIVE_FOLDER_ID
+        sync: false
+      - key: DRIVE_REFRESH_TOKEN
+        sync: false
+
+      # Publishing
+      - key: UPLOADPOST_API_KEY
+        sync: false
+      - key: UPLOADPOST_PROFILE
+        sync: false
+
+      # New Relic license key kept in panel only (not installed; panel guard vars prevent init crash)
+
+      # Canva (optional — thumbnail generation)
+      - key: CANVA_CLIENT_ID
+        sync: false
+      - key: CANVA_CLIENT_SECRET
+        sync: false
+
+      # Atlassian / Jira (optional)
+      - key: ATLASSIAN_API_TOKEN
+        sync: false
+      - key: ATLASSIAN_DOMAIN
+        sync: false
+      - key: ATLASSIAN_EMAIL
+        sync: false
+
+      # RunPod / ComfyUI (CPD-69, CPD-79 — video generation, WAN 2.7 Partner Nodes)
+      - key: RUNPOD_API_KEY
+        sync: false
+      - key: RUNPOD_POD_ID
+        sync: false
+      - key: RUNPOD_ENDPOINT_ID
+        sync: false
+      - key: WAN_MODEL_VERSION
+        value: '2.2'
+      - key: COMFYUI_API_KEY
+        sync: false
+
+      # Twelve Labs — video understanding + QA gate (CPD-431)
+      - key: TWELVE_LABS_API_KEY
+        sync: false
+
+      # ElevenLabs TTS (CPD-77 — voice matching)
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_DEFAULT_VOICE_ID
+        value: JBFqnCBsd6RMkjVDRZzb
+
+      # Clerk — auth (frontend + API)
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+
+      # Stripe — billing
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+      # AuraFlux frontend → API shared secret
+      - key: AURAFLUX_API_SECRET
+        sync: false
+
+      # Cloudflare R2 — backup storage + video output (CPD-50)
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BACKUP_BUCKET
+        value: auraflux-backups
+      - key: R2_VIDEO_BUCKET
+        value: auraflux-video-output
+      - key: R2_PUBLIC_URL
+        sync: false
+
+      # PostgreSQL — manually-created database, NOT managed by this Blueprint.
+      # Set DATABASE_URL in the Render environment panel → paste the Internal Connection String
+      # from the auraflux-pg dashboard page.
+      - key: DATABASE_URL
+        sync: false
+
+      # Redis — optional BullMQ queue (admin routes only; pipeline uses Postgres directly)
+      # If not set, queue.js falls back to redis://localhost:6379 and fails gracefully.
+      # To enable: create a key-value service in Render and paste its connection string here.
+      - key: REDIS_URL
+        sync: false
+
+      # C0 manual workflow flag (localhost only — keeps C0 path from auto-advancing)
+      - key: C0_MANUAL_SEGMENT_CHECKPOINT
+        value: 'true'
+
+  # ── Next.js customer dashboard (CPD-92) ─────────────────────────────────────
+  # rootDir: app → build + start commands run inside the app/ subdirectory
+  # healthCheckPath must return 200; /api/health is a public no-auth route
+  - type: web
+    name: auraflux-app
+    runtime: node
+    rootDir: app
+    buildCommand: npm install --include=dev && npm run build && (pip3 install -U yt-dlp curl-cffi tls-client --quiet 2>/dev/null || python3 -m pip install -U yt-dlp curl-cffi tls-client --quiet 2>/dev/null || true)
+    startCommand: npm start
+    plan: standard
+    region: oregon
+    healthCheckPath: /api/health
+    autoDeploy: no  # Deploys are triggered manually via [deploy] in commit message (render-deploy.yml)
+
+    # Same marketing isolation as auraflux-api — cloudflare/ changes must not restart the app.
+    buildFilter:
+      ignoredPaths:
+        - cloudflare/**
+        - docs/**
+        - logs/**
+        - scripts/run_*.py
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # CPD-325: Cap Next.js server heap — Render Standard = 2GB RAM
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=1536
+      # Clerk auth — use NEXT_PUBLIC_ prefix for browser-exposed keys
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_SIGN_IN_URL
+        value: /sign-in
+      - key: NEXT_PUBLIC_CLERK_SIGN_UP_URL
+        value: /sign-up
+      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL
+        value: /home
+      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
+        value: /home
+      # AuraFlux API — update to custom domain once CPD-93 is complete
+      - key: NEXT_PUBLIC_API_URL
+        value: https://auraflux-api.onrender.com
+      - key: AURAFLUX_API_SECRET
+        sync: false
+
+  # ── Redis Key Value — BullMQ job queues (optional) ───────────────────────────
+  # The auraflux-redis key-value service was removed to unblock builds.
+  # BullMQ / admin queue routes fall back gracefully when REDIS_URL is not set.
+  # Re-add a key-value service here when Redis is needed for production job queuing.
+
+  # ── Backup note ───────────────────────────────────────────────────────────────
+  # The nightly backup (SQLite + Postgres + JSON state → R2) now runs as a
+  # node-cron job inside auraflux-api at 03:00 UTC. A separate Render cron
+  # service cannot mount the persistent disk (Render: one disk = one service),
+  # so it was removed. R2 env vars (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID,
+  # R2_SECRET_ACCESS_KEY, R2_BACKUP_BUCKET) must be set on auraflux-api.
+
+# ── Staging environment (CPD-324) ────────────────────────────────────────────
+# Mirrors production but deploys from the `staging` branch.
+# Uses starter plan (cheaper) — performance testing still possible at reduced scale.
+# All secrets are separate from production — set in Render staging service env panel.
+# To activate: push to `staging` branch → Render auto-deploys both services.
+
+  - type: web
+    name: auraflux-api-staging
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: oregon
+    branch: staging
+    healthCheckPath: /health
+    disk:
+      name: auraflux-data-staging
+      mountPath: /app/data
+      sizeGB: 5
+
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: 10000
+      - key: TZ
+        value: UTC
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: 'true'
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=384
+      - key: GATE_TEST_MODE
+        value: 'false'
+      - key: PIPELINE_WORKER_CONCURRENCY
+        value: '1'
+      - key: WAN_MODEL_VERSION
+        value: '2.2'
+      # ── All secrets set separately in Render staging env panel ─────────────
+      # Use Stripe TEST mode keys, a separate Clerk staging app, and a
+      # separate Postgres DB so staging never touches real user data.
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: RUNPOD_API_KEY
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BACKUP_BUCKET
+        value: auraflux-backups-staging
+      - key: R2_VIDEO_BUCKET
+        value: auraflux-video-output-staging
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: AURAFLUX_API_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: HEYGEN_API_KEY
+        sync: false
+      - key: UPLOADPOST_API_KEY
+        sync: false
+
+  - type: web
+    name: auraflux-app-staging
+    runtime: node
+    rootDir: app
+    branch: staging
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=384
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_SIGN_IN_URL
+        value: /sign-in
+      - key: NEXT_PUBLIC_CLERK_SIGN_UP_URL
+        value: /sign-up
+      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL
+        value: /home
+      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
+        value: /home
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: AURAFLUX_API_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false
+
+# ── No managed databases ─────────────────────────────────────────────────────
+# auraflux-pg (PostgreSQL) was manually created in Render before this Blueprint
+# was set up. Managing it here causes a plan-mismatch sync failure (Blueprint
+# cannot claim ownership of a pre-existing manually-created database).
+# Set DATABASE_URL manually in the Render environment panel using the Internal
+# Connection String from the auraflux-pg dashboard page.

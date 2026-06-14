@@ -1,0 +1,100 @@
+---
+description: Feature gating by plan — all features wired, runtime activation by plan + job spec
+globs:
+alwaysApply: true
+---
+
+# Feature Gating — Plan + Job Spec Drives Activation
+
+## Core rule
+
+**ALL platform features are wired into the codebase.** Runtime activation is controlled exclusively by:
+1. The customer's **plan tier** (`operate` < `guided` < `managed` < `custom`)
+2. **Infrastructure credentials** (env vars) — for credentials only, never for feature activation
+
+**Environment variables are infrastructure, not feature switches.**
+- `VECTCUT_API_URL` — credential for the VectCut service
+- `GEMINI_API_KEY` — credential for Google AI
+- `RUNPOD_API_KEY` — credential for RunPod
+
+## The gate pattern
+
+```js
+// CORRECT — plan gate first, then credential check
+const { isFeatureEnabled } = require('../services/feature_gate');
+
+async function someFeature(jobSpec) {
+  if (!isFeatureEnabled('feature.key', jobSpec.planTier)) return null;
+  const apiKey = process.env.MY_API_KEY; // credential only
+  if (!apiKey) return null;
+  // ... do the work
+}
+
+// WRONG — env var as feature switch
+async function someFeature(jobSpec) {
+  if (!process.env.MY_API_KEY) return null; // ← this gates the feature, not the plan
+}
+```
+
+## How planTier flows
+
+`planTier` is baked into the job spec at creation time by `createJobSpec()`:
+```js
+createJobSpec({ customerId, contentType, planTier: 'guided', ... })
+```
+
+`featureFlags` is also baked in — a pre-computed map of all feature keys to booleans
+for the given plan tier + current env. Downstream services read `jobSpec.featureFlags`
+or call `isFeatureEnabled(key, jobSpec.planTier)` directly.
+
+**No downstream service should query the DB to check plan features** — use `jobSpec.planTier`.
+
+## Adding a new feature
+
+1. Add it to `FEATURE_PLANS` in `lib/services/feature_gate.js`:
+   ```js
+   'my_feature.key': {
+     min_plan:    'guided',                   // lowest tier that unlocks it
+     label:       'Human-readable name',
+     requires_env: ['MY_API_KEY'],            // credentials (optional)
+     description: 'What it does',
+   }
+   ```
+2. Gate it in the service code with `isFeatureEnabled('my_feature.key', jobSpec.planTier)`
+3. Add it to the plan comparison docs / Confluence feature matrix
+
+## Plan tier hierarchy
+
+| Tier | Included credits | Target customer |
+|---|---|---|
+| `operate` | 50/mo | Self-serve — full platform access, customer runs it themselves |
+| `guided` | 200/mo | Done-with-you — same features as Operate + operator monitoring and guidance |
+| `managed` | 1000/mo | Full done-for-you — operator runs everything + HeyGen, Imagen 3, TikTok direct |
+| `custom` | unlimited | Enterprise / white-label |
+
+**Key principle (CPD-109):** Operate and Guided are feature-identical. The distinction is service level only — Operate customers manage the platform themselves; Guided customers get operator support. Never gate a feature at `guided` if the reason is anything other than "this requires operator involvement to use safely."
+
+## Feature matrix (as of Sprint 6 / CPD-176)
+
+| Feature key | Operate | Guided | Managed |
+|---|---|---|---|
+| `thumbnail.frame` | ✓ | ✓ | ✓ |
+| `thumbnail.designed` | ✓ | ✓ | ✓ |
+| `thumbnail.vectcut` | ✓ | ✓ | ✓ |
+| `thumbnail.gemini_ranking` | ✓ | ✓ | ✓ |
+| `thumbnail.imagen` | — | — | ✓ |
+| `tts.elevenlabs` | ✓ | ✓ | ✓ |
+| `avatar.heygen` | — | — | ✓ |
+| `concierge` | ✓ | ✓ | ✓ |
+| `clip.sourcing` | ✓ | ✓ | ✓ |
+| `content.show_commentary` | ✓ | ✓ | ✓ |
+| `content.custom` | ✓ | ✓ | ✓ |
+| `portal.full_video_qa` | ✓ | ✓ | ✓ |
+| `portal.web_research` | ✓ | ✓ | ✓ |
+| `video.wan_t2v` | ✓ | ✓ | ✓ |
+| `video.wan_i2v` | — | — | ✓ |
+| `scheduling` | ✓ | ✓ | ✓ |
+| `credits.packs` | ✓ | ✓ | ✓ |
+| `credits.overage` | ✓ | ✓ | ✓ |
+| `publish.direct_youtube` | ✓ | ✓ | ✓ |
+| `publish.direct_tiktok` | ✓ | ✓ | ✓ |

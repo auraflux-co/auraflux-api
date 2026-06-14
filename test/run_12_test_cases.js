@@ -44,7 +44,7 @@ const results = {
   passed: 0,
   failed: 0,
   errors: 0,
-  cases: []
+  cases: [],
 };
 
 /**
@@ -62,7 +62,7 @@ function validateGate1(data, testCase) {
     expectedScenes: testCase.expectedScenes,
     clipCount: null,
     deductions: [],
-    issues: []
+    issues: [],
   };
 
   if (!data.script) {
@@ -75,7 +75,9 @@ function validateGate1(data, testCase) {
   gate1.sceneCount = sceneMarkers;
 
   if (sceneMarkers !== testCase.expectedScenes) {
-    gate1.issues.push(`Scene count mismatch: got ${sceneMarkers}, expected ${testCase.expectedScenes}`);
+    gate1.issues.push(
+      `Scene count mismatch: got ${sceneMarkers}, expected ${testCase.expectedScenes}`
+    );
   }
 
   // Count [CLIP PLAYS HERE] markers
@@ -99,9 +101,11 @@ function validateGate1(data, testCase) {
     gate1.retryAttempts = data.scriptQA.retryAttempts || 1;
 
     if (!gate1.passed) {
-      gate1.issues.push(`Gate 1 ${gate1.outcome?.toUpperCase() || 'FAIL'}: score ${gate1.score}/100`);
+      gate1.issues.push(
+        `Gate 1 ${gate1.outcome?.toUpperCase() || 'FAIL'}: score ${gate1.score}/100`
+      );
       if (gate1.deductions.length > 0) {
-        gate1.deductions.forEach(d => gate1.issues.push(`  -${d.points} ${d.reason}`));
+        gate1.deductions.forEach((d) => gate1.issues.push(`  -${d.points} ${d.reason}`));
       }
     }
   } else {
@@ -124,12 +128,14 @@ async function validateGate2(data, testCase) {
     score: null,
     outcome: null,
     segmentCount: 0,
-    issues: []
+    issues: [],
   };
 
   // Gate 2 requires HeyGen video jobs from the response
   if (!data.heygen || !data.heygen.videoJobs || data.heygen.videoJobs.length === 0) {
-    gate2.issues.push('No HeyGen video jobs in response — Gate 1 may have failed or HeyGen auto-send was skipped');
+    gate2.issues.push(
+      'No HeyGen video jobs in response — Gate 1 may have failed or HeyGen auto-send was skipped'
+    );
     gate2.outcome = 'skipped';
     gate2.passed = false; // Gate 2 cannot pass if no segments exist
     return gate2;
@@ -171,7 +177,7 @@ async function validateGate2(data, testCase) {
           completedSegments.push({
             type: 'avatar',
             label: job.sceneName,
-            url: videoData.video_url
+            url: videoData.video_url,
           });
           pendingJobs.splice(i, 1);
           console.log(`   ✅ Segment complete: ${job.sceneName}`);
@@ -186,7 +192,9 @@ async function validateGate2(data, testCase) {
 
     const elapsed = Math.round((Date.now() - pollStart) / 1000);
     if (elapsed % 30 === 0) {
-      console.log(`   ⏳ Gate 2: ${completedSegments.length}/${gate2.segmentCount} segments done (${elapsed}s elapsed)`);
+      console.log(
+        `   ⏳ Gate 2: ${completedSegments.length}/${gate2.segmentCount} segments done (${elapsed}s elapsed)`
+      );
     }
   }
 
@@ -198,11 +206,15 @@ async function validateGate2(data, testCase) {
 
   // Call /gate2-segment-qa with completed segments
   try {
-    const qaResp = await axios.post(`${BASE_URL}/gate2-segment-qa`, {
-      jobId: `test_${testCase.id}_${Date.now()}`,
-      segments: completedSegments,
-      contentType: testCase.payload.type
-    }, { timeout: 120000 });
+    const qaResp = await axios.post(
+      `${BASE_URL}/gate2-segment-qa`,
+      {
+        jobId: `test_${testCase.id}_${Date.now()}`,
+        segments: completedSegments,
+        contentType: testCase.payload.type,
+      },
+      { timeout: 120000 }
+    );
 
     const qaData = qaResp.data;
     gate2.score = qaData.score;
@@ -212,7 +224,7 @@ async function validateGate2(data, testCase) {
 
     if (!gate2.passed) {
       gate2.issues.push(`Gate 2 ${gate2.outcome?.toUpperCase()}: score ${gate2.score}/100`);
-      (gate2.deductions || []).forEach(d => gate2.issues.push(`  -${d.points} ${d.reason}`));
+      (gate2.deductions || []).forEach((d) => gate2.issues.push(`  -${d.points} ${d.reason}`));
     }
   } catch (e) {
     gate2.issues.push(`Gate 2 QA call failed: ${e.message}`);
@@ -234,7 +246,7 @@ async function validateGate3(assemblyId) {
     passed: false,
     score: null,
     outcome: null,
-    issues: []
+    issues: [],
   };
 
   if (!assemblyId) {
@@ -252,11 +264,17 @@ async function validateGate3(assemblyId) {
   while (!assemblyDone && Date.now() - pollStart < maxPollTime) {
     await sleep(POLL_INTERVAL);
     try {
-      const progressResp = await axios.get(`${BASE_URL}/assemble-progress/${assemblyId}`, { timeout: 10000 });
+      const progressResp = await axios.get(`${BASE_URL}/assemble-progress/${assemblyId}`, {
+        timeout: 10000,
+      });
       const progress = progressResp.data;
       lastStatus = progress.status;
 
-      if (progress.status === 'done' || progress.status === 'manual_review' || progress.status === 'failed') {
+      if (
+        progress.status === 'done' ||
+        progress.status === 'manual_review' ||
+        progress.status === 'failed'
+      ) {
         assemblyDone = true;
         gate3.score = progress.qaScore || null;
         gate3.outcome = progress.qaOutcome || (progress.status === 'done' ? 'pass' : 'fail');
@@ -289,16 +307,20 @@ async function validateGate4(testCase) {
     name: 'Thumbnail Generation',
     passed: false,
     outcome: null,
-    issues: []
+    issues: [],
   };
 
   try {
     const contentType = testCase.payload.type?.replace('-short', '') || 'twitch';
-    const resp = await axios.post(`${BASE_URL}/generate-thumbnail`, {
-      contentType,
-      date: testCase.payload.date || new Date().toLocaleDateString(),
-      title: `Test ${testCase.id}: ${testCase.name}`
-    }, { timeout: 60000 });
+    const resp = await axios.post(
+      `${BASE_URL}/generate-thumbnail`,
+      {
+        contentType,
+        date: testCase.payload.date || new Date().toLocaleDateString(),
+        title: `Test ${testCase.id}: ${testCase.name}`,
+      },
+      { timeout: 60000 }
+    );
 
     if (resp.data.ok && resp.data.thumbnailPath) {
       const thumbPath = resp.data.thumbnailPath;
@@ -337,7 +359,7 @@ async function validateGate5(testCase, script) {
     name: 'Publish Metadata',
     passed: false,
     outcome: null,
-    issues: []
+    issues: [],
   };
 
   if (!script) {
@@ -348,13 +370,17 @@ async function validateGate5(testCase, script) {
 
   try {
     const contentType = testCase.payload.type?.replace('-short', '') || 'twitch';
-    const resp = await axios.post(`${BASE_URL}/generate-publish-copy`, {
-      contentType,
-      formType: testCase.payload.type?.includes('-short') ? 'short' : 'compilation',
-      script: script.substring(0, 1000), // First 1000 chars for metadata
-      date: testCase.payload.date || new Date().toLocaleDateString(),
-      platforms: ['youtube']
-    }, { timeout: 60000 });
+    const resp = await axios.post(
+      `${BASE_URL}/generate-publish-copy`,
+      {
+        contentType,
+        formType: testCase.payload.type?.includes('-short') ? 'short' : 'compilation',
+        script: script.substring(0, 1000), // First 1000 chars for metadata
+        date: testCase.payload.date || new Date().toLocaleDateString(),
+        platforms: ['youtube'],
+      },
+      { timeout: 60000 }
+    );
 
     if (resp.data.ok) {
       const ytMeta = resp.data.title ? resp.data : resp.data.platforms?.youtube;
@@ -370,7 +396,8 @@ async function validateGate5(testCase, script) {
 
         const issues = [];
         if (title.length === 0) issues.push('YouTube title is empty');
-        if (title.length > 100) issues.push(`YouTube title too long: ${title.length} chars (max 100)`);
+        if (title.length > 100)
+          issues.push(`YouTube title too long: ${title.length} chars (max 100)`);
         if (description.length === 0) issues.push('YouTube description is empty');
         if (hashtags.length === 0) issues.push('No hashtags generated');
 
@@ -407,18 +434,18 @@ async function validateGate7(testCase, gate5) {
     issues: [],
     requestId: null,
     jobId: null,
-    uploadStatusLogged: false
+    uploadStatusLogged: false,
   };
 
   try {
-    const title = (gate5 && gate5.title) ? gate5.title : 'Test Case 1 Validation — Twitch Soup';
+    const title = gate5 && gate5.title ? gate5.title : 'Test Case 1 Validation — Twitch Soup';
     const publishPayload = {
       platforms: ['youtube'],
       title,
       description: 'Test Case #1 publish validation — skeleton mode',
       driveUrl: 'https://drive.google.com/uc?export=download&id=TEST_PLACEHOLDER_ID',
       contentType: 'long',
-      async: true
+      async: true,
     };
 
     console.log(`      📤 Calling POST /publish (skeleton mode)...`);
@@ -428,13 +455,21 @@ async function validateGate7(testCase, gate5) {
     } catch (publishErr) {
       // /publish may return 400 if UPLOADPOST_API_KEY is not set — that's expected in test env
       // Treat as skipped (not a failure) — endpoint is wired, API key just not configured
-      if (publishErr.response && publishErr.response.status === 400 &&
-          publishErr.response.data && publishErr.response.data.error &&
-          publishErr.response.data.error.includes('UPLOADPOST_API_KEY')) {
+      if (
+        publishErr.response &&
+        publishErr.response.status === 400 &&
+        publishErr.response.data &&
+        publishErr.response.data.error &&
+        publishErr.response.data.error.includes('UPLOADPOST_API_KEY')
+      ) {
         gate.outcome = 'skipped';
         gate.passed = true; // skeleton is wired, API key just not configured in test env
-        gate.issues.push('UPLOADPOST_API_KEY not set — publish endpoint wired but API key missing (expected in test env)');
-        console.log(`      ⏭️  Gate 7 SKIPPED — UPLOADPOST_API_KEY not configured (endpoint is wired correctly)`);
+        gate.issues.push(
+          'UPLOADPOST_API_KEY not set — publish endpoint wired but API key missing (expected in test env)'
+        );
+        console.log(
+          `      ⏭️  Gate 7 SKIPPED — UPLOADPOST_API_KEY not configured (endpoint is wired correctly)`
+        );
         return gate;
       }
       throw publishErr;
@@ -458,7 +493,9 @@ async function validateGate7(testCase, gate5) {
 
     // Verify upload was logged to upload_status.json
     try {
-      const statusResp = await axios.get(`${BASE_URL}/publish/upload-status?limit=1`, { timeout: 10000 });
+      const statusResp = await axios.get(`${BASE_URL}/publish/upload-status?limit=1`, {
+        timeout: 10000,
+      });
       const statusData = statusResp.data;
       if (statusData.total > 0 && statusData.uploads && statusData.uploads.length > 0) {
         const latest = statusData.uploads[0];
@@ -477,7 +514,6 @@ async function validateGate7(testCase, gate5) {
 
     gate.passed = gate.issues.length === 0;
     gate.outcome = gate.passed ? 'pass' : 'fail';
-
   } catch (err) {
     gate.issues.push(`Gate 7 error: ${err.message}`);
     gate.outcome = 'fail';
@@ -498,7 +534,7 @@ function validateGate6(gates) {
     passed: false,
     outcome: null,
     gatesSummary: {},
-    issues: []
+    issues: [],
   };
 
   let allPassed = true;
@@ -508,21 +544,28 @@ function validateGate6(gates) {
       name: gate.name,
       outcome: gate.outcome,
       passed: gate.passed,
-      score: gate.score || null
+      score: gate.score || null,
     };
 
     // Gates 1 and 2 are required; Gates 3-5 are best-effort (skipped = ok)
     // manual_review = human holds for review but is NOT a hard failure — treat as pass for Gate 6
     const isRequired = gate.gate <= 2;
-    const isEffectivePass = gate.passed || gate.outcome === 'manual_review' || gate.outcome === 'skipped';
+    const isEffectivePass =
+      gate.passed || gate.outcome === 'manual_review' || gate.outcome === 'skipped';
     if (isRequired && !isEffectivePass) {
       allPassed = false;
-      gate6.issues.push(`Gate ${gate.gate} (${gate.name}): ${gate.outcome?.toUpperCase() || 'FAIL'}`);
+      gate6.issues.push(
+        `Gate ${gate.gate} (${gate.name}): ${gate.outcome?.toUpperCase() || 'FAIL'}`
+      );
     } else if (!isEffectivePass && gate.outcome !== 'error') {
       // Non-required gates: warn but don't fail
-      gate6.issues.push(`Gate ${gate.gate} (${gate.name}): ${gate.outcome?.toUpperCase()} (non-blocking)`);
+      gate6.issues.push(
+        `Gate ${gate.gate} (${gate.name}): ${gate.outcome?.toUpperCase()} (non-blocking)`
+      );
     } else if (gate.outcome === 'manual_review') {
-      gate6.issues.push(`Gate ${gate.gate} (${gate.name}): MANUAL_REVIEW — human approval required before HeyGen send`);
+      gate6.issues.push(
+        `Gate ${gate.gate} (${gate.name}): MANUAL_REVIEW — human approval required before HeyGen send`
+      );
     }
   }
 
@@ -547,7 +590,7 @@ async function runTestCase(testCase) {
     duration: null,
     gates: [],
     errors: [],
-    warnings: []
+    warnings: [],
   };
 
   try {
@@ -563,12 +606,16 @@ async function runTestCase(testCase) {
     try {
       response = await axios.post(`${BASE_URL}${testCase.endpoint}`, testCase.payload, {
         headers: { 'Content-Type': 'application/json' },
-        timeout: MAX_WAIT_TIME
+        timeout: MAX_WAIT_TIME,
       });
     } catch (apiError) {
       if (apiError.response) {
-        console.error(`   ❌ API Error: ${apiError.response.status} ${apiError.response.statusText}`);
-        result.errors.push(`API returned ${apiError.response.status}: ${JSON.stringify(apiError.response.data)}`);
+        console.error(
+          `   ❌ API Error: ${apiError.response.status} ${apiError.response.statusText}`
+        );
+        result.errors.push(
+          `API returned ${apiError.response.status}: ${JSON.stringify(apiError.response.data)}`
+        );
       } else {
         console.error(`   ❌ Request failed: ${apiError.message}`);
         result.errors.push(`Request failed: ${apiError.message}`);
@@ -586,7 +633,9 @@ async function runTestCase(testCase) {
       result.actualScenes = sceneMarkers;
       console.log(`   📊 Scene count: ${sceneMarkers} (expected: ${testCase.expectedScenes})`);
       if (sceneMarkers !== testCase.expectedScenes) {
-        result.warnings.push(`Scene count mismatch: got ${sceneMarkers}, expected ${testCase.expectedScenes}`);
+        result.warnings.push(
+          `Scene count mismatch: got ${sceneMarkers}, expected ${testCase.expectedScenes}`
+        );
         console.log(`   ⚠️  Scene count mismatch!`);
       } else {
         console.log(`   ✅ Scene count matches!`);
@@ -603,13 +652,15 @@ async function runTestCase(testCase) {
       score: gate1.score,
       passed: gate1.passed,
       outcome: gate1.outcome,
-      deductions: gate1.deductions
+      deductions: gate1.deductions,
     };
 
-    const g1Icon = gate1.passed ? '✅' : (gate1.outcome === 'manual_review' ? '🟡' : '❌');
-    console.log(`   ${g1Icon} Gate 1: ${gate1.outcome?.toUpperCase() || 'UNKNOWN'} — Score ${gate1.score}/100`);
+    const g1Icon = gate1.passed ? '✅' : gate1.outcome === 'manual_review' ? '🟡' : '❌';
+    console.log(
+      `   ${g1Icon} Gate 1: ${gate1.outcome?.toUpperCase() || 'UNKNOWN'} — Score ${gate1.score}/100`
+    );
     if (gate1.issues.length > 0) {
-      gate1.issues.forEach(issue => {
+      gate1.issues.forEach((issue) => {
         console.log(`      ⚠️  ${issue}`);
         result.warnings.push(`Gate 1: ${issue}`);
       });
@@ -621,10 +672,12 @@ async function runTestCase(testCase) {
     result.gates.push(gate2);
     result.segmentQA = { score: gate2.score, passed: gate2.passed, outcome: gate2.outcome };
 
-    const g2Icon = gate2.passed ? '✅' : (gate2.outcome === 'skipped' ? '⏭️' : '❌');
-    console.log(`   ${g2Icon} Gate 2: ${gate2.outcome?.toUpperCase() || 'UNKNOWN'} — Score ${gate2.score || 'N/A'}/100`);
+    const g2Icon = gate2.passed ? '✅' : gate2.outcome === 'skipped' ? '⏭️' : '❌';
+    console.log(
+      `   ${g2Icon} Gate 2: ${gate2.outcome?.toUpperCase() || 'UNKNOWN'} — Score ${gate2.score || 'N/A'}/100`
+    );
     if (gate2.issues.length > 0) {
-      gate2.issues.forEach(issue => {
+      gate2.issues.forEach((issue) => {
         console.log(`      ⚠️  ${issue}`);
         result.warnings.push(`Gate 2: ${issue}`);
       });
@@ -639,10 +692,12 @@ async function runTestCase(testCase) {
     result.gates.push(gate3);
     result.assemblyQA = { score: gate3.score, passed: gate3.passed, outcome: gate3.outcome };
 
-    const g3Icon = gate3.passed ? '✅' : (gate3.outcome === 'skipped' ? '⏭️' : '❌');
-    console.log(`   ${g3Icon} Gate 3: ${gate3.outcome?.toUpperCase() || 'UNKNOWN'} — Score ${gate3.score || 'N/A'}/100`);
+    const g3Icon = gate3.passed ? '✅' : gate3.outcome === 'skipped' ? '⏭️' : '❌';
+    console.log(
+      `   ${g3Icon} Gate 3: ${gate3.outcome?.toUpperCase() || 'UNKNOWN'} — Score ${gate3.score || 'N/A'}/100`
+    );
     if (gate3.issues.length > 0) {
-      gate3.issues.forEach(issue => {
+      gate3.issues.forEach((issue) => {
         console.log(`      ⚠️  ${issue}`);
         result.warnings.push(`Gate 3: ${issue}`);
       });
@@ -653,11 +708,11 @@ async function runTestCase(testCase) {
     const gate4 = await validateGate4(testCase);
     result.gates.push(gate4);
 
-    const g4Icon = gate4.passed ? '✅' : (gate4.outcome === 'skipped' ? '⏭️' : '❌');
+    const g4Icon = gate4.passed ? '✅' : gate4.outcome === 'skipped' ? '⏭️' : '❌';
     console.log(`   ${g4Icon} Gate 4: ${gate4.outcome?.toUpperCase() || 'UNKNOWN'}`);
     if (gate4.thumbnailSizeKB) console.log(`      📐 Thumbnail: ${gate4.thumbnailSizeKB}KB`);
     if (gate4.issues.length > 0) {
-      gate4.issues.forEach(issue => {
+      gate4.issues.forEach((issue) => {
         console.log(`      ⚠️  ${issue}`);
         result.warnings.push(`Gate 4: ${issue}`);
       });
@@ -668,11 +723,11 @@ async function runTestCase(testCase) {
     const gate5 = await validateGate5(testCase, data.script);
     result.gates.push(gate5);
 
-    const g5Icon = gate5.passed ? '✅' : (gate5.outcome === 'skipped' ? '⏭️' : '❌');
+    const g5Icon = gate5.passed ? '✅' : gate5.outcome === 'skipped' ? '⏭️' : '❌';
     console.log(`   ${g5Icon} Gate 5: ${gate5.outcome?.toUpperCase() || 'UNKNOWN'}`);
     if (gate5.title) console.log(`      📝 Title (${gate5.titleLength} chars): "${gate5.title}"`);
     if (gate5.issues.length > 0) {
-      gate5.issues.forEach(issue => {
+      gate5.issues.forEach((issue) => {
         console.log(`      ⚠️  ${issue}`);
         result.warnings.push(`Gate 5: ${issue}`);
       });
@@ -686,7 +741,7 @@ async function runTestCase(testCase) {
     const g6Icon = gate6.passed ? '✅' : '❌';
     console.log(`   ${g6Icon} Gate 6: ${gate6.outcome?.toUpperCase()}`);
     if (gate6.issues.length > 0) {
-      gate6.issues.forEach(issue => console.log(`      ⚠️  ${issue}`));
+      gate6.issues.forEach((issue) => console.log(`      ⚠️  ${issue}`));
     }
 
     // ── Gate 7: Publish Validation (Test Case #1 only) ────────────────
@@ -696,13 +751,13 @@ async function runTestCase(testCase) {
       gate7 = await validateGate7(testCase, gate5);
       result.gates.push(gate7);
 
-      const g7Icon = gate7.passed ? '✅' : (gate7.outcome === 'skipped' ? '⏭️' : '❌');
+      const g7Icon = gate7.passed ? '✅' : gate7.outcome === 'skipped' ? '⏭️' : '❌';
       console.log(`   ${g7Icon} Gate 7: ${gate7.outcome?.toUpperCase() || 'UNKNOWN'}`);
       if (gate7.requestId) console.log(`      📋 request_id: ${gate7.requestId}`);
       if (gate7.jobId) console.log(`      📋 job_id: ${gate7.jobId}`);
       if (gate7.uploadStatusLogged) console.log(`      📝 Logged to upload_status.json: ✅`);
       if (gate7.issues.length > 0) {
-        gate7.issues.forEach(issue => {
+        gate7.issues.forEach((issue) => {
           console.log(`      ⚠️  ${issue}`);
           result.warnings.push(`Gate 7: ${issue}`);
         });
@@ -724,7 +779,6 @@ async function runTestCase(testCase) {
       const gateCount = testCase.id === 1 ? '7' : '6';
       console.log(`\n✅ TEST PASSED — all ${gateCount} gates passed`);
     }
-
   } catch (error) {
     console.error(`\n❌ EXCEPTION: ${error.message}`);
     result.status = 'error';
@@ -743,15 +797,17 @@ async function runTestCase(testCase) {
  * Sleep helper
  */
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
  * Generate summary report
  */
 function generateReport() {
-  const passed = results.cases.filter(c => c.status === 'passed' || c.status === 'warning').length;
-  const failed = results.cases.filter(c => c.status === 'failed' || c.status === 'error').length;
+  const passed = results.cases.filter(
+    (c) => c.status === 'passed' || c.status === 'warning'
+  ).length;
+  const failed = results.cases.filter((c) => c.status === 'failed' || c.status === 'error').length;
 
   let report = `
 ${'='.repeat(80)}
@@ -773,31 +829,31 @@ ${'='.repeat(80)}
 
 `;
 
-  results.cases.forEach(testCase => {
-    const icon = (testCase.status === 'passed' || testCase.status === 'warning') ? '✅' : '❌';
+  results.cases.forEach((testCase) => {
+    const icon = testCase.status === 'passed' || testCase.status === 'warning' ? '✅' : '❌';
     report += `${icon} Test ${testCase.id}: ${testCase.name}\n`;
     report += `   Expected scenes: ${testCase.expectedScenes} | Actual: ${testCase.actualScenes || 'N/A'}\n`;
     report += `   Status: ${testCase.status.toUpperCase()} | Duration: ${(testCase.duration / 1000).toFixed(1)}s\n`;
 
     if (testCase.gates && testCase.gates.length > 0) {
-      testCase.gates.forEach(gate => {
-        const gIcon = gate.passed ? '✅' : (gate.outcome === 'skipped' ? '⏭️' : '❌');
+      testCase.gates.forEach((gate) => {
+        const gIcon = gate.passed ? '✅' : gate.outcome === 'skipped' ? '⏭️' : '❌';
         const scoreStr = gate.score != null ? ` (${gate.score}/100)` : '';
         report += `   ${gIcon} Gate ${gate.gate} — ${gate.name}: ${gate.outcome?.toUpperCase() || 'N/A'}${scoreStr}\n`;
         if (gate.issues && gate.issues.length > 0) {
-          gate.issues.slice(0, 3).forEach(issue => report += `      ⚠️  ${issue}\n`);
+          gate.issues.slice(0, 3).forEach((issue) => (report += `      ⚠️  ${issue}\n`));
         }
       });
     }
 
     if (testCase.warnings.length > 0) {
       report += `   Warnings (${testCase.warnings.length}):\n`;
-      testCase.warnings.slice(0, 5).forEach(w => report += `     - ${w}\n`);
+      testCase.warnings.slice(0, 5).forEach((w) => (report += `     - ${w}\n`));
     }
 
     if (testCase.errors.length > 0) {
       report += `   Errors:\n`;
-      testCase.errors.forEach(e => report += `     - ${e}\n`);
+      testCase.errors.forEach((e) => (report += `     - ${e}\n`));
     }
 
     report += `\n`;
@@ -807,7 +863,7 @@ ${'='.repeat(80)}
   report += `SCENE COUNT VALIDATION\n`;
   report += `${'='.repeat(80)}\n\n`;
 
-  results.cases.forEach(testCase => {
+  results.cases.forEach((testCase) => {
     const match = testCase.actualScenes === testCase.expectedScenes;
     const icon = match ? '✅' : '❌';
     report += `${icon} ${testCase.name}: ${testCase.actualScenes || 'N/A'}/${testCase.expectedScenes} scenes\n`;
@@ -817,11 +873,11 @@ ${'='.repeat(80)}
   report += `GATE 1 PASS RATE\n`;
   report += `${'='.repeat(80)}\n\n`;
 
-  const gate1Results = results.cases.map(tc => {
-    const g1 = tc.gates?.find(g => g.gate === 1);
+  const gate1Results = results.cases.map((tc) => {
+    const g1 = tc.gates?.find((g) => g.gate === 1);
     return { name: tc.name, passed: g1?.passed, score: g1?.score, outcome: g1?.outcome };
   });
-  gate1Results.forEach(r => {
+  gate1Results.forEach((r) => {
     const icon = r.passed ? '✅' : '❌';
     report += `${icon} ${r.name}: ${r.outcome?.toUpperCase() || 'N/A'} (${r.score || 'N/A'}/100)\n`;
   });
@@ -891,7 +947,7 @@ process.on('unhandledRejection', (error) => {
 });
 
 // Run
-main().catch(error => {
+main().catch((error) => {
   console.error('❌ Fatal error:', error);
   process.exit(1);
 });

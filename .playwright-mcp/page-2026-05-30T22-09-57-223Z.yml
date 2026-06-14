@@ -1,0 +1,118 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e12]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e16] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e18]
+            - navigation "Site" [ref=e21]:
+              - list [ref=e22]:
+                - listitem [ref=e23]:
+                  - link "Home" [ref=e26] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com
+                    - generic [ref=e27]: Home
+                - listitem [ref=e28]:
+                  - link "About Us" [ref=e31] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/about-us
+                    - generic [ref=e32]: About Us
+                - listitem [ref=e33]:
+                  - generic [ref=e35]:
+                    - link "Summer Programs" [ref=e36] [cursor=pointer]:
+                      - /url: https://www.learningwithlumi.com/summer-camps-2026
+                      - generic [ref=e37]: Summer Programs
+                    - button "More Summer Programs pages" [ref=e38] [cursor=pointer]:
+                      - img [ref=e39]
+                - listitem [ref=e41]:
+                  - link "Tutoring" [ref=e44] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/tutoring
+                    - generic [ref=e45]: Tutoring
+                - listitem [ref=e46]:
+                  - link "Become a Lumi-nary" [ref=e49] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+                    - generic [ref=e50]: Become a Lumi-nary
+                - listitem [ref=e51]:
+                  - link "Contact Us" [ref=e54] [cursor=pointer]:
+                    - /url: https://www.learningwithlumi.com/contact-us
+                    - generic [ref=e55]: Contact Us
+      - main:
+        - generic [ref=e57]:
+          - group:
+            - generic [ref=e64]:
+              - generic "Free Phone Consultation" [ref=e65]
+              - region "Free Phone Consultation details" [ref=e70]:
+                - generic [ref=e71]:
+                  - navigation [ref=e73]:
+                    - list [ref=e74]:
+                      - listitem [ref=e75]:
+                        - link "Home" [ref=e76] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com
+                          - generic [ref=e77]: Home
+                      - img [ref=e78]
+                      - listitem [ref=e80]:
+                        - link "Service list" [ref=e81] [cursor=pointer]:
+                          - /url: https://www.learningwithlumi.com/book-online
+                          - generic [ref=e82]: Service list
+                      - img [ref=e83]
+                      - listitem [ref=e85]:
+                        - generic [ref=e86]: Free Phone Consultation
+                  - generic [ref=e87]:
+                    - generic [ref=e90]:
+                      - heading "Free Phone Consultation" [level=1] [ref=e92]
+                      - paragraph [ref=e93]: Free consultation service to understand your tutoring needs
+                    - generic [ref=e94]:
+                      - generic [ref=e96]:
+                        - generic [ref=e97]:
+                          - text: 45 min
+                          - generic [ref=e98]: 45 min
+                        - generic [ref=e99]: Telephonic Consultation
+                      - link "Book Now" [ref=e101] [cursor=pointer]:
+                        - generic [ref=e102]: Book Now
+                    - generic [ref=e103]:
+                      - separator [ref=e104]
+                      - generic [ref=e106]:
+                        - heading "Service Description" [level=2] [ref=e107]
+                        - paragraph [ref=e108]: At Lumi Education, we offer a Free 1:1 Tutoring Consultation to discuss your child's unique academic needs. This personalized session allows us to understand their strengths and challenges and unique learning style, enabling us to pair them with the ideal tutor who is the best fit for their educational journey and for their success.
+                    - generic [ref=e109]:
+                      - separator [ref=e110]
+                      - generic [ref=e112]:
+                        - heading "Contact Details" [level=2] [ref=e113]
+                        - list [ref=e114]:
+                          - listitem
+                    - separator [ref=e116]
+      - contentinfo:
+        - generic [ref=e118]:
+          - group:
+            - link "Lumi-Education-logo" [ref=e122] [cursor=pointer]:
+              - /url: https://www.learningwithlumi.com
+              - img "Lumi-Education-logo" [ref=e124]
+            - heading "Quick Links" [level=3] [ref=e126]
+            - paragraph [ref=e128]:
+              - link "About Us" [ref=e130] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/about-us
+            - paragraph [ref=e132]:
+              - link "Summer Programs" [ref=e134] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/summer-camps-2026
+            - paragraph [ref=e136]:
+              - link "Tutoring" [ref=e138] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/tutoring
+            - paragraph [ref=e140]:
+              - link "Join Our Team" [ref=e142] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/become-a-lumi-nary
+            - paragraph [ref=e144]:
+              - link "Contact Us" [ref=e146] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/contact-us
+            - heading "Contact Info" [level=3] [ref=e148]
+            - paragraph [ref=e150]:
+              - link "(571) 207-8373" [ref=e152] [cursor=pointer]:
+                - /url: tel:+15712078373
+            - paragraph [ref=e154]:
+              - link "contact.us@learningwithlumi.com" [ref=e156] [cursor=pointer]:
+                - /url: mailto:contact.us@learningwithlumi.com
+            - paragraph [ref=e158]: © 2026 Lumi Education
+            - paragraph [ref=e160]:
+              - link "Privacy Policy" [ref=e162] [cursor=pointer]:
+                - /url: https://www.learningwithlumi.com/privacy-policy
+  - region "bottom of page"

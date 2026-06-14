@@ -1,0 +1,200 @@
+{
+  "operate-hasanabi": {
+    "key": "operate-hasanabi",
+    "tier": "operate",
+    "streamer": "hasanabi",
+    "style": "commentary",
+    "clip_id": "AgitatedDelightfulArmadilloWOOP",
+    "title": "Hasan gets left with a 50/50 with AOC and Ilhan Omar",
+    "duration_s": 17.7,
+    "url": "https://assets.auraflux.co/e2e-fixtures/operate-hasanabi.mp4",
+    "r2_key": "e2e-fixtures/operate-hasanabi.mp4"
+  },
+  "operate-stableronaldo": {
+    "key": "operate-stableronaldo",
+    "tier": "operate",
+    "streamer": "stableronaldo",
+    "style": "gaming",
+    "clip_id": "RichTrappedShallotVoteYea-YOAIfnyH-X_MODZK",
+    "title": "hey!",
+    "duration_s": 47.4,
+    "url": "https://assets.auraflux.co/e2e-fixtures/operate-stableronaldo.mp4",
+    "r2_key": "e2e-fixtures/operate-stableronaldo.mp4"
+  },
+  "operate-extraemily": {
+    "key": "operate-extraemily",
+    "tier": "operate",
+    "streamer": "extraemily",
+    "style": "irl",
+    "clip_id": "PiliableKnottyLeopardOSfrog-9AfrgWqhjMCyflR4",
+    "title": "Emily with the XXXTentacion performance ",
+    "duration_s": 39,
+    "url": "https://assets.auraflux.co/e2e-fixtures/operate-extraemily.mp4",
+    "r2_key": "e2e-fixtures/operate-extraemily.mp4"
+  },
+  "operate-maya": {
+    "key": "operate-maya",
+    "tier": "operate",
+    "streamer": "maya",
+    "style": "variety",
+    "clip_id": "KindCogentPeanutCclamChamp-jheswOO8hiB9fBEI",
+    "title": "maya fell for it",
+    "duration_s": 47.6,
+    "url": "https://assets.auraflux.co/e2e-fixtures/operate-maya.mp4",
+    "r2_key": "e2e-fixtures/operate-maya.mp4"
+  },
+  "operate-jasontheween": {
+    "key": "operate-jasontheween",
+    "tier": "operate",
+    "streamer": "jasontheween",
+    "style": "commentary",
+    "clip_id": "TriumphantRockyReindeerM4xHeh-CqKdd1hDqXnXsLIv",
+    "title": "W Auntie",
+    "duration_s": 60,
+    "url": "https://assets.auraflux.co/e2e-fixtures/operate-jasontheween.mp4",
+    "r2_key": "e2e-fixtures/operate-jasontheween.mp4"
+  },
+  "operate-lacy": {
+    "key": "operate-lacy",
+    "tier": "operate",
+    "streamer": "lacy",
+    "style": "gaming",
+    "clip_id": "SneakySpineyHummingbirdMrDestructoid-SgkpkbBM6u39qU7j",
+    "title": "dd",
+    "duration_s": 47.6,
+    "url": "https://assets.auraflux.co/e2e-fixtures/operate-lacy-v2.mp4",
+    "r2_key": "e2e-fixtures/operate-lacy-v2.mp4"
+  },
+  "guided-hasanabi": {
+    "key": "guided-hasanabi",
+    "tier": "guided",
+    "streamer": "hasanabi",
+    "style": "commentary",
+    "clip_id": "FuriousArtisticWebKappaClaus-3SK5u4xGMy3Ngzs8",
+    "title": "Andrew Tate has been to space thats how he knows the earth i",
+    "duration_s": 44.5,
+    "url": "https://assets.auraflux.co/e2e-fixtures/guided-hasanabi.mp4",
+    "r2_key": "e2e-fixtures/guided-hasanabi.mp4"
+  },
+  "guided-stableronaldo": {
+    "key": "guided-stableronaldo",
+    "tier": "guided",
+    "streamer": "stableronaldo",
+    "style": "gaming",
+    "clip_id": "YawningRacyCrocodileHeyGuys-a85AO8ole8XkAmv6",
+    "title": "duke \"who is you\" \ud83d\ude2d\ud83d\ude2d",
+    "duration_s": 60,
+    "url": "https://assets.auraflux.co/e2e-fixtures/guided-stableronaldo.mp4",
+    "r2_key": "e2e-fixtures/guided-stableronaldo.mp4"
+  },
+  "guided-extraemily": {
+    "key": "guided-extraemily",
+    "tier": "guided",
+    "streamer": "extraemily",
+    "style": "irl",
+    "clip_id": "StupidExquisiteEggDancingBaby-2JVQv7x5rZ2uxwzg",
+    "title": "Parking lot crackhead",
+    "duration_s": 56.1,
+    "url": "https://assets.auraflux.co/e2e-fixtures/guided-extraemily-1778611285.mp4",
+    "r2_key": "e2e-fixtures/guided-extraemily-1778611285.mp4"
+  },
+  "guided-maya": {
+    "key": "guided-maya",
+    "tier": "guided",
+    "streamer": "maya",
+    "style": "variety",
+    "clip_id": "IntelligentPiercingBadgerCmonBruh-2W54kBy776gX4cRA",
+    "title": "DisguisedToast works for Maya now",
+    "duration_s": 36.2,
+    "url": "https://assets.auraflux.co/e2e-fixtures/guided-maya.mp4",
+    "r2_key": "e2e-fixtures/guided-maya.mp4"
+  },
+  "guided-jasontheween": {
+    "key": "guided-jasontheween",
+    "tier": "guided",
+    "streamer": "jasontheween",
+    "style": "commentary",
+    "clip_id": "SincereTriangularHerdGOWSkull-G5IM2HG0c-51lbdh",
+    "title": "NAH THEY ALL TWEAKIN\ud83e\udd23",
+    "duration_s": 14.6,
+    "url": "https://assets.auraflux.co/e2e-fixtures/guided-jasontheween.mp4",
+    "r2_key": "e2e-fixtures/guided-jasontheween.mp4"
+  },
+  "guided-lacy": {
+    "key": "guided-lacy",
+    "tier": "guided",
+    "streamer": "lacy",
+    "style": "gaming",
+    "clip_id": "SneakySpineyHummingbirdMrDestructoid-SgkpkbBM6u39qU7j",
+    "title": "dd",
+    "duration_s": 47.6,
+    "url": "https://assets.auraflux.co/e2e-fixtures/guided-lacy.mp4",
+    "r2_key": "e2e-fixtures/guided-lacy.mp4"
+  },
+  "managed-hasanabi": {
+    "key": "managed-hasanabi",
+    "tier": "managed",
+    "streamer": "hasanabi",
+    "style": "commentary",
+    "clip_id": "TrustworthyHorribleBunnyCharlietheUnicorn-q2JhJ1atdWOj3jOg",
+    "title": "irl ban",
+    "duration_s": 51.4,
+    "url": "https://assets.auraflux.co/e2e-fixtures/managed-hasanabi.mp4",
+    "r2_key": "e2e-fixtures/managed-hasanabi.mp4"
+  },
+  "managed-stableronaldo": {
+    "key": "managed-stableronaldo",
+    "tier": "managed",
+    "streamer": "stableronaldo",
+    "style": "gaming",
+    "clip_id": "SneakyBlatantChickpeaPeanutButterJellyTime-B6eWTXlxT7efwqM3",
+    "title": ".",
+    "duration_s": 14.9,
+    "url": "https://assets.auraflux.co/e2e-fixtures/managed-stableronaldo.mp4",
+    "r2_key": "e2e-fixtures/managed-stableronaldo.mp4"
+  },
+  "managed-extraemily": {
+    "key": "managed-extraemily",
+    "tier": "managed",
+    "streamer": "extraemily",
+    "style": "irl",
+    "clip_id": "ExuberantSaltyMoonBlargNaut-4Kg8MLuJvwq2eafr",
+    "title": "FULCRUM",
+    "duration_s": 21.8,
+    "url": "https://assets.auraflux.co/e2e-fixtures/managed-extraemily.mp4",
+    "r2_key": "e2e-fixtures/managed-extraemily.mp4"
+  },
+  "managed-maya": {
+    "key": "managed-maya",
+    "tier": "managed",
+    "streamer": "maya",
+    "style": "variety",
+    "clip_id": "FantasticSingleCarrotTTours-UrdNaYTkAydc-TSm",
+    "title": "Amazon Denies Another Employee a Bathroom Break",
+    "duration_s": 38.1,
+    "url": "https://assets.auraflux.co/e2e-fixtures/managed-maya.mp4",
+    "r2_key": "e2e-fixtures/managed-maya.mp4"
+  },
+  "managed-jasontheween": {
+    "key": "managed-jasontheween",
+    "tier": "managed",
+    "streamer": "jasontheween",
+    "style": "commentary",
+    "clip_id": "FlaccidNeighborlyChamoisGingerPower-Wou-HnVf9WEVZ6C-",
+    "title": "who is he talking to",
+    "duration_s": 37.5,
+    "url": "https://assets.auraflux.co/e2e-fixtures/managed-jasontheween.mp4",
+    "r2_key": "e2e-fixtures/managed-jasontheween.mp4"
+  },
+  "managed-lacy": {
+    "key": "managed-lacy",
+    "tier": "managed",
+    "streamer": "lacy",
+    "style": "gaming",
+    "clip_id": "EphemeralCaringNikudonRlyTho-5DrZbdGP_NHRvT9Z",
+    "title": "cpr",
+    "duration_s": 59.9,
+    "url": "https://assets.auraflux.co/e2e-fixtures/managed-lacy-1778611450.mp4",
+    "r2_key": "e2e-fixtures/managed-lacy-1778611450.mp4"
+  }
+}

@@ -1,0 +1,116 @@
+name: PR opened → In Review + post review checklist
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+    branches: [main]
+
+jobs:
+  pr-review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Extract Jira issue key
+        id: extract
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          TITLE="${{ github.event.pull_request.title }}"
+          KEY=$(echo "$BRANCH" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          if [ -z "$KEY" ]; then
+            KEY=$(echo "$TITLE" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          fi
+          echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "Found Jira key: $KEY"
+
+      - name: Transition Jira story → In Review (ID 3)
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          HTTP_STATUS=$(curl -s -o /tmp/jira_transition_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$BASE/rest/api/3/issue/$ISSUE_KEY/transitions" \
+            -d '{"transition":{"id":"3"}}')
+          cat /tmp/jira_transition_resp.json
+          echo "Transition to In Review: HTTP $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ $ISSUE_KEY → In Review"
+          else
+            echo "⚠️  Transition returned HTTP $HTTP_STATUS (non-fatal)"
+          fi
+
+      - name: Post review checklist on Jira issue
+        if: steps.extract.outputs.issue_key != ''
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.extract.outputs.issue_key }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+          BODY=$(printf '{
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [{
+                "type": "paragraph",
+                "content": [
+                  {"type":"text","text":"🔍 PR #%s opened by @%s — story moved to In Review.\n"},
+                  {"type":"text","text":"PR: %s\n\n"},
+                  {"type":"text","text":"Review checklist:\n"},
+                  {"type":"text","text":"- Correctness: no handler logic lost during extraction\n"},
+                  {"type":"text","text":"- Require paths: all module imports resolve correctly\n"},
+                  {"type":"text","text":"- Security: no hardcoded secrets, no unsafe eval\n"},
+                  {"type":"text","text":"- C0/C1+ boundary: C0-only code not leaking into shared paths\n"},
+                  {"type":"text","text":"- Tests: relevant unit tests present and passing\n\n"},
+                  {"type":"text","text":"When review is complete, transition this story to Approved."}
+                ]
+              }]
+            }
+          }' "$PR_NUMBER" "$PR_AUTHOR" "$PR_URL")
+
+          HTTP_STATUS=$(curl -s -o /tmp/jira_comment_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN" \
+            "$BASE/rest/api/3/issue/$ISSUE_KEY/comment" \
+            -d "$BODY")
+
+          cat /tmp/jira_comment_resp.json
+          echo "HTTP $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Review checklist posted to $ISSUE_KEY"
+          else
+            echo "⚠️  Comment post returned HTTP $HTTP_STATUS — non-fatal"
+          fi
+
+      - name: Post PR link comment on GitHub PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueKey = '${{ steps.extract.outputs.issue_key }}';
+            const jiraBase = '${{ secrets.JIRA_BASE_URL }}'.replace(/\/$/, '');
+            const jiraLink = issueKey
+              ? `[${issueKey}](${jiraBase}/browse/${issueKey})`
+              : '_no Jira key found in branch name_';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🔍 **Review requested**\n\nJira: ${jiraLink} → moved to **In Review**\nSerena pre-PR review ran locally before push (see \`.cursor/rules/serena-pr-review.mdc\`).\nReview checklist posted on the Jira issue.\n\nFlow: In Development → **In Review** → Approved (Rob) → Done (merge)`,
+            });

@@ -1,0 +1,105 @@
+name: Confluence — auto release notes on merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  release-notes:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          TITLE="${{ github.event.pull_request.title }}"
+          KEY=$(echo "$BRANCH" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          if [ -z "$KEY" ]; then
+            KEY=$(echo "$TITLE" | grep -oiE 'CPD-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+          fi
+          DATE=$(date -u +"%Y-%m-%d")
+          echo "issue_key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "pr_number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          echo "pr_title=$TITLE" >> "$GITHUB_OUTPUT"
+
+      - name: Create Confluence release notes page
+        id: confluence
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          ISSUE_KEY: ${{ steps.meta.outputs.issue_key }}
+          PR_DATE: ${{ steps.meta.outputs.date }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+          PR_TITLE: ${{ steps.meta.outputs.pr_title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.merged_by.login }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          BASE="${JIRA_BASE_URL%/}"
+
+          if [ -n "$ISSUE_KEY" ]; then
+            PAGE_TITLE="${ISSUE_KEY}: ${PR_TITLE} — ${PR_DATE}"
+            JIRA_LINK="${BASE}/browse/${ISSUE_KEY}"
+          else
+            PAGE_TITLE="PR #${PR_NUMBER}: ${PR_TITLE} — ${PR_DATE}"
+            JIRA_LINK="(no ticket)"
+          fi
+
+          COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} 2>/dev/null | head -20 || echo "see PR for history")
+
+          BODY=$(printf "## %s\n\n| Field | Value |\n|---|---|\n| **PR** | [#%s](%s) |\n| **Branch** | %s |\n| **Merged by** | @%s |\n| **Date** | %s |\n| **Jira** | %s |\n\n## Commits\n\n%s" \
+            "$PAGE_TITLE" "$PR_NUMBER" "$PR_URL" "$PR_BRANCH" "$PR_AUTHOR" "$PR_DATE" "$JIRA_LINK" "$COMMITS")
+
+          PAYLOAD=$(jq -n \
+            --arg spaceId "819202" \
+            --arg parentId "5537793" \
+            --arg title "$PAGE_TITLE" \
+            --arg body "$BODY" \
+            '{spaceId: $spaceId, parentId: $parentId, title: $title, body: {representation: "wiki", value: $body}}')
+
+          HTTP_STATUS=$(curl -s -o /tmp/confluence_resp.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -u "${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}" \
+            "${BASE}/wiki/api/v2/pages" \
+            -d "$PAYLOAD")
+
+          cat /tmp/confluence_resp.json
+          echo "HTTP $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            PAGE_ID=$(jq -r '.id // empty' /tmp/confluence_resp.json)
+            echo "page_id=$PAGE_ID" >> "$GITHUB_OUTPUT"
+            echo "Confluence page created: $PAGE_ID"
+          else
+            echo "Confluence page creation returned HTTP $HTTP_STATUS — non-fatal"
+          fi
+
+      - name: Post Confluence link as GitHub PR comment
+        if: steps.confluence.outputs.page_id != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pageId = '${{ steps.confluence.outputs.page_id }}';
+            const base = '${{ secrets.JIRA_BASE_URL }}'.replace(/\/$/, '');
+            const confluenceUrl = `${base}/wiki/spaces/CP/pages/${pageId}`;
+            const issueKey = '${{ steps.meta.outputs.issue_key }}';
+            const jiraLine = issueKey
+              ? `\nJira: [${issueKey}](${base}/browse/${issueKey})`
+              : '';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `📄 **Release notes created in Confluence**\n\n[View release notes](${confluenceUrl})${jiraLine}`,
+            });

@@ -1,0 +1,35 @@
+{
+  "results": [
+    {
+      "id": "O-Tw1",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": false,
+      "job_id": "e2e-operate-test_EXTRACT_FETCH_clips_1779739183011",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed to complete and did not produce an output URL, resulting in a low score. While source clips were fetched and the correct auth surface was used, the core processing failed.",
+      "source_count": 1
+    },
+    {
+      "id": "O-Tw2",
+      "tier": "operate",
+      "platform_src": "twitch",
+      "account": "hasanabi",
+      "auth_surface": "api",
+      "use_clip_spec": true,
+      "job_id": "e2e-operate-test_COMPACT_FETCH_clips_1779739829798",
+      "status": "failed",
+      "output_url": "",
+      "score": 30,
+      "pass": false,
+      "notes": "The job failed, resulting in no output URL and preventing any clipSpec assembly from being honored. However, source clips were successfully fetched from Twitch, and the correct API key authentication surface was identified for the 'operate' tier.",
+      "source_count": 3
+    }
+  ],
+  "elapsed_s": 688.0474371910095
+}
