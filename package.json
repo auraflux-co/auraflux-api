@@ -100,7 +100,7 @@
     "pino": "^9.14.0",
     "pino-http": "^11.0.0",
     "pino-pretty": "^11.3.0",
-    "puppeteer": "^24.40.0",
+    "puppeteer": "^24.43.1",
     "sharp": "^0.32.0",
     "stripe": "^22.2.1",
     "svix": "^1.95.2",
