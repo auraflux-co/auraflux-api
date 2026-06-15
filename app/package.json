@@ -14,7 +14,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@newrelic/next": "^0.10.0",
-    "@stripe/react-stripe-js": "^6.4.0",
+    "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.6.0",
     "@tailwindcss/postcss": "^4",
     "class-variance-authority": "^0.7.1",
