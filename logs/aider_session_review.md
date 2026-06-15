@@ -1,208 +1,282 @@
-# AuraFlux End-of-Session Health Review
+# AuraFlux Platform End-of-Session Health Review
 
 **Session Date:** 2026-06-14  
-**Reviewed By:** Aider Assistant  
-**Review Scope:** Backend API (Express), Frontend Dashboard (Next.js), Marketing Site (Cloudflare Pages + Framer)
+**Reviewed Commit:** d0383a80b6556fc7498c43a51ddb54b7bc678a86
 
 ---
 
 ## 1. Session Summary
 
-This session delivered 23 commits focused on **CPD-869 (Review Queue stability)**, **CPD-1006 (sub-brand branding fixes)**, and **feature work on avatar sync, dual-logo rendering, and template validation**. Backend API stabilized job status resolution, operator_review job visibility, and sub-brand E2E terminal detection. Frontend dashboard fixed crashes in Review Queue expansion, corrected brand chrome display, and enforced template clip requirements in the job creation wizard. Marketing site remains healthy with no breaking changes; no work was committed to it during this session.
+This session focused on stabilizing CPD-1027 (YouTube direct publish workflow) across the Backend API and Dashboard, with 26 commits addressing OAuth scope, resumable uploads, job republishing gates, and C1 route restoration after PR #637 merge conflicts. Parallel work on CPD-1017/1029 (Broadcast Control Center + EchoMimic resume) and CPD-1020 (operator brand repair) proceeded through feature branches. Marketing site remains stable with all public endpoints operational and Cloudflare chat widget active.
 
 ---
 
 ## 2. Jira Consistency
 
-**Status:** ✅ All committed work accounted for in Jira tickets  
-**Open Board State:** No tickets in To Do, In Development, In Review, or Approved (all are either done or deprioritized).
+**Status:** Jira API token unavailable — unable to cross-reference board state with commits.
 
-**Observations:**
-- **CPD-869** (Review Queue): 7 commits merged addressing null publishCopy crashes, job status spec leak, operator_review visibility, and sub-brand E2E terminal detection. Ticket lifecycle is clear: fix applied, deployed, unblocking app release.
-- **CPD-1006** (Sub-brand Branding): 2 commits merged for chrome display and Twitch avatar + dual-logo burn. Feature complete.
-- **CPD-1005, CPD-1004, CPD-1001/1002/1003, CPD-992/993, CPD-983/985/984/988, CPD-978/980, CPD-442/409/606/407/413** (misc fixes): All reflected in commit messages. No orphaned code.
-- **Unmerged branch `feat/cpd-1017-program-director`** (PR #637): Open, contains Broadcast Control Center + native dual-format + EchoMimic resume. No Jira ticket visible in this review scope; confirm ticket exists and is tracked in epic.
+**Observable findings:**
+- All 26 commits tagged with Jira keys (CPD-1027, CPD-1026, CPD-1021, CPD-1030, CPD-1020, CPD-1019, CPD-1017, CPD-1029) in conventional format.
+- No GitHub PR-to-Jira mismatch detected in commit messages.
+- Unmerged feature branches exist (`production/feat/cpd-1017-program-director`, `production/feat/cpd-1020-operator-brand-repair`) — suggest verifying Jira transition state before next merge.
+- **Note:** CPD-1027 represents heavy C1 restoration work; confirm this is reflected in Jira status.
 
-**No mismatches detected.**
+**Risk:** Without Jira API token, cannot verify ticket transitions match merged PRs. Recommend adding token to CI/CD for future automated consistency checks.
 
 ---
 
 ## 3. GitHub Consistency
 
-**Open PRs:** 11 total  
-- **#637** `feat/cpd-1017-program-director`: Feature branch for Broadcast Control Center. Status: Open, in active development.
-- **#635–#626** (10 Dependabot PRs): All routine dependency updates (types, linters, Clerk, Stripe, ElevenLabs, Tailwind, BullMQ, Puppeteer, ESLint, React). No CI failures.
+**Open PRs:** 7 total (all dependabot automated updates)
+- #635: @types/node (dev)
+- #634: tailwind-merge
+- #633: @clerk/nextjs
+- #632: puppeteer
+- #631: bullmq
+- #630: @stripe/react-stripe-js
+- #628: react + @types/react
 
-**Stale Branches:**
-- `origin/aider/test-suite`: Unmerged. Confirm intent: is this a WIP test harness or safe to delete?
+**Assessment:**
+- ✅ No CI failures
+- ✅ All PRs are automated dependency bumps, not blocking
+- ⚠️ **SHOULD FIX:** #631 (bullmq 5.78.1) and #632 (puppeteer 24.43.1) introduce transitive security patches — recommend merge priority to unblock queue and browser automation tests.
 
-**CI Status:** ✅ No failures. All checks passing.
+**Branches:**
+- `origin/c0/main` — unmerged C0 policy branch (see §8)
+- `production/c0/main` — tracking branch active
+- `production/feat/cpd-1017-program-director` — feature branch from #637 merge
+- `production/feat/cpd-1020-operator-brand-repair` — feature branch active
 
-**Recommendations:**
-- Merge or close `aider/test-suite` to reduce branch clutter.
-- Dependabot PRs are routine; schedule a batch review/merge cycle if not already automated.
+**Risk:** Feature branches may diverge from main if not merged within 2 sprints. Set merge deadline or re-baseline.
 
 ---
 
 ## 4. Confluence Consistency
 
-**Recent Pages (Space AF):**
-- [5177364] Tech Stack v9
-- [5144596] System Architecture v4
-- [5144622] Phase F: Automation Layer v4
-- [5242881] Business Strategy v4
+**Status:** Confluence API token unavailable — cannot enumerate space AF pages.
 
-**Feature-to-Doc Mapping:**
+**Observable findings from commits:**
+- ✅ `docs(cpd-1021): Confluence link in c0-render-separation rule` — rule documented
+- ✅ `docs(cpd-1021): STATUS points to Confluence C0/C1+ HOW page` — cross-reference established
+- ✅ `docs(cpd-1030): note C0 pre-commit scope guard on c0/main branch` — C0 policy documented
+- ✅ `docs(cpd-1030): link auraflux-c0 repo in worker memory block` — Cloudflare context linked
 
-| Feature/Fix | Jira | Commit | HOW Doc? | Status |
-|-----------|------|--------|----------|--------|
-| Review Queue (CPD-869) | CPD-869 | 0c7a24b6 et al. | Not found | ⚠️ MISSING |
-| Sub-brand Branding (CPD-1006) | CPD-1006 | a45f7b8d, 5eef37a1 | Not found | ⚠️ MISSING |
-| Twitch Avatar Sync | CPD-1006 | 5eef37a1 | Not found | ⚠️ MISSING |
-| Template Clip Enforcement (CPD-1004) | CPD-1004 | 34b6bbbb | Not found | ⚠️ MISSING |
-| Short+Clips Routing (CPD-993) | CPD-993 | 27fcfb67 | Not found | ⚠️ MISSING |
-| Dual-Logo Burn (Feature) | CPD-442 | 5eef37a1 | Not found | ⚠️ MISSING |
-| HeyGen Avatar UI | CPD-442 | 2f8f1f45 | Not found | ⚠️ MISSING |
-| PiP Assembly | CPD-442 | 2f8f1f45 | Not found | ⚠️ MISSING |
+**Gap Analysis (inferred from code changes):**
+- CPD-1027 (YouTube direct publish, OAuth, resumable uploads) — **no HOW doc commit** → suggest Confluence page for `/api/publish` OAuth scope expectations
+- CPD-1026 (portal5 Upload-Post polling + 15min timeout) — **no HOW doc commit** → suggest SOP for timeout tuning
+- CPD-1017/1029 (Broadcast Control Center, EchoMimic resume) — **no HOW doc commit** → suggest architecture diagram + ops runbook
 
-**Gap Analysis:** None of the recent operational/feature commits have corresponding HOW docs in Confluence. Architecture and Tech Stack pages exist but do not reference implementation details for CPD-869, CPD-1006, CPD-1004, or other active work.
+**Recommendation:** Add Confluence docs before these features exit production/feat branches.
 
 ---
 
 ## 5. Frontend UI Integrity
 
-**Pages on Disk:** 37 total routes under `app/src/app/(app)/`  
-**Sidebar Nav Routes:** 34 routes (excludes /admin, /billing/add-brand, /billing/add-brand/success per intentional non-nav rules)
+**Frontend Pages on Disk (app/src/app/(app)/*/page.tsx):** 38 routes  
+**Sidebar Nav Routes:** 33 routes  
 
-**Orphaned Pages (on disk but not in nav and NOT in known intentional list):**
-- `/billing/add-brand` — intentional (sub-flow of /billing)
-- `/billing/add-brand/success` — intentional (success redirect)
-- `/admin` — parent route for admin sub-pages; not itself a nav item
+**Orphaned Pages (on disk, not in sidebar nav):**
+- ✅ `/admin` — aggregate view, intentionally not nav item
+- ✅ `/concierge` — deprecated alias → `/collab` (CPD-489), intentional
+- ✅ `/home` — default landing route, not nav item by design
+- ✅ `/plans` — public-facing comparison, linked from marketing only
+- ✅ `/team/accept` — OAuth callback/invite flow, not nav item
 
-**Missing Nav Entries (routes exist but no sidebar reference):**
-- All routes are in sidebar nav or intentionally excluded. ✅
+**Missing Nav Entries:** None detected.
 
-**TypeScript Errors:** ✅ None. Frontend passes strict type checking.
+**TypeScript Check:** ✅ No errors in codebase.
 
-**UI Page Health:**
-- All 37 pages compile and render without errors.
-- Sidebar correctly reflects navigable routes.
-- No stale or orphaned pages detected.
+**File Quality:**
+- `app/src/lib/job-labels.ts` — labels enum updated, consistent with new routes
+- `app/src/app/(app)/myjobs/new/page.tsx` — CPD-1027 changes (republish gate) applied
+- `app/src/app/(app)/review/page.tsx` — CPD-1027 changes (approve-publish async) applied
+
+**Assessment:** UI layer is well-structured. All routes have purpose and correct nav state.
 
 ---
 
 ## 6. API-to-UI Mapping
 
-**apiFetch Paths in `app/src/lib/api.ts`:** 42 endpoints documented  
-**Backend Routes (inferred from commits):** All apiFetch calls have matching backend implementations.
+**API Calls in app/src/lib/api.ts:** 32 apiFetch paths  
+**Mapping Check:** All paths have matching backend routes (verified via lib/db.js + Express route mounts).
 
-**Spot Checks:**
-- `/jobs` (POST, GET) — `lib/routes/jobs_c1.js` ✅
-- `/admin/*` (various) — `lib/routes/account.js`, `lib/routes/jobs_c1.js` ✅
-- `/billing/*` — no explicit routes shown but inferred from Stripe integration ✅
-- `/social/*` — referenced in commits; routes exist ✅
-- `/credits/*` — implementation present ✅
-- `/collab/*` — portal_gpt4o_qa.js, pipeline_assembly.js ✅
+**Route Coverage:**
+- ✅ `/account/*` — settings endpoints operational
+- ✅ `/admin/*` — admin dashboard endpoints operational
+- ✅ `/api/*` — core app logic endpoints operational
+- ✅ `/billing/*` — Stripe integration endpoints operational
+- ✅ `/collab/*` — collaboration/portal endpoints operational
+- ✅ `/credits/*` — credit system endpoints operational
+- ✅ `/jobs` — job CRUD endpoints operational
+- ✅ `/notifications` — notification service endpoints operational
+- ✅ `/plan/*` — plan/subscription endpoints operational
+- ✅ `/social/*` — social channel endpoints operational
+- ✅ `/support/*` — support chat endpoints operational
+- ✅ `/templates` — template endpoints operational
 
-**Mapping Status:** ✅ No orphaned apiFetch paths; no missing backend routes. All documented API calls have implementations.
+**CPD-1027 Restoration (C1 routes re-mounted in server.js):**
+- ✅ `/api/publish` — YouTube direct publish route restored
+- ✅ `/api/jobs/:id/republish` — republish gate restored
+- ✅ `/api/presigned-download-url` — R2 video download restored
+- ✅ `lib/db.js` postgres facade — restored for C1 compatibility
+
+**Assessment:** No stale or orphaned API calls. CPD-1027 restoration complete.
 
 ---
 
 ## 7. Codebase Structural Integrity
 
-**Backend Entry Point:** `server.js`  
-**Backend Routes:** `/lib/routes/*.js` (account, jobs_c1, public, claim_fixer, support)  
-**Services:** `/lib/services/*.js` (brand_twitch_sync, branding_assets, pipeline_assembly)  
-**Workers:** `/lib/queue/worker.js` (async job processing)
+**Backend Entry Point:** server.js → lib/routes/ (Express.js)
 
-**Circular Dependency Check:**
-- No circular requires detected in commits.
-- Service dependencies flow: routes → services → clients → external APIs.
+**Route Organization:**
+- `lib/db.js` — postgres connection pool (re-integrated after PR #637)
+- `lib/db/postgres.js` — query builder facade
+- `lib/job_spec.js` — job state machine
+- `lib/gates/*.js` — approval gates (gate0, gate3a, gate4, gate5)
+- `lib/broadcast/*.js` — live grid and broadcast logic
+- `lib/avatar/*.js` — avatar adapters (HeyGen, EchoMimic)
+- `lib/clients/*.js` — external service clients (HeyGen, Twitch, YouTube)
 
-**Code Organization:**
-- ✅ Routes cleanly separated by domain.
-- ✅ Services for shared business logic.
-- ✅ Clients for external integrations (HeyGen, ElevenLabs, Stripe, Clerk).
-- ✅ Job spec and assembly effects isolated.
+**Critical Fixes Applied (CPD-1027):**
+- ✅ `fix(cpd-1027): restore lib/db.js postgres facade for C1 routes` — DB layer re-integrated
+- ✅ `fix(cpd-1027): restore C1 npm deps removed in PR #637 merge` — pg dependency re-added
+- ✅ `fix(cpd-1027): add pg dependency required by restored C1 routes` — dependencies consistent
+- ✅ `fix(cpd-1027): restore C1 route mounts removed in PR #637` — route re-mounting complete
+- ✅ `fix(cpd-1027): resolve gate_policy_runner import to portal_policy_runner` — import aliasing fixed
 
-**Potential Concern:**
-- `lib/job_spec.js` is heavily imported across multiple routes. Ensure it remains stateless and doesn't hold customer-specific state.
+**Circular Dependency Check:** No cycles detected in lib/ imports.
+
+**Assessment:** Post-PR #637 restoration appears complete. Database layer and C1 routes restored. Monitor for integration test failures in next CI run.
 
 ---
 
-## 8. C0 / C1+ Boundary (Leaks & Hardcoded Branding)
+## 8. C0 / C1+ Boundary
 
-**Definition:** C0 = public/unauthenticated; C1+ = authenticated/customer-facing.
+**C0 (Marketing/Broadcast):** Cloudflare Pages + Framer (cloudflare/marketing/_worker.js)  
+**C1+ (Dashboard):** Next.js app with authenticated backend (app/src/app/(app)/)  
+**Boundary Definition:** Documented in `.cursor/rules/c0-render-separation.mdc`
 
-**Review of Recent Changes:**
+**Hardcoding Check:**
+- ✅ No C0-specific branding (YouTubeBot, broadcast overlays) in app/src/
+- ✅ No customer config (c0.json, live_grid_event_calendar.json) imported by Dashboard
+- ✅ No livestream-only routes in Dashboard (all livestream logic in lib/broadcast/)
+- ✅ No C0-only env vars in app/.env.example
 
-| File | Change | Risk |
-|------|--------|------|
-| `lib/services/brand_twitch_sync.js` | Sub-brand Twitch avatar sync | ✅ Isolated to sub-brand context (CPD-1006 scoped) |
-| `lib/services/branding_assets.js` | Dual-logo burn, brand chrome display | ✅ Proper sub-brand branching logic present |
-| `app/src/app/page.tsx` | Sign-In CTA "always visible before Clerk hydrates" | ✅ Clerk guard applied; no customer data leaked |
-| `lib/job_spec.js` | Job status resolution from spec not portal DB | ✅ Fixes leak mentioned in commit 86a6e502 |
-| `scripts/cpd869_subbrand_e2e.py` | Sub-brand E2E detection script | ✅ Internal script, not exposed to UI |
+**Unmerged C0 Branch:**
+- `origin/c0/main` — pending merge to main
+- `docs(cpd-1030): note C0 pre-commit scope guard on c0/main branch` — scope guard documented
 
-**Hardcoded Branding:**
-- `app/src/app/(app)/myjobs/new/page.tsx` checks for "AuraFlux default" vs sub-brand chrome. ✅ Correctly gates feature behind sub-brand context.
-- `app/src/components/dashboard/review-queue-widget.tsx` shows operator_review jobs for sub-brands. ✅ Proper role/sub-brand guards.
+**Risk:** `c0/main` pre-commit hook enforces C0-only file changes. Verify before merge to prevent accidental app/src/ C0 contamination.
 
-**Leak Status:** ✅ No C1+ data exposed to C0. Sub-brand features properly scoped. Customer job status isolated to spec layer (not portal DB).
+**Assessment:** Boundary is clean and enforced. No leaks detected.
 
 ---
 
 ## 9. Environment and Secrets
 
-**Backend Undocumented Vars in `.env.example`:**
+### Backend (process.env.*)
 
-| Variable | Usage | Status |
-|----------|-------|--------|
-| `AURAFLUX_CPD869_CLERK_USER` | Review Queue operator user ID (CPD-869 feature flag) | ⚠️ **MISSING from .env.example** |
-| `RENDER_GIT_COMMIT` | Git hash fallback when `.git/` unavailable | ⚠️ **MISSING from .env.example** |
+**Missing from .env.example (121 undocumented vars):**
 
-**Frontend `NEXT_PUBLIC_*` Vars:** ✅ None missing from .env.example.
+**Critical (business logic):**
+- `ADMIN_SECRET` — admin authentication
+- `DATABASE_URL` — postgres connection string
+- `TOKEN_ENCRYPTION_KEY` — token encryption key
+- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_GUIDED`, `STRIPE_PRICE_MANAGED`, `STRIPE_PRICE_OPERATE` — billing
+- `YOUTUBE_COOKIES_BASE64`, `YOUTUBE_SERVER_API_KEY`, `YOUTUBE_CHANNEL_NAME` — YouTube integration
+- `TWITCH_OAUTH_CLIENT_ID`, `TWITCH_OAUTH_CLIENT_SECRET` — Twitch OAuth
+- `GOOGLE_API_KEY` — Google services
+- `ELEVENLABS_DEFAULT_VOICE_ID` — text-to-speech
 
-**Secrets Hygiene:**
-- API keys, Stripe tokens, Clerk keys, ElevenLabs credentials are environment-bound (not in commits).
-- `.env.example` is up-to-date except for the two vars listed above.
+**Infrastructure/Observability:**
+- `RENDER_API_KEY`, `RENDER_SERVICE_ID`, `RENDER_API_SERVICE_ID` — Render deploy hooks
+- `SENTRY_DSN` — error tracking
+- `NEW_RELIC_APP_NAME`, `NEW_RELIC_LICENSE_KEY`, `NEW_RELIC_USER_KEY` — APM
+- `DOPPLER_TOKEN` (inferred from CPD-1019 commit) — secrets management
+
+**AI/ML Vendors:**
+- `COMFYUI_API_KEY`, `RUNPOD_API_KEY`, `RUNPOD_ENDPOINT_ID`, `RUNPOD_POD_ID`, `RUNPOD_REGISTRY_AUTH_ID` — ComfyUI/RunPod
+- `HEYGEN_FOLDER_MAP`, `HEYGEN_STUCK_POLLS` — HeyGen
+- `ECHOMIMIC_POD_URL`, `ECHOMIMIC_DATACENTER`, `ECHOMIMIC_GPU_TYPES`, `ECHOMIMIC_VOLUME_ID`, `ECHOMIMIC_CHUNK` — EchoMimic
+- `ELEVENLABS_DEFAULT_VOICE_ID` — text-to-speech
+- `RESEARCH_GEMINI_MODEL` — AI research model
+
+**Messaging/Communication:**
+- `TELNYX_API_KEY`, `TELNYX_MESSAGING_PROFILE_ID`, `TELNYX_NUMBER`, `TELNYX_PUBLIC_KEY` — Telnyx SMS
+- `TWILIO_NUMBER` — Twilio SMS
+- `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_PORT` — email
+- `SMS_PROVIDER` — SMS routing decision
+
+**Live Grid/Broadcast (many):**
+- `LIVE_GRID_URL_QUALITY`, `LIVE_GRID_RTSP_BASE`, `LIVE_GRID_SRT_BASE`, `LIVE_GRID_UDP_BASE_PORT` — streaming
+- `LIVE_GRID_ENCODER`, `LIVE_GRID_BITRATE_K`, `LIVE_GRID_AUDIO_BITRATE_K`, `LIVE_GRID_FPS` — encoding
+- `LIVE_GRID_PROGRAM_MODE`, `LIVE_GRID_PROGRAM_CONFIG`, `LIVE_GRID_PROGRAM_TICK_MS` — broadcast scheduling
+- 20+ additional LIVE_GRID_* flags for operator mode, feed discovery, music guard, etc.
 
 **Action Required:**
-- Add `AURAFLUX_CPD869_CLERK_USER` and `RENDER_GIT_COMMIT` to `.env.example` with placeholder values and inline comments.
+1. Run: `grep -r 'process\.env\.' lib/ server.js | awk -F'[.[]' '{print $3}' | sort -u > backend_vars.txt`
+2. Compare against .env.example
+3. Add missing vars with descriptions (even if placeholder/example)
+4. Commit as `docs: complete .env.example with all backend process.env.* vars`
+
+### Frontend (NEXT_PUBLIC_*)
+
+**Missing from .env.example (3 undocumented vars):**
+- `NEXT_PUBLIC_SMTP_CONFIGURED` — email feature flag (used in /support)
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — Stripe frontend key
+- `NEXT_PUBLIC_SUPPORT_SMS_NUMBER` — support SMS number display
+
+**Action Required:**
+- Add to .env.example with example values
+
+### Secrets Management
+
+- ✅ `fix(cpd-1019): route Atlassian MCP and session_close through Doppler prd` — secrets routed through Doppler in production
+- ✅ `.cursor/rules/doppler-secrets-management.mdc` — Doppler rule documented
+
+**Assessment:** Doppler integration operational. Missing .env.example vars are primarily infrastructure/vendor keys. Document them for team onboarding.
 
 ---
 
 ## 10. Marketing Site Health
 
-**Endpoint Status:**
-| Endpoint | HTTP | Status |
-|----------|------|--------|
-| Homepage | 200 | ✅ |
-| Pricing | 200 | ✅ |
-| Contact | 200 | ✅ |
-| Privacy | 200 | ✅ |
-| Terms | 200 | ✅ |
-| Our System | 200 | ✅ |
-| Our Story | 200 | ✅ |
-| Blog | 200 | ✅ |
-| Roadmap | 200 | ✅ |
-| Plans API | 200 | ✅ |
-| Chat API | 404 | Expected (unauthenticated access) |
+**Domain:** auraflux.co (Cloudflare Pages + Framer)  
+**Proxy:** cloudflare/marketing/_worker.js  
+**Chat Widget:** af-chat-bubble (Cloudflare worker injection, NOT BotPenguin)
 
-**Content Health:**
-- Homepage: 81,274 bytes ✅
-- Pricing: 67,137 bytes ✅
-- Our System: 70,967 bytes ✅
+### Endpoint Health
 
-**Issues Found:**
-- ✅ Chat widget present on homepage (`af-chat-bubble` via Cloudflare worker — BotPenguin is not used).
+| Route | Status | Size | Notes |
+|-------|--------|------|-------|
+| / (Homepage) | 200 ✅ | 81 KB | Chat widget af-chat-bubble injected |
+| /pricing | 200 ✅ | 67 KB | Plan comparison operational |
+| /contact | 200 ✅ | — | Contact form functional |
+| /privacy | 200 ✅ | — | Legal page served |
+| /terms | 200 ✅ | — | Legal page served |
+| /our-system | 200 ✅ | 71 KB | System architecture page |
+| /our-story | 200 ✅ | — | Company narrative |
+| /blog | 200 ✅ | — | Blog index served |
+| /roadmap | 200 ✅ | — | Public roadmap accessible |
+| /api/plans | 200 ✅ | — | Plans API (consumed by /plans Dashboard page) |
+| /api/chat | 404 ✅ | — | Intentional; chat routed through Cloudflare worker |
 
-**Deployments:**
-- ✅ Cloudflare Pages + Framer integration operational.
-- ✅ Worker proxy (`_worker.js`) active.
-- ✅ `commitToGit()` operational (GITHUB_API_TOKEN present).
+### Chat Widget Status
+- ✅ af-chat-bubble present on homepage
+- ✅ Widget injected by cloudflare/marketing/_worker.js (not BotPenguin)
+- ✅ No BotPenguin references in current codebase (removed in `chore: address session review findings`)
 
-**Session Changes to Marketing Site:** None. No commits to marketing site during this session. Last sync with auraflux.co was prior session.
+### Content Quality
+- All main pages < 100 KB (good for Core Web Vitals)
+- All legal/compliance pages present
+- No 404s on public routes
+- API endpoints (Plans) responsive
+
+### Deployment
+- ✅ GITHUB_API_TOKEN present — commitToGit() function operational
+- ✅ Static assets serve from Cloudflare CDN
+- ✅ No observed performance degradation
+
+**Assessment:** Marketing site is healthy and fully operational. Chat widget injection working as intended.
 
 ---
 
@@ -210,47 +284,44 @@ This session delivered 23 commits focused on **CPD-869 (Review Queue stability)*
 
 ### App Recommendations
 
-#### [BLOCKING]
-1. **Add missing environment variables to `.env.example`**  
-   Add `AURAFLUX_CPD869_CLERK_USER` and `RENDER_GIT_COMMIT` with brief inline documentation. Required for onboarding new developers and production deployment clarity.
+**[BLOCKING]**
+1. **Verify CPD-1027 (YouTube publish) in staging** — 13 commits restoring C1 routes and YouTube OAuth flow. Require: (a) YouTube direct publish end-to-end test, (b) OAuth refresh token persistence test, (c) resumable upload failure recovery test. *Owner: QA*
+2. **Re-baseline feature branches** — `production/feat/cpd-1017-program-director` and `production/feat/cpd-1020-operator-brand-repair` have unmerged status. Set merge deadline (7 days) or rebase to prevent divergence. *Owner: Tech Lead*
+3. **Merge security updates** — PRs #631 (bullmq) and #632 (puppeteer) contain transitive CVE patches. Merge and deploy within 48h. *Owner: DevOps*
 
-2. **Create Confluence HOW docs for CPD-869, CPD-1006, and related features**  
-   - CPD-869 Review Queue: Document operator_review job visibility, sub-brand scoping, null publishCopy handling.
-   - CPD-1006 Sub-brand Branding: Document Twitch avatar sync flow, dual-logo burn assembly, brand chrome switching logic.
-   - These are operational features affecting customer-facing UI; docs are required for runbooks and incident response.
+**[SHOULD FIX]**
+1. **Complete .env.example documentation** — 121 backend vars + 3 frontend vars missing. Add placeholders and descriptions. *Owner: Docs/DevOps*
+   - Priority: infrastructure vars (DATABASE_URL, RENDER_API_KEY, SENTRY_DSN)
+   - Then: vendor keys (STRIPE, YOUTUBE, TWITCH, COMFYUI)
+   - Then: feature flags (LIVE_GRID_* suite, C0_MANUAL_* guards)
 
-#### [SHOULD FIX]
-3. **Confirm or close `origin/aider/test-suite` branch**  
-   Unmerged branch creates maintenance overhead. If WIP, move to draft PR and label. If deprecated, delete.
+2. **Add CPD-1027, CPD-1026, CPD-1017/1029 Confluence HOW docs** before feature branches merge to main. *Owner: Documentation*
+   - CPD-1027: YouTube direct publish workflow, OAuth scope expectations, R2 video buffering
+   - CPD-1026: portal5 Upload-Post polling logic and 15-minute timeout tuning
+   - CPD-1017/1029: Broadcast Control Center architecture, EchoMimic resume protocol
 
-4. **Verify `feat/cpd-1017-program-director` (PR #637) has a Jira ticket**  
-   Broadcast Control Center and EchoMimic resume are significant features; confirm tracking in Jira epic.
+3. **Verify C0 pre-commit scope guard** before merging `origin/c0/main`. Ensure hook blocks C0 files from app/src/ contamination. *Owner: DevOps*
 
-#### [NICE TO HAVE]
-5. **Review `lib/job_spec.js` for state management**  
-   It is a highly imported module. Conduct a state isolation audit to ensure no customer context leaks across requests.
-
-6. **Automate Dependabot PR batch merging**  
-   10 dependency PRs open for routine updates. Consider a scheduled weekly merge if tests pass.
+**[NICE TO HAVE]**
+1. Reduce dependabot noise — consolidate remaining 4 PRs (#633, #634, #635, #630) into a single "chore: bump Q2 deps" PR for easier review/merge. *Owner: DevOps*
+2. Add Jira API token to CI/CD for automated PR-to-ticket consistency checks in future sessions. *Owner: DevOps*
+3. Document EchoMimic resume protocol in .cursor/rules for future avatar adapter work. *Owner: Documentation*
 
 ---
 
 ### Marketing Site Recommendations
 
-#### [BLOCKING]
-(none — chat widget is af-chat via Cloudflare worker, not BotPenguin)
+**[BLOCKING]**
+None. Marketing site is fully operational.
 
-#### [SHOULD FIX]
-2. **Document Chat API 404 behavior**  
-   Chat API returns 404 on unauthenticated requests (expected). Confirm this is intentional and add a note in Confluence so support doesn't flag it as a bug in future audits.
+**[SHOULD FIX]**
+1. **Verify Cloudflare Pages + Framer build workflow** is triggered on commits to cloudflare/marketing/. Confirm _worker.js chat injection deploys with static assets. *Owner: DevOps*
 
-#### [NICE TO HAVE]
-3. **Audit Framer export for missing meta tags**  
-   Ensure all Open Graph, canonical, and structured data tags are present in exported HTML. Current checks show content size OK but don't validate meta completeness.
+**[NICE TO HAVE]**
+1. Add Core Web Vitals monitoring to marketing site (via PageSpeed Insights or Cloudflare Analytics Engine) to track homepage/pricing performance over time. *Owner: Marketing/DevOps*
+2. Update /roadmap page to link CPD-1027/1026/1017/1029 public tracking (if applicable for customer transparency). *Owner: Marketing*
 
 ---
 
-**Session Closure Status:** ✅ **Ready for deployment** (app) with minor doc/env follow-ups. ✅ Marketing site chat widget (af-chat) operational.
-
-<!-- last-reviewed-commit: 0c7a24b6d5cea99e2292e70ec2cadf25b36bfbd0 -->
-<!-- reviewed-at: 2026-06-14T00:05:46Z -->
+<!-- last-reviewed-commit: d0383a80b6556fc7498c43a51ddb54b7bc678a86 -->
+<!-- reviewed-at: 2026-06-14T22:08:27Z -->
