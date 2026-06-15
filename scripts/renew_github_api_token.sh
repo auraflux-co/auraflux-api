@@ -40,10 +40,27 @@ if [[ -f "$ENV" ]]; then
   echo "Updated $ENV"
 fi
 
-if command -v doppler >/dev/null 2>&1 && [[ -n "${DOPPLER_TOKEN:-}" ]]; then
-  doppler secrets set "GITHUB_API_TOKEN=$NEW" --silent 2>/dev/null && echo "Updated Doppler prd GITHUB_API_TOKEN" || echo "WARN: Doppler update failed — set manually"
+if command -v doppler >/dev/null 2>&1; then
+  ENV_FILE="$ROOT/.env"
+  if [[ -f "$ENV_FILE" ]] && [[ -z "${DOPPLER_TOKEN:-}" ]]; then
+    # shellcheck disable=SC2046
+    export $(grep '^DOPPLER_TOKEN=' "$ENV_FILE" | xargs) 2>/dev/null || true
+  fi
+  if [[ -n "${DOPPLER_TOKEN:-}" ]]; then
+    doppler secrets set "GITHUB_API_TOKEN=$NEW" --project auraflux --config prd --silent \
+      && echo "Updated Doppler prd GITHUB_API_TOKEN" \
+      || echo "WARN: Doppler update failed — set manually"
+  else
+    echo "SKIP: DOPPLER_TOKEN not in shell — set GITHUB_API_TOKEN in Doppler prd manually"
+  fi
 else
-  echo "SKIP: Doppler not configured in this shell — set GITHUB_API_TOKEN in Doppler prd manually"
+  echo "SKIP: doppler CLI not installed"
+fi
+
+if [[ -f "$ROOT/scripts/doppler_sync_to_render.py" ]] && [[ -n "${DOPPLER_TOKEN:-}" ]]; then
+  if python3 "$ROOT/scripts/doppler_sync_to_render.py" 2>&1; then
+    echo "Render secret file synced — redeploy auraflux-api to pick up token"
+  fi
 fi
 
 echo ""
