@@ -111,7 +111,7 @@
   "devDependencies": {
     "autocannon": "^8.0.0",
     "eslint": "^8.50.0",
-    "jest": "^30.3.0",
+    "jest": "^30.4.2",
     "playwright": "^1.59.1",
     "prettier": "^3.5.3"
   },
