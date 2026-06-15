@@ -16,6 +16,7 @@
 
 ---
 
+**Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats dashboard, env.example sync, C0 sports route guard, GitHub token renewal script.
 **Last Updated:** 2026-06-15 (CPD-1027) — YouTube OAuth scope expanded for API video delete.
 **Last Updated:** 2026-06-15 (CPD-1027) — YouTube channel metadata backfill for wanderbot + customUrl handles.
 **Last Updated:** 2026-06-15 (CPD-1027) — buffer R2 downloads for YouTube upload (Content-Length fix).
