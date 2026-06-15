@@ -1,6 +1,8 @@
 // Load repo-root .env regardless of PM2/cwd (folder_id and keys live here).
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
+const { ensureOAuthFromDoppler, kickCredentialsConfigured } = require('./lib/config/doppler_oauth_fill');
+ensureOAuthFromDoppler();
 require('newrelic');
 
 // ── Build identity — set once at startup, never changes during runtime ────────
@@ -2503,13 +2505,30 @@ app.get('/connect/youtube/callback', async (req, res) => {
 app.get('/connect/youtube/status', (req, res) => {
   const ytDirect = require('./lib/services/youtube_direct');
   const t = ytDirect.loadTokens();
+  const scope = t?.scope || '';
   res.json({
     connected: ytDirect.isConnected(),
     channelTitle: t?.channelTitle || null,
     channelId: t?.channelId || null,
     connectedAt: t?.connectedAt || null,
     directPublishEnabled: process.env.YOUTUBE_DIRECT_PUBLISH === 'true',
+    analyticsScope: scope.includes('yt-analytics.readonly'),
+    needsAnalyticsReconnect: ytDirect.isConnected() && !scope.includes('yt-analytics.readonly'),
   });
+});
+
+// GET /stats/channel — Videos + Shorts + Streams catalog; YouTube Analytics when OAuth connected
+app.get('/stats/channel', async (req, res) => {
+  try {
+    const { buildChannelStatsReport } = require('./lib/services/channel_stats');
+    const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
+    const handle = req.query.handle || process.env.YOUTUBE_CHANNEL_HANDLE || 'clipzworldnews';
+    const report = await buildChannelStatsReport({ handle, refresh });
+    res.json(report);
+  } catch (e) {
+    console.error('[stats/channel]', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // POST /job/:id/schedule — set/clear a deferred publish time (CPD-924)
@@ -2687,19 +2706,36 @@ app.post('/connect/twitch/token', async (req, res) => {
   }
 });
 
-// --- Kick follows OAuth (CPD-1027) — connect so we can sync Kick follows into the creator registry when the API allows ---
+// --- Kick follows OAuth (CPD-1027) — uses same redirect URI as CPD-353 channel connect ---
 const _kickPkceSessions = {};
-app.get('/connect/kick-follows', async (req, res) => {
-  const kickOAuth = require('./lib/publish/adapters/kick_oauth');
-  const { saveKickFollowsToken } = require('./lib/creator_registry/sync');
-  const redirectUri = `http://localhost:${PORT}/connect/kick-follows`;
-  const page = (msg) => `<!doctype html><html><body style="background:#0d1424;color:#fff;font-family:monospace;padding:40px;">${msg}</body></html>`;
 
-  if (!process.env.KICK_CLIENT_ID || !process.env.KICK_CLIENT_SECRET) {
-    return res.send(page('❌ KICK_CLIENT_ID / KICK_CLIENT_SECRET not set in .env'));
+async function handleKickFollowsOAuth(req, res) {
+  const kickOAuth = require('./lib/publish/adapters/kick_oauth');
+  const creatorSyncKick = require('./lib/creator_registry/sync');
+  const { saveKickFollowsToken, syncKickFollows, disconnectKickFollows } = creatorSyncKick;
+  const redirectUri = kickOAuth.getOAuthRedirectUri(req);
+  const page = (msg) => `<!doctype html><html><body style="background:#0d1424;color:#fff;font-family:monospace;padding:40px;line-height:1.6;">${msg}</body></html>`;
+
+  if (req.query.switch === '1' && !req.query.code) {
+    await disconnectKickFollows();
+  }
+
+  if (!kickCredentialsConfigured()) {
+    const hint = process.env.DOPPLER_TOKEN
+      ? 'Kick OAuth creds are in Doppler (auraflux/prd) but failed to load — check doppler CLI and restart pm2.'
+      : 'Add DOPPLER_TOKEN to .env (bootstrap) or set KICK_CLIENT_ID / KICK_CLIENT_SECRET locally.';
+    return res.send(page(`❌ Kick OAuth not configured.<p style="color:rgba(255,255,255,0.6);max-width:520px;">${hint}</p><p><a href="/cwn_production.html" style="color:#53fc18;">← Back to dashboard</a></p>`));
   }
   if (req.query.error) {
-    return res.send(page(`❌ Kick error: ${req.query.error_description || req.query.error}`));
+    const detail = req.query.error_description || req.query.error;
+    const clientId = process.env.KICK_CLIENT_ID || '';
+    const clientHint = clientId
+      ? `<p style="color:rgba(255,255,255,0.55);max-width:560px;">Find the app with Client ID <code style="color:#c7af4f;">${clientId}</code> in <a href="https://kick.com/settings/developer" style="color:#53fc18;">Kick → Settings → Developer</a> (try each Kick login you use — ClipzWorld, personal, etc.).</p>`
+      : '';
+    const regHint = detail && String(detail).toLowerCase().includes('redirect')
+      ? `<p style="color:rgba(255,255,255,0.55);max-width:560px;">Add this Redirect URI to that app (exact match, no trailing slash):<br><code style="color:#c7af4f;">${redirectUri}</code><br>Production may already have: <code style="color:rgba(255,255,255,0.45);">https://auraflux-api.onrender.com/channels/callback/kick</code></p>${clientHint}`
+      : clientHint;
+    return res.send(page(`❌ Kick error: ${detail}${regHint}<p><a href="/cwn_production.html" style="color:#53fc18;">← Back to dashboard</a></p>`));
   }
   if (req.query.code) {
     try {
@@ -2708,24 +2744,46 @@ app.get('/connect/kick-follows', async (req, res) => {
       delete _kickPkceSessions[sessionKey];
       if (!verifier) throw new Error('PKCE session expired — restart at /connect/kick-follows');
       const tokens = await kickOAuth.exchangeCode(req.query.code, redirectUri, verifier);
+      let profile = {};
+      try { profile = await kickOAuth.getUserInfo(tokens.access_token); } catch (e) {
+        console.warn('[kick-follows] profile lookup failed:', e.message);
+      }
       saveKickFollowsToken({
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
         scope: tokens.scope,
         obtained_at: new Date().toISOString(),
+        user_id: profile.platformUserId || null,
+        email: profile.email || null,
+        handle: profile.platformHandle || null,
       });
-      const { syncKickFollows } = require('./lib/creator_registry/sync');
       const sync = await syncKickFollows();
-      const note = sync.note ? `<p>${sync.note}</p>` : '';
-      return res.send(page(`✅ Kick connected — ${sync.total || 0} follow(s) synced (${sync.added || 0} new). Creator registry updated.${note}<p>You can close this tab.</p>`));
+      const who = profile.email || profile.platformHandle || profile.platformUserId || 'unknown account';
+      const note = sync.note ? `<p style="color:rgba(255,255,255,0.55);">${sync.note}</p>` : '';
+      const switchHint = `<p style="color:rgba(255,255,255,0.45);font-size:12px;">Wrong account? <a href="/connect/kick-follows?switch=1" style="color:#53fc18;">Switch Kick account</a> — log out of Kick in your browser first, or use a private window.</p>`;
+      return res.send(page(`✅ Kick connected as <strong>${who}</strong> — ${sync.total || 0} follow(s) synced (${sync.added || 0} new). Creator registry updated.${note}${switchHint}<p>You can close this tab.</p>`));
     } catch (e) {
-      return res.send(page(`❌ Kick token exchange failed: ${e.message}`));
+      return res.send(page(`❌ Kick token exchange failed: ${e.message}<p><a href="/connect/kick-follows" style="color:#53fc18;">Try again</a></p>`));
     }
   }
+
   const sessionKey = require('crypto').randomBytes(16).toString('hex');
   const { url, verifier } = kickOAuth.buildAuthUrl(redirectUri, sessionKey);
   _kickPkceSessions[sessionKey] = verifier;
+  setTimeout(() => _kickPkceSessions.delete(sessionKey), 10 * 60 * 1000);
   return res.redirect(url);
+}
+
+app.get('/connect/kick-follows', handleKickFollowsOAuth);
+app.get('/channels/callback/kick', handleKickFollowsOAuth);
+
+app.delete('/connect/kick-follows', async (req, res) => {
+  try {
+    const result = await require('./lib/creator_registry/sync').disconnectKickFollows();
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // GET /live-grid/followed-bench — preview the bench the next stream would use
@@ -6039,8 +6097,9 @@ async function scrapeBbcNewsVideos(limit = 10) {
 
 // ── Sports highlights picker (ESPN leagues + BBC Sport wire) ─────────────────
 const sportsCore = require('./lib/sports');
+const { requireC0Localhost } = require('./lib/middleware/c0_only');
 
-app.get('/sports/sources', async (req, res) => {
+app.get('/sports/sources', requireC0Localhost, async (req, res) => {
   try {
     await sportsCore.discovery.getEspnRegistry(req.query.refresh === '1');
     res.json({ ok: true, ...sportsCore.listSources(), configPath: 'config/sportsSources.json' });
@@ -6049,7 +6108,7 @@ app.get('/sports/sources', async (req, res) => {
   }
 });
 
-app.get('/sports/espn/discover', async (req, res) => {
+app.get('/sports/espn/discover', requireC0Localhost, async (req, res) => {
   try {
     const reg = await sportsCore.discovery.getEspnRegistry(req.query.refresh === '1');
     res.json({
@@ -6066,7 +6125,7 @@ app.get('/sports/espn/discover', async (req, res) => {
   }
 });
 
-app.get('/sports/categories', async (req, res) => {
+app.get('/sports/categories', requireC0Localhost, async (req, res) => {
   const pubHours = parseFloat(req.query.pubHours || sportsCore.listSources().probeWindowHours || 48) || 48;
   const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
   try {
@@ -6086,7 +6145,7 @@ app.get('/sports/categories', async (req, res) => {
   }
 });
 
-app.get('/sports/highlights', async (req, res) => {
+app.get('/sports/highlights', requireC0Localhost, async (req, res) => {
   const source = (req.query.source || 'nba').toLowerCase();
   const limit = Math.min(parseInt(req.query.limit || '30', 10) || 30, 50);
   const hasPickerFilters = req.query.durMin != null || req.query.durMax != null || req.query.pubHours != null;
@@ -6230,11 +6289,42 @@ app.post('/creators/sync', async (req, res) => {
 
 app.get('/creators/connect-status', (req, res) => {
   const yt = require('./lib/services/youtube_direct');
+  const kickOAuth = require('./lib/publish/adapters/kick_oauth');
+  const kickRedirect = kickOAuth.getOAuthRedirectUri(req);
+  const kickCreds = kickCredentialsConfigured();
+  const kickStored = creatorSync.loadKickFollowsToken();
+  const kickConnected = !!kickStored?.access_token;
+  const kickAccount = kickConnected ? {
+    email: kickStored.email || null,
+    handle: kickStored.handle || null,
+    userId: kickStored.user_id || null,
+    label: kickStored.email || kickStored.handle || kickStored.user_id || 'connected',
+  } : null;
   res.json({
     ok: true,
-    twitch: { connected: !!require('./lib/live_grid/follows').loadUserToken()?.access_token, connectUrl: '/connect/twitch' },
-    youtube: { connected: yt.isConnected(), connectUrl: '/connect/youtube', note: 'Same OAuth as live grid — includes subscription read' },
-    kick: { connected: !!creatorSync.loadKickFollowsToken()?.access_token, connectUrl: '/connect/kick-follows' },
+    twitch: {
+      connected: !!require('./lib/live_grid/follows').loadUserToken()?.access_token,
+      connectUrl: '/connect/twitch',
+      label: 'Twitch',
+    },
+    youtube: {
+      connected: yt.isConnected(),
+      connectUrl: '/connect/youtube',
+      label: 'YouTube',
+      note: 'Same OAuth as live grid — includes subscription read',
+    },
+    kick: {
+      connected: kickConnected,
+      account: kickAccount,
+      credentialsConfigured: kickCreds,
+      credentialsSource: kickCreds ? (process.env.DOPPLER_TOKEN ? 'doppler' : 'env') : 'missing',
+      connectUrl: kickCreds ? '/connect/kick-follows' : null,
+      switchUrl: kickCreds ? '/connect/kick-follows?switch=1' : null,
+      disconnectUrl: '/connect/kick-follows',
+      redirectUri: kickRedirect,
+      label: 'Kick',
+      note: kickCreds ? null : 'OAuth app creds live in Doppler (auraflux/prd) — DOPPLER_TOKEN in .env loads them at startup',
+    },
   });
 });
 

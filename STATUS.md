@@ -18,7 +18,7 @@
 
 ---
 
-**Last Updated:** 2026-06-13 (CPD-1027) — **Creator registry:** multi-platform lookup (`data/creator_registry.json`); auto-capture from live grid + Twitch follows + YouTube subscriptions + Kick OAuth; `/creators/*` API, SYNC ALL + ADD URL in dashboard. **Publish fix:** no double-upload on scheduled/immediate Gate 5; short-form copy regen (no VOD template/chapters on shorts).
+**Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats page (Videos+Shorts+Lives), YouTube Analytics merge, Upload-Post analytics, C0 sports route guard, TikTok is_aigc fix, env.example sync.
 **Branch:** c0/main → `origin` = **auraflux-c0** · `production` = auraflux-api (cherry-pick only)
 **How to start a session:** Read **this file first** → `cursor.md` → current focus below.
 

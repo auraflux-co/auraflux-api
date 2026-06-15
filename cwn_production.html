@@ -32,6 +32,112 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .sec-title .badge { font-size:10px; background:rgba(199,175,79,0.15); border:1px solid rgba(199,175,79,0.3); padding:3px 10px; border-radius:10px; letter-spacing:2px; }
 
 .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; margin-bottom:24px; }
+.cards-grid.pillar-single { grid-template-columns:1fr; }
+
+/* ── Generate page (CPD-1027 UX) ── */
+.gen-page { max-width:1400px; }
+.gen-page-head { margin-bottom:20px; }
+.gen-page-title-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+.gen-page-title { font-family:'Bebas Neue',sans-serif; font-size:28px; color:#c7af4f; letter-spacing:3px; margin:0; font-weight:400; }
+.gen-pillar-tabs { display:flex; gap:4px; flex-wrap:wrap; align-items:center; padding:4px; background:#0a1018; border:1px solid rgba(199,175,79,0.15); border-radius:8px; margin-bottom:10px; }
+.gen-pillar-tab { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; background:transparent; color:rgba(255,255,255,0.45); transition:all 0.15s; }
+.gen-pillar-tab:hover { color:rgba(255,255,255,0.75); background:rgba(255,255,255,0.04); }
+.gen-pillar-tab.active { background:#c7af4f; color:#060a12; }
+.gen-pillar-tab .gen-tab-status { margin-left:8px; font-size:9px; vertical-align:middle; }
+.gen-workflow { display:flex; gap:0; font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:0.5px; }
+.gen-workflow-step { display:flex; align-items:center; gap:8px; padding:6px 0; }
+.gen-workflow-step:not(:last-child)::after { content:'→'; margin:0 14px; opacity:0.25; }
+.gen-workflow-num { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:rgba(199,175,79,0.15); color:#c7af4f; font-size:10px; font-weight:700; }
+.gen-pillar-card { border-radius:10px; }
+.gen-pillar-card .card-body { padding:0; }
+.gen-workspace { display:grid; grid-template-columns:minmax(240px,280px) 1fr; gap:0; min-height:420px; }
+@media (max-width:900px) { .gen-workspace { grid-template-columns:1fr; } }
+.gen-sidebar { padding:18px 16px; border-right:1px solid rgba(199,175,79,0.1); background:#0a1018; display:flex; flex-direction:column; gap:14px; }
+@media (max-width:900px) { .gen-sidebar { border-right:none; border-bottom:1px solid rgba(199,175,79,0.1); } }
+.gen-main { padding:18px 20px; display:flex; flex-direction:column; min-height:360px; background:#0d1524; }
+.gen-main-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:12px; flex-wrap:wrap; }
+.gen-main-title { font-size:11px; font-weight:900; letter-spacing:2px; color:rgba(199,175,79,0.55); margin:0; }
+.gen-main-hint { font-size:11px; color:rgba(255,255,255,0.35); line-height:1.45; }
+.gen-main-empty { flex:1; display:flex; align-items:center; justify-content:center; text-align:center; padding:40px 24px; border:1px dashed rgba(199,175,79,0.15); border-radius:8px; color:rgba(255,255,255,0.3); font-size:13px; line-height:1.6; }
+.gen-action-bar { display:flex; flex-direction:column; gap:8px; }
+.gen-action-bar .gen-action-primary { display:flex; flex-direction:column; gap:8px; }
+.gen-action-bar .gen-action-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.gen-action-bar .btn { width:100%; text-align:center; padding:10px 12px; font-size:13px; }
+.gen-advanced { border:1px solid rgba(255,255,255,0.06); border-radius:6px; background:rgba(0,0,0,0.2); }
+.gen-advanced > summary { cursor:pointer; font-size:10px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.4); padding:8px 10px; list-style:none; user-select:none; }
+.gen-advanced > summary::-webkit-details-marker { display:none; }
+.gen-advanced > summary::before { content:'▸ '; opacity:0.5; }
+.gen-advanced[open] > summary::before { content:'▾ '; }
+.gen-advanced .gen-advanced-body { padding:0 10px 10px; }
+.gen-picker-panel { flex:1; min-height:200px; max-height:min(560px,calc(100vh - 320px)); overflow-y:auto; border:1px solid rgba(199,175,79,0.15); border-radius:8px; padding:10px; background:#060a12; }
+.gen-picker-panel:empty { display:none; }
+.gen-status-line { font-size:10px; color:rgba(255,255,255,0.35); font-family:monospace; line-height:1.4; margin-top:auto; }
+.gen-pipeline-wrap { margin-top:20px; }
+.gen-pipeline-wrap .dash-details > summary { font-size:12px; }
+.gen-pipeline-wrap .card { margin-top:8px; }
+.gen-pipeline-wrap .card-header { padding:10px 16px; }
+.gen-pipeline-wrap .card-body { padding:12px 16px; }
+.gen-chip-box { display:flex; flex-wrap:wrap; gap:6px; padding:10px; background:#060a12; border:1px solid rgba(199,175,79,0.2); border-radius:6px; min-height:44px; font-size:11px; color:rgba(255,255,255,0.45); }
+.gen-chip-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; align-items:center; }
+.gen-field-compact { margin-bottom:0; }
+.gen-field-compact label { margin-bottom:6px; }
+
+.streamers-layout { display:grid; grid-template-columns:minmax(260px,320px) 1fr; gap:20px; align-items:start; }
+@media (max-width:960px) { .streamers-layout { grid-template-columns:1fr; } }
+.streamers-list-panel { display:flex; flex-direction:column; min-height:360px; }
+.streamers-list-panel .field { margin-bottom:0; flex:1; display:flex; flex-direction:column; }
+#streamer-chips.streamers-grid {
+  display:flex; flex-direction:column; gap:4px;
+  flex:1; min-height:280px; max-height:min(520px,calc(100vh - 340px));
+  overflow-y:auto; padding:4px; align-content:start;
+  border:1px solid rgba(199,175,79,0.2); border-radius:8px; background:#060a12;
+}
+#streamer-chips.streamers-grid .streamer-row {
+  display:grid; grid-template-columns:28px 40px minmax(0,1fr) 32px;
+  align-items:center; gap:10px; padding:10px 12px;
+  border:1px solid rgba(255,255,255,0.06); border-radius:6px; background:#0d1524;
+  cursor:pointer; transition:border-color 0.15s,background 0.15s;
+  min-height:52px;
+}
+#streamer-chips.streamers-grid .streamer-row:hover { border-color:rgba(199,175,79,0.25); background:#101828; }
+#streamer-chips.streamers-grid .streamer-row.selected { border-color:rgba(145,70,255,0.5); background:rgba(145,70,255,0.12); }
+#streamer-chips.streamers-grid .streamer-row .streamer-name { font-size:13px; font-weight:700; color:#fff; line-height:1.25; word-break:break-word; }
+#streamer-chips.streamers-grid .streamer-row:not(.selected) .streamer-name { color:rgba(255,255,255,0.75); }
+#streamer-chips.streamers-grid .streamer-row .streamer-meta { font-size:11px; color:rgba(255,255,255,0.4); margin-top:2px; line-height:1.3; word-break:break-all; }
+#streamer-chips.streamers-grid .streamer-plat-badge { display:inline-flex; align-items:center; justify-content:center; width:32px; height:22px; border-radius:4px; font-size:9px; font-weight:800; letter-spacing:0.3px; }
+.streamer-howto { font-size:12px; line-height:1.55; color:rgba(255,255,255,0.55); padding:12px 14px; background:rgba(145,70,255,0.08); border:1px solid rgba(145,70,255,0.2); border-radius:8px; margin-bottom:12px; }
+.streamer-howto strong { color:#c7af4f; font-weight:700; }
+.streamer-howto ol { margin:8px 0 0 18px; padding:0; }
+.streamer-howto li { margin-bottom:4px; }
+.streamer-selected-bar { font-size:11px; color:rgba(255,255,255,0.45); padding:8px 10px; background:#0a1018; border-radius:6px; border:1px solid rgba(255,255,255,0.06); margin-bottom:10px; line-height:1.45; min-height:36px; }
+.field-input-compact { width:100%; background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:6px 8px;font-size:12px;border-radius:4px; }
+
+/* Channel stats page */
+.stats-page { max-width:1200px; }
+.stats-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+.stats-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
+.stats-card { background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:8px; padding:12px 14px; }
+.stats-card-label { font-size:9px; font-weight:900; letter-spacing:1.5px; color:rgba(199,175,79,0.5); margin-bottom:6px; }
+.stats-card-value { font-family:'Bebas Neue',sans-serif; font-size:26px; color:#c7af4f; line-height:1; }
+.stats-card-sub { font-size:10px; color:rgba(255,255,255,0.35); margin-top:4px; }
+.stats-banner { font-size:12px; line-height:1.5; padding:10px 14px; border-radius:8px; margin-bottom:14px; border:1px solid; }
+.stats-banner-warn { background:rgba(243,156,18,0.08); border-color:rgba(243,156,18,0.35); color:rgba(255,255,255,0.65); }
+.stats-banner-ok { background:rgba(46,204,113,0.08); border-color:rgba(46,204,113,0.3); color:rgba(255,255,255,0.65); }
+.stats-table-wrap { overflow-x:auto; border:1px solid rgba(199,175,79,0.15); border-radius:8px; background:#0a1018; max-height:520px; overflow-y:auto; }
+.stats-table { width:100%; border-collapse:collapse; font-size:11px; }
+.stats-table th { text-align:left; padding:8px 10px; font-size:9px; letter-spacing:1px; color:rgba(199,175,79,0.55); border-bottom:1px solid rgba(199,175,79,0.12); position:sticky; top:0; background:#0d1524; }
+.stats-table td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; }
+.stats-table tr:hover td { background:rgba(255,255,255,0.02); }
+.stats-tab-pill { display:inline-block; font-size:9px; font-weight:800; padding:2px 6px; border-radius:4px; letter-spacing:0.5px; }
+.stats-tab-shorts { background:rgba(145,70,255,0.2); color:#b794f6; }
+.stats-tab-videos { background:rgba(52,152,219,0.15); color:#6cb6ff; }
+.stats-tab-streams { background:rgba(231,76,60,0.15); color:#ff8a80; }
+.stats-cat-streaming { color:#b794f6; }
+.stats-cat-sports { color:#6cb6ff; }
+.stats-cat-news { color:#f39c12; }
+.stats-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center; }
+#streamer-connect-bar { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:14px; padding:10px 12px; background:#0a1018; border:1px solid rgba(199,175,79,0.2); border-radius:6px; }
+@media (max-width:720px) { #streamer-connect-bar { grid-template-columns:1fr; } }
 .card { background:#0d1524; border:1px solid rgba(199,175,79,0.12); border-radius:8px; overflow:hidden; }
 .card-header { background:linear-gradient(90deg,#131f38,#0f1a30); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(199,175,79,0.1); }
 .card-title { font-family:'Bebas Neue',sans-serif; font-size:14px; color:#c7af4f; letter-spacing:2px; }
@@ -39,7 +145,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
 .field { margin-bottom:12px; }
 .field label { display:block; font-size:9px; font-weight:900; color:rgba(199,175,79,0.5); letter-spacing:2px; margin-bottom:5px; }
-.field input, .field select, .field textarea { width:100%; background:#060a12; border:1px solid rgba(199,175,79,0.2); color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; font-size:13px; padding:8px 12px; border-radius:4px; resize:vertical; }
+.field > label:first-of-type { display:block; }
+.field input:not([type="checkbox"]):not([type="radio"]), .field select, .field textarea { width:100%; background:#060a12; border:1px solid rgba(199,175,79,0.2); color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; font-size:13px; padding:8px 12px; border-radius:4px; resize:vertical; }
+.plat-check-list { display:flex; flex-direction:column; gap:6px; }
+.plat-check-row { display:flex !important; align-items:center; gap:8px; cursor:pointer; font-size:12px !important; font-weight:600 !important; letter-spacing:0 !important; color:rgba(255,255,255,0.75) !important; margin-bottom:0 !important; }
+.plat-check-row input[type="checkbox"] { width:16px; height:16px; min-width:16px; flex-shrink:0; margin:0; padding:0; }
 .field textarea { min-height:80px; line-height:1.5; }
 .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:rgba(199,175,79,0.5); }
 
@@ -258,6 +368,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
     <div class="sidebar-section">
       <div class="sidebar-lbl">TOOLS</div>
       <button class="sidebar-btn" onclick="nav('publish')"><span class="icon">Y</span> Publish Prep</button>
+      <button class="sidebar-btn" onclick="nav('stats')"><span class="icon">S</span> Channel Stats</button>
       <button class="sidebar-btn" onclick="nav('abtest')"><span class="icon">T</span> Thumbnails</button>
       <button class="sidebar-btn" onclick="nav('settings')"><span class="icon">~</span> Settings</button>
     </div>
@@ -266,78 +377,99 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
   <div class="main">
 
     <!-- GENERATE PAGE -->
-    <div class="page active" id="page-generate">
-      <div class="sec-title">DAILY VIDEO GENERATOR <span class="badge" id="gen-date-badge">TODAY</span></div>
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-        <button type="button" id="pillar-tab-sports" class="btn btn-gold" style="font-size:11px;padding:8px 16px;letter-spacing:1px;" onclick="switchGeneratePillar('sports')">SPORTS</button>
-        <button type="button" id="pillar-tab-news" class="btn btn-outline" style="font-size:11px;padding:8px 16px;letter-spacing:1px;" onclick="switchGeneratePillar('news')">WORLD NEWS</button>
-        <button type="button" id="pillar-tab-twitch" class="btn btn-outline" style="font-size:11px;padding:8px 16px;letter-spacing:1px;" onclick="switchGeneratePillar('twitch')">STREAMERS</button>
+    <div class="page active gen-page" id="page-generate">
+      <div class="gen-page-head">
+        <div class="gen-page-title-row">
+          <h2 class="gen-page-title">Daily Video Generator</h2>
+          <span class="badge" id="gen-date-badge">TODAY</span>
+        </div>
+        <div class="gen-pillar-tabs" role="tablist">
+          <button type="button" role="tab" id="pillar-tab-sports" class="gen-pillar-tab active" onclick="switchGeneratePillar('sports')">Sports</button>
+          <button type="button" role="tab" id="pillar-tab-news" class="gen-pillar-tab" onclick="switchGeneratePillar('news')">World News</button>
+          <button type="button" role="tab" id="pillar-tab-twitch" class="gen-pillar-tab" onclick="switchGeneratePillar('twitch')">Streamers</button>
+          <span id="nba-status" class="tag tag-pending" style="margin-left:auto;"><span class="tag-dot"></span> READY</span>
+          <span id="news-status" class="tag tag-pending" style="display:none;"><span class="tag-dot"></span> READY</span>
+          <span id="twitch-gen-status" class="tag tag-pending" style="display:none;"><span class="tag-dot"></span> READY</span>
+        </div>
+        <div class="gen-workflow">
+          <span class="gen-workflow-step"><span class="gen-workflow-num">1</span> Configure sources</span>
+          <span class="gen-workflow-step"><span class="gen-workflow-num">2</span> Pick clips or stories</span>
+          <span class="gen-workflow-step"><span class="gen-workflow-num">3</span> Generate VOD / Short / Comp</span>
+        </div>
       </div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin:-6px 0 14px;letter-spacing:0.5px;">Same rhythm: pick sources → FETCH → select → VOD / SHORT / Comp</div>
-      <details class="dash-details"><summary>Production schedule policy <span class="dash-readonly-note">reference</span></summary>
-      <div class="alert alert-info" style="margin-top:8px;">Production target: all videos generated by 10AM ET. Long form posts at 10-11AM, shorts in late afternoon.</div></details>
-      <div class="cards-grid">
+      <details class="dash-details" style="margin-bottom:16px;"><summary>Production schedule <span class="dash-readonly-note">reference</span></summary>
+      <div class="alert alert-info" style="margin-top:8px;">Target: all videos by 10AM ET. Long form 10–11AM, shorts late afternoon.</div></details>
+      <div class="cards-grid pillar-single">
 
-        <div class="card" data-pillar="sports">
-          <div class="card-header">
-            <div class="card-title">SPORTS</div>
-            <span class="tag tag-pending" id="nba-status"><span class="tag-dot"></span> READY</span>
-          </div>
-          <div class="card-body">
-            <div id="nba-games-summary" style="font-size:12px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:12px;">Pick categories → EXPLORE CLIPS → select → VOD / SHORT / CLIPS COMP. PICK GAMES = NBA game reels only.</div>
-            <input type="hidden" id="sports-source" value="nba">
-            <input type="hidden" id="sports-categories" value="nba">
-            <div class="field" style="margin-bottom:8px;">
-              <label>SPORT CATEGORIES <span style="font-size:9px;color:rgba(255,255,255,0.35);font-weight:400;">— only leagues/feeds with video in last 48h</span></label>
-              <div id="sports-category-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#0d1524;border:1px solid rgba(199,175,79,0.3);border-radius:4px;min-height:40px;font-size:11px;color:rgba(255,255,255,0.45);">Probing ESPN + BBC Sport…</div>
-              <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="setAllSportsCategoryChips(true)" style="font-size:10px;padding:2px 10px;">ALL</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="setAllSportsCategoryChips(false)" style="font-size:10px;padding:2px 10px;">NONE</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="loadSportsCategories(true)" style="font-size:10px;padding:2px 10px;">⟳ REFRESH</button>
-                <span id="sports-category-status" style="font-size:10px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
-              </div>
-            </div>
-            <input id="nba-game-ids" type="hidden" value="">
-            <input type="hidden" id="nba-count" value="10">
-            <div class="field" style="margin-bottom:8px;">
-              <label>PICKER FILTERS</label>
-              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end;">
-                <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">MIN DURATION (s)</div>
-                  <input id="sports-picker-dur-min" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('sports');refreshPickerIfOpen('sports')" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:5px 8px;font-size:12px;"></div>
-                <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">MAX DURATION (s)</div>
-                  <input id="sports-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('sports');refreshPickerIfOpen('sports')" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:5px 8px;font-size:12px;"></div>
-                <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">GAME / CLIP AGE</div>
-                  <select id="sports-picker-pub-window" onchange="savePickerFilters('sports');refreshPickerIfOpen('sports')" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:5px 8px;font-size:12px;">
-                    <option value="any">Any</option><option value="24h">Last 24h</option><option value="48h" selected>Last 48h</option><option value="3d">Last 3 days</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option>
-                  </select></div>
-              </div>
-              <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 8px;" onclick="setPickerDurationPreset('sports',20,45)">~30s highlight</button>
-                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 8px;" onclick="setPickerDurationPreset('sports',null,null)">Clear duration</button>
-              </div>
-            </div>
-            <!-- inline clip picker — games (NBA VOD) or clip explorer grid -->
-            <div id="nba-inline-picker" style="display:none;margin-bottom:10px;max-height:560px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
-            <!-- short-form clip gallery — shown when SHORT is clicked, lets user pick exact clip -->
-            <div id="nba-short-clip-gallery" style="display:none;margin-bottom:10px;border:1px solid rgba(28,232,255,0.25);border-radius:6px;padding:10px;background:#060a12;">
-              <div style="font-size:10px;color:rgba(28,232,255,0.7);font-family:monospace;letter-spacing:1px;margin-bottom:8px;">PICK ONE CLIP FOR SHORT FORM — CLICK TO SELECT</div>
-              <div id="nba-short-clip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
-              <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;" id="nba-short-clip-status"></div>
-            </div>
-            <div class="progress-wrap" id="nba-progress-wrap" style="display:none"><div class="progress-bar" id="nba-progress" style="width:0%"></div></div>
-            <div class="btn-row" style="align-items:center;gap:10px;flex-wrap:wrap;">
-              <button id="btn-preview-sports-clips" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewSportsHighlights()">EXPLORE CLIPS</button>
-              <button id="btn-preview-nba" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewNBAGames()" title="NBA long-form — one highlights reel per game">PICK GAMES</button>
-              <span style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;letter-spacing:.03em;">↑ feeds both</span>
-              <button id="btn-gen-nba" class="btn btn-gold" onclick="generateNBAWithPicker()">VOD</button>
-              <button id="btn-gen-nba-short" class="btn btn-outline" onclick="triggerNbaShort()">SHORT</button>
-              <button id="btn-gen-sports-comp" class="btn btn-outline" onclick="triggerSportsClipComp()" title="Stitch 4 selected clips into one portrait short — no avatar">CLIPS COMP</button>
-              <span id="nba-fetch-status" style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
+        <div class="card gen-pillar-card" data-pillar="sports">
+          <div class="card-body gen-pillar-body">
+            <div class="gen-workspace">
+              <aside class="gen-sidebar">
+                <input type="hidden" id="sports-source" value="nba">
+                <input type="hidden" id="sports-categories" value="nba">
+                <input id="nba-game-ids" type="hidden" value="">
+                <input type="hidden" id="nba-count" value="10">
+                <div class="field gen-field-compact">
+                  <label>Sport categories</label>
+                  <div id="sports-category-chips" class="gen-chip-box">Probing ESPN + BBC Sport…</div>
+                  <div class="gen-chip-actions">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="setAllSportsCategoryChips(true)">All</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="setAllSportsCategoryChips(false)">None</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="loadSportsCategories(true)">Refresh</button>
+                  </div>
+                  <span id="sports-category-status" class="gen-status-line"></span>
+                </div>
+                <details class="gen-advanced">
+                  <summary>Clip filters</summary>
+                  <div class="gen-advanced-body">
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Min duration (s)</div>
+                        <input id="sports-picker-dur-min" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('sports');refreshPickerIfOpen('sports')" class="field-input-compact"></div>
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Max duration (s)</div>
+                        <input id="sports-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('sports');refreshPickerIfOpen('sports')" class="field-input-compact"></div>
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Clip age</div>
+                        <select id="sports-picker-pub-window" onchange="savePickerFilters('sports');refreshPickerIfOpen('sports')" class="field-input-compact">
+                          <option value="any">Any</option><option value="24h">Last 24h</option><option value="48h" selected>Last 48h</option><option value="3d">Last 3 days</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option>
+                        </select></div>
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                      <button type="button" class="btn btn-outline btn-sm" onclick="setPickerDurationPreset('sports',20,45)">~30s</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="setPickerDurationPreset('sports',null,null)">Clear</button>
+                    </div>
+                  </div>
+                </details>
+                <div class="progress-wrap" id="nba-progress-wrap" style="display:none"><div class="progress-bar" id="nba-progress" style="width:0%"></div></div>
+                <div class="gen-action-bar">
+                  <button id="btn-preview-sports-clips" class="btn btn-outline" onclick="previewSportsHighlights()">Explore clips</button>
+                  <button id="btn-preview-nba" class="btn btn-outline" onclick="previewNBAGames()" title="NBA game reels only">Pick games</button>
+                  <div class="gen-action-primary">
+                    <button id="btn-gen-nba" class="btn btn-gold" onclick="generateNBAWithPicker()">Generate VOD</button>
+                    <div class="gen-action-row">
+                      <button id="btn-gen-nba-short" class="btn btn-outline" onclick="triggerNbaShort()">Short</button>
+                      <button id="btn-gen-sports-comp" class="btn btn-outline" onclick="triggerSportsClipComp()" title="4 clips → one portrait short">Comp</button>
+                    </div>
+                  </div>
+                </div>
+                <span id="nba-fetch-status" class="gen-status-line"></span>
+              </aside>
+              <main class="gen-main">
+                <div class="gen-main-head">
+                  <h3 class="gen-main-title">CLIP PICKER</h3>
+                  <span class="gen-main-hint">Explore clips or pick games — selection appears here</span>
+                </div>
+                <div id="gen-sports-empty" class="gen-main-empty">Choose categories on the left, then <strong>Explore clips</strong> or <strong>Pick games</strong>.</div>
+                <div id="nba-inline-picker" class="gen-picker-panel" style="display:none;"></div>
+                <div id="nba-short-clip-gallery" style="display:none;margin-top:10px;border:1px solid rgba(28,232,255,0.25);border-radius:8px;padding:12px;background:#060a12;">
+                  <div style="font-size:10px;color:rgba(28,232,255,0.7);letter-spacing:1px;margin-bottom:8px;">PICK ONE CLIP FOR SHORT</div>
+                  <div id="nba-short-clip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
+                  <div id="nba-short-clip-status" class="gen-status-line" style="margin-top:8px;"></div>
+                </div>
+              </main>
             </div>
           </div>
         </div>
 
-        <div class="card" data-pillar="news" style="display:none;">
+        <div class="card gen-pillar-card" data-pillar="news" style="display:none;">
           <div class="card-header">
             <div class="card-title">WORLD NEWS</div>
             <span class="tag tag-pending" id="news-status"><span class="tag-dot"></span> READY</span>
@@ -400,81 +532,98 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           </div>
         </div>
 
-        <div class="card" data-pillar="twitch" style="display:none;">
-          <div class="card-header">
-            <div class="card-title">STREAMERS</div>
-            <span class="tag tag-pending" id="twitch-gen-status"><span class="tag-dot"></span> READY</span>
-          </div>
-          <div class="card-body">
-            <div class="field"><label>STREAMER PLATFORMS</label>
-              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;font-size:12px;">
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="streamer-plat-twitch" checked style="accent-color:#9146ff;"> Twitch</label>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="streamer-plat-kick" checked style="accent-color:#53fc18;"> Kick</label>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="streamer-plat-youtube" checked style="accent-color:#ff4444;"> YouTube</label>
-              </div>
+        <div class="card gen-pillar-card card-streamers" data-pillar="twitch" style="display:none;">
+          <div class="card-body gen-pillar-body">
+            <input type="hidden" id="twitch-streamers" value="jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming">
+            <div id="streamer-connect-bar" style="margin:14px 16px 0;"></div>
+            <div class="gen-workspace streamers-workspace">
+              <aside class="gen-sidebar streamers-controls">
+                <div class="streamer-howto">
+                  <strong>How streamer clips work</strong>
+                  <ol>
+                    <li><strong>Sync</strong> pulls creators from Twitch follows + YouTube subs</li>
+                    <li><strong>Check</strong> streamers to include (unchecked = skipped)</li>
+                    <li><strong>Pick clips</strong> fetches top clips per selected streamer</li>
+                    <li><strong>Generate</strong> VOD, Short, Top 10, or Comp from your picks</li>
+                  </ol>
+                </div>
+                <div class="field gen-field-compact">
+                  <label>Platforms to search</label>
+                  <div class="plat-check-list">
+                    <label class="plat-check-row"><input type="checkbox" id="streamer-plat-twitch" checked style="accent-color:#9146ff;"> Twitch</label>
+                    <label class="plat-check-row"><input type="checkbox" id="streamer-plat-kick" checked style="accent-color:#53fc18;"> Kick</label>
+                    <label class="plat-check-row"><input type="checkbox" id="streamer-plat-youtube" checked style="accent-color:#ff4444;"> YouTube</label>
+                  </div>
+                </div>
+                <div class="field gen-field-compact">
+                  <label>Clips per streamer</label>
+                  <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" class="field-input-compact">
+                    <option value="1">1 clip</option>
+                    <option value="2" selected>2 clips</option>
+                    <option value="3">3 clips</option>
+                    <option value="4">4 clips</option>
+                    <option value="5">5 clips</option>
+                  </select>
+                </div>
+                <details class="gen-advanced">
+                  <summary>Clip filters</summary>
+                  <div class="gen-advanced-body">
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Min duration (s)</div>
+                        <input id="twitch-picker-dur-min" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact"></div>
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Max duration (s)</div>
+                        <input id="twitch-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact"></div>
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Clip age</div>
+                        <select id="twitch-picker-pub-window" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact">
+                          <option value="any">Any time</option><option value="6h">Last 6 hours</option><option value="24h" selected>Last 24 hours</option><option value="3d">Last 3 days</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option>
+                        </select></div>
+                    </div>
+                  </div>
+                </details>
+                <div id="streamer-selected-summary" class="streamer-selected-bar">Check streamers in the list → they appear here when selected.</div>
+                <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
+                <div class="gen-action-bar">
+                  <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">Pick clips</button>
+                  <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitchWithPicker()">Generate VOD</button>
+                  <div class="gen-action-row">
+                    <button id="btn-gen-twitch-top10" class="btn btn-outline" onclick="generateTwitchTop10()" title="One clip per streamer, ranked by views">Top 10</button>
+                    <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()">Short</button>
+                  </div>
+                  <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch 4 clips into one portrait short">Comp</button>
+                </div>
+                <span id="twitch-fetch-status" class="gen-status-line"></span>
+              </aside>
+              <main class="gen-main streamers-list-panel">
+                <div class="gen-main-head">
+                  <h3 class="gen-main-title">YOUR CREATORS</h3>
+                  <span id="streamer-chip-count" class="gen-main-hint"></span>
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+                  <input type="search" id="streamer-search" placeholder="Search name or @handle…" oninput="renderStreamerChips()" class="field-input-compact" style="flex:1;min-width:160px;padding:8px 12px;">
+                  <select id="streamer-filter-platform" onchange="renderStreamerChips()" class="field-input-compact" style="width:auto;">
+                    <option value="all">All</option>
+                    <option value="twitch">Twitch</option>
+                    <option value="kick">Kick</option>
+                    <option value="youtube">YouTube</option>
+                  </select>
+                </div>
+                <div id="streamer-chips" class="streamers-grid"></div>
+                <div class="gen-chip-actions" style="margin-top:10px;">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(true)">Select all</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(false)">Select none</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()">+ Add URL</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" style="color:#9146ff;border-color:rgba(145,70,255,0.5);">Sync follows</button>
+                </div>
+              </main>
             </div>
-            <div class="field"><label>STREAMERS (top clips from each)</label>
-              <!-- CPD-930: chip multi-select. Hidden input keeps the same id/value
-                   contract (comma-joined) so all existing readers work unchanged. -->
-              <input type="hidden" id="twitch-streamers" value="jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming">
-              <div id="streamer-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#0d1524;border:1px solid rgba(199,175,79,0.3);border-radius:4px;min-height:40px;"></div>
-              <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
-                <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(true)" style="font-size:10px;padding:2px 10px;">ALL</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(false)" style="font-size:10px;padding:2px 10px;">NONE</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()" style="font-size:10px;padding:2px 10px;">+ ADD URL</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" title="Sync Twitch follows, YouTube subscriptions, and Kick follows into the creator registry" style="font-size:10px;padding:2px 10px;color:#9146ff;border-color:rgba(145,70,255,0.5);">⟳ SYNC ALL</button>
-                <a href="/connect/twitch" target="_blank" style="font-size:9px;color:#9146ff;margin-left:4px;" title="Connect Twitch follows">TW</a>
-                <a href="/connect/youtube" target="_blank" style="font-size:9px;color:#ff0000;margin-left:2px;" title="Connect YouTube (subscriptions sync)">YT</a>
-                <a href="/connect/kick-follows" target="_blank" style="font-size:9px;color:#53fc18;margin-left:2px;" title="Connect Kick follows">KI</a>
-                <span id="streamer-chip-count" style="font-size:10px;color:rgba(255,255,255,0.4);"></span>
-              </div>
-              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">Changes auto-save. Edit here or in Settings → Twitch Config.</div>
-            </div>
-            <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
-            <div class="field" style="margin-bottom:8px;">
-              <label>CLIPS PER STREAMER</label>
-              <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:13px;letter-spacing:1px;font-weight:700;">
-                <option value="1">1 clip</option>
-                <option value="2" selected>2 clips</option>
-                <option value="3">3 clips</option>
-                <option value="4">4 clips</option>
-                <option value="5">5 clips</option>
-              </select>
-              <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:8px;">(applies to this generation)</span>
-            </div>
-            <div class="field" style="margin-bottom:8px;">
-              <label>PICKER FILTERS</label>
-              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end;">
-                <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">MIN DURATION (s)</div>
-                  <input id="twitch-picker-dur-min" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:5px 8px;font-size:12px;"></div>
-                <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">MAX DURATION (s)</div>
-                  <input id="twitch-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:5px 8px;font-size:12px;"></div>
-                <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">CLIP CREATED</div>
-                  <select id="twitch-picker-pub-window" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:5px 8px;font-size:12px;">
-                    <option value="any">Any time</option><option value="6h">Last 6 hours</option><option value="24h" selected>Last 24 hours</option><option value="3d">Last 3 days</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option>
-                  </select></div>
-              </div>
-              <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 8px;" onclick="setPickerDurationPreset('twitch',15,60)">Short clips</button>
-                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 8px;" onclick="setPickerDurationPreset('twitch',null,null)">Clear duration</button>
-              </div>
-            </div>
-            <!-- Twitch inline clip picker -->
-            <div id="twitch-inline-picker" style="display:none;margin-bottom:10px;border:1px solid rgba(199,175,79,0.2);border-radius:6px;padding:10px;background:#060a12;"></div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;margin-bottom:8px;" id="twitch-fetch-status"></div>
-            <div class="btn-row">
-              <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">PICK CLIPS</button>
-              <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitchWithPicker()">VOD</button>
-              <button id="btn-gen-twitch-top10" class="btn btn-outline" onclick="generateTwitchTop10()" title="Countdown show — one clip per selected streamer, ranked by views (most viewed = #1)">TOP 10</button>
-              <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()">SHORT</button>
-              <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch 4 selected clips into one full-frame portrait short — no avatar">CLIPS COMP</button>
-            </div>
+            <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;margin:16px;border-top:1px solid rgba(199,175,79,0.1);"></div>
           </div>
         </div>
 
       </div>
 
-      <div class="sec-title">PIPELINE <span class="badge">STATUS</span></div>
+      <div class="gen-pipeline-wrap">
+      <details class="dash-details"><summary>Pipeline status</summary>
       <div class="card" id="pipeline-status-card">
         <div class="card-header">
           <div class="card-title" id="script-type-label">Ready — pick content above to start a job</div>
@@ -483,11 +632,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);" id="script-stats"></div>
           <div id="script-qa-result"></div>
           <div id="preflight-panel" style="display:none;margin:10px 0;padding:12px 16px;border-radius:6px;font-size:12px;font-family:monospace;line-height:1.6;border:1px solid;max-height:220px;overflow-y:auto;"></div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:10px;font-family:monospace;line-height:1.5;">
-            Shorts and clip comps skip script generation. VOD shows use locked intros/outros from
-            <a href="#" onclick="nav('settings');switchTab('script-cfg');loadScaffoldSettings();return false;" style="color:#c7af4f;text-decoration:none;">Settings → Script</a>.
-          </div>
         </div>
+      </div>
+      </details>
       </div>
       <!-- Hidden hooks — pipeline JS still reads/writes these; editor lives under Settings → Script -->
       <div id="pipeline-hooks" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);" aria-hidden="true">
@@ -750,6 +897,58 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         <div class="card-body" id="bc-allowlist-body">—</div>
         </details>
       </div>
+    </div>
+
+    <!-- CHANNEL STATS PAGE -->
+    <div class="page stats-page" id="page-stats">
+      <div class="stats-head">
+        <div>
+          <h2 class="gen-page-title" style="margin:0;">Channel Stats</h2>
+          <div id="stats-subtitle" style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">Videos · Shorts · Lives — @clipzworldnews</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="loadChannelStats(true)">↻ Refresh</button>
+          <a href="/connect/youtube" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;line-height:1.6;">YouTube OAuth</a>
+        </div>
+      </div>
+      <div id="stats-banner"></div>
+      <div class="stats-cards" id="stats-cards">
+        <div class="stats-card"><div class="stats-card-label">Loading</div><div class="stats-card-value">…</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-header"><div class="card-title">BY SURFACE &amp; CATEGORY</div></div>
+        <div class="card-body" id="stats-breakdown" style="font-size:12px;line-height:1.7;color:rgba(255,255,255,0.55);">—</div>
+      </div>
+      <div class="card" style="margin-bottom:14px;display:none;" id="stats-uploadpost-card">
+        <div class="card-header"><div class="card-title">UPLOAD-POST (CROSS-PLATFORM)</div></div>
+        <div class="card-body" id="stats-uploadpost" style="font-size:12px;">—</div>
+      </div>
+      <div class="sec-title">ALL CONTENT <span class="badge" id="stats-table-count">0</span></div>
+      <div class="stats-filters">
+        <select id="stats-filter-tab" class="field-input-compact" style="width:auto;" onchange="renderChannelStatsTable()">
+          <option value="all">All surfaces</option>
+          <option value="shorts">Shorts</option>
+          <option value="videos">Videos</option>
+          <option value="streams">Streams / Lives</option>
+        </select>
+        <select id="stats-filter-cat" class="field-input-compact" style="width:auto;" onchange="renderChannelStatsTable()">
+          <option value="all">All categories</option>
+          <option value="Streaming">Streaming</option>
+          <option value="Sports">Sports</option>
+          <option value="News">News</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="stats-table-wrap">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Views</th><th>Surface</th><th>Category</th><th>Title</th>
+            <th>Engaged</th><th>Avg %</th><th>Subs+</th><th>Likes</th>
+          </tr></thead>
+          <tbody id="stats-table-body"><tr><td colspan="8" style="padding:20px;color:rgba(255,255,255,0.35);">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="stats-sources" style="margin-top:12px;font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6;"></div>
     </div>
 
     <!-- JOB QUEUE PAGE -->
@@ -1714,14 +1913,17 @@ function loadSportsSourcePref() {
 
 function switchGeneratePillar(pillar) {
   var ids = ['sports', 'news', 'twitch'];
+  var statusMap = { sports: 'nba-status', news: 'news-status', twitch: 'twitch-gen-status' };
   ids.forEach(function(id) {
     var card = document.querySelector('[data-pillar="' + id + '"]');
     if (card) card.style.display = (id === pillar) ? '' : 'none';
     var tab = g('pillar-tab-' + id);
-    if (tab) {
-      tab.className = (id === pillar) ? 'btn btn-gold' : 'btn btn-outline';
-    }
+    if (tab) tab.className = 'gen-pillar-tab' + (id === pillar ? ' active' : '');
+    var st = g(statusMap[id]);
+    if (st) st.style.display = (id === pillar) ? '' : 'none';
   });
+  var grid = document.querySelector('#page-generate .cards-grid');
+  if (grid) grid.classList.add('pillar-single');
   try { localStorage.setItem('cwn_generate_pillar', pillar); } catch (e) {}
 }
 
@@ -1866,6 +2068,7 @@ function nav(page) {
   if (page === 'broadcast' && typeof broadcastPageInit === 'function') broadcastPageInit();
   if (page === 'publish') pubPopulateJobDropdown();
   if (page === 'abtest') thumbPopulateDropdown();
+  if (page === 'stats') statsPageInit();
 }
 
 function switchTab(name) {
@@ -1873,6 +2076,170 @@ function switchTab(name) {
   document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('tab-'+name).classList.add('active');
   event.target.classList.add('active');
+}
+
+// ── CHANNEL STATS PAGE ─────────────────────────────────────────────
+window._channelStatsReport = null;
+
+function statsPageInit() {
+  loadChannelStats(false);
+}
+
+function fmtNum(n) {
+  if (n == null || n === '' || isNaN(n)) return '—';
+  return Number(n).toLocaleString();
+}
+
+function fmtPct(n) {
+  if (n == null || n === '' || isNaN(n)) return '—';
+  return (Number(n) * (Number(n) <= 1 ? 100 : 1)).toFixed(1) + '%';
+}
+
+function statsTabPill(tab) {
+  var cls = tab === 'shorts' ? 'stats-tab-shorts' : (tab === 'streams' ? 'stats-tab-streams' : 'stats-tab-videos');
+  return '<span class="stats-tab-pill ' + cls + '">' + tab + '</span>';
+}
+
+function loadChannelStats(refresh) {
+  var cards = g('stats-cards');
+  var tbody = g('stats-table-body');
+  if (cards) cards.innerHTML = '<div class="stats-card"><div class="stats-card-label">Loading</div><div class="stats-card-value">…</div></div>';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:rgba(255,255,255,0.35);">Fetching catalog (Videos + Shorts + Streams)…</td></tr>';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/stats/channel' + (refresh ? '?refresh=1' : ''), true);
+  xhr.timeout = 300000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      if (!d.ok) throw new Error(d.error || 'Unknown error');
+      window._channelStatsReport = d;
+      renderChannelStats(d);
+    } catch (e) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:#e74c3c;">' + e.message + '</td></tr>';
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:#e74c3c;">Server unreachable — is pm2 running?</td></tr>';
+  };
+  xhr.send();
+}
+
+function renderChannelStats(d) {
+  var cat = d.catalog || {};
+  var items = cat.items || [];
+  var byTab = cat.byTab || {};
+  var byCat = cat.byCategory || {};
+  var sub = g('stats-subtitle');
+  if (sub) sub.textContent = (cat.channelTitle || d.channelTitle || '@' + (d.handle || 'clipzworldnews')) +
+    ' · ' + fmtNum(cat.totals && cat.totals.items) + ' items · ' + fmtNum(d.subscriberCount || cat.subscriberCount) + ' subs · updated ' +
+    new Date(d.fetchedAt || cat.fetchedAt).toLocaleString();
+
+  var banner = g('stats-banner');
+  if (banner) {
+    if (d.analytics && d.analytics.ok) {
+      var cs = d.analytics.channelSummary && d.analytics.channelSummary.totals;
+      banner.className = 'stats-banner stats-banner-ok';
+      banner.innerHTML = '<strong>YouTube Analytics connected.</strong> Retention, engaged views, and subs gained for ' +
+        (d.analytics.startDate || '?') + ' → ' + (d.analytics.endDate || '?') + ' (' + (d.analytics.videoCount || 0) + ' videos). ' +
+        (cs ? 'Channel period: ' + fmtNum(cs.views) + ' views · ' + fmtNum(cs.engagedViews) + ' engaged · ' + fmtNum(cs.subscribersGained) + ' subs gained. ' : '') +
+        '<span style="opacity:0.75;">Impressions/CTR are not in Google\'s Analytics API — see Upload-Post card or YouTube Studio.</span>';
+    } else {
+      banner.className = 'stats-banner stats-banner-warn';
+      banner.innerHTML = '<strong>Private metrics unavailable.</strong> ' + (d.analytics && d.analytics.message ? d.analytics.message :
+        'Connect YouTube at /connect/youtube for retention and subs gained. Public view counts load via yt-dlp (all three tabs).');
+    }
+  }
+
+  var cards = g('stats-cards');
+  if (cards) {
+    var totalViews = (cat.totals && cat.totals.views) || 0;
+    var shorts = byTab.shorts || { views: 0, count: 0, avgViews: 0 };
+    var vids = byTab.videos || { views: 0, count: 0, avgViews: 0 };
+    var streams = byTab.streams || { views: 0, count: 0, avgViews: 0 };
+    cards.innerHTML =
+      statCard('Total views', fmtNum(totalViews), fmtNum(cat.totals && cat.totals.items) + ' unique items') +
+      statCard('Shorts', fmtNum(shorts.views), shorts.count + ' · ' + fmtNum(shorts.avgViews) + ' avg') +
+      statCard('Videos', fmtNum(vids.views), vids.count + ' · ' + fmtNum(vids.avgViews) + ' avg') +
+      statCard('Lives', fmtNum(streams.views), streams.count + ' · ' + fmtNum(streams.avgViews) + ' avg') +
+      statCard('Subscribers', fmtNum(d.subscriberCount || cat.subscriberCount), 'public count');
+  }
+
+  function statCard(label, val, sub) {
+    return '<div class="stats-card"><div class="stats-card-label">' + label + '</div><div class="stats-card-value">' + val +
+      '</div><div class="stats-card-sub">' + (sub || '') + '</div></div>';
+  }
+
+  var breakdown = g('stats-breakdown');
+  if (breakdown) {
+    var catLines = Object.keys(byCat).sort(function(a, b) { return (byCat[b].views || 0) - (byCat[a].views || 0); }).map(function(k) {
+      var s = byCat[k];
+      return '<div><strong class="stats-cat-' + k.toLowerCase() + '">' + k + '</strong>: ' + s.count + ' videos · ' +
+        fmtNum(s.views) + ' views · ' + fmtNum(s.avgViews) + ' avg</div>';
+    }).join('');
+    breakdown.innerHTML = catLines || '—';
+  }
+
+  var upCard = g('stats-uploadpost-card');
+  var upEl = g('stats-uploadpost');
+  if (d.uploadPost && d.uploadPost.ok && d.uploadPost.platforms && upEl) {
+    if (upCard) upCard.style.display = '';
+    var plats = d.uploadPost.platforms;
+    upEl.innerHTML = ['youtube', 'tiktok', 'instagram'].map(function(p) {
+      var x = plats[p];
+      if (!x) return '';
+      var imprLabel = (x.metric_labels && x.metric_labels.impressions) || 'views';
+      return '<div style="margin-bottom:8px;"><strong style="color:#c7af4f;">' + p + '</strong> · ' +
+        fmtNum(x.followers) + ' followers · ' + fmtNum(x.impressions || x.reach || x.views) + ' ' + imprLabel + ' · ' +
+        fmtNum(x.likes) + ' likes · ' + fmtNum(x.comments) + ' comments</div>';
+    }).join('') || '—';
+  } else if (upCard) {
+    upCard.style.display = 'none';
+  }
+
+  var src = g('stats-sources');
+  if (src && d.dataSources) {
+    src.innerHTML = 'Sources: ' + d.dataSources.publicCatalog + '<br>' +
+      'Private: ' + d.dataSources.privateMetrics + '<br>' +
+      'Cross-platform: ' + d.dataSources.crossPlatform;
+  }
+
+  renderChannelStatsTable();
+}
+
+function renderChannelStatsTable() {
+  var d = window._channelStatsReport;
+  var tbody = g('stats-table-body');
+  var cnt = g('stats-table-count');
+  if (!tbody || !d) return;
+  var items = (d.catalog && d.catalog.items) || [];
+  var tabF = (g('stats-filter-tab') || {}).value || 'all';
+  var catF = (g('stats-filter-cat') || {}).value || 'all';
+  var filtered = items.filter(function(it) {
+    if (tabF !== 'all' && it.tab !== tabF) return false;
+    if (catF !== 'all' && it.category !== catF) return false;
+    return true;
+  });
+  if (cnt) cnt.textContent = filtered.length + ' SHOWN';
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:rgba(255,255,255,0.35);">No matches.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(function(it) {
+    var a = it.analytics || {};
+    var title = (it.title || '').replace(/</g, '&lt;');
+    var link = it.url ? '<a href="' + it.url + '" target="_blank" style="color:rgba(255,255,255,0.75);text-decoration:none;">' + title + '</a>' : title;
+    return '<tr>' +
+      '<td style="font-weight:700;color:#c7af4f;">' + fmtNum(it.views) + '</td>' +
+      '<td>' + statsTabPill(it.tab) + '</td>' +
+      '<td class="stats-cat-' + (it.category || '').toLowerCase() + '">' + (it.category || '—') + '</td>' +
+      '<td style="max-width:320px;">' + link + '</td>' +
+      '<td>' + fmtNum(a.engagedViews) + '</td>' +
+      '<td>' + (a.averageViewPercentage != null ? Number(a.averageViewPercentage).toFixed(1) + '%' : '—') + '</td>' +
+      '<td>' + fmtNum(a.subscribersGained) + '</td>' +
+      '<td>' + fmtNum(a.likes) + '</td>' +
+    '</tr>';
+  }).join('');
 }
 
 function g(id){ return document.getElementById(id); }
@@ -8830,6 +9197,7 @@ function publishViaUploadPost(platforms, opts) {
     tags:         prep.tags || [],
     scheduledAt:  schedule || null,
     contentType:  contentType,
+    jobType:      job.type || '',
     thumbnailUrl: prep.thumbnailUrl || job.canvaUrl || job.thumbDriveUrl || job.thumbnailUrl || '',
     pinnedComment:prep.pinnedComment || prep.comment || '',
     async:        true
@@ -9376,6 +9744,82 @@ function saveStreamerList() {
 // Selection = comma string in the hidden #twitch-streamers input.
 
 window._creatorRegistryMap = window._creatorRegistryMap || {};
+window._creatorConnectStatus = window._creatorConnectStatus || null;
+
+function escapeHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function jsQuote(str) {
+  return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function streamerPlatformStyle(platform) {
+  if (platform === 'youtube') return { badge: 'YT', color: '#ff4444', bg: 'rgba(255,68,68,0.15)' };
+  if (platform === 'kick') return { badge: 'KI', color: '#53fc18', bg: 'rgba(83,252,24,0.12)' };
+  return { badge: 'TW', color: '#9146ff', bg: 'rgba(145,70,255,0.15)' };
+}
+
+function formatStreamerSources(sources) {
+  if (!sources || !sources.length) return '';
+  var labels = {
+    twitch_follow: 'Twitch follow',
+    youtube_subscription: 'YT sub',
+    kick_follow: 'Kick follow',
+    live_grid: 'Live grid',
+    manual_add: 'Manual',
+    streamerSources_seed: 'Seed config'
+  };
+  return sources.slice(0, 3).map(function(s){ return labels[s] || s; }).join(' · ');
+}
+
+function loadCreatorConnectStatus(cb) {
+  var base = CFG.ffmpegUrl || 'http://localhost:3000';
+  fetch(base + '/creators/connect-status')
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      if (d.ok) window._creatorConnectStatus = d;
+      renderStreamerConnectBar();
+      if (cb) cb(d);
+    })
+    .catch(function(){ if (cb) cb(null); });
+}
+
+function renderStreamerConnectBar() {
+  var bar = g('streamer-connect-bar');
+  if (!bar) return;
+  var st = window._creatorConnectStatus;
+  if (!st) {
+    bar.innerHTML = '<span style="color:rgba(255,255,255,0.4);">Loading platform connections…</span>';
+    return;
+  }
+  function pill(key, cfg) {
+    var colors = { twitch: '#9146ff', youtube: '#ff4444', kick: '#53fc18' };
+    var color = colors[key] || '#c7af4f';
+    var connected = cfg.connected;
+    var credsOk = key !== 'kick' || cfg.credentialsConfigured !== false;
+    var dot = connected ? '●' : (credsOk ? '○' : '⚠');
+    var accountLabel = (cfg.account && cfg.account.label) ? cfg.account.label : null;
+    var statusText = connected
+      ? (accountLabel ? ('Connected · ' + accountLabel) : 'Connected')
+      : (key === 'kick' && !credsOk ? 'Creds missing' : 'Not connected');
+    var btn = '';
+    if (connected && key === 'kick' && cfg.switchUrl) {
+      btn = '<a href="' + cfg.switchUrl + '" target="_blank" style="color:' + color + ';font-size:10px;font-weight:700;text-decoration:none;" title="Log out of Kick in browser first, or use a private window">Switch →</a>';
+    } else if (connected) {
+      btn = '<span style="color:rgba(255,255,255,0.35);font-size:10px;">synced</span>';
+    } else if (cfg.connectUrl) {
+      btn = '<a href="' + cfg.connectUrl + '" target="_blank" style="color:' + color + ';font-size:10px;font-weight:700;text-decoration:none;">Connect →</a>';
+    } else if (key === 'kick') {
+      btn = '<span style="color:rgba(255,255,255,0.35);font-size:10px;" title="' + (cfg.note || '') + '">Doppler</span>';
+    }
+    return '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:4px;border:1px solid ' + color + '33;background:' + color + '11;min-width:0;">' +
+      '<span style="color:' + color + ';font-weight:700;white-space:nowrap;">' + (cfg.label || key) + '</span>' +
+      '<span style="color:' + (connected ? '#4ade80' : 'rgba(255,255,255,0.45)') + ';font-size:10px;white-space:nowrap;">' + dot + ' ' + statusText + '</span>' +
+      '<span style="margin-left:auto;">' + btn + '</span></div>';
+  }
+  bar.innerHTML = pill('twitch', st.twitch) + pill('youtube', st.youtube) + pill('kick', st.kick);
+}
 
 function loadCreatorRegistryFromServer(cb) {
   var base = CFG.ffmpegUrl || 'http://localhost:3000';
@@ -9391,7 +9835,13 @@ function loadCreatorRegistryFromServer(cb) {
           || (c.platforms && c.platforms.youtube && (c.platforms.youtube.handle || c.id))
           || c.id;
         key = String(key || c.id).toLowerCase().replace(/^@/, '');
-        window._creatorRegistryMap[key] = { displayName: c.displayName, platform: plat, kind: c.kind };
+        window._creatorRegistryMap[key] = {
+          displayName: c.displayName,
+          platform: plat,
+          kind: c.kind,
+          sources: c.sources || [],
+          id: c.id
+        };
       });
       var roster = d.creators.map(function(c) {
         if (c.platforms && c.platforms.twitch && c.platforms.twitch.login) return c.platforms.twitch.login;
@@ -9492,6 +9942,7 @@ function syncStreamersFromFollows(silent) {
           });
         }
         renderStreamerChips();
+        loadCreatorConnectStatus();
         if (silent) {
           if (added) cwn_log('[creators-sync] ' + added + ' new creator(s) from follows/subscriptions', false);
           return;
@@ -9507,7 +9958,12 @@ function syncStreamersFromFollows(silent) {
 }
 
 // CPD-959: auto-sync on load — follows + subscriptions → creator registry
-setTimeout(function(){ try { loadCreatorRegistryFromServer(function(){ syncStreamersFromFollows(true); }); } catch(_e) {} }, 2500);
+setTimeout(function(){
+  try {
+    loadCreatorConnectStatus();
+    loadCreatorRegistryFromServer(function(){ syncStreamersFromFollows(true); });
+  } catch(_e) {}
+}, 2500);
 
 function removeStreamerChip(handle, ev) {
   if (ev) ev.stopPropagation();
@@ -9517,27 +9973,66 @@ function removeStreamerChip(handle, ev) {
   setSelectedStreamers(getSelectedStreamers().filter(function(s){ return s !== handle; }));
 }
 
+function renderStreamerSelectedSummary(sel) {
+  var bar = g('streamer-selected-summary');
+  if (!bar) return;
+  sel = sel || getSelectedStreamers();
+  if (!sel.length) {
+    bar.innerHTML = '<span style="color:rgba(255,255,255,0.35);">No streamers selected — check names in the list to include them when picking clips.</span>';
+    return;
+  }
+  var preview = sel.slice(0, 6).map(function(h) {
+    var meta = window._creatorRegistryMap[h] || {};
+    return escapeHtml(meta.displayName && meta.displayName !== h ? meta.displayName : h);
+  }).join(', ');
+  bar.innerHTML = '<strong style="color:#9146ff;">' + sel.length + ' selected</strong> for clip picking: ' + preview + (sel.length > 6 ? ' +' + (sel.length - 6) + ' more' : '');
+}
+
 function renderStreamerChips() {
   var wrap = g('streamer-chips');
   if (!wrap) return;
   var roster = getStreamerRoster();
   var sel = getSelectedStreamers();
-  wrap.innerHTML = roster.map(function(h) {
-    var on = sel.indexOf(h) >= 0;
+  var query = ((g('streamer-search') || {}).value || '').trim().toLowerCase();
+  var platFilter = (g('streamer-filter-platform') || {}).value || 'all';
+
+  var filtered = roster.filter(function(h) {
     var meta = window._creatorRegistryMap[h] || {};
-    var plat = meta.platform || 'tw';
-    var badge = plat === 'youtube' ? 'YT' : (plat === 'kick' ? 'KI' : 'TW');
-    var label = meta.displayName && meta.displayName !== h ? meta.displayName : h;
-    return '<span onclick="toggleStreamerChip(\'' + h + '\')" title="' + (on ? 'Click to deselect' : 'Click to select') + ' [' + badge + ']" ' +
-      'style="cursor:pointer;user-select:none;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:6px;' +
-      (on
-        ? 'background:rgba(145,70,255,0.25);border:1px solid #9146ff;color:#fff;'
-        : 'background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.35);') +
-      '"><span style="font-size:8px;opacity:0.6;">' + badge + '</span> ' + (on ? '✓ ' : '') + label +
-      '<span onclick="removeStreamerChip(\'' + h + '\', event)" title="Remove from roster" style="color:rgba(255,255,255,0.3);font-weight:400;">✕</span></span>';
-  }).join('');
+    var plat = meta.platform || 'twitch';
+    if (platFilter !== 'all' && plat !== platFilter) return false;
+    if (!query) return true;
+    var label = (meta.displayName || h).toLowerCase();
+    return h.indexOf(query) >= 0 || label.indexOf(query) >= 0;
+  });
+
+  if (!filtered.length) {
+    wrap.innerHTML = '<div style="padding:32px 16px;text-align:center;color:rgba(255,255,255,0.4);font-size:13px;line-height:1.6;">' +
+      (roster.length ? 'No matches — try a different search or filter.' : 'No creators yet.<br>Click <strong>Sync follows</strong> or <strong>+ Add URL</strong>.') + '</div>';
+  } else {
+    wrap.innerHTML = filtered.map(function(h) {
+      var hk = String(h).toLowerCase().replace(/^@/, '');
+      var on = sel.indexOf(hk) >= 0 || sel.indexOf(h) >= 0;
+      var meta = window._creatorRegistryMap[hk] || window._creatorRegistryMap[h] || {};
+      var plat = meta.platform || 'twitch';
+      var ps = streamerPlatformStyle(plat);
+      var label = meta.displayName && meta.displayName !== hk ? meta.displayName : (meta.displayName || hk);
+      var src = formatStreamerSources(meta.sources);
+      var jq = jsQuote(hk);
+      return '<div class="streamer-row' + (on ? ' selected' : '') + '" onclick="toggleStreamerChip(\'' + jq + '\')" title="' + (on ? 'Click to exclude' : 'Click to include') + '">' +
+        '<input type="checkbox" ' + (on ? 'checked' : '') + ' onclick="event.stopPropagation();toggleStreamerChip(\'' + jq + '\')" style="accent-color:#9146ff;cursor:pointer;width:18px;height:18px;">' +
+        '<span class="streamer-plat-badge" style="color:' + ps.color + ';background:' + ps.bg + ';">' + ps.badge + '</span>' +
+        '<div style="min-width:0;">' +
+          '<div class="streamer-name">' + escapeHtml(label) + '</div>' +
+          '<div class="streamer-meta">@' + escapeHtml(hk) + (src ? ' · ' + escapeHtml(src) : '') + '</div>' +
+        '</div>' +
+        '<button type="button" onclick="removeStreamerChip(\'' + jq + '\', event)" title="Remove from roster" style="background:none;border:none;color:rgba(255,255,255,0.25);cursor:pointer;font-size:16px;line-height:1;">✕</button>' +
+      '</div>';
+    }).join('');
+  }
+
   var cnt = g('streamer-chip-count');
-  if (cnt) cnt.textContent = sel.length + ' of ' + roster.length + ' selected';
+  if (cnt) cnt.textContent = sel.length + ' of ' + roster.length + ' selected' + (filtered.length !== roster.length ? ' · ' + filtered.length + ' shown' : '');
+  renderStreamerSelectedSummary(sel);
 }
 
 function saveClipsPerStreamer() {
