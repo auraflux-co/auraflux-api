@@ -1,14 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Clone + avatar acceptance gate — run before retiring HeyGen audio fallback.
+ * Clone + avatar acceptance gate — spike profile (CPD-881 validated path).
  *
- * Produces in output/avatar_clone_gate/:
- *   cloned_tts.mp3          — ElevenLabs Bobby G clone (audio only)
- *   heygen_baseline.mp4     — HeyGen reference (same line)
- *   em_clone_production.mp4   — EchoMimic + clone TTS + production tuning
- *
- * Usage: node scripts/avatar_clone_gate.js
+ * Usage: bash scripts/doppler_run.sh node scripts/avatar_clone_gate.js
  */
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
@@ -16,7 +11,6 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const { execFileSync } = require('child_process');
 
 const TEXT = process.argv[2] || 'The stream was indeed his stream now.';
 const OUT = path.join(__dirname, '..', 'output', 'avatar_clone_gate');
@@ -50,13 +44,12 @@ async function heygenBaseline() {
     log(`reuse heygen baseline → ${dest}`);
     return dest;
   }
-  const config = avatar.resolveConfig({ contentType: 'twitch', format: 'landscape' }, { engine: 'heygen' });
   const { videoId } = await avatar.submitSegment(
-    { text: TEXT, title: 'GATE_HEYGEN', aspectRatio: '16:9', config },
+    { text: TEXT, title: 'GATE_HEYGEN', aspectRatio: '16:9' },
     { engine: 'heygen' }
   );
   const { videoUrl } = await avatar.waitForSegment(videoId, {
-    engine: 'heygen', maxWaitMs: 10 * 60 * 1000, pollIntervalMs: 8000, label: 'heygen_baseline'
+    engine: 'heygen', maxWaitMs: 25 * 60 * 1000, pollIntervalMs: 12000, label: 'heygen_baseline'
   });
   const resp = await axios.get(videoUrl, { responseType: 'arraybuffer', timeout: 180000 });
   fs.writeFileSync(dest, Buffer.from(resp.data));
@@ -64,22 +57,23 @@ async function heygenBaseline() {
   return dest;
 }
 
-async function echoMimicCloneProduction() {
+async function echoMimicSpikeProfile() {
+  process.env.ECHOMIMIC_PROFILE = 'spike';
   process.env.ECHOMIMIC_AUDIO_SOURCE = 'elevenlabs';
   process.env.ECHOMIMIC_HEYGEN_AUDIO_FALLBACK = '0';
-  process.env.ECHOMIMIC_STEPS = process.env.ECHOMIMIC_GATE_STEPS || '8';
-  process.env.ECHOMIMIC_AUDIO_GUIDANCE_SCALE = process.env.ECHOMIMIC_GATE_AGS || '2.0';
-  process.env.ECHOMIMIC_GUIDANCE_SCALE = process.env.ECHOMIMIC_GATE_GUIDANCE || '4.5';
-  process.env.ECHOMIMIC_USE_DYNAMIC_CFG = '0';
-  process.env.ECHOMIMIC_PORTRAIT = process.env.ECHOMIMIC_GATE_PORTRAIT || 'heygen_frame';
-  process.env.ECHOMIMIC_ASSEMBLY_CROP = 'off';
+  process.env.ECHOMIMIC_CHUNK = 'off';
   process.env.ECHOMIMIC_ENHANCED_DELIVERY = '0';
+  process.env.ECHOMIMIC_ASSEMBLY_CROP = 'off';
+  delete process.env.ECHOMIMIC_PORTRAIT;
   delete process.env.ECHOMIMIC_IMAGE_KEY;
   delete process.env.ECHOMIMIC_CHUNK_XFADE;
-  process.env.ECHOMIMIC_CHUNK = process.env.ECHOMIMIC_GATE_CHUNK || 'off';
+  delete process.env.ECHOMIMIC_USE_DYNAMIC_CFG;
+
   const avatar = require('../lib/avatar');
   const { wakePod } = require('../lib/avatar/echomimic_pod');
+  const { resolveSpikePortraitKey } = require('../lib/avatar/echomimic_spike');
   await wakePod();
+
   const dest = path.join(OUT, 'em_clone_production.mp4');
   const config = avatar.resolveConfig({ contentType: 'twitch', format: 'landscape' }, { engine: 'echomimic' });
   const t0 = Date.now();
@@ -93,20 +87,19 @@ async function echoMimicCloneProduction() {
   const resp = await axios.get(videoUrl, { responseType: 'arraybuffer', timeout: 180000 });
   fs.writeFileSync(dest, Buffer.from(resp.data));
   const sec = ((Date.now() - t0) / 1000).toFixed(1);
-  log(`EchoMimic + clone (${sec}s) → ${dest}`);
-  return { dest, renderSec: parseFloat(sec) };
+  log(`EchoMimic spike profile (${sec}s) → ${dest}`);
+  return { dest, renderSec: parseFloat(sec), portrait: resolveSpikePortraitKey() };
 }
 
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   log(`gate text: "${TEXT}"`);
-  log(`voice_id: ${process.env.ELEVENLABS_VOICE_ID}`);
+  log(`profile: spike (CPD-881)`);
 
   const manifest = {
     text: TEXT,
+    profile: 'spike',
     voiceId: process.env.ELEVENLABS_VOICE_ID,
-    imageKey: process.env.ECHOMIMIC_IMAGE_KEY,
-    steps: process.env.ECHOMIMIC_STEPS,
     startedAt: new Date().toISOString(),
     outputs: {}
   };
@@ -118,14 +111,15 @@ async function main() {
     manifest.outputs.heygenBaseline = path.join(OUT, 'heygen_baseline.mp4');
     log('reuse heygen baseline');
   }
-  const em = await echoMimicCloneProduction();
+  const em = await echoMimicSpikeProfile();
   manifest.outputs.emCloneProduction = em.dest;
+  manifest.portrait = em.portrait;
   manifest.renderSec = em.renderSec;
   manifest.completedAt = new Date().toISOString();
   manifest.qa = {
-    audio: 'Listen to cloned_tts.mp3 vs heygen_baseline.mp4 — voice should match Bobby G',
-    avatar: 'Compare em_clone_production.mp4 vs heygen_baseline.mp4 — mouth/hands/face bar',
-    heygenAccount: 'Keep HeyGen until both pass; ECHOMIMIC_HEYGEN_AUDIO_FALLBACK stays 1 until then'
+    audio: 'cloned_tts.mp3 vs heygen_baseline.mp4',
+    avatar: 'em_clone_production.mp4 vs heygen_baseline.mp4',
+    gate2: 'Run: node scripts/avatar_gate2_validation.js for A/B/C spike lines + Gemini scores'
   };
 
   fs.writeFileSync(path.join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2));

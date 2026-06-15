@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-15 (CPD-991) — EchoMimic Gate2 Gemini scoring, Kick OAuth disconnect/revoke, Doppler OAuth env fill for localhost.
 **Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats page (Videos+Shorts+Lives), YouTube Analytics merge, Upload-Post analytics, C0 sports route guard, TikTok is_aigc fix, env.example sync.
 **Branch:** c0/main → `origin` = **auraflux-c0** · `production` = auraflux-api (cherry-pick only)
 **How to start a session:** Read **this file first** → `cursor.md` → current focus below.
