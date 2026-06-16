@@ -120,6 +120,7 @@ async function main() {
     urls: [clip.url],
     sourceLibrary: [{
       url: clip.url,
+      cdnUrl: clip.cdnUrl || null,
       title: clip.title || 'Hub QA clip',
       duration: clip.duration,
       platform: 'twitch',

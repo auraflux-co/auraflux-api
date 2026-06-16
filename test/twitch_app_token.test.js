@@ -85,3 +85,37 @@ test('no secrets configured: 401 propagates without refresh attempt', async () =
   await expect(client.getUserByLogin('x')).rejects.toThrow('401');
   expect(axios.post).not.toHaveBeenCalled();
 }, 15000);
+
+test('getClipById resolves Helix clip metadata', async () => {
+  const client = new TwitchClient({ clientId: 'app-A', token: 'tok', maxRetries: 1 });
+  axios.get.mockResolvedValueOnce({
+    data: {
+      data: [{
+        id: 'FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ',
+        thumbnail_url: 'https://clips-media-assets2.twitch.tv/FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ-preview-480x272.jpg',
+      }],
+    },
+  });
+
+  const clip = await client.getClipById('FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ');
+  expect(clip.id).toBe('FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ');
+  expect(axios.get).toHaveBeenCalledWith(
+    expect.stringContaining('/helix/clips?id=FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ'),
+    expect.objectContaining({ headers: expect.objectContaining({ 'Client-Id': 'app-A' }) })
+  );
+});
+
+test('resolveClipCdnFromHelix derives mp4 from thumbnail', async () => {
+  const client = new TwitchClient({ clientId: 'app-A', token: 'tok', maxRetries: 1 });
+  axios.get.mockResolvedValueOnce({
+    data: {
+      data: [{
+        id: 'TestClipSlug',
+        thumbnail_url: 'https://clips-media-assets2.twitch.tv/TestClipSlug-preview-480x272.jpg',
+      }],
+    },
+  });
+
+  const mp4 = await client.resolveClipCdnFromHelix('https://clips.twitch.tv/TestClipSlug');
+  expect(mp4).toBe('https://clips-media-assets2.twitch.tv/TestClipSlug.mp4');
+});

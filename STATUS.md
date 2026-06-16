@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-16 (CPD-1037) — Fix clip assembly hook (`isPortal1Active`); deploy + re-test staging job on Render.
+**Last Updated:** 2026-06-16 (CPD-1037) — Assembly Twitch clips via Helix only (no GQL); deploy + re-test staging job.
 **Last Updated:** 2026-06-15 (CPD-553) — GITHUB_API_TOKEN renewed in Doppler prd + Render sync; renew script auto-syncs Doppler→Render.
 **Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats dashboard, env.example sync, C0 sports route guard, GitHub token renewal script.
 **Last Updated:** 2026-06-15 (CPD-1027) — YouTube OAuth scope expanded for API video delete.
@@ -189,6 +189,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(cpd-1037): Helix-only Twitch clip assembly** — assembly_service uses Helix getClipById + thumbnailToMp4 CDN (no GQL); TwitchClient helpers + tests; hub staging job passes cdnUrl. | lib/assembly_service.js, lib/clients/twitch_client.js, test/twitch_app_token.test.js, scripts/hub_staging_test_job.js, STATUS.md | — | 2026-06-16 |
 | Cursor | **fix(cpd-1037): clip assembly after portal0** — `isPortal1Active` reads `portals.portal1.active`; fixes portal3a fail on clip staging jobs. | lib/services/pipeline_assembly.js, test/job_spec_portals.test.js, scripts/hub_staging_test_job.js, scripts/cpd1056_regression_matrix.js, STATUS.md | — | 2026-06-16 |
 | Cursor | **fix(cpd-1037): detectSourcePlatform export + hub staging job script** — unblocks POST /v1/jobs chrome platform detection; hub test fetches spec after 202. | lib/chrome_overlay_ffmpeg.js, scripts/hub_staging_test_job.js, STATUS.md | — | 2026-06-16 |
 | Cursor | **fix(cpd-553): renew script loads Doppler and syncs Render** — `renew_github_api_token.sh` reads `DOPPLER_TOKEN` from `.env`, sets `auraflux/prd`, runs `doppler_sync_to_render.py`. Token renewed + Render redeploy triggered. | scripts/renew_github_api_token.sh, STATUS.md | — | 2026-06-15 |
