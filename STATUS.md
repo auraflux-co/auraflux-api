@@ -189,7 +189,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1037): Helix-only Twitch clip assembly** — assembly_service uses Helix getClipById + thumbnailToMp4 CDN (no GQL); TwitchClient helpers + tests; hub staging job passes cdnUrl. | lib/assembly_service.js, lib/clients/twitch_client.js, test/twitch_app_token.test.js, scripts/hub_staging_test_job.js, STATUS.md | — | 2026-06-16 |
+| Cursor | **fix(cpd-1037): Helix CDN + yt-dlp fallback for Twitch assembly** — Helix resolves clip id; yt-dlp when clips-media-assets2 file is 0-duration on Render. | lib/assembly_service.js, STATUS.md | — | 2026-06-16 |
 | Cursor | **fix(cpd-1037): clip assembly after portal0** — `isPortal1Active` reads `portals.portal1.active`; fixes portal3a fail on clip staging jobs. | lib/services/pipeline_assembly.js, test/job_spec_portals.test.js, scripts/hub_staging_test_job.js, scripts/cpd1056_regression_matrix.js, STATUS.md | — | 2026-06-16 |
 | Cursor | **fix(cpd-1037): detectSourcePlatform export + hub staging job script** — unblocks POST /v1/jobs chrome platform detection; hub test fetches spec after 202. | lib/chrome_overlay_ffmpeg.js, scripts/hub_staging_test_job.js, STATUS.md | — | 2026-06-16 |
 | Cursor | **fix(cpd-553): renew script loads Doppler and syncs Render** — `renew_github_api_token.sh` reads `DOPPLER_TOKEN` from `.env`, sets `auraflux/prd`, runs `doppler_sync_to_render.py`. Token renewed + Render redeploy triggered. | scripts/renew_github_api_token.sh, STATUS.md | — | 2026-06-15 |
