@@ -16,6 +16,7 @@
 
 ---
 
+**Last Updated:** 2026-06-16 (CPD-1037) — Pipeline Parity Hub ported to Render (portals, publish gates, clip_comp, R2 checkpoint, production cron); staging deploy + CPD-1056 matrix in flight.
 **Last Updated:** 2026-06-15 (CPD-553) — GITHUB_API_TOKEN renewed in Doppler prd + Render sync; renew script auto-syncs Doppler→Render.
 **Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats dashboard, env.example sync, C0 sports route guard, GitHub token renewal script.
 **Last Updated:** 2026-06-15 (CPD-1027) — YouTube OAuth scope expanded for API video delete.
