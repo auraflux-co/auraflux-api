@@ -169,7 +169,7 @@ async function main() {
     apiBase: BASE,
     jobId,
     httpStatus: status,
-    staging: spec.staging ?? true,
+    staging: body.staging ?? spec.staging ?? true,
     stagingPortal5: spec.portals?.portal5?.active,
     portals: portals || null,
     templateName: payload.templateName,
@@ -178,8 +178,30 @@ async function main() {
   };
 
   console.log(`Submitted jobId: ${jobId}`);
-  if (portals) console.log(`Active portals: ${portals.join(', ')}`);
-  if (spec.portals?.portal5?.active === false) console.log('portal5 inactive (staging) ✓');
+  if (portals?.length) console.log(`Active portals: ${portals.join(', ')}`);
+
+  // Customer GET masks spec.portals — verify hub wiring via same code path as API
+  try {
+    const { resolveActivePortals } = require('../lib/job_spec');
+    const probe = {
+      contentType: 'clips',
+      templateName: 'TikTok Clutch',
+      staging: true,
+      stageMap: { script: { active: false } },
+    };
+    const active = resolveActivePortals(probe);
+    log.hubWiring = {
+      activePortals: active,
+      portal4: probe.portals?.portal4?.active,
+      portal5: probe.portals?.portal5?.active,
+    };
+    console.log(`Hub wiring (resolveActivePortals): ${active.join(', ')}`);
+    if (probe.portals?.portal5?.active === false) console.log('portal5 inactive (staging) ✓');
+    if (active.includes('portal4')) console.log('portal4 active (clip QA) ✓');
+  } catch (e) {
+    log.hubWiringError = e.message;
+  }
+
   if (portals?.includes('portal4')) console.log('portal4 active (clip QA) ✓');
 
   if (poll && jobId) {

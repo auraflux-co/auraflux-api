@@ -123,8 +123,13 @@ async function main() {
     try {
       const j = JSON.parse(fs.readFileSync(hubJobLog, 'utf8'));
       row('M-07', 'e2e', 'hub staging test job submit', j.jobId ? 'PASS' : 'FAIL', j.jobId || j.error || '');
-      if (j.portals) row('M-08', 'e2e', 'resolveActivePortals on live job', j.portals.includes('portal4') ? 'PASS' : 'FAIL', j.portals);
-      if (j.stagingPortal5 === false) row('M-09', 'e2e', 'staging portal5 inactive', 'PASS');
+      if (j.hubWiring) {
+        row('M-08', 'e2e', 'hub resolveActivePortals portal4', j.hubWiring.portal4 ? 'PASS' : 'FAIL', (j.hubWiring.activePortals || []).join(','));
+        row('M-09', 'e2e', 'staging portal5 inactive', j.hubWiring.portal5 === false ? 'PASS' : 'FAIL');
+      } else if (j.portals) {
+        row('M-08', 'e2e', 'resolveActivePortals on live job', j.portals.includes('portal4') ? 'PASS' : 'FAIL', j.portals);
+        if (j.stagingPortal5 === false) row('M-09', 'e2e', 'staging portal5 inactive', 'PASS');
+      }
     } catch { /* ignore */ }
   }
 

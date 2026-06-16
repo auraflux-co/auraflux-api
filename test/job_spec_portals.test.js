@@ -61,3 +61,28 @@ describe('resolveActiveExtensions', () => {
     expect(spec.extensions.heygen_ext.ordered).toBe(true);
   });
 });
+
+describe('isPortal1Active + clip assembly hook (CPD-1037)', () => {
+  const { isPortal1Active } = require('../lib/services/pipeline_assembly');
+
+  test('false when portals.portal1.active is false even if stageMap.script still on', () => {
+    const spec = {
+      contentType: 'clips',
+      templateName: 'TikTok Clutch',
+      stageMap: { script: { active: true } },
+      portals: { portal1: { active: false, reason: 'clip comp' } },
+    };
+    expect(isPortal1Active(spec)).toBe(false);
+  });
+
+  test('clip staging spec from resolveActivePortals triggers assembly after portal0', () => {
+    const spec = {
+      contentType: 'clips',
+      templateName: 'TikTok Clutch',
+      staging: true,
+    };
+    resolveActivePortals(spec);
+    expect(spec.portals.portal1.active).toBe(false);
+    expect(isPortal1Active(spec)).toBe(false);
+  });
+});
