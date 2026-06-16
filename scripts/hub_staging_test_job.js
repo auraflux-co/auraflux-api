@@ -144,7 +144,7 @@ async function main() {
 
   const { status, body } = await request('POST', '/v1/jobs', payload);
   if (status !== 200 && status !== 201 && status !== 202) {
-    const err = body.error || body.message || JSON.stringify(body).slice(0, 200);
+    const err = body.error || body.message || JSON.stringify(body).slice(0, 400);
     fs.writeFileSync(OUT, JSON.stringify({ error: err, httpStatus: status, at: new Date().toISOString() }, null, 2));
     console.error(`Submit failed HTTP ${status}: ${err}`);
     process.exit(1);
