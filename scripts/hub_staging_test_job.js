@@ -144,14 +144,21 @@ async function main() {
 
   const { status, body } = await request('POST', '/v1/jobs', payload);
   if (status !== 200 && status !== 201 && status !== 202) {
-    const err = body.error || body.message || JSON.stringify(body).slice(0, 400);
+    const err = body.message || body.error || JSON.stringify(body).slice(0, 400);
     fs.writeFileSync(OUT, JSON.stringify({ error: err, httpStatus: status, at: new Date().toISOString() }, null, 2));
     console.error(`Submit failed HTTP ${status}: ${err}`);
     process.exit(1);
   }
 
-  const jobId = (body.job || body).id || body.jobId || body.id;
-  const spec = (body.job || body).spec || body.spec || {};
+  const jobId = body.jobId || (body.job || body).id || body.id;
+
+  // 202 response may not include full spec — fetch job for portal map
+  let spec = (body.job || body).spec || body.spec || {};
+  if (jobId && !spec.portals) {
+    const got = await request('GET', `/v1/jobs/${encodeURIComponent(jobId)}`);
+    if (got.status === 200) spec = got.body.job?.spec || got.body.spec || got.body || spec;
+  }
+
   const portals = spec.portals
     ? Object.entries(spec.portals).filter(([, v]) => v?.active).map(([k]) => k)
     : null;

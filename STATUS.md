@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-16 (CPD-1037) — Hub on Render v1.0.173 deployed; job_spec c1_default fallback hotfix for API staging jobs.
+**Last Updated:** 2026-06-16 (CPD-1037) — Hub v1.0.174 on Render; hotfixes for c1_default fallback + detectSourcePlatform; staging test job submitting.
 **Last Updated:** 2026-06-15 (CPD-553) — GITHUB_API_TOKEN renewed in Doppler prd + Render sync; renew script auto-syncs Doppler→Render.
 **Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats dashboard, env.example sync, C0 sports route guard, GitHub token renewal script.
 **Last Updated:** 2026-06-15 (CPD-1027) — YouTube OAuth scope expanded for API video delete.
@@ -189,6 +189,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(cpd-1037): detectSourcePlatform export + hub staging job script** — unblocks POST /v1/jobs chrome platform detection; hub test fetches spec after 202. | lib/chrome_overlay_ffmpeg.js, scripts/hub_staging_test_job.js, STATUS.md | — | 2026-06-16 |
 | Cursor | **fix(cpd-553): renew script loads Doppler and syncs Render** — `renew_github_api_token.sh` reads `DOPPLER_TOKEN` from `.env`, sets `auraflux/prd`, runs `doppler_sync_to_render.py`. Token renewed + Render redeploy triggered. | scripts/renew_github_api_token.sh, STATUS.md | — | 2026-06-15 |
 | Cursor | **fix(cpd-1027): hotfix approve-publish SyntaxError on Render** — duplicate `publishResultsHadSuccess` const in `jobs_c1.js` + `developer_api.js` caused `update_failed` on dep-d8nejuurnols73dmhl6g; removed redundant require. Prior commit adds YouTube direct path (no Upload-Post gate when OAuth available), `scheduledAt→publishAt`, and `scripts/cpd869_audit_and_publish.py schedule-publish`. | lib/routes/jobs_c1.js, lib/routes/developer_api.js, STATUS.md | a6adb41f+ | 2026-06-15 |
 | Cursor | **feat(cpd-1006): UDP relay layer + member-only chat policy** — NEW `lib/live_grid/relays.js`: 4× ffmpeg RTSP→UDP MPEG-TS relays on localhost ports 5010–5013; `QuadRelays.startAll/restart/stopAll` with auto-restart on EOF. Master compositor reads fixed UDP URLs via `quadMasterInputArgs()` — quadrant swaps nudge only the relay, RTMP to YouTube uninterrupted. Manager wires relays after 8s feeder warmup; poller swaps + member !swap call `relays.restart(q)`; status exposes `relays` array. Legacy path when `LIVE_GRID_UDP_RELAY=off`: RTSP direct + freeze watchdog + optional SWAP_RESTART. **Chat policy (CPD-1005 amendment):** removed public audio voting — `LIVE_GRID_MEMBER_ONLY_AUDIO=on` (default) rejects non-members on !listen; !swap members-only + gated by like milestone via `LikeTracker.onMilestone`. `.env.example` updated. jest live-grid 42/42. | lib/live_grid/relays.js, manager.js, compositor.js, chat_perks.js, seo.js, .env.example, test/live_grid_relays.test.js, test/live_grid_compositor.test.js, STATUS.md | — | 2026-06-13 |
