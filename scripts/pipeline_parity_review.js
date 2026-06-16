@@ -95,6 +95,71 @@ function checkClipSpecForwarded() {
     : fail('jobs_c1.js: clipSpec NOT forwarded — trim points silently dropped')];
 }
 
+/** CPD-1046 / CPD-1057 — clip jobs must run portal4 before publish (GREEN wiring ≠ pixel QA). */
+function checkClipPortal4Qa() {
+  const jobSpecSrc = readFile('lib/job_spec.js') || '';
+  const routingSrc = readFile('lib/pipeline_routing.js') || '';
+  const portal5Src = readFile('lib/portals/portal5.js') || '';
+  const results = [];
+  results.push(/isClips\)[\s\S]{0,120}defaults\.portal4\s*=\s*true/.test(jobSpecSrc)
+    ? pass('job_spec.js: clip jobs activate portal4 (CPD-1046)')
+    : fail('job_spec.js: clip jobs still skip portal4 — bad pixels can ship (CPD-1046)'));
+  const paths = ['tiktok_clutch', 'youtube_deep_dive'];
+  const allPathsPortal4 = paths.every((p) => {
+    const re = new RegExp(`${p}:[\\s\\S]{0,400}portal4:\\s*true`);
+    return re.test(routingSrc);
+  });
+  results.push(allPathsPortal4
+    ? pass('pipeline_routing.js: KNOWN_CLEAN_PATHS expect portal4 for clip templates')
+    : fail('pipeline_routing.js: clip templates missing portal4 in expectedPortals'));
+  results.push(/portal4Inactive/.test(portal5Src)
+    ? pass('portal5.js: R2-only publish fallback gated on portal4 inactive')
+    : fail('portal5.js: clip jobs may publish without portal4 uploadSignal (CPD-1046)'));
+  return results;
+}
+
+function checkProductionCronWired() {
+  const src = readFile('server.js') || '';
+  const svc = readFile('lib/services/production_cron.js');
+  const auto = readFile('lib/calendar/auto_production.js');
+  const results = [];
+  results.push(svc && auto
+    ? pass('production_cron + auto_production modules present (CPD-1053)')
+    : fail('production_cron modules missing (CPD-1053)'));
+  results.push(/startProductionCron\s*\(\{/.test(src)
+    ? pass('server.js: startProductionCron wired on boot')
+    : fail('server.js: production cron not started on boot (CPD-1053)'));
+  const cal = readFile('config/content_calendar.json') || '';
+  results.push(/"autoProduction"/.test(cal)
+    ? pass('content_calendar.json: autoProduction config block present')
+    : fail('content_calendar.json: missing autoProduction block'));
+  return results;
+}
+
+/** CPD-1044/1045 / CPD-1057 — hub publish gates wired (static; does not prove pixel quality). */
+function checkHubPublishGates() {
+  const jobs = readFile('lib/routes/jobs_c1.js') || '';
+  const dev = readFile('lib/routes/developer_api.js') || '';
+  const approve = readFile('lib/services/approve_publish.js') || '';
+  const results = [];
+  results.push(/assertPublishReadiness\s*\(/.test(approve)
+    ? pass('approve_publish.js: assertPublishReadiness defined (CPD-1045)')
+    : fail('approve_publish.js: missing assertPublishReadiness'));
+  results.push(/assertPublishReadiness\s*\(\s*spec/.test(jobs) && /assertPublishReadiness\s*\(\s*spec/.test(dev)
+    ? pass('jobs_c1 + developer_api: assertPublishReadiness called on approve-publish')
+    : fail('approve-publish route missing assertPublishReadiness on one or both paths (CPD-1045)'));
+  results.push(/resolveActivePortals\s*\(\s*jobSpec\s*\)/.test(jobs)
+    ? pass('jobs_c1.js: resolveActivePortals on job create (CPD-1044 staging portal5)')
+    : fail('jobs_c1.js: resolveActivePortals not called — staging may not disable portal5'));
+  results.push(/resolveActivePortals\s*\(\s*jobSpec\s*\)|resolveActivePortals\s*\(\s*_spec\s*\)/.test(dev)
+    ? pass('developer_api.js: resolveActivePortals on v1 job create')
+    : fail('developer_api.js: resolveActivePortals missing on v1 path'));
+  results.push(/forceApprove/.test(jobs) && /superadmin|SUPERADMIN|requireRole/.test(jobs + dev)
+    ? pass('forceApprove gated behind superadmin on approve-publish paths')
+    : warn('verify forceApprove requires superadmin on both approve-publish routes'));
+  return results;
+}
+
 function checkLongformFormatSent() {
   // The wizard assembles a payload object and passes it to createJob(payload).
   // format is a state variable set from template/user selection and included
@@ -449,6 +514,9 @@ function runReview() {
     { title: '1.3 Assembly failure aborts portal sequence (CPD-492)', results: checkAssemblyFailureAborts() },
     { title: '1.4 Operator retry/advance includes assembly + completion hooks (CPD-493)', results: checkOperatorRetryHooks() },
     { title: '1.5 clipSpec forwarded into jobSpec', results: checkClipSpecForwarded() },
+    { title: '1.5b Clip jobs run portal4 pixel QA before publish (CPD-1046 / CPD-1057)', results: checkClipPortal4Qa() },
+    { title: '1.5c Production cron ported (CPD-1053)', results: checkProductionCronWired() },
+    { title: '1.5d Hub publish gates wired — static only (CPD-1044/1045 / CPD-1057)', results: checkHubPublishGates() },
     { title: '1.6 format: longform in wizard submit payload (CPD-494)', results: checkLongformFormatSent() },
     { title: '1.7 productionProfile resolved on all paths', results: checkProductionProfileResolved() },
     { title: '1.8 portalReports stored during pipeline (grader dependency)', results: checkPortalReportsStored() },
@@ -479,6 +547,10 @@ function runReview() {
     `**Date:** ${date}`,
     `**Script:** scripts/pipeline_parity_review.js`,
     `**Layers:** Pipeline parity · Pipeline dependencies · Pipeline consumers`,
+    '',
+    `> **CPD-1057 — GREEN ≠ pixel-perfect.** This report checks **wiring and static contracts** only.`,
+    `> It did **not** catch CPD-869 (raw concat / missing chrome). After GREEN, still run:`,
+    `> live job on staging (Review before publishing + private), operator pixel review, and \`logs/render_live_browse_session.json\`.`,
     '',
   ];
 

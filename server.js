@@ -3708,12 +3708,18 @@ app.post('/job/:id/reassemble', async (req, res) => {
 // SHORT buttons dispatch single-clip jobs here. contentType 'news-short' rides
 // the same flow: assembly re-scrapes fresh Brightcove HLS from clip pageUrl.
 app.post('/generate-clip-comp', async (req, res) => {
+  const {
+    applyClipCompProfileToJobSpec,
+    resolveClipCompPublishContentType,
+    resolveClipCompSourceContentType,
+  } = require('./lib/clip_comp');
   const clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
   if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
   if (clips.length > 10) return res.status(400).json({ error: `Too many clips (${clips.length} > 10 max)` });
 
-  const contentType = ['twitch-short', 'news-short'].includes(req.body.contentType)
-    ? req.body.contentType : 'twitch-short';
+  const contentType = ['twitch-short', 'news-short', 'sports-short'].includes(req.body.contentType)
+    ? req.body.contentType
+    : resolveClipCompSourceContentType({ contentType: req.body.contentType, templateName: req.body.templateName });
   const platforms = Array.isArray(req.body.platforms) && req.body.platforms.length ? req.body.platforms : ['tiktok'];
   const streamers = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
   // Single-clip shorts slug to clip_short_* — the ClipzWorld TV playlist filter
@@ -3728,10 +3734,10 @@ app.post('/generate-clip-comp', async (req, res) => {
   let jobSpec = null;
   try {
     jobSpec = await createJobSpec({
-      customerId:   'c0',
+      customerId:   req.body.customerId || 'c0',
       templateId:   'short-form',
       contentType,
-      createdBy:    'dashboard',
+      createdBy:    req.body.createdBy || 'dashboard',
       sourceType:   'url_list',
       sourceConfig: { urls: clips.map(c => c.pageUrl || c.url).filter(Boolean) },
       items:        clips,
@@ -3742,22 +3748,21 @@ app.post('/generate-clip-comp', async (req, res) => {
     // saveOutput(card id) seeds a DUPLICATE spec row and Gate 5 (reading the
     // semantic row) sees publishCopy=null → "YouTube: title is required" fail.
     linkScriptJob(jobSpec.jobId, jobId);
-    jobSpec = updateJobSpec(jobSpec.jobId, {
+    applyClipCompProfileToJobSpec(jobSpec, {
+      customerId: req.body.customerId || 'c0',
+      clipCount: clips.length,
+      sourceContentType: contentType,
+      platforms,
+      scheduledAt: req.body.scheduledAt || null,
       clipsOnly: true,
-      deliverySpec: { platforms },
-      // Spec-driven routing: declare the stages this job actually skips. Clips-only
-      // comps have no script generation and no HeyGen avatar — the spec must say so.
-      stageMap: {
-        script: { active: false },
-        avatar: { active: false }
-      },
-      designSpec: { chrome: {
-        layout: 'clip-comp',
-        hasTopBar: false, hasFlag: false, hasSidebar: false, hasTicker: false, hasLogo: true,
-        // Short-form assembly places the logo bottom-right (shortLogoPos "mug") — the
-        // inherited top-right default made Gate 3a dock points for a per-spec logo.
-        logoPosition: 'bottom-right', logoSize: 80
-      } }
+    });
+    jobSpec = require('./lib/job_spec').updateJobSpec(jobSpec.jobId, {
+      clipsOnly: true,
+      deliverySpec: jobSpec.deliverySpec,
+      order: jobSpec.order,
+      stageMap: jobSpec.stageMap,
+      designSpec: jobSpec.designSpec,
+      contentType,
     });
   } catch (specErr) {
     console.warn('[/generate-clip-comp] Job Spec creation failed (non-fatal):', specErr.message);
@@ -3783,6 +3788,10 @@ app.post('/generate-clip-comp', async (req, res) => {
     streamers,
     platforms,
     repurposedFrom: req.body.repurposedFrom || null, // CPD-998: spawned from a published longform
+    createdBy:     req.body.createdBy || 'dashboard',
+    calendarSlotId: req.body.calendarSlotId || null,
+    scheduledPublishAt: req.body.scheduledAt || null,
+    autoScheduled: req.body.createdBy === 'production_cron',
     specId:      jobSpec?.jobId || null,
     jobSpecId:   jobSpec?.jobId || null,
     createdAt:   new Date().toISOString(),
@@ -3823,6 +3832,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     format:        'portrait',
     assemblyId,
     contentType,
+    clipCompProfile: 'streamer',
+    publishContentType: resolveClipCompPublishContentType(contentType),
     jobId,
     jobSpecId:     jobSpec?.jobId || null,
     jobTitle:      title,
@@ -9197,6 +9208,18 @@ const server = app.listen(PORT, async () => {
     });
   } catch (e) {
     console.warn('⚠️  Scheduling cron failed to start:', e.message);
+  }
+
+  // CPD-1053: calendar-driven autonomous production (shorts + long-form when HeyGen ready)
+  try {
+    const { startProductionCron } = require('./lib/services/production_cron');
+    startProductionCron({
+      baseUrl: `http://localhost:${PORT}`,
+      getPersistedJobs: () => persistedJobs,
+      saveJobCard,
+    });
+  } catch (e) {
+    console.warn('⚠️  Production cron failed to start:', e.message);
   }
 
   // CPD-996: end orphaned live broadcasts from a previous process (restart kills

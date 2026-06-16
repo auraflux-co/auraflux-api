@@ -6,6 +6,16 @@
     "requirePin": true,
     "note": "Schedule changes require CALENDAR_OWNER_PIN in .env — only Rob overrides hard rules."
   },
+  "autoProduction": {
+    "enabled": true,
+    "leadMinutes": { "longform": 120, "short": 90 },
+    "customerId": "c0",
+    "twitchTemplateStreamers": [
+      "jasontheween", "adapt", "marlon", "extraemily", "stableronaldo", "maya",
+      "cinna", "yonnajay", "jaycinco", "lacy", "hasanabi", "yourragegaming"
+    ],
+    "note": "production_cron fires calendar slots without dashboard clicks. Long-form skipped when avatar/HeyGen blocked. On Render set PRODUCTION_CRON=on to enable."
+  },
   "guidelines": {
     "live": [
       "Twitch TV: transformative produced video only (Bobby G commentary VODs + news desk). No streamer clip comps, no 4-up grid rebroadcast.",
