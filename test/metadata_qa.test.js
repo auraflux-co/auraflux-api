@@ -34,9 +34,48 @@ describe('metadata_qa (CPD-1049)', () => {
         designSpec: { chrome: { layout: 'clip-comp' } },
         order: { inputs: { items: [{ title: 'Jason Rage Quits Minecraft' }] } },
       },
-      { title: 'Jason Rage Quits — Twitch Clips', description: desc }
+      {
+        title: 'Jason Rage Quits — Twitch Clips',
+        description: desc,
+        tiktok: { caption: 'Jason rage quits Minecraft — viral Twitch moment from ClipzWorld News #TwitchClips' },
+        instagram: {
+          caption: 'Jason rage quits Minecraft in this viral Twitch clip — watch the full moment on ClipzWorld News.',
+          altText: 'Jason rage quits Minecraft Twitch clip',
+        },
+      },
     );
     expect(r.passed).toBe(true);
+  });
+
+  test('blocks missing TikTok caption on shorts', () => {
+    const desc = [
+      'ExtraEmily and Lacy star in this Twitch clips compilation from ClipzWorld News with hilarious viral moments.',
+      'We break down the funniest and most shocking highlights from today\'s top streamers with context and commentary.',
+      'ClipzWorld News curates Twitch highlights each week so you catch every viral moment before it disappears.',
+      'From unexpected reactions to chat-driven chaos, this Short captures why live streaming beats polished uploads.',
+      'Follow us on TikTok and Instagram for more clips, and subscribe on YouTube for full compilations every week.',
+      'Subscribe for Twitch soup, streamer drama, and viral gaming moments from ClipzWorld News.',
+      '#TwitchClips #Shorts #FYP #ExtraEmily #Lacy',
+    ].join(' ');
+    const r = validatePublishMetadata(
+      {
+        contentType: 'twitch-short',
+        formType: 'short',
+        streamers: ['ExtraEmily', 'Lacy'],
+        designSpec: { chrome: { layout: 'clip-comp' } },
+      },
+      {
+        title: 'ExtraEmily Goes Viral — Twitch Clips',
+        description: desc,
+        tiktok: { caption: '' },
+        instagram: {
+          caption: 'IG caption here with enough length for the check to pass easily.',
+          altText: 'ExtraEmily clip',
+        },
+      },
+    );
+    expect(r.passed).toBe(false);
+    expect(r.violations.some((v) => v.includes('TikTok'))).toBe(true);
   });
 
   test('review hold on by default', () => {

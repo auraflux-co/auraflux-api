@@ -35,6 +35,28 @@ test('_buildHookDrawtextFilters uses two drawtext filters for two lines', () => 
   assert.ok(!vf.includes('applynfor'));
 });
 
+test('_wrapHookLines strips emoji that FFmpeg cannot render', () => {
+  const lines = _wrapHookLines('World Cup Game! 😂', 2, 36);
+  const joined = lines.join(' ');
+  assert.ok(!joined.includes('😂'));
+  assert.match(joined, /World Cup Game/);
+});
+
+test('resolveClipHookTitle rejects single-letter junk titles', () => {
+  const { resolveClipHookTitle } = require('../lib/clip_comp_cards');
+  const title = resolveClipHookTitle(
+    { title: 'd' },
+    { displayName: 'ExtraEmily', streamer: 'extraemily' },
+  );
+  assert.ok(title.length >= 10);
+  assert.match(title, /ExtraEmily/i);
+});
+
+test('stripDrawtextUnsafe removes emoji', () => {
+  const { stripDrawtextUnsafe } = require('../lib/clip_comp_cards');
+  assert.equal(stripDrawtextUnsafe('Hello! 😂'), 'Hello!');
+});
+
 test('twitch clip comp hook uses brand gold not twitch purple', () => {
   const spec = buildClipCompDesignSpec({ clipCount: 4, sourceContentType: 'twitch-short' });
   assert.equal(spec.chrome.caption.colors.clips, '#c7af4f');

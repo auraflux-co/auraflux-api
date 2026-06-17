@@ -558,6 +558,19 @@ function saveJobCard(jobId, card) {
   }
 
   persistedJobs[jobId] = { ...card, savedAt: new Date().toISOString() };
+  // Promote nested assembly outputs so GET /jobs + dashboard restore always see fresh SEO/video.
+  const _saved = persistedJobs[jobId].state && persistedJobs[jobId].state.savedOutputs;
+  if (_saved) {
+    if (_saved.publishCopy && !persistedJobs[jobId].publishCopy) {
+      persistedJobs[jobId].publishCopy = _saved.publishCopy;
+    }
+    if (_saved.driveUrl && !persistedJobs[jobId].driveUrl) {
+      persistedJobs[jobId].driveUrl = _saved.driveUrl;
+    }
+  }
+  if (persistedJobs[jobId].stage === 'metadata_review' || persistedJobs[jobId].stage === 'awaiting_review') {
+    if (persistedJobs[jobId].status === 'assembling') persistedJobs[jobId].status = 'completed';
+  }
   // Keep global ref in sync so assembly.js Gate 2 bypass can read card state
   if (global.persistedJobsRef) global.persistedJobsRef[jobId] = persistedJobs[jobId];
   // Prune jobs older than 7 days to keep file small
@@ -3462,6 +3475,77 @@ app.get('/stream-scheduler/status', (req, res) => {
   res.json({ ok: true, enabled: true, streams: streamScheduler.status() });
 });
 
+// POST /job/:id/regenerate-publish-copy — rebuild SEO metadata and re-run metadata QA
+app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  try {
+    const { handleGeneratePublishCopy, ensurePublishMetadataComplete, buildChannelConfig } = require('./lib/publish');
+    const { validatePublishMetadata, metadataFromPublishCopy } = require('./lib/gates/metadata_qa');
+    const contentType = card.contentType || card.type || 'twitch-short';
+    const isShort = String(contentType).includes('-short') || card.formType === 'short';
+    const platforms = ['youtube', 'tiktok', 'instagram'];
+    const items = card.order?.inputs?.items || card.items || [];
+    const streamers = card.streamers || card.order?.inputs?.streamers || [];
+    const script = card.fullScript || card.scriptText
+      || items.map((it, i) => `${i + 1}. ${it.title || it.displayName || 'Clip'}`).join('\n');
+
+    const fakeReq = {
+      body: {
+        contentType,
+        formType: isShort ? 'short' : 'compilation',
+        script,
+        date: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
+        streamers,
+        items,
+        platforms,
+      },
+    };
+    const fakeRes = {
+      _payload: null,
+      status() { return this; },
+      json(payload) { this._payload = payload; return payload; },
+    };
+    await handleGeneratePublishCopy(fakeReq, fakeRes);
+    const publishCopy = fakeRes._payload;
+    if (!publishCopy || publishCopy.error) {
+      return res.status(500).json({ ok: false, error: publishCopy?.error || 'Publish copy generation failed' });
+    }
+
+    const cc = buildChannelConfig();
+    ensurePublishMetadataComplete(publishCopy, { streamers, cc, isShort });
+
+    const jobSpec = { ...card, contentType, formType: isShort ? 'short' : 'compilation', streamers, items };
+    const metaCheck = validatePublishMetadata(jobSpec, metadataFromPublishCopy(publishCopy));
+
+    card.publishCopy = publishCopy;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.publishCopy = publishCopy;
+    card.metadataQaViolations = metaCheck.passed ? null : metaCheck.violations;
+    card.stage = metaCheck.passed ? 'awaiting_review' : 'metadata_review';
+    saveJobCard(jobId, card);
+
+    try {
+      const { saveOutput } = require('./lib/job_spec');
+      await saveOutput(jobId, 'publishCopy', publishCopy);
+    } catch (_) { /* non-fatal */ }
+
+    res.json({
+      ok: true,
+      passed: metaCheck.passed,
+      violations: metaCheck.violations,
+      stage: card.stage,
+      publishCopy,
+    });
+  } catch (err) {
+    console.error(`[regenerate-publish-copy] ${jobId}:`, err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // POST /job/:id/run-gate5 — trigger Gate 5 upload for an assembled/force-advanced job
 app.post('/job/:id/run-gate5', async (req, res) => {
   const jobId = req.params.id;
@@ -3969,10 +4053,15 @@ app.post('/job/:id/reassemble', async (req, res) => {
   const assemblyId = `asm_${jobId}_r${retryNum}`;
 
   card._assemblyRetryCount = retryNum;
+  card.status = 'assembling';
+  card.assemblyId = assemblyId;
   // Clear previous assembly artefacts but preserve heygen, script, designSpec, etc.
   delete card.assembledAt;
   delete card.finalUrl;
   delete card.outputPath;
+  delete card.driveUrl;
+  delete card.publishCopy;
+  delete card.publishPrep;
   delete card.gate5;
   delete card._gate5Done;
   delete card._gate5Running;
@@ -8740,13 +8829,39 @@ app.post('/thumbnail-short', async (req, res) => {
       try { fs.unlinkSync(localPath); } catch(e) {}
     }
 
+    let thumbnailDriveUrl = null;
+    try {
+      const { uploadToR2 } = require('./lib/storage');
+      const folder = jobId ? `outputs/${jobId}` : 'thumbnails';
+      thumbnailDriveUrl = await uploadToR2(outPath, outFile, { folder });
+      console.log(`[thumbnail-short] ✅ Uploaded to R2: ${thumbnailDriveUrl}`);
+      if (jobId && persistedJobs[jobId]) {
+        const card = persistedJobs[jobId];
+        card.thumbnailDriveUrl = thumbnailDriveUrl;
+        card.state = card.state || {};
+        card.state.savedOutputs = card.state.savedOutputs || {};
+        card.state.savedOutputs.thumbnailDriveUrl = thumbnailDriveUrl;
+        saveJobCard(jobId, card);
+      }
+    } catch (uploadErr) {
+      console.warn(`[thumbnail-short] R2 upload failed (local path still available): ${uploadErr.message}`);
+    }
+
+    const assetsBase = process.env.R2_ASSETS_DOMAIN
+      ? `https://${process.env.R2_ASSETS_DOMAIN.replace(/^https?:\/\//, '')}`
+      : 'https://assets.auraflux.co';
+    const localUrl = `${assetsBase}/download/${outFile}`;
+
     res.json({
       ok: true,
       thumbnailPath: outPath,
-      thumbnailUrl: `/download/${outFile}`,
+      thumbnailUrl: thumbnailDriveUrl || `/download/${outFile}`,
+      thumbnailDriveUrl,
+      localDownloadUrl: `/download/${outFile}`,
       episode: epNum,
       frameTimestamp: bestTimestamp,
-      contentType
+      contentType,
+      jobId: jobId || null,
     });
 
   } catch(e) {
