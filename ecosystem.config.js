@@ -89,6 +89,7 @@ module.exports = {
       env: {
         NODE_ENV: 'development',
         PORT: 3000,
+        C0_LOCALHOST: '1',
         STREAM_SCHEDULER: 'off',
         LIVE_GRID_AUTO_RESUME: 'off',
         LIVE_GRID_SCHEDULE_AHEAD: 'off',
@@ -102,6 +103,7 @@ module.exports = {
       env_production: {
         NODE_ENV: 'production',
         PORT: 3000,
+        C0_LOCALHOST: '1',
         STREAM_SCHEDULER: 'off',
         LIVE_GRID_AUTO_RESUME: 'off',
         LIVE_GRID_SCHEDULE_AHEAD: 'off',

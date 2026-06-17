@@ -932,9 +932,15 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           </div>
           <div class="btn-row" style="flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px;">
             <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
-              <option value="public" selected>PUBLIC</option>
+              <option value="private" selected>PRIVATE (rehearsal)</option>
               <option value="unlisted">UNLISTED</option>
+              <option value="public">PUBLIC</option>
             </select>
+            <label style="font-size:10px;color:rgba(255,255,255,0.55);display:inline-flex;align-items:center;gap:4px;cursor:pointer;" title="Full ffmpeg encode to localhost HLS only — zero YouTube listing">
+              <input type="checkbox" id="lg-local-only" style="accent-color:#c7af4f;" onchange="liveGridRehearsalToggle()" />
+              Local only
+            </label>
+            <a id="lg-local-watch-link" href="/broadcast/local-watch" target="_blank" rel="noopener" style="font-size:10px;color:#c7af4f;letter-spacing:0.5px;">▶ LOCAL WATCH</a>
             <label style="font-size:10px;color:rgba(255,255,255,0.45);">Mode:</label>
             <select id="lg-seo-mode" title="Controls quadrants + YouTube title, description, and thumbnail" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
               <option value="grid" selected>Twitch multiview grid</option>
@@ -1193,6 +1199,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <div><span style="color:rgba(199,175,79,0.5);letter-spacing:1px;">CREATED</span> <span id="pub-job-date" style="color:#fff;margin-left:6px;"></span></div>
               <div><span style="color:rgba(199,175,79,0.5);letter-spacing:1px;">SEGMENTS</span> <span id="pub-job-segs" style="color:#fff;margin-left:6px;"></span></div>
               <div id="pub-canva-row" style="display:none;"><span style="color:rgba(199,175,79,0.5);letter-spacing:1px;">CANVA</span> <a id="pub-canva-link" href="#" target="_blank" style="color:#a060ff;margin-left:6px;">Open design ↗</a></div>
+              <div id="pub-video-row" style="display:none;"><span style="color:rgba(199,175,79,0.5);letter-spacing:1px;">VIDEO</span> <a id="pub-video-link" href="#" target="_blank" style="color:#2ecc71;margin-left:6px;font-weight:700;">▶ Preview assembled MP4 ↗</a></div>
             </div>
           </div>
           <div id="pub-status" style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></div>
@@ -1200,6 +1207,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       </div>
 
       <div id="pub-results" style="display:none;">
+        <div id="pub-video-preview" style="display:none;margin-bottom:16px;background:#000;border-radius:8px;overflow:hidden;border:1px solid rgba(199,175,79,0.2);">
+          <video id="pub-video-player" controls playsinline style="width:100%;max-height:420px;background:#000;"></video>
+        </div>
 
         <!-- Platform tabs -->
         <div class="tab-bar" style="margin-bottom:16px;">
@@ -1918,6 +1928,63 @@ var CFG = {
   outputDir: './output',
 };
 
+/** C0 scrape routes (/sports/*, /news/*) only exist on the local server (port 3000). */
+function resolveApiBase() {
+  var origin = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '';
+  var host = (window.location.hostname && window.location.hostname !== 'null') ? window.location.hostname : 'localhost';
+  var proto = window.location.protocol && window.location.protocol !== 'null:' ? window.location.protocol : 'http:';
+  // Dashboard served from the C0 API itself — use same origin.
+  if (origin && /:3000$/.test(origin)) return origin;
+  // Any local/LAN dashboard (Cursor preview, .local hostname, etc.) → pin to C0 API port.
+  if (!origin || origin.indexOf('localhost') >= 0 || origin.indexOf('127.0.0.1') >= 0
+      || origin.indexOf('192.168.') >= 0 || origin.indexOf('.local') >= 0 || origin === 'null') {
+    return proto + '//' + host + ':3000';
+  }
+  return CFG.ffmpegUrl || 'http://localhost:3000';
+}
+
+function c0ApiCandidates() {
+  var bases = [];
+  var seen = {};
+  function add(u) {
+    if (!u || seen[u]) return;
+    seen[u] = 1;
+    bases.push(u.replace(/\/$/, ''));
+  }
+  add(resolveApiBase());
+  add('http://localhost:3000');
+  add('http://127.0.0.1:3000');
+  if (window.location.hostname) {
+    add(window.location.protocol + '//' + window.location.hostname + ':3000');
+  }
+  return bases;
+}
+
+function syncLocalApiBase() {
+  var base = resolveApiBase();
+  if (base) CFG.ffmpegUrl = base;
+}
+
+function parseJsonResponse(xhr, urlHint) {
+  var text = xhr.responseText || '';
+  var trimmed = text.trim();
+  if (trimmed.charAt(0) === '{') {
+    var d = JSON.parse(trimmed);
+    if (xhr.status < 200 || xhr.status >= 300 || d.ok === false) {
+      throw new Error(d.error || ('HTTP ' + xhr.status));
+    }
+    return d;
+  }
+  if (xhr.status < 200 || xhr.status >= 300) {
+    throw new Error('HTTP ' + xhr.status + (trimmed.slice(0, 80) ? ': ' + trimmed.slice(0, 80)
+      : ' — open dashboard at http://localhost:3000 (C0 API must be running)'));
+  }
+  if (!trimmed) {
+    throw new Error('empty response from ' + (urlHint || 'API'));
+  }
+  throw new Error('expected JSON from ' + (urlHint || 'API') + ' — got HTML (use http://localhost:3000)');
+}
+
 var PUB_CHECKLIST_KEYS = ['cap-yt-auto', 'cap-yt-burned', 'cap-tt-auto', 'cap-ig-sticker', 'cap-ig-cover'];
 
 function setNewsSource(val) {
@@ -2006,20 +2073,30 @@ function renderSportsCategoryChips() {
   if (status) status.textContent = sel.length + ' selected · ' + cats.length + ' active (48h)';
 }
 
-function loadSportsCategories(forceRefresh) {
+function loadSportsCategories(forceRefresh, tryIdx) {
+  tryIdx = tryIdx || 0;
+  var bases = c0ApiCandidates();
   var wrap = g('sports-category-chips');
   var status = g('sports-category-status');
-  if (wrap && forceRefresh) wrap.innerHTML = 'Probing ESPN + BBC Sport…';
-  if (status && forceRefresh) status.textContent = 'Scanning categories…';
-  var url = (CFG.ffmpegUrl || 'http://localhost:3000') + '/sports/categories?pubHours=48'
+  if (tryIdx === 0) {
+    if (wrap && forceRefresh) wrap.innerHTML = 'Probing ESPN + BBC Sport…';
+    if (status && forceRefresh) status.textContent = 'Scanning categories…';
+  }
+  if (tryIdx >= bases.length) {
+    if (wrap) wrap.innerHTML = '<span style="color:#e74c3c;">Category probe failed — is auraflux running on port 3000?</span>';
+    return;
+  }
+  var apiBase = bases[tryIdx];
+  var url = apiBase + '/sports/categories?pubHours=48'
     + (forceRefresh ? '&refresh=1' : '');
   var xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
   xhr.timeout = 300000;
   xhr.onload = function() {
     try {
-      var d = JSON.parse(xhr.responseText);
+      var d = parseJsonResponse(xhr, url);
       if (!d.ok) throw new Error(d.error || 'probe failed');
+      if (apiBase !== CFG.ffmpegUrl) { CFG.ffmpegUrl = apiBase; applyCfgToForm(); }
       _sportsActiveCategories = d.categories || [];
       var saved = [];
       try {
@@ -2037,10 +2114,18 @@ function loadSportsCategories(forceRefresh) {
           + (d.pubHours || 48) + 'h';
       }
     } catch (e) {
+      if ((xhr.status === 404 || xhr.status === 0) && tryIdx + 1 < bases.length) {
+        loadSportsCategories(forceRefresh, tryIdx + 1);
+        return;
+      }
       if (wrap) wrap.innerHTML = '<span style="color:#e74c3c;">Category probe failed: ' + e.message + '</span>';
     }
   };
   xhr.onerror = xhr.ontimeout = function() {
+    if (tryIdx + 1 < bases.length) {
+      loadSportsCategories(forceRefresh, tryIdx + 1);
+      return;
+    }
     if (wrap) wrap.innerHTML = '<span style="color:#e74c3c;">Category probe timed out — click REFRESH</span>';
   };
   xhr.send();
@@ -2123,7 +2208,8 @@ function loadCfgFromLocalStorage() {
 }
 
 async function loadDashboardConfig() {
-  var base = CFG.ffmpegUrl || 'http://localhost:3000';
+  syncLocalApiBase();
+  var base = resolveApiBase();
   try {
     var r = await fetch(base + '/dashboard-config');
     var d = await r.json();
@@ -2149,6 +2235,7 @@ async function loadDashboardConfig() {
     }
   } catch (e) {}
   loadCfgFromLocalStorage();
+  syncLocalApiBase();
   applyCfgToForm();
 }
 
@@ -3464,7 +3551,7 @@ function restoreJobsFromServer(showAlert) {
 
         // On AUTO-restore (page load), skip jobs waiting for operator review/publish.
         // On MANUAL restore (↩ RESTORE JOBS), bring back assembled + awaiting_review cards.
-        var isAwaitingOperator = serverStage === 'awaiting_review' || serverStage === 'metadata_review' || serverStage === 'assembled';
+        var isAwaitingOperator = serverStage === 'awaiting_review' || serverStage === 'metadata_review' || serverStage === 'assembled' || serverStage === 'publish_scheduled';
         var isAssembledDone = !isGate5InFlight && isAwaitingOperator;
         if (isAssembledDone && !showAlert) {
           cwn_log('[restore] Skipping review-ready job ' + serverJob.jobId + ' on auto-restore — use ↩ RESTORE JOBS to bring it back', false);
@@ -3646,15 +3733,24 @@ function renderQueue() {
     var jobStage = job.stage || '';
     var pubPayload = resolvePublishPayload(job);
     var hasSeo = !!(pubPayload && pubPayload.title);
-    if (jobStage === 'metadata_review' && job.metadataQaViolations && job.metadataQaViolations.length) {
+    if ((jobStage === 'failed' || job.assemblyError) && !job.driveUrl && !(job.finalUrl && job.finalUrl.indexOf('http') === 0)) {
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:11px;color:#e74c3c;">'
+        + '❌ ASSEMBLY FAILED — ' + escHtml(job.assemblyError || 'clip download failed') + '. Dismiss and re-run CLIPS COMP.'
+        + '</div>';
+    } else if (jobStage === 'metadata_review' && job.metadataQaViolations && job.metadataQaViolations.length) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:11px;color:#e74c3c;">'
         + '⛔ METADATA QA — fix before publish: ' + job.metadataQaViolations.slice(0, 3).join(' · ')
         + '</div>';
-    } else if (hasSeo && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || job.assembledAt || job.clipsOnly)) {
+    } else if (hasSeo && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || jobStage === 'publish_scheduled' || job.assembledAt || job.clipsOnly)) {
       var tagCount = (pubPayload.tags || []).length;
       var hashCount = ((pubPayload.description || '').match(/#\w+/g) || []).length;
+      var schedNote = (jobStage === 'publish_scheduled' && job.scheduledPublishAt)
+        ? ' — scheduled ' + new Date(job.scheduledPublishAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+        : '';
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.06);border:1px solid rgba(199,175,79,0.22);border-radius:6px;">'
-        + '<div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.55);letter-spacing:2px;margin-bottom:6px;">PUBLISH METADATA'+(jobStage==='awaiting_review'?' — AWAITING YOUR REVIEW':'')+'</div>'
+        + '<div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.55);letter-spacing:2px;margin-bottom:6px;">PUBLISH METADATA'
+        + (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled' ? ' — AWAITING YOUR REVIEW' + schedNote : '')
+        + '</div>'
         + '<div style="font-size:12px;color:#fff;font-weight:700;line-height:1.4;margin-bottom:4px;">'+escHtml(pubPayload.title)+'</div>'
         + '<div style="font-size:10px;color:rgba(255,255,255,0.45);font-family:monospace;">'
         + 'YT desc '+(pubPayload.description||'').length+' chars · '+tagCount+' tags · '+hashCount+' # · '
@@ -3674,7 +3770,8 @@ function renderQueue() {
       actions += '<button onclick="triggerDriveCanva(\'' + job.id + '\',\'' + (job.filename||'') + '\',\'' + (job.title||'') + '\')" class="btn btn-gold btn-sm">☁️ DRIVE→CANVA</button>';
     } else if (job.driveUrl || (job.finalUrl && job.finalUrl.indexOf('http') === 0)) {
       var cloudUrl = job.driveUrl || job.finalUrl;
-      actions += '<a href="'+cloudUrl+'" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none;">📥 R2 MP4</a>';
+      actions += '<a href="'+cloudUrl+'" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none;font-weight:700;">▶ PREVIEW VIDEO</a>';
+      actions += '<a href="'+cloudUrl+'" download class="btn btn-outline btn-sm" style="text-decoration:none;">📥 MP4</a>';
     }
     if (doneSegs.length&&!job.canvaUrl) {
       var firstIdx = segments.indexOf(doneSegs[0]);
@@ -3686,7 +3783,7 @@ function renderQueue() {
     }
     actions += '<button onclick="navToThumbnail(\'' + job.id + '\')" class="btn btn-outline btn-sm">🖼 THUMBNAIL</button>';
     actions += '<button onclick="navToPublishPrep(\'' + job.id + '\')" class="btn btn-outline btn-sm">📋 REVIEW SEO'+(job.publishPrep?' ✓':'')+'</button>';
-    if ((jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'metadata_review' || jobStage === 'gate5_failed') && (job.driveUrl || job.finalUrl) && jobStage !== 'metadata_review') {
+    if ((jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'metadata_review' || jobStage === 'gate5_failed' || jobStage === 'publish_scheduled') && (job.driveUrl || job.finalUrl) && jobStage !== 'metadata_review') {
       actions += '<button onclick="approveAndPublishJob(\'' + job.id + '\')" class="btn btn-green btn-sm" style="font-weight:700;" title="Upload to all platforms using assembly-generated SEO (Gate 5)">🚀 APPROVE &amp; PUBLISH</button>';
     }
     // Short-form only: portrait thumbnail + CapCut draft buttons
@@ -3766,7 +3863,7 @@ function renderQueue() {
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
     var tagCls = status==='completed'||status==='all_sent'?'tag-done':status==='failed'?'tag-failed':'tag-processing';
-    var tagLbl = (jobStage === 'awaiting_review') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : status.toUpperCase().replace('_',' ');
+    var tagLbl = (jobStage === 'failed') ? 'FAILED' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : status.toUpperCase().replace('_',' ');
     var pctBar = (status==='processing'||anyRendering)?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
 
     return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':status==='failed'?'failed':'')+'" id="job-'+job.id+'">'
@@ -8676,7 +8773,18 @@ function startClipCompReviewPoll(jobId) {
         }
         renderQueue();
         var st = serverJob.stage || '';
-        if (st === 'awaiting_review' || st === 'metadata_review' || st === 'published' || st === 'gate5_failed') return;
+        if (st === 'failed' || (serverJob.assemblyError && !serverJob.driveUrl)) {
+          var lj = JOBS.find(function(j) { return j.id === jobId; });
+          if (lj) {
+            lj.stage = 'failed';
+            lj.status = 'failed';
+            lj.assemblyError = serverJob.assemblyError || 'Assembly failed';
+            saveJobs();
+            renderQueue();
+          }
+          return;
+        }
+        if (st === 'awaiting_review' || st === 'metadata_review' || st === 'published' || st === 'gate5_failed' || st === 'publish_scheduled') return;
       }
       if (attempts < maxAttempts) setTimeout(tick, 15000);
     });
@@ -8701,7 +8809,7 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
           type: contentType,
           title: clips.length === 1 ? ('Clip Short — ' + (streamerNames[0] || 'Twitch'))
             : ('Clips Comp — ' + (streamerNames.slice(0, 3).join(', ') || 'Twitch')),
-          status: 'completed',
+          status: 'processing',
           stage: 'heygen_done',
           clipsOnly: true,
           created: new Date().toISOString(),
@@ -9621,7 +9729,13 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   var job = JOBS.find(function(j) { return j.id === jobId; });
   if (!job || !serverJob) return job;
   if (serverJob.publishCopy) job.publishCopy = serverJob.publishCopy;
-  if (serverJob.driveUrl) job.driveUrl = serverJob.driveUrl;
+  if (serverJob.driveUrl) {
+    job.driveUrl = serverJob.driveUrl;
+    delete job.assemblyError;
+    job.status = 'completed';
+  }
+  if (serverJob.assembledAt) job.assembledAt = serverJob.assembledAt;
+  if (serverJob.scheduledPublishAt) job.scheduledPublishAt = serverJob.scheduledPublishAt;
   if (serverJob.stage) job.stage = serverJob.stage;
   if (serverJob.finalUrl) job.finalUrl = serverJob.finalUrl;
   if (serverJob.metadataQaViolations) job.metadataQaViolations = serverJob.metadataQaViolations;
@@ -11264,6 +11378,26 @@ function pubJobSelected() {
     g('pub-canva-link').href = job.canvaUrl;
   } else { canvaRow.style.display = 'none'; }
 
+  // Assembled video preview
+  var videoUrl = job.driveUrl || (job.finalUrl && job.finalUrl.indexOf('http') === 0 ? job.finalUrl : '');
+  var videoRow = g('pub-video-row');
+  var videoPreview = g('pub-video-preview');
+  var videoPlayer = g('pub-video-player');
+  if (videoUrl) {
+    if (videoRow) { videoRow.style.display = ''; g('pub-video-link').href = videoUrl; }
+    if (videoPreview && videoPlayer) {
+      videoPreview.style.display = '';
+      if (videoPlayer.getAttribute('src') !== videoUrl) {
+        videoPlayer.src = videoUrl;
+        videoPlayer.load();
+      }
+    }
+  } else {
+    if (videoRow) videoRow.style.display = 'none';
+    if (videoPreview) videoPreview.style.display = 'none';
+    if (videoPlayer) videoPlayer.removeAttribute('src');
+  }
+
   // Auto-fill stored game ID for NBA (hidden field, no display needed)
   var isNba = job.type === 'nba' || job.type === 'nba-short';
   if (isNba) {
@@ -12174,6 +12308,13 @@ loadAllPickerFilters();
 loadDashboardConfig().then(function() {
   loadCredits();
   loadSportsCategories(false);
+  // Retry once if server was still starting (common after pm2 restart)
+  setTimeout(function() {
+    var wrap = g('sports-category-chips');
+    if (wrap && wrap.textContent && wrap.textContent.indexOf('Category probe failed') >= 0) {
+      loadSportsCategories(false);
+    }
+  }, 4000);
 });
 loadJobs();
 initHeader();
@@ -12433,7 +12574,12 @@ function liveGridRender() {
   const watchUrl = s && s.broadcast && s.broadcast.watchUrl;
   const vertUrl = s && s.verticalBroadcast && s.verticalBroadcast.watchUrl;
   watchRow.style.display = (running && watchUrl) ? '' : 'none';
-  if (watchUrl) document.getElementById('lg-watch-link').href = watchUrl;
+  if (watchUrl) {
+    const link = document.getElementById('lg-watch-link');
+    const localOnly = !!(s.broadcast && s.broadcast.localOnly);
+    link.href = localOnly ? '/broadcast/local-watch' : watchUrl;
+    link.textContent = localOnly ? '▶ OPEN LOCAL WATCH (rehearsal)' : '▶ OPEN STREAM ON YOUTUBE';
+  }
   const vertLink = document.getElementById('lg-vertical-link');
   if (vertLink) {
     vertLink.style.display = (running && vertUrl) ? 'inline' : 'none';
@@ -12594,13 +12740,22 @@ function liveGridRender() {
   }).join('');
 }
 
+function liveGridRehearsalToggle() {
+  const lo = document.getElementById('lg-local-only')?.checked;
+  const priv = document.getElementById('lg-privacy');
+  if (priv) priv.disabled = !!lo;
+}
+
 async function liveGridStart() {
+  const localOnly = document.getElementById('lg-local-only')?.checked;
   const privacy = document.getElementById('lg-privacy').value;
   const programMode = document.getElementById('lg-seo-mode')?.value || 'grid';
-  if (!confirm(`Start the Live Grid broadcast (${programMode.replace('_', ' ')}, ${privacy.toUpperCase()})?`)) return;
+  const modeLabel = localOnly ? 'LOCAL HLS ONLY (no YouTube)' : privacy.toUpperCase();
+  if (!confirm(`Start the Live Grid broadcast (${programMode.replace('_', ' ')}, ${modeLabel})?\n\n${localOnly ? 'Watch: /broadcast/local-watch' : privacy === 'private' ? 'Private YouTube — only your channel account sees it.' : ''}`)) return;
   const btn = document.getElementById('lg-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
   const body = { privacyStatus: privacy, programMode: programMode === 'auto' ? 'grid' : programMode };
+  if (localOnly) body.localOnly = true;
   const headline = document.getElementById('bc-headline')?.value?.trim();
   const eventTitle = document.getElementById('bc-event-title')?.value?.trim();
   if (headline) body.headline = headline;

@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-17 (CPD-1049) — Dashboard workflow regression bundle: review hold before schedule, Twitch yt-dlp fallback, sports probe API pin, publish_scheduled restore/publish, stale assemblyError clear.
 **Last Updated:** 2026-06-13 (CPD-1049) — Clip comp review-hold: dashboard SEO preview, Publish Prep hydration from publishCopy, Gate 5 approve publish, RESTORE JOBS for awaiting_review.
 **Last Updated:** 2026-06-15 (CPD-991) — EchoMimic Gate2 Gemini scoring, Kick OAuth disconnect/revoke, Doppler OAuth env fill for localhost.
 **Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats page (Videos+Shorts+Lives), YouTube Analytics merge, Upload-Post analytics, C0 sports route guard, TikTok is_aigc fix, env.example sync.

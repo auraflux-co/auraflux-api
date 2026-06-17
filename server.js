@@ -2038,6 +2038,7 @@ app.get('/jobs', (req, res) => {
   const RESTORE_STAGES = new Set([
     ...IN_FLIGHT_STAGES,
     'heygen_done', 'assembling', 'assembled', 'awaiting_review', 'metadata_review',
+    'publish_scheduled',
     'gate5_forced', 'gate5_running', 'gate5_failed', 'music_review',
   ]);
   const allowedStages = req.query.restore === '1' ? RESTORE_STAGES : IN_FLIGHT_STAGES;
@@ -3415,8 +3416,8 @@ app.post('/job/:id/run-gate5', async (req, res) => {
   } catch (_e) { /* non-fatal */ }
 
   const stage = card.stage || '';
-  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked', 'awaiting_review', 'metadata_review'].includes(stage)) {
-    return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/heygen_done/awaiting_review/metadata_review/gate5_forced/gate5_failed/gate5_running` });
+  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked', 'awaiting_review', 'metadata_review', 'publish_scheduled'].includes(stage)) {
+    return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/heygen_done/awaiting_review/metadata_review/publish_scheduled/gate5_forced/gate5_failed/gate5_running` });
   }
 
   // Allow caller to inject driveUrl / assembledPath when Gate 3b blocked the normal save path
@@ -3829,6 +3830,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
         return {
           type:              'source_clip',
           url:               seg.url || clipEntry.url || clipEntry.pageUrl || '',
+          pageUrl:           clipEntry.pageUrl || clipEntry.url || seg.pageUrl || '',
           label:             seg.label,
           clipTimingTargets: clipEntry.clipTimingTargets  || seg.clipTimingTargets  || [],
           clipTimingFormat:  clipEntry.clipTimingFormat   || seg.clipTimingFormat   || 'timestamp_table',
@@ -3852,6 +3854,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
       segmentData.push({
         type:              'source_clip',
         url,
+        pageUrl:           clipEntry.pageUrl || clipEntry.url || '',
         label:             clipEntry.label || scene.name || labelFallback,
         clipTimingTargets: Array.isArray(clipEntry.clipTimingTargets) ? clipEntry.clipTimingTargets : [],
         clipTimingFormat:  clipEntry.clipTimingFormat || 'timestamp_table',
@@ -3883,6 +3886,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
         return {
           type:              'source_clip',
           url:               clipEntry.url || clipEntry.pageUrl || '',
+          pageUrl:           clipEntry.pageUrl || clipEntry.url || '',
           label:             sceneName,
           clipTimingTargets: clipEntry.clipTimingTargets  || [],
           clipTimingFormat:  clipEntry.clipTimingFormat   || 'timestamp_table',
