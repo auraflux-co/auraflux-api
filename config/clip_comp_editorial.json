@@ -1,0 +1,27 @@
+{
+  "networkBrand": "ClipzWorld News",
+  "handle": "@clipzworldnews",
+  "templates": {
+    "sports": {
+      "introTts": "ClipzWorld News. Sports highlights for {dateLong}. {topic}.",
+      "outroTts": "That's today's rundown. Follow ClipzWorld News.",
+      "categoryLabel": "SPORTS HIGHLIGHTS",
+      "accentColor": "#1CE8FF"
+    },
+    "news": {
+      "introTts": "ClipzWorld News. World news for {dateLong}. {topic}.",
+      "outroTts": "That's today's rundown. Follow ClipzWorld News.",
+      "categoryLabel": "WORLD NEWS",
+      "accentColor": "#c7af4f"
+    }
+  },
+  "stingProfiles": {
+    "sports_hit": "assets/audio/ES_BUZZER BEATER (Instrumental Version) - Demon Baby.mp3",
+    "news_ticker": "assets/audio/ES_IRRATIONAL - Dylan Sitts.mp3",
+    "neutral_whoosh": "assets/audio/ES_Oui (Instrumental Version) - Baha Bank$.mp3"
+  },
+  "stingDurationSec": 0.45,
+  "crossfadeSec": 0.45,
+  "cardMinDurationSec": 2.5,
+  "bridgeMinDurationSec": 2.0
+}

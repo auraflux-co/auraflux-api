@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-13 (CPD-1049) — Clip comp review-hold: dashboard SEO preview, Publish Prep hydration from publishCopy, Gate 5 approve publish, RESTORE JOBS for awaiting_review.
 **Last Updated:** 2026-06-15 (CPD-991) — EchoMimic Gate2 Gemini scoring, Kick OAuth disconnect/revoke, Doppler OAuth env fill for localhost.
 **Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats page (Videos+Shorts+Lives), YouTube Analytics merge, Upload-Post analytics, C0 sports route guard, TikTok is_aigc fix, env.example sync.
 **Branch:** c0/main → `origin` = **auraflux-c0** · `production` = auraflux-api (cherry-pick only)
@@ -207,6 +208,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **feat(cpd-1049): clip comp review-hold SEO publish workflow** — Dashboard metadata strip + APPROVE & PUBLISH (Gate 5); Publish Prep auto-loads assembly publishCopy; GET /job/:id + GET /jobs?restore=1; clip comp card on dispatch + review poll; metadata_qa + clip_comp_gate1; assembly poll preserves awaiting_review. | lib/gates/metadata_qa.js, lib/gates/clip_comp_gate1.js, lib/clip_comp*.js, lib/publish_privacy.js, server.js, cwn_production.html, lib/assembly.js, lib/assembly_postprocess.js, lib/gates/gate5.js, ecosystem.config.js, test/metadata_qa.test.js, test/clip_comp*.test.js, STATUS.md | — | 2026-06-13 |
 | Cursor | **feat(cpd-1026): complete unified picker plan — Kick/YouTube + sports content type** — `lib/pickers/streamers/` (Twitch/Kick/YouTube adapters), `GET /streamers/clips`, platform checkboxes on STREAMERS pillar, `dispatchFromPicker()` helper, canonical `sports` type with `nba` legacy aliases (`lib/content_type.js`), explorer VOD uses `sports`. Serena QA: 12 files, 12/12 tests pass, no blocking issues. | config/streamerSources.json, lib/pickers/, lib/content_type.js, config/contentTypes.json, lib/configLoader.js, lib/validation.js, lib/script_gen.js, lib/qa.js, lib/sources/nba_source.js, server.js, cwn_production.html, test/picker_plan.test.js, STATUS.md | ad2c899e | 2026-06-15 |
 | Cursor | **feat(cpd-991): EchoMimic avatar adapter hardening + post-process** — echomimic adapter/post-process, handler tweaks, clone gate + env docs, AB scripts. | lib/avatar/, worker/echomimic/, scripts/avatar_*.js, test/avatar_echomimic.test.js, .env.example, STATUS.md | f26dcbed | 2026-06-15 |
 | Cursor | **feat(cpd-1026): unified three-pillar picker — VOD/SHORT/COMP + schedule** — SPORTS|WORLD NEWS|STREAMERS tabs; sports explorer VOD from multi-league clips; picker-first VOD for news/twitch; platform modal optional publish schedule → `/job/:id/schedule`. | cwn_production.html, STATUS.md | e8079a05 | 2026-06-15 |

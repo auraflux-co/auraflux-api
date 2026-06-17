@@ -43,11 +43,25 @@ module.exports = {
         NODE_ENV: 'development',
         LIVE_SIDECAR_PORT: 3001,
         LIVE_BROADCAST_SIDECAR: 'on',
+        STREAM_SCHEDULER: 'off',
+        LIVE_GRID_AUTO_RESUME: 'off',
+        LIVE_GRID_SCHEDULE_AHEAD: 'off',
+        LIVE_GRID_LOCAL_HLS: 'on',
+        LIVE_GRID_AUDIO_DIRECT: 'on',
+        LIVE_GRID_AUDIO_COPY: 'off',
+        LIVE_GRID_ENCODER: 'libx264',
       },
       env_production: {
         NODE_ENV: 'production',
         LIVE_SIDECAR_PORT: 3001,
         LIVE_BROADCAST_SIDECAR: 'on',
+        STREAM_SCHEDULER: 'off',
+        LIVE_GRID_AUTO_RESUME: 'off',
+        LIVE_GRID_SCHEDULE_AHEAD: 'off',
+        LIVE_GRID_LOCAL_HLS: 'on',
+        LIVE_GRID_AUDIO_DIRECT: 'on',
+        LIVE_GRID_AUDIO_COPY: 'off',
+        LIVE_GRID_ENCODER: 'libx264',
       },
     },
     {
@@ -75,16 +89,26 @@ module.exports = {
       env: {
         NODE_ENV: 'development',
         PORT: 3000,
+        STREAM_SCHEDULER: 'off',
+        LIVE_GRID_AUTO_RESUME: 'off',
+        LIVE_GRID_SCHEDULE_AHEAD: 'off',
         CWN_OVERLAY_BASELINE_PRESET: '0415',
         GATE_TEST_MODE: 'false', // PRODUCTION RUN — intentional full pipeline test
+        AUTO_PUBLISH_PLATFORMS: 'none', // Gate 5 off during assembly/editorial testing
+        YOUTUBE_DIRECT_PUBLISH: 'false',
       },
 
       // Environment — production (Render or local production run)
       env_production: {
         NODE_ENV: 'production',
         PORT: 3000,
+        STREAM_SCHEDULER: 'off',
+        LIVE_GRID_AUTO_RESUME: 'off',
+        LIVE_GRID_SCHEDULE_AHEAD: 'off',
         CWN_OVERLAY_BASELINE_PRESET: '0415',
         GATE_TEST_MODE: 'false', // PRODUCTION RUN — intentional full pipeline test
+        AUTO_PUBLISH_PLATFORMS: 'none', // Gate 5 off during assembly/editorial testing
+        YOUTUBE_DIRECT_PUBLISH: 'false',
       },
 
       // Ignore watch dirs (mirrors nodemon.json)
@@ -98,6 +122,51 @@ module.exports = {
         '*.mp4',
         '*.png',
       ],
+    },
+    {
+      name: 'stream-health',
+      script: 'scripts/stream_health_daemon.cjs',
+      cwd: __dirname,
+      interpreter: 'node',
+      watch: false,
+      max_restarts: 10,
+      min_uptime: '10s',
+      restart_delay: 3000,
+      out_file: 'logs/stream_health_pm2.log',
+      error_file: 'logs/stream_health_pm2.log',
+      merge_logs: true,
+      env: {
+        NODE_ENV: 'development',
+        STREAM_HEALTH_INTERVAL_MS: '45000',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        STREAM_HEALTH_INTERVAL_MS: '45000',
+      },
+    },
+    {
+      name: 'stream-av-probe',
+      script: 'scripts/stream_av_probe_daemon.cjs',
+      cwd: __dirname,
+      interpreter: 'node',
+      watch: false,
+      max_restarts: 10,
+      min_uptime: '10s',
+      restart_delay: 5000,
+      out_file: 'logs/stream_av_probe_pm2.log',
+      error_file: 'logs/stream_av_probe_pm2.log',
+      merge_logs: true,
+      env: {
+        NODE_ENV: 'development',
+        STREAM_AV_PROBE_INTERVAL_MS: '60000',
+        // On-air quad only for stability scores; set true to sample all 4 (diagnostic, heavier).
+        STREAM_AV_PROBE_ALL_QUADS: 'false',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        STREAM_AV_PROBE_INTERVAL_MS: '60000',
+        STREAM_AV_PROBE_ALL_QUADS: 'false',
+      },
     },
     {
       name: 'job-monitor',

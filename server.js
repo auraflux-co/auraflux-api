@@ -1299,7 +1299,8 @@ pipelineBus.on('publish:complete', async ({ jobId }) => {
   if (!card) return;
   try {
     const { applyLiveAlsoHooks } = require('./lib/calendar/live_also');
-    const baseUrl = process.env.LIVE_SIDECAR_URL || `http://127.0.0.1:${process.env.LIVE_SIDECAR_PORT || 3001}`;
+    const baseUrl = process.env.LIVE_ALSO_BASE_URL
+      || `http://127.0.0.1:${process.env.PORT || 3000}`;
     const result = await applyLiveAlsoHooks({ jobId, card, baseUrl });
     if (result.applied?.length) {
       console.log(`[liveAlso] ${jobId}: applied → ${result.applied.join(', ')}`);
@@ -1573,12 +1574,25 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
       const finalCard = persistedJobs[jobId] || cardNow;
       if (asmJob.status === 'done' || asmJob.status === 'manual_review') {
         finalCard.assembledAt = new Date().toISOString();
-        finalCard.stage = 'assembled';
+        const _holdStages = new Set(['awaiting_review', 'metadata_review', 'music_review']);
+        if (!_holdStages.has(finalCard.stage)) {
+          finalCard.stage = 'assembled';
+        }
         if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
-        // Use driveUrl if available; fall back to local download URL so stage
-        // reaches 'assembled' and Approve button appears even when Drive is down.
         const _resolvedUrl = asmJob.driveUrl || asmJob.localUrl || null;
-        if (_resolvedUrl) finalCard.finalUrl = _resolvedUrl;
+        if (_resolvedUrl) {
+          finalCard.finalUrl = _resolvedUrl;
+          finalCard.driveUrl = asmJob.driveUrl || finalCard.driveUrl || null;
+        }
+        if (asmJob.publishCopy) {
+          finalCard.publishCopy = asmJob.publishCopy;
+          finalCard.state = finalCard.state || {};
+          finalCard.state.savedOutputs = {
+            ...(finalCard.state.savedOutputs || {}),
+            publishCopy: asmJob.publishCopy,
+            driveUrl: asmJob.driveUrl || finalCard.state.savedOutputs?.driveUrl || null,
+          };
+        }
         // Gate 3 = assembly QA (Gemini watches the assembled video)
         if (asmJob.qaScore !== undefined) {
           finalCard.gate3 = {
@@ -2017,21 +2031,23 @@ app.get('/health', async (req, res) => {
   res.status(statusCode).json(health);
 });
 
-// GET /jobs — return all persisted job cards for dashboard recovery after server restart
-// Dashboard calls this on load to restore the job queue (script + HeyGen video IDs)
+// GET /jobs — return persisted job cards for dashboard recovery after server restart
+// ?restore=1 — include assembled + awaiting_review jobs (manual ↩ RESTORE JOBS)
 app.get('/jobs', (req, res) => {
-  // Only return in-flight jobs. Completed (assembled, published) and
-  // failed/dismissed jobs are excluded — they do not need to restore on page load.
-  const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling']);
+  const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling', 'heygen_done']);
+  const RESTORE_STAGES = new Set([
+    ...IN_FLIGHT_STAGES,
+    'heygen_done', 'assembling', 'assembled', 'awaiting_review', 'metadata_review',
+    'gate5_forced', 'gate5_running', 'gate5_failed', 'music_review',
+  ]);
+  const allowedStages = req.query.restore === '1' ? RESTORE_STAGES : IN_FLIGHT_STAGES;
 
   const actionableJobs = Object.values(persistedJobs).filter(job => {
     const status = job.status || '';
-    // Never return dismissed jobs regardless of stage
     if (status === 'dismissed') return false;
-    // Infer stage for legacy jobs that don't have the stage field set
     const stage = job.stage || inferJobStage(job);
-    // Only return in-flight stages
-    return IN_FLIGHT_STAGES.has(stage);
+    if (stage === 'published') return false;
+    return allowedStages.has(stage);
   }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
 
   const { getJobBySpec } = require('./lib/db');
@@ -2049,6 +2065,37 @@ app.get('/jobs', (req, res) => {
   });
 
   res.json({ ok: true, count: jobsWithGateStatus.length, jobs: jobsWithGateStatus });
+});
+
+// GET /job/:id — full card for Publish Prep hydration (publishCopy + driveUrl)
+app.get('/job/:id', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found: ' + jobId });
+
+  const savedOutputs = card.state?.savedOutputs || {};
+  const _pcUsable = (pc) => pc && (pc.title || pc.youtube || pc.platforms?.youtube);
+  let publishCopy = card.publishCopy || savedOutputs.publishCopy || null;
+  if (!_pcUsable(publishCopy)) {
+    try {
+      const { getJobSpec } = require('./lib/job_spec');
+      for (const id of [card.jobSpecId, card.specId, jobId].filter(Boolean)) {
+        const spec = getJobSpec(id);
+        const dbPc = spec?.state?.savedOutputs?.publishCopy;
+        if (_pcUsable(dbPc)) { publishCopy = dbPc; break; }
+      }
+    } catch (_e) { /* non-fatal */ }
+  }
+
+  res.json({
+    ok: true,
+    job: {
+      jobId,
+      ...card,
+      driveUrl: card.driveUrl || savedOutputs.driveUrl || null,
+      publishCopy: publishCopy || null,
+    },
+  });
 });
 
 // DELETE /job/:id — remove a job from persistedJobs + jobs.json AND kill any active work
@@ -2403,6 +2450,7 @@ async function _runGate5ForCard(jobId) {
   const g5JobSpec = {
     jobId,
     contentType,
+    clipsOnly: !!card.clipsOnly,
     driveUrl,
     state: {
       ...(card.state || {}),
@@ -2615,11 +2663,31 @@ app.post('/live-grid/start', async (req, res) => {
 
 // POST /live-grid/stop — instant kill (also the DMCA mitigation switch)
 app.post('/live-grid/stop', async (req, res) => {
-  if (!liveGridManager) return res.status(400).json({ ok: false, error: 'Live grid not running' });
+  const { resolveLiveGridStopOpts, endYoutubeBroadcastFromEnv } = require('./lib/broadcast/live_routes');
+  const stopOpts = resolveLiveGridStopOpts(req.body || {});
+  if (!liveGridManager) {
+    if (!stopOpts.endBroadcast) {
+      return res.status(400).json({ ok: false, error: 'Live grid not running' });
+    }
+    try {
+      const ended = await endYoutubeBroadcastFromEnv();
+      return res.json({
+        ok: true,
+        message: 'YouTube broadcast ended (encoder was already stopped)',
+        endBroadcast: true,
+        broadcastId: ended.broadcastId,
+      });
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
   const watchUrl = liveGridManager.broadcast?.watchUrl || null;
-  await liveGridManager.stop();
+  await liveGridManager.stop(stopOpts);
   liveGridManager = null;
-  res.json({ ok: true, message: 'Live grid stopped — VOD remains on the channel', watchUrl });
+  const message = stopOpts.skipEndBroadcast
+    ? 'Encoder stopped — YouTube listing kept open (start again to reattach RTMP)'
+    : 'Live grid stopped — broadcast ended on YouTube';
+  res.json({ ok: true, message, watchUrl, endBroadcast: stopOpts.endBroadcast || !stopOpts.skipEndBroadcast });
 });
 
 } // end !USE_BROADCAST_SIDECAR (grid start/stop on main)
@@ -2825,13 +2893,14 @@ app.post('/live-grid/roster', (req, res) => {
   res.json({ ok: true, ...lists });
 });
 
-// POST /live-grid/audio { quadrant: 1-4 } pins audio (operator override);
-// { quadrant: "auto" } releases back to chat/auto control
+// POST /live-grid/audio { quadrant: 1-4 } previews audio (auto pilot stays on);
+// { pin: true } pins manual; { quadrant: "auto" } releases to auto follow
 app.post('/live-grid/audio', (req, res) => {
   if (!liveGridManager?.running) return res.status(400).json({ ok: false, error: 'Live grid not running' });
-  const { quadrant } = req.body || {};
+  const { quadrant, pin } = req.body || {};
   const arg = quadrant === 'auto' ? 'auto' : Number(quadrant) - 1;
-  const switched = liveGridManager.setAudio(arg, 'manual');
+  const source = quadrant === 'auto' ? 'auto' : (pin === true ? 'manual' : 'listen');
+  const switched = liveGridManager.setAudio(arg, source);
   res.json({ ok: true, switched, audio: liveGridManager.status().audio });
 });
 
@@ -3096,6 +3165,59 @@ app.get('/broadcast/ops', async (req, res) => {
   }
 });
 
+// GET /broadcast/stream-health — stream-health daemon markdown report (CPD-1028)
+app.get('/broadcast/stream-health', (req, res) => {
+  try {
+    const { readStreamHealthReport } = require('./lib/broadcast/stream_health_read');
+    res.json(readStreamHealthReport());
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /broadcast/av-probe — RTSP frame + audio level samples (read-only daemon)
+app.get('/broadcast/av-probe', (req, res) => {
+  try {
+    const { readAvProbeReport } = require('./lib/broadcast/av_probe_read');
+    res.json(readAvProbeReport());
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /broadcast/live-monitor — unified stability report for video/audio subagents
+app.get('/broadcast/live-monitor', (req, res) => {
+  try {
+    const { readLiveMonitorReport } = require('./lib/broadcast/live_monitor_read');
+    res.json(readLiveMonitorReport());
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /broadcast/local-feed — localhost QA URLs (composed HLS + Twitch sources + RTSP taps)
+app.get('/broadcast/local-feed', async (req, res) => {
+  try {
+    const { readLocalFeedReport } = require('./lib/broadcast/local_feed_read');
+    res.json(await readLocalFeedReport());
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// Local composed grid HLS (tee from master encoder when LIVE_GRID_LOCAL_HLS=on)
+app.use('/broadcast/preview-hls', express.static(path.join(__dirname, 'tmp', 'live_grid', 'preview'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.m3u8')) res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+    if (filePath.endsWith('.ts')) res.setHeader('Content-Type', 'video/mp2t');
+    res.setHeader('Cache-Control', 'no-cache');
+  },
+}));
+
+app.get('/broadcast/local-watch', (req, res) => {
+  res.sendFile(path.join(__dirname, 'assets', 'local_grid_watch.html'));
+});
+
 // POST /broadcast/24h-arm — operator ready for 24h measurement (CPD-1028)
 app.post('/broadcast/24h-arm', (req, res) => {
   try {
@@ -3293,8 +3415,8 @@ app.post('/job/:id/run-gate5', async (req, res) => {
   } catch (_e) { /* non-fatal */ }
 
   const stage = card.stage || '';
-  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked'].includes(stage)) {
-    return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/heygen_done/gate5_forced/gate5_failed/gate5_running` });
+  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked', 'awaiting_review', 'metadata_review'].includes(stage)) {
+    return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/heygen_done/awaiting_review/metadata_review/gate5_forced/gate5_failed/gate5_running` });
   }
 
   // Allow caller to inject driveUrl / assembledPath when Gate 3b blocked the normal save path
@@ -3791,10 +3913,39 @@ app.post('/job/:id/reassemble', async (req, res) => {
     if (assemblyJobs[asmId]?.sourceJobId === jobId) delete assemblyJobs[asmId];
   });
   card.stage = 'heygen_done';
-  saveJobCard(jobId, card);
+  delete card.publishedAt;
+  delete card.gate5Result;
+  delete card.gate5;
+  delete card._gate5Done;
 
   // ── Fire /assemble (internal axios call so all middleware runs normally) ───
   const port = process.env.PORT || 3000;
+  const { buildClipCompDesignSpec, resolveClipCompPublishContentType, buildClipCompDeliverySpec, buildClipCompPublishOrder } = require('./lib/clip_comp');
+  let reassembleDesignSpec = card.designSpec || null;
+  let reassembleFullScript = card.script?.raw || card.script || null;
+  if (card.clipsOnly) {
+    reassembleDesignSpec = buildClipCompDesignSpec({
+      clipCount: orderedClips.length || segmentData.length,
+      sourceContentType: card.contentType || 'twitch-short',
+    });
+    card.designSpec = reassembleDesignSpec;
+    card.clipCompProfile = card.clipCompProfile || 'streamer';
+    card.deliverySpec = {
+      ...(card.deliverySpec || {}),
+      ...buildClipCompDeliverySpec({
+        platforms: card.platforms || card.deliverySpec?.platforms || ['youtube'],
+        scheduledAt: card.scheduledPublishAt || card.deliverySpec?.scheduledAt || null,
+      }),
+    };
+    card.order = { ...(card.order || {}), publish: { ...(card.order?.publish || {}), ...buildClipCompPublishOrder() } };
+    card.publishPrivacy = 'private';
+    reassembleFullScript = (orderedClips.length ? orderedClips : segmentData)
+      .map((c, i) => `CLIP ${i + 1} (${c.displayName || c.streamer || 'clip'}): ${c.title || 'untitled clip'}`)
+      .join('\n');
+  }
+  saveJobCard(jobId, card);
+
+  // ── Fire /assemble (continued) ───
   const payload = {
     segments:     segmentData.map(s => s.url),
     segmentData,
@@ -3805,6 +3956,8 @@ app.post('/job/:id/reassemble', async (req, res) => {
     format:       (card.contentType || '').includes('-short') ? 'portrait' : 'mp4',
     assemblyId,
     contentType:  card.contentType || 'nba',
+    clipCompProfile: card.clipsOnly ? (card.clipCompProfile || 'streamer') : null,
+    publishContentType: card.clipsOnly ? resolveClipCompPublishContentType(card.contentType) : null,
     jobId,
     jobSpecId:    card.specId || card.jobSpecId || null,
     // Without jobTitle the short-form output falls back to a cwn_short_* name —
@@ -3812,11 +3965,11 @@ app.post('/job/:id/reassemble', async (req, res) => {
     // ClipzWorld TV takedown-shield filename filter no longer matches them.
     jobTitle:     card.title || null,
     sceneTextMap: card.heygen?.sceneTextMap || null,
-    fullScript:   card.script?.raw || card.script || null,
+    fullScript:   reassembleFullScript,
     streamers:    card.streamers || [],
-    items:        card.nbaItems  || card.newsItems || card.items || [],
-    expectedClips: orderedClips.length,
-    designSpec:   card.designSpec  || null,
+    items:        card.nbaItems  || card.newsItems || card.items || orderedClips.map(c => ({ title: c.title || '', headline: c.title || '' })) || [],
+    expectedClips: orderedClips.length || segmentData.filter(s => s.type === 'source_clip').length,
+    designSpec:   reassembleDesignSpec,
     nbaItems:     card.nbaItems    || [],
     captionText:  card.captionText || null,
     captionStyle: card.captionStyle || null
@@ -3850,6 +4003,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
 // CPD-981: also the path for ALL dashboard news shorts — no avatar, ever.
 // News VOD (long form) keeps the script + HeyGen avatar path; shorts stay clips-only.
 app.post('/generate-clip-comp', async (req, res) => {
+  const { buildClipCompDesignSpec, resolveClipCompPublishContentType, buildClipCompDeliverySpec, buildClipCompPublishOrder } = require('./lib/clip_comp');
   const clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
   if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
   if (clips.length > 10) return res.status(400).json({ error: `Too many clips (${clips.length} > 10 max)` });
@@ -3879,7 +4033,7 @@ app.post('/generate-clip-comp', async (req, res) => {
       customerId:   'c0',
       templateId:   'short-form',
       contentType,
-      createdBy:    'dashboard',
+      createdBy:    req.body.createdBy || 'dashboard',
       sourceType:   'url_list',
       sourceConfig: { urls: clips.map(c => c.pageUrl || c.url).filter(Boolean) },
       items:        clips,
@@ -3890,25 +4044,44 @@ app.post('/generate-clip-comp', async (req, res) => {
     // saveOutput(card id) seeds a DUPLICATE spec row and Gate 5 (reading the
     // semantic row) sees publishCopy=null → "YouTube: title is required" fail.
     linkScriptJob(jobSpec.jobId, jobId);
+    const clipCompDesignSpec = buildClipCompDesignSpec({
+      customerId: 'c0',
+      clipCount: clips.length,
+      sourceContentType: contentType,
+    });
     jobSpec = updateJobSpec(jobSpec.jobId, {
       clipsOnly: true,
-      deliverySpec: { platforms, scheduledAt: scheduledAt || null },
+      deliverySpec: buildClipCompDeliverySpec({ platforms, scheduledAt }),
+      order: { publish: buildClipCompPublishOrder() },
       // Spec-driven routing: declare the stages this job actually skips. Clips-only
       // comps have no script generation and no HeyGen avatar — the spec must say so.
       stageMap: {
         script: { active: false },
         avatar: { active: false }
       },
-      designSpec: { chrome: {
-        layout: 'clip-comp',
-        hasTopBar: false, hasFlag: false, hasSidebar: false, hasTicker: false, hasLogo: true,
-        // Short-form assembly places the logo bottom-right (shortLogoPos "mug") — the
-        // inherited top-right default made Gate 3a dock points for a per-spec logo.
-        logoPosition: 'bottom-right', logoSize: 80
-      } }
+      designSpec: clipCompDesignSpec,
     });
   } catch (specErr) {
     console.warn('[/generate-clip-comp] Job Spec creation failed (non-fatal):', specErr.message);
+  }
+
+  const { runClipCompGate1 } = require('./lib/gates/clip_comp_gate1');
+  let gate1Result = null;
+  if (jobSpec) {
+    gate1Result = runClipCompGate1(jobSpec, { clips, title });
+    try {
+      const { saveGateResult } = require('./lib/job_spec');
+      saveGateResult(jobSpec.jobId, 'gate1', gate1Result);
+    } catch (g1Err) {
+      console.warn('[/generate-clip-comp] Gate 1 save failed (non-fatal):', g1Err.message);
+    }
+    if (!gate1Result.passed) {
+      return res.status(422).json({
+        error: 'Clip comp Gate 1 failed',
+        violations: gate1Result.violations,
+        gate1: gate1Result,
+      });
+    }
   }
 
   const orderedClipUrls = clips.map((c, i) => ({
@@ -3931,12 +4104,17 @@ app.post('/generate-clip-comp', async (req, res) => {
     streamers,
     platforms,
     scheduledPublishAt: scheduledAt,
+    deliverySpec: buildClipCompDeliverySpec({ platforms, scheduledAt }),
+    publishPrivacy: 'private',
     repurposedFrom: req.body.repurposedFrom || null, // CPD-998: spawned from a published longform
     specId:      jobSpec?.jobId || null,
     jobSpecId:   jobSpec?.jobId || null,
     createdAt:   new Date().toISOString(),
+    createdBy:   req.body.createdBy || 'dashboard',
+    calendarSlotId: req.body.calendarSlotId || null,
     stage:       'heygen_done',
     status:      'assembling',
+    gate1:         gate1Result || undefined,
     // Synthetic all-clip scene script: keeps saveJobCard segment extraction and
     // the /reassemble script-driven rebuild (CPD-932) working with no avatar scenes.
     script: {
@@ -3945,7 +4123,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     },
     orderedClipUrls,
     heygen: { videoJobs: [] },
-    designSpec: jobSpec?.designSpec || { chrome: { layout: 'clip-comp', hasLogo: true, hasTopBar: false, hasFlag: false, hasSidebar: false, hasTicker: false } },
+    designSpec: jobSpec?.designSpec || buildClipCompDesignSpec({ clipCount: clips.length, sourceContentType: contentType }),
+    clipCompProfile: 'streamer',
     _assemblyRetryCount: 1
   };
   saveJobCard(jobId, card);
@@ -3972,6 +4151,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     format:        'portrait',
     assemblyId,
     contentType,
+    clipCompProfile: 'streamer',
+    publishContentType: resolveClipCompPublishContentType(contentType),
     jobId,
     jobSpecId:     jobSpec?.jobId || null,
     jobTitle:      title,
@@ -5947,6 +6128,77 @@ function parseNewsQueryInt(val) {
   return Number.isFinite(n) ? n : null;
 }
 
+const NEWS_ALL_SOURCES = ['bbc', 'pbs', 'vox'];
+const NEWS_SOURCE_LABELS = { bbc: 'BBC', pbs: 'PBS', vox: 'Vox', aljazeera: 'Al Jazeera', ap: 'AP', reuters: 'Reuters' };
+
+function dedupeNewsVideosByTitle(videos) {
+  const seen = new Set();
+  return videos.filter(v => {
+    const key = (v.title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function countNewsBySource(videos) {
+  const counts = {};
+  for (const v of videos) {
+    const s = (v.source || 'unknown').toLowerCase();
+    counts[s] = (counts[s] || 0) + 1;
+  }
+  return counts;
+}
+
+function buildNewsSourceBreakdown(counts, sourceKeys) {
+  const breakdown = {};
+  for (const key of sourceKeys) {
+    breakdown[NEWS_SOURCE_LABELS[key] || key] = counts[key] || 0;
+  }
+  return breakdown;
+}
+
+/** Round-robin merge so multi-source "all" picks include every source with matches. */
+function mergeNewsAllSources(batchesBySource, limit, req) {
+  const filteredBySource = {};
+  const matchedBySource = {};
+  for (const [src, raw] of Object.entries(batchesBySource)) {
+    const sorted = sortNewsVideosForPicker(dedupeNewsVideosByTitle(raw || []));
+    filteredBySource[src] = sorted;
+    matchedBySource[src] = applyNewsPickerQueryFilters(sorted, req);
+  }
+
+  const sources = NEWS_ALL_SOURCES.filter(s => batchesBySource[s]);
+  const merged = [];
+  const indices = Object.fromEntries(sources.map(s => [s, 0]));
+
+  while (merged.length < limit) {
+    let added = false;
+    for (const src of sources) {
+      const pool = matchedBySource[src] || [];
+      if (indices[src] < pool.length) {
+        merged.push(pool[indices[src]++]);
+        added = true;
+        if (merged.length >= limit) break;
+      }
+    }
+    if (!added) break;
+  }
+
+  return {
+    videos: merged,
+    sourceBreakdown: buildNewsSourceBreakdown(countNewsBySource(merged), sources),
+    sourceBreakdownMatched: buildNewsSourceBreakdown(
+      Object.fromEntries(sources.map(s => [s, (matchedBySource[s] || []).length])),
+      sources
+    ),
+    sourceBreakdownFetched: buildNewsSourceBreakdown(
+      Object.fromEntries(sources.map(s => [s, (filteredBySource[s] || []).length])),
+      sources
+    ),
+  };
+}
+
 /** Operator filters from dashboard query params (durMin, durMax, pubHours). */
 function applyNewsPickerQueryFilters(videos, req) {
   const durMin = parseNewsQueryInt(req.query.durMin);
@@ -6001,6 +6253,25 @@ function parseBbcRss(xmlText) {
 }
 
 /**
+ * yt-dlp often returns BBC ichef URLs with {width} or $width placeholders — unusable in <img>.
+ * Normalize to /raw/{id}.jpg which always resolves.
+ */
+function normalizeBbcThumbnail(thumbnail) {
+  if (!thumbnail || typeof thumbnail !== 'string') return null;
+  const url = thumbnail.trim();
+  if (!url.includes('ichef.bbci.co.uk')) return url;
+
+  const idMatch = url.match(/\/(p0[a-z0-9]+)\.(jpg|jpeg|png|webp)/i);
+  if (idMatch) {
+    return `https://ichef.bbci.co.uk/images/ic/raw/${idMatch[1]}.${idMatch[2].toLowerCase()}`;
+  }
+
+  const fixed = url.replace(/\{width\}|\$width/g, '960');
+  if (/\{|\$width/i.test(fixed)) return null;
+  return fixed;
+}
+
+/**
  * Run yt-dlp on a single BBC article URL.
  * Returns { url, title, hlsUrl, duration, thumbnail, publishedAt } or null.
  */
@@ -6033,7 +6304,7 @@ async function extractBbcVideo(articleUrl) {
           title:       d.title || '',
           hlsUrl,
           duration,
-          thumbnail:   d.thumbnail || null,
+          thumbnail:   normalizeBbcThumbnail(d.thumbnail),
           publishedAt: parseYtPublishedAt(d.upload_date, d.timestamp),
           orientation: 'landscape',   // BBC is always landscape 16:9 — fits 1920x1080 assembly frame directly
           pillarboxFilter: null,
@@ -6155,7 +6426,7 @@ app.get('/sports/highlights', requireC0Localhost, async (req, res) => {
     : null;
 
   try {
-    const videos = await sportsCore.fetchSportsHighlights({
+    const result = await sportsCore.fetchSportsHighlights({
       source,
       categories,
       limit: scrapeLimit,
@@ -6171,7 +6442,18 @@ app.get('/sports/highlights', requireC0Localhost, async (req, res) => {
       },
     });
 
-    const filtered = applyNewsPickerQueryFilters(videos, req).slice(0, limit);
+    const rawVideos = result.videos || [];
+    const filtered = applyNewsPickerQueryFilters(rawVideos, req).slice(0, limit);
+    const categoryBreakdown = {};
+    for (const v of filtered) {
+      const c = v.category || v.source || 'unknown';
+      categoryBreakdown[c] = (categoryBreakdown[c] || 0) + 1;
+    }
+    const requestedCats = categories || [source];
+    const categoryBreakdownDisplay = {};
+    for (const cat of requestedCats) {
+      categoryBreakdownDisplay[cat] = categoryBreakdown[cat] || 0;
+    }
     const prefs = getNewsPickerDurationPrefs();
     const sweetSpotCount = filtered.filter(v => v.duration >= prefs.sweetMin && v.duration <= prefs.sweetMax).length;
 
@@ -6185,6 +6467,9 @@ app.get('/sports/highlights', requireC0Localhost, async (req, res) => {
       sweetSpotCount,
       sweetSpotBandSec: [prefs.sweetMin, prefs.sweetMax],
       pickerFiltersApplied: hasPickerFilters,
+      categoryBreakdown: categoryBreakdownDisplay,
+      categoryBreakdownMatched: result.categoryBreakdownMatched || {},
+      categoryBreakdownFetched: result.categoryBreakdownFetched || {},
     });
   } catch (err) {
     console.error('[sports/highlights] Error:', err.message);
@@ -6516,13 +6801,13 @@ app.get('/news/stories', async (req, res) => {
             const v = (r.data?.videos || []).map(v => ({ ...v, source: 'aljazeera' }));
             _cacheNewsResults('aljazeera', v);
             console.log(`[news/stories] AJ: ${v.length} videos`);
-            return v;
+            return { source: 'aljazeera', videos: v };
           })
           .catch(e => {
             console.warn(`[news/stories] AJ failed: ${e.message}`);
             const cached = _getCachedNewsResults('aljazeera');
-            if (cached) { console.log(`[news/stories] AJ: using ${cached.length} cached videos`); return cached; }
-            return [];
+            if (cached) { console.log(`[news/stories] AJ: using ${cached.length} cached videos`); return { source: 'aljazeera', videos: cached }; }
+            return { source: 'aljazeera', videos: [] };
           })
       );
     }
@@ -6552,9 +6837,9 @@ app.get('/news/stories', async (req, res) => {
           console.log(`[news/stories] BBC: ${v.length} videos (${yt.length} YT + ${rss.length} RSS)`);
           if (v.length === 0) {
             const cached = _getCachedNewsResults('bbc');
-            if (cached) { console.log(`[news/stories] BBC: 0 fresh — using ${cached.length} cached`); return cached; }
+            if (cached) { console.log(`[news/stories] BBC: 0 fresh — using ${cached.length} cached`); return { source: 'bbc', videos: cached }; }
           }
-          return v;
+          return { source: 'bbc', videos: v };
         })
       );
     }
@@ -6568,15 +6853,15 @@ app.get('/news/stories', async (req, res) => {
             console.log(`[news/stories] PBS: ${v.length} videos`);
             if (v.length === 0) {
               const cached = _getCachedNewsResults('pbs');
-              if (cached) { console.log(`[news/stories] PBS: 0 fresh — using ${cached.length} cached`); return cached; }
+              if (cached) { console.log(`[news/stories] PBS: 0 fresh — using ${cached.length} cached`); return { source: 'pbs', videos: cached }; }
             }
-            return v;
+            return { source: 'pbs', videos: v };
           })
           .catch(e => {
             console.warn(`[news/stories] PBS failed: ${e.message}`);
             const cached = _getCachedNewsResults('pbs');
-            if (cached) { console.log(`[news/stories] PBS: using ${cached.length} cached videos`); return cached; }
-            return [];
+            if (cached) { console.log(`[news/stories] PBS: using ${cached.length} cached videos`); return { source: 'pbs', videos: cached }; }
+            return { source: 'pbs', videos: [] };
           })
       );
     }
@@ -6590,15 +6875,15 @@ app.get('/news/stories', async (req, res) => {
             console.log(`[news/stories] Vox: ${v.length} videos`);
             if (v.length === 0) {
               const cached = _getCachedNewsResults('vox');
-              if (cached) { console.log(`[news/stories] Vox: 0 fresh — using ${cached.length} cached`); return cached; }
+              if (cached) { console.log(`[news/stories] Vox: 0 fresh — using ${cached.length} cached`); return { source: 'vox', videos: cached }; }
             }
-            return v;
+            return { source: 'vox', videos: v };
           })
           .catch(e => {
             console.warn(`[news/stories] Vox failed: ${e.message}`);
             const cached = _getCachedNewsResults('vox');
-            if (cached) { console.log(`[news/stories] Vox: using ${cached.length} cached videos`); return cached; }
-            return [];
+            if (cached) { console.log(`[news/stories] Vox: using ${cached.length} cached videos`); return { source: 'vox', videos: cached }; }
+            return { source: 'vox', videos: [] };
           })
       );
     }
@@ -6612,15 +6897,15 @@ app.get('/news/stories', async (req, res) => {
             console.log(`[news/stories] AP: ${v.length} videos`);
             if (v.length === 0) {
               const cached = _getCachedNewsResults('ap');
-              if (cached) { console.log(`[news/stories] AP: 0 fresh — using ${cached.length} cached`); return cached; }
+              if (cached) { console.log(`[news/stories] AP: 0 fresh — using ${cached.length} cached`); return { source: 'ap', videos: cached }; }
             }
-            return v;
+            return { source: 'ap', videos: v };
           })
           .catch(e => {
             console.warn(`[news/stories] AP failed: ${e.message}`);
             const cached = _getCachedNewsResults('ap');
-            if (cached) { console.log(`[news/stories] AP: using ${cached.length} cached videos`); return cached; }
-            return [];
+            if (cached) { console.log(`[news/stories] AP: using ${cached.length} cached videos`); return { source: 'ap', videos: cached }; }
+            return { source: 'ap', videos: [] };
           })
       );
     }
@@ -6634,35 +6919,50 @@ app.get('/news/stories', async (req, res) => {
             console.log(`[news/stories] Reuters: ${v.length} videos`);
             if (v.length === 0) {
               const cached = _getCachedNewsResults('reuters');
-              if (cached) { console.log(`[news/stories] Reuters: 0 fresh — using ${cached.length} cached`); return cached; }
+              if (cached) { console.log(`[news/stories] Reuters: 0 fresh — using ${cached.length} cached`); return { source: 'reuters', videos: cached }; }
             }
-            return v;
+            return { source: 'reuters', videos: v };
           })
           .catch(e => {
             console.warn(`[news/stories] Reuters failed: ${e.message}`);
             const cached = _getCachedNewsResults('reuters');
-            if (cached) { console.log(`[news/stories] Reuters: using ${cached.length} cached videos`); return cached; }
-            return [];
+            if (cached) { console.log(`[news/stories] Reuters: using ${cached.length} cached videos`); return { source: 'reuters', videos: cached }; }
+            return { source: 'reuters', videos: [] };
           })
       );
     }
 
     const results = await Promise.all(fetchTasks);
-    for (const batch of results) videos.push(...batch);
+    const batchesBySource = {};
+    for (const batch of results) {
+      const src = batch && batch.source;
+      const vids = (batch && batch.videos) || [];
+      if (!src) continue;
+      if (batchesBySource[src]) batchesBySource[src].push(...vids);
+      else batchesBySource[src] = vids;
+    }
 
-    // Prefer ~30s sweet-spot clips, then dedupe by title, cap at limit
-    videos = sortNewsVideosForPicker(videos);
-    const seenTitles = new Set();
-    videos = videos.filter(v => {
-      const key = (v.title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
-      if (seenTitles.has(key)) return false;
-      seenTitles.add(key);
-      return true;
-    });
-    if (source === 'all') videos = videos.slice(0, scrapeLimit);
+    let sourceBreakdown = {};
+    let sourceBreakdownMatched = {};
+    let sourceBreakdownFetched = {};
 
-    videos = applyNewsPickerQueryFilters(videos, req);
-    videos = videos.slice(0, limit);
+    if (source === 'all') {
+      const merged = mergeNewsAllSources(batchesBySource, limit, req);
+      videos = merged.videos;
+      sourceBreakdown = merged.sourceBreakdown;
+      sourceBreakdownMatched = merged.sourceBreakdownMatched;
+      sourceBreakdownFetched = merged.sourceBreakdownFetched;
+    } else {
+      const raw = batchesBySource[source] || [];
+      let processed = sortNewsVideosForPicker(dedupeNewsVideosByTitle(raw));
+      processed = processed.slice(0, scrapeLimit);
+      const matched = applyNewsPickerQueryFilters(processed, req);
+      videos = matched.slice(0, limit);
+      const label = NEWS_SOURCE_LABELS[source] || source;
+      sourceBreakdown = { [label]: videos.length };
+      sourceBreakdownMatched = { [label]: matched.length };
+      sourceBreakdownFetched = { [label]: processed.length };
+    }
 
     const filterActive = hasPickerFilters;
 
@@ -6679,6 +6979,9 @@ app.get('/news/stories', async (req, res) => {
       sweetSpotBandSec: [prefs.sweetMin, prefs.sweetMax],
       targetDurationSec: prefs.target,
       pickerFiltersApplied: filterActive,
+      sourceBreakdown,
+      sourceBreakdownMatched,
+      sourceBreakdownFetched,
       hiddenByFilters: 0,
     });
   } catch (err) {
@@ -6973,7 +7276,7 @@ app.post('/generate-full-script',
         showId: req.body.showId || null,
         templateId: formType === 'short' ? 'short-form' : 'long-form',
         contentType,
-        createdBy: 'dashboard',
+        createdBy: req.body.createdBy || 'dashboard',
         expectedSynth: !!req.body.expectedSynth,
         sourceType,
         sourceConfig: sourceType === 'site_scrape'
@@ -9787,6 +10090,18 @@ const server = app.listen(PORT, async () => {
     });
   } catch (e) {
     console.warn('⚠️  Scheduling cron failed to start:', e.message);
+  }
+
+  // Task #21: autonomous production — calendar slots fire Generate without dashboard clicks
+  try {
+    const { startProductionCron } = require('./lib/services/production_cron');
+    startProductionCron({
+      baseUrl: `http://localhost:${PORT}`,
+      getPersistedJobs: () => persistedJobs,
+      saveJobCard,
+    });
+  } catch (e) {
+    console.warn('⚠️  Production cron failed to start:', e.message);
   }
 
   // CPD-996: end orphaned live broadcasts from a previous process (restart kills

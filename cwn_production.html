@@ -51,14 +51,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .gen-pillar-card { border-radius:10px; }
 .gen-pillar-card .card-body { padding:0; }
 .gen-workspace { display:grid; grid-template-columns:minmax(240px,280px) 1fr; gap:0; min-height:420px; }
+.gen-pillar-card[data-pillar="sports"] .gen-workspace { min-height:calc(100vh - 240px); }
 @media (max-width:900px) { .gen-workspace { grid-template-columns:1fr; } }
 .gen-sidebar { padding:18px 16px; border-right:1px solid rgba(199,175,79,0.1); background:#0a1018; display:flex; flex-direction:column; gap:14px; }
 @media (max-width:900px) { .gen-sidebar { border-right:none; border-bottom:1px solid rgba(199,175,79,0.1); } }
 .gen-main { padding:18px 20px; display:flex; flex-direction:column; min-height:360px; background:#0d1524; }
-.gen-main-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:12px; flex-wrap:wrap; }
+.gen-pillar-card[data-pillar="sports"] .gen-main { min-height:0; height:100%; }
+.gen-main-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:12px; flex-wrap:wrap; flex-shrink:0; }
 .gen-main-title { font-size:11px; font-weight:900; letter-spacing:2px; color:rgba(199,175,79,0.55); margin:0; }
 .gen-main-hint { font-size:11px; color:rgba(255,255,255,0.35); line-height:1.45; }
 .gen-main-empty { flex:1; display:flex; align-items:center; justify-content:center; text-align:center; padding:40px 24px; border:1px dashed rgba(199,175,79,0.15); border-radius:8px; color:rgba(255,255,255,0.3); font-size:13px; line-height:1.6; }
+.gen-main-has-picker .gen-main-empty { display:none; }
 .gen-action-bar { display:flex; flex-direction:column; gap:8px; }
 .gen-action-bar .gen-action-primary { display:flex; flex-direction:column; gap:8px; }
 .gen-action-bar .gen-action-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
@@ -69,8 +72,96 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .gen-advanced > summary::before { content:'▸ '; opacity:0.5; }
 .gen-advanced[open] > summary::before { content:'▾ '; }
 .gen-advanced .gen-advanced-body { padding:0 10px 10px; }
-.gen-picker-panel { flex:1; min-height:200px; max-height:min(560px,calc(100vh - 320px)); overflow-y:auto; border:1px solid rgba(199,175,79,0.15); border-radius:8px; padding:10px; background:#060a12; }
+.gen-picker-panel { flex:1; min-height:0; overflow-y:auto; border:1px solid rgba(199,175,79,0.15); border-radius:8px; padding:10px; background:#060a12; }
+.gen-main-has-picker .gen-picker-panel { flex:1; min-height:0; max-height:none; }
+.gen-picker-head { font-size:10px; color:rgba(255,255,255,0.35); font-family:monospace; margin-bottom:8px; letter-spacing:1px; line-height:1.55; flex-shrink:0; }
+.gen-picker-head .picker-sub-cyan { color:rgba(28,232,255,0.55); }
+.gen-picker-head .picker-sub-gold { color:rgba(199,175,79,0.65); }
+.gen-picker-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(156px,1fr)); gap:8px; align-content:start; }
+.gen-picker-card { border:1px solid rgba(255,255,255,0.1); border-radius:6px; background:rgba(255,255,255,0.02); padding:5px; transition:all 0.15s; position:relative; }
+.gen-picker-card.is-selected { border-color:rgba(199,175,79,0.55); background:rgba(199,175,79,0.06); }
+.gen-picker-card.is-disabled { opacity:0.45; cursor:not-allowed; }
+.gen-picker-card .picker-thumb { width:100%; height:72px; object-fit:cover; border-radius:4px; margin-bottom:5px; background:#1a2035; }
+.gen-picker-card .picker-thumb-placeholder { width:100%; height:72px; background:rgba(255,255,255,0.05); border-radius:4px; margin-bottom:5px; display:flex; align-items:center; justify-content:center; font-size:10px; color:rgba(255,255,255,0.2); }
+.gen-picker-card .picker-title { font-size:10px; color:#fff; line-height:1.25; margin-bottom:4px; max-height:38px; overflow:hidden; }
+.gen-picker-card .picker-source { font-size:8px; font-family:monospace; margin-bottom:4px; }
+.gen-picker-card .picker-when { font-size:8px; color:rgba(255,200,80,0.65); font-family:monospace; margin-bottom:4px; }
+.gen-picker-card .picker-dur { font-size:9px; font-family:monospace; font-weight:700; }
+.gen-picker-card .picker-check { position:absolute; top:6px; left:6px; z-index:2; }
+.gen-picker-scroll { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:4px; padding:4px; border:1px solid rgba(199,175,79,0.15); border-radius:8px; background:#060a12; }
+.gen-picker-list-row { display:grid; grid-template-columns:28px 40px minmax(0,1fr) 32px; align-items:center; gap:10px; padding:10px 12px; border:1px solid rgba(255,255,255,0.06); border-radius:6px; background:#0d1524; cursor:pointer; transition:border-color 0.15s,background 0.15s; min-height:52px; }
+.gen-picker-list-row:hover { border-color:rgba(199,175,79,0.25); background:#101828; }
+.gen-picker-list-row.is-selected { border-color:rgba(145,70,255,0.5); background:rgba(145,70,255,0.12); }
+.gen-picker-streamer-block { border-bottom:1px solid rgba(255,255,255,0.05); padding:8px 4px; }
+.gen-picker-streamer-block.is-dropped { border-color:rgba(255,60,60,0.2); }
 .gen-picker-panel:empty { display:none; }
+.gen-pillar-card[data-pillar="news"] .gen-workspace,
+.gen-pillar-card[data-pillar="twitch"] .gen-workspace { min-height:calc(100vh - 240px); }
+.gen-pillar-card[data-pillar="news"] .gen-main,
+.gen-pillar-card[data-pillar="twitch"] .gen-main { min-height:0; height:100%; }
+.gen-creator-panel { flex:1; min-height:0; display:flex; flex-direction:column; gap:8px; }
+.streamer-sidebar-select { display:flex; flex-direction:column; gap:6px; flex:1; min-height:0; overflow-y:auto; max-height:calc(100vh - 280px); padding-right:4px; scrollbar-gutter:stable; }
+.card-streamers .gen-sidebar { min-width:280px; max-width:340px; }
+.card-streamers .gen-workspace { grid-template-columns:minmax(280px,340px) 1fr; }
+.streamer-roster-section { border:1px solid rgba(255,255,255,0.06); border-radius:6px; background:#060a12; margin:0; flex-shrink:0; }
+.streamer-roster-section > summary {
+  cursor:pointer; font-size:10px; font-weight:800; letter-spacing:0.8px; color:rgba(199,175,79,0.55);
+  padding:7px 10px; list-style:none; display:flex; align-items:center; gap:6px; user-select:none;
+}
+.streamer-roster-section > summary::-webkit-details-marker { display:none; }
+.streamer-roster-section > summary::before {
+  content:'▸'; font-size:9px; color:rgba(199,175,79,0.45); flex-shrink:0; transition:transform 0.15s ease;
+}
+.streamer-roster-section[open] > summary::before { transform:rotate(90deg); color:#c7af4f; }
+.streamer-roster-section[open] > summary { border-bottom:1px solid rgba(255,255,255,0.05); color:#c7af4f; }
+.streamer-roster-section-selected[open] > summary { color:#9146ff; }
+.streamer-section-count {
+  margin-left:auto; font-size:9px; font-weight:700; letter-spacing:0.3px;
+  color:rgba(255,255,255,0.35); font-family:monospace; white-space:nowrap;
+}
+.streamer-section-count.has-selected { color:rgba(145,70,255,0.85); }
+.creator-chip-grid.is-section {
+  flex:0 1 auto; max-height:min(320px,42vh); min-height:36px; margin:6px 8px 8px;
+  border-color:rgba(255,255,255,0.08); overflow-y:auto;
+}
+.streamer-roster-section:not([open]) .creator-chip-grid.is-section,
+.streamer-roster-section:not([open]) .streamer-section-actions,
+.streamer-roster-section:not([open]) #streamer-bench-auto-hint { display:none; }
+.streamer-section-actions { display:flex; gap:4px; flex-wrap:wrap; padding:0 8px 8px; }
+.streamer-section-actions .btn-sm { font-size:9px; padding:2px 8px; }
+.streamer-sections-bar { display:flex; gap:4px; flex-wrap:wrap; padding:2px 0 4px; }
+.streamer-sections-bar .btn-sm { font-size:9px; padding:2px 7px; opacity:0.85; }
+.creator-toolbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; flex-shrink:0; }
+.creator-toolbar .creator-search { flex:1; min-width:140px; }
+.creator-toolbar .creator-filter { width:auto; flex:0 0 auto; }
+.creator-section-label { font-size:9px; font-weight:900; letter-spacing:1.5px; color:rgba(199,175,79,0.45); flex-shrink:0; }
+.creator-chip-grid {
+  display:flex; flex-wrap:wrap; gap:6px; align-content:flex-start;
+  flex:1; min-height:80px; max-height:none; overflow-y:auto;
+  padding:10px; border:1px solid rgba(199,175,79,0.15); border-radius:8px; background:#060a12;
+}
+.creator-chip-grid.is-compact { flex:0 1 auto; max-height:min(320px,42vh); min-height:44px; overflow-y:auto; }
+.creator-chip-grid.is-empty-hint { align-items:center; justify-content:center; color:rgba(255,255,255,0.28); font-size:12px; line-height:1.5; text-align:center; padding:20px; }
+.creator-chip {
+  display:inline-flex; align-items:center; gap:5px; max-width:100%;
+  padding:4px 8px 4px 5px; border-radius:999px; border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.03); cursor:pointer; font-size:11px; line-height:1.2;
+  transition:border-color 0.12s,background 0.12s;
+}
+.creator-chip:hover { border-color:rgba(199,175,79,0.35); background:rgba(255,255,255,0.06); }
+.creator-chip.is-selected { border-color:rgba(145,70,255,0.55); background:rgba(145,70,255,0.14); }
+.creator-chip.is-selected:hover { border-color:rgba(145,70,255,0.75); }
+.creator-chip-plat {
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:22px; height:16px; border-radius:3px; font-size:8px; font-weight:800; letter-spacing:0.2px;
+}
+.creator-chip-name { font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
+.creator-chip-handle { font-size:9px; color:rgba(255,255,255,0.35); font-family:monospace; }
+.creator-chip-x { flex-shrink:0; font-size:12px; line-height:1; color:rgba(255,255,255,0.3); padding:0 2px; }
+.creator-chip-x:hover { color:#e74c3c; }
+.creator-browse-bar { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-shrink:0; font-size:10px; color:rgba(255,255,255,0.35); font-family:monospace; }
+.creator-add-section, .creator-browse-section { flex:1; min-height:0; display:none; flex-direction:column; gap:6px; }
+.creator-add-section.is-open, .creator-browse-section.is-open { display:flex; }
 .gen-status-line { font-size:10px; color:rgba(255,255,255,0.35); font-family:monospace; line-height:1.4; margin-top:auto; }
 .gen-pipeline-wrap { margin-top:20px; }
 .gen-pipeline-wrap .dash-details > summary { font-size:12px; }
@@ -88,19 +179,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .streamers-list-panel .field { margin-bottom:0; flex:1; display:flex; flex-direction:column; }
 #streamer-chips.streamers-grid {
   display:flex; flex-direction:column; gap:4px;
-  flex:1; min-height:280px; max-height:min(520px,calc(100vh - 340px));
+  flex:1; min-height:0; max-height:none;
   overflow-y:auto; padding:4px; align-content:start;
-  border:1px solid rgba(199,175,79,0.2); border-radius:8px; background:#060a12;
+  border:1px solid rgba(199,175,79,0.15); border-radius:8px; background:#060a12;
 }
-#streamer-chips.streamers-grid .streamer-row {
-  display:grid; grid-template-columns:28px 40px minmax(0,1fr) 32px;
-  align-items:center; gap:10px; padding:10px 12px;
-  border:1px solid rgba(255,255,255,0.06); border-radius:6px; background:#0d1524;
-  cursor:pointer; transition:border-color 0.15s,background 0.15s;
-  min-height:52px;
-}
-#streamer-chips.streamers-grid .streamer-row:hover { border-color:rgba(199,175,79,0.25); background:#101828; }
-#streamer-chips.streamers-grid .streamer-row.selected { border-color:rgba(145,70,255,0.5); background:rgba(145,70,255,0.12); }
+#streamer-chips.streamers-grid .streamer-row { /* extends .gen-picker-list-row */ }
 #streamer-chips.streamers-grid .streamer-row .streamer-name { font-size:13px; font-weight:700; color:#fff; line-height:1.25; word-break:break-word; }
 #streamer-chips.streamers-grid .streamer-row:not(.selected) .streamer-name { color:rgba(255,255,255,0.75); }
 #streamer-chips.streamers-grid .streamer-row .streamer-meta { font-size:11px; color:rgba(255,255,255,0.4); margin-top:2px; line-height:1.3; word-break:break-all; }
@@ -136,8 +219,12 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .stats-cat-sports { color:#6cb6ff; }
 .stats-cat-news { color:#f39c12; }
 .stats-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center; }
-#streamer-connect-bar { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:14px; padding:10px 12px; background:#0a1018; border:1px solid rgba(199,175,79,0.2); border-radius:6px; }
-@media (max-width:720px) { #streamer-connect-bar { grid-template-columns:1fr; } }
+#streamer-connect-bar { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; margin-bottom:6px; padding:0; background:transparent; border:none; }
+.streamer-connect-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; font-size:10px; line-height:1.2; white-space:nowrap; max-width:100%; }
+.streamer-connect-pill .scp-name { font-weight:800; letter-spacing:0.2px; }
+.streamer-connect-pill .scp-dot { font-size:8px; line-height:1; }
+.streamer-connect-pill .scp-detail { color:rgba(255,255,255,0.45); font-size:9px; max-width:88px; overflow:hidden; text-overflow:ellipsis; }
+.streamer-connect-pill a { font-size:9px; font-weight:700; text-decoration:none; }
 .card { background:#0d1524; border:1px solid rgba(199,175,79,0.12); border-radius:8px; overflow:hidden; }
 .card-header { background:linear-gradient(90deg,#131f38,#0f1a30); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(199,175,79,0.1); }
 .card-title { font-family:'Bebas Neue',sans-serif; font-size:14px; color:#c7af4f; letter-spacing:2px; }
@@ -275,6 +362,22 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .bc-ops-chip.bc-live-tw { border-color:rgba(145,70,255,0.5); color:#b794f6; }
 .bc-ops-warn { margin-top:8px; font-size:11px; color:#e88; background:rgba(231,76,60,0.1); padding:8px 10px; border-radius:4px; }
 .bc-ops-chip.bc-ops-chip-warn { border-color:rgba(231,76,60,0.45); color:#e88; }
+.bc-stream-health-panel { background:#0a1020; border:1px solid rgba(199,175,79,0.25); border-radius:6px; padding:10px 12px; margin-bottom:16px; }
+.bc-stream-health-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:8px; }
+.bc-stream-health-score { font-size:11px; font-weight:800; letter-spacing:0.5px; padding:4px 10px; border-radius:12px; }
+.bc-stream-health-score.good { background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.45); color:#6ecf8f; }
+.bc-stream-health-score.warn { background:rgba(255,170,80,0.12); border:1px solid rgba(255,170,80,0.45); color:#fa5; }
+.bc-stream-health-score.critical { background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.45); color:#e88; }
+.bc-stream-health-md { font-family:ui-monospace,Menlo,monospace; font-size:10px; line-height:1.45; color:rgba(255,255,255,0.82);
+  max-height:140px; overflow:auto; white-space:pre-wrap; margin:0; }
+.bc-stream-health-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; margin-bottom:10px; }
+.bc-stream-health-stat { background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:4px; padding:6px 8px; }
+.bc-stream-health-stat label { display:block; font-size:9px; letter-spacing:0.5px; color:rgba(255,255,255,0.4); margin-bottom:2px; }
+.bc-stream-health-stat span { font-size:11px; font-weight:700; color:rgba(255,255,255,0.9); }
+.bc-stream-health-seeing { font-size:11px; color:#fa5; margin-bottom:8px; line-height:1.4; }
+.bc-stream-health-fixes { font-size:10px; line-height:1.45; color:rgba(255,255,255,0.75); margin-bottom:8px; }
+.bc-stream-health-fixes li { margin:4px 0; }
+.bc-stream-health-scores { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .tv-catalog-group { margin-bottom:10px; }
 .tv-catalog-title { font-size:10px; letter-spacing:1px; color:#c7af4f; margin-bottom:6px; font-weight:700; }
 .tv-catalog-item { display:flex; align-items:flex-start; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:11px; cursor:pointer; }
@@ -470,64 +573,75 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         </div>
 
         <div class="card gen-pillar-card" data-pillar="news" style="display:none;">
-          <div class="card-header">
-            <div class="card-title">WORLD NEWS</div>
-            <span class="tag tag-pending" id="news-status"><span class="tag-dot"></span> READY</span>
-          </div>
-          <div class="card-body">
-            <input type="hidden" id="news-source" value="all">
-            <div class="field"><label>NEWS SOURCE</label>
-              <select id="news-source-select" onchange="setNewsSource(this.value)" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
-                <option value="all" selected>All (BBC · PBS · Vox)</option>
-                <option value="bbc">BBC only (YouTube + RSS)</option>
-                <option value="pbs">PBS NewsHour only</option>
-                <option value="vox">Vox only</option>
-              </select>
-              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">SHORT = clips-only 9:16, no avatar. VOD (long form) will use Bobby G avatar when that pipeline is ready.</div>
-            </div>
-            <input type="hidden" id="news-count" value="40">
-            <div class="field" style="margin-bottom:8px;">
-              <label>STORIES TO FETCH</label>
-              <select id="news-fetch-limit" onchange="var nc=g('news-count');if(nc)nc.value=this.value;" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
-                <option value="20">20 stories</option>
-                <option value="30">30 stories</option>
-                <option value="40" selected>40 stories</option>
-                <option value="50">50 stories (max)</option>
-              </select>
-              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">PICK STORIES loads this many — check the ones you want for batch shorts.</div>
-            </div>
-            <div class="field" style="margin-bottom:8px;">
-              <label>PICKER FILTERS</label>
-              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end;">
-                <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">MIN DURATION (s)</div>
-                  <input id="news-picker-dur-min" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('news');refreshPickerIfOpen('news')" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:5px 8px;font-size:12px;"></div>
-                <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">MAX DURATION (s)</div>
-                  <input id="news-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('news');refreshPickerIfOpen('news')" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:5px 8px;font-size:12px;"></div>
-                <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">PUBLISHED</div>
-                  <select id="news-picker-pub-window" onchange="savePickerFilters('news');refreshPickerIfOpen('news')" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:5px 8px;font-size:12px;">
-                    <option value="any">Any time</option><option value="6h">Last 6 hours</option><option value="24h">Last 24 hours</option><option value="3d">Last 3 days</option><option value="7d" selected>Last 7 days</option><option value="30d">Last 30 days</option>
-                  </select></div>
-              </div>
-              <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 8px;" onclick="setPickerDurationPreset('news',18,48)">~30s band</button>
-                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 8px;" onclick="setPickerDurationPreset('news',null,null)">Clear duration</button>
-              </div>
-            </div>
-            <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
-            <!-- inline story picker — populated by previewNewsStories() -->
-            <div id="news-inline-picker" style="display:none;margin-bottom:10px;max-height:560px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:10px;background:#060a12;"></div>
-            <!-- short-form clip gallery — shown when SHORT is clicked, lets user pick one story -->
-            <div id="news-short-clip-gallery" style="display:none;margin-bottom:10px;border:1px solid rgba(28,232,255,0.25);border-radius:6px;padding:10px;background:#060a12;">
-              <div style="font-size:10px;color:rgba(28,232,255,0.7);font-family:monospace;letter-spacing:1px;margin-bottom:8px;">PICK ONE STORY FOR SHORT FORM — CLICK TO SELECT</div>
-              <div id="news-short-clip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
-              <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;" id="news-short-clip-status"></div>
-            </div>
-            <div class="btn-row" style="flex-wrap:wrap;gap:10px;align-items:center;">
-              <button id="btn-preview-news" class="btn btn-outline" style="font-size:11px;padding:6px 12px;" onclick="previewNewsStories()">PICK STORIES</button>
-              <span style="font-size:10px;color:rgba(255,255,255,0.3);font-family:monospace;letter-spacing:.03em;">↑ feeds both</span>
-              <button id="btn-gen-news" class="btn btn-gold" onclick="generateNewsWithPicker()" title="News VOD — full newscast with Bobby G avatar (when pipeline is ready)">VOD</button>
-              <button id="btn-gen-news-short" class="btn btn-gold" onclick="triggerNewsShort()">SHORT</button>
-              <button id="btn-gen-news-comp" class="btn btn-outline" onclick="triggerNewsClipComp()" title="Stitch 4 selected stories into one portrait short — no avatar">CLIPS COMP</button>
+          <div class="card-body gen-pillar-body">
+            <div class="gen-workspace">
+              <aside class="gen-sidebar">
+                <input type="hidden" id="news-source" value="all">
+                <input type="hidden" id="news-count" value="40">
+                <div class="field gen-field-compact">
+                  <label>News source</label>
+                  <select id="news-source-select" onchange="setNewsSource(this.value)" class="field-input-compact">
+                    <option value="all" selected>All (BBC · PBS · Vox)</option>
+                    <option value="bbc">BBC only (YouTube + RSS)</option>
+                    <option value="pbs">PBS NewsHour only</option>
+                    <option value="vox">Vox only</option>
+                  </select>
+                  <span class="gen-status-line">SHORT = clips-only 9:16, no avatar.</span>
+                </div>
+                <div class="field gen-field-compact">
+                  <label>Stories to fetch</label>
+                  <select id="news-fetch-limit" onchange="var nc=g('news-count');if(nc)nc.value=this.value;" class="field-input-compact">
+                    <option value="20">20 stories</option>
+                    <option value="30">30 stories</option>
+                    <option value="40" selected>40 stories</option>
+                    <option value="50">50 stories (max)</option>
+                  </select>
+                </div>
+                <details class="gen-advanced">
+                  <summary>Clip filters</summary>
+                  <div class="gen-advanced-body">
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Min duration (s)</div>
+                        <input id="news-picker-dur-min" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('news');refreshPickerIfOpen('news')" class="field-input-compact"></div>
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Max duration (s)</div>
+                        <input id="news-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('news');refreshPickerIfOpen('news')" class="field-input-compact"></div>
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Clip age</div>
+                        <select id="news-picker-pub-window" onchange="savePickerFilters('news');refreshPickerIfOpen('news')" class="field-input-compact">
+                          <option value="any">Any time</option><option value="6h">Last 6 hours</option><option value="24h">Last 24 hours</option><option value="3d">Last 3 days</option><option value="7d" selected>Last 7 days</option><option value="30d">Last 30 days</option>
+                        </select></div>
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                      <button type="button" class="btn btn-outline btn-sm" onclick="setPickerDurationPreset('news',18,48)">~30s band</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="setPickerDurationPreset('news',null,null)">Clear</button>
+                    </div>
+                  </div>
+                </details>
+                <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
+                <div class="gen-action-bar">
+                  <button id="btn-preview-news" class="btn btn-outline" onclick="previewNewsStories()">Pick stories</button>
+                  <div class="gen-action-primary">
+                    <button id="btn-gen-news" class="btn btn-gold" onclick="generateNewsWithPicker()" title="News VOD — full newscast with Bobby G avatar (when pipeline is ready)">Generate VOD</button>
+                    <div class="gen-action-row">
+                      <button id="btn-gen-news-short" class="btn btn-outline" onclick="triggerNewsShort()">Short</button>
+                      <button id="btn-gen-news-comp" class="btn btn-outline" onclick="triggerNewsClipComp()" title="Stitch 4 selected stories into one portrait short">Comp</button>
+                    </div>
+                  </div>
+                </div>
+                <span id="news-fetch-status" class="gen-status-line"></span>
+              </aside>
+              <main class="gen-main">
+                <div class="gen-main-head">
+                  <h3 class="gen-main-title">CLIP PICKER</h3>
+                  <span class="gen-main-hint">Pick stories — checked items feed VOD, Short, and Comp</span>
+                </div>
+                <div id="gen-news-empty" class="gen-main-empty">Configure source on the left, then <strong>Pick stories</strong>.</div>
+                <div id="news-inline-picker" class="gen-picker-panel" style="display:none;"></div>
+                <div id="news-short-clip-gallery" style="display:none;margin-top:10px;border:1px solid rgba(28,232,255,0.25);border-radius:8px;padding:12px;background:#060a12;flex-shrink:0;">
+                  <div style="font-size:10px;color:rgba(28,232,255,0.7);letter-spacing:1px;margin-bottom:8px;">PICK ONE STORY FOR SHORT</div>
+                  <div id="news-short-clip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
+                  <div id="news-short-clip-status" class="gen-status-line" style="margin-top:8px;"></div>
+                </div>
+              </main>
             </div>
           </div>
         </div>
@@ -535,24 +649,79 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         <div class="card gen-pillar-card card-streamers" data-pillar="twitch" style="display:none;">
           <div class="card-body gen-pillar-body">
             <input type="hidden" id="twitch-streamers" value="jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming">
-            <div id="streamer-connect-bar" style="margin:14px 16px 0;"></div>
             <div class="gen-workspace streamers-workspace">
               <aside class="gen-sidebar streamers-controls">
-                <div class="streamer-howto">
-                  <strong>How streamer clips work</strong>
-                  <ol>
-                    <li><strong>Sync</strong> pulls creators from Twitch follows + YouTube subs</li>
-                    <li><strong>Check</strong> streamers to include (unchecked = skipped)</li>
-                    <li><strong>Pick clips</strong> fetches top clips per selected streamer</li>
-                    <li><strong>Generate</strong> VOD, Short, Top 10, or Comp from your picks</li>
-                  </ol>
-                </div>
-                <div class="field gen-field-compact">
-                  <label>Platforms to search</label>
-                  <div class="plat-check-list">
-                    <label class="plat-check-row"><input type="checkbox" id="streamer-plat-twitch" checked style="accent-color:#9146ff;"> Twitch</label>
-                    <label class="plat-check-row"><input type="checkbox" id="streamer-plat-kick" checked style="accent-color:#53fc18;"> Kick</label>
-                    <label class="plat-check-row"><input type="checkbox" id="streamer-plat-youtube" checked style="accent-color:#ff4444;"> YouTube</label>
+                <div id="streamer-connect-bar" class="streamer-connect-compact"></div>
+                <div id="streamer-sidebar-select" class="streamer-sidebar-select">
+                  <div class="creator-toolbar">
+                    <input type="search" id="streamer-search" placeholder="Search @handle…" oninput="onStreamerSearchInput()" class="field-input-compact creator-search">
+                    <select id="streamer-filter-platform" onchange="onStreamerSearchInput()" class="field-input-compact creator-filter">
+                      <option value="all">All</option>
+                      <option value="twitch">Twitch</option>
+                      <option value="kick">Kick</option>
+                      <option value="youtube">YouTube</option>
+                    </select>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" style="color:#9146ff;border-color:rgba(145,70,255,0.5);">Sync</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()">+ Add</button>
+                  </div>
+                  <div class="streamer-sections-bar">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="setStreamerSectionsExpanded(true)">Expand all</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="setStreamerSectionsExpanded(false)">Collapse all</button>
+                  </div>
+                  <details open class="streamer-roster-section streamer-roster-section-selected" id="streamer-section-selected-wrap">
+                    <summary><span>Selected for today</span><span class="streamer-section-count" id="streamer-count-selected">0</span></summary>
+                    <div id="streamer-selected-chips" class="creator-chip-grid is-compact"></div>
+                  </details>
+                  <details open class="streamer-roster-section" id="streamer-section-templates-wrap">
+                    <summary><span>Templates · VOD lineup</span><span class="streamer-section-count" id="streamer-count-templates">0</span></summary>
+                    <div id="streamer-section-templates" class="creator-chip-grid is-section"></div>
+                    <div class="streamer-section-actions">
+                      <button type="button" class="btn btn-outline btn-sm" onclick="applyStreamerTemplateSelection()">Select all templates</button>
+                    </div>
+                  </details>
+                  <details class="streamer-roster-section" id="streamer-section-following-wrap">
+                    <summary><span>Following · Twitch &amp; YouTube</span><span class="streamer-section-count" id="streamer-count-following">0</span></summary>
+                    <div id="streamer-section-following" class="creator-chip-grid is-section"></div>
+                  </details>
+                  <details class="streamer-roster-section" id="streamer-section-bench-wrap">
+                    <summary><span>Bench · backup</span><span class="streamer-section-count" id="streamer-count-bench">0</span></summary>
+                    <div id="streamer-section-bench" class="creator-chip-grid is-section"></div>
+                    <div id="streamer-bench-auto-hint" class="gen-status-line" style="padding:0 8px 2px;font-size:9px;min-height:14px;"></div>
+                    <div class="streamer-section-actions">
+                      <button type="button" class="btn btn-outline btn-sm" onclick="loadStreamerBenchFromLiveGrid()">↻ Pull follows</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="promptAddStreamerBench()">+ Bench</button>
+                    </div>
+                  </details>
+                  <details class="streamer-roster-section" id="streamer-section-kick-wrap">
+                    <summary><span>Kick · manual</span><span class="streamer-section-count" id="streamer-count-kick">0</span></summary>
+                    <div id="streamer-section-kick" class="creator-chip-grid is-section"></div>
+                    <div class="streamer-section-actions">
+                      <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()" style="color:#53fc18;border-color:rgba(83,252,24,0.4);">+ Kick URL</button>
+                    </div>
+                  </details>
+                  <div id="streamer-add-section" class="creator-add-section" style="display:none;">
+                    <div class="creator-section-label">SEARCH RESULTS</div>
+                    <div id="streamer-search-results" class="creator-chip-grid is-section"></div>
+                  </div>
+                  <div id="streamer-browse-section" class="creator-browse-section" style="display:none;">
+                    <div class="creator-browse-bar">
+                      <span id="streamer-browse-label">Browse roster</span>
+                      <span>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowseSelectPage(true)">Select page</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowseSelectPage(false)">Deselect</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowsePage(-1)">←</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowsePage(1)">→</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="closeStreamerBrowse()">Close</button>
+                      </span>
+                    </div>
+                    <div id="streamer-browse-chips" class="creator-chip-grid is-section"></div>
+                  </div>
+                  <div id="streamer-panel-footer" class="creator-browse-bar">
+                    <span id="streamer-roster-hint"></span>
+                    <span>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(false)">Clear</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="toggleStreamerBrowse()" id="btn-streamer-browse">Browse</button>
+                    </span>
                   </div>
                 </div>
                 <div class="field gen-field-compact">
@@ -580,7 +749,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                     </div>
                   </div>
                 </details>
-                <div id="streamer-selected-summary" class="streamer-selected-bar">Check streamers in the list → they appear here when selected.</div>
+                <div id="streamer-selected-summary" class="streamer-selected-bar">Select creators in the sections above, then Pick clips.</div>
                 <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
                 <div class="gen-action-bar">
                   <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">Pick clips</button>
@@ -593,30 +762,15 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 </div>
                 <span id="twitch-fetch-status" class="gen-status-line"></span>
               </aside>
-              <main class="gen-main streamers-list-panel">
+              <main class="gen-main">
                 <div class="gen-main-head">
-                  <h3 class="gen-main-title">YOUR CREATORS</h3>
-                  <span id="streamer-chip-count" class="gen-main-hint"></span>
+                  <h3 class="gen-main-title" id="twitch-main-title">CLIP PICKER</h3>
+                  <span class="gen-main-hint">Checked clips feed VOD, Short, and Comp</span>
                 </div>
-                <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-                  <input type="search" id="streamer-search" placeholder="Search name or @handle…" oninput="renderStreamerChips()" class="field-input-compact" style="flex:1;min-width:160px;padding:8px 12px;">
-                  <select id="streamer-filter-platform" onchange="renderStreamerChips()" class="field-input-compact" style="width:auto;">
-                    <option value="all">All</option>
-                    <option value="twitch">Twitch</option>
-                    <option value="kick">Kick</option>
-                    <option value="youtube">YouTube</option>
-                  </select>
-                </div>
-                <div id="streamer-chips" class="streamers-grid"></div>
-                <div class="gen-chip-actions" style="margin-top:10px;">
-                  <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(true)">Select all</button>
-                  <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(false)">Select none</button>
-                  <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()">+ Add URL</button>
-                  <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" style="color:#9146ff;border-color:rgba(145,70,255,0.5);">Sync follows</button>
-                </div>
+                <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, then <strong>Pick clips</strong>.</div>
+                <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
               </main>
             </div>
-            <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;margin:16px;border-top:1px solid rgba(199,175,79,0.1);"></div>
           </div>
         </div>
 
@@ -650,93 +804,26 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="sec-title">BROADCAST CONTROL <span class="badge">LIVE GRID + CLIPZWORLD TV</span></div>
 
       <div id="bc-cal-banner" class="bc-cal-banner" style="display:none;"></div>
-
       <div id="bc-ops-bar" class="bc-ops-bar">Loading ops…</div>
-
-      <div class="card" style="margin-bottom:16px;">
-        <details class="dash-details" open>
-          <summary>Programming playbook <span class="dash-readonly-note">read-only · from YouTube data</span></summary>
-        <div class="card-header" style="border-top:1px solid rgba(199,175,79,0.1);margin-top:8px;">
-          <div class="card-title">PROGRAMMING PLAYBOOK</div>
-          <span style="font-size:10px;color:rgba(255,255,255,0.35);">From YouTube top-200 data · Jun 13</span>
+      <div id="bc-stream-health-panel" class="bc-stream-health-panel" style="display:none;">
+        <div class="bc-stream-health-head">
+          <span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.5);">LIVE STREAM DIAGNOSTICS</span>
+          <div class="bc-stream-health-scores">
+            <span id="bc-stream-health-viewer-score" class="bc-stream-health-score warn">Viewer —</span>
+            <span id="bc-stream-health-score" class="bc-stream-health-score warn">Uptime —</span>
+          </div>
+          <span id="bc-stream-health-updated" style="font-size:10px;color:rgba(255,255,255,0.35);"></span>
         </div>
-        <div class="card-body" id="bc-playbook">
-          <div style="font-size:11px;color:rgba(255,255,255,0.35);">Loading playbook…</div>
-        </div>
+        <div id="bc-stream-health-seeing" class="bc-stream-health-seeing"></div>
+        <div id="bc-stream-health-stats" class="bc-stream-health-stats"></div>
+        <ul id="bc-stream-health-fixes" class="bc-stream-health-fixes"></ul>
+        <details style="margin-top:6px;">
+          <summary style="font-size:10px;color:rgba(255,255,255,0.4);cursor:pointer;">Raw report</summary>
+          <pre id="bc-stream-health-md" class="bc-stream-health-md">Loading…</pre>
         </details>
       </div>
 
-      <div class="card" style="margin-bottom:16px;">
-        <details class="dash-details" open>
-          <summary>Content board <span class="dash-readonly-note">read-only · pipeline snapshot</span></summary>
-        <div class="card-header" style="border-top:1px solid rgba(199,175,79,0.1);margin-top:8px;">
-          <div class="card-title">CONTENT BOARD</div>
-          <span style="font-size:10px;color:rgba(255,255,255,0.35);">What’s scheduled · in production · ready for Twitch</span>
-        </div>
-        <div class="card-body" id="bc-content-board">
-          <div style="font-size:11px;color:rgba(255,255,255,0.35);">Loading…</div>
-        </div>
-        </details>
-      </div>
-
-      <div class="cards-grid">
-        <div class="card">
-          <div class="card-header"><div class="card-title">GO LIVE</div></div>
-          <div class="card-body">
-            <div class="field"><label>PROGRAM MODE</label>
-              <select id="bc-program-mode" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
-                <option value="auto" selected>auto (daypart schedule)</option>
-                <option value="grid">grid (4× Twitch multiview)</option>
-                <option value="news_desk">news_desk</option>
-                <option value="event_night">event_night</option>
-              </select></div>
-            <div class="field"><label>HEADLINE (news_desk)</label>
-              <input id="bc-headline" type="text" placeholder="Breaking & Analysis"></div>
-            <div class="field"><label>EVENT TITLE (event_night)</label>
-              <input id="bc-event-title" type="text" placeholder="Weekend Sports Watch Party"></div>
-            <div class="field"><label>EVENT FILE (fallback if no live feed)</label>
-              <select id="bc-event-file" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px;font-size:11px;">
-                <option value="">— auto: live feed picker first —</option>
-              </select></div>
-            <div id="bc-mobile-format" style="font-size:10px;color:#888;margin-bottom:8px;line-height:1.4;">
-              Mobile portrait is served by YouTube dual-format from this landscape stream (CPD-1029).
-            </div>
-            <div id="bc-vertical-row" style="display:none;font-size:11px;margin-bottom:8px;">
-              <span style="color:#888;">Legacy dual broadcast:</span>
-              <a id="bc-vertical-link" href="#" target="_blank" style="color:#9146ff;">▶ Vertical YouTube listing</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header"><div class="card-title">SCHEDULER</div></div>
-          <div class="card-body" id="bc-scheduler-body">—</div>
-          <div class="card-body" style="border-top:1px solid rgba(199,175,79,0.1);padding-top:10px;">
-            <button class="btn btn-outline btn-sm" onclick="bcArm24h()">ARM 24H MEASUREMENT</button>
-            <div id="bc-waiter-log" class="bc-log" style="margin-top:8px;"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header"><div class="card-title">ON AIR / PROGRAM</div></div>
-          <div class="card-body" id="bc-on-air">—</div>
-          <div class="card-body" id="bc-event-feed" style="border-top:1px solid rgba(199,175,79,0.1);padding-top:10px;font-size:11px;color:rgba(255,255,255,0.5);">Event feed: loading…</div>
-          <div id="bc-daypart-timeline" class="bc-daypart-timeline" style="padding:0 14px 14px;"></div>
-        </div>
-
-        <div class="card">
-          <div class="card-header"><div class="card-title">CONNECTIONS</div></div>
-          <div class="card-body">
-            <div class="btn-row">
-              <button class="btn btn-outline btn-sm" onclick="bcConnectTwitch()">CONNECT TWITCH FOLLOWS</button>
-              <button class="btn btn-outline btn-sm" onclick="bcConnectYoutube()">CONNECT YOUTUBE</button>
-            </div>
-            <div id="bc-env-panel" style="margin-top:10px;"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LIVE GRID (moved from Generate) -->
+      <!-- LIVE GRID -->
       <div class="card" style="margin-bottom:16px;">
         <div class="card-header">
           <div class="card-title">LIVE GRID</div>
@@ -783,8 +870,24 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <div id="lg-removed-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:60px;overflow-y:auto;"></div>
             </div>
             <div style="display:flex;gap:6px;">
-              <input id="lg-bench-input" type="text" placeholder="bench streamer login…" style="flex:1;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);border-radius:4px;padding:4px 8px;font-size:12px;">
+              <input id="lg-bench-input" type="text" placeholder="any twitch login…" style="flex:1;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);border-radius:4px;padding:4px 8px;font-size:12px;">
               <button class="btn btn-outline btn-sm" style="font-size:10px;padding:2px 10px;" onclick="liveGridAddBench()">+ BENCH</button>
+            </div>
+          </div>
+          <div id="lg-replace-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:10000;align-items:center;justify-content:center;" onclick="if(event.target===this)liveGridCloseReplaceModal()">
+            <div style="background:#0d1524;border:1px solid rgba(199,175,79,0.45);border-radius:8px;padding:16px;width:min(420px,92vw);max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+              <div id="lg-replace-title" style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">Replace on grid</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:10px;">Type any Twitch login — not limited to bench or follows.</div>
+              <input id="lg-replace-input" type="text" placeholder="twitch login to seat…" autocomplete="off"
+                style="width:100%;box-sizing:border-box;background:#060a12;color:#fff;border:1px solid rgba(199,175,79,0.35);border-radius:4px;padding:8px 10px;font-size:13px;margin-bottom:8px;"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();liveGridConfirmReplace();}">
+              <div style="font-size:9px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:4px;">SUGGESTIONS <span id="lg-replace-suggest-count"></span></div>
+              <div id="lg-replace-suggestions" style="display:flex;flex-wrap:wrap;gap:4px;max-height:140px;overflow-y:auto;margin-bottom:12px;"></div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;" onclick="liveGridCloseReplaceModal()">Cancel</button>
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;" onclick="liveGridConfirmReplace(true)">Remove only (slate)</button>
+                <button type="button" class="btn btn-sm" style="font-size:10px;background:#c7af4f;color:#0d1524;" onclick="liveGridConfirmReplace()">Replace</button>
+              </div>
             </div>
           </div>
           <div class="field" style="margin-bottom:10px;">
@@ -808,7 +911,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               </div>
             </div>
           </div>
-          <div class="btn-row" style="flex-wrap:wrap;align-items:center;gap:8px;">
+          <div class="btn-row" style="flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px;">
             <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
               <option value="public" selected>PUBLIC</option>
               <option value="unlisted">UNLISTED</option>
@@ -824,21 +927,24 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <button id="lg-unmute-btn" class="btn btn-outline" style="display:none;font-size:11px;" onclick="liveGridUnmute()" title="Restore Twitch quadrant audio">🔊 RESTORE AUDIO</button>
             <button id="lg-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveGridStop()">END STREAM</button>
           </div>
+          <details class="dash-details">
+            <summary>News &amp; event options <span class="dash-readonly-note">only when using news_desk or event_night</span></summary>
+            <div style="padding-top:10px;">
+              <div class="field"><label>HEADLINE (news_desk)</label>
+                <input id="bc-headline" type="text" placeholder="Breaking & Analysis"></div>
+              <div class="field"><label>EVENT TITLE (event_night)</label>
+                <input id="bc-event-title" type="text" placeholder="Weekend Sports Watch Party"></div>
+              <div class="field"><label>EVENT FILE (fallback if no live feed)</label>
+                <select id="bc-event-file" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px;font-size:11px;">
+                  <option value="">— auto: live feed picker first —</option>
+                </select></div>
+              <div id="bc-event-feed" style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:8px;">Event feed: —</div>
+            </div>
+          </details>
         </div>
       </div>
 
       <div class="cards-grid">
-        <div class="card">
-          <div class="card-header"><div class="card-title">BENCH PREVIEW</div></div>
-          <div class="card-body">
-            <select id="bc-bench-tab" onchange="broadcastRefreshDiscovery()" style="margin-bottom:8px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
-              <option value="merged">Merged (follows + platform top)</option>
-              <option value="follows">Follows only</option>
-            </select>
-            <div id="bc-discovery-list" style="max-height:120px;overflow-y:auto;"></div>
-          </div>
-        </div>
-
         <div class="card">
           <div class="card-header">
             <div class="card-title">CLIPZWORLD TV</div>
@@ -875,26 +981,49 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             </div>
           </div>
         </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">AUTO SCHEDULER</div></div>
+          <div class="card-body" id="bc-scheduler-body">—</div>
+          <div class="card-body" style="border-top:1px solid rgba(199,175,79,0.1);padding-top:10px;">
+            <button class="btn btn-outline btn-sm" onclick="bcArm24h()">ARM 24H MEASUREMENT</button>
+            <div id="bc-waiter-log" class="bc-log" style="margin-top:8px;"></div>
+          </div>
+          <div class="card-body" style="border-top:1px solid rgba(199,175,79,0.1);padding-top:10px;">
+            <div class="btn-row">
+              <button class="btn btn-outline btn-sm" onclick="bcConnectTwitch()">CONNECT TWITCH FOLLOWS</button>
+              <button class="btn btn-outline btn-sm" onclick="bcConnectYoutube()">CONNECT YOUTUBE</button>
+            </div>
+            <div id="bc-env-panel" style="margin-top:10px;"></div>
+          </div>
+        </div>
       </div>
 
       <div class="card" style="margin-bottom:16px;">
         <details class="dash-details">
-          <summary>YouTube hourly analytics <span class="dash-readonly-note">read-only</span></summary>
-        <div class="card-header" style="border-top:1px solid rgba(199,175,79,0.1);margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
-          <div class="card-title">YOUTUBE HOURLY ANALYTICS</div>
-          <select id="bc-analytics-days" onchange="broadcastRefreshAnalytics()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;">
-            <option value="7">7 days</option><option value="14" selected>14 days</option><option value="28">28 days</option>
-          </select>
-        </div>
-        <div class="card-body" id="bc-analytics-body">Open this page to load analytics.</div>
-        </details>
-      </div>
-
-      <div class="card">
-        <details class="dash-details">
-          <summary>Allowlist &amp; platform rules <span class="dash-readonly-note">read-only reference</span></summary>
-        <div class="card-header" style="border-top:1px solid rgba(199,175,79,0.1);margin-top:8px;"><div class="card-title">ALLOWLIST & PLATFORM RULES</div></div>
-        <div class="card-body" id="bc-allowlist-body">—</div>
+          <summary>Reference &amp; pipeline <span class="dash-readonly-note">read-only · collapse unless you need it</span></summary>
+          <div style="padding-top:12px;">
+            <div class="card-header" style="margin-bottom:8px;"><div class="card-title">CONTENT BOARD</div></div>
+            <div class="card-body" id="bc-content-board" style="padding:0 0 16px;">
+              <div style="font-size:11px;color:rgba(255,255,255,0.35);">Loading…</div>
+            </div>
+            <div class="card-header" style="margin-bottom:8px;"><div class="card-title">PROGRAMMING PLAYBOOK</div></div>
+            <div class="card-body" id="bc-playbook" style="padding:0 0 16px;">
+              <div style="font-size:11px;color:rgba(255,255,255,0.35);">Loading playbook…</div>
+            </div>
+            <div class="card-header" style="margin-bottom:8px;"><div class="card-title">ON AIR / PROGRAM</div></div>
+            <div class="card-body" id="bc-on-air" style="padding:0 0 8px;">—</div>
+            <div id="bc-daypart-timeline" class="bc-daypart-timeline" style="padding:0 0 16px;"></div>
+            <div class="card-header" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+              <div class="card-title">YOUTUBE HOURLY ANALYTICS</div>
+              <select id="bc-analytics-days" onchange="broadcastRefreshAnalytics()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;">
+                <option value="7">7 days</option><option value="14" selected>14 days</option><option value="28">28 days</option>
+              </select>
+            </div>
+            <div class="card-body" id="bc-analytics-body" style="padding:0 0 16px;">Expand to load analytics.</div>
+            <div class="card-header" style="margin-bottom:8px;"><div class="card-title">ALLOWLIST &amp; PLATFORM RULES</div></div>
+            <div class="card-body" id="bc-allowlist-body" style="padding:0;">—</div>
+          </div>
         </details>
       </div>
     </div>
@@ -908,6 +1037,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-outline btn-sm" onclick="loadChannelStats(true)">↻ Refresh</button>
+          <button class="btn btn-outline btn-sm" onclick="exportChannelStatsCsv()">↓ Export CSV</button>
           <a href="/connect/youtube" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;line-height:1.6;">YouTube OAuth</a>
         </div>
       </div>
@@ -936,14 +1066,13 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <option value="Streaming">Streaming</option>
           <option value="Sports">Sports</option>
           <option value="News">News</option>
-          <option value="Other">Other</option>
         </select>
       </div>
       <div class="stats-table-wrap">
         <table class="stats-table">
           <thead><tr>
-            <th>Views</th><th>Surface</th><th>Category</th><th>Title</th>
-            <th>Engaged</th><th>Avg %</th><th>Subs+</th><th>Likes</th>
+            <th>Title</th><th>Category</th><th>Surface</th><th>Views</th>
+            <th>Engaged views</th><th>Avg % viewed</th><th>Subs gained</th><th>Published</th>
           </tr></thead>
           <tbody id="stats-table-body"><tr><td colspan="8" style="padding:20px;color:rgba(255,255,255,0.35);">Loading…</td></tr></tbody>
         </table>
@@ -2095,6 +2224,64 @@ function fmtPct(n) {
   return (Number(n) * (Number(n) <= 1 ? 100 : 1)).toFixed(1) + '%';
 }
 
+function fmtDate(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso);
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function statsRowFields(it) {
+  var a = it.analytics || {};
+  return {
+    title: it.title || '',
+    category: it.category || '',
+    surface: it.surface || it.tab || '',
+    views: it.views != null ? it.views : '',
+    engaged_views: it.engaged_views != null ? it.engaged_views : (a.engagedViews != null ? a.engagedViews : ''),
+    avg_percent_viewed: it.avg_percent_viewed != null ? it.avg_percent_viewed : (a.averageViewPercentage != null ? a.averageViewPercentage : ''),
+    subs_gained: it.subs_gained != null ? it.subs_gained : (a.subscribersGained != null ? a.subscribersGained : ''),
+    published_date: it.published_date || it.published || '',
+    url: it.url || ''
+  };
+}
+
+function getFilteredChannelStatsItems() {
+  var d = window._channelStatsReport;
+  if (!d) return [];
+  var items = (d.catalog && d.catalog.items) || [];
+  var tabF = (g('stats-filter-tab') || {}).value || 'all';
+  var catF = (g('stats-filter-cat') || {}).value || 'all';
+  return items.filter(function(it) {
+    if (tabF !== 'all' && it.tab !== tabF) return false;
+    if (catF !== 'all' && it.category !== catF) return false;
+    return true;
+  });
+}
+
+function exportChannelStatsCsv() {
+  var rows = getFilteredChannelStatsItems();
+  if (!rows.length) { alert('No rows to export — load Channel Stats first.'); return; }
+  var headers = ['title', 'category', 'surface', 'views', 'engaged_views', 'avg_percent_viewed', 'subs_gained', 'published_date', 'url'];
+  function esc(v) {
+    var s = v == null ? '' : String(v);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  var lines = [headers.join(',')];
+  rows.forEach(function(it) {
+    var f = statsRowFields(it);
+    lines.push(headers.map(function(h) { return esc(f[h]); }).join(','));
+  });
+  var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'channel-stats-' + (window._channelStatsReport.handle || 'clipzworldnews') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
 function statsTabPill(tab) {
   var cls = tab === 'shorts' ? 'stats-tab-shorts' : (tab === 'streams' ? 'stats-tab-streams' : 'stats-tab-videos');
   return '<span class="stats-tab-pill ' + cls + '">' + tab + '</span>';
@@ -2116,11 +2303,20 @@ function loadChannelStats(refresh) {
       window._channelStatsReport = d;
       renderChannelStats(d);
     } catch (e) {
-      if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:#e74c3c;">' + e.message + '</td></tr>';
+      var msg = e.message || 'Failed to load stats';
+      if (cards) cards.innerHTML = '<div class="stats-card"><div class="stats-card-label">Error</div><div class="stats-card-value" style="font-size:14px;color:#e74c3c;">' + msg + '</div><div class="stats-card-sub">Try Refresh or check pm2 logs</div></div>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:#e74c3c;">' + msg + '</td></tr>';
+      var banner = g('stats-banner');
+      if (banner) {
+        banner.className = 'stats-banner stats-banner-warn';
+        banner.innerHTML = '<strong>Could not load channel stats.</strong> ' + msg;
+      }
     }
   };
   xhr.onerror = xhr.ontimeout = function() {
-    if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:#e74c3c;">Server unreachable — is pm2 running?</td></tr>';
+    var msg = xhr.status === 0 ? 'Request timed out — catalog fetch can take 1–2 min on first load' : 'Server unreachable — is pm2 running?';
+    if (cards) cards.innerHTML = '<div class="stats-card"><div class="stats-card-label">Error</div><div class="stats-card-value" style="font-size:14px;color:#e74c3c;">' + msg + '</div></div>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:#e74c3c;">' + msg + '</td></tr>';
   };
   xhr.send();
 }
@@ -2137,7 +2333,11 @@ function renderChannelStats(d) {
 
   var banner = g('stats-banner');
   if (banner) {
-    if (d.analytics && d.analytics.ok) {
+    if (d.stale) {
+      banner.className = 'stats-banner stats-banner-warn';
+      banner.innerHTML = '<strong>Showing cached data</strong> — live refresh failed' +
+        (d.staleError ? ': ' + d.staleError : '') + '. Click Refresh to retry.';
+    } else if (d.analytics && d.analytics.ok) {
       var cs = d.analytics.channelSummary && d.analytics.channelSummary.totals;
       banner.className = 'stats-banner stats-banner-ok';
       banner.innerHTML = '<strong>YouTube Analytics connected.</strong> Retention, engaged views, and subs gained for ' +
@@ -2201,7 +2401,8 @@ function renderChannelStats(d) {
   if (src && d.dataSources) {
     src.innerHTML = 'Sources: ' + d.dataSources.publicCatalog + '<br>' +
       'Private: ' + d.dataSources.privateMetrics + '<br>' +
-      'Cross-platform: ' + d.dataSources.crossPlatform;
+      'Cross-platform: ' + d.dataSources.crossPlatform + '<br>' +
+      '<span style="opacity:0.85;">Views + published date = public (yt-dlp). Engaged views, avg % viewed, subs gained = YouTube Analytics (last 365 days when OAuth connected).</span>';
   }
 
   renderChannelStatsTable();
@@ -2212,32 +2413,27 @@ function renderChannelStatsTable() {
   var tbody = g('stats-table-body');
   var cnt = g('stats-table-count');
   if (!tbody || !d) return;
-  var items = (d.catalog && d.catalog.items) || [];
-  var tabF = (g('stats-filter-tab') || {}).value || 'all';
-  var catF = (g('stats-filter-cat') || {}).value || 'all';
-  var filtered = items.filter(function(it) {
-    if (tabF !== 'all' && it.tab !== tabF) return false;
-    if (catF !== 'all' && it.category !== catF) return false;
-    return true;
-  });
+  var filtered = getFilteredChannelStatsItems();
   if (cnt) cnt.textContent = filtered.length + ' SHOWN';
   if (!filtered.length) {
     tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:rgba(255,255,255,0.35);">No matches.</td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(function(it) {
-    var a = it.analytics || {};
-    var title = (it.title || '').replace(/</g, '&lt;');
-    var link = it.url ? '<a href="' + it.url + '" target="_blank" style="color:rgba(255,255,255,0.75);text-decoration:none;">' + title + '</a>' : title;
+    var f = statsRowFields(it);
+    var title = (f.title || '').replace(/</g, '&lt;');
+    var link = f.url ? '<a href="' + f.url + '" target="_blank" style="color:rgba(255,255,255,0.75);text-decoration:none;">' + title + '</a>' : title;
+    var avgPct = f.avg_percent_viewed !== '' && f.avg_percent_viewed != null
+      ? Number(f.avg_percent_viewed).toFixed(1) + '%' : '—';
     return '<tr>' +
-      '<td style="font-weight:700;color:#c7af4f;">' + fmtNum(it.views) + '</td>' +
-      '<td>' + statsTabPill(it.tab) + '</td>' +
-      '<td class="stats-cat-' + (it.category || '').toLowerCase() + '">' + (it.category || '—') + '</td>' +
-      '<td style="max-width:320px;">' + link + '</td>' +
-      '<td>' + fmtNum(a.engagedViews) + '</td>' +
-      '<td>' + (a.averageViewPercentage != null ? Number(a.averageViewPercentage).toFixed(1) + '%' : '—') + '</td>' +
-      '<td>' + fmtNum(a.subscribersGained) + '</td>' +
-      '<td>' + fmtNum(a.likes) + '</td>' +
+      '<td style="max-width:280px;">' + link + '</td>' +
+      '<td class="stats-cat-' + (f.category || '').toLowerCase() + '">' + (f.category || '—') + '</td>' +
+      '<td>' + statsTabPill(f.surface) + '</td>' +
+      '<td style="font-weight:700;color:#c7af4f;">' + fmtNum(f.views) + '</td>' +
+      '<td>' + fmtNum(f.engaged_views) + '</td>' +
+      '<td>' + avgPct + '</td>' +
+      '<td>' + fmtNum(f.subs_gained) + '</td>' +
+      '<td style="white-space:nowrap;">' + fmtDate(f.published_date) + '</td>' +
     '</tr>';
   }).join('');
 }
@@ -3065,7 +3261,7 @@ function clearAllJobs() {
 // Reconstructs segments in 'rendering' status so REFRESH IDs button appears.
 function restoreJobsFromServer(showAlert) {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', CFG.ffmpegUrl + '/jobs', true);
+  xhr.open('GET', CFG.ffmpegUrl + '/jobs' + (showAlert ? '?restore=1' : ''), true);
   xhr.timeout = 10000;
   xhr.onload = function() {
     try {
@@ -3247,16 +3443,16 @@ function restoreJobsFromServer(showAlert) {
         // gate5_forced / gate5_running — Gate 5 is actively uploading; restore and poll.
         var isGate5InFlight = (serverStage === 'gate5_forced' || serverStage === 'gate5_running');
 
-        // On AUTO-restore (page load), skip assembled jobs too — they are done and awaiting manual publish.
-        // On MANUAL restore (operator clicked ↩ RESTORE JOBS), allow assembled jobs to come back.
-        // Always restore gate5_in_flight jobs so the dashboard shows upload progress.
-        var isAssembledDone = !isGate5InFlight && !!(serverJob.assembledAt || serverStage === 'assembled');
+        // On AUTO-restore (page load), skip jobs waiting for operator review/publish.
+        // On MANUAL restore (↩ RESTORE JOBS), bring back assembled + awaiting_review cards.
+        var isAwaitingOperator = serverStage === 'awaiting_review' || serverStage === 'metadata_review' || serverStage === 'assembled';
+        var isAssembledDone = !isGate5InFlight && isAwaitingOperator;
         if (isAssembledDone && !showAlert) {
-          cwn_log('[restore] Skipping assembled job ' + serverJob.jobId + ' on auto-restore — use ↩ RESTORE JOBS to bring it back', false);
+          cwn_log('[restore] Skipping review-ready job ' + serverJob.jobId + ' on auto-restore — use ↩ RESTORE JOBS to bring it back', false);
           return;
         }
 
-        var isAssembled = !!(serverJob.assembledAt || serverStage === 'assembled');
+        var isAssembled = isAwaitingOperator || !!(serverJob.assembledAt);
         var restoredStatus = isAssembled ? 'completed' : 'all_sent';
 
         // If assembled, mark all avatar segments as completed so ASSEMBLE button appears
@@ -3270,30 +3466,57 @@ function restoreJobsFromServer(showAlert) {
           });
         }
 
+        if (!segments.length && clipUrls.length) {
+          clipUrls.forEach(function(c, ci) {
+            var curl = c.url || c.clipUrl || '';
+            segments.push({
+              type: 'source_clip',
+              label: c.label || ('CLIP_' + (ci + 1)),
+              status: curl ? 'completed' : 'queued',
+              clipUrl: curl,
+              url: curl,
+              pageUrl: c.pageUrl || ''
+            });
+          });
+        }
+
+        var cardTitle = serverJob.title || (contentType.toUpperCase() + ' ' + dateLabel);
+        var savedOut = serverJob.state && serverJob.state.savedOutputs ? serverJob.state.savedOutputs : {};
+        var restoredPublishCopy = serverJob.publishCopy || savedOut.publishCopy || null;
+        var restoredDriveUrl = serverJob.driveUrl || savedOut.driveUrl || serverJob.finalUrl || null;
+
         var restoredJob = {
           id:          serverJob.jobId,
           scriptJobId: serverJob.scriptJobId || serverJob.jobId,
           type:        contentType,
-          title:       contentType.toUpperCase() + ' ' + dateLabel + ' (' + avatarCount + ' avatar + ' + clipCount + ' clips)',
+          title:       cardTitle,
           status:      restoredStatus,
           stage:       serverJob.stage || null,
-          jobSpecId:   serverJob.jobSpecId || null,
+          jobSpecId:   serverJob.jobSpecId || serverJob.specId || null,
+          clipsOnly:   !!serverJob.clipsOnly,
           manualSegments: serverJob.manualSegments || null,
           created:     serverJob.savedAt || new Date().toISOString(),
           segments:    segments,
           script:      scriptText || '',
           meta:        {
-            streamers:       (serverJob.streamers || []).map(function(s){ return s.twitchUsername || s; }),
+            streamers:       (serverJob.streamers || []).map(function(s){ return (s && s.twitchUsername) ? s.twitchUsername : s; }),
             orderedClipUrls: clipUrls
           },
           url:         null,
           pct:         isAssembled ? 100 : 50,
-          finalUrl:    serverJob.finalUrl || null,
+          finalUrl:    serverJob.finalUrl || restoredDriveUrl || null,
+          driveUrl:    restoredDriveUrl,
           assembledAt: serverJob.assembledAt || null,
+          publishCopy: restoredPublishCopy,
+          metadataQaViolations: serverJob.metadataQaViolations || null,
           canvaUrl:    null, thumbnail: null, publishPrep: null,
           platforms:   { youtube: 'pending', tiktok: 'pending', instagram: 'pending' },
           _restoredFromServer: true
         };
+
+        if (restoredPublishCopy) {
+          try { restoredJob.publishPrep = publishCopyToPrep(restoredPublishCopy); } catch (_pcErr) { /* non-fatal */ }
+        }
 
         JOBS.push(restoredJob);
         existingIds[serverJob.jobId] = true;
@@ -3313,7 +3536,7 @@ function restoreJobsFromServer(showAlert) {
         renderQueue();
         cwn_log('[restore] ✅ Restored ' + added + ' job(s) from server — click 🔄 REFRESH IDs to sync HeyGen URLs', false);
         if (showAlert) {
-          alert('✅ Restored ' + added + ' job(s) from server.\n\nNext steps:\n1. Click 🔄 REFRESH IDs on each job card\n2. Once segments show COMPLETED, click ⚙ ASSEMBLE');
+          alert('✅ Restored ' + added + ' job(s) from server.\n\nReview-ready jobs: check SEO preview on the card → 📋 REVIEW SEO or 🚀 APPROVE & PUBLISH.');
         }
       } else {
         cwn_log('[restore] Server has ' + resp.jobs.length + ' job(s) — all already in queue', false);
@@ -3399,6 +3622,27 @@ function renderQueue() {
     });
     platBar += '<span style="font-size:9px;color:rgba(255,255,255,0.2);margin-left:2px;">tap to mark posted</span></div>';
 
+    // SEO / publish metadata preview (clip comps + review-hold jobs)
+    var metaStrip = '';
+    var jobStage = job.stage || '';
+    var pubPayload = resolvePublishPayload(job);
+    var hasSeo = !!(pubPayload && pubPayload.title);
+    if (jobStage === 'metadata_review' && job.metadataQaViolations && job.metadataQaViolations.length) {
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:11px;color:#e74c3c;">'
+        + '⛔ METADATA QA — fix before publish: ' + job.metadataQaViolations.slice(0, 3).join(' · ')
+        + '</div>';
+    } else if (hasSeo && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || job.assembledAt || job.clipsOnly)) {
+      var tagCount = (pubPayload.tags || []).length;
+      var hashCount = ((pubPayload.description || '').match(/#\w+/g) || []).length;
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.06);border:1px solid rgba(199,175,79,0.22);border-radius:6px;">'
+        + '<div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.55);letter-spacing:2px;margin-bottom:6px;">PUBLISH METADATA'+(jobStage==='awaiting_review'?' — AWAITING YOUR REVIEW':'')+'</div>'
+        + '<div style="font-size:12px;color:#fff;font-weight:700;line-height:1.4;margin-bottom:4px;">'+escHtml(pubPayload.title)+'</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,0.45);font-family:monospace;">'
+        + 'YT desc '+(pubPayload.description||'').length+' chars · '+tagCount+' tags · '+hashCount+' # · '
+        + 'TT '+(pubPayload.tiktokCaption||'').length+' chars · IG '+(pubPayload.igCaption||'').length+' chars'
+        + '</div></div>';
+    }
+
     // ACTION BUTTONS
     var actions = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">';
     if (doneSegs.length) {
@@ -3409,6 +3653,9 @@ function renderQueue() {
       var dlUrl = job.finalUrl.startsWith('http') ? job.finalUrl : CFG.ffmpegUrl + job.finalUrl;
       actions += '<a href="'+dlUrl+'" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none;">📥 MP4</a>';
       actions += '<button onclick="triggerDriveCanva(\'' + job.id + '\',\'' + (job.filename||'') + '\',\'' + (job.title||'') + '\')" class="btn btn-gold btn-sm">☁️ DRIVE→CANVA</button>';
+    } else if (job.driveUrl || (job.finalUrl && job.finalUrl.indexOf('http') === 0)) {
+      var cloudUrl = job.driveUrl || job.finalUrl;
+      actions += '<a href="'+cloudUrl+'" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none;">📥 R2 MP4</a>';
     }
     if (doneSegs.length&&!job.canvaUrl) {
       var firstIdx = segments.indexOf(doneSegs[0]);
@@ -3419,7 +3666,10 @@ function renderQueue() {
       actions += '<a href="'+job.canvaUrl+'" target="_blank" class="btn btn-canva btn-sm" style="text-decoration:none;">↗ OPEN CANVA</a>';
     }
     actions += '<button onclick="navToThumbnail(\'' + job.id + '\')" class="btn btn-outline btn-sm">🖼 THUMBNAIL</button>';
-    actions += '<button onclick="navToPublishPrep(\'' + job.id + '\')" class="btn btn-outline btn-sm">📋 PUBLISH COPY'+(job.publishPrep?' ✓':'')+'</button>';
+    actions += '<button onclick="navToPublishPrep(\'' + job.id + '\')" class="btn btn-outline btn-sm">📋 REVIEW SEO'+(job.publishPrep?' ✓':'')+'</button>';
+    if ((jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'metadata_review' || jobStage === 'gate5_failed') && (job.driveUrl || job.finalUrl) && jobStage !== 'metadata_review') {
+      actions += '<button onclick="approveAndPublishJob(\'' + job.id + '\')" class="btn btn-green btn-sm" style="font-weight:700;" title="Upload to all platforms using assembly-generated SEO (Gate 5)">🚀 APPROVE &amp; PUBLISH</button>';
+    }
     // Short-form only: portrait thumbnail + CapCut draft buttons
     var isShortJob = (job.type||'').indexOf('short') > -1 || job.format === 'portrait';
     if (isShortJob) {
@@ -3497,7 +3747,7 @@ function renderQueue() {
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
     var tagCls = status==='completed'||status==='all_sent'?'tag-done':status==='failed'?'tag-failed':'tag-processing';
-    var tagLbl = status.toUpperCase().replace('_',' ');
+    var tagLbl = (jobStage === 'awaiting_review') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : status.toUpperCase().replace('_',' ');
     var pctBar = (status==='processing'||anyRendering)?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
 
     return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':status==='failed'?'failed':'')+'" id="job-'+job.id+'">'
@@ -3515,7 +3765,7 @@ function renderQueue() {
       +'</div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+platBar+actions+segToggle+segHtml
+      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -4812,7 +5062,7 @@ function fetchCwnNewsVideos(callback, source) {
           title:             v.title || '',
           link:              v.url || v.href || '',
           pubDate:           v.publishedAt || '',
-          thumbnail:         v.thumbnail || '',
+          thumbnail:         normalizeBbcThumbUrl(v.thumbnail || ''),
           description:       v.description || '',
           enclosure:         {},
           hlsUrl:            v.hlsUrl || '',
@@ -4834,7 +5084,9 @@ function fetchCwnNewsVideos(callback, source) {
         validationSummary: d.validationSummary || null,
         sweetSpotCount: d.sweetSpotCount,
         sweetSpotBandSec: d.sweetSpotBandSec,
-        targetDurationSec: d.targetDurationSec
+        targetDurationSec: d.targetDurationSec,
+        sourceBreakdown: d.sourceBreakdown || null,
+        sourceBreakdownMatched: d.sourceBreakdownMatched || null
       }, null);
     } catch(e) { callback(null, e.message); }
   };
@@ -7454,6 +7706,51 @@ function nbaUseSelected() {} // legacy stub — no longer used
 
 // ── Main-page inline clip pickers ──────────────────────────────────────────────
 
+var PICKER_PANEL_CONFIG = {
+  sports: { emptyId: 'gen-sports-empty', pickerId: 'nba-inline-picker' },
+  news: { emptyId: 'gen-news-empty', pickerId: 'news-inline-picker' },
+  twitch: { emptyId: 'gen-twitch-empty', pickerId: 'twitch-inline-picker', titleId: 'twitch-main-title', titlePick: 'CLIP PICKER', titleDefault: 'CLIP PICKER' }
+};
+
+function setPickerPanelVisible(pillar, visible) {
+  var cfg = PICKER_PANEL_CONFIG[pillar];
+  if (!cfg) return;
+  var card = document.querySelector('.gen-pillar-card[data-pillar="' + pillar + '"]');
+  var main = card && card.querySelector('.gen-main');
+  if (main) main.classList.toggle('gen-main-has-picker', !!visible);
+  if (cfg.emptyId) {
+    var empty = g(cfg.emptyId);
+    if (empty) empty.style.display = visible ? 'none' : '';
+  }
+  var picker = g(cfg.pickerId);
+  if (picker) picker.style.display = visible ? '' : 'none';
+  if (cfg.hideId) {
+    var hide = g(cfg.hideId);
+    if (hide) hide.style.display = visible ? 'none' : '';
+  }
+  if (cfg.titleId) {
+    var titleEl = g(cfg.titleId);
+    if (titleEl) titleEl.textContent = visible ? cfg.titlePick : cfg.titleDefault;
+  }
+}
+
+function setSportsPickerPanelVisible(visible) { setPickerPanelVisible('sports', visible); }
+
+function pickerHeadHtml(lines) {
+  return '<div class="gen-picker-head">' + lines.filter(function(l) { return l; }).join('') + '</div>';
+}
+
+function pickerCardClasses(isSelected, hasVideo) {
+  var cls = 'gen-picker-card';
+  if (isSelected && hasVideo !== false) cls += ' is-selected';
+  if (hasVideo === false) cls += ' is-disabled';
+  return cls;
+}
+
+function pickerDurColor(dur) {
+  return dur >= 45 ? '#2ecc71' : dur >= 20 ? '#c7af4f' : 'rgba(255,255,255,0.35)';
+}
+
 // State for main-page pickers
 var _nbaPickerGames = [];   // [{gameId, away, home, awayAbbr, homeAbbr, awayScore, homeScore, clipUrl, clipDuration, thumbnail, localPath, selected}]
 var _newsPickerStories = []; // [{title, link, videoUrl, hlsUrl, thumbnailUrl, orientation, pillarboxFilter, pubDate, selected}]
@@ -7502,7 +7799,7 @@ function previewSportsHighlights() {
   var btn = g('btn-preview-sports-clips');
   var picker = g('nba-inline-picker');
   if (picker.style.display !== 'none' && _sportsPickerMode === 'clips' && _sportsPickerClips.length > 0) {
-    picker.style.display = 'none';
+    setSportsPickerPanelVisible(false);
     btn.textContent = 'EXPLORE CLIPS';
     return;
   }
@@ -7516,6 +7813,7 @@ function previewSportsHighlights() {
     alert('Select at least one sport category above (chips with video in last 48h).');
     return;
   }
+  var _fetchStart = Date.now();
   fetchSportsHighlights(function(d, err) {
     btn.disabled = false;
     if (err || !d || !(d.videos || []).length) {
@@ -7523,6 +7821,14 @@ function previewSportsHighlights() {
       alert('Could not fetch sports clips (' + cats.join(', ') + '): ' + (err || 'no data'));
       return;
     }
+    _sportsPickerFetchMeta = {
+      ms: Date.now() - _fetchStart,
+      categories: cats,
+      sweetSpotCount: d.sweetSpotCount,
+      sweetSpotBandSec: d.sweetSpotBandSec,
+      categoryBreakdown: d.categoryBreakdown || {},
+      categoryBreakdownMatched: d.categoryBreakdownMatched || {}
+    };
     _sportsPickerClips = (d.videos || []).map(function(v) {
       var catMeta = (_sportsActiveCategories || []).find(function(c) { return c.id === (v.category || v.source); });
       var sty = catMeta ? sportsCategoryStyle(catMeta) : sportsSourceStyle(v.source || v.category);
@@ -7531,7 +7837,7 @@ function previewSportsHighlights() {
         link: v.url || '',
         hlsUrl: v.hlsUrl || '',
         videoUrl: v.hlsUrl || '',
-        thumbnailUrl: v.thumbnail || '',
+        thumbnailUrl: normalizeBbcThumbUrl(v.thumbnail || ''),
         duration: v.duration != null ? v.duration : null,
         pubDate: v.publishedAt || '',
         source: sty.label,
@@ -7541,7 +7847,6 @@ function previewSportsHighlights() {
         selected: false
       };
     });
-    _sportsPickerFetchMeta = { ms: 0, categories: cats, sweetSpotCount: d.sweetSpotCount, sweetSpotBandSec: d.sweetSpotBandSec };
     renderSportsHighlightsPicker(btn);
   });
 }
@@ -7556,35 +7861,48 @@ function renderSportsHighlightsPicker(btn) {
   var withVideo = visible.filter(function(s){ return !!s.hlsUrl; }).length;
   var selectedCount = visible.filter(function(s){ return s.selected && s.hlsUrl; }).length;
   var filterLine = pickerFilterSummaryLine(filters, visible.length, _sportsPickerClips.length);
-  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:8px;letter-spacing:1px;">'
-    + 'SPORTS CLIP EXPLORER — ' + withVideo + '/' + visible.length + ' WITH VIDEO — ' + selectedCount + ' SELECTED'
-    + (filterLine ? '<br><span style="color:rgba(199,175,79,0.65);">' + filterLine + '</span>' : '')
-    + '</div><div style="display:flex;flex-wrap:wrap;gap:8px;">';
+  var breakdown = formatPickerBreakdownLine(labelSportsCategoryBreakdown(_sportsPickerFetchMeta.categoryBreakdown || {}));
+  var emptyCats = [];
+  if (_sportsPickerFetchMeta.categoryBreakdownMatched) {
+    Object.keys(_sportsPickerFetchMeta.categoryBreakdownMatched).forEach(function(catId) {
+      if ((_sportsPickerFetchMeta.categoryBreakdownMatched[catId] || 0) === 0) {
+        emptyCats.push(sportsCategoryLabel(catId));
+      }
+    });
+  }
+  var fetchNote = _sportsPickerFetchMeta.ms
+    ? ('Fetched in ' + (_sportsPickerFetchMeta.ms / 1000).toFixed(1) + 's'
+      + (breakdown ? ' — ' + breakdown : '')
+      + (emptyCats.length ? ' · no matches: ' + emptyCats.slice(0, 6).join(', ') + (emptyCats.length > 6 ? '…' : '') : ''))
+    : '';
+  var html = pickerHeadHtml([
+    'SPORTS CLIP EXPLORER — ' + withVideo + '/' + visible.length + ' WITH VIDEO — ' + selectedCount + ' SELECTED',
+    fetchNote ? '<br><span class="picker-sub-cyan">' + fetchNote + '</span>' : '',
+    filterLine ? '<br><span class="picker-sub-gold">' + filterLine + '</span>' : ''
+  ]) + '<div class="gen-picker-grid">';
 
   visible.forEach(function(clip) {
     var i = _sportsPickerClips.indexOf(clip);
     var hasVideo = !!clip.hlsUrl;
     var sty = sportsSourceStyle(clip.sourceKey || clip.source);
     var isSelected = !!clip.selected && hasVideo;
-    var cardBorder = isSelected ? 'rgba(199,175,79,0.55)' : 'rgba(255,255,255,0.1)';
-    var cardBg = isSelected ? 'rgba(199,175,79,0.06)' : 'rgba(255,255,255,0.02)';
     var thumb = clip.thumbnailUrl || '';
     var dur = clip.duration ? Math.round(clip.duration) : 0;
     var durStr = dur ? dur + 's' : '';
-    var durClr = dur >= 45 ? '#2ecc71' : dur >= 20 ? '#c7af4f' : 'rgba(255,255,255,0.35)';
+    var durClr = pickerDurColor(dur);
     var when = _clipRelTime(clip.pubDate);
     var sub = clip.meta && clip.meta.awayAbbr ? (clip.meta.awayAbbr + ' @ ' + clip.meta.homeAbbr) : '';
-    html += '<div onclick="' + (hasVideo ? '_toggleSportsClip(' + i + ')' : '') + '" style="cursor:' + (hasVideo?'pointer':'default') + ';width:168px;border:1px solid ' + cardBorder + ';border-radius:6px;background:' + cardBg + ';padding:5px;">';
-    if (thumb) html += '<img src="' + thumb + '" style="width:100%;height:72px;object-fit:cover;border-radius:4px;margin-bottom:5px;" onerror="this.style.display=\'none\'">';
-    html += '<div style="font-size:10px;color:#fff;line-height:1.25;margin-bottom:4px;max-height:38px;overflow:hidden;">' + (clip.title || '').slice(0, 72) + '</div>';
+    html += '<div class="' + pickerCardClasses(isSelected, hasVideo) + '" onclick="' + (hasVideo ? '_toggleSportsClip(' + i + ')' : '') + '" style="cursor:' + (hasVideo?'pointer':'default') + ';">';
+    html += pickerThumbImgHtml(thumb);
+    html += '<div class="picker-title">' + (clip.title || '').slice(0, 72) + '</div>';
     if (sub) html += '<div style="font-size:8px;color:rgba(255,255,255,0.45);margin-bottom:3px;">' + sub + '</div>';
-    html += '<div style="font-size:8px;font-family:monospace;color:' + sty.color + ';margin-bottom:4px;">' + sty.label + '</div>';
-    if (when) html += '<div style="font-size:8px;color:rgba(255,200,80,0.65);font-family:monospace;margin-bottom:4px;">' + when + '</div>';
-    html += '<div style="display:flex;justify-content:flex-end;">' + (durStr ? '<span style="font-size:9px;font-family:monospace;font-weight:700;color:' + durClr + ';">' + durStr + '</span>' : '') + '</div></div>';
+    html += '<div class="picker-source" style="color:' + sty.color + ';">' + sty.label + '</div>';
+    if (when) html += '<div class="picker-when">' + when + '</div>';
+    html += '<div style="display:flex;justify-content:flex-end;">' + (durStr ? '<span class="picker-dur" style="color:' + durClr + ';">' + durStr + '</span>' : '') + '</div></div>';
   });
   html += '</div>';
   picker.innerHTML = html;
-  picker.style.display = '';
+  setSportsPickerPanelVisible(true);
 }
 
 function _toggleSportsClip(i) {
@@ -7605,7 +7923,7 @@ function previewNBAGames() {
   var btn = g('btn-preview-nba');
   // Toggle off if already showing
   if (picker.style.display !== 'none' && _nbaPickerGames.length > 0) {
-    picker.style.display = 'none';
+    setSportsPickerPanelVisible(false);
     btn.textContent = 'PICK GAMES';
     return;
   }
@@ -7708,9 +8026,10 @@ function renderNBAPicker(btn, statusEl, dateStr) {
   }
   var picker = g('nba-inline-picker');
   var filterLine = pickerFilterSummaryLine(filters, visible.length, _nbaPickerGames.length);
-  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:6px;letter-spacing:1px;">SELECT GAMES FOR LONG FORM — UNCHECKED = EXCLUDED'
-    + (filterLine ? '<br><span style="color:rgba(28,232,255,0.55);">' + filterLine + '</span>' : '')
-    + '</div>';
+  var html = pickerHeadHtml([
+    'NBA GAME PICKER — ' + withClips + '/' + visible.length + ' WITH CLIPS — UNCHECK TO EXCLUDE',
+    filterLine ? '<br><span class="picker-sub-cyan">' + filterLine + '</span>' : ''
+  ]);
   visible.forEach(function(gm) {
     var i = _nbaPickerGames.indexOf(gm);
     var hasClip = !!gm.clipUrl;
@@ -7736,7 +8055,7 @@ function renderNBAPicker(btn, statusEl, dateStr) {
       +'</label>';
   });
   picker.innerHTML = html;
-  picker.style.display = '';
+  setSportsPickerPanelVisible(true);
 }
 
 // Override generateNBA to respect manual selection when picker has been used
@@ -7871,6 +8190,42 @@ function pickerFilterSummaryLine(filters, shown, total) {
   return line;
 }
 
+function normalizeBbcThumbUrl(url) {
+  if (!url || String(url).indexOf('ichef.bbci.co.uk') < 0) return url || '';
+  var m = String(url).match(/\/(p0[a-z0-9]+)\.(jpg|jpeg|png|webp)/i);
+  if (m) return 'https://ichef.bbci.co.uk/images/ic/raw/' + m[1] + '.' + m[2].toLowerCase();
+  return String(url).replace(/\{width\}|\$width/g, '960');
+}
+
+function pickerThumbImgHtml(thumbUrl) {
+  var thumb = normalizeBbcThumbUrl(thumbUrl);
+  if (!thumb) return '<div class="picker-thumb-placeholder">NO THUMB</div>';
+  var ref = thumb.indexOf('ichef.bbci.co.uk') >= 0 ? ' referrerpolicy="no-referrer"' : '';
+  return '<img src="' + thumb + '" class="picker-thumb"' + ref + ' onerror="this.style.display=\'none\'">';
+}
+
+function formatPickerBreakdownLine(breakdown) {
+  if (!breakdown) return '';
+  var keys = Object.keys(breakdown);
+  if (!keys.length) return '';
+  return keys.map(function(k) { return k + ' ' + breakdown[k]; }).join(' · ');
+}
+
+function sportsCategoryLabel(catId) {
+  var meta = (_sportsActiveCategories || []).find(function(c) { return c.id === catId; });
+  if (meta) return meta.label || catId;
+  return sportsSourceStyle(catId).label || catId;
+}
+
+function labelSportsCategoryBreakdown(breakdown) {
+  var out = {};
+  if (!breakdown) return out;
+  Object.keys(breakdown).forEach(function(catId) {
+    out[sportsCategoryLabel(catId)] = breakdown[catId];
+  });
+  return out;
+}
+
 function savePickerFilters(kind) {
   var f = getPickerFilters(kind);
   try {
@@ -7954,7 +8309,7 @@ function previewNewsStories() {
   var btn = g('btn-preview-news');
   var picker = g('news-inline-picker');
   if (picker.style.display !== 'none' && _newsPickerStories.length > 0) {
-    picker.style.display = 'none';
+    setPickerPanelVisible('news', false);
     btn.textContent = 'PICK STORIES';
     return;
   }
@@ -7966,9 +8321,10 @@ function previewNewsStories() {
     btn.disabled = false;
     _newsPickerFetchMeta.ms = Date.now() - _fetchStart;
     _newsPickerFetchMeta.source = _pickSrc;
-    _newsPickerFetchMeta.breakdown = {};
-    _newsPickerFetchMeta.sweetSpotCount = d.sweetSpotCount != null ? d.sweetSpotCount : null;
-    _newsPickerFetchMeta.sweetSpotBandSec = d.sweetSpotBandSec || null;
+    _newsPickerFetchMeta.sweetSpotCount = d && d.sweetSpotCount != null ? d.sweetSpotCount : null;
+    _newsPickerFetchMeta.sweetSpotBandSec = d && d.sweetSpotBandSec || null;
+    _newsPickerFetchMeta.breakdown = (d && d.sourceBreakdown) || {};
+    _newsPickerFetchMeta.breakdownMatched = (d && d.sourceBreakdownMatched) || {};
     if (err || !d || !(d.items||[]).length) {
       btn.textContent = 'PICK STORIES';
       alert('Could not fetch stories (' + _pickSrc + '): ' + (err || 'no data'));
@@ -7976,8 +8332,6 @@ function previewNewsStories() {
     }
     var fetchLimit = getNewsFetchLimit();
     (d.items||[]).slice(0, fetchLimit).forEach(function(it) {
-      var sty = newsSourceStyle(it.source || _pickSrc);
-      _newsPickerFetchMeta.breakdown[sty.label] = (_newsPickerFetchMeta.breakdown[sty.label] || 0) + 1;
       _newsPickerStories.push({
         title: (it.title||'').trim(),
         link: it.link||'',
@@ -7988,7 +8342,7 @@ function previewNewsStories() {
         orientation: it.sourceOrientation||it.orientation||'landscape',
         sourceOrientation: it.sourceOrientation||it.orientation||'landscape',
         pillarboxFilter: it.pillarboxFilter != null ? it.pillarboxFilter : null,
-        source: it.source || sty.label,
+        source: it.source || newsSourceStyle(it.source || _pickSrc).label,
         pubDate: it.pubDate||'',
         desc: (it.description||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,1200),
         selected: false
@@ -8007,61 +8361,62 @@ function renderNewsPicker(btn, maxCount) {
   });
   var withVideo = visible.filter(function(s){ return !!s.hlsUrl; }).length;
   var selectedCount = visible.filter(function(s){ return s.selected && s.hlsUrl; }).length;
-  var breakdown = Object.keys(_newsPickerFetchMeta.breakdown || {}).map(function(k) {
-    return k + ' ' + _newsPickerFetchMeta.breakdown[k];
-  }).join(' · ');
+  var breakdown = formatPickerBreakdownLine(_newsPickerFetchMeta.breakdown || {});
+  var matchedNote = '';
+  if (_newsPickerFetchMeta.source === 'all' && _newsPickerFetchMeta.breakdownMatched) {
+    var matchedParts = [];
+    Object.keys(_newsPickerFetchMeta.breakdownMatched).forEach(function(k) {
+      var n = _newsPickerFetchMeta.breakdownMatched[k];
+      if (n === 0) matchedParts.push(k + ' 0 (none match filters)');
+    });
+    if (matchedParts.length) matchedNote = ' · ' + matchedParts.join(' · ');
+  }
   var fetchNote = _newsPickerFetchMeta.ms
     ? ('Fetched in ' + (_newsPickerFetchMeta.ms / 1000).toFixed(1) + 's' + (breakdown ? ' — ' + breakdown : '')
+      + matchedNote
       + (_newsPickerFetchMeta.sweetSpotCount != null && _newsPickerFetchMeta.sweetSpotBandSec
         ? ' · ~' + (_newsPickerFetchMeta.sweetSpotBandSec[0] || 18) + '–' + (_newsPickerFetchMeta.sweetSpotBandSec[1] || 48) + 's: '
           + _newsPickerFetchMeta.sweetSpotCount + ' clip' + (_newsPickerFetchMeta.sweetSpotCount === 1 ? '' : 's')
         : ''))
     : '';
   var filterLine = pickerFilterSummaryLine(filters, visible.length, _newsPickerStories.length);
-  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:8px;letter-spacing:1px;">'
-    + 'CHECK STORIES TO USE — ' + withVideo + '/' + visible.length + ' HAVE VIDEO — '
-    + selectedCount + ' SELECTED'
-    + (visible.length < _newsPickerStories.length ? ' · ' + (_newsPickerStories.length - visible.length) + ' hidden by filters' : '')
-    + (fetchNote ? '<br><span style="color:rgba(28,232,255,0.55);">' + fetchNote + '</span>' : '')
-    + (filterLine ? '<br><span style="color:rgba(199,175,79,0.65);">' + filterLine + '</span>' : '')
-    + '</div>'
-    + '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+  var html = pickerHeadHtml([
+    'NEWS CLIP EXPLORER — ' + withVideo + '/' + visible.length + ' WITH VIDEO — ' + selectedCount + ' SELECTED'
+      + (visible.length < _newsPickerStories.length ? ' · ' + (_newsPickerStories.length - visible.length) + ' hidden by filters' : ''),
+    fetchNote ? '<br><span class="picker-sub-cyan">' + fetchNote + '</span>' : '',
+    filterLine ? '<br><span class="picker-sub-gold">' + filterLine + '</span>' : ''
+  ]) + '<div class="gen-picker-grid">';
 
   visible.forEach(function(story) {
     var i = _newsPickerStories.indexOf(story);
     var hasVideo = !!story.hlsUrl;
     var sty = newsSourceStyle(story.source);
     var isSelected = !!story.selected && hasVideo;
-    var cardBorder = isSelected ? 'rgba(199,175,79,0.55)' : 'rgba(255,255,255,0.1)';
-    var cardBg = isSelected ? 'rgba(199,175,79,0.06)' : 'rgba(255,255,255,0.02)';
     var thumb = story.thumbnailUrl || '';
     var dur = story.duration ? Math.round(story.duration) : 0;
     var durStr = dur ? dur + 's' : '';
-    var durClr = dur >= 45 ? '#2ecc71' : dur >= 20 ? '#c7af4f' : 'rgba(255,255,255,0.35)';
+    var durClr = pickerDurColor(dur);
     var when = _clipRelTime(story.pubDate);
-    var opacity = hasVideo ? '1' : '0.45';
     var cursor = hasVideo ? 'pointer' : 'not-allowed';
 
-    html += '<div onclick="' + (hasVideo ? '_toggleNewsStory(' + i + ')' : '') + '" style="cursor:' + cursor + ';opacity:' + opacity + ';width:168px;border:1px solid ' + cardBorder + ';border-radius:6px;background:' + cardBg + ';padding:5px;transition:all 0.15s;position:relative;">';
-    html += '<label style="position:absolute;top:6px;left:6px;z-index:2;cursor:' + cursor + ';" onclick="event.stopPropagation();">'
+    html += '<div class="' + pickerCardClasses(isSelected, hasVideo) + '" onclick="' + (hasVideo ? '_toggleNewsStory(' + i + ')' : '') + '" style="cursor:' + cursor + ';">';
+    html += '<label class="picker-check" onclick="event.stopPropagation();">'
       + '<input type="checkbox" id="newspick-' + i + '" ' + (isSelected ? 'checked' : '') + (hasVideo ? '' : ' disabled')
       + ' onchange="_newsPickerStories[' + i + '].selected=this.checked&&!!_newsPickerStories[' + i + '].hlsUrl;_renderNewsPickerCards()" style="width:14px;height:14px;">'
       + '</label>';
     if (thumb) {
-      html += '<img src="' + thumb + '" style="width:100%;height:72px;object-fit:cover;border-radius:4px;margin-bottom:5px;background:#1a2035;" onerror="this.src=\'\';this.style.display=\'none\'">';
+      html += pickerThumbImgHtml(thumb);
     } else {
-      html += '<div style="width:100%;height:72px;background:rgba(255,255,255,0.05);border-radius:4px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.2);font-size:10px;">NO THUMB</span></div>';
+      html += '<div class="picker-thumb-placeholder">NO THUMB</div>';
     }
-    html += '<div style="font-size:10px;color:#fff;line-height:1.25;margin-bottom:4px;max-height:38px;overflow:hidden;">' + (story.title || '').slice(0, 72) + '</div>';
-    html += '<div style="font-size:8px;font-family:monospace;color:' + sty.color + ';margin-bottom:4px;">' + sty.label + '</div>';
-    if (when) {
-      html += '<div style="font-size:8px;color:rgba(255,200,80,0.65);font-family:monospace;margin-bottom:4px;" title="' + (story.pubDate || '') + '">' + when + '</div>';
-    }
+    html += '<div class="picker-title">' + (story.title || '').slice(0, 72) + '</div>';
+    html += '<div class="picker-source" style="color:' + sty.color + ';">' + sty.label + '</div>';
+    if (when) html += '<div class="picker-when">' + when + '</div>';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;min-height:14px;">';
     if (!hasVideo) {
       html += '<span style="font-size:8px;color:rgba(255,80,80,0.75);">NO VIDEO</span>';
     } else if (durStr) {
-      html += '<span style="font-size:9px;font-family:monospace;font-weight:700;color:' + durClr + ';">' + durStr + '</span>';
+      html += '<span class="picker-dur" style="color:' + durClr + ';">' + durStr + '</span>';
     } else {
       html += '<span style="font-size:8px;color:rgba(46,204,113,0.7);">✓ VIDEO</span>';
     }
@@ -8070,7 +8425,7 @@ function renderNewsPicker(btn, maxCount) {
 
   html += '</div>';
   picker.innerHTML = html;
-  picker.style.display = '';
+  setPickerPanelVisible('news', true);
 }
 
 function _toggleNewsStory(i) {
@@ -8287,6 +8642,29 @@ function _newsStoryToDispatch(s) {
   };
 }
 
+function startClipCompReviewPoll(jobId) {
+  var attempts = 0;
+  var maxAttempts = 80; // ~20 min at 15s
+  function tick() {
+    attempts++;
+    fetchJobCard(jobId, function(err, serverJob) {
+      if (!err && serverJob) {
+        var job = JOBS.find(function(j) { return j.id === jobId; });
+        if (job) {
+          mergeServerJobIntoLocal(jobId, serverJob);
+        } else {
+          restoreJobsFromServer(false);
+        }
+        renderQueue();
+        var st = serverJob.stage || '';
+        if (st === 'awaiting_review' || st === 'metadata_review' || st === 'published' || st === 'gate5_failed') return;
+      }
+      if (attempts < maxAttempts) setTimeout(tick, 15000);
+    });
+  }
+  setTimeout(tick, 5000);
+}
+
 function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, statusEl, scheduledAt) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', (CFG.ffmpegUrl || 'http://localhost:3000') + '/generate-clip-comp', true);
@@ -8298,6 +8676,35 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
       if (xhr.status === 200 && d.ok) {
         msg = 'CLIPS COMP started — ' + d.clipCount + ' clip(s), job ' + d.jobId;
         if (scheduledAt) applyJobPublishSchedule(d.jobId, platforms, scheduledAt);
+        var streamerNames = clips.map(function(c) { return c.displayName || c.streamer || ''; }).filter(Boolean);
+        var localJob = {
+          id: d.jobId,
+          type: contentType,
+          title: clips.length === 1 ? ('Clip Short — ' + (streamerNames[0] || 'Twitch'))
+            : ('Clips Comp — ' + (streamerNames.slice(0, 3).join(', ') || 'Twitch')),
+          status: 'completed',
+          stage: 'heygen_done',
+          clipsOnly: true,
+          created: new Date().toISOString(),
+          segments: clips.map(function(c, i) {
+            return {
+              type: 'source_clip',
+              label: 'CLIP_' + (i + 1),
+              status: 'completed',
+              clipUrl: c.url || c.clipUrl || '',
+              url: c.url || c.clipUrl || '',
+              pageUrl: c.pageUrl || ''
+            };
+          }),
+          platforms: { youtube: 'pending', tiktok: 'pending', instagram: 'pending' },
+          meta: { streamers: streamerNames, orderedClipUrls: clips }
+        };
+        if (!JOBS.some(function(j) { return j.id === d.jobId; })) {
+          JOBS.unshift(localJob);
+          saveJobs();
+          renderQueue();
+        }
+        startClipCompReviewPoll(d.jobId);
       } else {
         msg = 'CLIPS COMP failed: ' + (d.error || ('HTTP ' + xhr.status));
       }
@@ -8588,11 +8995,7 @@ var TWITCH_PICKER_DISPLAY_NAMES = {
 };
 
 function getSelectedStreamerPlatforms() {
-  var out = [];
-  if (g('streamer-plat-twitch') && g('streamer-plat-twitch').checked) out.push('twitch');
-  if (g('streamer-plat-kick') && g('streamer-plat-kick').checked) out.push('kick');
-  if (g('streamer-plat-youtube') && g('streamer-plat-youtube').checked) out.push('youtube');
-  return out.length ? out : ['twitch'];
+  return ['twitch', 'kick', 'youtube'];
 }
 
 function previewTwitchClips() {
@@ -8600,7 +9003,7 @@ function previewTwitchClips() {
   var picker = g('twitch-inline-picker');
   // Toggle: if already open with data, hide it
   if (picker.style.display !== 'none' && _twitchPickerStreamers.length > 0) {
-    picker.style.display = 'none';
+    setPickerPanelVisible('twitch', false);
     btn.textContent = 'PICK CLIPS';
     return;
   }
@@ -8695,20 +9098,18 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
   var picker = g('twitch-inline-picker');
   var filterLine = pickerFilterSummaryLine(filters);
 
-  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:8px;letter-spacing:1px;">'
-    + 'SELECT STREAMERS — UNCHECK TO EXCLUDE — ' + ok + '/' + total + ' HAVE CLIPS'
-    + (filterLine ? '<br><span style="color:rgba(199,175,79,0.65);">' + filterLine + '</span>' : '')
-    + '</div>';
+  var html = pickerHeadHtml([
+    'STREAMER CLIP EXPLORER — ' + ok + '/' + total + ' WITH CLIPS',
+    filterLine ? '<br><span class="picker-sub-gold">' + filterLine + '</span>' : ''
+  ]);
 
   _twitchPickerStreamers.forEach(function(entry, si) {
-    var hasClips = entry.clips.length >= clipsPerStreamer && !entry.dropReason;
     var isDropped = !!entry.dropReason;
-    var borderColor = isDropped ? 'rgba(255,60,60,0.2)' : 'rgba(255,255,255,0.05)';
+    var blockCls = 'gen-picker-streamer-block' + (isDropped ? ' is-dropped' : '');
     var nameColor = isDropped ? 'rgba(255,80,80,0.7)' : '#fff';
 
-    html += '<div style="border-bottom:1px solid ' + borderColor + ';padding:8px 4px;">';
-    // Header row: checkbox + name + clip count + drop reason
-    html += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:' + (hasClips ? '6' : '0') + 'px;">'
+    html += '<div class="' + blockCls + '">';
+    html += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:' + (entry.clips.length ? '6' : '0') + 'px;">'
       + '<input type="checkbox" id="tpick-' + si + '" ' + (entry.selected && !isDropped ? 'checked' : '') + (isDropped ? ' disabled' : '')
       + ' onchange="_twitchPickerStreamers[' + si + '].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;">'
       + '<span style="font-weight:700;font-family:Barlow Condensed,sans-serif;font-size:14px;color:' + nameColor + ';min-width:90px;">'
@@ -8725,13 +9126,10 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
     }
     html += '</label>';
 
-    // Clip cards row
     if (entry.clips.length > 0) {
-      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;padding-left:24px;">';
+      html += '<div class="gen-picker-grid" style="padding-left:24px;">';
       entry.clips.forEach(function(clip, ci) {
         var isSelected = clip.selected;
-        var cardBorder = isSelected ? 'rgba(199,175,79,0.5)' : 'rgba(255,255,255,0.1)';
-        var cardBg = isSelected ? 'rgba(199,175,79,0.05)' : 'rgba(255,255,255,0.02)';
         var thumb = clip.thumbnailUrl
           ? clip.thumbnailUrl.replace('{width}', '160').replace('{height}', '90')
           : '';
@@ -8741,26 +9139,23 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
         var rankColor = ci < clipsPerStreamer ? 'rgba(199,175,79,0.7)' : 'rgba(255,255,255,0.25)';
         var clipDur = clip.duration || 0;
         var durStr = clipDur ? clipDur + 's' : '';
-        var durClr = clipDur >= 45 ? '#2ecc71' : clipDur >= 20 ? '#c7af4f' : 'rgba(255,255,255,0.35)';
-
-        html += '<div onclick="_toggleTwitchClip(' + si + ',' + ci + ')" style="cursor:pointer;width:155px;border:1px solid ' + cardBorder + ';border-radius:5px;background:' + cardBg + ';padding:4px;transition:all 0.15s;">';
-        if (thumb) {
-          html += '<img src="' + thumb + '" style="width:100%;height:55px;object-fit:cover;border-radius:3px;margin-bottom:4px;" onerror="this.style.display=\'none\'">';
-        } else {
-          html += '<div style="width:100%;height:55px;background:rgba(255,255,255,0.05);border-radius:3px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;"><span style="color:rgba(255,255,255,0.2);font-size:10px;">NO THUMB</span></div>';
-        }
-        html += '<div style="font-size:9px;color:rgba(255,255,255,0.6);line-height:1.3;margin-bottom:3px;max-height:32px;overflow:hidden;">' + (clip.title || '').slice(0, 60) + '</div>';
+        var durClr = pickerDurColor(clipDur);
         var clipWhen = _clipRelTime(clip.createdAt);
-        if (clipWhen) {
-          html += '<div style="font-size:8px;color:rgba(255,200,80,0.6);font-family:monospace;margin-bottom:3px;" title="' + (clip.createdAt || '') + '">' + clipWhen + '</div>';
+
+        html += '<div class="' + pickerCardClasses(isSelected, true) + '" onclick="_toggleTwitchClip(' + si + ',' + ci + ')">';
+        if (thumb) {
+          html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;" onerror="this.style.display=\'none\'">';
+        } else {
+          html += '<div class="picker-thumb-placeholder" style="height:55px;">NO THUMB</div>';
         }
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;">'
+        html += '<div class="picker-title">' + (clip.title || '').slice(0, 60) + '</div>';
+        if (clipWhen) html += '<div class="picker-when">' + clipWhen + '</div>';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">'
           + '<span style="font-size:8px;color:rgba(255,255,255,0.3);">' + views + ' views</span>'
           + usedBadge
-          + (durStr ? '<span style="font-size:9px;font-family:monospace;font-weight:700;color:' + durClr + ';">' + durStr + '</span>' : '')
+          + (durStr ? '<span class="picker-dur" style="color:' + durClr + ';">' + durStr + '</span>' : '')
           + '<span style="font-size:8px;color:' + rankColor + ';font-family:monospace;font-weight:700;">' + rankLabel + '</span>'
-          + '</div>';
-        html += '</div>';
+          + '</div></div>';
       });
       html += '</div>';
     }
@@ -8768,7 +9163,7 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
   });
 
   picker.innerHTML = html;
-  picker.style.display = '';
+  setPickerPanelVisible('twitch', true);
 }
 
 function _toggleTwitchClip(si, ci) {
@@ -9092,6 +9487,165 @@ function generateAB() {
   g('ab-b').innerHTML='<div class="ab-label">VARIANT B -- '+g('ab-style-b').value+'</div><div style="padding:20px;color:rgba(255,255,255,0.4);font-size:12px;">Generate alternate style and paste screenshot here</div>';
 }
 
+// ── PUBLISH METADATA HELPERS (clip comps + review-hold) ─────────────
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function resolvePublishCopy(job) {
+  if (!job) return null;
+  var pc = job.publishCopy || (job.state && job.state.savedOutputs && job.state.savedOutputs.publishCopy) || null;
+  if (!pc) return null;
+  if (pc.youtube || pc.platforms || pc.title) return pc;
+  return null;
+}
+
+function publishCopyToPrep(pc) {
+  if (!pc) return null;
+  var yt = (pc.youtube || (pc.platforms && pc.platforms.youtube) || {});
+  var tt = (pc.tiktok || (pc.platforms && pc.platforms.tiktok) || {});
+  var ig = (pc.instagram || (pc.platforms && pc.platforms.instagram) || {});
+  var title = yt.bestTitle && yt.bestTitle.title ? yt.bestTitle.title
+    : (yt.title || (Array.isArray(yt.titles) && yt.titles[0]) || pc.title || '');
+  var tags = Array.isArray(yt.tags) ? yt.tags.slice() : [];
+  if (!tags.length && Array.isArray(yt.hashtags)) {
+    tags = yt.hashtags.map(function(h) { return String(h).replace(/^#/, ''); });
+  }
+  return {
+    title: title,
+    description: yt.description || '',
+    tags: tags,
+    pinnedComment: yt.pinnedComment || '',
+    endscreen: yt.endscreen || '',
+    cards: yt.cards || '',
+    twitchTitle: yt.twitchTitle || title,
+    tiktokCaption: tt.caption || '',
+    igCaption: ig.caption || '',
+    igAlt: ig.altText || ig.alt_text || '',
+    generatedAt: pc._generatedAt || new Date().toISOString(),
+    source: 'publishCopy'
+  };
+}
+
+function resolvePublishPayload(job) {
+  var prep = job && job.publishPrep ? job.publishPrep : null;
+  var pc = resolvePublishCopy(job);
+  if (!prep && pc) prep = publishCopyToPrep(pc);
+  if (!prep && !pc) {
+    return {
+      title: (job && job.title) || '',
+      description: '',
+      tags: [],
+      tiktokCaption: '',
+      igCaption: '',
+      pinnedComment: ''
+    };
+  }
+  var yt = pc ? (pc.youtube || (pc.platforms && pc.platforms.youtube) || {}) : {};
+  var tt = pc ? (pc.tiktok || (pc.platforms && pc.platforms.tiktok) || {}) : {};
+  var ig = pc ? (pc.instagram || (pc.platforms && pc.platforms.instagram) || {}) : {};
+  var title = (prep && prep.title) || yt.title || (Array.isArray(yt.titles) && yt.titles[0]) || (job && job.title) || '';
+  var tags = (prep && prep.tags && prep.tags.length) ? prep.tags
+    : (Array.isArray(yt.tags) ? yt.tags : []);
+  if (!tags.length && Array.isArray(yt.hashtags)) {
+    tags = yt.hashtags.map(function(h) { return String(h).replace(/^#/, ''); });
+  }
+  return {
+    title: title,
+    description: (prep && prep.description) || yt.description || '',
+    tags: tags,
+    pinnedComment: (prep && prep.pinnedComment) || yt.pinnedComment || '',
+    tiktokCaption: (prep && prep.tiktokCaption) || tt.caption || '',
+    igCaption: (prep && prep.igCaption) || ig.caption || '',
+    igAlt: (prep && prep.igAlt) || ig.altText || '',
+    twitchTitle: (prep && prep.twitchTitle) || yt.twitchTitle || title
+  };
+}
+
+function hydratePublishPrepFromJob(job, opts) {
+  opts = opts || {};
+  if (!job) return false;
+  var pc = resolvePublishCopy(job);
+  if (!pc) return false;
+  var prep = publishCopyToPrep(pc);
+  if (!prep || !prep.title) return false;
+  job.publishPrep = prep;
+  if (!opts.skipSave) {
+    try { updateJob(job.id, { publishPrep: prep, publishCopy: pc }); } catch (_e) { saveJobs(); }
+  }
+  var isShort = (job.type || '').indexOf('short') > -1 || job.format === 'portrait' || !!job.clipsOnly;
+  if (opts.showUi !== false && g('pub-job-select') && g('pub-job-select').value === job.id) {
+    pubDisplay(prep.title, prep.description, prep.pinnedComment || '', prep.endscreen || '', prep.cards || '',
+      prep.twitchTitle || prep.title, prep.title, prep.tiktokCaption, prep.igCaption, prep.igAlt || '', isShort);
+    if (g('pub-results')) g('pub-results').style.display = 'block';
+    if (g('pub-status')) g('pub-status').textContent = '✅ Loaded assembly SEO (publishCopy)';
+  }
+  return true;
+}
+
+function fetchJobCard(jobId, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId), true);
+  xhr.timeout = 15000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok || !resp.job) throw new Error(resp.error || 'Job fetch failed');
+      cb(null, resp.job);
+    } catch (e) { cb(e); }
+  };
+  xhr.onerror = xhr.ontimeout = function() { cb(new Error('Server unreachable')); };
+  xhr.send();
+}
+
+function mergeServerJobIntoLocal(jobId, serverJob) {
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  if (!job || !serverJob) return job;
+  if (serverJob.publishCopy) job.publishCopy = serverJob.publishCopy;
+  if (serverJob.driveUrl) job.driveUrl = serverJob.driveUrl;
+  if (serverJob.stage) job.stage = serverJob.stage;
+  if (serverJob.finalUrl) job.finalUrl = serverJob.finalUrl;
+  if (serverJob.metadataQaViolations) job.metadataQaViolations = serverJob.metadataQaViolations;
+  hydratePublishPrepFromJob(job, { showUi: false });
+  saveJobs();
+  return job;
+}
+
+function approveAndPublishJob(jobId) {
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  if (!job) { alert('Job not found'); return; }
+  if (!job.driveUrl && !job.finalUrl) {
+    alert('No cloud video URL yet — wait for assembly upload to finish.');
+    return;
+  }
+  var payload = resolvePublishPayload(job);
+  if (!payload.title) {
+    alert('Publish metadata missing — open 📋 REVIEW SEO or wait for assembly to finish generating copy.');
+    return;
+  }
+  if (!confirm('Publish to all selected platforms?\n\nTitle: ' + payload.title.slice(0, 80) + (payload.title.length > 80 ? '…' : ''))) return;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/run-gate5', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Gate 5 failed to start');
+      job.stage = 'gate5_forced';
+      saveJobs();
+      renderQueue();
+      cwn_log('[publish] Gate 5 started for ' + jobId + ' — polling for published status', false);
+      _pollForPublished(jobId);
+    } catch (e) {
+      alert('❌ Publish failed: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() { alert('❌ Server unreachable — is server.js running?'); };
+  xhr.send(JSON.stringify({}));
+}
+
 // ── PUBLISH PREP ──────────────────────────────────────────────────
 var PUB_SEASON_LEADERS = {
   ATL:{name:'T. Young',ppg:'23.1',rpg:'3.2',apg:'11.4'},BOS:{name:'J. Brown',ppg:'27.2',rpg:'6.8',apg:'3.5'},
@@ -9120,7 +9674,13 @@ function publishViaUploadPost(platforms, opts) {
   opts = opts || {};
   var job = getCurrentPubJob();
   if (!job) { alert('No job selected.'); return; }
-  if (!job.driveUrl && !job.filename) { alert('No assembled video found. Assemble first — video must be uploaded to Drive before publishing.'); return; }
+  if (!job.driveUrl && !job.filename && !job.finalUrl) { alert('No assembled video found. Assemble first — video must be uploaded to cloud storage before publishing.'); return; }
+
+  // Clip comps + review-hold jobs: Gate 5 uses full per-platform publishCopy (titles, tags, TT/IG captions)
+  if (resolvePublishCopy(job) && (job.driveUrl || job.finalUrl)) {
+    approveAndPublishJob(job.id);
+    return;
+  }
 
   // Auto-remediate missed FFmpeg work before publishing
   var missed = detectMissedItems(job);
@@ -9134,6 +9694,7 @@ function publishViaUploadPost(platforms, opts) {
   }
 
   var prep     = job.publishPrep || {};
+  var payload  = resolvePublishPayload(job);
   var statusEl = g('pub-up-status') || g('pub-yt-publish-status') || g('pub-tt-publish-status') || g('pub-ig-publish-status');
   var schedule = opts.scheduledAt || (g('pub-yt-schedule') && g('pub-yt-schedule').value) || '';
   var contentType = job.format === 'portrait' ? 'short' : 'long';
@@ -9189,17 +9750,17 @@ function publishViaUploadPost(platforms, opts) {
   };
 
   xhr.send(JSON.stringify({
-    driveUrl:     job.driveUrl || '',
+    driveUrl:     job.driveUrl || job.finalUrl || '',
     filename:     job.filename || '',
     platforms:    platforms,
-    title:        prep.title || job.title || 'ClipzWorld News — The Daily Update',
-    description:  prep.description || prep.ytDescription || '',
-    tags:         prep.tags || [],
+    title:        payload.title || prep.title || job.title || 'ClipzWorld News — The Daily Update',
+    description:  payload.description || prep.description || prep.ytDescription || '',
+    tags:         (payload.tags && payload.tags.length) ? payload.tags : (prep.tags || []),
     scheduledAt:  schedule || null,
     contentType:  contentType,
     jobType:      job.type || '',
     thumbnailUrl: prep.thumbnailUrl || job.canvaUrl || job.thumbDriveUrl || job.thumbnailUrl || '',
-    pinnedComment:prep.pinnedComment || prep.comment || '',
+    pinnedComment:payload.pinnedComment || prep.pinnedComment || prep.comment || '',
     async:        true
   }));
 }
@@ -9801,22 +10362,27 @@ function renderStreamerConnectBar() {
     var dot = connected ? '●' : (credsOk ? '○' : '⚠');
     var accountLabel = (cfg.account && cfg.account.label) ? cfg.account.label : null;
     var statusText = connected
-      ? (accountLabel ? ('Connected · ' + accountLabel) : 'Connected')
+      ? (accountLabel ? ('Connected · ' + accountLabel) : 'Connected · synced')
       : (key === 'kick' && !credsOk ? 'Creds missing' : 'Not connected');
-    var btn = '';
+    var shortName = key === 'youtube' ? 'YT' : (key === 'twitch' ? 'TW' : 'Kick');
+    var action = '';
     if (connected && key === 'kick' && cfg.switchUrl) {
-      btn = '<a href="' + cfg.switchUrl + '" target="_blank" style="color:' + color + ';font-size:10px;font-weight:700;text-decoration:none;" title="Log out of Kick in browser first, or use a private window">Switch →</a>';
-    } else if (connected) {
-      btn = '<span style="color:rgba(255,255,255,0.35);font-size:10px;">synced</span>';
-    } else if (cfg.connectUrl) {
-      btn = '<a href="' + cfg.connectUrl + '" target="_blank" style="color:' + color + ';font-size:10px;font-weight:700;text-decoration:none;">Connect →</a>';
-    } else if (key === 'kick') {
-      btn = '<span style="color:rgba(255,255,255,0.35);font-size:10px;" title="' + (cfg.note || '') + '">Doppler</span>';
+      action = '<a href="' + cfg.switchUrl + '" target="_blank" style="color:' + color + ';" title="Switch Kick account">↻</a>';
+    } else if (!connected && cfg.connectUrl) {
+      action = '<a href="' + cfg.connectUrl + '" target="_blank" style="color:' + color + ';" title="Connect ' + (cfg.label || key) + '">+</a>';
+    } else if (!connected && key === 'kick') {
+      action = '<span style="color:rgba(255,255,255,0.35);font-size:9px;" title="' + escapeHtml(cfg.note || 'Configure in Doppler') + '">!</span>';
     }
-    return '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:4px;border:1px solid ' + color + '33;background:' + color + '11;min-width:0;">' +
-      '<span style="color:' + color + ';font-weight:700;white-space:nowrap;">' + (cfg.label || key) + '</span>' +
-      '<span style="color:' + (connected ? '#4ade80' : 'rgba(255,255,255,0.45)') + ';font-size:10px;white-space:nowrap;">' + dot + ' ' + statusText + '</span>' +
-      '<span style="margin-left:auto;">' + btn + '</span></div>';
+    var detail = '';
+    if (connected && accountLabel) {
+      var shortAcct = accountLabel.indexOf('@') >= 0 ? accountLabel.split('@')[0] : accountLabel;
+      if (shortAcct.length > 10) shortAcct = shortAcct.slice(0, 9) + '…';
+      detail = '<span class="scp-detail">' + escapeHtml(shortAcct) + '</span>';
+    }
+    return '<span class="streamer-connect-pill" style="border:1px solid ' + color + '44;background:' + color + '14;" title="' + escapeHtml((cfg.label || key) + ' — ' + statusText) + '">'
+      + '<span class="scp-name" style="color:' + color + ';">' + shortName + '</span>'
+      + '<span class="scp-dot" style="color:' + (connected ? '#4ade80' : 'rgba(255,255,255,0.45)') + ';">' + dot + '</span>'
+      + detail + action + '</span>';
   }
   bar.innerHTML = pill('twitch', st.twitch) + pill('youtube', st.youtube) + pill('kick', st.kick);
 }
@@ -9887,9 +10453,16 @@ function setSelectedStreamers(list) {
 }
 
 function toggleStreamerChip(handle) {
+  var h = String(handle || '').trim().toLowerCase().replace(/^@/, '');
+  if (!h) return;
   var sel = getSelectedStreamers();
-  var idx = sel.indexOf(handle);
-  if (idx >= 0) sel.splice(idx, 1); else sel.push(handle);
+  var idx = sel.indexOf(h);
+  if (idx >= 0) sel.splice(idx, 1);
+  else {
+    sel.push(h);
+    var roster = getStreamerRoster();
+    if (roster.indexOf(h) === -1) { roster.push(h); saveStreamerRoster(roster); }
+  }
   setSelectedStreamers(sel);
 }
 
@@ -9943,6 +10516,7 @@ function syncStreamersFromFollows(silent) {
         }
         renderStreamerChips();
         loadCreatorConnectStatus();
+        loadStreamerBenchFromLiveGrid();
         if (silent) {
           if (added) cwn_log('[creators-sync] ' + added + ' new creator(s) from follows/subscriptions', false);
           return;
@@ -9961,7 +10535,10 @@ function syncStreamersFromFollows(silent) {
 setTimeout(function(){
   try {
     loadCreatorConnectStatus();
-    loadCreatorRegistryFromServer(function(){ syncStreamersFromFollows(true); });
+    loadCreatorRegistryFromServer(function(){
+      syncStreamersFromFollows(true);
+      loadStreamerBenchFromLiveGrid();
+    });
   } catch(_e) {}
 }, 2500);
 
@@ -9978,25 +10555,285 @@ function renderStreamerSelectedSummary(sel) {
   if (!bar) return;
   sel = sel || getSelectedStreamers();
   if (!sel.length) {
-    bar.innerHTML = '<span style="color:rgba(255,255,255,0.35);">No streamers selected — check names in the list to include them when picking clips.</span>';
+    bar.innerHTML = '<span style="color:rgba(255,255,255,0.35);">No creators selected — use Templates, Following, Bench, or Kick above.</span>';
     return;
   }
-  var preview = sel.slice(0, 6).map(function(h) {
-    var meta = window._creatorRegistryMap[h] || {};
-    return escapeHtml(meta.displayName && meta.displayName !== h ? meta.displayName : h);
-  }).join(', ');
-  bar.innerHTML = '<strong style="color:#9146ff;">' + sel.length + ' selected</strong> for clip picking: ' + preview + (sel.length > 6 ? ' +' + (sel.length - 6) + ' more' : '');
+  bar.innerHTML = '<strong style="color:#9146ff;">' + sel.length + ' selected</strong> — Pick clips when ready.';
 }
 
-function renderStreamerChips() {
-  var wrap = g('streamer-chips');
-  if (!wrap) return;
-  var roster = getStreamerRoster();
-  var sel = getSelectedStreamers();
-  var query = ((g('streamer-search') || {}).value || '').trim().toLowerCase();
-  var platFilter = (g('streamer-filter-platform') || {}).value || 'all';
+var STREAMER_VOD_TEMPLATE_DEFAULTS = 'jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming';
 
-  var filtered = roster.filter(function(h) {
+function getStreamerTemplateHandles() {
+  var out = {};
+  STREAMER_VOD_TEMPLATE_DEFAULTS.split(',').forEach(function(s) {
+    s = s.trim().toLowerCase();
+    if (s) out[s] = true;
+  });
+  getStreamerRoster().forEach(function(h) {
+    var meta = window._creatorRegistryMap[h] || {};
+    if ((meta.sources || []).indexOf('streamerSources_seed') >= 0) out[h] = true;
+  });
+  return Object.keys(out).sort();
+}
+
+function getStreamerBenchHandles() {
+  var out = {};
+  try {
+    var raw = localStorage.getItem('CWN_STREAMER_BENCH');
+    if (raw) JSON.parse(raw).forEach(function(h) { if (h) out[String(h).toLowerCase()] = true; });
+  } catch (e) {}
+  (window._streamerLiveGridBench && window._streamerLiveGridBench.logins || []).forEach(function(h) {
+    out[String(h).toLowerCase()] = true;
+  });
+  getStreamerRoster().forEach(function(h) {
+    var meta = window._creatorRegistryMap[h] || {};
+    var plat = meta.platform || 'twitch';
+    if (plat === 'kick') return;
+    if ((meta.sources || []).indexOf('live_grid') >= 0) out[h] = true;
+  });
+  return Object.keys(out).sort();
+}
+
+window._streamerLiveGridBench = window._streamerLiveGridBench || { logins: [], meta: null };
+
+/** Auto-pull Twitch follows bench from Live Grid (same pool as multiview). */
+function loadStreamerBenchFromLiveGrid(cb) {
+  var base = CFG.ffmpegUrl || 'http://localhost:3000';
+  var hint = g('streamer-bench-auto-hint');
+  if (hint) hint.textContent = 'Pulling Twitch follows bench…';
+
+  Promise.all([
+    fetch(base + '/live-grid/followed-bench').then(function(r) { return r.json(); }).catch(function() { return null; }),
+    fetch(base + '/live-grid/status').then(function(r) { return r.json(); }).catch(function() { return null; })
+  ]).then(function(results) {
+    var benchResp = results[0];
+    var statusResp = results[1];
+    var logins = {};
+    var meta = { fromFollows: 0, fromGrid: 0, user: null, at: new Date().toISOString(), error: null, gridRunning: false };
+
+    if (benchResp && benchResp.ok) {
+      meta.user = benchResp.user || null;
+      (benchResp.bench || []).forEach(function(l) {
+        l = String(l || '').trim().toLowerCase();
+        if (l) { logins[l] = true; meta.fromFollows++; }
+      });
+    } else if (benchResp && benchResp.error) {
+      meta.error = benchResp.error;
+    }
+
+    if (statusResp && statusResp.ok && statusResp.running && statusResp.poller) {
+      meta.gridRunning = true;
+      var p = statusResp.poller;
+      (p.bench || []).concat(p.benchFollows || []).forEach(function(l) {
+        l = String(l || '').trim().toLowerCase();
+        if (!l) return;
+        if (!logins[l]) { logins[l] = true; meta.fromGrid++; }
+      });
+    }
+
+    window._streamerLiveGridBench = { logins: Object.keys(logins).sort(), meta: meta };
+
+    var roster = getStreamerRoster();
+    var changed = false;
+    window._streamerLiveGridBench.logins.forEach(function(h) {
+      if (roster.indexOf(h) === -1) { roster.push(h); changed = true; }
+    });
+    if (changed) saveStreamerRoster(roster);
+
+    if (hint) {
+      if (meta.error && !window._streamerLiveGridBench.logins.length) {
+        hint.textContent = 'Auto-pull failed — connect Twitch or use + Bench.';
+      } else if (window._streamerLiveGridBench.logins.length) {
+        hint.textContent = 'Auto from Live Grid'
+          + (meta.user ? ' (' + meta.user + ')' : '')
+          + ' · ' + window._streamerLiveGridBench.logins.length + ' on bench'
+          + (meta.gridRunning ? ' · grid live' : '');
+      } else {
+        hint.textContent = 'No follows bench yet — Sync Twitch or connect at /connect/twitch.';
+      }
+    }
+
+    renderStreamerChips();
+    if (cb) cb(window._streamerLiveGridBench);
+  });
+}
+
+function saveStreamerBenchHandles(list) {
+  localStorage.setItem('CWN_STREAMER_BENCH', JSON.stringify(list));
+}
+
+function promptAddStreamerBench() {
+  var input = prompt('Add Twitch/YouTube login to bench:');
+  if (!input) return;
+  var h = String(input).trim().toLowerCase().replace(/^@/, '');
+  if (!h) return;
+  var bench = getStreamerBenchHandles();
+  if (bench.indexOf(h) === -1) bench.push(h);
+  saveStreamerBenchHandles(bench);
+  var roster = getStreamerRoster();
+  if (roster.indexOf(h) === -1) { roster.push(h); saveStreamerRoster(roster); }
+  renderStreamerChips();
+}
+
+function applyStreamerTemplateSelection() {
+  var templates = getStreamerTemplateHandles();
+  var sel = getSelectedStreamers();
+  var set = {};
+  sel.forEach(function(h) { set[h] = true; });
+  templates.forEach(function(h) { set[h] = true; });
+  setSelectedStreamers(Object.keys(set));
+}
+
+function classifyStreamerSections(roster) {
+  var templates = {};
+  getStreamerTemplateHandles().forEach(function(h) { templates[h] = true; });
+  var benchSet = {};
+  getStreamerBenchHandles().forEach(function(h) { benchSet[h] = true; });
+  var buckets = { templates: [], following: [], bench: [], kick: [] };
+  var placed = {};
+
+  roster.forEach(function(h) {
+    var meta = window._creatorRegistryMap[h] || {};
+    var plat = meta.platform || 'twitch';
+    var src = meta.sources || [];
+    if (plat === 'kick' || src.indexOf('kick_follow') >= 0) {
+      if (!placed[h]) { buckets.kick.push(h); placed[h] = true; }
+      return;
+    }
+    if (templates[h]) {
+      if (!placed[h]) { buckets.templates.push(h); placed[h] = true; }
+      return;
+    }
+    if (benchSet[h] || src.indexOf('live_grid') >= 0) {
+      if (!placed[h]) { buckets.bench.push(h); placed[h] = true; }
+      return;
+    }
+    if (src.indexOf('twitch_follow') >= 0 || src.indexOf('youtube_subscription') >= 0) {
+      if (!placed[h]) { buckets.following.push(h); placed[h] = true; }
+    }
+  });
+
+  getStreamerTemplateHandles().forEach(function(h) {
+    if (buckets.templates.indexOf(h) === -1 && !placed[h]) {
+      buckets.templates.push(h);
+      placed[h] = true;
+    }
+  });
+  getStreamerBenchHandles().forEach(function(h) {
+    if (!placed[h] && buckets.bench.indexOf(h) === -1) {
+      buckets.bench.push(h);
+      placed[h] = true;
+    }
+  });
+
+  buckets.templates.sort();
+  buckets.following.sort();
+  buckets.bench.sort();
+  buckets.kick.sort();
+  return buckets;
+}
+
+function renderStreamerSectionGrid(elId, handles, selSet, emptyMsg) {
+  var el = g(elId);
+  if (!el) return;
+  if (!handles.length) {
+    el.className = 'creator-chip-grid is-section is-empty-hint';
+    el.innerHTML = emptyMsg;
+    return;
+  }
+  el.className = 'creator-chip-grid is-section';
+  el.innerHTML = handles.map(function(h) {
+    return creatorChipHtml(h, !!selSet[h], { showHandle: true });
+  }).join('');
+}
+
+function updateStreamerSectionCount(elId, count, selectedInSection) {
+  var el = g(elId);
+  if (!el) return;
+  var label = String(count);
+  if (selectedInSection > 0) label += ' · ' + selectedInSection + ' sel';
+  el.textContent = label;
+  el.className = 'streamer-section-count' + (selectedInSection > 0 ? ' has-selected' : '');
+}
+
+function countSelectedIn(handles, selSet) {
+  var n = 0;
+  handles.forEach(function(h) { if (selSet[h]) n++; });
+  return n;
+}
+
+function setStreamerSectionsExpanded(open) {
+  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap'].forEach(function(id) {
+    var d = g(id);
+    if (d) {
+      d.open = !!open;
+      d.dataset.userToggled = '1';
+    }
+  });
+  if (open) {
+    var sel = g('streamer-section-selected-wrap');
+    if (sel) sel.open = true;
+  }
+}
+
+function initStreamerSectionAccordion() {
+  if (window._streamerSectionsInited) return;
+  window._streamerSectionsInited = true;
+  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap'].forEach(function(id) {
+    var d = g(id);
+    if (!d) return;
+    d.addEventListener('toggle', function() { d.dataset.userToggled = '1'; });
+  });
+}
+
+function applyStreamerSectionDefaults(buckets) {
+  initStreamerSectionAccordion();
+  var followingWrap = g('streamer-section-following-wrap');
+  var benchWrap = g('streamer-section-bench-wrap');
+  var kickWrap = g('streamer-section-kick-wrap');
+  if (followingWrap && !followingWrap.dataset.userToggled) {
+    followingWrap.open = buckets.following.length > 0 && buckets.following.length <= 10;
+  }
+  if (benchWrap && !benchWrap.dataset.userToggled) {
+    benchWrap.open = buckets.bench.length > 0 && buckets.bench.length <= 12;
+  }
+  if (kickWrap && !kickWrap.dataset.userToggled) {
+    kickWrap.open = buckets.kick.length > 0;
+  }
+}
+
+var _streamerBrowsePage = 0;
+var _streamerBrowseOpen = false;
+var STREAMER_BROWSE_PAGE_SIZE = 60;
+var STREAMER_SEARCH_LIMIT = 48;
+
+function creatorChipHtml(h, isSelected, opts) {
+  opts = opts || {};
+  var hk = String(h).toLowerCase().replace(/^@/, '');
+  var meta = window._creatorRegistryMap[hk] || window._creatorRegistryMap[h] || {};
+  var plat = meta.platform || 'twitch';
+  var ps = streamerPlatformStyle(plat);
+  var label = meta.displayName && meta.displayName !== hk ? meta.displayName : (meta.displayName || hk);
+  var jq = jsQuote(hk);
+  var cls = 'creator-chip' + (isSelected ? ' is-selected' : '');
+  var action = opts.removeOnly
+    ? 'toggleStreamerChip(\'' + jq + '\')'
+    : 'toggleStreamerChip(\'' + jq + '\')';
+  var xBtn = isSelected && opts.showRemove !== false
+    ? '<span class="creator-chip-x" onclick="event.stopPropagation();toggleStreamerChip(\'' + jq + '\')" title="Remove">×</span>'
+    : '';
+  return '<button type="button" class="' + cls + '" onclick="' + action + '" title="@' + escapeHtml(hk) + '">'
+    + '<span class="creator-chip-plat" style="color:' + ps.color + ';background:' + ps.bg + ';">' + ps.badge + '</span>'
+    + '<span class="creator-chip-name">' + escapeHtml(label) + '</span>'
+    + (!isSelected && opts.showHandle ? '<span class="creator-chip-handle">@' + escapeHtml(hk) + '</span>' : '')
+    + xBtn
+    + '</button>';
+}
+
+function filterStreamerRoster(roster, query, platFilter) {
+  query = (query || '').trim().toLowerCase();
+  platFilter = platFilter || 'all';
+  return roster.filter(function(h) {
     var meta = window._creatorRegistryMap[h] || {};
     var plat = meta.platform || 'twitch';
     if (platFilter !== 'all' && plat !== platFilter) return false;
@@ -10004,34 +10841,139 @@ function renderStreamerChips() {
     var label = (meta.displayName || h).toLowerCase();
     return h.indexOf(query) >= 0 || label.indexOf(query) >= 0;
   });
+}
 
-  if (!filtered.length) {
-    wrap.innerHTML = '<div style="padding:32px 16px;text-align:center;color:rgba(255,255,255,0.4);font-size:13px;line-height:1.6;">' +
-      (roster.length ? 'No matches — try a different search or filter.' : 'No creators yet.<br>Click <strong>Sync follows</strong> or <strong>+ Add URL</strong>.') + '</div>';
+function onStreamerSearchInput() {
+  _streamerBrowseOpen = false;
+  var browseSec = g('streamer-browse-section');
+  if (browseSec) browseSec.classList.remove('is-open');
+  var btn = g('btn-streamer-browse');
+  if (btn) btn.textContent = 'Browse roster';
+  renderStreamerChips();
+}
+
+function toggleStreamerBrowse() {
+  _streamerBrowseOpen = !_streamerBrowseOpen;
+  if (_streamerBrowseOpen) {
+    var s = g('streamer-search');
+    if (s) s.value = '';
+    _streamerBrowsePage = 0;
+  }
+  renderStreamerChips();
+}
+
+function closeStreamerBrowse() {
+  _streamerBrowseOpen = false;
+  renderStreamerChips();
+}
+
+function streamerBrowsePage(delta) {
+  var roster = filterStreamerRoster(getStreamerRoster(), '', (g('streamer-filter-platform') || {}).value || 'all');
+  var pages = Math.max(1, Math.ceil(roster.length / STREAMER_BROWSE_PAGE_SIZE));
+  _streamerBrowsePage = Math.max(0, Math.min(pages - 1, _streamerBrowsePage + delta));
+  renderStreamerChips();
+}
+
+function streamerBrowseSelectPage(select) {
+  if (!_streamerBrowseOpen) return;
+  var roster = filterStreamerRoster(getStreamerRoster(), '', (g('streamer-filter-platform') || {}).value || 'all');
+  var slice = roster.slice(_streamerBrowsePage * STREAMER_BROWSE_PAGE_SIZE, (_streamerBrowsePage + 1) * STREAMER_BROWSE_PAGE_SIZE);
+  var sel = getSelectedStreamers();
+  var set = {};
+  sel.forEach(function(h) { set[h] = true; });
+  slice.forEach(function(h) {
+    if (select) set[h] = true;
+    else delete set[h];
+  });
+  setSelectedStreamers(Object.keys(set));
+}
+
+function renderStreamerChips() {
+  var selWrap = g('streamer-selected-chips');
+  var searchWrap = g('streamer-search-results');
+  var browseWrap = g('streamer-browse-chips');
+  if (!selWrap) return;
+
+  var roster = getStreamerRoster();
+  var sel = getSelectedStreamers();
+  var query = ((g('streamer-search') || {}).value || '').trim();
+  var platFilter = (g('streamer-filter-platform') || {}).value || 'all';
+  var selSet = {};
+  sel.forEach(function(h) { selSet[h] = true; });
+
+  // Selected chips (sorted by display name)
+  var selectedSorted = sel.slice().sort(function(a, b) {
+    var ma = window._creatorRegistryMap[a] || {};
+    var mb = window._creatorRegistryMap[b] || {};
+    return String(ma.displayName || a).localeCompare(String(mb.displayName || b));
+  });
+  if (!selectedSorted.length) {
+    selWrap.className = 'creator-chip-grid is-compact is-empty-hint';
+    selWrap.innerHTML = 'No creators selected.<br>Use <strong>Templates</strong>, <strong>Following</strong>, <strong>Bench</strong>, or search.';
   } else {
-    wrap.innerHTML = filtered.map(function(h) {
-      var hk = String(h).toLowerCase().replace(/^@/, '');
-      var on = sel.indexOf(hk) >= 0 || sel.indexOf(h) >= 0;
-      var meta = window._creatorRegistryMap[hk] || window._creatorRegistryMap[h] || {};
-      var plat = meta.platform || 'twitch';
-      var ps = streamerPlatformStyle(plat);
-      var label = meta.displayName && meta.displayName !== hk ? meta.displayName : (meta.displayName || hk);
-      var src = formatStreamerSources(meta.sources);
-      var jq = jsQuote(hk);
-      return '<div class="streamer-row' + (on ? ' selected' : '') + '" onclick="toggleStreamerChip(\'' + jq + '\')" title="' + (on ? 'Click to exclude' : 'Click to include') + '">' +
-        '<input type="checkbox" ' + (on ? 'checked' : '') + ' onclick="event.stopPropagation();toggleStreamerChip(\'' + jq + '\')" style="accent-color:#9146ff;cursor:pointer;width:18px;height:18px;">' +
-        '<span class="streamer-plat-badge" style="color:' + ps.color + ';background:' + ps.bg + ';">' + ps.badge + '</span>' +
-        '<div style="min-width:0;">' +
-          '<div class="streamer-name">' + escapeHtml(label) + '</div>' +
-          '<div class="streamer-meta">@' + escapeHtml(hk) + (src ? ' · ' + escapeHtml(src) : '') + '</div>' +
-        '</div>' +
-        '<button type="button" onclick="removeStreamerChip(\'' + jq + '\', event)" title="Remove from roster" style="background:none;border:none;color:rgba(255,255,255,0.25);cursor:pointer;font-size:16px;line-height:1;">✕</button>' +
-      '</div>';
+    selWrap.className = 'creator-chip-grid is-compact';
+    selWrap.innerHTML = selectedSorted.map(function(h) {
+      return creatorChipHtml(h, true, { showRemove: true });
     }).join('');
   }
 
+  var addSec = g('streamer-add-section');
+  var browseSec = g('streamer-browse-section');
+  var hint = g('streamer-roster-hint');
+  var browseLabel = g('streamer-browse-label');
+
+  if (_streamerBrowseOpen) {
+    if (addSec) addSec.classList.remove('is-open');
+    if (browseSec) browseSec.classList.add('is-open');
+    var filtered = filterStreamerRoster(roster, '', platFilter);
+    var pages = Math.max(1, Math.ceil(filtered.length / STREAMER_BROWSE_PAGE_SIZE));
+    _streamerBrowsePage = Math.max(0, Math.min(pages - 1, _streamerBrowsePage));
+    var slice = filtered.slice(_streamerBrowsePage * STREAMER_BROWSE_PAGE_SIZE, (_streamerBrowsePage + 1) * STREAMER_BROWSE_PAGE_SIZE);
+    if (browseLabel) browseLabel.textContent = 'Page ' + (_streamerBrowsePage + 1) + ' of ' + pages + ' · ' + filtered.length + ' creators';
+    if (browseWrap) {
+      browseWrap.innerHTML = slice.map(function(h) {
+        return creatorChipHtml(h, !!selSet[h], { showHandle: true });
+      }).join('') || '<span style="color:rgba(255,255,255,0.35);font-size:12px;">No creators in registry.</span>';
+    }
+    if (hint) hint.textContent = sel.length + ' selected · browse mode';
+    var btn = g('btn-streamer-browse');
+    if (btn) btn.textContent = 'Close browse';
+  } else if (query.length >= 2) {
+    if (browseSec) browseSec.classList.remove('is-open');
+    if (addSec) addSec.classList.add('is-open');
+    var matches = filterStreamerRoster(roster, query, platFilter).slice(0, STREAMER_SEARCH_LIMIT);
+    if (searchWrap) {
+      searchWrap.innerHTML = matches.length
+        ? matches.map(function(h) { return creatorChipHtml(h, !!selSet[h], { showHandle: true }); }).join('')
+        : '<span style="color:rgba(255,255,255,0.35);font-size:12px;">No matches — try another name or Sync follows.</span>';
+    }
+    if (hint) hint.textContent = matches.length + ' match' + (matches.length === 1 ? '' : 'es') + (matches.length >= STREAMER_SEARCH_LIMIT ? ' (showing first ' + STREAMER_SEARCH_LIMIT + ')' : '');
+    var btn2 = g('btn-streamer-browse');
+    if (btn2) btn2.textContent = 'Browse roster';
+  } else {
+    if (addSec) addSec.classList.remove('is-open');
+    if (browseSec) browseSec.classList.remove('is-open');
+    if (hint) hint.textContent = roster.length + ' in registry · type 2+ chars to search';
+    var btn3 = g('btn-streamer-browse');
+    if (btn3) btn3.textContent = 'Browse roster';
+  }
+
+  if (!_streamerBrowseOpen && query.length < 2) {
+    var buckets = classifyStreamerSections(roster);
+    renderStreamerSectionGrid('streamer-section-templates', buckets.templates, selSet, 'Sync or add — VOD lineup from config.');
+    renderStreamerSectionGrid('streamer-section-following', buckets.following, selSet, 'Sync Twitch/YouTube follows.');
+    renderStreamerSectionGrid('streamer-section-bench', buckets.bench, selSet, 'Pulling follows… or use + Bench.');
+    renderStreamerSectionGrid('streamer-section-kick', buckets.kick, selSet, 'Add Kick creators with + Kick URL.');
+    updateStreamerSectionCount('streamer-count-selected', sel.length, sel.length);
+    updateStreamerSectionCount('streamer-count-templates', buckets.templates.length, countSelectedIn(buckets.templates, selSet));
+    updateStreamerSectionCount('streamer-count-following', buckets.following.length, countSelectedIn(buckets.following, selSet));
+    updateStreamerSectionCount('streamer-count-bench', buckets.bench.length, countSelectedIn(buckets.bench, selSet));
+    updateStreamerSectionCount('streamer-count-kick', buckets.kick.length, countSelectedIn(buckets.kick, selSet));
+    applyStreamerSectionDefaults(buckets);
+  }
+
   var cnt = g('streamer-chip-count');
-  if (cnt) cnt.textContent = sel.length + ' of ' + roster.length + ' selected' + (filtered.length !== roster.length ? ' · ' + filtered.length + ' shown' : '');
+  if (cnt) cnt.textContent = sel.length + ' selected';
   renderStreamerSelectedSummary(sel);
 }
 
@@ -10221,15 +11163,17 @@ function pubPopulateJobDropdown() {
   if (!sel) return;
   // Keep placeholder option, rebuild the rest
   while (sel.options.length > 1) sel.remove(1);
-  // Show all jobs that have at least some completed segments or a finalUrl
+  // Show all jobs ready for review or publish (clip comps + HeyGen batches)
   var candidates = JOBS.filter(function(j) {
     var hasDone = j.segments && j.segments.some(function(s){ return s.status === 'completed'; });
-    return hasDone || j.finalUrl || j.url || j.status === 'all_sent' || j.status === 'completed';
+    var reviewReady = j.stage === 'awaiting_review' || j.stage === 'assembled' || j.stage === 'metadata_review';
+    return hasDone || j.finalUrl || j.driveUrl || j.url || j.assembledAt || j.clipsOnly || reviewReady
+      || j.status === 'all_sent' || j.status === 'completed';
   });
   if (!candidates.length) {
     var opt = document.createElement('option');
     opt.value = ''; opt.disabled = true;
-    opt.textContent = 'No finished jobs yet — complete a HeyGen batch first';
+    opt.textContent = 'No finished jobs yet — run a CLIPS COMP or complete a HeyGen batch first';
     sel.appendChild(opt);
     return;
   }
@@ -10240,7 +11184,9 @@ function pubPopulateJobDropdown() {
     var dateLabel = new Date(job.created).toLocaleDateString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
     var canvaTag = job.canvaUrl ? ' ✓ Canva' : '';
     var segCount = job.segments ? job.segments.filter(function(s){ return s.status==='completed'; }).length + '/' + job.segments.length + ' segs' : '';
-    opt.textContent = typeLabel + ' — ' + dateLabel + ' (' + segCount + ')' + canvaTag;
+    var seoTag = (job.publishPrep || resolvePublishCopy(job)) ? ' ✓ SEO' : '';
+    var stageTag = job.stage === 'awaiting_review' ? ' ⏸ REVIEW' : '';
+    opt.textContent = typeLabel + ' — ' + dateLabel + ' (' + segCount + ')' + canvaTag + seoTag + stageTag;
     sel.appendChild(opt);
   });
 }
@@ -10309,6 +11255,17 @@ function pubJobSelected() {
   var hlWrap = g('pub-headline-wrap');
   hlWrap.style.display = (!isNba && job.type !== 'nba') ? '' : 'none';
   loadPubChecklist(jobId);
+
+  // Auto-hydrate assembly publishCopy into Publish Prep tabs
+  if (!hydratePublishPrepFromJob(job)) {
+    fetchJobCard(jobId, function(err, serverJob) {
+      if (!err && serverJob) {
+        mergeServerJobIntoLocal(jobId, serverJob);
+        hydratePublishPrepFromJob(JOBS.find(function(j){ return j.id === jobId; }));
+        renderQueue();
+      }
+    });
+  }
 }
 
 function pubTypeChange() {
@@ -10640,12 +11597,15 @@ function pubSwitchPlatform(tab) {
 function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, previewLabel, tiktokCaption, igCaption, igAlt, isShort) {
   // Store publish prep on the active job
   var activeJobId = g('pub-job-select') ? g('pub-job-select').value : '';
+  var _pubJobForPrep = activeJobId ? JOBS.find(function(j){ return j.id === activeJobId; }) : null;
+  var _payloadForPrep = _pubJobForPrep ? resolvePublishPayload(_pubJobForPrep) : { tags: [] };
   if (activeJobId) {
     updateJob(activeJobId, {
       publishPrep: {
         title: title, description: desc, pinnedComment: comment,
         endscreen: endscreen, cards: cards, twitchTitle: twitchTitle,
         tiktokCaption: tiktokCaption||'', igCaption: igCaption||'', igAlt: igAlt||'',
+        tags: _payloadForPrep.tags || [],
         generatedAt: new Date().toISOString()
       }
     });
@@ -10701,8 +11661,23 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
   var tLen = title.length;
   g('pub-title-chars').innerHTML = '<span style="color:'+(tLen<=60?'#2ecc71':tLen<=100?'#f39c12':'#e74c3c')+'">'+tLen+' chars '+(tLen<=60?'(ideal)':tLen<=100?'(ok)':'(too long)')+'</span>';
 
-  // SEO checklist
-  var checks = [
+  // SEO checklist — shorts use tighter rules than long-form compilations
+  var tagCount = (function() {
+    var prepTags = (activeJobId && JOBS.find(function(j){ return j.id===activeJobId; })) || null;
+    var pl = prepTags ? resolvePublishPayload(prepTags) : { tags: [], description: desc };
+    return (pl.tags || []).length;
+  })();
+  var hashInDesc = (desc.match(/#\w+/g) || []).length;
+  var checks = isShort ? [
+    {label:'Title length', pass:title.length>0&&title.length<=100, warn:title.length>60&&title.length<=100, msg:title.length+' chars '+(title.length<=60?'— ideal':'— ok for Shorts')},
+    {label:'Title has #Shorts or clip hook', pass:/#Shorts/i.test(title)||title.length>15, msg:title.slice(0,70)+(title.length>70?'…':'')},
+    {label:'YouTube tags', pass:tagCount>=5, msg:tagCount+' tags — aim for 8-15'},
+    {label:'Hashtags in description', pass:hashInDesc>=3, msg:hashInDesc+' hashtags in YT description'},
+    {label:'TikTok caption', pass:!!(tiktokCaption&&tiktokCaption.length>=40), msg:(tiktokCaption||'missing').slice(0,80)+(tiktokCaption&&tiktokCaption.length>80?'…':'')},
+    {label:'TikTok caption length', pass:!tiktokCaption||tiktokCaption.length<=300, warn:tiktokCaption&&tiktokCaption.length>220&&tiktokCaption.length<=300, msg:(tiktokCaption||'').length+' chars (visible ~150-300)'},
+    {label:'Instagram caption', pass:!!(igCaption&&igCaption.length>=40), msg:(igCaption||'missing').slice(0,80)+(igCaption&&igCaption.length>80?'…':'')},
+    {label:'IG alt text', pass:!!(igAlt&&igAlt.length>10), msg:igAlt ? igAlt.slice(0,60)+'…' : 'missing — add for accessibility'}
+  ] : [
     {label:'Title length', pass:tLen<=100, warn:tLen>60&&tLen<=100, msg:tLen+' chars '+(tLen<=60?'— ideal under 60':'— ok, shorter is better')},
     {label:'First line keyword-rich', pass:desc.split('\n')[0].length>30, msg:desc.split('\n')[0].slice(0,60)+'...'},
     {label:'Timestamps included', pass:desc.indexOf('00:00')>-1, msg:desc.indexOf('00:00')>-1?'YouTube surfaces timestamped videos higher':'Add timestamps to boost discoverability'},
@@ -11365,6 +12340,17 @@ function liveGridRenderHealth(s) {
   pills.push(lgHealthPill('FPS', fps || '—', fps >= 60 ? 'ok' : fps >= 30 ? 'warn' : 'bad', 'Output frame rate'));
 
   pills.push(lgHealthPill('RES', '1080p', 'ok', 'Grid output resolution'));
+  const encPlan = s.encode || {};
+  if (encPlan.rtmp) {
+    const sq = !!encPlan.rtmpSquare;
+    pills.push(lgHealthPill('RTMP', encPlan.rtmp.replace(/ landscape.*/, ''), sq ? 'bad' : 'ok', sq ? 'Square RTMP — set LIVE_GRID_YOUTUBE_SQUARE_PAD=off' : 'YouTube RTMP matches 1920×1080 canvas'));
+  }
+  const ytW = s.youtube && s.youtube.deliveryWidth;
+  const ytH = s.youtube && s.youtube.deliveryHeight;
+  if (ytW && ytH) {
+    const sq = ytW === ytH;
+    pills.push(lgHealthPill('YT SIZE', `${ytW}×${ytH}`, sq ? 'bad' : 'ok', sq ? 'Square delivery — disable Studio dual-format for 1920×1080' : 'YouTube CDN matches landscape encode'));
+  }
 
   pills.push(lgHealthPill('UDP RELAY', enc.udpRelay ? 'ON' : 'OFF', enc.udpRelay ? 'ok' : 'warn', 'Per-quadrant RTSP→UDP relays'));
 
@@ -11579,9 +12565,7 @@ function liveGridRender() {
 
 async function liveGridStart() {
   const privacy = document.getElementById('lg-privacy').value;
-  const programMode = document.getElementById('lg-seo-mode')?.value
-    || document.getElementById('bc-program-mode')?.value
-    || 'grid';
+  const programMode = document.getElementById('lg-seo-mode')?.value || 'grid';
   if (!confirm(`Start the Live Grid broadcast (${programMode.replace('_', ' ')}, ${privacy.toUpperCase()})?`)) return;
   const btn = document.getElementById('lg-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
@@ -11603,9 +12587,13 @@ async function liveGridStart() {
 }
 
 async function liveGridStop() {
-  if (!confirm('End the live stream? The VOD stays on the channel.')) return;
+  if (!confirm('End the live stream on YouTube and stop the encoder? The VOD stays on the channel.')) return;
   try {
-    const r = await fetch(LG_BASE + '/live-grid/stop', { method: 'POST' });
+    const r = await fetch(LG_BASE + '/live-grid/stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endBroadcast: true }),
+    });
     const d = await r.json();
     if (!d.ok) alert('Stop failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Stop failed: ' + e.message); }
@@ -11634,11 +12622,16 @@ async function liveGridUnmute() {
 }
 
 async function liveGridAudio(quadrant) {
+  const enc = (_lgStatus && _lgStatus.master && _lgStatus.master.encode) || {};
+  if (enc.audioHotSwitch === false && !confirm('Audio switch will restart the YouTube encoder (~2–5s blip). Continue?')) return;
+  if (enc.audioHotSwitch !== true && enc.audioHotSwitch !== false && !confirm('Audio switch may blip YouTube (~2–5s) until sidecar is updated. Continue?')) return;
   try {
-    await fetch(LG_BASE + '/live-grid/audio', {
+    const r = await fetch(LG_BASE + '/live-grid/audio', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quadrant }),
     });
+    const d = await r.json();
+    if (!d.ok) alert('Audio switch failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Audio switch failed: ' + e.message); }
   setTimeout(liveGridRefresh, 500);
 }
@@ -11671,31 +12664,123 @@ async function liveGridReAddBench(login) {
   setTimeout(liveGridRefresh, 3000);
 }
 
-async function liveGridRemoveFromGrid(login) {
+let _lgReplaceCtx = null;
+
+function liveGridReplaceSuggestions(s, excludeLogin) {
+  const poller = (s && s.poller) || {};
+  const live = poller.live || {};
+  const exclude = String(excludeLogin || '').trim().toLowerCase();
+  const seen = new Set();
+  const out = [];
+  const add = (login) => {
+    const l = String(login || '').trim().toLowerCase();
+    if (!l || l === exclude || seen.has(l)) return;
+    seen.add(l);
+    out.push(l);
+  };
+  (poller.bench || []).forEach(add);
+  (poller.roster || []).forEach(add);
+  (poller.allFollows || []).forEach(add);
+  (poller.benchFollows || []).forEach(add);
+  out.sort((a, b) => {
+    const la = live[a] != null;
+    const lb = live[b] != null;
+    if (la !== lb) return la ? -1 : 1;
+    if (la && lb) return (live[b] - live[a]) || a.localeCompare(b);
+    return a.localeCompare(b);
+  });
+  return out;
+}
+
+function liveGridCloseReplaceModal() {
+  const modal = document.getElementById('lg-replace-modal');
+  if (modal) modal.style.display = 'none';
+  _lgReplaceCtx = null;
+}
+
+function liveGridPickReplaceSuggestion(login) {
+  const input = document.getElementById('lg-replace-input');
+  if (input) input.value = login;
+}
+
+function liveGridOpenReplaceModal(login) {
   const s = _lgStatus || {};
   const qRec = (s.quadrants || []).find(x => x.login === login);
   const qNum = qRec ? qRec.quadrant : null;
-  const follows = (s.poller && s.poller.allFollows && s.poller.allFollows.length)
-    ? s.poller.allFollows
-    : ((s.poller && s.poller.benchFollows) || []);
+  if (!qNum) { alert('Not on grid'); return; }
+  _lgReplaceCtx = { login: String(login).toLowerCase(), qNum };
   const live = (s.poller && s.poller.live) || {};
-  const liveFollows = follows.filter(f => live[f] != null).slice(0, 12);
-  let msg = `Remove ${login} from Q${qNum || '?'}?\n\n`;
-  if (liveFollows.length) msg += `Live follows (type one to replace):\n${liveFollows.join(', ')}\n\n`;
-  msg += 'Replacement twitch login (blank = slate until you pick):';
-  const rep = prompt(msg);
-  if (rep === null) return;
-  try {
-    const r = await fetch(LG_BASE + '/live-grid/roster', {
+  const suggestions = liveGridReplaceSuggestions(s, login);
+  document.getElementById('lg-replace-title').textContent = `Replace ${login} on Q${qNum}`;
+  const input = document.getElementById('lg-replace-input');
+  input.value = '';
+  document.getElementById('lg-replace-suggest-count').textContent = suggestions.length ? `(${suggestions.length})` : '';
+  document.getElementById('lg-replace-suggestions').innerHTML = suggestions.map(l => {
+    const viewers = live[l] != null ? ` · ${live[l].toLocaleString()}` : '';
+    const liveTag = live[l] != null ? '<span style="color:#6f6;">●</span> ' : '';
+    return `<span onclick="liveGridPickReplaceSuggestion('${l}')" style="cursor:pointer;font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(199,175,79,0.12);border:1px solid rgba(199,175,79,0.25);color:#fff;">${liveTag}${l}${viewers}</span>`;
+  }).join('');
+  const modal = document.getElementById('lg-replace-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => input.focus(), 50);
+}
+
+async function liveGridReplaceOnQuadrant(qNum, removeLogin, replaceLogin) {
+  const removed = String(removeLogin || '').trim().toLowerCase();
+  const next = String(replaceLogin || '').trim().toLowerCase();
+
+  const tryReplace = async () => {
+    const r = await fetch(LG_BASE + `/live-grid/quadrant/${qNum}/replace`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ remove: [login] }),
+      body: JSON.stringify({ remove: removed, replace: next || null }),
     });
+    if (r.status === 404) return null;
     const d = await r.json();
-    if (!d.ok) { alert('Remove failed: ' + (d.error || 'unknown')); return; }
-    const next = String(rep || '').trim().toLowerCase();
-    if (next && qNum) await liveGridAssignChannel(qNum, next);
-  } catch (e) { alert('Remove failed: ' + e.message); }
+    if (!d.ok) throw new Error(d.error || 'Replace failed');
+    return d;
+  };
+
+  try {
+    const atomic = await tryReplace();
+    if (atomic) return atomic;
+  } catch (e) {
+    if (!/404|not found/i.test(String(e.message))) throw e;
+  }
+
+  // Fallback for running sidecar without /replace — seat first, then roster (one poll)
+  if (next) {
+    const ar = await fetch(LG_BASE + `/live-grid/quadrant/${qNum}/channel`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login: next }),
+    });
+    const ad = await ar.json();
+    if (!ad.ok) throw new Error(ad.error || 'Assign failed');
+  }
+  const rr = await fetch(LG_BASE + '/live-grid/roster', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      remove: [removed],
+      ...(next ? { benchAdd: [next] } : {}),
+    }),
+  });
+  const rd = await rr.json();
+  if (!rd.ok) throw new Error(rd.error || 'Remove failed');
+  return rd;
+}
+
+async function liveGridConfirmReplace(slateOnly) {
+  const ctx = _lgReplaceCtx;
+  if (!ctx) return;
+  const next = slateOnly ? '' : String((document.getElementById('lg-replace-input') || {}).value || '').trim().toLowerCase();
+  liveGridCloseReplaceModal();
+  try {
+    await liveGridReplaceOnQuadrant(ctx.qNum, ctx.login, next);
+  } catch (e) { alert('Replace failed: ' + e.message); }
   setTimeout(liveGridRefresh, 1500);
+}
+
+async function liveGridRemoveFromGrid(login) {
+  liveGridOpenReplaceModal(login);
 }
 
 async function liveGridToggleOperatorMode() {
