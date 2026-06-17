@@ -38,24 +38,42 @@ PY
 
 apply_baseline() {
   require_profile
-  local tmp block
-  block="$(baseline_env_lines)"
+  local tmp blockfile
+  blockfile="$(mktemp)"
+  baseline_env_lines > "$blockfile"
   tmp="$(mktemp)"
   if grep -q "$MARK_BEGIN" "$ENV_FILE" 2>/dev/null; then
-    awk -v begin="$MARK_BEGIN" -v end="$MARK_END" -v block="$block" '
-      $0 == begin { print; print block; skip=1; next }
-      skip && $0 == end { skip=0; print; next }
-      !skip { print }
-    ' "$ENV_FILE" > "$tmp"
+    python3 - "$ENV_FILE" "$blockfile" "$MARK_BEGIN" "$MARK_END" "$tmp" <<'PY'
+import sys
+env_file, block_file, begin, end, out = sys.argv[1:6]
+block = open(block_file).read().rstrip('\n')
+lines = open(env_file).read().splitlines()
+out_lines = []
+skip = False
+for line in lines:
+    if line == begin:
+        out_lines.append(line)
+        out_lines.extend(block.splitlines())
+        skip = True
+        continue
+    if skip and line == end:
+        skip = False
+        out_lines.append(line)
+        continue
+    if not skip:
+        out_lines.append(line)
+open(out, 'w').write('\n'.join(out_lines) + '\n')
+PY
   else
     {
       echo ""
       echo "$MARK_BEGIN"
-      echo "$block"
+      cat "$blockfile"
       echo "$MARK_END"
     } >> "$ENV_FILE"
     cp "$ENV_FILE" "$tmp"
   fi
+  rm -f "$blockfile"
   mv "$tmp" "$ENV_FILE"
   echo "Applied baseline env block to .env"
   echo "Next: pm2 restart broadcast-sidecar --update-env"
