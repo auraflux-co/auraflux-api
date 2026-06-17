@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Clipz World Live — Local Watch</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --navy:#0d1424; --gold:#c7af4f; --panel:#131f38; }
+    body { margin:0; background:var(--navy); color:#fff; font-family:'Barlow Condensed',system-ui,sans-serif; }
+    header { padding:14px 18px; border-bottom:1px solid rgba(199,175,79,0.2); background:linear-gradient(90deg,#131f38,#0f1a30); }
+    h1 { margin:0; font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:2px; color:var(--gold); }
+    p { margin:6px 0 0; color:rgba(255,255,255,0.55); font-size:0.85rem; }
+    main { padding:16px; max-width:1200px; margin:0 auto; }
+    video { width:100%; max-height:70vh; background:#000; border-radius:8px; border:1px solid rgba(199,175,79,0.25); }
+    .meta { margin-top:14px; font-size:0.9rem; line-height:1.5; }
+    .warn { color:#f0883e; }
+    .ok { color:#5c8; }
+    a { color:var(--gold); }
+    .quad-map { display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:320px; margin-top:12px; }
+    .quad-cell { position:relative; padding:10px; border-radius:6px; background:#0d1524; border:1px solid rgba(199,175,79,0.2); min-height:52px; }
+    .quad-cell.on-air { border-color:var(--gold); box-shadow:0 0 8px rgba(199,175,79,0.35); }
+    .quad-cell .q { font-size:10px; color:rgba(255,255,255,0.4); }
+    .quad-cell .name { font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:1px; }
+    .audio-badge { position:absolute; top:6px; right:6px; font-family:'Bebas Neue',sans-serif; font-size:9px; letter-spacing:1px; padding:2px 6px; background:var(--gold); color:var(--navy); border-radius:3px; }
+    ul { padding-left:1.2rem; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>CLIPZ WORLD LIVE</h1>
+    <p>Local composed grid — same encode as YouTube RTMP</p>
+  </header>
+  <main>
+    <video id="player" controls autoplay playsinline muted></video>
+    <div class="meta" id="meta">Loading feed…</div>
+    <div class="quad-map" id="quad-map"></div>
+    <div class="meta" id="sources"></div>
+  </main>
+  <script>
+    const v = document.getElementById('player');
+    const meta = document.getElementById('meta');
+    const mapEl = document.getElementById('quad-map');
+    const sourcesEl = document.getElementById('sources');
+
+    function renderQuadMap(feed) {
+      const onQ = feed.onAir?.quadrant || 0;
+      const sources = feed.sources || [];
+      mapEl.innerHTML = [1, 2, 3, 4].map((n) => {
+        const s = sources.find((x) => x.quadrant === n) || {};
+        const onAir = onQ === n;
+        return `<div class="quad-cell${onAir ? ' on-air' : ''}">
+          ${onAir ? '<span class="audio-badge">AUDIO</span>' : ''}
+          <div class="q">Q${n}</div>
+          <div class="name">${(s.login || 'SLATE').toUpperCase()}</div>
+        </div>`;
+      }).join('');
+    }
+
+    async function boot() {
+      const feed = await fetch('/broadcast/local-feed').then((r) => r.json()).catch(() => null);
+      if (!feed?.ok) {
+        meta.innerHTML = '<span class="warn">Could not load /broadcast/local-feed</span>';
+        return;
+      }
+      const hls = feed.composed?.hlsUrl;
+      const ready = feed.composed?.hlsReady;
+      const onAir = feed.onAir || {};
+      meta.innerHTML = ready
+        ? `<span class="ok">LIVE</span> · on-air <strong>Q${onAir.quadrant || '?'}</strong> ${onAir.login || ''} · ${onAir.mode || 'auto'}${onAir.muted ? ' · <span class="warn">MUTED</span>' : ''}`
+        : `<span class="warn">HLS not ready</span> — ${feed.composed?.note || 'start grid with LIVE_GRID_LOCAL_HLS=on'}`;
+
+      renderQuadMap(feed);
+
+      if (ready && hls) {
+        if (v.canPlayType('application/vnd.apple.mpegurl')) {
+          v.src = hls;
+        } else if (window.Hls && Hls.isSupported()) {
+          const h = new Hls({ lowLatencyMode: true });
+          h.loadSource(hls);
+          h.attachMedia(v);
+        } else {
+          meta.innerHTML += '<br><span class="warn">HLS not supported in this browser</span>';
+        }
+      }
+
+      let srcHtml = '<strong>Sources</strong><ul>';
+      for (const s of feed.sources || []) {
+        srcHtml += `<li>Q${s.quadrant} ${s.login || '—'} — <a href="${s.twitchWatchUrl}" target="_blank" rel="noopener">Twitch</a></li>`;
+      }
+      srcHtml += '</ul>';
+      sourcesEl.innerHTML = srcHtml;
+    }
+    boot();
+    setInterval(boot, 15000);
+  </script>
+</body>
+</html>

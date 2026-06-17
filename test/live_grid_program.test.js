@@ -71,6 +71,16 @@ describe('live_grid program director', () => {
     expect(sources.slice(1)).toEqual(['lacy', 'hasanabi', 'extraemily']);
   });
 
+  test('buildQuadrantSources event_night without feed does not duplicate co-stream on Q0', () => {
+    const config = loadPrograms(path.join(__dirname, '..', 'config', 'live_grid_programs.json'));
+    const poller = ['cinna', 'jasontheween', 'lacy', 'joe_bartolozzi'];
+    const { sources } = buildQuadrantSources('event_night', config, poller, {}, {});
+    const logins = sources.filter(s => typeof s === 'string');
+    expect(new Set(logins).size).toBe(logins.length);
+    expect(logins).toContain('cinna');
+    expect(logins).toContain('jasontheween');
+  });
+
   test('formatTitle substitutes mode variables', () => {
     const t = formatTitle('🔴 LIVE: {eventTitle} — ClipzWorld', { eventTitle: 'World Cup Final' });
     expect(t).toContain('World Cup Final');

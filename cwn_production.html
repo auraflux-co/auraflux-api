@@ -230,6 +230,25 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .card-title { font-family:'Bebas Neue',sans-serif; font-size:14px; color:#c7af4f; letter-spacing:2px; }
 .card-body { padding:14px 16px; }
 
+/* Live Grid quadrant tiles — mirrors on-stream gold AUDIO badge */
+.lg-quad-tile { position:relative; padding:8px; border-radius:4px; background:#0d1524; min-height:72px; }
+.lg-quad-tile.on-air { border:1px solid #c7af4f !important; box-shadow:0 0 8px rgba(199,175,79,0.35); }
+.lg-audio-badge {
+  position:absolute; top:6px; right:6px; z-index:2;
+  font-family:'Bebas Neue',sans-serif; font-size:10px; letter-spacing:1.5px;
+  padding:3px 7px; border-radius:3px; background:#c7af4f; color:#0d1424;
+  box-shadow:0 1px 4px rgba(0,0,0,0.35); pointer-events:none;
+}
+.lg-audio-badge.muted { background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.45); }
+.lg-audio-badge.bed { background:rgba(199,175,79,0.75); color:#0d1424; }
+.lg-quad-label { font-size:9px; color:rgba(255,255,255,0.35); }
+.lg-quad-name { font-size:12px; font-weight:700; letter-spacing:0.5px; }
+.lg-audio-pill {
+  display:inline-flex; align-items:center; gap:6px; margin-top:4px;
+  font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1px; color:#c7af4f;
+}
+.lg-audio-pill .dot { width:8px; height:8px; border-radius:50%; background:#c7af4f; box-shadow:0 0 6px rgba(199,175,79,0.6); }
+
 .field { margin-bottom:12px; }
 .field label { display:block; font-size:9px; font-weight:900; color:rgba(199,175,79,0.5); letter-spacing:2px; margin-bottom:5px; }
 .field > label:first-of-type { display:block; }
@@ -850,7 +869,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <span style="color:rgba(255,255,255,0.35);margin-left:6px;">Click Q1–Q4 on a streamer below · 🔒 = your lock (poller won&apos;t move it)</span>
           </div>
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-            <span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.45);">AUDIO: <b id="lg-audio-mode" style="color:#c7af4f;">—</b></span>
+            <span class="lg-audio-pill">AUDIO <span class="dot" id="lg-audio-dot"></span> <b id="lg-audio-mode" style="color:#c7af4f;font-weight:400;">—</b></span>
             <button class="btn btn-outline btn-sm" id="lg-audio-auto" style="font-size:10px;padding:2px 10px;display:none;" onclick="liveGridAudio('auto')">RELEASE TO AUTO</button>
           </div>
           <div id="lg-bench-row" style="display:none;margin-bottom:10px;">
@@ -12448,11 +12467,16 @@ function liveGridRender() {
 
   document.getElementById('lg-audio-mode').textContent = running
     ? (audio.fallbackMusic
-        ? `🎵 EPIDEMIC BED · ${audio.fallbackTrack || 'royalty-free'}`
+        ? `MUSIC BED · ${audio.fallbackTrack || 'royalty-free'}`
         : audio.muted
-          ? '🔇 MUTED — COPYRIGHT PROTECT'
-          : `${(audio.label || audio.login || 'slate').toUpperCase()} · ${(audio.mode || 'auto').toUpperCase()}${audio.musicWarning ? ' · 🎵 MUSIC ON AIR' : ''}`)
+          ? 'MUTED — COPYRIGHT PROTECT'
+          : `${(audio.label || audio.login || 'slate').toUpperCase()} · ${(audio.mode || 'auto').toUpperCase()}${audio.musicWarning ? ' · MUSIC ON AIR' : ''}`)
     : '—';
+  const audioDot = document.getElementById('lg-audio-dot');
+  if (audioDot) {
+    audioDot.style.background = !running ? 'transparent' : audio.muted ? '#e88' : audio.fallbackMusic ? '#c7af4f' : '#5c8';
+    audioDot.style.boxShadow = running && !audio.muted ? '0 0 8px rgba(92,200,120,0.7)' : 'none';
+  }
   document.getElementById('lg-audio-auto').style.display = (running && audio.mode === 'manual') ? '' : 'none';
 
   const quadsEl = document.getElementById('lg-quads');
@@ -12550,14 +12574,21 @@ function liveGridRender() {
     const canAudio = hasSource;
     const retryHint = q.login && !live[q.login] ? ' <span style="color:#e88;">⚠ offline — retrying</span>' : '';
     const unlockBtn = locked ? `<span onclick="event.stopPropagation();liveGridUnlockQuad(${q.quadrant})" title="Release lock — auto-fill again" style="position:absolute;top:4px;right:6px;cursor:pointer;color:#c7af4f;font-size:11px;">🔓</span>` : '';
-    return `<div onclick="${canAudio ? `liveGridAudio(${q.quadrant})` : ''}" title="${canAudio ? (music ? 'Music detected — claims risk if put on air' : 'Click to put this quadrant on air') : 'Slate'}"
-      style="cursor:${canAudio ? 'pointer' : 'default'};position:relative;padding:8px;border-radius:4px;background:#0d1524;
-      border:1px solid ${onAir ? '#c7af4f' : locked ? 'rgba(199,175,79,0.55)' : music ? 'rgba(255,120,120,0.4)' : 'rgba(199,175,79,0.2)'};${onAir ? 'box-shadow:0 0 6px rgba(199,175,79,0.4);' : ''}">
-      ${q.login && !locked ? `<span onclick="event.stopPropagation();liveGridRemoveFromGrid('${q.login}')" title="Remove from grid — back to the bench (re-add to re-admit)"
-        style="position:absolute;top:4px;right:6px;cursor:pointer;color:rgba(255,120,120,0.7);font-weight:700;font-size:12px;line-height:1;">×</span>` : unlockBtn}
+    const audioBadge = onAir
+      ? `<span class="lg-audio-badge${audio.muted ? ' muted' : audio.fallbackMusic ? ' bed' : ''}">${audio.muted ? 'MUTED' : audio.fallbackMusic ? 'BED' : 'AUDIO'}</span>`
+      : '';
+  const removeBtn = q.login && !locked && !onAir
+      ? `<span onclick="event.stopPropagation();liveGridRemoveFromGrid('${q.login}')" title="Remove from grid — back to the bench (re-add to re-admit)"
+        style="position:absolute;top:4px;right:6px;cursor:pointer;color:rgba(255,120,120,0.7);font-weight:700;font-size:12px;line-height:1;">×</span>`
+      : (locked ? unlockBtn : '');
+    return `<div onclick="${canAudio ? `liveGridAudio(${q.quadrant})` : ''}" title="${canAudio ? (music ? 'Music detected — claims risk if put on air' : 'Click to listen on this quadrant (auto-pilot stays on)') : 'Slate'}"
+      class="lg-quad-tile${onAir ? ' on-air' : ''}"
+      style="cursor:${canAudio ? 'pointer' : 'default'};border:1px solid ${onAir ? '#c7af4f' : locked ? 'rgba(199,175,79,0.55)' : music ? 'rgba(255,120,120,0.4)' : 'rgba(199,175,79,0.2)'};">
+      ${audioBadge}
+      ${removeBtn}
       ${locked ? '<span style="position:absolute;top:4px;left:6px;font-size:10px;" title="Operator lock">🔒</span>' : ''}
-      <div style="font-size:9px;color:rgba(255,255,255,0.35);">Q${q.quadrant} ${onAir ? (audio.muted ? '· 🔇 MUTED' : '· 🔊 ON AIR') : ''}${music ? ' <span style="color:#e88;">🎵 MUSIC</span>' : ''}${retryHint}</div>
-      <div style="font-size:12px;font-weight:700;color:${hasSource ? '#fff' : 'rgba(255,255,255,0.3)'};letter-spacing:0.5px;padding-left:${locked ? '14px' : '0'};">${primary}</div>
+      <div class="lg-quad-label">Q${q.quadrant}${music ? ' <span style="color:#e88;">MUSIC</span>' : ''}${retryHint}</div>
+      <div class="lg-quad-name" style="color:${hasSource ? '#fff' : 'rgba(255,255,255,0.3)'};padding-left:${locked ? '14px' : '0'};">${primary}</div>
       <div style="font-size:9px;color:rgba(199,175,79,0.8);">${subline}</div>
     </div>`;
   }).join('');

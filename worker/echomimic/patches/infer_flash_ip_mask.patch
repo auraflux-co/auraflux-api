@@ -1,0 +1,49 @@
+--- a/infer_flash.py
++++ b/infer_flash.py
+@@ -17,6 +17,8 @@ from src.fm_solvers import FlowDPMSolverMultistepScheduler
+ from src.fm_solvers_unipc import FlowUniPCMultistepScheduler
+ from src.cache_utils import get_teacache_coefficients
+ 
++import json
++import math
+ import decord
+ import json
+ import random
+@@ -95,6 +97,8 @@ def parse_args():
+     parser.add_argument("--mouth_prompts", type=str, default=None, help="Mouth prompts")
++    parser.add_argument("--ip_mask_coords", type=str, default=None,
++                        help="JSON face bbox from face_detect_subprocess.py")
+ 
+     # Skip ratio
+     parser.add_argument("--cfg_skip_ratio", type=float, default=0.0, help="CFG skip ratio")
+@@ -168,6 +172,7 @@ def main():
+     mouth_prompts = args.mouth_prompts
+     cfg_skip_ratio = args.cfg_skip_ratio
+     shift = args.shift
++    ip_mask_coords = args.ip_mask_coords
+ 
+     # Convert weight dtype
+     weight_dtype = torch.bfloat16 if weight_dtype_str == "bfloat16" else torch.float16
+@@ -318,6 +323,18 @@ def main():
+ 
+         input_video, input_video_mask, clip_image = get_image_to_video_latent2(validation_image_start, validation_image_end, video_length=video_length_actual, sample_size=[sample_size_0, sample_size_1])
+ 
++        ip_mask = None
++        if ip_mask_coords:
++            coords_raw = json.loads(ip_mask_coords)
++            y1, y2, x1, x2, h_, w_ = (
++                coords_raw["y1"], coords_raw["y2"], coords_raw["x1"], coords_raw["x2"],
++                coords_raw["height"], coords_raw["width"],
++            )
++            downratio = math.sqrt(sample_size_0 * sample_size_1 / h_ / w_)
++            coords = (
++                y1 * downratio // 16, y2 * downratio // 16,
++                x1 * downratio // 16, x2 * downratio // 16,
++                sample_size_0 // 16, sample_size_1 // 16,
++            )
++            ip_mask = get_ip_mask(coords).unsqueeze(0)
++            ip_mask = torch.cat([ip_mask] * 3).to(device=device, dtype=weight_dtype)
++
+         sample = pipeline(
+             prompt,
+             num_frames = video_length_actual,

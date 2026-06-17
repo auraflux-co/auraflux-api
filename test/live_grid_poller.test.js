@@ -133,12 +133,12 @@ describe('live_grid bench tier (CPD-951)', () => {
     expect(swaps).toContainEqual({ quadrant: 2, out: 'z', in: 'b', reason: 'roster_priority' });
   });
 
-  test('operator mode drops offline, fills empties — no challenge swaps', () => {
+  test('operator mode freezes grid — no offline drop or highest-viewer fill', () => {
     const current = ['a', 'b', 'c', 'd'];
     const live = { b: 50, c: 40, d: 30, e: 100 };
     const { assignments, swaps } = computeAssignments(current, live, {}, { operatorMode: true });
-    expect(assignments).toEqual(['e', 'b', 'c', 'd']);
-    expect(swaps).toEqual([{ quadrant: 0, out: 'a', in: 'e', reason: 'offline' }]);
+    expect(assignments).toEqual(current);
+    expect(swaps).toEqual([]);
   });
 
   test('operator mode skips viewer-challenge reshuffles', () => {
@@ -220,5 +220,17 @@ describe('live_grid updateRoster remove-to-bench (CPD-1001)', () => {
     expect(p.exclude.has('b')).toBe(false);
     expect(p.roster).toContain('b');
     expect(p.bench.has('b')).toBe(false);
+  });
+
+  test('setOperatorSeat skips auto-fill race — direct assignment', () => {
+    const { LiveGridPoller } = require('../lib/live_grid/poller');
+    const p = new LiveGridPoller({ roster: ['a', 'b', 'c', 'd'], bench: ['e', 'f'] });
+    p.assignments = ['a', 'b', 'c', 'd'];
+    p.updateRoster({ remove: ['a'] });
+    p.setOperatorSeat(0, 'e');
+    expect(p.assignments[0]).toBe('e');
+    expect(p.pinned[0]).toBe('e');
+    expect(p.exclude.has('a')).toBe(true);
+    expect(p.exclude.has('e')).toBe(false);
   });
 });

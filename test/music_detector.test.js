@@ -46,6 +46,12 @@ describe('pickAudioQuad', () => {
     expect(pickAudioQuad([null, null, null, null], {}, [false, false, false, false]))
       .toEqual({ quad: -1, mute: false });
   });
+
+  test('skips unhealthy quadrants', () => {
+    expect(pickAudioQuad(A, VIEWERS, [false, false, false, false], {
+      unhealthyQuads: [false, true, false, false],
+    })).toEqual({ quad: 0, mute: false });
+  });
 });
 
 describe('MusicDetector tick', () => {
@@ -68,7 +74,8 @@ describe('MusicDetector tick', () => {
       results: [music, music, music],
     });
     await det._tick();
-    expect(det.flags).toEqual([false, false, false, false]);
+    expect(det.flags).toEqual([true, false, false, false]);
+    expect(flagEvents).toEqual([[true, false, false, false]]);
     await det._tick();
     expect(det.flags).toEqual([true, false, false, false]);
     expect(flagEvents).toEqual([[true, false, false, false]]);

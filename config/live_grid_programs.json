@@ -5,7 +5,7 @@
     "grid": {
       "label": "Twitch multiview grid",
       "titleTemplate": "🔴 LIVE: {streamers} — ClipzWorld Multiview",
-      "descriptionPrefix": "Four live streams on one screen — members pick audio with !listen 1-4.",
+      "descriptionPrefix": "Four live streams on one screen — subscribe, then !listen 1-4 to pick audio.",
       "quadrants": [
         { "type": "twitch" },
         { "type": "twitch" },

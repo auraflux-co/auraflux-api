@@ -6,6 +6,15 @@
     "requirePin": true,
     "note": "Schedule changes require CALENDAR_OWNER_PIN in .env — only Rob overrides hard rules."
   },
+  "autoProduction": {
+    "enabled": true,
+    "leadMinutes": { "longform": 120, "short": 90 },
+    "twitchTemplateStreamers": [
+      "jasontheween", "adapt", "marlon", "extraemily", "stableronaldo", "maya",
+      "cinna", "yonnajay", "jaycinco", "lacy", "hasanabi", "yourragegaming"
+    ],
+    "note": "production_cron fires calendar slots without dashboard clicks. Long-form skipped when avatar/HeyGen blocked."
+  },
   "guidelines": {
     "live": [
       "Twitch TV: transformative produced video only (Bobby G commentary VODs + news desk). No streamer clip comps, no 4-up grid rebroadcast.",
@@ -238,11 +247,11 @@
         "id": "vod_production_auto",
         "label": "Auto-run Generate at production times",
         "category": "production",
-        "status": "no",
-        "why": "Not built — Generate is always manual; roadmap item",
-        "operatorPath": "Generate tab only",
-        "repairsNeeded": ["Autonomous production cron (Task #21)"],
-        "env": []
+        "status": "yes",
+        "why": "production_cron ticks every 60s — auto-picks clips and fires Generate for enabled calendar slots. Long-form waits on avatar/HeyGen; shorts run immediately.",
+        "operatorPath": "Automatic when pm2/server running and PRODUCTION_CRON≠off",
+        "repairsNeeded": [],
+        "env": ["PRODUCTION_CRON", "HEYGEN_API_KEY", "GATE_TEST_MODE", "GEMINI_API_KEY"]
       },
       {
         "id": "vod_native_platform_schedule",
@@ -268,10 +277,10 @@
         "id": "live_also_rules",
         "label": "liveAlso (auto-play VOD on Twitch/YT when published)",
         "category": "automation",
-        "status": "partial",
-        "why": "On Gate 5 publish: twitchTv adds to curated playlist + enqueues; youtubeNewsDesk queues file for news_desk segment",
+        "status": "yes",
+        "why": "On Gate 5 publish: twitchTv adds to curated playlist + enqueues; youtubeNewsDesk queues file for news_desk segment; hot daypart switch applies produced_news override",
         "operatorPath": "Automatic when slot has liveAlso in calendar",
-        "repairsNeeded": ["Wire news_desk queue into program director file override on grid start"],
+        "repairsNeeded": [],
         "env": []
       }
     ]

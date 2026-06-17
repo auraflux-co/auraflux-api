@@ -1,0 +1,74 @@
+{
+  "name": "c0-grid-overnight-baseline",
+  "version": "2026-06-17",
+  "description": "Locked profile for 1920×1080 landscape VODs, hot-switch audio (no blips on quadrant change), feed-failure benching, and auto-pilot overnight. Apply when grid is OFF: bash scripts/live_grid_baseline.sh apply",
+  "restoreCommand": "bash scripts/live_grid_baseline.sh restore",
+  "verifyCommand": "bash scripts/live_grid_baseline.sh verify",
+  "preflightCommand": "bash scripts/live_grid_baseline.sh preflight",
+  "localWatchUrl": "http://127.0.0.1:3000/broadcast/local-watch",
+  "output": "1920x1080",
+  "cells": "960x540 letterbox",
+  "env": {
+    "LIVE_GRID_LOCAL_HLS": "on",
+    "LIVE_GRID_AUDIO_DIRECT": "on",
+    "LIVE_GRID_AUDIO_COPY": "off",
+    "LIVE_GRID_UDP_RELAY": "on",
+    "LIVE_GRID_RELAY_TRANSCODE": "on",
+    "LIVE_GRID_RELAY_FPS": "30",
+    "LIVE_GRID_RELAY_SCALE_W": "960",
+    "LIVE_GRID_RELAY_SCALE_H": "540",
+    "LIVE_GRID_RELAY_BITRATE_K": "2200",
+    "LIVE_GRID_FPS": "30",
+    "LIVE_GRID_OUTPUT_W": "1920",
+    "LIVE_GRID_OUTPUT_H": "1080",
+    "LIVE_GRID_ENCODER": "libx264",
+    "LIVE_GRID_BITRATE_K": "6800",
+    "LIVE_GRID_AUDIO_BITRATE_K": "192",
+    "LIVE_GRID_UDP_MASTER_REFRESH_MS": "0",
+    "LIVE_GRID_EMBED_MUSIC_BED": "off",
+    "LIVE_GRID_MUSIC_GUARD": "off",
+    "LIVE_GRID_DUAL_BROADCAST": "off",
+    "LIVE_GRID_YOUTUBE_SQUARE_PAD": "off",
+    "LIVE_GRID_ENFORCE_LANDSCAPE": "on",
+    "LIVE_GRID_ALWAYS_FRESH_LISTING": "off",
+    "LIVE_GRID_TWITCH_QUALITY": "1080p60,1080p,720p60,720p,best",
+    "LIVE_GRID_URL_QUALITY": "best"
+  },
+  "featuresLocked": [
+    "END STREAM posts endBroadcast:true — encoder + YouTube listing both end",
+    "Dashboard quadrant click uses listen (auto-pilot stays on); only pin:true or chat !listen pins manual",
+    "Auto-audio skips unhealthy quads (relay restarts + feed failures)",
+    "Feed guard: 5 streamlink failures / 2min → bench quadrant + move audio off",
+    "Resume state does not restore stale manual audio without pinSource",
+    "RTMP landscape guard blocks GO LIVE if YOUTUBE_SQUARE_PAD would send 1080×1080",
+    "On-stream AUDIO badge (top-right of on-air quad) + CLIPZ WORLD LIVE frame bug",
+    "Poller auto-fills empty quadrants from bench when operator mode off (overnight auto-pilot)"
+  ],
+  "codeLocked": [
+    "compositor.js: YOUTUBE_SQUARE_PAD default off; RTMP gets -s 1920x1080 -aspect 16:9",
+    "compositor.js: LIVE_GRID_CELL_FIT default letterbox (matches jC7G-era VODs)",
+    "compositor.js: volume@aqN hot-switch amix when AUDIO_COPY=off (no master restart on audio hop)",
+    "manager.js: _guardRtmpLandscapeEncode before master start",
+    "manager.js: _onFeedUnhealthy benches dying event/URL feeds",
+    "feeders.js: _noteFeedFailure threshold before onFeedUnhealthy callback",
+    "music_detector.js: pickAudioQuad skips unhealthyQuads",
+    "live_routes.js: /live-grid/audio listen vs pin; stop endBroadcast"
+  ],
+  "doNotRevertWithoutReason": [
+    "LIVE_GRID_YOUTUBE_SQUARE_PAD=on (RTMP becomes 1080×1080 while HLS stays 16:9 — bad VODs)",
+    "LIVE_GRID_AUDIO_DIRECT=off (restores always-on 4× amix bleed)",
+    "LIVE_GRID_CELL_FIT=cover without testing (changes cell crop vs jC7G VODs)",
+    "live_routes audio default manual (pins auto-pilot overnight)",
+    "Skipping endBroadcast on dashboard END STREAM (zombie YouTube LIVE)"
+  ],
+  "overnightAutoPilot": {
+    "operatorMode": "off for bench auto-fill and viewer swaps",
+    "audioMode": "auto — dashboard clicks use listen, not manual pin",
+    "resume": "does not restore manual pin without audioPinSource",
+    "feedGuard": "auto-bench Q1 event feeds after repeated streamlink exits"
+  },
+  "probeBaseline": {
+    "command": "ffmpeg -hide_banner -loglevel error -i http://127.0.0.1:3000/broadcast/preview-hls/index.m3u8 -t 10 -vn -af silencedetect=noise=-38dB:d=0.06 -f null - 2>&1 | grep -c silence_end || true",
+    "expectMaxGapsPer10s": 1
+  }
+}

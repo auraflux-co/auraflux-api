@@ -15,6 +15,26 @@ describe('live_grid seo', () => {
     }
   });
 
+  test('withLiveTitleDate inserts ET date after LIVE without duplicating', () => {
+    const { withLiveTitleDate, liveTitleDateEt } = require('../lib/live_grid/seo');
+    const stamp = liveTitleDateEt(new Date('2026-06-16T20:00:00Z'));
+    const t = withLiveTitleDate('🔴 LIVE: Twitch Multiview Grid | Lacy, Emily', new Date('2026-06-16T20:00:00Z'));
+    expect(t).toMatch(new RegExp(`^🔴 LIVE: ${stamp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\|`));
+    expect(withLiveTitleDate(t)).toBe(t);
+  });
+
+  test('withLiveTitleDate replaces stale GPT dates (e.g. Oct 5, 2023 Mario Kart)', () => {
+    const { withLiveTitleDate, liveTitleDateEt } = require('../lib/live_grid/seo');
+    const stamp = liveTitleDateEt(new Date('2026-06-16T20:00:00Z'));
+    const t = withLiveTitleDate(
+      '🔴 LIVE: Oct 5, 2023 | Mario Kart Party | Cinna, Jason',
+      new Date('2026-06-16T20:00:00Z'),
+    );
+    expect(t).toContain(stamp);
+    expect(t).not.toContain('2023');
+    expect(t).not.toMatch(/Mario Kart/i);
+  });
+
   test('appendChannelHashtag adds ClipzWorldNews within 100 chars', () => {
     const t = appendChannelHashtag('🔴 LIVE: Brazil vs Morocco | Watch Party');
     expect(t).toContain('#ClipzWorldNews');

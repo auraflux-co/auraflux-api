@@ -15,12 +15,75 @@ describe('live_grid compositor (CPD-1005)', () => {
   });
 
   test('buildArgs uses UDP relay inputs by default', () => {
+    process.env.LIVE_GRID_AUDIO_DIRECT = 'off';
     const args = buildArgs({ output: '/tmp/test.mp4', durationSec: 1 });
     const joined = args.join(' ');
     expect(joined).toContain('udp://127.0.0.1:5010');
     expect(joined).toContain('fps=60');
     expect(joined).toContain('192k');
-    expect(joined).toContain('aresample=async=1');
+    expect(joined).toContain('amix=inputs=4');
+  });
+
+  test('buildArgs direct audio skips amix and copies AAC by default', () => {
+    process.env.LIVE_GRID_AUDIO_DIRECT = 'on';
+    process.env.LIVE_GRID_AUDIO_COPY = 'on';
+    const args = buildArgs({ output: '/tmp/test.mp4', durationSec: 1, audioQuad: 1 });
+    const joined = args.join(' ');
+    expect(joined).not.toContain('amix=inputs=4');
+    expect(joined).toContain('-map 1:a');
+    expect(joined).toContain('-c:a copy');
+    expect(joined).not.toContain('[1:a]');
+    expect(joined).not.toContain('aresample=44100');
+  });
+
+  test('buildArgs direct audio re-encodes via hot-switch amix when copy disabled', () => {
+    process.env.LIVE_GRID_AUDIO_DIRECT = 'on';
+    process.env.LIVE_GRID_AUDIO_COPY = 'off';
+    const args = buildArgs({ output: '/tmp/test.mp4', durationSec: 1, audioQuad: 1 });
+    const joined = args.join(' ');
+    expect(joined).toContain('volume@aq1=1');
+    expect(joined).toContain('amix=inputs=4');
+    expect(joined).toContain('-c:a aac');
+    expect(joined).not.toContain('-map 1:a');
+  });
+
+  test('buildArgs cover-fills grid cells and forces 16:9 RTMP for YouTube', () => {
+    process.env.LIVE_GRID_CELL_FIT = 'cover';
+    process.env.LIVE_GRID_ENCODER = 'libx264';
+    process.env.LIVE_GRID_YOUTUBE_SQUARE_PAD = 'off';
+    const args = buildArgs({ output: 'rtmp://test/live/key', localHlsPath: '/tmp/preview.m3u8', durationSec: 1 });
+    const joined = args.join(' ');
+    expect(joined).toContain('force_original_aspect_ratio=increase,crop=960:540');
+    expect(joined).toContain('setdar=16/9');
+    expect(joined).toContain('-s 1920x1080');
+    expect(joined).toContain('-aspect 16:9');
+    expect(joined).toContain('h264_metadata=sample_aspect_ratio=1/1');
+    expect(joined).not.toContain('pad=1080:1080');
+    expect(joined).toContain('flvflags=no_duration_filesize');
+  });
+
+  test('buildArgs letterboxes 16:9 HLS and square-pads RTMP when square pad enabled', () => {
+    process.env.LIVE_GRID_ENCODER = 'libx264';
+    process.env.LIVE_GRID_YOUTUBE_SQUARE_PAD = 'on';
+    const args = buildArgs({ output: 'rtmp://test/live/key', localHlsPath: '/tmp/preview.m3u8', durationSec: 1 });
+    const joined = args.join(' ');
+    expect(joined).toContain('[v_hls]');
+    expect(joined).toContain('[v_yt]');
+    expect(joined).toContain('pad=1080:1080');
+    expect(joined).toContain('-f hls');
+    expect(joined).toContain('-f flv');
+    expect(joined).not.toContain('tee');
+  });
+
+  test('buildArgs includes branded audio badge and frame bug', () => {
+    process.env.LIVE_GRID_AUDIO_DIRECT = 'on';
+    process.env.LIVE_GRID_AUDIO_COPY = 'off';
+    const args = buildArgs({ output: '/tmp/test.mp4', durationSec: 1, audioQuad: 2 });
+    const joined = args.join(' ');
+    expect(joined).toContain('drawtext@audiobadge');
+    expect(joined).toContain('drawtext@brandbug');
+    expect(joined).toContain("text='CLIPZ WORLD LIVE'");
+    expect(joined).toContain('drawbox@onair');
   });
 
   test('isUdpInputNotReady detects empty UDP port errors', () => {

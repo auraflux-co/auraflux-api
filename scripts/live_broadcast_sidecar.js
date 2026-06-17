@@ -11,7 +11,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env'), override: true });
 
 const express = require('express');
-const { registerLiveBroadcastRoutes } = require('../lib/broadcast/live_routes');
+const { registerLiveBroadcastRoutes, autoResumeLiveGrid } = require('../lib/broadcast/live_routes');
 
 const PORT = Number(process.env.LIVE_SIDECAR_PORT || 3001);
 const liveState = { grid: null, tv: null };
@@ -23,6 +23,11 @@ registerLiveBroadcastRoutes(app, liveState);
 const server = app.listen(PORT, '127.0.0.1', () => {
   console.log(`[broadcast-sidecar] listening on http://127.0.0.1:${PORT} (pid ${process.pid})`);
   console.log('[broadcast-sidecar] ClipzWorld TV + Live Grid ffmpeg live here — safe to restart auraflux');
+  setTimeout(() => {
+    autoResumeLiveGrid(liveState).catch((e) => {
+      console.warn(`[broadcast-sidecar] auto-resume error: ${e.message}`);
+    });
+  }, 2500);
 });
 
 async function shutdown() {
@@ -33,6 +38,10 @@ async function shutdown() {
     (process.env.LIVE_GRID_BROADCAST_ID || process.env.LIVE_GRID_WATCH_URL)
   );
   try {
+    if (liveState.grid?.running) {
+      const { saveResumeFromManager } = require('../lib/live_grid/resume_state');
+      saveResumeFromManager(liveState.grid);
+    }
     await liveState.grid?.stop({ skipEndBroadcast: rtmpBypass });
   } catch (_) {}
   server.close(() => process.exit(0));
@@ -48,4 +57,20 @@ setInterval(() => {
   if (tv?.running || grid) {
     console.log(`[broadcast-sidecar] heartbeat tv=${!!tv?.running} grid=${!!grid} tvUp=${tv?.uptimeSec || 0}s`);
   }
-}, 5 * 60 * 1000);
+  if (grid && liveState.grid) {
+    try {
+      const { saveResumeFromManager } = require('../lib/live_grid/resume_state');
+      saveResumeFromManager(liveState.grid);
+    } catch (_) {}
+  }
+  if (grid && liveState.grid?.autoTuneEncodeIfNeeded) {
+    try {
+      const tune = liveState.grid.autoTuneEncodeIfNeeded();
+      if (tune?.action === 'downshifted') {
+        console.log(`[broadcast-sidecar] encode autotune → ${tune.encode?.fps}fps ${tune.encode?.bitrateK}k (load ${tune.loadPerCore}/core)`);
+      }
+    } catch (e) {
+      console.warn(`[broadcast-sidecar] encode autotune failed: ${e.message}`);
+    }
+  }
+}, 60 * 1000);

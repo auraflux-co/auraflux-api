@@ -9,13 +9,15 @@ describe('live_grid UDP relays (CPD-1006)', () => {
     expect(relayListenUrl(1)).toContain('5011');
   });
 
-  test('master input uses mpegts UDP when relay enabled', () => {
+  test('master input uses resilient mpegts UDP when relay enabled', () => {
     const { quadMasterInputArgs, USE_UDP_RELAY } = require('../lib/live_grid/relays');
     const args = quadMasterInputArgs(2);
     expect(args[0]).toBe('-f');
     expect(args[1]).toBe('mpegts');
-    expect(args[2]).toBe('-i');
-    expect(args[3]).toContain('udp://127.0.0.1:5012');
+    expect(args[2]).toBe('-fflags');
+    expect(args[3]).toContain('discardcorrupt');
+    expect(args).toContain('-err_detect');
+    expect(args[args.length - 1]).toContain('udp://127.0.0.1:5012');
     expect(USE_UDP_RELAY).toBe(true);
   });
 

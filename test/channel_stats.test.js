@@ -21,3 +21,7 @@ test('categorizeTitle detects streaming personalities not in legacy keyword list
   assert.equal(categorizeTitle('YonnaJay CHILLING w/ @bendadonnn @jaycinco Stream'), 'Streaming');
   assert.equal(categorizeTitle('Did Jason Lose?'), 'Streaming');
 });
+
+test('categorizeTitle defaults non-news/sports to Streaming', () => {
+  assert.equal(categorizeTitle('Random clip title with no keywords'), 'Streaming');
+});

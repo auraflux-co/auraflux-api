@@ -6,31 +6,20 @@ Job input:
   "audio_url":      "https://...presigned GET — speech wav (ElevenLabs TTS output)",
   "output_put_url": "https://...presigned PUT — where the mp4 lands (R2)",
   "prompt":         "optional — scene/persona prompt, defaults to Bobby G studio",
-  "video_length":   81,        # frames (25fps). 81 = 3.24s, the validated window
-  "num_inference_steps": 8,    # spike default; CPD-991 tuning raises to 15-25
-  "audio_guidance_scale": 2.0,
-  "guidance_scale": 4.5,
-  "sample_size":    [768, 768],
-  "fps":            25,
-  "seed":           43,
-  "use_dynamic_cfg": true,     # Phase-aware Negative CFG (paper / app_mm.py)
-  "use_dynamic_acfg": true,
-  "neg_scale": 1.5,
-  "neg_steps": 2,
-  "negative_prompt": "optional — defaults to EchoMimic hand-artifact negatives"
+  "use_ip_mask":    true,       # face-only audio cross-attn (RetinaFace subprocess + Flash patches)
+  "video_length":   81,
+  ...
 }
 
 Output:
 { "ok": true, "render_seconds": 152.3, "output_bytes": 1234567, "uploaded": true }
-
-v1 renders via subprocess (replicates the spike invocation exactly — ~45s model
-load per job, measured 49x realtime cold). Warm in-process pipeline reuse is the
-CPD-991 follow-up once quality tuning settles the final inference args.
 """
 
+import json
 import os
 import shutil
 import subprocess
+import sys
 import time
 import uuid
 
@@ -38,9 +27,13 @@ import requests
 import runpod
 
 REPO_DIR = "/workspace/echomimic_v3"
-# Weights live on a RunPod network volume (serverless mounts it at /runpod-volume).
-# GHCR's 10GB layer cap rules out baking the ~22GB of weights into the image.
+WORKSPACE = "/workspace"
 MODELS_DIR = os.environ.get("MODELS_DIR", "/runpod-volume/models")
+IP_MASK_MARKER = "/workspace/state/ip_mask_patches.done"
+FACE_VENV_PY = "/workspace/face_detect_venv/bin/python"
+ASSETS_BASE = os.environ.get(
+    "ECHOMIMIC_ASSETS_BASE", "https://assets.auraflux.co/build/echomimic"
+)
 
 DEFAULT_PROMPT = (
     "A bearded man in a tan blazer over a black t-shirt sits at a desk in a "
@@ -58,6 +51,11 @@ DEFAULT_NEGATIVE_PROMPT = (
     "fused fingers. 手指融合，"
 )
 
+WORKER_SCRIPTS = (
+    "apply_ip_mask_patches.py",
+    "face_detect_subprocess.py",
+)
+
 
 def _download(url, dest, label):
     resp = requests.get(url, timeout=120)
@@ -71,12 +69,53 @@ def _download(url, dest, label):
     return dest
 
 
-def _truthy(val):
+def _truthy(val, default_on=False):
     if isinstance(val, bool):
         return val
     if val is None:
-        return False
+        return default_on
     return str(val).lower() in ("1", "true", "yes", "on")
+
+
+def _ensure_worker_script(name):
+    dest = os.path.join(WORKSPACE, name)
+    if os.path.isfile(dest) and os.path.getsize(dest) > 0:
+        return dest
+    url = f"{ASSETS_BASE}/{name}"
+    print(f"[handler] fetching {name} from CDN")
+    _download(url, dest, name)
+    os.chmod(dest, 0o755)
+    return dest
+
+
+def _ensure_ip_mask_patches():
+    if os.path.isfile(IP_MASK_MARKER):
+        return
+    apply_py = _ensure_worker_script("apply_ip_mask_patches.py")
+    _ensure_worker_script("face_detect_subprocess.py")
+    print("[handler] applying ip_mask patches to echomimic_v3…")
+    proc = subprocess.run(
+        [sys.executable, apply_py],
+        capture_output=True, text=True, timeout=600,
+    )
+    if proc.returncode != 0:
+        tail = (proc.stderr or proc.stdout or "")[-2000:]
+        raise RuntimeError(f"apply_ip_mask_patches failed: {tail}")
+    print(proc.stdout or "[handler] patches applied")
+
+
+def _detect_face_coords(image_path):
+    face_py = _ensure_worker_script("face_detect_subprocess.py")
+    if not os.path.isfile(FACE_VENV_PY):
+        raise RuntimeError("face_detect venv missing — run apply_ip_mask_patches first")
+    proc = subprocess.run(
+        [FACE_VENV_PY, face_py, image_path],
+        capture_output=True, text=True, timeout=120,
+    )
+    if proc.returncode != 0:
+        tail = (proc.stderr or proc.stdout or "")[-1000:]
+        raise RuntimeError(f"face detect failed: {tail}")
+    return proc.stdout.strip()
 
 
 def handler(job):
@@ -85,12 +124,25 @@ def handler(job):
         if not inp.get(required):
             return {"ok": False, "error": f"missing required input: {required}"}
 
+    use_ip_mask = _truthy(
+        inp.get("use_ip_mask"),
+        default_on=_truthy(os.environ.get("ECHOMIMIC_USE_IP_MASK"), default_on=True),
+    )
+
     job_dir = f"/tmp/job_{uuid.uuid4().hex[:8]}"
     os.makedirs(job_dir, exist_ok=True)
+    ip_mask_coords = None
 
     try:
+        if use_ip_mask:
+            _ensure_ip_mask_patches()
+
         image_path = _download(inp["image_url"], f"{job_dir}/input.png", "image")
         audio_path = _download(inp["audio_url"], f"{job_dir}/input.wav", "audio")
+
+        if use_ip_mask:
+            ip_mask_coords = _detect_face_coords(image_path)
+            print(f"[handler] ip_mask coords: {ip_mask_coords[:120]}…")
 
         out_dir = f"{job_dir}/out"
         os.makedirs(out_dir, exist_ok=True)
@@ -101,9 +153,6 @@ def handler(job):
         neg_scale = float(inp.get("neg_scale", 1.5 if use_dynamic_cfg else 1.0))
         neg_steps = int(inp.get("neg_steps", 2 if use_dynamic_cfg else 0))
 
-        # Exact spike invocation (spike/cpd881/control.sh) with tunable overrides.
-        # --fsdp_dit is REQUIRED: without it the audio-injection layers missing
-        # from the base Wan checkpoint stay on the meta device and .to(device) crashes.
         args = [
             "python", "infer_flash.py",
             "--image_path", image_path,
@@ -136,6 +185,8 @@ def handler(job):
             args.append("--use_dynamic_cfg")
         if use_dynamic_acfg:
             args.append("--use_dynamic_acfg")
+        if ip_mask_coords:
+            args.extend(["--ip_mask_coords", ip_mask_coords])
 
         env = dict(os.environ, PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True")
         t0 = time.time()
@@ -148,7 +199,7 @@ def handler(job):
         if proc.returncode != 0:
             tail = (proc.stderr or proc.stdout or "")[-2000:]
             return {"ok": False, "error": f"infer_flash.py exit {proc.returncode}", "log_tail": tail,
-                    "render_seconds": render_seconds}
+                    "render_seconds": render_seconds, "use_ip_mask": use_ip_mask}
 
         mp4s = [f for f in os.listdir(out_dir) if f.endswith(".mp4")]
         if not mp4s:
@@ -165,11 +216,17 @@ def handler(job):
                                headers={"Content-Type": "video/mp4"}, timeout=300)
         put.raise_for_status()
 
-        return {"ok": True, "render_seconds": render_seconds,
-                "output_bytes": out_bytes, "uploaded": True}
+        return {
+            "ok": True,
+            "render_seconds": render_seconds,
+            "output_bytes": out_bytes,
+            "uploaded": True,
+            "use_ip_mask": use_ip_mask,
+            "ip_mask_coords": json.loads(ip_mask_coords) if ip_mask_coords else None,
+        }
 
-    except Exception as e:  # surfaced verbatim in the RunPod job status
-        return {"ok": False, "error": f"{type(e).__name__}: {e}"}
+    except Exception as e:
+        return {"ok": False, "error": f"{type(e).__name__}: {e}", "use_ip_mask": use_ip_mask}
     finally:
         shutil.rmtree(job_dir, ignore_errors=True)
 

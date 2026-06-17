@@ -331,15 +331,25 @@
     } catch (_) {}
     if (!cal?.ok) { el.style.display = 'none'; return; }
     el.style.display = '';
+    if (cal.liveStreamsPaused) {
+      el.style.background = 'rgba(231,76,60,0.1)';
+      el.style.borderColor = 'rgba(231,76,60,0.35)';
+      el.innerHTML = `<b style="color:#e74c3c;">Livestreams paused for today (${cal.date})</b><br>
+        Auto Twitch TV and YouTube Grid are off — scheduler will not start streams.
+        ${cal.livePauseReason ? `<br><span style="font-size:10px;color:rgba(255,255,255,0.5);">${cal.livePauseReason}</span>` : ''}
+        <br><span style="font-size:10px;color:rgba(255,255,255,0.45);">VOD production slots still run · override on Content Calendar tab</span>`;
+      return;
+    }
     const yt = cal.youtubeNow;
     const prod = (cal.production || []).map((p) => `${p.time} ${p.label} (${p.status})`).join(' · ');
     el.innerHTML = `<b style="color:#c7af4f;">Calendar drives today</b><br>
-      ${yt ? `YouTube Live now: <b>${yt.label}</b> (${yt.mode}) — use this mode in GO LIVE below.` : 'YouTube Live: between dayparts — check scheduler.'}<br>
+      ${yt ? `YouTube Live now: <b>${yt.label}</b> (${yt.mode}) — pick this mode below before GO LIVE.` : 'YouTube Live: between dayparts — check scheduler.'}<br>
       Twitch TV window: <b>${cal.twitchTv?.window || '—'}</b> · ${cal.twitchTv?.contentRule || ''}<br>
       <span style="font-size:10px;color:rgba(255,255,255,0.45);">Produce today: ${prod || '—'} · Full plan on Content Calendar tab</span>`;
-    const modeSel = g('bc-program-mode');
-    if (modeSel && yt?.mode && modeSel.value === 'auto') {
-      modeSel.value = yt.mode;
+    const modeSel = g('lg-seo-mode');
+    if (modeSel && yt?.mode && modeSel.value !== yt.mode) {
+      const hasOpt = [...modeSel.options].some((o) => o.value === yt.mode);
+      if (hasOpt) modeSel.value = yt.mode;
     }
   }
 
@@ -530,6 +540,84 @@
     renderDiscoveryBench();
   }
 
+  function scoreClass(level, score) {
+    if (level === 'critical') return 'critical';
+    if (level === 'good' || (score != null && score >= 75)) return 'good';
+    return 'warn';
+  }
+
+  function renderStreamHealthPanel() {
+    const panel = g('bc-stream-health-panel');
+    const pre = g('bc-stream-health-md');
+    const scoreEl = g('bc-stream-health-score');
+    const viewerScoreEl = g('bc-stream-health-viewer-score');
+    const updatedEl = g('bc-stream-health-updated');
+    const seeingEl = g('bc-stream-health-seeing');
+    const statsEl = g('bc-stream-health-stats');
+    const fixesEl = g('bc-stream-health-fixes');
+    if (!panel) return;
+    const sh = _bcOps?.streamHealth;
+    const gridLive = !!( _lgStatus?.running) || !!(_bcOps?.gridLive);
+    if (!gridLive && !sh?.summaryExists) {
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = '';
+    if (pre) pre.textContent = sh?.markdown || 'Waiting for stream-health daemon…';
+    const vScore = sh?.viewerScore;
+    const vLevel = sh?.viewerLevel || 'warn';
+    const uScore = sh?.score;
+    const uLevel = sh?.level || 'warn';
+    if (viewerScoreEl) {
+      viewerScoreEl.textContent = `Viewer ${vScore != null ? vScore : '—'}/100 · ${vLevel}`;
+      viewerScoreEl.className = 'bc-stream-health-score ' + scoreClass(vLevel, vScore);
+    }
+    if (scoreEl) {
+      scoreEl.textContent = `Uptime ${uScore != null ? uScore : '—'}/100 · ${uLevel}`;
+      scoreEl.className = 'bc-stream-health-score ' + scoreClass(uLevel, uScore);
+    }
+    if (updatedEl) {
+      const when = sh?.updatedAt
+        ? new Date(sh.updatedAt).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', second: '2-digit' }) + ' ET'
+        : '—';
+      updatedEl.textContent = `Updated ${when}`;
+    }
+    if (seeingEl) {
+      const lines = sh?.viewerSeeing || [];
+      seeingEl.innerHTML = lines.length
+        ? '<b>What you may be seeing:</b> ' + lines.join(' · ')
+        : (sh?.viewerSummary || '');
+    }
+    if (statsEl) {
+      const p = sh?.profile || {};
+      const pipe = sh?.pipeline || {};
+      const enc = sh?.encode || {};
+      const audio = sh?.audio || {};
+      const chips = [
+        { label: 'Profile output', val: p.output || pipe.detectedOutput || '—' },
+        { label: 'Cells', val: p.cell || pipe.detectedCell || '—' },
+        { label: 'Pad-only path', val: pipe.padOnly ? 'yes ✓' : (pipe.padOnly === false ? 'no ✗ upscale' : '—') },
+        { label: 'Encode', val: `${enc.fps || p.fps || '—'}fps · ${enc.bitrateK || p.bitrateK || '—'}k` },
+        { label: 'Total ffmpeg CPU', val: pipe.totalFfmpegCpu != null ? `${pipe.totalFfmpegCpu}%` : '—' },
+        { label: 'Master CPU', val: sh?.masterCpu != null ? `${sh.masterCpu}%` : '—' },
+        { label: 'Relay mode', val: p.relayTranscode ? `tc ${p.relayScale}` : 'copy' },
+        { label: 'Audio', val: audio.login ? `Q${audio.quadrant} ${audio.login}` : '—' },
+        { label: 'Music guard', val: p.musicGuard ? 'on' : 'off' },
+        { label: 'Master restarts', val: sh?.masterRestarts ?? '—' },
+        { label: 'Relay restarts', val: sh?.relayRestarts ? JSON.stringify(sh.relayRestarts) : '—' },
+      ];
+      statsEl.innerHTML = chips.map((c) =>
+        `<div class="bc-stream-health-stat"><label>${c.label}</label><span>${c.val}</span></div>`
+      ).join('');
+    }
+    if (fixesEl) {
+      const fixes = sh?.resolutions || [];
+      fixesEl.innerHTML = fixes.length
+        ? '<b>Fix paths (grid OFF unless noted):</b>' + fixes.map((r) => `<li><b>${r.key}</b> — ${r.text}</li>`).join('')
+        : '<li>No automated fix paths — viewer score green or monitoring warming up.</li>';
+    }
+  }
+
   function renderOpsBar() {
     const bar = g('bc-ops-bar');
     if (!bar) return;
@@ -559,6 +647,7 @@
       </div>
       ${!safe ? `<div class="bc-ops-warn">⚠ ${(o.blockers || []).join(' · ')} — no restart/deploy while live</div>` : ''}
       ${o?.waiter?.okFile ? '<div class="bc-ops-info">24h test armed — waiter will start when pipeline idle</div>' : ''}`;
+    renderStreamHealthPanel();
     renderPreparedPanel();
   }
 
@@ -592,7 +681,7 @@
 
   window.liveGridPrepare = async function () {
     if (!confirm('Prepare YouTube broadcast + thumbnail for tonight? (Does not start the stream)')) return;
-    const programMode = g('bc-program-mode')?.value || 'auto';
+    const programMode = g('lg-seo-mode')?.value || 'grid';
     const body = { programMode, force: true };
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
@@ -687,7 +776,16 @@
       el.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);">Scheduler disabled (STREAM_SCHEDULER=off)</div>';
       return;
     }
-    el.innerHTML = (d.streams || []).map(s => {
+    const streams = d.streams || [];
+    if (streams.every((s) => s.paused)) {
+      el.innerHTML = `<div style="font-size:12px;color:#e74c3c;margin-bottom:6px;"><b>Paused for today</b> — no auto start/stop</div>
+        ${streams.map((s) => `<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:4px;">${s.name}: off${s.pauseReason ? ' · ' + s.pauseReason : ''}</div>`).join('')}`;
+      return;
+    }
+    el.innerHTML = streams.map(s => {
+      if (s.paused || !s.window) {
+        return `<div style="margin-bottom:8px;font-size:12px;color:rgba(255,255,255,0.4);"><b>${s.name}</b> paused today</div>`;
+      }
       const inW = s.inWindow ? '<span style="color:#2ecc71;">● in window</span>' : '<span style="color:rgba(255,255,255,0.35);">○ out</span>';
       const next = s.next ? `${s.next.action} in ~${s.next.inMinutes}m` : '';
       return `<div style="margin-bottom:8px;font-size:12px;">
@@ -871,7 +969,7 @@
   const _origLiveGridStart = window.liveGridStart;
   window.liveGridStart = async function () {
     const privacy = g('lg-privacy')?.value || 'public';
-    const programMode = g('bc-program-mode')?.value || 'auto';
+    const programMode = g('lg-seo-mode')?.value || 'grid';
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
     const eventFile = g('bc-event-file')?.value || '';
@@ -921,6 +1019,7 @@
     renderProgramPanel();
     renderVerticalLink();
     renderOpsBar();
+    renderStreamHealthPanel();
   };
 
   const _origTvRender = window.liveTvRender;
