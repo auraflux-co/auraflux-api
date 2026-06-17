@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-17 (CPD-1049) — YT SEO descriptions (125–250 words, inline hashtags), correct TT/IG handles, metadata_qa grading, hook caption fix, dashboard RE-ASSEMBLE for awaiting_review.
 **Last Updated:** 2026-06-17 (CPD-1049) — Gate 3b correctedVideoPath scope fix + clip comp review hold when Gate 4/5 handoff blocked.
 **Last Updated:** 2026-06-17 (CPD-1049) — Clip comp dashboard fixes: jobId/id restore, CLIPS pipeline bar, ASSEMBLING badge, bypass grid defer for clip comps, no fake zero SEO strip.
 **Last Updated:** 2026-06-17 (CPD-1049) — Dashboard workflow regression bundle: review hold before schedule, Twitch yt-dlp fallback, sports probe API pin, publish_scheduled restore/publish, stale assemblyError clear.

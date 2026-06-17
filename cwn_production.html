@@ -1317,7 +1317,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
               <div style="width:36px;height:36px;border-radius:50%;background:#22304b;display:flex;align-items:center;justify-content:center;font-size:14px;">📺</div>
               <div>
-                <div style="font-size:13px;font-weight:700;color:#fff;font-family:Arial,sans-serif;">@clipznashite</div>
+                <div style="font-size:13px;font-weight:700;color:#fff;font-family:Arial,sans-serif;">@clipzworldstreams</div>
                 <div style="font-size:11px;color:#aaa;font-family:Arial,sans-serif;">Follow</div>
               </div>
             </div>
@@ -1370,7 +1370,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div style="background:#000;border-radius:8px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.1);">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
               <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;font-size:14px;">📺</div>
-              <div style="font-size:13px;font-weight:700;color:#fff;font-family:Arial,sans-serif;">clipznashite</div>
+              <div style="font-size:13px;font-weight:700;color:#fff;font-family:Arial,sans-serif;">clipzworldnews</div>
             </div>
             <div id="pub-ig-preview" style="font-size:13px;color:#fff;line-height:1.7;font-family:Arial,sans-serif;white-space:pre-wrap;">--</div>
             <div style="font-size:11px;color:#888;margin-top:8px;font-family:Arial,sans-serif;">↑ First 125 chars shown above the fold</div>
@@ -3378,6 +3378,12 @@ function restoreJobsFromServer(showAlert) {
         return;
       }
 
+      // Manual ↩ RESTORE: replace local queue with server truth (drops stale localStorage cards).
+      if (showAlert) {
+        JOBS = [];
+        saveJobs();
+      }
+
       var existingIds = {};
       JOBS.forEach(function(j) { existingIds[j.id] = true; });
 
@@ -3385,8 +3391,8 @@ function restoreJobsFromServer(showAlert) {
       resp.jobs.forEach(function(serverJob) {
         var serverJobId = serverJob.jobId || serverJob.id;
         if (!serverJobId) return;
-        // Skip if already in dashboard queue
-        if (existingIds[serverJobId]) return;
+        // Skip if already in dashboard queue (auto-restore only merges new jobs)
+        if (!showAlert && existingIds[serverJobId]) return;
 
         // Reconstruct a dashboard-compatible job card from the server's persisted data
         // Server saves: jobId, contentType, date, script, heygen (videoJobs array), orderedClipUrls
@@ -3825,12 +3831,15 @@ function renderQueue() {
       actions += '<button onclick="resumeAssembly(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(46,204,113,0.7);color:#2ecc71;font-weight:700;" title="Run preflight check then trigger assembly with the files you dropped in manual_segments/">▶ RESUME ASSEMBLY</button>';
     }
     // RE-ASSEMBLE FROM FILES — uses manual_segments folder overrides, skips Gate 2 (chrome burning).
-    // Show for any job that has been through HeyGen (not just submitted — any post-script stage).
-    // Server validates that heygen.videoJobs exists; shows error toast if not ready.
-    var pastHeygenStage = ['all_sent','awaiting_manual_segments','heygen_done','assembled',
-      'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1;
-    if (pastHeygenStage && status !== 'published') {
+    // Show for clip comps / post-HeyGen jobs including awaiting_review (operator re-burn after code fixes).
+    var pastHeygenStage = ['all_sent','awaiting_manual_segments','heygen_done','assembled','assembling',
+      'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1
+      || ['awaiting_review','metadata_review','publish_scheduled','assembled'].indexOf(jobStage) > -1
+      || !!(job.assembledAt || job.driveUrl);
+    if (pastHeygenStage && jobStage !== 'published' && status !== 'assembling') {
       actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Skip Gate 2 — build segments from card data and fire assembly. Files in manual_segments folder are used automatically.">📁 RE-ASSEMBLE FROM FILES</button>';
+    } else if (status === 'assembling') {
+      actions += '<span style="font-size:10px;color:#3498db;font-family:monospace;align-self:center;">⏳ assembling…</span>';
     }
     actions += '</div>';
     // Short-form status div (for thumbnail + CapCut feedback)
@@ -11835,11 +11844,17 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
     return (pl.tags || []).length;
   })();
   var hashInDesc = (desc.match(/#\w+/g) || []).length;
+  var wordCount = desc.trim().split(/\s+/).filter(function(w){ return w.length; }).length;
+  var hookLen = (desc.split('\n')[0] || desc).slice(0, 150).trim().length;
   var checks = isShort ? [
     {label:'Title length', pass:title.length>0&&title.length<=100, warn:title.length>60&&title.length<=100, msg:title.length+' chars '+(title.length<=60?'— ideal':'— ok for Shorts')},
     {label:'Title has #Shorts or clip hook', pass:/#Shorts/i.test(title)||title.length>15, msg:title.slice(0,70)+(title.length>70?'…':'')},
+    {label:'Description word count', pass:wordCount>=125&&wordCount<=280, warn:wordCount>=100&&wordCount<125, msg:wordCount+' words — aim 125-250'},
+    {label:'Hook in first 150 chars', pass:hookLen>=40, msg:desc.slice(0,80)+(desc.length>80?'…':'')},
     {label:'YouTube tags', pass:tagCount>=5, msg:tagCount+' tags — aim for 8-15'},
-    {label:'Hashtags in description', pass:hashInDesc>=3, msg:hashInDesc+' hashtags in YT description'},
+    {label:'Hashtags in description', pass:hashInDesc>=3&&hashInDesc<=15, msg:hashInDesc+' hashtags in YT description'},
+    {label:'Social profile links', pass:/tiktok\.com\/@clipzworldstreams/i.test(desc)&&/instagram\.com\/clipzworldnews/i.test(desc), msg:'TikTok + Instagram URLs in description'},
+    {label:'Subscribe CTA', pass:/subscribe/i.test(desc), msg:'Subscribe call to action in description'},
     {label:'TikTok caption', pass:!!(tiktokCaption&&tiktokCaption.length>=40), msg:(tiktokCaption||'missing').slice(0,80)+(tiktokCaption&&tiktokCaption.length>80?'…':'')},
     {label:'TikTok caption length', pass:!tiktokCaption||tiktokCaption.length<=300, warn:tiktokCaption&&tiktokCaption.length>220&&tiktokCaption.length<=300, msg:(tiktokCaption||'').length+' chars (visible ~150-300)'},
     {label:'Instagram caption', pass:!!(igCaption&&igCaption.length>=40), msg:(igCaption||'missing').slice(0,80)+(igCaption&&igCaption.length>80?'…':'')},
@@ -11847,8 +11862,10 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
   ] : [
     {label:'Title length', pass:tLen<=100, warn:tLen>60&&tLen<=100, msg:tLen+' chars '+(tLen<=60?'— ideal under 60':'— ok, shorter is better')},
     {label:'First line keyword-rich', pass:desc.split('\n')[0].length>30, msg:desc.split('\n')[0].slice(0,60)+'...'},
+    {label:'Description word count', pass:wordCount>=125, warn:wordCount>=100&&wordCount<125, msg:wordCount+' words — aim 125-250+'},
     {label:'Timestamps included', pass:desc.indexOf('00:00')>-1, msg:desc.indexOf('00:00')>-1?'YouTube surfaces timestamped videos higher':'Add timestamps to boost discoverability'},
-    {label:'Hashtag count', pass:true, msg:(desc.match(/#\w+/g)||[]).length+' hashtags — aim for 10-15'},
+    {label:'Hashtags in description', pass:hashInDesc>=3&&hashInDesc<=15, msg:hashInDesc+' hashtags in YT description'},
+    {label:'Social profile links', pass:/tiktok\.com\/@clipzworldstreams/i.test(desc)&&/instagram\.com\/clipzworldnews/i.test(desc), msg:'TikTok + Instagram URLs in description'},
     {label:'Channel CTA', pass:desc.indexOf('Subscribe')>-1, msg:'Subscribe call to action present'},
     {label:'Description length', pass:desc.length>300, msg:desc.length+' chars — aim for 200-500 words'},
     {label:'Pinned comment ready', pass:comment.length>50, msg:'Pinned comment generated'},

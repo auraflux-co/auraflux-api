@@ -2139,6 +2139,71 @@ app.delete('/job/:id', (req, res) => {
   res.json({ ok: true, deleted: jobId });
 });
 
+// POST /jobs/prune — keep only listed job IDs (operator queue cleanup)
+app.post('/jobs/prune', (req, res) => {
+  const keep = Array.isArray(req.body?.keep) ? req.body.keep.filter(Boolean) : [];
+  if (!keep.length) return res.status(400).json({ ok: false, error: 'keep[] required — job IDs to retain' });
+  const keepSet = new Set(keep);
+  const deleted = [];
+  for (const jobId of Object.keys(persistedJobs)) {
+    if (keepSet.has(jobId)) continue;
+    if (activePollers.has(jobId)) unregisterPoller(jobId);
+    Object.keys(assemblyJobs).forEach(asmId => {
+      if (assemblyJobs[asmId]?.sourceJobId === jobId) {
+        assemblyJobs[asmId].status = 'cancelled';
+      }
+    });
+    delete persistedJobs[jobId];
+    deleted.push(jobId);
+    try {
+      const { deleteJob } = require('./lib/db');
+      if (typeof deleteJob === 'function') deleteJob(jobId);
+    } catch (_e) { /* non-fatal */ }
+  }
+  try {
+    fs.writeFileSync(JOBS_FILE, JSON.stringify(persistedJobs, null, 2));
+  } catch (e) {
+    console.error('[jobs/prune] Failed to save jobs.json:', e.message);
+  }
+  if (req.body?.resetPublish) {
+    for (const jobId of keep) {
+      const card = persistedJobs[jobId];
+      if (!card) continue;
+      delete card.gate5Result;
+      delete card.publishRecord;
+      delete card.publishedAt;
+      card.stage = 'awaiting_review';
+      try {
+        const d = db.getDb ? db.getDb() : null;
+        if (d) d.prepare('DELETE FROM publish_results WHERE job_id = ?').run(jobId);
+      } catch (_e) { /* non-fatal */ }
+      saveJobCard(jobId, card);
+    }
+  }
+  console.log(`[jobs/prune] kept ${keep.length}, deleted ${deleted.length}`);
+  res.json({ ok: true, kept: keep, deleted });
+});
+
+// POST /job/:id/reset-publish — clear publish artefacts, stay at awaiting_review (re-approve flow)
+app.post('/job/:id/reset-publish', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found: ' + jobId });
+  delete card.gate5Result;
+  delete card.publishRecord;
+  delete card.publishedAt;
+  delete card._gate5Done;
+  delete card._gate5Running;
+  card.stage = 'awaiting_review';
+  try {
+    const d = db.getDb ? db.getDb() : null;
+    if (d) d.prepare('DELETE FROM publish_results WHERE job_id = ?').run(jobId);
+  } catch (_e) { /* non-fatal */ }
+  saveJobCard(jobId, card);
+  console.log(`[reset-publish] ${jobId}: cleared publish state → awaiting_review`);
+  res.json({ ok: true, jobId, stage: 'awaiting_review', message: 'Publish state cleared — preview and APPROVE & PUBLISH again.' });
+});
+
 // ── POST /job/:id/fix-claims (CPD-980) — mute claimed ranges + republish ─────
 // Body: { ranges: "12:34-13:10, 45:00-45:40" } (timestamps from the Studio
 // claim panel). Mutes those ranges on the job's final video (video stream

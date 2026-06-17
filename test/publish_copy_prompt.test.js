@@ -1,3 +1,5 @@
+process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-key';
+
 const { buildPublishCopySystemPrompt } = require('../lib/publish');
 
 const cc = { showName: 'Twitch Soup', handle: '@clipzworldnews', host: 'Bobby G' };
@@ -24,9 +26,16 @@ describe('publish copy prompt — long-form structured description (CPD-962)', (
     }
   });
 
-  test('short-form description instruction stays punchy and unstructured', () => {
-    const out = buildPublishCopySystemPrompt({ ...base, isShort: true });
-    expect(out).toContain('1-2 punchy sentences');
+  test('short-form description requires full YouTube SEO block', () => {
+    const out = buildPublishCopySystemPrompt({
+      ...base,
+      isShort: true,
+      cc: { ...cc, tiktokUrl: 'https://www.tiktok.com/@clipzworldstreams', instagramUrl: 'https://www.instagram.com/clipzworldnews/' },
+    });
+    expect(out).toContain('125-250 words');
+    expect(out).toContain('3-5 hashtags INLINE');
+    expect(out).toContain('clipzworldstreams');
+    expect(out).not.toContain('under 120 chars');
     expect(out).not.toContain('Featured Streamers');
   });
 
