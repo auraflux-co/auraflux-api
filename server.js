@@ -3517,15 +3517,17 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
 
   try {
-    const { handleGeneratePublishCopy, ensurePublishMetadataComplete, buildChannelConfig } = require('./lib/publish');
+    const { handleGeneratePublishCopy, ensurePublishMetadataComplete, buildChannelConfig, buildPublishScriptFromCard, buildPublishItemsFromCard } = require('./lib/publish');
     const { validatePublishMetadata, metadataFromPublishCopy } = require('./lib/gates/metadata_qa');
     const contentType = card.contentType || card.type || 'twitch-short';
     const isShort = String(contentType).includes('-short') || card.formType === 'short';
     const platforms = ['youtube', 'tiktok', 'instagram'];
-    const items = card.order?.inputs?.items || card.items || [];
+    const items = buildPublishItemsFromCard(card);
     const streamers = card.streamers || card.order?.inputs?.streamers || [];
-    const script = card.fullScript || card.scriptText
-      || items.map((it, i) => `${i + 1}. ${it.title || it.displayName || 'Clip'}`).join('\n');
+    const script = buildPublishScriptFromCard(card);
+    if (!script) {
+      return res.status(400).json({ ok: false, error: 'No script context on job card — re-assemble or restore jobs first' });
+    }
 
     const fakeReq = {
       body: {

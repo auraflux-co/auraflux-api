@@ -10112,6 +10112,31 @@ function pollPublishStatus(jobId) {
 }
 
 // ── Phase 2: Short-Form Thumbnail Generator ──────────────────────────────────
+function publishScriptFromJob(job, maxLen) {
+  if (!job) return '';
+  var limit = maxLen || 4000;
+  if (job.fullScript && typeof job.fullScript === 'string') return job.fullScript.slice(0, limit);
+  if (job.scriptText && typeof job.scriptText === 'string') return job.scriptText.slice(0, limit);
+  if (typeof job.script === 'string') return job.script.slice(0, limit);
+  if (job.script && job.script.raw) return String(job.script.raw).slice(0, limit);
+  if (job.script && job.script.text) return String(job.script.text).slice(0, limit);
+  var clips = job.orderedClipUrls || [];
+  var scenes = (job.script && job.script.scenes) ? job.script.scenes : [];
+  if (clips.length) {
+    var lines = clips.map(function(c, i) {
+      var who = c.displayName || c.streamer || 'streamer';
+      var t = c.title || c.clipTitle || (scenes[i] && scenes[i].title) || 'clip';
+      return 'CLIP ' + (i + 1) + ' (' + who + '): ' + t;
+    });
+    var header = (job.script && job.script.title) || job.title || 'Clip compilation';
+    return (header + '\n\n' + lines.join('\n')).slice(0, limit);
+  }
+  if (job.streamers && job.streamers.length) {
+    return ('Twitch clips compilation featuring: ' + job.streamers.join(', ')).slice(0, limit);
+  }
+  return (job.title || '').slice(0, limit);
+}
+
 function generateShortThumbnail(jobId) {
   var job = JOBS.find(function(j){ return j.id === jobId; });
   var statusEl = g('short-status-' + jobId);
@@ -11773,8 +11798,7 @@ function pubGenerateSocialCopy(type, title, desc, comment, endscreen, cards, twi
 
   // Build script context for the server endpoint
   var job = getCurrentPubJob();
-  var scriptContext = (job && job.script) ? job.script.substring(0, 600)
-    : (topLine ? topLine + '\n\n' + title : title);
+  var scriptContext = publishScriptFromJob(job, 600) || (topLine ? topLine + '\n\n' + title : title);
 
   // Determine content type key for server
   var contentTypeKey = type.indexOf('nba') > -1 ? 'nba'

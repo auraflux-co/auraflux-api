@@ -7,6 +7,8 @@ const {
   CHANNEL_SOCIAL,
   finalizeYoutubePublishMetadata,
   appendHashtagsToDescription,
+  buildPublishScriptFromCard,
+  buildPublishItemsFromCard,
 } = require('../lib/publish');
 const { validateYoutubeDescriptionSeo } = require('../lib/gates/metadata_qa');
 
@@ -58,5 +60,18 @@ describe('validateYoutubeDescriptionSeo', () => {
     const v = validateYoutubeDescriptionSeo('Quick clip.', { isShort: true });
     expect(v.some((x) => x.includes('too short'))).toBe(true);
     expect(v.some((x) => x.includes('hashtags'))).toBe(true);
+  });
+
+  test('buildPublishScriptFromCard reads clip comp orderedClipUrls', () => {
+    const card = {
+      title: 'Clips Comp — ExtraEmily',
+      streamers: ['ExtraEmily'],
+      script: { title: 'Clips Comp', scenes: [{ title: 'scene title' }] },
+      orderedClipUrls: [{ displayName: 'ExtraEmily', title: 'pad box open' }],
+    };
+    const script = buildPublishScriptFromCard(card);
+    expect(script).toMatch(/ExtraEmily/);
+    expect(script).toMatch(/pad box open/);
+    expect(buildPublishItemsFromCard(card)).toHaveLength(1);
   });
 });
