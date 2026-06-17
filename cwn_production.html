@@ -3318,6 +3318,7 @@ function loadJobs() {
     var raw = JSON.parse(localStorage.getItem('cwn_jobs')||'[]');
     // Sanitize: ensure every job has required fields so renderQueue never crashes on bad data
     JOBS = raw.filter(function(j){ return j && typeof j === 'object'; }).map(function(j){
+      j.id = j.id || j.scriptJobId || null;
       j.status = j.status || 'unknown';
       j.type   = j.type   || 'video';
       j.title  = j.title  || 'Untitled Job';
@@ -3330,7 +3331,7 @@ function loadJobs() {
         });
       }
       return j;
-    });
+    }).filter(function(j){ return !!j.id; });
     cwn_log('Loaded ' + JOBS.length + ' jobs from storage', false);
   } catch(e) {
     cwn_log('loadJobs failed: '+e.message+' — clearing storage', true);
@@ -3382,8 +3383,10 @@ function restoreJobsFromServer(showAlert) {
 
       var added = 0;
       resp.jobs.forEach(function(serverJob) {
+        var serverJobId = serverJob.jobId || serverJob.id;
+        if (!serverJobId) return;
         // Skip if already in dashboard queue
-        if (existingIds[serverJob.jobId]) return;
+        if (existingIds[serverJobId]) return;
 
         // Reconstruct a dashboard-compatible job card from the server's persisted data
         // Server saves: jobId, contentType, date, script, heygen (videoJobs array), orderedClipUrls
@@ -3559,7 +3562,8 @@ function restoreJobsFromServer(showAlert) {
         }
 
         var isAssembled = isAwaitingOperator || !!(serverJob.assembledAt);
-        var restoredStatus = isAssembled ? 'completed' : 'all_sent';
+        var restoredStatus = isAssembled ? 'completed'
+          : (serverJob.clipsOnly ? 'processing' : 'all_sent');
 
         // If assembled, mark all avatar segments as completed so ASSEMBLE button appears
         if (isAssembled) {
@@ -3592,8 +3596,8 @@ function restoreJobsFromServer(showAlert) {
         var restoredDriveUrl = serverJob.driveUrl || savedOut.driveUrl || serverJob.finalUrl || null;
 
         var restoredJob = {
-          id:          serverJob.jobId,
-          scriptJobId: serverJob.scriptJobId || serverJob.jobId,
+          id:          serverJobId,
+          scriptJobId: serverJob.scriptJobId || serverJobId,
           type:        contentType,
           title:       cardTitle,
           status:      restoredStatus,
@@ -3625,13 +3629,13 @@ function restoreJobsFromServer(showAlert) {
         }
 
         JOBS.push(restoredJob);
-        existingIds[serverJob.jobId] = true;
+        existingIds[serverJobId] = true;
         added++;
 
         // If Gate 5 is actively uploading, start polling so the card auto-updates to "published".
         if (isGate5InFlight) {
           cwn_log('[restore] ' + serverJob.jobId + ' Gate 5 in-flight — polling for published status.', false);
-          (function(jid){ setTimeout(function(){ _pollForPublished(jid); }, 3000); })(serverJob.jobId);
+          (function(jid){ setTimeout(function(){ _pollForPublished(jid); }, 3000); })(serverJobId);
         }
       });
 
@@ -3705,10 +3709,16 @@ function renderQueue() {
 
     // PIPELINE STATUS BAR
     var pipe = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 10px;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);">';
-    pipe += pipeStep('SCRIPT', !!(job.script&&job.script.length>10), false, '#c7af4f');
-    var hgDone = doneSegs.length===totalSegs&&totalSegs>0;
-    pipe += pipeStep('HEYGEN '+doneSegs.length+'/'+totalSegs, hgDone, anyRendering, '#e74c3c');
-    pipe += pipeStep('FFMPEG', !!job.assembledAt, !!(status==='all_sent'&&doneSegs.length>0&&!job.assembledAt), '#e67e22');
+    if (job.clipsOnly) {
+      var clipsReady = clipSlots.filter(function(s){ return s.clipUrl || s.url; }).length;
+      var clipTotal = clipSlots.length || totalSegs;
+      pipe += pipeStep('CLIPS '+clipsReady+'/'+clipTotal, clipTotal > 0 && clipsReady >= clipTotal, !(job.assembledAt || job.driveUrl), '#9b59b6');
+    } else {
+      pipe += pipeStep('SCRIPT', !!(job.script&&job.script.length>10), false, '#c7af4f');
+      var hgDone = doneSegs.length===totalSegs&&totalSegs>0;
+      pipe += pipeStep('HEYGEN '+doneSegs.length+'/'+totalSegs, hgDone, anyRendering, '#e74c3c');
+    }
+    pipe += pipeStep('FFMPEG', !!(job.assembledAt || job.driveUrl), !!(status==='processing'||status==='all_sent')&&!job.assembledAt&&!job.driveUrl, '#e67e22');
     pipe += pipeStep('GATE 5 QA', !!(job.gate5&&job.gate5.score>=85), !!(job.assembledAt&&!job.gate5), '#3498db');
     var isGate5Running = !!(job.stage === 'gate5_forced' || job.stage === 'gate5_running');
     pipe += pipeStep('UPLOAD-POST', isGate5Running, !!(job.gate5&&!isGate5Running&&job.stage!=='published'), '#c7af4f');
@@ -3737,11 +3747,15 @@ function renderQueue() {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:11px;color:#e74c3c;">'
         + '❌ ASSEMBLY FAILED — ' + escHtml(job.assemblyError || 'clip download failed') + '. Dismiss and re-run CLIPS COMP.'
         + '</div>';
+    } else if (job.clipsOnly && !job.driveUrl && jobStage !== 'failed' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:11px;color:#3498db;">'
+        + '⏳ Assembling clip comp — preview + SEO will appear when FFmpeg finishes.'
+        + '</div>';
     } else if (jobStage === 'metadata_review' && job.metadataQaViolations && job.metadataQaViolations.length) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:11px;color:#e74c3c;">'
         + '⛔ METADATA QA — fix before publish: ' + job.metadataQaViolations.slice(0, 3).join(' · ')
         + '</div>';
-    } else if (hasSeo && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || jobStage === 'publish_scheduled' || job.assembledAt || job.clipsOnly)) {
+    } else if ((job.publishCopy || job.driveUrl) && hasSeo && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || jobStage === 'publish_scheduled' || job.assembledAt)) {
       var tagCount = (pubPayload.tags || []).length;
       var hashCount = ((pubPayload.description || '').match(/#\w+/g) || []).length;
       var schedNote = (jobStage === 'publish_scheduled' && job.scheduledPublishAt)
@@ -3863,7 +3877,7 @@ function renderQueue() {
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
     var tagCls = status==='completed'||status==='all_sent'?'tag-done':status==='failed'?'tag-failed':'tag-processing';
-    var tagLbl = (jobStage === 'failed') ? 'FAILED' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : status.toUpperCase().replace('_',' ');
+    var tagLbl = (jobStage === 'failed') ? 'FAILED' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (job.clipsOnly && !job.driveUrl ? 'ASSEMBLING' : status.toUpperCase().replace('_',' '));
     var pctBar = (status==='processing'||anyRendering)?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
 
     return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':status==='failed'?'failed':'')+'" id="job-'+job.id+'">'

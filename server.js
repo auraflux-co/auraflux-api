@@ -2062,7 +2062,7 @@ app.get('/jobs', (req, res) => {
         if (spec) break;
       } catch (_e) {}
     }
-    return { ...job, gateStatus: spec ? buildGateStatusSnapshot(spec) : null };
+    return { ...job, jobId: job.jobId || job.id, id: job.id || job.jobId, gateStatus: spec ? buildGateStatusSnapshot(spec) : null };
   });
 
   res.json({ ok: true, count: jobsWithGateStatus.length, jobs: jobsWithGateStatus });
