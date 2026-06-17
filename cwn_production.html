@@ -9709,6 +9709,20 @@ function publishCopyToPrep(pc) {
   };
 }
 
+function pickYoutubeFromPublishCopy(pc) {
+  if (!pc) return {};
+  var top = pc.youtube;
+  var deep = pc.platforms && pc.platforms.youtube;
+  if (!top) return deep || {};
+  if (!deep) return top;
+  var topWords = (top.description || '').trim().split(/\s+/).filter(function(w){ return w.length; }).length;
+  var deepWords = (deep.description || '').trim().split(/\s+/).filter(function(w){ return w.length; }).length;
+  if (deepWords !== topWords) return deepWords > topWords ? deep : top;
+  var topHash = ((top.description || '').match(/#\w+/g) || []).length;
+  var deepHash = ((deep.description || '').match(/#\w+/g) || []).length;
+  return deepHash >= topHash ? deep : top;
+}
+
 function resolvePublishPayload(job) {
   var pc = resolvePublishCopy(job);
   // publishCopy from assembly/server is source of truth — publishPrep is a display cache only
@@ -9723,7 +9737,7 @@ function resolvePublishPayload(job) {
       pinnedComment: ''
     };
   }
-  var yt = pc ? (pc.youtube || (pc.platforms && pc.platforms.youtube) || {}) : {};
+  var yt = pc ? pickYoutubeFromPublishCopy(pc) : {};
   var tt = pc ? (pc.tiktok || (pc.platforms && pc.platforms.tiktok) || {}) : {};
   var ig = pc ? (pc.instagram || (pc.platforms && pc.platforms.instagram) || {}) : {};
   var title = (prep && prep.title) || yt.title || (Array.isArray(yt.titles) && yt.titles[0]) || (job && job.title) || '';

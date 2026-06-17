@@ -3517,6 +3517,7 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
 
   try {
+    const { normalizePublishCopyShape } = require('./lib/publish_copy_normalize');
     const { handleGeneratePublishCopy, ensurePublishMetadataComplete, buildChannelConfig, buildPublishScriptFromCard, buildPublishItemsFromCard } = require('./lib/publish');
     const { validatePublishMetadata, metadataFromPublishCopy } = require('./lib/gates/metadata_qa');
     const contentType = card.contentType || card.type || 'twitch-short';
@@ -3546,13 +3547,14 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
       json(payload) { this._payload = payload; return payload; },
     };
     await handleGeneratePublishCopy(fakeReq, fakeRes);
-    const publishCopy = fakeRes._payload;
+    let publishCopy = normalizePublishCopyShape(fakeRes._payload || {});
     if (!publishCopy || publishCopy.error) {
       return res.status(500).json({ ok: false, error: publishCopy?.error || 'Publish copy generation failed' });
     }
 
     const cc = buildChannelConfig();
     ensurePublishMetadataComplete(publishCopy, { streamers, cc, isShort });
+    publishCopy = normalizePublishCopyShape(publishCopy);
 
     const jobSpec = { ...card, contentType, formType: isShort ? 'short' : 'compilation', streamers, items };
     const metaCheck = validatePublishMetadata(jobSpec, metadataFromPublishCopy(publishCopy));
