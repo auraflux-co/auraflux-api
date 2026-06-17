@@ -491,6 +491,40 @@ function mergeJsonAvatarCheckpoints(intoJobs, jsonJobs) {
   if (merged > 0) console.log(`[jobs] Merged avatar checkpoints from jobs.json for ${merged} job(s)`);
 }
 
+/** jobs.json often has fresher assembly outputs than SQLite lag — merge on startup. */
+function mergeJsonAssemblyOutputs(intoJobs, jsonJobs) {
+  let merged = 0;
+  for (const [id, jsonCard] of Object.entries(jsonJobs || {})) {
+    const mem = intoJobs[id];
+    if (!mem || !jsonCard) continue;
+    const jsonSaved = new Date(jsonCard.savedAt || 0).getTime();
+    const memSaved = new Date(mem.savedAt || 0).getTime();
+    const jsonHasAssembly = !!(jsonCard.driveUrl || jsonCard.assembledAt || jsonCard.state?.savedOutputs?.driveUrl);
+    if (!jsonHasAssembly && jsonSaved <= memSaved) continue;
+    intoJobs[id] = {
+      ...mem,
+      ...jsonCard,
+      heygen: { ...(mem.heygen || {}), ...(jsonCard.heygen || {}) },
+      state: {
+        ...(mem.state || {}),
+        ...(jsonCard.state || {}),
+        savedOutputs: {
+          ...(mem.state?.savedOutputs || {}),
+          ...(jsonCard.state?.savedOutputs || {}),
+        },
+      },
+    };
+    if (intoJobs[id].stage === 'metadata_review' || intoJobs[id].stage === 'awaiting_review') {
+      if (intoJobs[id].driveUrl && intoJobs[id].status === 'assembling') {
+        intoJobs[id].status = 'completed';
+      }
+    }
+    try { db.saveJob(id, intoJobs[id]); } catch (_) { /* saveJobCard also writes SQLite */ }
+    merged++;
+  }
+  if (merged > 0) console.log(`[jobs] Merged assembly/SEO outputs from jobs.json for ${merged} job(s)`);
+}
+
 // ── SQLite init + fallback load ───────────────────────────────────────────────
 // Initialize SQLite alongside jobs.json. During transition both run in parallel.
 // If SQLite has more jobs than the JSON file (e.g. after a partial migration),
@@ -508,6 +542,7 @@ try {
       if (key) persistedJobs[key] = card;
     }
     mergeJsonAvatarCheckpoints(persistedJobs, jsonJobsSnapshot);
+    mergeJsonAssemblyOutputs(persistedJobs, jsonJobsSnapshot);
   } else {
     console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
   }
