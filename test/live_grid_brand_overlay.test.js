@@ -3,30 +3,78 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const {
-  audioBadgeXY,
-  audioBadgeText,
-  audioBadgeZmqCommands,
+  gridFrameMetrics,
+  cellBlockOrigin,
+  audioFrameZmqCommands,
+  onAirVideoCropRect,
+  buildFrameOverlayFilters,
 } = require('../lib/live_grid/brand_overlay');
 
-test('audioBadgeXY places badge top-right per quadrant', () => {
-  const cellW = 960;
-  const cellH = 540;
-  assert.deepEqual(audioBadgeXY(0, cellW, cellH), { ax: 0, ay: 0, x: 838, y: 14 });
-  assert.deepEqual(audioBadgeXY(1, cellW, cellH), { ax: 960, ay: 0, x: 1798, y: 14 });
-  assert.deepEqual(audioBadgeXY(2, cellW, cellH), { ax: 0, ay: 540, x: 838, y: 554 });
-  assert.deepEqual(audioBadgeXY(3, cellW, cellH), { ax: 960, ay: 540, x: 1798, y: 554 });
+const esc = (s) => s;
+
+test('gridFrameMetrics insets content inside uniform border', () => {
+  const m = gridFrameMetrics(1920, 1080);
+  assert.equal(m.borderW, 8);
+  assert.equal(m.innerX, 8);
+  assert.equal(m.innerY, 8);
+  assert.equal(m.innerW, 1904);
+  assert.equal(m.innerH, 1064);
+  assert.equal(m.stripH, 52);
+  assert.equal(m.innerY + m.stripH + 2 * m.rowBlockH + m.borderW, m.innerY + m.innerH);
 });
 
-test('audioBadgeText hides on mute, shows bed label', () => {
-  assert.equal(audioBadgeText({}), 'AUDIO');
-  assert.equal(audioBadgeText({ muted: true }), '');
-  assert.equal(audioBadgeText({ fallbackMusicActive: true }), 'MUSIC BED');
+test('all name strips same height as title strip', () => {
+  const m = gridFrameMetrics(1920, 1080);
+  for (let q = 0; q < 4; q++) {
+    const b = cellBlockOrigin(q, m);
+    assert.equal(b.labelY + m.stripH, b.y + m.rowBlockH);
+  }
 });
 
-test('audioBadgeZmqCommands moves badge and mute pill', () => {
-  const cmds = audioBadgeZmqCommands(1, 960, 540, { muted: false });
-  assert.match(cmds, /cdrawtext@audiobadge -1 x 1798/);
-  assert.match(cmds, /cdrawtext@audiobadge -1 text AUDIO/);
-  const muted = audioBadgeZmqCommands(0, 960, 540, { muted: true });
-  assert.match(muted, /cdrawtext@mutestatus -1 text AUDIO MUTED/);
+test('name plates always navy — on-air uses stroke only', () => {
+  const m = gridFrameMetrics(1920, 1080);
+  const f = buildFrameOverlayFilters(m, 0, { muted: false, fallbackMusicActive: false }, esc);
+  assert.match(f, /drawbox@labelbg0=.*color=0x22304b@1/);
+  assert.match(f, /drawbox@labelbg3=.*color=0x22304b@1/);
+  assert.doesNotMatch(f, /drawbox@onair=.*t=8/);
+});
+
+test('vertical gutter starts below title strip (does not cut through title)', () => {
+  const m = gridFrameMetrics(1920, 1080);
+  const f = buildFrameOverlayFilters(m, 0, { muted: false, fallbackMusicActive: false }, esc);
+  assert.match(f, /drawbox@titlebg=x=8:y=8:w=1904:h=52/);
+  assert.match(f, /drawbox@vgutter=x=956:y=60:w=8:h=1012/);
+  assert.doesNotMatch(f, /drawbox@titlebgL/);
+});
+
+test('outer border drawn after labels so bottom row strips stay visible', () => {
+  const m = gridFrameMetrics(1920, 1080);
+  const f = buildFrameOverlayFilters(m, 0, { muted: false, fallbackMusicActive: false }, esc);
+  const labelPos = f.indexOf('drawbox@labelbg3');
+  const outerPos = f.lastIndexOf('drawbox=x=0:y=0:w=1920');
+  assert.ok(labelPos < outerPos);
+});
+
+test('audioFrameZmqCommands keeps name centered and moves flank overlays', () => {
+  const m = gridFrameMetrics(1920, 1080);
+  const cmds = audioFrameZmqCommands(1, m, { muted: false });
+  assert.match(cmds, /cdrawtext@name1 -1 x 964\+\(948-text_w\)\/2/);
+  assert.match(cmds, /coverlay@onairavatar -1 x /);
+  assert.match(cmds, /coverlay@onairbadge -1 x /);
+  assert.match(cmds, /cdrawtext@name1 -1 fontcolor 0xc7af4f/);
+});
+
+test('xstackFilter pads canvas to full output size', () => {
+  const m = gridFrameMetrics(1920, 1080);
+  const { xstackFilter } = require('../lib/live_grid/brand_overlay');
+  const f = xstackFilter(['[q1]', '[q2]', '[q3]', '[q4]'], m);
+  assert.match(f, /xstack=inputs=4:layout=/);
+  assert.match(f, /pad=1920:1080:0:0/);
+});
+
+test('onAirVideoCropRect is video area only', () => {
+  const m = gridFrameMetrics(1920, 1080);
+  const c = onAirVideoCropRect(0, m);
+  assert.equal(c.h, m.cellVideoH);
+  assert.equal(c.y, cellBlockOrigin(0, m).videoY);
 });

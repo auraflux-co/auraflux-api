@@ -4,59 +4,101 @@
   <meta charset="utf-8" />
   <title>Clipz World Live — Local Watch</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet" />
   <style>
-    :root { --navy:#0d1424; --gold:#c7af4f; --panel:#131f38; }
-    body { margin:0; background:var(--navy); color:#fff; font-family:'Barlow Condensed',system-ui,sans-serif; }
-    header { padding:14px 18px; border-bottom:1px solid rgba(199,175,79,0.2); background:linear-gradient(90deg,#131f38,#0f1a30); }
-    h1 { margin:0; font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:2px; color:var(--gold); }
-    p { margin:6px 0 0; color:rgba(255,255,255,0.55); font-size:0.85rem; }
-    main { padding:16px; max-width:1200px; margin:0 auto; }
-    video { width:100%; max-height:70vh; background:#000; border-radius:8px; border:1px solid rgba(199,175,79,0.25); }
-    .meta { margin-top:14px; font-size:0.9rem; line-height:1.5; }
-    .warn { color:#f0883e; }
-    .ok { color:#5c8; }
-    a { color:var(--gold); }
-    .quad-map { display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:320px; margin-top:12px; }
-    .quad-cell { position:relative; padding:10px; border-radius:6px; background:#0d1524; border:1px solid rgba(199,175,79,0.2); min-height:52px; }
-    .quad-cell.on-air { border-color:var(--gold); box-shadow:0 0 8px rgba(199,175,79,0.35); }
-    .quad-cell .q { font-size:10px; color:rgba(255,255,255,0.4); }
-    .quad-cell .name { font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:1px; }
-    .audio-badge { position:absolute; top:6px; right:6px; font-family:'Bebas Neue',sans-serif; font-size:9px; letter-spacing:1px; padding:2px 6px; background:var(--gold); color:var(--navy); border-radius:3px; }
-    ul { padding-left:1.2rem; }
+    :root { --gold:#c7af4f; --navy:#0d1424; --chrome-h:44px; --footer-h:52px; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:#060a12; color:#fff; font-family:system-ui,sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+    header {
+      flex-shrink:0; height:var(--chrome-h);
+      padding:0 16px; display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid rgba(199,175,79,.2); background:#0f1a30;
+    }
+    header h1 { font-size:14px; letter-spacing:2px; color:var(--gold); font-weight:600; }
+    .tag { font-size:10px; padding:3px 8px; border-radius:999px; border:1px solid rgba(199,175,79,.35); }
+    .tag.live { color:#5c8; border-color:#5c8; }
+    .tag.off { color:rgba(255,255,255,.4); }
+    /* Locked 16:9 — matches YouTube encode pixel-for-pixel, no stretch */
+    .stage-wrap {
+      flex:1; display:flex; align-items:center; justify-content:center;
+      min-height:0; padding:8px;
+    }
+    .stage {
+      position:relative; width:min(100%, calc((100vh - var(--chrome-h) - var(--footer-h) - 16px) * 16 / 9));
+      aspect-ratio:16/9; background:#000; overflow:hidden;
+    }
+    #player { display:block; width:100%; height:100%; background:#000; }
+    .offline-msg {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      background:var(--navy); color:rgba(255,255,255,.5); font-size:15px; text-align:center; padding:24px;
+    }
+    footer {
+      flex-shrink:0; min-height:var(--footer-h); padding:8px 16px 12px;
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+    }
+    .unmute-bar { display:none; }
+    .unmute-bar.show { display:block; }
+    .unmute-bar button {
+      font-size:14px; font-weight:700; letter-spacing:1px;
+      background:var(--gold); color:var(--navy); border:none;
+      padding:10px 24px; border-radius:4px; cursor:pointer;
+    }
+    .meta { font-size:13px; color:rgba(255,255,255,.6); text-align:center; }
+    .ok { color:#5c8; } .warn { color:#f0883e; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>CLIPZ WORLD LIVE</h1>
-    <p>Local composed grid — same encode as YouTube RTMP</p>
+    <h1>CLIPZ WORLD LIVE — LOCAL WATCH</h1>
+    <span id="status-tag" class="tag off">OFFLINE</span>
   </header>
-  <main>
-    <video id="player" controls autoplay playsinline muted></video>
-    <div class="meta" id="meta">Loading feed…</div>
-    <div class="quad-map" id="quad-map"></div>
-    <div class="meta" id="sources"></div>
-  </main>
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+      <div id="offline-msg" class="offline-msg">Grid offline — GO LIVE (Local only) on the broadcast dashboard</div>
+      <video id="player" playsinline muted></video>
+    </div>
+  </div>
+  <footer>
+    <div id="unmute-bar" class="unmute-bar show">
+      <button type="button" onclick="unmute()">▶ UNMUTE — HEAR ON-AIR AUDIO</button>
+    </div>
+    <p class="meta" id="meta">Loading…</p>
+  </footer>
   <script>
     const v = document.getElementById('player');
     const meta = document.getElementById('meta');
-    const mapEl = document.getElementById('quad-map');
-    const sourcesEl = document.getElementById('sources');
+    const stage = document.getElementById('stage');
+    const offlineMsg = document.getElementById('offline-msg');
+    const statusTag = document.getElementById('status-tag');
+    const unmuteBar = document.getElementById('unmute-bar');
+    let hlsInstance = null;
 
-    function renderQuadMap(feed) {
-      const onQ = feed.onAir?.quadrant || 0;
-      const sources = feed.sources || [];
-      mapEl.innerHTML = [1, 2, 3, 4].map((n) => {
-        const s = sources.find((x) => x.quadrant === n) || {};
-        const onAir = onQ === n;
-        return `<div class="quad-cell${onAir ? ' on-air' : ''}">
-          ${onAir ? '<span class="audio-badge">AUDIO</span>' : ''}
-          <div class="q">Q${n}</div>
-          <div class="name">${(s.login || 'SLATE').toUpperCase()}</div>
-        </div>`;
-      }).join('');
+    function unmute() {
+      v.muted = false;
+      v.play().catch(() => {});
+      unmuteBar.classList.remove('show');
+    }
+
+    function attachHls(url) {
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      offlineMsg.style.display = 'none';
+      v.style.display = 'block';
+      if (v.canPlayType('application/vnd.apple.mpegurl')) {
+        v.src = url;
+      } else if (window.Hls && Hls.isSupported()) {
+        hlsInstance = new Hls({ lowLatencyMode: true, enableWorker: true });
+        hlsInstance.loadSource(url);
+        hlsInstance.attachMedia(v);
+      }
+      v.play().catch(() => {});
+    }
+
+    function detachHls() {
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      v.removeAttribute('src');
+      v.load();
+      v.style.display = 'none';
+      offlineMsg.style.display = 'flex';
     }
 
     async function boot() {
@@ -65,36 +107,34 @@
         meta.innerHTML = '<span class="warn">Could not load /broadcast/local-feed</span>';
         return;
       }
-      const hls = feed.composed?.hlsUrl;
-      const ready = feed.composed?.hlsReady;
-      const onAir = feed.onAir || {};
-      meta.innerHTML = ready
-        ? `<span class="ok">LIVE</span> · on-air <strong>Q${onAir.quadrant || '?'}</strong> ${onAir.login || ''} · ${onAir.mode || 'auto'}${onAir.muted ? ' · <span class="warn">MUTED</span>' : ''}`
-        : `<span class="warn">HLS not ready</span> — ${feed.composed?.note || 'start grid with LIVE_GRID_LOCAL_HLS=on'}`;
+      const live = feed.gridRunning && feed.composed?.hlsReady;
+      const stale = feed.gridRunning && feed.composed?.hlsStale;
+      statusTag.textContent = live ? 'LIVE' : stale ? 'STALE' : 'OFFLINE';
+      statusTag.className = 'tag ' + (live ? 'live' : 'off');
 
-      renderQuadMap(feed);
-
-      if (ready && hls) {
-        if (v.canPlayType('application/vnd.apple.mpegurl')) {
-          v.src = hls;
-        } else if (window.Hls && Hls.isSupported()) {
-          const h = new Hls({ lowLatencyMode: true });
-          h.loadSource(hls);
-          h.attachMedia(v);
-        } else {
-          meta.innerHTML += '<br><span class="warn">HLS not supported in this browser</span>';
+      if (live && feed.composed?.hlsUrl) {
+        const url = feed.composed.hlsUrl + '?t=' + Date.now();
+        if (stage.dataset.liveUrl !== feed.composed.hlsUrl) {
+          stage.dataset.liveUrl = feed.composed.hlsUrl;
+          attachHls(url);
         }
+        if (v.muted) unmuteBar.classList.add('show');
+        meta.innerHTML = `<span class="ok">Live encode</span> · Q${feed.onAir?.quadrant || '?'} ${feed.onAir?.login || ''} · ${v.videoWidth || '?'}×${v.videoHeight || '?'}`;
+      } else {
+        delete stage.dataset.liveUrl;
+        detachHls();
+        meta.innerHTML = stale
+          ? '<span class="warn">Stale HLS — END STREAM → Local only → GO LIVE</span>'
+          : feed.gridRunning
+            ? '<span class="warn">Encoder starting…</span>'
+            : '<span class="warn">Grid offline</span>';
+        unmuteBar.classList.remove('show');
       }
-
-      let srcHtml = '<strong>Sources</strong><ul>';
-      for (const s of feed.sources || []) {
-        srcHtml += `<li>Q${s.quadrant} ${s.login || '—'} — <a href="${s.twitchWatchUrl}" target="_blank" rel="noopener">Twitch</a></li>`;
-      }
-      srcHtml += '</ul>';
-      sourcesEl.innerHTML = srcHtml;
     }
+
+    v.addEventListener('volumechange', () => { if (!v.muted) unmuteBar.classList.remove('show'); });
     boot();
-    setInterval(boot, 15000);
+    setInterval(boot, 8000);
   </script>
 </body>
 </html>

@@ -53,7 +53,7 @@ describe('live_grid compositor (CPD-1005)', () => {
     process.env.LIVE_GRID_YOUTUBE_SQUARE_PAD = 'off';
     const args = buildArgs({ output: 'rtmp://test/live/key', localHlsPath: '/tmp/preview.m3u8', durationSec: 1 });
     const joined = args.join(' ');
-    expect(joined).toContain('force_original_aspect_ratio=increase,crop=960:540');
+    expect(joined).toContain('crop=948:450');
     expect(joined).toContain('setdar=16/9');
     expect(joined).toContain('-s 1920x1080');
     expect(joined).toContain('-aspect 16:9');
@@ -75,15 +75,22 @@ describe('live_grid compositor (CPD-1005)', () => {
     expect(joined).not.toContain('tee');
   });
 
-  test('buildArgs includes branded audio badge and frame bug', () => {
+  test('buildArgs includes framed layout with top brand and name strips', () => {
     process.env.LIVE_GRID_AUDIO_DIRECT = 'on';
     process.env.LIVE_GRID_AUDIO_COPY = 'off';
     const args = buildArgs({ output: '/tmp/test.mp4', durationSec: 1, audioQuad: 2 });
     const joined = args.join(' ');
-    expect(joined).toContain('drawtext@audiobadge');
-    expect(joined).toContain('drawtext@brandbug');
+    expect(joined).toContain('xstack=inputs=4:layout=');
+    expect(joined).toContain('pad=1920:1080:0:0');
+    expect(joined).not.toContain('scale=1920:1080:flags=fast_bilinear');
+    expect(joined).toContain('drawtext@brandtitle');
     expect(joined).toContain("text='CLIPZ WORLD LIVE'");
-    expect(joined).toContain('drawbox@onair');
+    expect(joined).toContain('drawtext@name0');
+    expect(joined).toContain('drawbox@labelbg0');
+    expect(joined).toContain('overlay@onairavatar');
+    expect(joined).toContain('overlay@onairbadge');
+    expect(joined).not.toContain('drawtext@onairtag');
+    expect(joined).not.toContain('drawtext@audiobadge');
   });
 
   test('isUdpInputNotReady detects empty UDP port errors', () => {

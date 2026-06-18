@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-17 (CPD-1005) — Live grid brand overlay + avatar cache, local-only rehearsal path, compositor/manager hardening, watch UI refresh.
 **Last Updated:** 2026-06-17 (CPD-1049) — Short-form thumbs: no VOD show/EP/tagline burn; reassemble passes orderedClipUrls + streamer fields; assembly publishCopy normalize.
 **Last Updated:** 2026-06-17 (CPD-1049) — YT SEO descriptions (125–250 words, inline hashtags), correct TT/IG handles, metadata_qa grading, hook caption fix, dashboard RE-ASSEMBLE for awaiting_review.
 **Last Updated:** 2026-06-17 (CPD-1049) — Gate 3b correctedVideoPath scope fix + clip comp review hold when Gate 4/5 handoff blocked.
@@ -213,7 +214,8 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1049): short-form thumbs without VOD show burn + reassemble clip shape** — Strip EP/tagline from `/thumbnail-short`; skip designed-template fallback on shorts; plain portrait frame fallback; reassemble passes `orderedClipUrls` + streamer fields; normalize publishCopy after assembly SEO gen. | lib/thumbnail.js, lib/assembly.js, lib/routes/c0_capcut.js, server.js, .cursor/rules/short-form-thumbnails.mdc, STATUS.md | — | 2026-06-17 |
+| Cursor | **feat(cpd-1005): live grid brand overlay, avatar cache, local rehearsal** — Twitch avatar PNG cache per quadrant; brand overlay refresh; manager `localOnly` rehearsal skips YT RTMP; compositor/feeders/seo tweaks; local_grid_watch UI; tests updated. | lib/live_grid/avatar_cache.js, brand_overlay.js, compositor.js, feeders.js, local_preview.js, manager.js, seo.js, lib/broadcast/local_feed_read.js, assets/local_grid_watch.html, test/live_grid_brand_overlay.test.js, test/live_grid_compositor.test.js, STATUS.md | — | 2026-06-17 |
+| Cursor | **fix(cpd-1049): short-form thumbs without VOD show burn + reassemble clip shape** — Strip EP/tagline from `/thumbnail-short`; skip designed-template fallback on shorts; plain portrait frame fallback; reassemble passes `orderedClipUrls` + streamer fields; normalize publishCopy after assembly SEO gen. | lib/thumbnail.js, lib/assembly.js, lib/routes/c0_capcut.js, server.js, .cursor/rules/short-form-thumbnails.mdc, STATUS.md | 3dd01951 | 2026-06-17 |
 | Cursor | **fix(cpd-1049): normalize publishCopy shape so SEO QA reads rich platforms.youtube** — FIX SEO now passes live (both comps → awaiting_review). | lib/publish_copy_normalize.js, lib/publish.js, lib/gates/metadata_qa.js, server.js, cwn_production.html, test/publish_copy_normalize.test.js, STATUS.md | — | 2026-06-17 |
 | Cursor | **fix(cpd-1049): build publish script from clip comp card shape** — FIX SEO / regenerate-publish-copy no longer fails "script required" when script is `{scenes}` + `orderedClipUrls`. | lib/publish.js, server.js, cwn_production.html, test/publish_youtube_seo.test.js, STATUS.md | 6209e363 | 2026-06-17 |
 | Cursor | **fix(cpd-1049): merge jobs.json assembly outputs over stale SQLite on reload** — SQLite primary load no longer drops fresher driveUrl/publishCopy/stage from jobs.json. | server.js, STATUS.md | 91ac0981 | 2026-06-17 |
