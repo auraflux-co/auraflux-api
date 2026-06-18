@@ -4164,7 +4164,14 @@ app.post('/job/:id/reassemble', async (req, res) => {
     sceneTextMap: card.heygen?.sceneTextMap || null,
     fullScript:   reassembleFullScript,
     streamers:    card.streamers || [],
-    items:        card.nbaItems  || card.newsItems || card.items || orderedClips.map(c => ({ title: c.title || '', headline: c.title || '' })) || [],
+    items:        card.nbaItems || card.newsItems || card.items || orderedClips.map(c => ({
+      title: c.title || '',
+      headline: c.title || '',
+      displayName: c.displayName || c.streamer || '',
+      streamer: c.streamer || c.displayName || '',
+      clipTitle: c.title || '',
+    })) || [],
+    orderedClipUrls: orderedClips,
     expectedClips: orderedClips.length || segmentData.filter(s => s.type === 'source_clip').length,
     designSpec:   reassembleDesignSpec,
     nbaItems:     card.nbaItems    || [],
@@ -8739,8 +8746,7 @@ app.get('/capcut/status/:jobId', (req, res) => {
 // ── Phase 2.2: Portrait Thumbnail Frame Extraction ────────────────
 // POST /thumbnail-short
 // Body: { videoPath, contentType, jobId }
-// Finds highest-motion frame in assembled short-form video, applies
-// "BECAUSE THE LIGHT WAS ON" tagline + episode number overlay.
+// Extracts a high-motion portrait frame — no show tagline (operator sets YT thumb on phone).
 // Output: thumbnail_short_{type}_ep{N}_{timestamp}.png in ./output/
 app.post('/thumbnail-short', async (req, res) => {
   const { videoPath, contentType = 'twitch', jobId = '' } = req.body;
@@ -8828,31 +8834,15 @@ app.post('/thumbnail-short', async (req, res) => {
     const outFile = `thumbnail_short_${contentType}_ep${epNum}_${ts}.png`;
     const outPath = path.join(outDir, outFile);
 
-    // Extract frame + apply overlays in one FFmpeg pass
-    // Overlays: "BECAUSE THE LIGHT WAS ON" tagline (bottom) + "EP N" badge (top-left)
-    const tagline = 'BECAUSE THE LIGHT WAS ON';
-    const epLabel = `EP ${epNum}`;
-
-    // Check if we have a font available
-    const fontPath = '/System/Library/Fonts/Supplemental/BebasNeue-Regular.ttf';
-    const fallbackFont = '/System/Library/Fonts/Helvetica.ttc';
-    const useFont = fs.existsSync(fontPath) ? fontPath : fallbackFont;
-
-    const drawTextFilters = [
-      // Dark gradient overlay at bottom for tagline readability
-      `drawbox=x=0:y=1560:w=1080:h=360:color=black@0.55:t=fill`,
-      // Tagline: "BECAUSE THE LIGHT WAS ON" — centered, bottom area
-      `drawtext=fontfile='${useFont}':text='${tagline}':fontsize=64:fontcolor=white:x=(w-text_w)/2:y=1680:shadowcolor=black:shadowx=2:shadowy=2`,
-      // Episode badge: "EP N" — top-left, gold
-      `drawtext=fontfile='${useFont}':text='${epLabel}':fontsize=36:fontcolor=#c7af4f:x=20:y=20:shadowcolor=black:shadowx=1:shadowy=1`
-    ].join(',');
+    // Extract frame — clean still (no news/twitch tagline burn; YT custom thumb is set at publish)
+    const vf = 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black';
 
     await new Promise((resolve, reject) => {
       const args = [
         '-ss', bestTimestamp.toFixed(3),
         '-i', localPath,
         '-vframes', '1',
-        '-vf', drawTextFilters,
+        '-vf', vf,
         '-q:v', '2',
         '-y', outPath
       ];

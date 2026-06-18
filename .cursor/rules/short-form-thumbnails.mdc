@@ -1,0 +1,27 @@
+---
+description: Short-form thumbnails must never burn VOD show branding (EP, taglines, show names)
+globs: lib/thumbnail.js,lib/assembly.js,server.js,lib/routes/c0_capcut.js,cwn_production.html
+alwaysApply: false
+---
+
+# Short-Form Thumbnails — Not VOD Episodes
+
+**Shorts are never VOD shows.** They are standalone vertical clips, not numbered episodes of a news/sports/Twitch Soup series.
+
+## Thumbnail rules
+
+**✅ Short-form thumbnails (`templateId: short-form`, `*-short` content types):**
+- Clean frame pulled from the assembled video only
+- No burned text: no EP badge, no episode number, no show name, no tagline ("Because the Light Was On", etc.)
+- Custom YouTube thumb is set at publish time (often on mobile)
+
+**✅ Allowed paths:**
+- `generateShortFrameThumbnail()` — Gemini frame pick or plain FFmpeg fallback
+- `POST /thumbnail-short` — portrait frame extract, scale/pad only
+
+**❌ NEVER for shorts:**
+- `generateThumbnail()` designed HTML/overlay templates (VOD episode branding)
+- `drawtext` / `drawbox` overlays with show name, EP, or series tagline
+- Falling back to long-form thumbnail templates when frame extract fails
+
+**Long-form VOD** (`templateId: long-form`) may use designed templates with show chrome — that path does not apply to shorts.
