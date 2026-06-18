@@ -43,6 +43,7 @@ describe('live_grid compositor (CPD-1005)', () => {
     const joined = args.join(' ');
     expect(joined).toContain('volume@aq1=1');
     expect(joined).toContain('amix=inputs=4');
+    expect(joined).toContain('aformat=sample_rates=44100:channel_layouts=stereo');
     expect(joined).toContain('-c:a aac');
     expect(joined).not.toContain('-map 1:a');
   });
@@ -53,7 +54,7 @@ describe('live_grid compositor (CPD-1005)', () => {
     process.env.LIVE_GRID_YOUTUBE_SQUARE_PAD = 'off';
     const args = buildArgs({ output: 'rtmp://test/live/key', localHlsPath: '/tmp/preview.m3u8', durationSec: 1 });
     const joined = args.join(' ');
-    expect(joined).toContain('crop=948:450');
+    expect(joined).toContain('crop=952:450');
     expect(joined).toContain('setdar=16/9');
     expect(joined).toContain('-s 1920x1080');
     expect(joined).toContain('-aspect 16:9');
@@ -86,8 +87,8 @@ describe('live_grid compositor (CPD-1005)', () => {
     expect(joined).toContain('drawtext@brandtitle');
     expect(joined).toContain("text='CLIPZ WORLD LIVE'");
     expect(joined).toContain('drawtext@name0');
-    expect(joined).toContain('drawbox@labelbg0');
-    expect(joined).toContain('overlay@onairavatar');
+    expect(joined).toContain('drawbox@labelrow0');
+    expect(joined).toContain('overlay@onairav2');
     expect(joined).toContain('overlay@onairbadge');
     expect(joined).not.toContain('drawtext@onairtag');
     expect(joined).not.toContain('drawtext@audiobadge');

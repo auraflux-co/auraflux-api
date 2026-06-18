@@ -12,6 +12,34 @@ const {
 } = require('../lib/publish');
 const { validateYoutubeDescriptionSeo } = require('../lib/gates/metadata_qa');
 
+describe('short social captions', () => {
+  test('finalizeShortSocialCaptions builds dense TT/IG hashtag packs', () => {
+    const {
+      finalizeShortSocialCaptions,
+      buildChannelConfig,
+    } = require('../lib/publish');
+    const cc = buildChannelConfig().clips;
+    const metadata = {
+      youtube: {
+        title: 'Marlon: Streamers\' Most Unexpected Twitch Fails! #Shorts',
+        description: 'Marlon and ExtraEmily deliver wild Twitch clips. Subscribe for more highlights from top streamers every week.',
+        hashtags: ['#Shorts', '#TwitchClips', '#FYP'],
+      },
+    };
+    finalizeShortSocialCaptions(metadata, {
+      streamers: ['Marlon', 'ExtraEmily', 'Cinna'],
+      cc,
+      contentType: 'twitch-short',
+    });
+    expect(metadata.tiktok.caption).toMatch(/#FYP/);
+    expect(metadata.tiktok.caption).toMatch(/#Marlon/i);
+    expect((metadata.tiktok.caption.match(/#\w+/g) || []).length).toBeGreaterThanOrEqual(8);
+    expect(metadata.instagram.caption).toMatch(/instagram\.com\/clipzworldnews/i);
+    expect((metadata.instagram.caption.match(/#\w+/g) || []).length).toBeGreaterThanOrEqual(12);
+    expect(metadata.tiktok.caption).not.toMatch(/Subscribe for more highlights.{80,}/);
+  });
+});
+
 describe('publish YouTube SEO finalize', () => {
   test('channel config uses correct social URLs', () => {
     const cfg = buildChannelConfig();

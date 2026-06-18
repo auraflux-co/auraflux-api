@@ -12858,7 +12858,7 @@ function liveGridRender() {
       <span style="color:${isLive ? '#5c8' : 'rgba(255,255,255,0.2)'};font-size:8px;">●</span>
       ${login}${rosterSet.has(login) ? ' <span style="color:#8cf;font-size:8px;">ROSTER</span>' : ''}${isLive ? ` <span style="color:rgba(199,175,79,0.8);">${live[login].toLocaleString()}</span>` : ''}${onGrid ? ' <span style="color:#c7af4f;font-size:8px;">ON GRID</span>' : ''}${satOut ? ' <span style="color:#fa5;font-size:8px;">SAT OUT</span>' : ''}
       <span style="display:inline-flex;gap:2px;margin-left:2px;">
-        <span onclick="liveGridAssignEventFeed('${login}')" title="Lock as EVENT feed Q1" style="cursor:pointer;color:#c7af4f;font-size:8px;padding:0 2px;">E</span>
+        <span onclick="liveGridAssignChannel(1,'${login}')" title="Lock Q1" style="cursor:pointer;color:#c7af4f;font-size:8px;padding:0 2px;">1</span>
         ${[2,3,4].map(n => `<span onclick="liveGridAssignChannel(${n},'${login}')" title="Lock Q${n}" style="cursor:pointer;color:rgba(199,175,79,0.75);font-size:8px;padding:0 2px;">${n}</span>`).join('')}
       </span>
       ${satOut ? `<span onclick="liveGridReAddBench('${login}')" title="Re-admit to the grid" style="cursor:pointer;color:#5c8;font-weight:700;padding:0 2px;">+</span>` : ''}
@@ -13180,19 +13180,6 @@ async function liveGridAssignChannel(quadrant, login) {
     const d = await r.json();
     if (!d.ok) alert('Assign failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Assign failed: ' + e.message); }
-  setTimeout(liveGridRefresh, 800);
-}
-
-async function liveGridAssignEventFeed(login) {
-  const url = `https://www.twitch.tv/${String(login).toLowerCase()}`;
-  try {
-    const r = await fetch(LG_BASE + '/live-grid/quadrant/1/url', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, label: 'EVENT', login }),
-    });
-    const d = await r.json();
-    if (!d.ok) alert('Event feed failed: ' + (d.error || 'unknown'));
-  } catch (e) { alert('Event feed failed: ' + e.message); }
   setTimeout(liveGridRefresh, 800);
 }
 

@@ -3,6 +3,8 @@
 const {
   existingIngestStream,
   allowNewIngestStream,
+  trustEnvBroadcast,
+  envBroadcastAttach,
   resolveIngestForCreate,
   MISSING_INGEST_MSG,
 } = require('../lib/live_grid/ingest_stream');
@@ -92,5 +94,51 @@ describe('resolveIngestForCreate', () => {
     delete process.env.LIVE_GRID_RTMP_URL;
     delete process.env.LIVE_GRID_STREAM_ID;
     expect(resolveIngestForCreate({ createStream: true })).toBeNull();
+  });
+});
+
+describe('trustEnvBroadcast', () => {
+  const env = process.env;
+
+  afterEach(() => {
+    process.env = env;
+  });
+
+  test('on by default', () => {
+    delete process.env.LIVE_GRID_TRUST_ENV_BROADCAST;
+    expect(trustEnvBroadcast()).toBe(true);
+  });
+
+  test('off when env says off', () => {
+    process.env.LIVE_GRID_TRUST_ENV_BROADCAST = 'off';
+    expect(trustEnvBroadcast()).toBe(false);
+  });
+});
+
+describe('envBroadcastAttach', () => {
+  const env = process.env;
+
+  afterEach(() => {
+    process.env = env;
+  });
+
+  test('returns attach bundle when bid + rtmp set', () => {
+    process.env.LIVE_GRID_BROADCAST_ID = 'IReUWCNp9iU';
+    process.env.LIVE_GRID_WATCH_URL = 'https://youtube.com/live/IReUWCNp9iU';
+    process.env.LIVE_GRID_RTMP_URL = 'rtmp://a.rtmp.youtube.com/live2/q213-xgt5';
+    process.env.LIVE_GRID_STREAM_ID = 'DTFPlg5';
+    expect(envBroadcastAttach()).toEqual({
+      broadcastId: 'IReUWCNp9iU',
+      watchUrl: 'https://youtube.com/live/IReUWCNp9iU',
+      streamId: 'DTFPlg5',
+      rtmpUrl: 'rtmp://a.rtmp.youtube.com/live2/q213-xgt5',
+    });
+  });
+
+  test('null without broadcast id', () => {
+    process.env.LIVE_GRID_RTMP_URL = 'rtmp://a/b';
+    process.env.LIVE_GRID_STREAM_ID = 's1';
+    delete process.env.LIVE_GRID_BROADCAST_ID;
+    expect(envBroadcastAttach()).toBeNull();
   });
 });

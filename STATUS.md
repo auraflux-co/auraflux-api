@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-18 (CPD-1005) — Live grid YouTube RTMP protection: AUTOTUNE off, PROTECT_YT_RTMP skips encoder restarts mid-listing, env-only broadcast attach (zero API), operator offline auto-fill, brand overlay/on-air flanks, SEO_ON_START off. Session end: sidecar restarted, grid stopped cleanly.
 **Last Updated:** 2026-06-17 (CPD-1005) — Live grid brand overlay + avatar cache, local-only rehearsal path, compositor/manager hardening, watch UI refresh.
 **Last Updated:** 2026-06-17 (CPD-1049) — Short-form thumbs: no VOD show/EP/tagline burn; reassemble passes orderedClipUrls + streamer fields; assembly publishCopy normalize.
 **Last Updated:** 2026-06-17 (CPD-1049) — YT SEO descriptions (125–250 words, inline hashtags), correct TT/IG handles, metadata_qa grading, hook caption fix, dashboard RE-ASSEMBLE for awaiting_review.

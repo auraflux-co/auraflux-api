@@ -37,9 +37,19 @@ describe('metadata_qa (CPD-1049)', () => {
       {
         title: 'Jason Rage Quits — Twitch Clips',
         description: desc,
-        tiktok: { caption: 'Jason rage quits Minecraft — viral Twitch moment from ClipzWorld News #TwitchClips' },
+        tiktok: {
+          caption: [
+            'Jason rage quits Minecraft — viral Twitch moment from ClipzWorld News',
+            '#FYP #ForYou #Twitch #TwitchClips #TwitchHighlights #StreamerFails #Gaming #LiveStream #Viral #Jason #Minecraft #ClipzWorldNews',
+            'https://www.tiktok.com/@clipzworldstreams',
+          ].join('\n\n'),
+        },
         instagram: {
-          caption: 'Jason rage quits Minecraft in this viral Twitch clip — watch the full moment on ClipzWorld News.',
+          caption: [
+            'Jason rage quits Minecraft in this viral Twitch clip — watch the full moment on ClipzWorld News.',
+            '#FYP #ForYou #Twitch #TwitchClips #TwitchHighlights #StreamerFails #Gaming #LiveStream #Viral #Jason #Minecraft #ClipzWorldNews #Streaming #GamingClips',
+            'https://www.instagram.com/clipzworldnews/',
+          ].join('\n\n'),
           altText: 'Jason rage quits Minecraft Twitch clip',
         },
       },

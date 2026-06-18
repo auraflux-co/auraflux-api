@@ -40,6 +40,22 @@ describe('live_grid resume_state', () => {
     assert.equal(resumeIsStale(fresh, 24 * 3600000), false);
   });
 
+  test('buildResumeStartOpts forces grid when four channel locks', () => {
+    const opts = buildResumeStartOpts({
+      startOpts: { programMode: 'auto' },
+      runtime: {
+        operatorLocks: [
+          { quadrant: 1, type: 'channel', login: 'a' },
+          { quadrant: 2, type: 'channel', login: 'b' },
+          { quadrant: 3, type: 'channel', login: 'c' },
+          { quadrant: 4, type: 'channel', login: 'd' },
+        ],
+      },
+    });
+    assert.equal(opts.programMode, 'grid');
+    assert.equal(opts.avatarOverlay, false);
+  });
+
   test('buildResumeStartOpts merges program mode and broadcast id', () => {
     const opts = buildResumeStartOpts({
       startOpts: { roster: ['a'] },

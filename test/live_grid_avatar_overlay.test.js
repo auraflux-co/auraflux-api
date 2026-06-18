@@ -21,6 +21,7 @@ describe('live_grid avatar overlay', () => {
     expect(shouldUseAvatarPip('event_night', {})).toBe(false);
     expect(shouldUseAvatarPip('grid', {})).toBe(false);
     expect(shouldUseAvatarPip('news_desk', {})).toBe(true);
+    expect(shouldUseAvatarPip('news_desk', { operatorChannelGrid: true })).toBe(false);
   });
 
   test('resolveAvatarOverlay does not pick twitch-short comp for event_night', () => {

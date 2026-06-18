@@ -133,12 +133,25 @@ describe('live_grid bench tier (CPD-951)', () => {
     expect(swaps).toContainEqual({ quadrant: 2, out: 'z', in: 'b', reason: 'roster_priority' });
   });
 
-  test('operator mode freezes grid — no offline drop or highest-viewer fill', () => {
+  test('operator mode still evicts offline and fills from follows before platform bench', () => {
     const current = ['a', 'b', 'c', 'd'];
-    const live = { b: 50, c: 40, d: 30, e: 100 };
-    const { assignments, swaps } = computeAssignments(current, live, {}, { operatorMode: true });
-    expect(assignments).toEqual(current);
-    expect(swaps).toEqual([]);
+    const live = { b: 50, c: 40, e: 100, f: 80 };
+    const bench = new Set(['x', 'y', 'f']);
+    const follows = new Set(['x', 'y']);
+    const { assignments, swaps } = computeAssignments(current, live, {}, { operatorMode: true, bench, follows });
+    expect(assignments).toEqual(['e', 'b', 'c', 'f']);
+    expect(swaps).toContainEqual({ quadrant: 0, out: 'a', in: 'e', reason: 'offline' });
+    expect(swaps).toContainEqual({ quadrant: 3, out: 'd', in: 'f', reason: 'offline' });
+  });
+
+  test('follows tier fills before platform-only bench', () => {
+    const bench = new Set(['x', 'y']);
+    const follows = new Set(['x']);
+    const live = { a: 10, x: 5, y: 9000 };
+    const { assignments } = computeAssignments(empty(), live, {}, { bench, follows });
+    expect(assignments[0]).toBe('a');
+    expect(assignments).toContain('x');
+    expect(assignments.indexOf('x')).toBeLessThan(assignments.indexOf('y'));
   });
 
   test('operator mode skips viewer-challenge reshuffles', () => {

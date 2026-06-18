@@ -64,20 +64,20 @@ describe('live_grid file feeder', () => {
 
   test('setQuadrantUrl records url kind in status', () => {
     const feeders = new QuadrantFeeders({ log: () => {} });
-    feeders.setQuadrantUrl(0, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'EVENT');
+    feeders.setQuadrantUrl(0, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'CUSTOM');
     const st = feeders.status()[0];
     expect(st.kind).toBe('url');
     expect(st.feedUrl).toContain('youtube.com');
-    expect(st.displayName).toBe('EVENT · watch');
+    expect(st.displayName).toBe('watch');
     expect(st.channelSlug).toBe('watch');
     feeders.stopAll();
   });
 
-  test('setQuadrantUrl twitch feed shows EVENT · channel', () => {
+  test('setQuadrantUrl twitch feed shows channel login', () => {
     const feeders = new QuadrantFeeders({ log: () => {} });
-    feeders.setQuadrantUrl(0, 'https://www.twitch.tv/ishowspeed', 'EVENT');
+    feeders.setQuadrantUrl(0, 'https://www.twitch.tv/ishowspeed');
     const st = feeders.status()[0];
-    expect(st.displayName).toBe('EVENT · ishowspeed');
+    expect(st.displayName).toBe('ishowspeed');
     expect(st.channelSlug).toBe('ishowspeed');
     feeders.stopAll();
   });
