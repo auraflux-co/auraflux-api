@@ -5,6 +5,7 @@
 
 exec docker run --rm \
   --platform linux/arm64 \
+  -v /Users/robertgregory/cwn-c0:/Users/robertgregory/cwn-c0 \
   -v /Users/robertgregory/cwn-production:/Users/robertgregory/cwn-production \
   -v /private/tmp:/private/tmp \
   linuxserver/ffmpeg:latest \

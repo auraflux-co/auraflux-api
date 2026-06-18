@@ -3392,7 +3392,10 @@ function restoreJobsFromServer(showAlert) {
         var serverJobId = serverJob.jobId || serverJob.id;
         if (!serverJobId) return;
         // Skip if already in dashboard queue (auto-restore only merges new jobs)
-        if (!showAlert && existingIds[serverJobId]) return;
+        if (!showAlert && existingIds[serverJobId]) {
+          mergeServerJobIntoLocal(serverJobId, serverJob);
+          return;
+        }
 
         // Reconstruct a dashboard-compatible job card from the server's persisted data
         // Server saves: jobId, contentType, date, script, heygen (videoJobs array), orderedClipUrls
@@ -3627,6 +3630,9 @@ function restoreJobsFromServer(showAlert) {
           driveUrl:    restoredDriveUrl,
           assembledAt: serverJob.assembledAt || null,
           assemblyId: serverJob.assemblyId || null,
+          clipHookTitles: serverJob.clipHookTitles || null,
+          captionsApplied: serverJob.captionsApplied,
+          clipCompTransformApplied: serverJob.clipCompTransformApplied,
           publishCopy: restoredPublishCopy,
           metadataQaViolations: serverJob.metadataQaViolations || null,
           canvaUrl:    null, thumbnail: null, publishPrep: null,
@@ -3791,7 +3797,22 @@ function renderQueue() {
         + '<div style="font-size:10px;color:rgba(255,255,255,0.45);font-family:monospace;">'
         + 'YT desc '+(pubPayload.description||'').length+' chars · '+tagCount+' tags · '+hashCount+' # · '
         + 'TT '+(pubPayload.tiktokCaption||'').length+' chars · IG '+(pubPayload.igCaption||'').length+' chars'
-        + '</div></div>';
+        + '</div>';
+      if (job.clipHookTitles && job.clipHookTitles.length) {
+        var hookPreview = job.clipHookTitles.filter(function(h){ return h && String(h).trim(); }).slice(0, 4)
+          .map(function(h){ return escHtml(String(h).slice(0, 42)); }).join(' · ');
+        if (hookPreview) {
+          metaStrip += '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-top:6px;">'
+            + '<span style="color:rgba(199,175,79,0.75);font-weight:700;letter-spacing:1px;">CLIP HOOKS</span> · '
+            + hookPreview + '</div>';
+        }
+      }
+      if (job.clipsOnly) {
+        metaStrip += '<div style="font-size:10px;margin-top:4px;color:'+(job.captionsApplied ? '#2ecc71' : '#e67e22')+';">'
+          + (job.captionsApplied ? '✓ Whisper captions burned in video' : '⚠ Whisper captions missing — RE-ASSEMBLE FROM FILES')
+          + '</div>';
+      }
+      metaStrip += '</div>';
     }
 
     // ACTION BUTTONS
@@ -3806,8 +3827,9 @@ function renderQueue() {
       actions += '<button onclick="triggerDriveCanva(\'' + job.id + '\',\'' + (job.filename||'') + '\',\'' + (job.title||'') + '\')" class="btn btn-gold btn-sm">☁️ DRIVE→CANVA</button>';
     } else if (job.driveUrl || (job.finalUrl && job.finalUrl.indexOf('http') === 0)) {
       var cloudUrl = job.driveUrl || job.finalUrl;
-      actions += '<a href="'+cloudUrl+'" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none;font-weight:700;">▶ PREVIEW VIDEO</a>';
-      actions += '<a href="'+cloudUrl+'" download class="btn btn-outline btn-sm" style="text-decoration:none;">📥 MP4</a>';
+      var previewUrl = cloudUrl + (cloudUrl.indexOf('?') > -1 ? '&' : '?') + 'v=' + (job.assembledAt ? Date.parse(job.assembledAt) : Date.now());
+      actions += '<a href="'+previewUrl+'" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none;font-weight:700;">▶ PREVIEW VIDEO</a>';
+      actions += '<a href="'+previewUrl+'" download class="btn btn-outline btn-sm" style="text-decoration:none;">📥 MP4</a>';
     }
     if (doneSegs.length&&!job.canvaUrl) {
       var firstIdx = segments.indexOf(doneSegs[0]);
@@ -9815,6 +9837,11 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.stage) job.stage = serverJob.stage;
   if (serverJob.finalUrl) job.finalUrl = serverJob.finalUrl;
   if (serverJob.metadataQaViolations) job.metadataQaViolations = serverJob.metadataQaViolations;
+  if (serverJob.clipHookTitles && serverJob.clipHookTitles.length) job.clipHookTitles = serverJob.clipHookTitles;
+  if (serverJob.captionsApplied === true || serverJob.captionsApplied === false) job.captionsApplied = serverJob.captionsApplied;
+  if (serverJob.clipCompTransformApplied === true || serverJob.clipCompTransformApplied === false) {
+    job.clipCompTransformApplied = serverJob.clipCompTransformApplied;
+  }
   if (serverJob.stage === 'metadata_review' || serverJob.stage === 'awaiting_review') {
     job.status = 'completed';
   }
@@ -11530,11 +11557,12 @@ function pubJobSelected() {
   var videoPreview = g('pub-video-preview');
   var videoPlayer = g('pub-video-player');
   if (videoUrl) {
-    if (videoRow) { videoRow.style.display = ''; g('pub-video-link').href = videoUrl; }
+    var bustedVideoUrl = videoUrl + (videoUrl.indexOf('?') > -1 ? '&' : '?') + 'v=' + (job.assembledAt ? Date.parse(job.assembledAt) : Date.now());
+    if (videoRow) { videoRow.style.display = ''; g('pub-video-link').href = bustedVideoUrl; }
     if (videoPreview && videoPlayer) {
       videoPreview.style.display = '';
-      if (videoPlayer.getAttribute('src') !== videoUrl) {
-        videoPlayer.src = videoUrl;
+      if (videoPlayer.getAttribute('src') !== bustedVideoUrl) {
+        videoPlayer.src = bustedVideoUrl;
         videoPlayer.load();
       }
     }

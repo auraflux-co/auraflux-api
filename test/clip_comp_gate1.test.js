@@ -32,6 +32,18 @@ describe('clip_comp_gate1 (CPD-1051)', () => {
     expect(r.violations.some((v) => v.includes('missing title'))).toBe(true);
   });
 
+  test('does not require platform captions at intake (Gate 5 owns SEO)', () => {
+    const r = runClipCompGate1(
+      { contentType: 'twitch-short', designSpec: { expectedClipCount: 1, chrome: { layout: 'clip-comp' } } },
+      {
+        title: 'Clip Short — Marlon',
+        clips: [{ title: 'Marlon rage moment', displayName: 'Marlon' }],
+      }
+    );
+    expect(r.passed).toBe(true);
+    expect(r.violations.some((v) => v.includes('TikTok caption'))).toBe(false);
+  });
+
   test('blocks AI marketing title', () => {
     const r = runClipCompGate1(
       { contentType: 'twitch-short', designSpec: { chrome: { layout: 'clip-comp' } } },

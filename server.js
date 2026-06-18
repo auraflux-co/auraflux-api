@@ -525,6 +525,18 @@ function mergeJsonAssemblyOutputs(intoJobs, jsonJobs) {
   if (merged > 0) console.log(`[jobs] Merged assembly/SEO outputs from jobs.json for ${merged} job(s)`);
 }
 
+/** jobs.json may have cards SQLite never received (e.g. saveJobCard wrote JSON only). */
+function mergeJsonOnlyJobs(intoJobs, jsonJobs) {
+  let added = 0;
+  for (const [id, jsonCard] of Object.entries(jsonJobs || {})) {
+    if (!jsonCard || intoJobs[id]) continue;
+    intoJobs[id] = jsonCard;
+    try { db.saveJob(id, jsonCard); } catch (_) { /* saveJobCard also writes SQLite */ }
+    added++;
+  }
+  if (added > 0) console.log(`[jobs] Imported ${added} job card(s) from jobs.json missing in SQLite`);
+}
+
 // ── SQLite init + fallback load ───────────────────────────────────────────────
 // Initialize SQLite alongside jobs.json. During transition both run in parallel.
 // If SQLite has more jobs than the JSON file (e.g. after a partial migration),
@@ -543,6 +555,7 @@ try {
     }
     mergeJsonAvatarCheckpoints(persistedJobs, jsonJobsSnapshot);
     mergeJsonAssemblyOutputs(persistedJobs, jsonJobsSnapshot);
+    mergeJsonOnlyJobs(persistedJobs, jsonJobsSnapshot);
   } else {
     console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
   }
@@ -2082,7 +2095,10 @@ app.get('/health', async (req, res) => {
 // GET /jobs — return persisted job cards for dashboard recovery after server restart
 // ?restore=1 — include assembled + awaiting_review jobs (manual ↩ RESTORE JOBS)
 app.get('/jobs', (req, res) => {
-  const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling', 'heygen_done']);
+  const IN_FLIGHT_STAGES = new Set([
+    'script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling', 'heygen_done',
+    'awaiting_review', 'metadata_review', // ready for operator — must show without ↩ RESTORE
+  ]);
   const RESTORE_STAGES = new Set([
     ...IN_FLIGHT_STAGES,
     'heygen_done', 'assembling', 'assembled', 'awaiting_review', 'metadata_review',
@@ -7221,9 +7237,31 @@ app.post('/twitch-clip-url', async (req, res) => {
     const result = await resolveTwitchClipMp4(slug);
     console.log(`[twitch-clip-url] ✓ ${result.quality} — ${result.mp4Url.slice(0, 80)}...`);
     res.json({ ok: true, slug, ...result });
-  } catch(err) {
-    console.warn(`[twitch-clip-url] Failed for ${slug}: ${err.message}`);
-    res.status(500).json({ error: err.message, slug });
+  } catch (gqlErr) {
+    // GQL playback tokens fail often — Helix CDN URL works without token (CPD-349).
+    try {
+      const clip = await twitchClient.getClipById(slug);
+      let mp4Url = twitchClient.thumbnailToMp4(clip.thumbnail_url);
+      let quality = 'helix-cdn';
+      if (!mp4Url || !/\.mp4(\?|$)/i.test(mp4Url)) {
+        mp4Url = clip.url || url || `https://www.twitch.tv/clip/${slug}`;
+        quality = 'page-url-ytdlp';
+      }
+      console.log(`[twitch-clip-url] ✓ ${quality} fallback — ${String(mp4Url).slice(0, 80)}...`);
+      res.json({
+        ok: true,
+        slug,
+        mp4Url,
+        quality,
+        title: clip.title || '',
+        broadcaster: clip.broadcaster_name || '',
+        game: clip.game_id || '',
+        pageUrl: clip.url || url || null,
+      });
+    } catch (helixErr) {
+      console.warn(`[twitch-clip-url] Failed for ${slug}: GQL=${gqlErr.message}; Helix=${helixErr.message}`);
+      res.status(500).json({ error: gqlErr.message, helixError: helixErr.message, slug });
+    }
   }
 });
 
