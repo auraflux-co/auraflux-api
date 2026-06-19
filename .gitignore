@@ -8,7 +8,9 @@ node_modules/
 # Agent config/state files — local only
 .cline/
 .clinerules/
-.serena/
+.serena/*
+!.serena/project.yml
+!.serena/.gitignore
 .claude/
 data/assembly_jobs.json
 cwn-drive-key.json

@@ -1,0 +1,18 @@
+# Serena project — Render / C1+ production (auraflux-api + Next.js app)
+project_name: "cwn-production"
+
+languages:
+- typescript
+- python
+
+encoding: "utf-8"
+
+ignore_all_files_in_gitignore: true
+
+read_only: false
+
+initial_prompt: |
+  Render production repo (cwn-production). Session start: activate_project("cwn-production"),
+  list_memories (architecture-overview, c0-render-separation, coding-conventions).
+  Next.js app/ + Express lib/ on Render. C0 localhost is separate — activate_project("cwn-c0") only in ~/cwn-c0.
+  After EVERY git commit: run Serena post-commit QA (serena-pr-review.mdc). Rob may say "Serena QA the commit".
