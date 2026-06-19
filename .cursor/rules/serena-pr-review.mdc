@@ -1,151 +1,58 @@
 ---
-description: Serena MCP — session-wide code intelligence + pre-PR review gate
+description: Serena MCP — C0 localhost code intelligence + commit/PR review
 globs:
 alwaysApply: true
 ---
-# Serena — Session-Wide Usage + Pre-PR Review
+# Serena — C0 Session Usage + Review
 
-## Session start (REQUIRED every session)
-1. Call `initial_instructions` to load the Serena Instructions Manual
-2. Call `activate_project` with `project: "cwn-production"` to warm the index
-3. Call `list_memories` to load project context (architecture, sprint state, conventions)
+## Session start (REQUIRED every C0 session)
+1. Call `initial_instructions`
+2. Call `activate_project` with **`project: "cwn-c0"`** (never `cwn-production` for work in this repo)
+3. Call `list_memories` — read `mem:core`, `mem:conventions`, `mem:pipeline` when touching assembly/gates/clip comps
 
-Serena in memory = less work for Aider overnight. Aider should focus on environment-level tasks, not re-reviewing every commit. Real-time Serena review during Cursor sessions handles that.
+Render/Next.js work in `~/cwn-production` uses **`activate_project("cwn-production")`** instead.
 
-## For ALL code work (not just PR time)
+## Code intelligence (C0)
 
-**Reading code — forbidden patterns replaced:**
-- `Read` file → `get_symbols_overview` first, then `find_symbol` with `include_body=true`
-- `Grep` for symbols → `find_symbol` with name path pattern
-- Following references → `find_referencing_symbols`
+**Reading:** `get_symbols_overview` → `find_symbol` (`include_body=true`) → `find_referencing_symbols`
 
-**Editing code — forbidden patterns replaced:**
-- `StrReplace` on code files → `replace_symbol_body` (whole symbol) or `replace_content` (partial)
-- Adding new code → `insert_after_symbol` / `insert_before_symbol`
+**Editing `.js`:** `replace_symbol_body` / `replace_content` / `insert_after_symbol` — not StrReplace/Write.
 
-Exception: non-code files (markdown, yaml, JSON config, shell scripts) may use StrReplace/Write.
+**Non-code** (markdown, yaml, json config, shell): StrReplace/Write OK.
 
-## After EVERY `git push origin main`
+## After EVERY `git commit` on `c0/main`
 
-**Check `STATUS.md` line 2 for `Deploy Mode` before triggering anything.**
+**Step 1:** `initial_instructions` → `activate_project("cwn-c0")`
 
-```
-Deploy Mode: dev      → trigger deploys immediately after push
-Deploy Mode: testing  → DO NOT deploy — a test run is in progress on the current build
-```
+**Step 2:** `git diff HEAD~1 --name-only`
 
-Both `auraflux-app` and `auraflux-api` have `autoDeploy: off`. Pushing to GitHub does NOT deploy automatically.
-
-**When `Deploy Mode: dev`**, run after every push (skip `auraflux-api` if only `app/` files changed):
-```bash
-RENDER_API_KEY=$(grep "RENDER_API_KEY" .env | head -1 | cut -d= -f2)
-# auraflux-app (Next.js frontend — always deploy when app/ files changed)
-curl -s -X POST "https://api.render.com/v1/services/srv-d7pnalhj2pic73btevl0/deploys" \
-  -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: application/json" | python3 -m json.tool
-# auraflux-api (Node/Docker backend — only if lib/, server.js, Dockerfile changed)
-curl -s -X POST "https://api.render.com/v1/services/srv-d7nsd77avr4c73frifcg/deploys" \
-  -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: application/json" | python3 -m json.tool
-```
-
-Confirm the response shows `"status": "build_in_progress"` and the correct commit message before moving on.
-
-**When `Deploy Mode: testing`**, skip the deploy and note it in the response: "Deploy held — testing mode active."
-
-**Switching modes:** Rob sets the mode. When Rob says "run a job / let's test / testing now" → update STATUS.md to `testing`. When Rob says "done testing / back to dev / ship it" → update STATUS.md to `dev`.
-
----
-
-## Commit review (after EVERY `git commit`)
-
-Serena reviews every commit — no exceptions. This is not optional and does not require a PR.
-
-### Run in order
-
-**Step 1 — Warm the index**
-```
-initial_instructions → activate_project("cwn-production")
-```
-
-**Step 2 — Get changed files**
-```bash
-git diff HEAD~1 --name-only
-```
-
-**Step 3 — Symbol-level checks on each changed file**
+**Step 3 — Symbol checks**
 
 | Check | Tool | Pass condition |
 |-------|------|----------------|
-| Terminology | `find_symbol` for "gate" in comments/strings | No "gate N" or "Gate N" in new code (ok in schema fields `gate:`) |
-| Branding | `find_symbol` scan in `app/` | No `cwn`, `c0_`, `clipzworld`, `ClipzWorld` in new platform files |
-| Feature gate | `find_symbol` `runWorker` body | All new portal extension workers call `isFeatureEnabled` before logic |
-| Route mounting | `find_referencing_symbols` on new route files | New `lib/routes/*.js` is `require`d + `app.use`d in `server.js` |
-| Test coverage | Check `test/` directory | New `lib/` module has a matching `test/*.test.js` |
-| Env vars | `find_symbol` for `process.env.` in new code | Each new env var appears in `.env.example` |
-| Confluence HOW | ticket linked doc | Implementation matches HOW page; update page if it deviated |
+| Terminology | `find_symbol` "gate N" in strings | No new "gate N" / "Gate N" in comments (schema `gate:` OK) |
+| Branding | scan `cwn_production.html` + new platform strings | No new `c0_` prefixes in customer-facing copy; ClipzWorld OK on C0 dashboard |
+| Feature gate | `runWorker` / portal extensions | `isFeatureEnabled` before logic |
+| Route mounting | new handlers in `server.js` or `lib/routes/*` | Dashboard fetch in `cwn_production.html` or documented API |
+| Tests | `test/` | New `lib/*.js` module has `test/*.test.js` |
+| Env vars | new `process.env.*` | In `.env.example` or `docs/environment-variables.md` |
+| C0 boundary | changed files | No `app/` or Render-only `lib/portals/` commits on `c0/main` |
 
-**Step 4 — Output commit QA report**
+**Step 4 — Report**
 ```
-✅ Commit QA — [commit hash]
+✅ Commit QA — [hash] (cwn-c0)
 - Files reviewed: N
-- Checks: pass/fail per row above
-- Confluence HOW page: updated / not required / MISSING (needs page)
-- Issues: (list any, or "none")
+- Issues: none | [list]
 ```
 
-**If issues are found: fix before moving to the next task.**
+Fix issues before the next task.
 
----
+## Pre-PR (c0/main → auraflux-c0)
 
-## Pre-PR review gate (before every `gh pr create`)
+Same symbol review on `git diff origin/c0/main...HEAD`. Post `## Serena Review` in PR body.
 
-## Required steps (in order)
-
-### 1. Read initial instructions
-Call Serena's `initial_instructions` tool to ensure the symbolic index is loaded.
-
-### 2. Symbol-level diff review
-For every file changed in the PR (from `git diff main...HEAD --name-only`):
-- Use `get_symbols_overview` to see what symbols exist in the file
-- Use `find_symbol` with `include_body=true` for any symbol that was added or modified
-- Flag any symbol where:
-  - A required import is missing or resolves to a wrong path
-  - A handler has been removed but is still referenced elsewhere (use `find_referencing_symbols`)
-  - Hardcoded secrets or credentials are present
-  - C0-only logic has leaked into a shared/C1+ path
-
-### 3. Checklist (must pass before PR)
-```
-[ ] No handler logic lost during extraction
-[ ] All require/import paths resolve correctly
-[ ] No hardcoded secrets, tokens, or API keys
-[ ] C0/C1+ boundary respected — C0 code not in shared paths
-[ ] New symbols have no dangling references to deleted symbols
-[ ] Job spec shape unchanged or migration provided if changed
-[ ] Portal/extension workers follow spec-driven routing (see spec-driven-portal-routing.mdc)
-[ ] .env.example updated if new env vars introduced
-```
-
-### 4. Post result as PR body section
-Include a `## Serena Review` section in the PR body summarizing:
-- Files reviewed
-- Any issues found (or "No issues found")
-- Checklist items passed/failed
-
-## What Serena provides that Rovo Dev did not
-- Symbol-level understanding — reads only relevant code slices, no context flood
-- `find_referencing_symbols` — catches dangling references after refactors
-- Precise edits via `replace_symbol_body` — can fix issues found during review in the same pass
-
-## PR merge — agent always merges, never Rob
-
-After Serena review passes:
-1. `gh pr merge <number> --squash --delete-branch`
-2. Trigger Render deploy if autoDeploy is off
-3. Update Jira ticket to Done with a comment summarising what was merged
-4. Update Confluence HOW page if implementation deviated from spec
-5. Update `.env.example` if new env vars were introduced
-
-**Rob never merges PRs.** Never ask Rob to merge, never suggest he merge. If the pre-commit hook or any rule says otherwise, that rule is wrong — this one takes precedence.
+C0 does **not** auto-deploy Render. No Render curl after push unless cherry-picking to production separately.
 
 ## Skipping review
-Only skip if Rob explicitly says "skip review" or "just push." Document the skip reason in the PR body.
+
+Only if Rob says "skip review" / "just push" — note reason in PR/commit comment.

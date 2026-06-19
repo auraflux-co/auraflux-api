@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-19 (CPD-1049) — Serena onboarded for cwn-c0: project.yml committed, memories (core/pipeline/conventions), serena-pr-review rule uses activate_project(cwn-c0).
 **Last Updated:** 2026-06-19 (CPD-1049) — Aider backlog: env sync (219 stubs), route audit doc, clip_comp/job_spec tests, qa legacy note, C0 policy boundary table.
 **Last Updated:** 2026-06-19 (CPD-1049) — Aider callouts: skip Gate 3b legacy reburn on clip comps, filterFfmpegPath shared for chrome overlay, pm2 false-positive tuning in local review script, session rule fix-aider-first.
 **Last Updated:** 2026-06-18 (CPD-1049) — Clip comp template lock (Jun 17 reference, CLIP_COMP_EXPERIMENT opt-in), concat A/V fix, ffmpeg-full hook/caption burn, dashboard hook+caption restore, Gate 1 intake-only metadata, Helix CDN fallback when GQL fails. Three ~1:30pm comps re-assembled r5/r4/r6 and published.

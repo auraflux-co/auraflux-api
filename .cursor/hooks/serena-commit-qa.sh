@@ -41,7 +41,7 @@ command=$(echo "$input" | jq -r '.input.command // ""')
 if echo "$command" | grep -qE '^git commit' && ! echo "$command" | grep -q '\-\-dry-run'; then
   cat <<'EOF'
 {
-  "additional_context": "A git commit just completed. You MUST run the Serena post-commit QA checklist before continuing (defined in serena-pr-review.mdc → Post-commit QA section). Steps: (1) call initial_instructions to warm the Serena index, (2) run git diff HEAD~1 --name-only to get changed files, (3) call get_symbols_overview on each changed file, (4) check for terminology violations ('gate N' in new code), (5) check for branding violations (cwn/c0/clipzworld in app/ directory), (6) verify new portal extension runWorker functions call isFeatureEnabled, (7) verify new lib/routes/*.js files are mounted in server.js, (8) verify new lib/ modules have a test/*.test.js counterpart, (9) check .env.example for any new process.env.* references. Output a QA summary report before proceeding."
+  "additional_context": "A git commit just completed. Run Serena post-commit QA (serena-pr-review.mdc). (1) initial_instructions, (2) activate_project for THIS repo — cwn-c0 if cwd/path is ~/cwn-c0, else cwn-production, (3) git diff HEAD~1 --name-only, (4) get_symbols_overview + find_symbol on each changed code file, (5) terminology/branding/feature-gate/route/test/env checks per serena-pr-review.mdc. Output QA summary before proceeding."
 }
 EOF
 else
