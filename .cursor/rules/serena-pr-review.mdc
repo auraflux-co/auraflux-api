@@ -3,12 +3,16 @@ description: Serena MCP — session-wide code intelligence + pre-PR review gate
 globs:
 alwaysApply: true
 ---
-# Serena — Session-Wide Usage + Pre-PR Review
+# Serena — Always On (Render production) + Pre-PR Review
+
+**For Rob:** In `cwn-production`, this rule is **always applied**. Workers warm Serena at session start and run post-commit QA after every commit. The Cursor hook injects the checklist automatically — if a worker skips it, say **"Serena QA the commit."** No manual Serena setup per session.
 
 ## Session start (REQUIRED every session)
 1. Call `initial_instructions` to load the Serena Instructions Manual
-2. Call `activate_project` with `project: "cwn-production"` to warm the index
-3. Call `list_memories` to load project context (architecture, sprint state, conventions)
+2. Call `activate_project` for the repo you are working in:
+   - **`cwn-production`** (Render / Next.js / `main`) — **default when workspace is this repo**
+   - **`cwn-c0`** (localhost / pm2 / `c0/main`) — required for all work in `~/cwn-c0`
+3. Call `list_memories` to load project context
 
 Serena in memory = less work for Aider overnight. Aider should focus on environment-level tasks, not re-reviewing every commit. Real-time Serena review during Cursor sessions handles that.
 

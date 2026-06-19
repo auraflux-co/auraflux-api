@@ -14,34 +14,32 @@
 
 set -euo pipefail
 
-# ── Smoke-test dependencies ────────────────────────────────────────────────────
-# jq is required to parse the tool input JSON.
-# Fail loudly if it is missing so the problem is obvious immediately.
 if ! command -v jq >/dev/null 2>&1; then
   echo '{"error": "serena-commit-qa.sh: jq is not on PATH — install jq (brew install jq) to enable Serena post-commit QA"}' >&2
   exit 1
 fi
 
-# ── Parse input ────────────────────────────────────────────────────────────────
 input=$(cat)
 
-# Validate that stdin was valid JSON (not empty / malformed)
 if ! echo "$input" | jq -e . >/dev/null 2>&1; then
-  # Silently pass through — hook received non-JSON (shouldn't happen, but fail open here)
   echo '{}'
   exit 0
 fi
 
-# Extract the shell command from the tool input
 command=$(echo "$input" | jq -r '.input.command // ""')
 
-# ── Trigger only on git commit ─────────────────────────────────────────────────
-# Matches: git commit -m "...", git commit --amend, etc.
-# Does NOT match: git commit --dry-run (no actual commit)
 if echo "$command" | grep -qE '^git commit' && ! echo "$command" | grep -q '\-\-dry-run'; then
-  cat <<'EOF'
+  # Default cwn-production when hook runs from this repo; cwn-c0 when cwd is ~/cwn-c0
+  repo_root=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+  if [[ "$repo_root" == *"/cwn-c0" ]]; then
+    project='cwn-c0'
+  else
+    project='cwn-production'
+  fi
+
+  cat <<EOF
 {
-  "additional_context": "A git commit just completed. You MUST run the Serena post-commit QA checklist before continuing (defined in serena-pr-review.mdc → Post-commit QA section). Steps: (1) call initial_instructions to warm the Serena index, (2) run git diff HEAD~1 --name-only to get changed files, (3) call get_symbols_overview on each changed file, (4) check for terminology violations ('gate N' in new code), (5) check for branding violations (cwn/c0/clipzworld in app/ directory), (6) verify new portal extension runWorker functions call isFeatureEnabled, (7) verify new lib/routes/*.js files are mounted in server.js, (8) verify new lib/ modules have a test/*.test.js counterpart, (9) check .env.example for any new process.env.* references. Output a QA summary report before proceeding."
+  "additional_context": "A git commit just completed. You MUST run the Serena post-commit QA checklist before continuing (serena-pr-review.mdc). Steps: (1) initial_instructions, (2) activate_project(\\"${project}\\"), (3) git diff HEAD~1 --name-only, (4) get_symbols_overview on each changed file, (5) terminology ('gate N' in new code), (6) branding (cwn/c0/clipzworld in app/), (7) isFeatureEnabled in new portal extension runWorker, (8) new lib/routes/*.js mounted in server.js, (9) new lib/ modules have test/*.test.js, (10) new process.env.* in .env.example. Output the QA summary report before proceeding."
 }
 EOF
 else
