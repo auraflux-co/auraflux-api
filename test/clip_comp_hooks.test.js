@@ -12,6 +12,7 @@ test('isJunkHook rejects twitch passthrough junk', () => {
   assert.equal(isJunkHook('dsda'), true);
   assert.equal(isJunkHook('wisdom'), true);
   assert.equal(isJunkHook('w tricksot'), true);
+  assert.equal(isJunkHook('jasontheween: jasont'), true);
   assert.equal(isJunkHook('ExtraEmily: Wrong Shirt Gift'), false);
 });
 
