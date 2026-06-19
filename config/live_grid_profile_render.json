@@ -1,16 +1,20 @@
 {
   "name": "render-broadcast-staging",
   "version": "2026-06-19",
-  "description": "Linux broadcast worker profile — libx264, copy relays, middleware off until C0 sync lands in cwn-production.",
+  "description": "Linux broadcast worker — libx264 compositor → local HLS → grid-restreamer → YouTube RTMP, staged swap on.",
   "env": {
     "LIVE_GRID_ENCODER": "libx264",
     "LIVE_GRID_RELAY_TRANSCODE": "off",
     "LIVE_GRID_UDP_RELAY": "on",
     "LIVE_GRID_TWITCH_QUALITY": "720p60,720p,best",
-    "LIVE_GRID_OUTPUT_MIDDLEWARE": "off",
-    "LIVE_GRID_STAGED_SWAP": "off",
-    "LIVE_GRID_LOCAL_HLS": "off",
+    "LIVE_GRID_OUTPUT_MIDDLEWARE": "on",
+    "LIVE_GRID_STAGED_SWAP": "on",
+    "LIVE_GRID_RESTREAMER_HOLD": "on",
+    "LIVE_GRID_SWAP_DEBOUNCE_MS": "8000",
+    "LIVE_GRID_SWAP_STABLE_MS": "3000",
+    "LIVE_GRID_LOCAL_HLS": "on",
     "LIVE_GRID_AUTOTUNE": "off",
+    "LIVE_GRID_BITRATE_K": "4500",
     "LIVE_SIDECAR_BIND": "0.0.0.0",
     "FFMPEG_PATH": "ffmpeg"
   },
@@ -22,9 +26,10 @@
   },
   "soakChecklist": [
     "Render deploy auraflux-broadcast-staging from staging branch",
-    "Set Doppler secrets on broadcast service (Twitch, YouTube OAuth, RTMP)",
-    "curl https://<broadcast-staging>/live-broadcast/health → ok: true",
-    "POST /live-grid/start with private listing — 30 min compositor soak",
-    "Enable middleware in follow-up PR after C0 live_grid sync"
+    "bash scripts/sync_broadcast_env_to_render.js srv-d8qs41ernols73ej7720",
+    "curl https://auraflux-broadcast-staging.onrender.com/live-broadcast/health → ok: true",
+    "POST /live-grid/prepare then /live-grid/start (private)",
+    "Confirm status.middleware.restreamer.running + master encoder libx264",
+    "Scripted logoff swap test on private listing"
   ]
 }
