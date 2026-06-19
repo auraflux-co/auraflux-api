@@ -15,6 +15,10 @@ There are **two separate review scripts** — use the right one for the work don
 
 If work touched both repos, run both.
 
+## Fix Aider callouts before new jobs
+
+**Operating rule:** Resolve `[BLOCKING]` and relevant `[SHOULD FIX]` items from the latest Aider report **before** generating new pipeline jobs or starting feature work. Re-run the matching review script after fixes so `last-reviewed-commit` matches `HEAD`.
+
 ## Start of every session
 
 1. Identify which repo the session is working in (`cwn-production` vs `cwn-c0`)
