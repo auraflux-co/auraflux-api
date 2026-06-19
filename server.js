@@ -4026,7 +4026,21 @@ app.post('/job/:id/reassemble', async (req, res) => {
   let clipIdx = 0;
   let segmentData;
 
-  if (manifest?.segments?.length) {
+  if (card.clipsOnly && orderedClips.length) {
+    // Clips-only comps: orderedClipUrls are the sole source of truth — no avatar scenes.
+    segmentData = orderedClips.map((c, i) => ({
+      type:              'source_clip',
+      url:               c.clipUrl || c.url || c.pageUrl || '',
+      pageUrl:           c.pageUrl || c.url || c.clipUrl || '',
+      label:             c.label || `CLIP_${i + 1}`,
+      clipTimingTargets: Array.isArray(c.clipTimingTargets) ? c.clipTimingTargets : [],
+      clipTimingFormat:  c.clipTimingFormat || 'none',
+      pillarboxFilter:   c.pillarboxFilter != null ? c.pillarboxFilter : null,
+      sourceOrientation: c.sourceOrientation || c.orientation || 'landscape',
+    }));
+    clipIdx = orderedClips.length;
+    console.log(`[reassemble] ${jobId}: clips-only rebuild (${segmentData.length} clips)`);
+  } else if (manifest?.segments?.length) {
     // Use manifest — interleaves source_clip segments in the correct positions
     segmentData = manifest.segments.map((seg, i) => {
       if ((seg.type || 'avatar') === 'source_clip') {
@@ -4204,6 +4218,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
     orderedClipUrls: orderedClips,
     clipHookTitles: reassembleClipHookTitles || card.clipHookTitles || null,
     regenerateClipHooks: false,
+    clipsOnly:   !!card.clipsOnly,
     expectedClips: orderedClips.length || segmentData.filter(s => s.type === 'source_clip').length,
     designSpec:   reassembleDesignSpec,
     nbaItems:     card.nbaItems    || [],
@@ -4396,6 +4411,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     jobSpecId:     jobSpec?.jobId || null,
     jobTitle:      title,
     streamers,
+    clipsOnly:     true,
+    orderedClipUrls,
     expectedClips: segmentData.length,
     designSpec:    card.designSpec,
     captionText:   null, // CPD-935: no hook caption — whisper captions only
