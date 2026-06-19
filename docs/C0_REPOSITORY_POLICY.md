@@ -36,8 +36,18 @@ Before 2026-06-14 both lines pushed to `auraflux-co/auraflux-api`. PR #637 merge
 - **C1+ work:** branch from `main` in `cwn-production`, PR → merge → Render deploy — **never commit on c0/main**.
 - **Portable fixes** (storage, publish, feature_gate): `C0_PORTABLE=1 git commit` on C0, cherry-pick hash onto `main` with a CPD ticket.
 - **Commit guard:** `bash scripts/install_git_hooks.sh` — blocks `app/`, `lib/portals/`, `render.yaml`, migrations; warns on bare `lib/*` commits with no grid/gates/dashboard file.
-- **Reviews:** `aider_session_review_local.sh` (C0) vs `aider_session_review.sh` (production).
+- **Reviews:** `aider_session_review_local.sh` (C0) vs `aider_session_review.sh` (production). **Fix `[BLOCKING]` / relevant `[SHOULD FIX]` from the latest Aider report before generating new pipeline jobs.**
 - **Dashboard URL:** http://localhost:3000/ (Node serves HTML). Port 8765 static server is optional legacy.
+
+## C0 / C1+ code boundary (agents)
+
+| Layer | C0 (`cwn-c0`) | C1+ (`cwn-production`) |
+|-------|---------------|------------------------|
+| Dashboard | `cwn_production.html` | Next.js `app/` |
+| Gates / assembly | `lib/gates/*`, `lib/assembly.js` | Portal workers under `lib/portals/` on Render |
+| Legacy QA | `lib/qa.js` `geminiQACheck` / `geminiSegmentQA` — **not in server.js pipeline**; gate workers replaced them | N/A |
+| Env reference | `.env.example` + `docs/environment-variables.md` + `node scripts/sync_env_example.js --write` | Doppler + Render env groups |
+| Route hygiene | `node scripts/route_audit.js --write` → `docs/route_audit.md` | API routes under `lib/routes/` |
 
 ## What stays C0-only
 

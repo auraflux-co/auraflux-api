@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-19 (CPD-1049) — Aider backlog: env sync (219 stubs), route audit doc, clip_comp/job_spec tests, qa legacy note, C0 policy boundary table.
 **Last Updated:** 2026-06-19 (CPD-1049) — Aider callouts: skip Gate 3b legacy reburn on clip comps, filterFfmpegPath shared for chrome overlay, pm2 false-positive tuning in local review script, session rule fix-aider-first.
 **Last Updated:** 2026-06-18 (CPD-1049) — Clip comp template lock (Jun 17 reference, CLIP_COMP_EXPERIMENT opt-in), concat A/V fix, ffmpeg-full hook/caption burn, dashboard hook+caption restore, Gate 1 intake-only metadata, Helix CDN fallback when GQL fails. Three ~1:30pm comps re-assembled r5/r4/r6 and published.
 **Last Updated:** 2026-06-18 (CPD-1005) — Live grid YouTube RTMP protection: AUTOTUNE off, PROTECT_YT_RTMP skips encoder restarts mid-listing, env-only broadcast attach (zero API), operator offline auto-fill, brand overlay/on-air flanks, SEO_ON_START off. Session end: sidecar restarted, grid stopped cleanly.

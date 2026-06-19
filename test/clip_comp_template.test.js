@@ -1,0 +1,28 @@
+'use strict';
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+
+test('clip comp template mode is off unless CLIP_COMP_EXPERIMENT=1', () => {
+  delete process.env.CLIP_COMP_EXPERIMENT;
+  delete process.env.CLIP_COMP_TRANSFORM;
+  const mod = require('../lib/clip_comp_template');
+  assert.equal(mod.clipCompExperimentEnabled(), false);
+  assert.equal(mod.shouldApplyClipCompTransform(true), false);
+  assert.equal(mod.shouldApplyClipCompTransform(false), false);
+  assert.ok(mod.clipCompWhisperCaptionStyleSuffix().includes('MarginV'));
+});
+
+test('CLIP_COMP_EXPERIMENT enables transform and clears template caption suffix', () => {
+  process.env.CLIP_COMP_EXPERIMENT = '1';
+  const mod = require('../lib/clip_comp_template');
+  assert.equal(mod.clipCompExperimentEnabled(), true);
+  assert.equal(mod.shouldApplyClipCompTransform(true), true);
+  assert.equal(mod.clipCompWhisperCaptionStyleSuffix(), '');
+  delete process.env.CLIP_COMP_EXPERIMENT;
+});
+
+test('golden reference documents Jun 17 job id', () => {
+  const { GOLDEN_REFERENCE } = require('../lib/clip_comp_template');
+  assert.match(GOLDEN_REFERENCE.jobId, /1781715314184/);
+});
