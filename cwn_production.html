@@ -849,6 +849,22 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <span class="tag tag-pending" id="lg-status-tag"><span class="tag-dot"></span> OFFLINE</span>
         </div>
         <div class="card-body">
+          <div id="lg-listing-bar" style="margin-bottom:12px;padding:10px 12px;background:rgba(199,175,79,0.08);border:1px solid rgba(199,175,79,0.35);border-radius:4px;">
+            <div style="font-size:10px;color:rgba(255,255,255,0.55);line-height:1.5;">
+              <b style="color:#c7af4f;">GO LIVE</b> reuses your current YouTube listing when possible — one listing per session, no duplicate Upcoming spam.
+              Private rehearsal now; flips <b>PUBLIC at 6:00 PM ET</b> automatically.
+            </div>
+            <details style="margin-top:8px;">
+              <summary style="font-size:10px;color:rgba(255,255,255,0.4);cursor:pointer;">Advanced: attach existing Studio listing id</summary>
+              <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+                <input id="lg-youtube-listing-id" type="text" placeholder="optional Studio video id"
+                  autocomplete="off"
+                  style="flex:1;min-width:160px;background:#060a12;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;" />
+                <button type="button" class="btn btn-outline btn-sm" style="font-size:10px;" onclick="liveGridSaveListing()">SAVE</button>
+              </div>
+              <div id="lg-youtube-listing-hint" style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;"></div>
+            </details>
+          </div>
           <div id="lg-watch-row" style="display:none;font-size:11px;margin-bottom:10px;">
             <a id="lg-watch-link" href="#" target="_blank" style="color:#c7af4f;font-weight:700;letter-spacing:1px;">▶ OPEN STREAM ON YOUTUBE</a>
             <a id="lg-vertical-link" href="#" target="_blank" style="display:none;color:#9146ff;font-weight:700;letter-spacing:1px;margin-left:12px;">▶ PORTRAIT (9:16)</a>
@@ -5350,32 +5366,155 @@ function parseStreamerNotes() {
   return notes;
 }
 
-// ── Resolve Twitch clip MP4 URLs via server ──────────────────────
-// Called after clips are fetched — enriches each clip with a direct mp4Url
-// Uses Promise.all so all clips resolve in parallel
-function resolveTwitchClipUrls(clips, callback) {
+// ── Resolve clip MP4 URLs via unified /clip-url (CPD-1053) ─────
+function resolveClipUrls(clips, callback) {
   if (!clips || !clips.length) { callback(clips); return; }
   var pending = clips.length;
   clips.forEach(function(clip) {
-    if (!clip.url) { pending--; if(!pending) callback(clips); return; }
+    if (!clip.url && !clip.pageUrl) { pending--; if (!pending) callback(clips); return; }
+    if (clip.mp4Url) { pending--; if (!pending) callback(clips); return; }
+    if (clip.cdnUrl && !clip.mp4Url) {
+      clip.mp4Url = clip.cdnUrl;
+      clip.clipQuality = 'kick-cdn-inline';
+      pending--;
+      if (!pending) callback(clips);
+      return;
+    }
+    var pageUrl = clip.url || clip.pageUrl;
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', CFG.ffmpegUrl + '/twitch-clip-url', true);
-    xhr.setRequestHeader('Content-Type','application/json');
-    xhr.timeout = 15000;
+    xhr.open('POST', (CFG.ffmpegUrl || 'http://localhost:3000') + '/clip-url', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.timeout = 20000;
     xhr.onload = function() {
       try {
         var resp = JSON.parse(xhr.responseText);
         if (resp.ok && resp.mp4Url) {
           clip.mp4Url = resp.mp4Url;
           clip.clipQuality = resp.quality || '';
-          console.log('[twitch-clip-url] Resolved ' + (clip.streamer||'?') + ': ' + resp.quality);
+          console.log('[clip-url] Resolved ' + (clip.streamer || clip.displayName || '?') + ': ' + resp.quality);
         }
-      } catch(e) {}
+      } catch (e) {}
       pending--;
       if (!pending) callback(clips);
     };
-    xhr.onerror = xhr.ontimeout = function() { pending--; if(!pending) callback(clips); };
-    xhr.send(JSON.stringify({ url: clip.url }));
+    xhr.onerror = xhr.ontimeout = function() { pending--; if (!pending) callback(clips); };
+    xhr.send(JSON.stringify({ url: pageUrl, platform: clip.platform || null }));
+  });
+}
+function resolveTwitchClipUrls(clips, callback) { resolveClipUrls(clips, callback); }
+
+function buildStreamerClipsQuery(streamers, clipsPer, platforms) {
+  var twFilters = getPickerFilters('twitch');
+  var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
+    + '&platforms=' + encodeURIComponent((platforms || getSelectedStreamerPlatforms()).join(','))
+    + '&clipsPer=' + Math.max(clipsPer * 5, 20);
+  if (twFilters.durMin != null) qs += '&durMin=' + twFilters.durMin;
+  if (twFilters.durMax != null) qs += '&durMax=' + twFilters.durMax;
+  if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;
+  return qs;
+}
+
+function streamerFetchResultsToItems(fetchResults, streamers, clipsPerStreamer, streamerNotes) {
+  var items = [];
+  var droppedStreamers = [];
+  (fetchResults || []).forEach(function(s) {
+    var login = (s.login || s.name || '').toLowerCase();
+    if (s.dropReason || !(s.clips || []).length) {
+      droppedStreamers.push({ name: login, reason: s.dropReason || 'No clips' });
+      if (window.CURRENT_META && CURRENT_META.clipFailureReasons) {
+        CURRENT_META.clipFailureReasons[login] = { cause: 'FETCH_EMPTY', evidence: s.dropReason || 'No clips' };
+      }
+      return;
+    }
+    var pool = s.clips.slice();
+    var unused = pool.filter(function(c) { return !isClipUsed(c.url); });
+    if (unused.length >= clipsPerStreamer) pool = unused;
+    var validClips = pool.slice(0, clipsPerStreamer);
+    if (validClips.length < clipsPerStreamer) {
+      droppedStreamers.push({ name: login, reason: 'Only ' + pool.length + ' clip(s) (need ' + clipsPerStreamer + ')' });
+      if (window.CURRENT_META && CURRENT_META.clipFailureReasons) {
+        CURRENT_META.clipFailureReasons[login] = { cause: 'INSUFFICIENT_CLIPS', evidence: 'Only ' + pool.length + ' clips' };
+      }
+      return;
+    }
+    var displayName = s.displayName || TWITCH_PICKER_DISPLAY_NAMES[login] || login;
+    items.push({
+      login: login,
+      streamer: displayName,
+      displayName: displayName,
+      platform: s.platform || 'twitch',
+      notes: streamerNotes[login] || streamerNotes[displayName.toLowerCase()] || '',
+      clipsPerStreamer: clipsPerStreamer,
+      targetClipsPerStreamer: clipsPerStreamer,
+      clips: validClips.map(function(c, ci) {
+        return {
+          rank: ci + 1,
+          isBackup: false,
+          title: c.title,
+          url: c.url,
+          cdnUrl: c.cdnUrl || null,
+          views: c.views || 0,
+          game: c.game || '',
+          thumbnailUrl: c.thumbnailUrl || '',
+          platform: c.platform || s.platform || 'twitch',
+        };
+      }),
+      title: validClips[0].title,
+      url: validClips[0].url,
+      views: validClips[0].views || 0,
+      game: validClips[0].game || '',
+      thumbnailUrl: validClips[0].thumbnailUrl || '',
+    });
+  });
+  items.sort(function(a, b) {
+    var ai = streamers.indexOf(a.login || (a.displayName || '').toLowerCase());
+    var bi = streamers.indexOf(b.login || (b.displayName || '').toLowerCase());
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  return { items: items, droppedStreamers: droppedStreamers };
+}
+
+function finalizeStreamerClipItems(items, streamers, statusElId, onReady) {
+  if (!items.length) {
+    if (g(statusElId)) g(statusElId).innerHTML = '❌ No streamers returned valid clips — check platform roster or API tokens';
+    unlockGenerateButtons();
+    return;
+  }
+  if (g('script-type-label')) g('script-type-label').textContent = 'STREAMERS — Resolving clip URLs...';
+  var allClips = [];
+  items.forEach(function(item) {
+    (item.clips || []).forEach(function(clip) {
+      clip.streamer = item.streamer || '';
+      clip.displayName = item.displayName || item.streamer || '';
+      allClips.push(clip);
+    });
+  });
+  resolveClipUrls(allClips, function() {
+    if (!CURRENT_META.clipMp4Urls) CURRENT_META.clipMp4Urls = {};
+    CURRENT_META.orderedClipUrls = [];
+    CURRENT_META.clipsByStreamer = {};
+    allClips.forEach(function(clip) {
+      if (clip.mp4Url) CURRENT_META.clipMp4Urls[clip.url] = clip.mp4Url;
+      var entry = {
+        url: clip.mp4Url || clip.url || '',
+        pageUrl: clip.url || '',
+        streamer: clip.streamer || '',
+        displayName: clip.displayName || '',
+        title: clip.title || '',
+        isBackup: clip.isBackup || false,
+        platform: clip.platform || 'twitch',
+      };
+      CURRENT_META.orderedClipUrls.push(entry);
+      var sKey = (clip.streamer || 'unknown').toLowerCase();
+      if (!CURRENT_META.clipsByStreamer[sKey]) CURRENT_META.clipsByStreamer[sKey] = [];
+      CURRENT_META.clipsByStreamer[sKey].push(entry);
+    });
+    var primaryClipUrls = [];
+    items.forEach(function(item) {
+      (item.clips || []).forEach(function(clip) { if (clip.url) primaryClipUrls.push(clip.url); });
+    });
+    markClipsUsed(primaryClipUrls);
+    if (onReady) onReady(items);
   });
 }
 
@@ -5388,170 +5527,36 @@ function generateTwitch() {
   var streamerNotes = parseStreamerNotes();
   CURRENT_TYPE = 'twitch';
   CURRENT_META = { streamers: streamers, clipMp4Urls: {}, clipFailureReasons: {} };
-  setGeneratingState('twitch-gen-status', 'TWITCH — Fetching ' + clipsPerStreamer + ' clip(s) per streamer...');
-  var items = []; var done = 0;
-  var droppedStreamers = []; // streamers returning 0 valid clips from dashboard fetch
-  streamers.forEach(function(name) {
-    var xU = new XMLHttpRequest();
-    xU.open('GET','https://api.twitch.tv/helix/users?login='+name,true);
-    xU.setRequestHeader('Client-Id', CFG.twitchId);
-    xU.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
-    xU.timeout=8000;
-    xU.onload=function(){
-      try{
-        var u=JSON.parse(xU.responseText); var user=u.data&&u.data[0];
-        if(!user){
-          droppedStreamers.push({name: name, reason: 'Twitch user not found'});
-          CURRENT_META.clipFailureReasons[name] = { cause: 'STREAMER_NOT_FOUND', evidence: 'Twitch /helix/users returned empty data array' };
-          console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch user not found');
-          done++;check();return;
-        }
-        var since=new Date(Date.now()-86400000*2).toISOString();  // 48h window — Rob runs long-form every other day; 48h avoids duplicates without over-pulling (was 7d, was 24h before that)
-        // Fetch up to 20 clips per streamer — GQL fails on ~50% so we need a large backup pool
-        // This is equivalent to: twitch.tv/STREAMER/clips?filter=clips&range=24hr
-        var fetchCount = Math.max(clipsPerStreamer * 5, 20);
-        var xC=new XMLHttpRequest();
-        xC.open('GET','https://api.twitch.tv/helix/clips?broadcaster_id='+user.id+'&first='+fetchCount+'&started_at='+since,true);
-        xC.setRequestHeader('Client-Id',CFG.twitchId); xC.setRequestHeader('Authorization','Bearer '+CFG.twitchToken);
-        xC.timeout=8000;
-        xC.onload=function(){
-          try{
-            var cd=JSON.parse(xC.responseText);
-            // All clips are valid — titles are viewer-created and never used in the video
-            var allClips=(cd.data||[]);
-            // Prefer unused clips; fall back to all clips if needed to fill the quota
-            var unusedClips = allClips.filter(function(c){ return !isClipUsed(c.url); });
-            var allValidClips = unusedClips.length >= clipsPerStreamer ? unusedClips : allClips;
-            var validClips=allValidClips.slice(0, clipsPerStreamer);
-            var backupClips=allValidClips.slice(clipsPerStreamer); // all remaining clips as backup
-            if(validClips.length >= clipsPerStreamer) {
-              var nameKey = user.display_name.toLowerCase();
-              // Send only the requested clips — backups stay client-side for GQL fallback
-              var allClipsToSend = validClips;
-              var DISPLAY_NAMES = {
-                'jasontheween':'Jason','hasanabi':'Hasan','hasanbi':'Hasan','adapt':'Adapt',
-                'stableronaldo':'Ron','lacy':'Lacy','marlon':'Marlon',
-                'cinna':'Cinna','yonnajay':'Yonna','jaycinco':'Jay Cinco','maya':'Maya',
-                'extraemily':'ExtraEmily','yourragegaming':'Rage','yourrage':'Rage'
-              };
-              var displayName = DISPLAY_NAMES[nameKey] || user.display_name;
-              items.push({
-                streamer:     user.display_name,
-                displayName:  displayName,
-                notes:        streamerNotes[nameKey] || streamerNotes[name] || '',
-                clipsPerStreamer: clipsPerStreamer,
-                targetClipsPerStreamer: clipsPerStreamer,
-                clips: allClipsToSend.map(function(c, ci) {
-                  return {
-                    rank:         ci + 1,
-                    isBackup:     ci >= clipsPerStreamer,
-                    title:        c.title,
-                    url:          c.url,
-                    views:        c.view_count,
-                    game:         c.game_name||'',
-                    thumbnailUrl: c.thumbnail_url||''
-                  };
-                }),
-                // Keep top-level fields for backward compat
-                title:        validClips[0].title,
-                url:          validClips[0].url,
-                views:        validClips[0].view_count,
-                game:         validClips[0].game_name||'',
-                thumbnailUrl: validClips[0].thumbnail_url||''
-              });
-            } else {
-              var rawCount = (cd.data || []).length;
-              var reason = rawCount === 0
-                ? 'No clips in 48h window'
-                : 'Only ' + realClips.length + '/' + rawCount + ' clips passed title filter (need ' + clipsPerStreamer + ')';
-              droppedStreamers.push({name: name, reason: reason});
-              CURRENT_META.clipFailureReasons[name] = { cause: rawCount === 0 ? 'TWITCH_API_EMPTY' : 'INSUFFICIENT_CLIPS', evidence: reason };
-              console.warn('[generateTwitch] DROPPED: ' + name + ' — ' + reason);
-            }
-          }catch(e){}
-          done++;check();
-        };
-        xC.onerror=xC.ontimeout=function(){
-          droppedStreamers.push({name: name, reason: 'Twitch clips API timeout/error'});
-          CURRENT_META.clipFailureReasons[name] = { cause: 'TWITCH_API_ERROR', evidence: 'Twitch clips API request failed' };
-          console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch clips API timeout/error');
-          done++;check();
-        }; xC.send();
-      }catch(e){done++;check();}
-    };
-    xU.onerror=xU.ontimeout=function(){
-      droppedStreamers.push({name: name, reason: 'Twitch users API timeout/error'});
-      CURRENT_META.clipFailureReasons[name] = { cause: 'TWITCH_API_ERROR', evidence: 'Twitch users API request failed' };
-      console.warn('[generateTwitch] DROPPED: ' + name + ' — Twitch users API timeout/error');
-      done++;check();
-    }; xU.send();
-  });
-  function check(){
-    if(done>=streamers.length){
-      if (droppedStreamers.length > 0) {
-        var dropMsg = 'TWITCH — Dropped ' + droppedStreamers.length + ' streamers: ' +
-          droppedStreamers.map(function(d){ return d.name + ' (' + d.reason + ')'; }).join(', ');
+  setGeneratingState('twitch-gen-status', 'STREAMERS — Fetching ' + clipsPerStreamer + ' clip(s) per creator...');
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/streamers/clips?' + buildStreamerClipsQuery(streamers, clipsPerStreamer), true);
+  xhr.timeout = 120000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText || '{}');
+      if (!d.ok) throw new Error(d.error || 'fetch failed');
+      var built = streamerFetchResultsToItems(d.streamers || [], streamers, clipsPerStreamer, streamerNotes);
+      if (built.droppedStreamers.length) {
+        var dropMsg = 'Dropped ' + built.droppedStreamers.length + ': ' +
+          built.droppedStreamers.map(function(x){ return x.name + ' (' + x.reason + ')'; }).join(', ');
         console.warn('[generateTwitch] ' + dropMsg);
         setGeneratingState('twitch-gen-status', dropMsg);
       }
-      g('script-type-label').textContent = 'TWITCH — Resolving clip URLs...';
-      // Sort items back into configured streamer order (async fetches complete randomly)
-      items.sort(function(a, b) {
-        var ai = streamers.indexOf((a.streamer||'').toLowerCase());
-        var bi = streamers.indexOf((b.streamer||'').toLowerCase());
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-      });
-      // Flatten all clips for URL resolution — propagate streamer name onto each clip
-      var allClips = [];
-      items.forEach(function(item) {
-        (item.clips||[]).forEach(function(clip){
-          clip.streamer = item.streamer || '';      // propagate streamer name
-          clip.displayName = item.displayName || item.streamer || '';
-          allClips.push(clip);
-        });
-      });
-      resolveTwitchClipUrls(allClips, function() {
-        // Store ordered clip URLs for parseSegments — in streamer order, primary clips first
-        if (!CURRENT_META.clipMp4Urls) CURRENT_META.clipMp4Urls = {};
-        CURRENT_META.orderedClipUrls = [];
-        // Build per-streamer clip lookup for debugging
-        CURRENT_META.clipsByStreamer = {};
-        allClips.forEach(function(clip) {
-          if (clip.mp4Url) CURRENT_META.clipMp4Urls[clip.url] = clip.mp4Url;
-          var entry = {
-            url:         clip.mp4Url || clip.url || '',
-            pageUrl:     clip.url || '',
-            streamer:    clip.streamer || '',
-            displayName: clip.displayName || '',
-            title:       clip.title || '',
-            isBackup:    clip.isBackup || false
-          };
-          CURRENT_META.orderedClipUrls.push(entry);
-          // Also index by streamer for easy lookup
-          var sKey = (clip.streamer||'unknown').toLowerCase();
-          if (!CURRENT_META.clipsByStreamer[sKey]) CURRENT_META.clipsByStreamer[sKey] = [];
-          CURRENT_META.clipsByStreamer[sKey].push(entry);
-        });
-        console.log('[generateTwitch] Stored ' + CURRENT_META.orderedClipUrls.length + ' clip URLs for assembly');
-        console.log('[generateTwitch] Clips by streamer:', Object.keys(CURRENT_META.clipsByStreamer).map(function(k){ return k + ':' + CURRENT_META.clipsByStreamer[k].length; }).join(', '));
-        // Lock used clips BEFORE sending to server — prevents re-use on next run
-        var primaryClipUrls = [];
-        items.forEach(function(item) {
-          (item.clips || []).forEach(function(clip) {
-            if (!clip.isBackup && clip.url) primaryClipUrls.push(clip.url);
-          });
-        });
-        markClipsUsed(primaryClipUrls);
-        if (!items.length) {
-          g('twitch-gen-status').innerHTML = '❌ No streamers returned valid clips — check Twitch API token or streamer names';
-          unlockGenerateButtons();
-          return;
-        }
-        g('script-type-label').textContent = 'TWITCH — Gemini + Claude writing full script...';
+      finalizeStreamerClipItems(built.items, streamers, 'twitch-gen-status', function(items) {
+        if (g('script-type-label')) g('script-type-label').textContent = 'STREAMERS VOD — Gemini + Claude writing full script...';
         callFullScriptServer('twitch', items, 'twitch-gen-status', null);
       });
+    } catch (e) {
+      setGeneratingState('twitch-gen-status', 'Fetch failed: ' + e.message);
+      unlockGenerateButtons();
     }
-  }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    setGeneratingState('twitch-gen-status', 'Fetch failed — is localhost:3000 running?');
+    unlockGenerateButtons();
+  };
+  xhr.send();
 }
 
 var HEYGEN_CHAR_LIMIT = 1400;
@@ -12745,6 +12750,7 @@ async function liveGridRefresh() {
     const r = await fetch(LG_BASE + '/live-grid/status');
     _lgStatus = await r.json();
   } catch (e) { _lgStatus = null; }
+  if (!(_lgStatus && _lgStatus.running)) await liveGridLoadListing();
   liveGridRender();
 }
 
@@ -12949,16 +12955,71 @@ function liveGridRehearsalToggle() {
   if (priv) priv.disabled = !!lo;
 }
 
+async function liveGridLoadListing() {
+  const input = document.getElementById('lg-youtube-listing-id');
+  const hint = document.getElementById('lg-youtube-listing-hint');
+  if (!input) return;
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/youtube-listing');
+    const d = await r.json();
+    const listing = d.listing || {};
+    if (listing.broadcastId) input.value = listing.broadcastId;
+    if (hint) {
+      hint.textContent = listing.stale
+        ? `Listing ${listing.broadcastId} is closed — create a new one in Studio, paste id, Save, then GO LIVE.`
+        : listing.broadcastId
+          ? `Saved: ${listing.watchUrl || listing.broadcastId}`
+          : 'Paste Studio listing id, Save (or just GO LIVE) — server writes .env for you.';
+      hint.style.color = listing.stale ? '#e88' : 'rgba(255,255,255,0.4)';
+    }
+  } catch (_) {}
+}
+
+async function liveGridSaveListing() {
+  const input = document.getElementById('lg-youtube-listing-id');
+  const hint = document.getElementById('lg-youtube-listing-hint');
+  if (!input) return false;
+  const broadcastId = (input.value || '').trim();
+  if (!broadcastId) return true;
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/youtube-listing', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ broadcastId }),
+    });
+    const d = await r.json();
+    if (!d.ok) {
+      alert('Save failed: ' + (d.error || 'unknown'));
+      return false;
+    }
+    if (hint) {
+      hint.textContent = `Saved: ${d.listing?.watchUrl || d.broadcastId}`;
+      hint.style.color = 'rgba(46,204,113,0.9)';
+    }
+    return true;
+  } catch (e) {
+    alert('Save failed: ' + e.message);
+    return false;
+  }
+}
+
 async function liveGridStart() {
   const localOnly = document.getElementById('lg-local-only')?.checked;
   const privacy = document.getElementById('lg-privacy').value;
   const programMode = document.getElementById('lg-seo-mode')?.value || 'grid';
   const modeLabel = localOnly ? 'LOCAL HLS ONLY (no YouTube)' : privacy.toUpperCase();
-  if (!confirm(`Start the Live Grid broadcast (${programMode.replace('_', ' ')}, ${modeLabel})?\n\n${localOnly ? 'Watch: /broadcast/local-watch' : privacy === 'private' ? 'Private YouTube — only your channel account sees it.' : ''}`)) return;
+  if (!confirm(`Start the Live Grid broadcast (${programMode.replace('_', ' ')}, ${modeLabel})?\n\n${localOnly ? 'Watch: /broadcast/local-watch' : privacy === 'private' ? 'Private YouTube now — goes PUBLIC at 6:00 PM ET automatically.' : ''}`)) return;
   const btn = document.getElementById('lg-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
-  const body = { privacyStatus: privacy, programMode: programMode === 'auto' ? 'grid' : programMode };
+  const body = { privacyStatus: privacy, programMode: programMode === 'auto' ? 'grid' : programMode, usePrepared: false };
   if (localOnly) body.localOnly = true;
+  else if (privacy === 'private') body.goPublicAt = '18:00';
+  const listingOverride = (document.getElementById('lg-youtube-listing-id')?.value || '').trim();
+  if (listingOverride) {
+    body.broadcastId = listingOverride;
+    body.createListing = false;
+    delete body.goPublicAt;
+  }
   const headline = document.getElementById('bc-headline')?.value?.trim();
   const eventTitle = document.getElementById('bc-event-title')?.value?.trim();
   if (headline) body.headline = headline;

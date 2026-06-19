@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-20 (CPD-1053) — C0 streamer pillar: multi-platform clip fetch (`/streamers/clips`), unified `/clip-url`, `/streamers/vods`, `generateTwitch()` off Helix-only path; Lacy→Kick; Confluence HOW page 35291137.
 **Last Updated:** 2026-06-19 (CPD-1049) — Serena onboarded for cwn-c0: project.yml committed, memories (core/pipeline/conventions), serena-pr-review rule uses activate_project(cwn-c0).
 **Last Updated:** 2026-06-19 (CPD-1049) — Aider backlog: env sync (219 stubs), route audit doc, clip_comp/job_spec tests, qa legacy note, C0 policy boundary table.
 **Last Updated:** 2026-06-19 (CPD-1049) — Aider callouts: skip Gate 3b legacy reburn on clip comps, filterFfmpegPath shared for chrome overlay, pm2 false-positive tuning in local review script, session rule fix-aider-first.

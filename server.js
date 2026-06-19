@@ -6740,6 +6740,37 @@ app.get('/streamers/clips', async (req, res) => {
   }
 });
 
+app.get('/streamers/vods', async (req, res) => {
+  const streamersParam = (req.query.streamers || '').trim();
+  if (!streamersParam) return res.status(400).json({ ok: false, error: 'streamers query param required' });
+
+  const streamers = streamersParam.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const platforms = (req.query.platforms || 'twitch,kick,youtube')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const limit = Math.max(1, Math.min(10, parseInt(req.query.limit, 10) || 5));
+
+  try {
+    const results = await streamerPicker.fetchStreamerPickerVods({ streamers, platforms, limit });
+    res.json({ ok: true, streamers: results, limit, platforms });
+  } catch (err) {
+    console.error('[streamers/vods] Error:', err.message);
+    res.status(500).json({ ok: false, error: err.message, streamers: [] });
+  }
+});
+
+// ── POST /clip-url — unified Twitch/Kick/YouTube clip resolve (CPD-1053) ─────
+app.post('/clip-url', async (req, res) => {
+  const { url, slug, platform } = req.body || {};
+  if (!url && !slug) return res.status(400).json({ ok: false, error: 'Provide url or slug' });
+  try {
+    const result = await streamerPicker.resolveClipUrl({ url, slug, platform }, { twitchClient });
+    res.json(result);
+  } catch (err) {
+    console.warn(`[clip-url] Failed: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message, helixError: err.helixError || null });
+  }
+});
+
 // ── Creator registry (CPD-1027) — multi-platform streamer lookup + follow sync ─
 const creatorRegistry = require('./lib/creator_registry');
 const creatorSync = require('./lib/creator_registry/sync');
@@ -10324,9 +10355,10 @@ const server = app.listen(PORT, async () => {
   startMonitoring(); // Start pipeline event monitoring
 
   try {
-    const { seedFromStreamerSources } = require('./lib/creator_registry');
+    const { seedFromStreamerSources, syncPlatformsFromConfig } = require('./lib/creator_registry');
     const { seeded } = seedFromStreamerSources();
     if (seeded) console.log(`[creator_registry] Seeded ${seeded} creators from streamerSources.json`);
+    syncPlatformsFromConfig();
   } catch (e) {
     console.warn('[creator_registry] seed skipped:', e.message);
   }
