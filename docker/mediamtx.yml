@@ -1,0 +1,23 @@
+# MediaMTX — Live Grid quadrant paths (CPD-1040)
+# Feeders publish SRT: srt://127.0.0.1:8890?streamid=publish:quadN
+# Compositor reads RTSP: rtsp://127.0.0.1:8554/quadN
+
+logLevel: warn
+readTimeout: 30s
+writeTimeout: 30s
+
+api: no
+
+rtsp: yes
+rtspAddress: :8554
+rtspTransports: [tcp]
+
+srt: yes
+srtAddress: :8890
+
+paths:
+  quad1:
+  quad2:
+  quad3:
+  quad4:
+  grid:

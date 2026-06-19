@@ -13,15 +13,17 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env'), override: t
 const express = require('express');
 const { registerLiveBroadcastRoutes } = require('../lib/broadcast/live_routes');
 
-const PORT = Number(process.env.LIVE_SIDECAR_PORT || 3001);
+const PORT = Number(process.env.PORT || process.env.LIVE_SIDECAR_PORT || 3001);
+const HOST = process.env.LIVE_SIDECAR_BIND
+  || (process.env.RENDER ? '0.0.0.0' : '127.0.0.1');
 const liveState = { grid: null, tv: null };
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 registerLiveBroadcastRoutes(app, liveState);
 
-const server = app.listen(PORT, '127.0.0.1', () => {
-  console.log(`[broadcast-sidecar] listening on http://127.0.0.1:${PORT} (pid ${process.pid})`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`[broadcast-sidecar] listening on http://${HOST}:${PORT} (pid ${process.pid})`);
   console.log('[broadcast-sidecar] ClipzWorld TV + Live Grid ffmpeg live here — safe to restart auraflux');
 });
 

@@ -1,0 +1,30 @@
+{
+  "name": "render-broadcast-staging",
+  "version": "2026-06-19",
+  "description": "Linux broadcast worker profile — libx264, copy relays, middleware off until C0 sync lands in cwn-production.",
+  "env": {
+    "LIVE_GRID_ENCODER": "libx264",
+    "LIVE_GRID_RELAY_TRANSCODE": "off",
+    "LIVE_GRID_UDP_RELAY": "on",
+    "LIVE_GRID_TWITCH_QUALITY": "720p60,720p,best",
+    "LIVE_GRID_OUTPUT_MIDDLEWARE": "off",
+    "LIVE_GRID_STAGED_SWAP": "off",
+    "LIVE_GRID_LOCAL_HLS": "off",
+    "LIVE_GRID_AUTOTUNE": "off",
+    "LIVE_SIDECAR_BIND": "0.0.0.0",
+    "FFMPEG_PATH": "ffmpeg"
+  },
+  "startPayload": {
+    "privacyStatus": "private",
+    "freshListing": true,
+    "operatorMode": true,
+    "programMode": "grid"
+  },
+  "soakChecklist": [
+    "Render deploy auraflux-broadcast-staging from staging branch",
+    "Set Doppler secrets on broadcast service (Twitch, YouTube OAuth, RTMP)",
+    "curl https://<broadcast-staging>/live-broadcast/health → ok: true",
+    "POST /live-grid/start with private listing — 30 min compositor soak",
+    "Enable middleware in follow-up PR after C0 live_grid sync"
+  ]
+}
