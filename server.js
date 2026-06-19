@@ -4117,6 +4117,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
   delete card.driveUrl;
   delete card.publishCopy;
   delete card.publishPrep;
+  delete card.clipHookTitles;
   delete card.gate5;
   delete card._gate5Done;
   delete card._gate5Running;
@@ -4134,8 +4135,10 @@ app.post('/job/:id/reassemble', async (req, res) => {
   // ── Fire /assemble (internal axios call so all middleware runs normally) ───
   const port = process.env.PORT || 3000;
   const { buildClipCompDesignSpec, resolveClipCompPublishContentType, buildClipCompDeliverySpec, buildClipCompPublishOrder } = require('./lib/clip_comp');
+  const { generateClipCompHooks, buildHookScript } = require('./lib/clip_comp_hooks');
   let reassembleDesignSpec = card.designSpec || null;
   let reassembleFullScript = card.script?.raw || card.script || null;
+  let reassembleClipHookTitles = null;
   if (card.clipsOnly) {
     reassembleDesignSpec = buildClipCompDesignSpec({
       clipCount: orderedClips.length || segmentData.length,
@@ -4152,9 +4155,20 @@ app.post('/job/:id/reassemble', async (req, res) => {
     };
     card.order = { ...(card.order || {}), publish: { ...(card.order?.publish || {}), ...buildClipCompPublishOrder() } };
     card.publishPrivacy = 'private';
-    reassembleFullScript = (orderedClips.length ? orderedClips : segmentData)
-      .map((c, i) => `CLIP ${i + 1} (${c.displayName || c.streamer || 'clip'}): ${c.title || 'untitled clip'}`)
-      .join('\n');
+    const hookItems = (card.items || orderedClips).map(c => ({
+      title: c.title || '',
+      displayName: c.displayName || c.streamer || '',
+      streamer: c.streamer || c.displayName || '',
+      thumbnailUrl: c.thumbnailUrl || '',
+      game: c.game || '',
+      viewCount: c.views || c.viewCount || null,
+    }));
+    console.log(`[reassemble] ${jobId}: regenerating Gemini hooks for ${orderedClips.length} clips...`);
+    reassembleClipHookTitles = await generateClipCompHooks(orderedClips, hookItems, {
+      log: (m) => console.log(`[reassemble] ${jobId}${m}`),
+    });
+    card.clipHookTitles = reassembleClipHookTitles;
+    reassembleFullScript = buildHookScript(orderedClips.length ? orderedClips : segmentData, reassembleClipHookTitles);
   }
   saveJobCard(jobId, card);
 
@@ -4188,6 +4202,8 @@ app.post('/job/:id/reassemble', async (req, res) => {
       clipTitle: c.title || '',
     })) || [],
     orderedClipUrls: orderedClips,
+    clipHookTitles: reassembleClipHookTitles || card.clipHookTitles || null,
+    regenerateClipHooks: false,
     expectedClips: orderedClips.length || segmentData.filter(s => s.type === 'source_clip').length,
     designSpec:   reassembleDesignSpec,
     nbaItems:     card.nbaItems    || [],
@@ -4312,6 +4328,9 @@ app.post('/generate-clip-comp', async (req, res) => {
     streamer:    c.streamer || '',
     displayName: c.displayName || c.streamer || '',
     title:       c.title || '',
+    thumbnailUrl: c.thumbnailUrl || '',
+    game:        c.game || '',
+    views:       c.views || c.viewCount || null,
     orientation: c.orientation || 'landscape',
     pillarboxFilter: c.pillarboxFilter != null ? c.pillarboxFilter : null
   }));
@@ -4396,8 +4415,28 @@ app.post('/generate-clip-comp', async (req, res) => {
 
   setImmediate(async () => {
     try {
+      const { generateClipCompHooks, buildHookScript } = require('./lib/clip_comp_hooks');
+      const hookItems = clips.map(c => ({
+        title: c.title || '',
+        headline: c.title || '',
+        displayName: c.displayName || c.streamer || '',
+        streamer: c.streamer || c.displayName || '',
+        clipTitle: c.title || '',
+        thumbnailUrl: c.thumbnailUrl || '',
+        game: c.game || '',
+        viewCount: c.views || c.viewCount || null,
+      }));
+      console.log(`[clip-comp] ${jobId}: generating Gemini hooks for ${orderedClipUrls.length} clips...`);
+      const clipHookTitles = await generateClipCompHooks(orderedClipUrls, hookItems, {
+        log: (m) => console.log(`[clip-comp] ${jobId}${m}`),
+      });
+      card.clipHookTitles = clipHookTitles;
+      payload.clipHookTitles = clipHookTitles;
+      payload.fullScript = buildHookScript(orderedClipUrls, clipHookTitles);
+      payload.regenerateClipHooks = false;
+      saveJobCard(jobId, card);
       await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
-      console.log(`[clip-comp] ${jobId}: /assemble fired (${segmentData.length} clips)`);
+      console.log(`[clip-comp] ${jobId}: /assemble fired (${segmentData.length} clips, hooks: ${clipHookTitles.filter(Boolean).length})`);
     } catch (err) {
       console.error(`[clip-comp] ${jobId}: /assemble failed — ${err.message}`);
     }
