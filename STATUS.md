@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-19 (CPD-1043) — env_persist hotfix for Render middleware start path.
+**Last Updated:** 2026-06-19 (CPD-1043) — relays.js sync (waitForRunning) for Render middleware start.
 **Last Updated:** 2026-06-19 (CPD-1041) — Broadcast R0 executing: Dockerfile.broadcast + auraflux-broadcast-staging deploy for 7pm grid.
 **Last Updated:** 2026-06-16 (CPD-1037) — Assembly Twitch clips via Helix only (no GQL); deploy + re-test staging job.
 **Last Updated:** 2026-06-15 (CPD-553) — GITHUB_API_TOKEN renewed in Doppler prd + Render sync; renew script auto-syncs Doppler→Render.
