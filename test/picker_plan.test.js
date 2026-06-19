@@ -34,6 +34,11 @@ describe('streamer picker config', () => {
     expect(s.platform).toBe('kick');
   });
 
+  test('resolveStreamer reads lacy as kick after CPD-1053', () => {
+    const s = resolveStreamer('lacy');
+    expect(s.platform).toBe('kick');
+  });
+
   test('listPlatforms returns enabled platforms', () => {
     const platforms = listPlatforms();
     expect(platforms.some(p => p.id === 'twitch')).toBe(true);
