@@ -81,9 +81,16 @@ describe('live_grid resume_state env fallback', () => {
 });
 
 describe('solo_publishers UDP defaults (CPD-1047)', () => {
-  test('soloUdpInputEnabled follows UDP relay', () => {
+  test('soloUdpInputEnabled defaults off (master owns relay UDP ports)', () => {
     delete process.env.LIVE_GRID_SOLO_UDP_INPUT;
     process.env.LIVE_GRID_UDP_RELAY = 'on';
+    jest.resetModules();
+    const { soloUdpInputEnabled } = require('../lib/live_grid/solo_publishers');
+    expect(soloUdpInputEnabled()).toBe(false);
+  });
+
+  test('soloUdpInputEnabled respects explicit on', () => {
+    process.env.LIVE_GRID_SOLO_UDP_INPUT = 'on';
     jest.resetModules();
     const { soloUdpInputEnabled } = require('../lib/live_grid/solo_publishers');
     expect(soloUdpInputEnabled()).toBe(true);
