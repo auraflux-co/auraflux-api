@@ -18,6 +18,8 @@
 
 ---
 
+**Last Updated:** 2026-06-13 (CPD-1043) — Studio-attach GO LIVE now syncs YouTube privacy (PUBLIC/UNLISTED) via API; privacy badge on dashboard.
+**Last Updated:** 2026-06-13 (CPD-1043) — Slate-lock on blank quadrant remove; dashboard uses /quadrant/N/replace; EPIPE-safe feeder pipes (GO LIVE crash fix).
 **Last Updated:** 2026-06-13 (CPD-1055) — Direct dashboard→Render API (broadcast_api.js + CORS); c0 removed from encode path; static dashboard server on :3002.
 **Last Updated:** 2026-06-13 (CPD-1055) — Dashboard→Render proxy catch-all; read routes on sidecar; sync env from Doppler/cwn-production (not c0).
 **Last Updated:** 2026-06-13 (CPD-1047) — Per-seat YouTube solo streams (Q1–Q4): solo publishers, swap sync, dashboard START SOLO STREAMS, chat lineup announce.
@@ -202,6 +204,8 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(cpd-1043): sync YouTube listing privacy on GO LIVE** — studio-attach path applies PUBLIC/UNLISTED via API; START RTMP re-applies; privacy badge in dashboard. | lib/services/youtube_direct.js, lib/live_grid/manager.js, youtube_sync.js, live_routes.js, cwn_production.html, STATUS.md | — | 2026-06-13 |
+| Cursor | **fix(cpd-1043): GO LIVE remove-to-slate crash** — blank replace locks slate (no auto-pilot backfill); dashboard POST /quadrant/N/replace; EPIPE-safe streamlink→ffmpeg pipes. | lib/live_grid/poller.js, manager.js, feeders.js, cwn_production.html, test/live_grid_poller.test.js, STATUS.md | — | 2026-06-13 |
 | Cursor | **chore(cpd-1047/1055): broadcast closeout** — solo YouTube listings provisioned (Q1–Q4 on Render); full QA 14+19+17 pass; PR #647 merged; broadcast-staging live. | scripts/provision_solo_youtube_listings.js, logs/cpd1055_proxy_qa.json, STATUS.md | — | 2026-06-13 |
 | Cursor | **fix(cpd-1055): broadcast script order + solo profile on Render** — load broadcast-config/broadcast_api before LG_BASE; apply LIVE_GRID_SOLO_* from render profile; delete missed sync_broadcast_proxy_to_c0.sh. | cwn_production.html, lib/live_grid/render_profile.js, scripts/sync_broadcast_proxy_to_c0.sh, STATUS.md | cd3835c1 | 2026-06-13 |
 | Cursor | **fix(cpd-869): YouTube synthetic tag from job metadata** — youtube_direct derives containsSyntheticMedia via publish_synthetic (not hardcoded true); setContainsSyntheticMedia for post-upload correction. | lib/services/youtube_direct.js, STATUS.md | — | 2026-06-13 |

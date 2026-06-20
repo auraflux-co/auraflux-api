@@ -489,6 +489,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         <div class="card-body">
           <div id="lg-watch-row" style="display:none;font-size:11px;margin-bottom:10px;">
             <a id="lg-watch-link" href="#" target="_blank" style="color:#c7af4f;font-weight:700;letter-spacing:1px;">▶ OPEN STREAM ON YOUTUBE</a>
+            <span id="lg-privacy-badge" style="display:none;margin-left:8px;color:#e88;font-weight:700;"></span>
             <span id="lg-uptime" style="color:rgba(255,255,255,0.35);margin-left:8px;"></span>
           </div>
           <div id="lg-quads" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
@@ -9649,6 +9650,17 @@ function liveGridRender() {
   const watchUrl = s && s.broadcast && s.broadcast.watchUrl;
   watchRow.style.display = (running && watchUrl) ? '' : 'none';
   if (watchUrl) document.getElementById('lg-watch-link').href = watchUrl;
+  const privBadge = document.getElementById('lg-privacy-badge');
+  const ytPriv = (s && s.youtube && s.youtube.privacyStatus) || null;
+  if (privBadge) {
+    if (running && ytPriv && ytPriv !== 'public') {
+      privBadge.style.display = '';
+      privBadge.textContent = ytPriv.toUpperCase() + (rtmpHeld ? ' — click START RTMP after Studio dual' : '');
+    } else {
+      privBadge.style.display = 'none';
+      privBadge.textContent = '';
+    }
+  }
   if (running && s.uptimeSec != null) {
     const mins = Math.floor(s.uptimeSec / 60);
     document.getElementById('lg-uptime').textContent = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
