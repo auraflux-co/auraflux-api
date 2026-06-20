@@ -19,16 +19,7 @@ describe('live_grid delivery_qa', () => {
     expect(r.signals).toHaveLength(0);
   });
 
-  test('critical hls_stale suggests restart_restreamer self-heal', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'delivery-qa-'));
-    const previewDir = path.join(tmp, 'preview');
-    fs.mkdirSync(previewDir, { recursive: true });
-    const seg = path.join(previewDir, 'seg0.ts');
-    fs.writeFileSync(seg, 'x');
-    fs.writeFileSync(path.join(previewDir, 'index.m3u8'), '#EXTM3U\nseg0.ts\n');
-    const past = Date.now() - 60_000;
-    fs.utimesSync(seg, past / 1000, past / 1000);
-
+  test('critical hls_stale suggests restart_compositor self-heal', () => {
     jest.doMock('../lib/live_grid/local_preview', () => ({
       hlsPreviewLive: () => false,
       hlsSegmentAgeMs: () => 60_000,
@@ -39,15 +30,55 @@ describe('live_grid delivery_qa', () => {
       running: true,
       middleware: { outputMiddleware: true, restreamer: { running: true, restarts: 0, uptimeSec: 100 } },
       master: { running: true, uptimeSec: 100, restarts: 0 },
-      relays: [{ running: true, restarts: 0 }, { running: true, restarts: 0 }, { running: true, restarts: 0 }, { running: true, restarts: 0 }],
+      relays: [
+        { running: true, restarts: 0 },
+        { running: true, restarts: 0 },
+        { running: true, restarts: 0 },
+        { running: true, restarts: 0 },
+      ],
     });
 
     expect(r.viewerLevel).toBe('degraded');
     expect(r.viewerScore).toBe(55);
     expect(r.signals.some((s) => s.key === 'hls_stale')).toBe(true);
-    expect(r.selfHeal?.actions).toContain('restart_restreamer');
+    expect(r.selfHeal?.actions).toContain('restart_compositor');
+    expect(r.selfHeal?.actions).not.toContain('restart_restreamer');
     expect(r.humanQaRequired).toBe(true);
-    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test('restreamer_down when HLS live suggests restart_restreamer', () => {
+    jest.doMock('../lib/live_grid/local_preview', () => ({
+      hlsPreviewLive: () => true,
+      hlsSegmentAgeMs: () => 1500,
+    }));
+    const { assessDelivery } = require('../lib/live_grid/delivery_qa');
+
+    const r = assessDelivery({
+      running: true,
+      middleware: { outputMiddleware: true, restreamer: { running: false, restarts: 0 } },
+      master: { running: true, uptimeSec: 100, restarts: 0 },
+      relays: [{ running: true }, { running: true }, { running: true }, { running: true }],
+    });
+
+    expect(r.signals.some((s) => s.key === 'restreamer_down')).toBe(true);
+    expect(r.selfHeal?.actions).toContain('restart_restreamer');
+  });
+
+  test('restreamer_down when HLS stale suggests restart_encode_pipeline', () => {
+    jest.doMock('../lib/live_grid/local_preview', () => ({
+      hlsPreviewLive: () => false,
+      hlsSegmentAgeMs: () => 30_000,
+    }));
+    const { assessDelivery } = require('../lib/live_grid/delivery_qa');
+
+    const r = assessDelivery({
+      running: true,
+      middleware: { outputMiddleware: true, restreamer: { running: false, restarts: 0 } },
+      master: { running: true, uptimeSec: 100, restarts: 0 },
+      relays: [{ running: true }, { running: true }, { running: true }, { running: true }],
+    });
+
+    expect(r.selfHeal?.actions).toContain('restart_encode_pipeline');
   });
 
   test('relayChurnScore handles relay array from manager.status', () => {
