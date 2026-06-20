@@ -409,7 +409,7 @@ services:
       - key: LIVE_GRID_X264_PRESET
         value: ultrafast
       - key: LIVE_GRID_OUTPUT_W
-        value: '1080'
+        value: '1920'
       - key: LIVE_GRID_OUTPUT_H
         value: '1080'
       - key: LIVE_GRID_BITRATE_K
@@ -417,6 +417,10 @@ services:
       - key: LIVE_GRID_CELL_FIT
         value: cover
       - key: LIVE_GRID_LOCAL_HLS
+        value: 'off'
+      - key: LIVE_GRID_YOUTUBE_DUAL_STREAM
+        value: 'off'
+      - key: LIVE_GRID_DUAL_BROADCAST
         value: 'off'
       - key: LIVE_GRID_AUTOTUNE
         value: 'on'

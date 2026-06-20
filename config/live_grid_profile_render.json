@@ -19,8 +19,10 @@
     "LIVE_GRID_SWAP_DEBOUNCE_MS": "8000",
     "LIVE_GRID_SWAP_STABLE_MS": "3000",
     "LIVE_GRID_LOCAL_HLS": "off",
+    "LIVE_GRID_YOUTUBE_DUAL_STREAM": "off",
+    "LIVE_GRID_DUAL_BROADCAST": "off",
     "LIVE_GRID_FPS": "30",
-    "LIVE_GRID_OUTPUT_W": "1080",
+    "LIVE_GRID_OUTPUT_W": "1920",
     "LIVE_GRID_OUTPUT_H": "1080",
     "LIVE_GRID_BITRATE_K": "4500",
     "LIVE_GRID_AUTOTUNE": "on",
@@ -42,10 +44,9 @@
     "LIVE_GRID_DELIVERY_HLS_STALE_MS": "8000"
   },
   "notes": [
-    "pro_plus (4 CPU) — libx264 4-quad compositor needs headroom; standard/pro peg at 200% CPU",
-    "GO LIVE probes YouTube CDN aspect via yt-dlp → native square 1080² or landscape 1920×1080",
-    "Direct RTMP only (LOCAL_HLS off) — no tee disk I/O starving YouTube ingest",
-    "AUTOTUNE on — downshift to 720² @ 3500k if load > 1.0/core before viewers see spin",
-    "CELL_FIT=cover — fill quad cells; CBR maxrate/bufsize on RTMP leg"
+    "LIVE_GRID_YOUTUBE_DUAL_STREAM=off — landscape 1920×1080 RTMP; disable Dual stream in YouTube Studio before GO LIVE",
+    "pro_plus (4 CPU) — libx264 4-quad compositor needs headroom",
+    "Direct RTMP only (LOCAL_HLS off); AUTOTUNE downshift to 720² if CPU saturated",
+    "Legacy LIVE_GRID_DUAL_BROADCAST stays off (CPD-1029 uses YouTube native dual, not our ffmpeg 9:16 leg)"
   ]
 }
