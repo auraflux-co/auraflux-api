@@ -46,9 +46,15 @@
     "STREAM_DELIVERY_HEAL_COOLDOWN_SEC": "45",
     "STREAM_DELIVERY_COMPOSITOR_HEAL_COOLDOWN_SEC": "90",
     "LIVE_GRID_POST_SWAP_DELIVERY_CHECK_MS": "12000",
-    "LIVE_GRID_DELIVERY_HLS_STALE_MS": "8000"
+    "LIVE_GRID_DELIVERY_HLS_STALE_MS": "8000",
+    "LIVE_GRID_SOLO_STREAMS": "on",
+    "LIVE_GRID_SOLO_BITRATE_K": "2500",
+    "LIVE_GRID_SOLO_OUTPUT_W": "1920",
+    "LIVE_GRID_SOLO_OUTPUT_H": "1080",
+    "LIVE_GRID_SOLO_CHAT_ANNOUNCE": "on"
   },
   "notes": [
+    "CPD-1047: LIVE_GRID_SOLO_STREAMS=on — four per-seat YouTube solos (Q1–Q4); POST /live-grid/solo-go after main RTMP",
     "CPD-1029: LIVE_GRID_STUDIO_DUAL_FIRST=on holds RTMP until Dual stream → Auto is set in YouTube Studio",
     "LIVE_GRID_BENCH + LIVE_GRID_PLATFORM_BENCH=on — overnight fill when Twitch follows 429",
     "LIVE_GRID_OPERATOR_MODE=off — autopilot fills empty quadrants from bench",

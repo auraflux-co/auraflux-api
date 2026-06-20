@@ -914,6 +914,18 @@
     liveGridRefresh();
   };
 
+  window.liveGridSoloGo = async function () {
+    const btn = g('lg-solo-go-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'STARTING SOLOS…'; }
+    try {
+      const r = await fetch(BC_BASE + '/live-grid/solo-go', { method: 'POST' });
+      const d = await r.json();
+      if (!d.ok && !d.started) alert('Solo streams failed: ' + (d.error || 'unknown'));
+    } catch (e) { alert('Solo streams failed: ' + e.message); }
+    if (btn) { btn.disabled = false; btn.textContent = 'START SOLO STREAMS'; }
+    liveGridRefresh();
+  };
+
   window.broadcastRefreshDiscovery = broadcastRefreshDiscovery;
   window.broadcastRefreshAnalytics = broadcastRefreshAnalytics;
 

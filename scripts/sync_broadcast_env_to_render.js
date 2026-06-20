@@ -95,6 +95,9 @@ const env = {
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   LIVE_GRID_OPERATOR_MODE: process.env.LIVE_GRID_OPERATOR_MODE || 'off',
   LIVE_GRID_ALLOW_NEW_STREAM: process.env.LIVE_GRID_ALLOW_NEW_STREAM || 'off',
+  ...Object.fromEntries(
+    Object.entries(process.env).filter(([k]) => k.startsWith('LIVE_GRID_SOLO_')),
+  ),
 };
 
 const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
