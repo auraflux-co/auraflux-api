@@ -38,6 +38,8 @@ describe('live_grid grid_restreamer', () => {
     expect(local).toContain('-re');
     expect(local.indexOf('-re')).toBeLessThan(local.indexOf('-i'));
     expect(local[local.indexOf('-i') + 1]).toBe('/tmp/preview/index.m3u8');
+    expect(local).toContain('-c:a');
+    expect(local[local.indexOf('-c:a') + 1]).toBe('aac');
 
     const remote = buildRestreamerArgs('http://127.0.0.1/preview/index.m3u8', 'rtmp://a/live2/key');
     expect(remote).toContain('-re');

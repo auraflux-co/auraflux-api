@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-20 (CPD-1043) — Fix restreamer -re before -i (RTMP Invalid argument); nightly 720p profile live on Render.
+**Last Updated:** 2026-06-20 (CPD-1043) — Fix deep/choppy audio: disable AAC copy on UDP+middleware; restreamer re-encodes 48kHz AAC.
 **Last Updated:** 2026-06-19 (CPD-1043) — Render delivery QA: viewer signals on /live-grid/delivery, sidecar self-heal (restreamer), HLS staleness detection.
 **Last Updated:** 2026-06-19 (CPD-1043) — Restreamer: drop -re on local HLS (fixes YouTube cutouts when encode lags); x264 superfast on Render.
 **Last Updated:** 2026-06-19 (CPD-1041) — Broadcast R0 executing: Dockerfile.broadcast + auraflux-broadcast-staging deploy for 7pm grid.
