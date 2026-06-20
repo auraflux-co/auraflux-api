@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — full SEO refresh (main + solos) shipping to broadcast-staging.
+**Deploy Mode:** testing — hold all deploys until live streams end. SEO/discovery fix shipped once to broadcast-staging 2026-06-20.
 
-**Last Updated:** 2026-06-20 (CPD-1047) — Fix assignment logins for URL/event Q1; sync titles from feeders on swap.
+**Last Updated:** 2026-06-20 (CPD-1047) — Stop solo orphan broadcast creation; auto-discover SEO by ingest stream key; refresh-all-seo without Studio IDs.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
