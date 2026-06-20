@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** testing — live grid stability: main-first, solos after YouTube live, UDP 720p solos, /app/tmp resume.
+**Deploy Mode:** testing — main LIVE; YouTube ingest auto-heal coded (deploy when offline).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
