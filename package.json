@@ -1,6 +1,6 @@
 {
   "name": "cwn-production",
-  "version": "1.0.228",
+  "version": "1.0.229",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -47,7 +47,8 @@
     "manual:ingest": "node scripts/manual_ingest.cjs",
     "manual:ingest:latest": "node scripts/manual_ingest.cjs --latest",
     "prompt-replay:offline": "node scripts/prompt_replay_offline.cjs",
-    "heygen:delete-all": "node scripts/heygen_delete_all.cjs --confirm"
+    "heygen:delete-all": "node scripts/heygen_delete_all.cjs --confirm",
+    "sync:solo-listings": "node scripts/sync_solo_listings.js"
   },
   "keywords": [
     "ai",

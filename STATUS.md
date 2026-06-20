@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** testing — hold all deploys until live streams end. SEO/discovery fix shipped once to broadcast-staging 2026-06-20.
+**Deploy Mode:** dev — backup YouTube API env synced to broadcast-staging 2026-06-20 (quota failover deploy).
 
-**Last Updated:** 2026-06-20 (CPD-1047) — Stop solo orphan broadcast creation; auto-discover SEO by ingest stream key; refresh-all-seo without Studio IDs.
+**Last Updated:** 2026-06-20 (CPD-1047) — YouTube backup GCP OAuth in Doppler; quota failover on 403; broadcast-staging env synced.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
