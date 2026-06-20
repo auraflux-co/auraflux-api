@@ -164,6 +164,7 @@ video_generation_custom_*.csv
 !app/public/brand/*.jpg
 !app/public/*.png
 !app/public/*.ico
+!assets/live_grid/on_air_badge.png
 
 # Debug ingest logs (per-session; do not commit)
 .cursor/debug-*.log

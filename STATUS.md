@@ -16,6 +16,7 @@
 
 ---
 
+**Last Updated:** 2026-06-20 (CPD-1043) — On-air avatar/badge overlay asset + remove gold row gutter; deploy broadcast-staging.
 **Last Updated:** 2026-06-20 (CPD-1043) — Fix deep/choppy audio: disable AAC copy on UDP+middleware; restreamer re-encodes 48kHz AAC.
 **Last Updated:** 2026-06-19 (CPD-1043) — Render delivery QA: viewer signals on /live-grid/delivery, sidecar self-heal (restreamer), HLS staleness detection.
 **Last Updated:** 2026-06-19 (CPD-1043) — Restreamer: drop -re on local HLS (fixes YouTube cutouts when encode lags); x264 superfast on Render.
