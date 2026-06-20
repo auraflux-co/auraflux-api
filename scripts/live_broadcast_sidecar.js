@@ -12,7 +12,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env'), override: true });
 
 const express = require('express');
-const { registerLiveBroadcastRoutes } = require('../lib/broadcast/live_routes');
+const { registerLiveBroadcastRoutes, autoResumeLiveGrid } = require('../lib/broadcast/live_routes');
 
 const PORT = Number(process.env.PORT || process.env.LIVE_SIDECAR_PORT || 3001);
 const HOST = process.env.LIVE_SIDECAR_BIND
@@ -26,6 +26,14 @@ registerLiveBroadcastRoutes(app, liveState);
 const server = app.listen(PORT, HOST, () => {
   console.log(`[broadcast-sidecar] listening on http://${HOST}:${PORT} (pid ${process.pid})`);
   console.log('[broadcast-sidecar] ClipzWorld TV + Live Grid ffmpeg live here — safe to restart auraflux');
+  autoResumeLiveGrid(liveState)
+    .then((r) => {
+      if (r.resumed) console.log(`[broadcast-sidecar] auto-resume ok → ${r.watchUrl || 'RTMP'}`);
+      else if (r.reason !== 'no_state' && r.reason !== 'disabled') {
+        console.log(`[broadcast-sidecar] auto-resume skipped: ${r.reason}${r.error ? ` (${r.error})` : ''}`);
+      }
+    })
+    .catch((e) => console.warn(`[broadcast-sidecar] auto-resume error: ${e.message}`));
 });
 
 async function shutdown() {
