@@ -140,6 +140,15 @@ describe('live_grid bench tier (CPD-951)', () => {
     expect(assignments).toEqual([null, 'b', 'c', 'd']);
     expect(swaps).toEqual([{ quadrant: 0, out: 'a', in: null, reason: 'offline' }]);
   });
+
+  test('slateLocked quadrants stay empty — auto pilot does not backfill', () => {
+    const current = ['a', 'b', 'c', 'd'];
+    const live = { a: 100, b: 90, c: 80, e: 500, f: 400 };
+    const slateLocked = [false, false, false, true];
+    const { assignments, swaps } = computeAssignments(current, live, {}, { slateLocked });
+    expect(assignments).toEqual(['a', 'b', 'c', null]);
+    expect(swaps).toEqual([{ quadrant: 3, out: 'd', in: null, reason: 'offline' }]);
+  });
 });
 
 describe('live_grid mergeBench (CPD-955 live follows sync)', () => {

@@ -9881,15 +9881,15 @@ async function liveGridRemoveFromGrid(login) {
   msg += 'Replacement twitch login (blank = slate until you pick):';
   const rep = prompt(msg);
   if (rep === null) return;
+  if (!qNum) { alert('Could not find quadrant for ' + login); return; }
+  const next = String(rep || '').trim().toLowerCase();
   try {
-    const r = await fetch(LG_BASE + '/live-grid/roster', {
+    const r = await fetch(LG_BASE + `/live-grid/quadrant/${qNum}/replace`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ remove: [login] }),
+      body: JSON.stringify({ remove: login, replace: next }),
     });
     const d = await r.json();
     if (!d.ok) { alert('Remove failed: ' + (d.error || 'unknown')); return; }
-    const next = String(rep || '').trim().toLowerCase();
-    if (next && qNum) await liveGridAssignChannel(qNum, next);
   } catch (e) { alert('Remove failed: ' + e.message); }
   setTimeout(liveGridRefresh, 1500);
 }

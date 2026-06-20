@@ -1,5 +1,7 @@
 # CWN Production — Status & Task Tracker
 
+**Deploy Mode:** testing — broadcast GO LIVE slate-lock + EPIPE fixes on staging; do not promote prod until retest passes.
+
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
 **HOW (Confluence — source of truth):** [Server Split — C0/C1+ Boundary](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/6881341)  
