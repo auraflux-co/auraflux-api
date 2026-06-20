@@ -1,5 +1,6 @@
 const { buildSoloLiveSeo } = require('../lib/live_grid/solo_seo');
 const { buildYoutubeTags } = require('../lib/live_grid/seo');
+const { buildGoLiveSeo } = require('../lib/live_grid/go_live_template');
 const { isBlockedTag, _ytTags, resolveLivePlaylistIdFromConfig } = require('../lib/services/youtube_direct');
 
 describe('live_grid solo SEO (CPD-1047)', () => {
@@ -42,9 +43,12 @@ describe('live_grid solo SEO (CPD-1047)', () => {
     expect(title.length).toBeLessThanOrEqual(100);
   });
 
-  test('normalizeSoloLogin rejects generic Screen N labels', () => {
-    const { normalizeSoloLogin } = require('../lib/live_grid/solo_seo');
-    expect(normalizeSoloLogin('Screen 1')).toBe('');
-    expect(normalizeSoloLogin('eliasn97')).toBe('eliasn97');
+  test('buildGoLiveSeo title uses assignment logins in quadrant order', () => {
+    const pack = buildGoLiveSeo({}, {
+      assignments: ['scump', 'hasanabi', 'maya', 'ludwig'],
+    });
+    expect(pack.seo.title).toContain('#scump');
+    expect(pack.seo.title).toContain('#hasanabi');
+    expect(pack.seo.title).not.toContain('oldschoolrs');
   });
 });

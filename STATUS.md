@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — solo title fix shipping to broadcast-staging.
+**Deploy Mode:** dev — full SEO refresh (main + solos) shipping to broadcast-staging.
 
-**Deploy Mode (prev):** testing — broadcast-staging live on `dbdc9915` (main + 4 solos).
+**Last Updated:** 2026-06-20 (CPD-1047) — Feeder-based main+solo SEO; POST /live-grid/refresh-all-seo.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
