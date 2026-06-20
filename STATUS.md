@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — full SEO refresh (main + solos) shipping to broadcast-staging.
 
-**Last Updated:** 2026-06-20 (CPD-1047) — Feeder-based main+solo SEO; POST /live-grid/refresh-all-seo.
+**Last Updated:** 2026-06-20 (CPD-1047) — Mirror live title to videos API so watch page updates stick.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
