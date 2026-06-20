@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — full SEO refresh (main + solos) shipping to broadcast-staging.
 
-**Last Updated:** 2026-06-20 (CPD-1047) — Mirror live title to videos API so watch page updates stick.
+**Last Updated:** 2026-06-20 (CPD-1047) — Fix assignment logins for URL/event Q1; sync titles from feeders on swap.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
