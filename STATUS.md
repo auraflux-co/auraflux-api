@@ -16,6 +16,7 @@
 
 ---
 
+**Last Updated:** 2026-06-13 (CPD-1055) — Dashboard→Render proxy catch-all; read routes on sidecar; sync env from Doppler/cwn-production (not c0).
 **Last Updated:** 2026-06-13 (CPD-1047) — Per-seat YouTube solo streams (Q1–Q4): solo publishers, swap sync, dashboard START SOLO STREAMS, chat lineup announce.
 **Last Updated:** 2026-06-20 (CPD-1043) — Overnight bench fail-open, dashboard GO LIVE fixes, studio-first RTMP + START RTMP button.
 **Last Updated:** 2026-06-20 (CPD-1043) — Render broadcast fix pack: pro_plus CPU, native YouTube aspect probe, direct RTMP CBR, autotune + delivery QA.
@@ -198,7 +199,8 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **feat(cpd-1047): per-seat YouTube solo streams** — four RTMP publishers (Q1–Q4), swap sync, solo-go route, dashboard UI, chat lineup announce; Render profile LIVE_GRID_SOLO_STREAMS=on. | lib/live_grid/solo_*.js, manager.js, live_routes.js, cwn_production.html, config/live_grid_profile_render.json, test/live_grid_solo_streams.test.js, STATUS.md | pending | 2026-06-13 |
+| Cursor | **feat(cpd-1055): dashboard→Render proxy QA + decouple c0 env** — catch-all sidecar proxy; grid read routes on sidecar; sync from Doppler/cwn-production; QA script + Confluence HOW update. | lib/broadcast/sidecar_client.js, grid_read_routes.js, live_routes.js, server.js, scripts/sync_broadcast_env_to_render.js, scripts/broadcast_dashboard_proxy_qa.js, test/sidecar_client.test.js, STATUS.md | pending | 2026-06-13 |
+| Cursor | **feat(cpd-1047): per-seat YouTube solo streams** — four RTMP publishers (Q1–Q4), swap sync, solo-go route, dashboard UI, chat lineup announce; Render profile LIVE_GRID_SOLO_STREAMS=on. | lib/live_grid/solo_*.js, manager.js, live_routes.js, cwn_production.html, config/live_grid_profile_render.json, test/live_grid_solo_streams.test.js, STATUS.md | 74c1be0f | 2026-06-13 |
 | Cursor | **fix(cpd-1043): Render 1080p encode pilot** — 1920×1080 @ 6000k veryfast, autotune off, direct RTMP; sync script hardcodes Render encode (ignore c0 .env). | config/live_grid_profile_render.json, scripts/sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-20 |
 | Cursor | **fix(cpd-1043): auto pilot + sidecar auto-resume** — skip template locks when operatorMode off; release offline locks on auto pilot; sidecar auto-resumes grid after deploy; LIVE_GRID_OPERATOR_MODE=off on Render. | lib/live_grid/go_live_template.js, lib/live_grid/manager.js, scripts/live_broadcast_sidecar.js, scripts/sync_broadcast_env_to_render.js, STATUS.md | 73ab1939 | 2026-06-20 |
 | Cursor | **fix(cpd-1043): restreamer local HLS pacing** — remove `-re` on growing playlist (YouTube cutouts with 0 restarts); Render x264 superfast. | lib/live_grid/grid_restreamer.js, lib/live_grid/compositor.js, scripts/sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-19 |

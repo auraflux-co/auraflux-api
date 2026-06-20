@@ -1,6 +1,16 @@
 #!/usr/bin/env node
 'use strict';
-/** Push Live Grid env from c0 + Render profile to broadcast service (CPD-1042 / CPD-1043). */
+/**
+ * Push Live Grid env to auraflux-broadcast-staging on Render (CPD-1042 / CPD-1055).
+ *
+ * Sources (no c0 dependency):
+ *   1. config/live_grid_profile_render.json — encode defaults
+ *   2. process.env — run via `bash scripts/doppler_run.sh node scripts/sync_broadcast_env_to_render.js <service-id>`
+ *      or export secrets from cwn-production/.env locally
+ *
+ * Usage:
+ *   bash scripts/doppler_run.sh node scripts/sync_broadcast_env_to_render.js srv-d8qs41ernols73ej7720
+ */
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -13,14 +23,14 @@ if (!serviceId) {
 
 const apiKey = process.env.RENDER_API_KEY;
 if (!apiKey) {
-  console.error('RENDER_API_KEY required');
+  console.error('RENDER_API_KEY required (cwn-production .env or doppler_run.sh)');
   process.exit(1);
 }
 
-const c0Root = process.env.C0_ROOT || path.join(process.env.HOME, 'cwn-c0');
-require('dotenv').config({ path: path.join(c0Root, '.env') });
+const repoRoot = path.join(__dirname, '..');
+require('dotenv').config({ path: path.join(repoRoot, '.env') });
 
-const profilePath = path.join(__dirname, '..', 'config', 'live_grid_profile_render.json');
+const profilePath = path.join(repoRoot, 'config', 'live_grid_profile_render.json');
 let profileEnv = {};
 try {
   profileEnv = JSON.parse(fs.readFileSync(profilePath, 'utf8')).env || {};
@@ -29,28 +39,13 @@ try {
   console.warn(`[sync] profile missing — using hardcoded fallbacks (${e.message})`);
 }
 
-const tokenPath = path.join(c0Root, 'data', 'youtube_tokens.json');
-let ytRefresh = '';
-if (fs.existsSync(tokenPath)) {
-  try {
-    ytRefresh = JSON.parse(fs.readFileSync(tokenPath, 'utf8')).refresh_token || '';
-  } catch { /* ignore */ }
-}
+const ytRefresh = process.env.YOUTUBE_REFRESH_TOKEN || '';
 if (!ytRefresh) {
-  ytRefresh = process.env.YOUTUBE_REFRESH_TOKEN || '';
-}
-if (!ytRefresh) {
-  console.error('No YouTube refresh token in env or youtube_tokens.json');
+  console.error('YOUTUBE_REFRESH_TOKEN required — use doppler_run.sh or set in cwn-production .env');
   process.exit(1);
 }
 
-let twitchUserTokenJson = '';
-const twitchTokenPath = path.join(c0Root, 'data', 'twitch_user_token.json');
-if (fs.existsSync(twitchTokenPath)) {
-  try {
-    twitchUserTokenJson = fs.readFileSync(twitchTokenPath, 'utf8');
-  } catch { /* ignore */ }
-}
+const twitchUserTokenJson = process.env.TWITCH_USER_TOKEN_JSON || '';
 
 const env = {
   NODE_ENV: 'staging',
@@ -59,7 +54,7 @@ const env = {
   LIVE_SIDECAR_BIND: '0.0.0.0',
   LIVE_BROADCAST_SIDECAR: 'on',
   ...profileEnv,
-  LIVE_GRID_TWITCH_QUALITY: process.env.C0_TWITCH_QUALITY_FOR_RENDER
+  LIVE_GRID_TWITCH_QUALITY: process.env.LIVE_GRID_TWITCH_QUALITY
     || profileEnv.LIVE_GRID_TWITCH_QUALITY
     || '720p60,720p,best',
   LIVE_GRID_AUDIO_COPY: process.env.LIVE_GRID_AUDIO_COPY_RENDER || profileEnv.LIVE_GRID_AUDIO_COPY || 'off',
@@ -111,7 +106,7 @@ const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'applicatio
     }, { headers });
     added++;
   }
-  console.log(`[sync] ${added} env vars set on ${serviceId}`);
+  console.log(`[sync] ${added} env vars set on ${serviceId} (source: cwn-production profile + env, not c0)`);
 })().catch((e) => {
   console.error(e.response?.data || e.message);
   process.exit(1);
