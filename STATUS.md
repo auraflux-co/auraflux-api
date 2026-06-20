@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** testing — auto fresh listing when pinned main is dead; dashboard shows listing status before GO LIVE.
+**Deploy Mode:** testing — SEO applies after streamers seated; title/description/tags include on-screen names.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

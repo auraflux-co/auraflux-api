@@ -76,5 +76,17 @@ describe('live_grid seo', () => {
     expect(pack.seo.title).toContain('#hasanabi');
     expect(pack.seo.tags.length).toBeGreaterThan(10);
     expect(pack.seo.description).toContain('ON SCREEN NOW');
+    expect(pack.seo.description).toContain('Hasanabi');
+  });
+
+  test('buildGoLiveSeo accepts prebuilt streamers', () => {
+    const pack = buildGoLiveSeo({}, {
+      streamers: [
+        { login: 'xqc', displayName: 'Xqc', quadrant: 1 },
+        { login: 'shroud', displayName: 'Shroud', quadrant: 2 },
+      ],
+    });
+    expect(pack.seo.title).toContain('#xqc');
+    expect(pack.seo.description).toContain('Xqc');
   });
 });
