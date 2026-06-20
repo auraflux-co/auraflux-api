@@ -20,6 +20,7 @@
 
 ---
 
+**Last Updated:** 2026-06-20 (CPD-1047) — Solo titles: feeder-based login (fixes Q1 scump); refresh-solo-seo pushed live.
 **Last Updated:** 2026-06-20 (CPD-1047) — Deploy broadcast-staging `dbdc9915`: solo RTSP fix + fresh YouTube broadcasts; main + Q1–Q4 live.
 **Last Updated:** 2026-06-13 (CPD-1043) — Slate-lock on blank quadrant remove; dashboard uses /quadrant/N/replace; EPIPE-safe feeder pipes (GO LIVE crash fix).
 **Last Updated:** 2026-06-13 (CPD-1055) — Direct dashboard→Render API (broadcast_api.js + CORS); c0 removed from encode path; static dashboard server on :3002.
