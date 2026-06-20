@@ -16,6 +16,7 @@
 
 ---
 
+**Last Updated:** 2026-06-13 (CPD-1055) — Localhost proxy QA 19/19 + lifecycle smoke (rtmpHeld); token-cheap test ladder; sync_broadcast_proxy_to_c0.sh.
 **Last Updated:** 2026-06-13 (CPD-1055) — Dashboard→Render proxy catch-all; read routes on sidecar; sync env from Doppler/cwn-production (not c0).
 **Last Updated:** 2026-06-13 (CPD-1047) — Per-seat YouTube solo streams (Q1–Q4): solo publishers, swap sync, dashboard START SOLO STREAMS, chat lineup announce.
 **Last Updated:** 2026-06-20 (CPD-1043) — Overnight bench fail-open, dashboard GO LIVE fixes, studio-first RTMP + START RTMP button.
