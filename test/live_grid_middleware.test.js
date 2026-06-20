@@ -28,14 +28,16 @@ describe('live_grid middleware_config', () => {
 });
 
 describe('live_grid grid_restreamer', () => {
-  test('buildRestreamerArgs reads HLS and pushes FLV RTMP', () => {
+  test('buildRestreamerArgs — local HLS has no -re; remote URL paces realtime', () => {
     const { buildRestreamerArgs } = require('../lib/live_grid/grid_restreamer');
-    const args = buildRestreamerArgs('/tmp/preview/index.m3u8', 'rtmp://a/live2/key');
-    expect(args).toContain('-re');
-    expect(args).toContain('/tmp/preview/index.m3u8');
-    expect(args).toContain('-f');
-    expect(args[args.indexOf('-f') + 1]).toBe('flv');
-    expect(args[args.length - 1]).toBe('rtmp://a/live2/key');
+    const local = buildRestreamerArgs('/tmp/preview/index.m3u8', 'rtmp://a/live2/key');
+    expect(local).not.toContain('-re');
+    expect(local).toContain('/tmp/preview/index.m3u8');
+    expect(local[local.indexOf('-f') + 1]).toBe('flv');
+
+    const remote = buildRestreamerArgs('http://127.0.0.1/preview/index.m3u8', 'rtmp://a/live2/key');
+    expect(remote).toContain('-re');
+    expect(remote[remote.length - 1]).toBe('rtmp://a/live2/key');
   });
 });
 
