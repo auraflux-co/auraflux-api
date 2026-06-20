@@ -1,10 +1,10 @@
 {
   "name": "render-broadcast-nightly",
   "version": "2026-06-20",
-  "description": "Repeatable Render Pro 4-quad grid — 720p compositor, buffered HLS restreamer, copy relays.",
+  "description": "Render Pro 4-quad grid — 1080p direct RTMP, localhost-parity encode for stability pilot.",
   "env": {
     "LIVE_GRID_ENCODER": "libx264",
-    "LIVE_GRID_X264_PRESET": "ultrafast",
+    "LIVE_GRID_X264_PRESET": "veryfast",
     "LIVE_GRID_RELAY_TRANSCODE": "off",
     "LIVE_GRID_UDP_RELAY": "on",
     "LIVE_GRID_TWITCH_QUALITY": "720p60,720p,best",
@@ -15,20 +15,18 @@
     "LIVE_GRID_SWAP_STABLE_MS": "3000",
     "LIVE_GRID_LOCAL_HLS": "on",
     "LIVE_GRID_FPS": "30",
-    "LIVE_GRID_OUTPUT_W": "1280",
-    "LIVE_GRID_OUTPUT_H": "720",
-    "LIVE_GRID_BITRATE_K": "3500",
-    "LIVE_GRID_AUTOTUNE": "on",
+    "LIVE_GRID_OUTPUT_W": "1920",
+    "LIVE_GRID_OUTPUT_H": "1080",
+    "LIVE_GRID_BITRATE_K": "6000",
+    "LIVE_GRID_AUTOTUNE": "off",
     "LIVE_GRID_MUSIC_GUARD": "off",
-    "LIVE_GRID_AUDIO_BITRATE_K": "160",
+    "LIVE_GRID_AUDIO_BITRATE_K": "192",
     "LIVE_GRID_AUDIO_DIRECT": "on",
     "LIVE_GRID_AUDIO_COPY": "off",
     "LIVE_GRID_AUDIO_HZ": "48000",
     "LIVE_GRID_HLS_TIME": "2",
     "LIVE_GRID_HLS_LIST_SIZE": "24",
     "LIVE_GRID_HLS_DELETE_SEGMENTS": "off",
-    "LIVE_GRID_RESTREAMER_HLS_LAG": "3",
-    "LIVE_GRID_RESTREAMER_HLS_WAIT_MS": "45000",
     "LIVE_SIDECAR_BIND": "0.0.0.0",
     "STREAM_DELIVERY_AUTO_HEAL": "on",
     "LIVE_SIDECAR_HEARTBEAT_MS": "15000",
@@ -38,8 +36,8 @@
     "LIVE_GRID_DELIVERY_HLS_STALE_MS": "8000"
   },
   "notes": [
-    "Render: LIVE_GRID_OUTPUT_MIDDLEWARE=off — compositor → YouTube RTMP directly (no HLS restreamer hop; matches localhost stability)",
-    "720p@3500k ultrafast keeps compositor ahead on Render Pro",
-    "HLS delete_segments off when middleware on avoids restreamer racing deleted .ts files"
+    "1080p@6000k veryfast — localhost parity (c0 uses 6800k VideoToolbox on Mac)",
+    "Direct RTMP (middleware off) — compositor → YouTube, no HLS restreamer hop",
+    "AUTOTUNE off during pilot — no surprise master restarts mid-stream"
   ]
 }

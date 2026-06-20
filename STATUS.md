@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-20 (CPD-1043) — Render direct RTMP (middleware off); remove compositor restart on audio pin to stop YouTube spinning.
+**Last Updated:** 2026-06-20 (CPD-1043) — Render 1080p@6000k veryfast direct RTMP; autotune off for stability pilot.
 **Last Updated:** 2026-06-20 (CPD-1043) — On-air avatar/badge overlay asset + remove gold row gutter; deploy broadcast-staging.
 **Last Updated:** 2026-06-20 (CPD-1043) — Fix deep/choppy audio: disable AAC copy on UDP+middleware; restreamer re-encodes 48kHz AAC.
 **Last Updated:** 2026-06-19 (CPD-1043) — Render delivery QA: viewer signals on /live-grid/delivery, sidecar self-heal (restreamer), HLS staleness detection.
@@ -195,7 +195,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1043): Render direct RTMP** — middleware off on Render; sync script hardcodes off (ignore c0 .env); no compositor restart on audio pin. | lib/live_grid/manager.js, config/live_grid_profile_render.json, scripts/sync_broadcast_env_to_render.js, STATUS.md | 7d14bbeb | 2026-06-20 |
+| Cursor | **fix(cpd-1043): Render 1080p encode pilot** — 1920×1080 @ 6000k veryfast, autotune off, direct RTMP; sync script hardcodes Render encode (ignore c0 .env). | config/live_grid_profile_render.json, scripts/sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-20 |
 | Cursor | **fix(cpd-1043): auto pilot + sidecar auto-resume** — skip template locks when operatorMode off; release offline locks on auto pilot; sidecar auto-resumes grid after deploy; LIVE_GRID_OPERATOR_MODE=off on Render. | lib/live_grid/go_live_template.js, lib/live_grid/manager.js, scripts/live_broadcast_sidecar.js, scripts/sync_broadcast_env_to_render.js, STATUS.md | 73ab1939 | 2026-06-20 |
 | Cursor | **fix(cpd-1043): restreamer local HLS pacing** — remove `-re` on growing playlist (YouTube cutouts with 0 restarts); Render x264 superfast. | lib/live_grid/grid_restreamer.js, lib/live_grid/compositor.js, scripts/sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-19 |
 | Cursor | **fix(cpd-1043): Render broadcast stability** — restreamer `-c:a copy` (no double AAC); sync 4500k + 720p ingest + relay transcode on + MUSIC_GUARD off for Render Pro. | config/live_grid_profile_render.json, lib/live_grid/grid_restreamer.js, scripts/sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-19 |
