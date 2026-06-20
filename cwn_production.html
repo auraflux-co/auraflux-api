@@ -543,10 +543,12 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               </div>
             </div>
           </div>
+          <div id="lg-listing-row" style="display:none;margin-bottom:8px;font-size:10px;color:rgba(255,255,255,0.65);line-height:1.5;"></div>
           <div class="btn-row">
             <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
               <option value="public" selected>PUBLIC</option>
               <option value="unlisted">UNLISTED</option>
+              <option value="private">PRIVATE</option>
             </select>
             <button id="lg-start-btn" class="btn btn-gold" onclick="liveGridStart()">GO LIVE</button>
             <button id="lg-rtmp-go-btn" class="btn btn-outline" style="display:none;border-color:#c7af4f;color:#c7af4f;" onclick="liveGridRtmpGo()">START RTMP → YOUTUBE</button>
@@ -9587,12 +9589,21 @@ function lgSidecarBase() {
 }
 const LG_BASE = lgSidecarBase();
 let _lgStatus = null;
+let _lgListing = null;
+
+async function liveGridRefreshListing() {
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/youtube-listing?probe=1');
+    _lgListing = await r.json();
+  } catch (e) { _lgListing = null; }
+}
 
 async function liveGridRefresh() {
   try {
     const r = await fetch(LG_BASE + '/live-grid/status');
     _lgStatus = await r.json();
   } catch (e) { _lgStatus = null; }
+  if (!_lgStatus?.running) await liveGridRefreshListing();
   liveGridRender();
 }
 
@@ -9608,6 +9619,31 @@ function liveGridRender() {
   document.getElementById('lg-start-btn').style.display = running ? 'none' : '';
   document.getElementById('lg-privacy').style.display = running ? 'none' : '';
   document.getElementById('lg-stop-btn').style.display = running ? '' : 'none';
+  const listingRow = document.getElementById('lg-listing-row');
+  if (listingRow) {
+    if (running) {
+      listingRow.style.display = 'none';
+      listingRow.innerHTML = '';
+    } else if (_lgListing?.ok) {
+      listingRow.style.display = '';
+      const L = _lgListing.listing || {};
+      const P = _lgListing.probe || {};
+      const bid = L.broadcastId || '(none)';
+      let badge = '';
+      if (L.stale || P.attachable === false) {
+        badge = '<span style="color:#e88;">ended — fresh listing on GO LIVE</span>';
+      } else if (P.attachable === true) {
+        badge = `<span style="color:#8d8;">reusable (${P.lifeCycleStatus || 'ok'})</span>`;
+      } else {
+        badge = '<span style="color:#ca8;">will validate on GO LIVE</span>';
+      }
+      const hint = _lgListing.goLiveHint || '';
+      const link = L.watchUrl ? ` <a href="${L.watchUrl}" target="_blank" style="color:#b794f6;">watch</a>` : '';
+      listingRow.innerHTML = `<b>Main listing:</b> ${bid}${link} · ${badge}<br><span style="color:rgba(255,255,255,0.45);">${hint}</span>`;
+    } else {
+      listingRow.style.display = 'none';
+    }
+  }
   const rtmpGoBtn = document.getElementById('lg-rtmp-go-btn');
   const rtmpHeld = !!(s && s.middleware && s.middleware.rtmpHeld);
   if (rtmpGoBtn) rtmpGoBtn.style.display = running && rtmpHeld ? '' : 'none';
@@ -9785,7 +9821,8 @@ function liveGridRender() {
 async function liveGridStart() {
   const privacy = document.getElementById('lg-privacy').value;
   const programMode = document.getElementById('bc-program-mode')?.value || 'auto';
-  if (!confirm(`Start the Live Grid broadcast (${programMode}, ${privacy.toUpperCase()})?\n\nEnable Dual stream in YouTube Studio, then START RTMP.`)) return;
+  const hint = _lgListing?.goLiveHint || 'Starts main 2×2 grid + auto-starts solo streams.';
+  if (!confirm(`Start the Live Grid (${programMode}, ${privacy.toUpperCase()})?\n\n${hint}`)) return;
   const btn = document.getElementById('lg-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
   try {
@@ -9795,7 +9832,6 @@ async function liveGridStart() {
         privacyStatus: privacy,
         programMode,
         usePrepared: false,
-        createListing: false,
         autoPilot: true,
         operatorMode: false,
       }),

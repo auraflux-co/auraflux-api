@@ -878,14 +878,13 @@
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
     const eventFile = g('bc-event-file')?.value || '';
-    if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?\n\nStudio-first: enable Dual stream in YouTube Studio, then click START RTMP.`)) return;
+    if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?\n\nMain + solo streams start automatically. Listing is validated — fresh if the pinned one ended.`)) return;
     const btn = g('lg-start-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'STARTING…'; }
     const body = {
       privacyStatus: privacy,
       programMode,
       usePrepared: false,
-      createListing: false,
       autoPilot: true,
       operatorMode: false,
     };

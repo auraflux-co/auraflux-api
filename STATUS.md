@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** testing — broadcast reliability pack (deploy-safe stop, solo auto-start, SEO template) on staging.
+**Deploy Mode:** testing — auto fresh listing when pinned main is dead; dashboard shows listing status before GO LIVE.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
