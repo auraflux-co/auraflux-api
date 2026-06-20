@@ -11,6 +11,15 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env'), override: true });
 
+if (process.env.RENDER || process.env.NODE_ENV === 'staging') {
+  try {
+    const { applyRenderProfile } = require('../lib/live_grid/render_profile');
+    applyRenderProfile((m) => console.log(`[broadcast-sidecar] ${m}`));
+  } catch (e) {
+    console.warn(`[broadcast-sidecar] render profile skipped: ${e.message}`);
+  }
+}
+
 const express = require('express');
 const { registerLiveBroadcastRoutes, autoResumeLiveGrid } = require('../lib/broadcast/live_routes');
 

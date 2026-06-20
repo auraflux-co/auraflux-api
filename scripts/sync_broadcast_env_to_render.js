@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/** Push Live Grid env from c0 to Render broadcast service (CPD-1042 / CPD-1043). */
+/** Push Live Grid env from c0 + Render profile to broadcast service (CPD-1042 / CPD-1043). */
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -19,6 +19,15 @@ if (!apiKey) {
 
 const c0Root = process.env.C0_ROOT || path.join(process.env.HOME, 'cwn-c0');
 require('dotenv').config({ path: path.join(c0Root, '.env') });
+
+const profilePath = path.join(__dirname, '..', 'config', 'live_grid_profile_render.json');
+let profileEnv = {};
+try {
+  profileEnv = JSON.parse(fs.readFileSync(profilePath, 'utf8')).env || {};
+  console.log(`[sync] loaded ${Object.keys(profileEnv).length} vars from ${path.basename(profilePath)}`);
+} catch (e) {
+  console.warn(`[sync] profile missing — using hardcoded fallbacks (${e.message})`);
+}
 
 const tokenPath = path.join(c0Root, 'data', 'youtube_tokens.json');
 let ytRefresh = '';
@@ -49,37 +58,16 @@ const env = {
   LIVE_SIDECAR_PORT: '10000',
   LIVE_SIDECAR_BIND: '0.0.0.0',
   LIVE_BROADCAST_SIDECAR: 'on',
-  RENDER: 'true',
-  LIVE_GRID_ENCODER: 'libx264',
-  // Render encode — hardcoded (never inherit c0 .env 6800k/1080p Mac settings blindly)
-  LIVE_GRID_X264_PRESET: 'veryfast',
-  LIVE_GRID_FPS: '30',
-  LIVE_GRID_OUTPUT_W: '1920',
-  LIVE_GRID_OUTPUT_H: '1080',
-  LIVE_GRID_BITRATE_K: '6000',
-  LIVE_GRID_AUDIO_BITRATE_K: '192',
-  LIVE_GRID_AUTOTUNE: 'off',
-  LIVE_GRID_RELAY_TRANSCODE: 'off',
-  LIVE_GRID_UDP_RELAY: 'on',
-  // Render CPU: default 720p ingest unless C0_TWITCH_QUALITY_FOR_RENDER set
+  ...profileEnv,
   LIVE_GRID_TWITCH_QUALITY: process.env.C0_TWITCH_QUALITY_FOR_RENDER
-    || process.env.LIVE_GRID_TWITCH_QUALITY_RENDER
+    || profileEnv.LIVE_GRID_TWITCH_QUALITY
     || '720p60,720p,best',
-  LIVE_GRID_OUTPUT_MIDDLEWARE: 'off',
-  LIVE_GRID_STAGED_SWAP: 'on',
-  LIVE_GRID_RESTREAMER_HOLD: 'on',
-  LIVE_GRID_SWAP_DEBOUNCE_MS: process.env.LIVE_GRID_SWAP_DEBOUNCE_MS || '8000',
-  LIVE_GRID_SWAP_STABLE_MS: process.env.LIVE_GRID_SWAP_STABLE_MS || '3000',
+  LIVE_GRID_AUDIO_COPY: process.env.LIVE_GRID_AUDIO_COPY_RENDER || profileEnv.LIVE_GRID_AUDIO_COPY || 'off',
+  LIVE_GRID_AUDIO_HZ: process.env.LIVE_GRID_AUDIO_HZ || profileEnv.LIVE_GRID_AUDIO_HZ || '48000',
+  LIVE_GRID_SWAP_DEBOUNCE_MS: process.env.LIVE_GRID_SWAP_DEBOUNCE_MS || profileEnv.LIVE_GRID_SWAP_DEBOUNCE_MS || '8000',
+  LIVE_GRID_SWAP_STABLE_MS: process.env.LIVE_GRID_SWAP_STABLE_MS || profileEnv.LIVE_GRID_SWAP_STABLE_MS || '3000',
   LIVE_GRID_RESTREAMER_HLS_WAIT_MS: process.env.LIVE_GRID_RESTREAMER_HLS_WAIT_MS || '45000',
   LIVE_GRID_RESTREAMER_HLS_LAG: process.env.LIVE_GRID_RESTREAMER_HLS_LAG || '3',
-  LIVE_GRID_LOCAL_HLS: 'on',
-  LIVE_GRID_AUDIO_DIRECT: process.env.LIVE_GRID_AUDIO_DIRECT || 'on',
-  LIVE_GRID_AUDIO_COPY: process.env.LIVE_GRID_AUDIO_COPY_RENDER || 'off',
-  LIVE_GRID_AUDIO_HZ: process.env.LIVE_GRID_AUDIO_HZ || '48000',
-  LIVE_GRID_HLS_TIME: process.env.LIVE_GRID_HLS_TIME || '2',
-  LIVE_GRID_HLS_LIST_SIZE: process.env.LIVE_GRID_HLS_LIST_SIZE || '24',
-  LIVE_GRID_HLS_DELETE_SEGMENTS: process.env.LIVE_GRID_HLS_DELETE_SEGMENTS || 'off',
-  LIVE_GRID_MUSIC_GUARD: 'off',
   LIVE_GRID_MUSIC_USE_BED: process.env.LIVE_GRID_MUSIC_USE_BED || 'on',
   LIVE_GRID_RELAY_FPS: process.env.LIVE_GRID_RELAY_FPS || '30',
   LIVE_GRID_UDP_MASTER_REFRESH_MS: process.env.LIVE_GRID_UDP_MASTER_REFRESH_MS || '0',
@@ -90,12 +78,6 @@ const env = {
   LIVE_GRID_YOUTUBE_SQUARE_PAD: 'off',
   LIVE_GRID_TRUST_ENV_BROADCAST: process.env.LIVE_GRID_TRUST_ENV_BROADCAST || 'on',
   LIVE_GRID_PROTECT_YT_RTMP: 'on',
-  STREAM_DELIVERY_AUTO_HEAL: 'on',
-  LIVE_SIDECAR_HEARTBEAT_MS: process.env.LIVE_SIDECAR_HEARTBEAT_MS || '15000',
-  STREAM_DELIVERY_HEAL_COOLDOWN_SEC: process.env.STREAM_DELIVERY_HEAL_COOLDOWN_SEC || '45',
-  STREAM_DELIVERY_COMPOSITOR_HEAL_COOLDOWN_SEC: process.env.STREAM_DELIVERY_COMPOSITOR_HEAL_COOLDOWN_SEC || '90',
-  LIVE_GRID_POST_SWAP_DELIVERY_CHECK_MS: process.env.LIVE_GRID_POST_SWAP_DELIVERY_CHECK_MS || '12000',
-  LIVE_GRID_DELIVERY_HLS_STALE_MS: process.env.LIVE_GRID_DELIVERY_HLS_STALE_MS || '8000',
   TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID,
   TWITCH_TOKEN: process.env.TWITCH_TOKEN,
   TWITCH_OAUTH_CLIENT_ID: process.env.TWITCH_OAUTH_CLIENT_ID,

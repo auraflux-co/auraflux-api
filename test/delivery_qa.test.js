@@ -90,4 +90,22 @@ describe('live_grid delivery_qa', () => {
     expect(s.churn).toBe(3);
     expect(s.down).toBe(1);
   });
+
+  test('direct RTMP flags CPU saturation for self-heal downshift', () => {
+    jest.doMock('../lib/live_grid/local_preview', () => ({
+      hlsPreviewLive: () => false,
+      hlsSegmentAgeMs: () => null,
+    }));
+    const { assessDelivery } = require('../lib/live_grid/delivery_qa');
+
+    const r = assessDelivery({
+      running: true,
+      middleware: { outputMiddleware: false },
+      master: { running: true, uptimeSec: 200, restarts: 0, loadPerCore: 1.9 },
+      relays: [{ running: true }, { running: true }, { running: true }, { running: true }],
+    });
+
+    expect(r.signals.some((s) => s.key === 'encode_cpu_saturated')).toBe(true);
+    expect(r.selfHeal?.actions).toContain('downshift_encode');
+  });
 });

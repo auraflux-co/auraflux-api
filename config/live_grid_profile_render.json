@@ -1,10 +1,15 @@
 {
   "name": "render-broadcast-nightly",
   "version": "2026-06-20",
-  "description": "Render Pro 4-quad grid — 1080p direct RTMP, localhost-parity encode for stability pilot.",
+  "description": "Render Pro Plus 4-quad grid — native YouTube CDN aspect, direct RTMP, CPU autotune.",
+  "renderPlan": "pro_plus",
   "env": {
+    "RENDER": "true",
     "LIVE_GRID_ENCODER": "libx264",
-    "LIVE_GRID_X264_PRESET": "veryfast",
+    "LIVE_GRID_X264_PRESET": "ultrafast",
+    "LIVE_GRID_X264_MAXRATE_K": "4500",
+    "LIVE_GRID_X264_BUFSIZE_K": "9000",
+    "LIVE_GRID_CELL_FIT": "cover",
     "LIVE_GRID_RELAY_TRANSCODE": "off",
     "LIVE_GRID_UDP_RELAY": "on",
     "LIVE_GRID_TWITCH_QUALITY": "720p60,720p,best",
@@ -13,12 +18,13 @@
     "LIVE_GRID_RESTREAMER_HOLD": "on",
     "LIVE_GRID_SWAP_DEBOUNCE_MS": "8000",
     "LIVE_GRID_SWAP_STABLE_MS": "3000",
-    "LIVE_GRID_LOCAL_HLS": "on",
+    "LIVE_GRID_LOCAL_HLS": "off",
     "LIVE_GRID_FPS": "30",
-    "LIVE_GRID_OUTPUT_W": "1920",
+    "LIVE_GRID_OUTPUT_W": "1080",
     "LIVE_GRID_OUTPUT_H": "1080",
-    "LIVE_GRID_BITRATE_K": "6000",
-    "LIVE_GRID_AUTOTUNE": "off",
+    "LIVE_GRID_BITRATE_K": "4500",
+    "LIVE_GRID_AUTOTUNE": "on",
+    "LIVE_GRID_AUTOTUNE_LOAD": "1.0",
     "LIVE_GRID_MUSIC_GUARD": "off",
     "LIVE_GRID_AUDIO_BITRATE_K": "192",
     "LIVE_GRID_AUDIO_DIRECT": "on",
@@ -36,8 +42,10 @@
     "LIVE_GRID_DELIVERY_HLS_STALE_MS": "8000"
   },
   "notes": [
-    "1080p@6000k veryfast — localhost parity (c0 uses 6800k VideoToolbox on Mac)",
-    "Direct RTMP (middleware off) — compositor → YouTube, no HLS restreamer hop",
-    "AUTOTUNE off during pilot — no surprise master restarts mid-stream"
+    "pro_plus (4 CPU) — libx264 4-quad compositor needs headroom; standard/pro peg at 200% CPU",
+    "GO LIVE probes YouTube CDN aspect via yt-dlp → native square 1080² or landscape 1920×1080",
+    "Direct RTMP only (LOCAL_HLS off) — no tee disk I/O starving YouTube ingest",
+    "AUTOTUNE on — downshift to 720² @ 3500k if load > 1.0/core before viewers see spin",
+    "CELL_FIT=cover — fill quad cells; CBR maxrate/bufsize on RTMP leg"
   ]
 }

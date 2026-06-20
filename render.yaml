@@ -384,7 +384,7 @@ services:
     name: auraflux-broadcast-staging
     runtime: docker
     dockerfilePath: ./Dockerfile.broadcast
-    plan: standard
+    plan: pro_plus
     region: oregon
     branch: staging
     healthCheckPath: /live-broadcast/health
@@ -406,6 +406,22 @@ services:
         value: 'on'
       - key: LIVE_GRID_ENCODER
         value: libx264
+      - key: LIVE_GRID_X264_PRESET
+        value: ultrafast
+      - key: LIVE_GRID_OUTPUT_W
+        value: '1080'
+      - key: LIVE_GRID_OUTPUT_H
+        value: '1080'
+      - key: LIVE_GRID_BITRATE_K
+        value: '4500'
+      - key: LIVE_GRID_CELL_FIT
+        value: cover
+      - key: LIVE_GRID_LOCAL_HLS
+        value: 'off'
+      - key: LIVE_GRID_AUTOTUNE
+        value: 'on'
+      - key: LIVE_GRID_AUTOTUNE_LOAD
+        value: '1.0'
       - key: LIVE_GRID_RELAY_TRANSCODE
         value: 'off'
       - key: LIVE_GRID_UDP_RELAY
@@ -415,7 +431,7 @@ services:
       - key: LIVE_GRID_OUTPUT_MIDDLEWARE
         value: 'off'
       - key: LIVE_GRID_STAGED_SWAP
-        value: 'off'
+        value: 'on'
       - key: TWITCH_CLIENT_ID
         sync: false
       - key: TWITCH_TOKEN
