@@ -4,7 +4,7 @@
   "description": "Linux broadcast worker — libx264 compositor → local HLS → grid-restreamer → YouTube RTMP, staged swap on.",
   "env": {
     "LIVE_GRID_ENCODER": "libx264",
-    "LIVE_GRID_RELAY_TRANSCODE": "off",
+    "LIVE_GRID_RELAY_TRANSCODE": "on",
     "LIVE_GRID_UDP_RELAY": "on",
     "LIVE_GRID_TWITCH_QUALITY": "720p60,720p,best",
     "LIVE_GRID_OUTPUT_MIDDLEWARE": "on",
@@ -15,6 +15,13 @@
     "LIVE_GRID_LOCAL_HLS": "on",
     "LIVE_GRID_AUTOTUNE": "off",
     "LIVE_GRID_BITRATE_K": "4500",
+    "LIVE_GRID_MUSIC_GUARD": "off",
+    "LIVE_GRID_AUDIO_BITRATE_K": "192",
+    "LIVE_GRID_AUDIO_DIRECT": "on",
+    "LIVE_GRID_AUDIO_COPY": "off",
+    "LIVE_GRID_RELAY_FPS": "30",
+    "LIVE_GRID_UDP_MASTER_REFRESH_MS": "0",
+    "LIVE_GRID_RESTREAMER_HLS_WAIT_MS": "45000",
     "LIVE_SIDECAR_BIND": "0.0.0.0",
     "FFMPEG_PATH": "ffmpeg"
   },
