@@ -30,6 +30,8 @@ const liveState = { grid: null, tv: null };
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
+const { broadcastCorsMiddleware } = require('../lib/broadcast/cors_middleware');
+app.use(broadcastCorsMiddleware());
 registerLiveBroadcastRoutes(app, liveState);
 
 const server = app.listen(PORT, HOST, () => {

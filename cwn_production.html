@@ -9577,7 +9577,9 @@ function confirmPlatformModal() {
 // ===========================================================================
 // LIVE GRID controls (CPD-952) — start/stop, click-to-listen, bench add
 // ===========================================================================
-const LG_BASE = (typeof CFG !== 'undefined' && CFG.ffmpegUrl) || 'http://localhost:3000';
+const LG_BASE = (typeof BroadcastApi !== 'undefined' && BroadcastApi.sidecarUrl)
+  ? BroadcastApi.sidecarUrl()
+  : 'https://auraflux-broadcast-staging.onrender.com';
 let _lgStatus = null;
 
 async function liveGridRefresh() {
@@ -10024,6 +10026,7 @@ liveTvRefresh();
 setInterval(liveTvRefresh, 15000);
 </script>
 <script src="/assets/calendar_dashboard.js"></script>
+<script src="/assets/broadcast_api.js"></script>
 <script src="/assets/broadcast_dashboard.js"></script>
 </body>
 </html>

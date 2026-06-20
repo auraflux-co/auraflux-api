@@ -10,7 +10,7 @@
  *
  * Usage:
  *   node scripts/broadcast_dashboard_proxy_qa.js                    # Render direct
- *   node scripts/broadcast_dashboard_proxy_qa.js --local            # localhost:3000 proxy
+ *   node scripts/broadcast_dashboard_proxy_qa.js --local            # legacy: via localhost proxy (optional)
  *   node scripts/broadcast_dashboard_proxy_qa.js --local --actions
  *   node scripts/broadcast_dashboard_proxy_qa.js --local --lifecycle
  */
