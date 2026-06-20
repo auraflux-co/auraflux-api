@@ -62,8 +62,12 @@ describe('live_grid solo streams (CPD-1047)', () => {
     expect(text).not.toContain('twitch.tv');
   });
 
-  test('soloOutputDims defaults to 1080p', () => {
+  test('soloOutputDims defaults to 720p', () => {
+    delete process.env.LIVE_GRID_SOLO_OUTPUT_W;
+    delete process.env.LIVE_GRID_SOLO_OUTPUT_H;
+    delete process.env.LIVE_GRID_SOLO_BITRATE_K;
+    jest.resetModules();
     const { soloOutputDims } = require('../lib/live_grid/solo_publishers');
-    expect(soloOutputDims()).toEqual(expect.objectContaining({ w: 1920, h: 1080, bitrateK: 2500 }));
+    expect(soloOutputDims()).toEqual(expect.objectContaining({ w: 1280, h: 720, bitrateK: 1500 }));
   });
 });

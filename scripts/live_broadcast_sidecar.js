@@ -79,6 +79,10 @@ setInterval(async () => {
   }
   if (!gridLive) return;
   try {
+    const { saveResumeFromManager } = require('../lib/live_grid/resume_state');
+    saveResumeFromManager(grid);
+  } catch (_) {}
+  try {
     grid.autoTuneEncodeIfNeeded?.();
     const heal = await grid.autoHealDelivery?.();
     if (heal?.action && heal.action !== 'none') {
