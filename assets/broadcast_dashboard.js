@@ -875,10 +875,17 @@
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
     const eventFile = g('bc-event-file')?.value || '';
-    if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?`)) return;
+    if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?\n\nStudio-first: enable Dual stream in YouTube Studio, then click START RTMP.`)) return;
     const btn = g('lg-start-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'STARTING…'; }
-    const body = { privacyStatus: privacy, programMode, usePrepared: false };
+    const body = {
+      privacyStatus: privacy,
+      programMode,
+      usePrepared: false,
+      createListing: false,
+      autoPilot: true,
+      operatorMode: false,
+    };
     if (headline) body.headline = headline;
     if (eventTitle) body.eventTitle = eventTitle;
     if (eventFile) body.eventFile = eventFile;
@@ -893,6 +900,18 @@
     if (btn) { btn.disabled = false; btn.textContent = 'GO LIVE'; }
     liveGridRefresh();
     broadcastRefreshAll();
+  };
+
+  window.liveGridRtmpGo = async function () {
+    const btn = g('lg-rtmp-go-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'STARTING RTMP…'; }
+    try {
+      const r = await fetch(BC_BASE + '/live-grid/rtmp-go', { method: 'POST' });
+      const d = await r.json();
+      if (!d.ok && !d.started) alert('RTMP start failed: ' + (d.error || d.message || 'unknown'));
+    } catch (e) { alert('RTMP start failed: ' + e.message); }
+    if (btn) { btn.disabled = false; btn.textContent = 'START RTMP → YOUTUBE'; }
+    liveGridRefresh();
   };
 
   window.broadcastRefreshDiscovery = broadcastRefreshDiscovery;

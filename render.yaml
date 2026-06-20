@@ -424,6 +424,10 @@ services:
         value: 'on'
       - key: LIVE_GRID_AUTO_RESUME
         value: 'off'
+      - key: LIVE_GRID_OPERATOR_MODE
+        value: 'off'
+      - key: LIVE_GRID_PLATFORM_BENCH
+        value: 'on'
       - key: LIVE_GRID_DUAL_BROADCAST
         value: 'off'
       - key: LIVE_GRID_AUTOTUNE
