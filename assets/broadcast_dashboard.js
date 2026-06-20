@@ -211,7 +211,10 @@
   };
 
   async function bcFetch(path, opts) {
-    const r = await fetch(BC_BASE + path, opts);
+    const url = (typeof BroadcastApi !== 'undefined' && BroadcastApi.apiUrl)
+      ? BroadcastApi.apiUrl(path)
+      : BC_BASE + path;
+    const r = await fetch(url, opts);
     return r.json();
   }
 
@@ -599,7 +602,7 @@
     if (headline) body.headline = headline;
     if (eventTitle) body.eventTitle = eventTitle;
     try {
-      const r = await fetch(BC_BASE + '/live-grid/prepare', {
+      const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/prepare') : BC_BASE + '/live-grid/prepare'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
@@ -612,7 +615,7 @@
 
   window.liveGridRefreshPrepared = async function () {
     try {
-      const r = await fetch(BC_BASE + '/live-grid/prepare/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/prepare/refresh') : BC_BASE + '/live-grid/prepare/refresh'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
       const d = await r.json();
       if (!d.ok) alert('Refresh failed: ' + (d.error || 'unknown'));
     } catch (e) { alert('Refresh failed: ' + e.message); }
@@ -622,7 +625,7 @@
   window.liveGridClearPrepared = async function () {
     if (!confirm('Clear prepared broadcast state?')) return;
     try {
-      await fetch(BC_BASE + '/live-grid/prepared/clear', { method: 'POST' });
+      await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/prepared/clear') : BC_BASE + '/live-grid/prepared/clear'), { method: 'POST' });
     } catch (_) {}
     broadcastRefreshPrepared();
   };
@@ -820,11 +823,11 @@
   };
 
   window.bcConnectTwitch = function () {
-    window.open(BC_BASE + '/connect/twitch', '_blank');
+    window.open((typeof BroadcastApi !== 'undefined' ? BroadcastApi.localUrl() : BC_BASE) + '/connect/twitch', '_blank');
   };
 
   window.bcConnectYoutube = function () {
-    window.open(BC_BASE + '/connect/youtube', '_blank');
+    window.open((typeof BroadcastApi !== 'undefined' ? BroadcastApi.localUrl() : BC_BASE) + '/connect/youtube', '_blank');
   };
 
   window.broadcastRefreshAll = async function () {
@@ -875,15 +878,22 @@
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
     const eventFile = g('bc-event-file')?.value || '';
-    if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?`)) return;
+    if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?\n\nStudio-first: enable Dual stream in YouTube Studio, then click START RTMP.`)) return;
     const btn = g('lg-start-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'STARTING…'; }
-    const body = { privacyStatus: privacy, programMode, usePrepared: false };
+    const body = {
+      privacyStatus: privacy,
+      programMode,
+      usePrepared: false,
+      createListing: false,
+      autoPilot: true,
+      operatorMode: false,
+    };
     if (headline) body.headline = headline;
     if (eventTitle) body.eventTitle = eventTitle;
     if (eventFile) body.eventFile = eventFile;
     try {
-      const r = await fetch(BC_BASE + '/live-grid/start', {
+      const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/start') : BC_BASE + '/live-grid/start'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
@@ -893,6 +903,30 @@
     if (btn) { btn.disabled = false; btn.textContent = 'GO LIVE'; }
     liveGridRefresh();
     broadcastRefreshAll();
+  };
+
+  window.liveGridRtmpGo = async function () {
+    const btn = g('lg-rtmp-go-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'STARTING RTMP…'; }
+    try {
+      const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/rtmp-go') : BC_BASE + '/live-grid/rtmp-go'), { method: 'POST' });
+      const d = await r.json();
+      if (!d.ok && !d.started) alert('RTMP start failed: ' + (d.error || d.message || 'unknown'));
+    } catch (e) { alert('RTMP start failed: ' + e.message); }
+    if (btn) { btn.disabled = false; btn.textContent = 'START RTMP → YOUTUBE'; }
+    liveGridRefresh();
+  };
+
+  window.liveGridSoloGo = async function () {
+    const btn = g('lg-solo-go-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'STARTING SOLOS…'; }
+    try {
+      const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/solo-go') : BC_BASE + '/live-grid/solo-go'), { method: 'POST' });
+      const d = await r.json();
+      if (!d.ok && !d.started) alert('Solo streams failed: ' + (d.error || 'unknown'));
+    } catch (e) { alert('Solo streams failed: ' + e.message); }
+    if (btn) { btn.disabled = false; btn.textContent = 'START SOLO STREAMS'; }
+    liveGridRefresh();
   };
 
   window.broadcastRefreshDiscovery = broadcastRefreshDiscovery;

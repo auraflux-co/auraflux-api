@@ -1,6 +1,6 @@
-const { isEnabled, sidecarBaseUrl } = require('../lib/broadcast/sidecar_client');
+const { PROXY_PREFIXES } = require('../lib/broadcast/sidecar_client');
 
-describe('sidecar_client', () => {
+describe('sidecar_client (CPD-1055)', () => {
   const origSidecar = process.env.LIVE_BROADCAST_SIDECAR;
   const origUrl = process.env.LIVE_SIDECAR_URL;
 
@@ -10,21 +10,29 @@ describe('sidecar_client', () => {
   });
 
   test('enabled by default with LIVE_SIDECAR_URL', () => {
+    jest.resetModules();
     process.env.LIVE_BROADCAST_SIDECAR = 'on';
     process.env.LIVE_SIDECAR_URL = 'http://127.0.0.1:3001';
+    const { isEnabled, sidecarBaseUrl } = require('../lib/broadcast/sidecar_client');
     expect(isEnabled()).toBe(true);
     expect(sidecarBaseUrl()).toBe('http://127.0.0.1:3001');
   });
 
   test('disabled when LIVE_BROADCAST_SIDECAR=off', () => {
+    jest.resetModules();
     process.env.LIVE_BROADCAST_SIDECAR = 'off';
     process.env.LIVE_SIDECAR_URL = 'http://127.0.0.1:3001';
+    const { isEnabled } = require('../lib/broadcast/sidecar_client');
     expect(isEnabled()).toBe(false);
+  });
+
+  test('catch-all proxy prefixes cover dashboard routes', () => {
+    expect(PROXY_PREFIXES).toEqual(expect.arrayContaining(['/live-grid', '/live-tv', '/live-broadcast']));
   });
 });
 
 describe('live_routes health', () => {
-  test('registerLiveBroadcastRoutes exposes health path', () => {
+  test('registerLiveBroadcastRoutes exposes health and read routes', () => {
     const express = require('express');
     const { registerLiveBroadcastRoutes } = require('../lib/broadcast/live_routes');
     const app = express();
@@ -33,5 +41,23 @@ describe('live_routes health', () => {
     const routes = app._router.stack.filter((l) => l.route).map((l) => l.route.path);
     expect(routes).toContain('/live-broadcast/health');
     expect(routes).toContain('/live-tv/status');
+    expect(routes).toContain('/live-grid/followed-bench');
+    expect(routes).toContain('/live-grid/discovery/bench');
+    expect(routes).toContain('/live-grid/files');
+    expect(routes).toContain('/live-grid/delivery');
+    expect(routes).toContain('/live-grid/solo-go');
+  });
+});
+
+describe('grid_read_routes', () => {
+  test('registerLiveGridReadRoutes mounts six GET paths', () => {
+    const express = require('express');
+    const { registerLiveGridReadRoutes } = require('../lib/broadcast/grid_read_routes');
+    const app = express();
+    registerLiveGridReadRoutes(app);
+    const routes = app._router.stack.filter((l) => l.route).map((l) => l.route.path);
+    expect(routes).toContain('/live-grid/followed-bench');
+    expect(routes).toContain('/live-grid/allowlist');
+    expect(routes.filter((p) => p.startsWith('/live-grid/')).length).toBeGreaterThanOrEqual(6);
   });
 });

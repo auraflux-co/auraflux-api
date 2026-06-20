@@ -16,7 +16,17 @@
 
 ---
 
-**Last Updated:** 2026-06-13 (CPD-1049) — Serena always-on for Render production workspace (project.yml, rules, commit hook).
+**Last Updated:** 2026-06-13 (CPD-1055) — Direct dashboard→Render API (broadcast_api.js + CORS); c0 removed from encode path; static dashboard server on :3002.
+**Last Updated:** 2026-06-13 (CPD-1055) — Dashboard→Render proxy catch-all; read routes on sidecar; sync env from Doppler/cwn-production (not c0).
+**Last Updated:** 2026-06-13 (CPD-1047) — Per-seat YouTube solo streams (Q1–Q4): solo publishers, swap sync, dashboard START SOLO STREAMS, chat lineup announce.
+**Last Updated:** 2026-06-20 (CPD-1043) — Overnight bench fail-open, dashboard GO LIVE fixes, studio-first RTMP + START RTMP button.
+**Last Updated:** 2026-06-20 (CPD-1043) — Render broadcast fix pack: pro_plus CPU, native YouTube aspect probe, direct RTMP CBR, autotune + delivery QA.
+**Last Updated:** 2026-06-20 (CPD-1043) — Render 1080p@6000k veryfast direct RTMP; autotune off for stability pilot.
+**Last Updated:** 2026-06-20 (CPD-1043) — On-air avatar/badge overlay asset + remove gold row gutter; deploy broadcast-staging.
+**Last Updated:** 2026-06-20 (CPD-1043) — Fix deep/choppy audio: disable AAC copy on UDP+middleware; restreamer re-encodes 48kHz AAC.
+**Last Updated:** 2026-06-19 (CPD-1043) — Render delivery QA: viewer signals on /live-grid/delivery, sidecar self-heal (restreamer), HLS staleness detection.
+**Last Updated:** 2026-06-19 (CPD-1043) — Restreamer: drop -re on local HLS (fixes YouTube cutouts when encode lags); x264 superfast on Render.
+**Last Updated:** 2026-06-19 (CPD-1041) — Broadcast R0 executing: Dockerfile.broadcast + auraflux-broadcast-staging deploy for 7pm grid.
 **Last Updated:** 2026-06-16 (CPD-1037) — Assembly Twitch clips via Helix only (no GQL); deploy + re-test staging job.
 **Last Updated:** 2026-06-15 (CPD-553) — GITHUB_API_TOKEN renewed in Doppler prd + Render sync; renew script auto-syncs Doppler→Render.
 **Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats dashboard, env.example sync, C0 sports route guard, GitHub token renewal script.
@@ -190,6 +200,14 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(cpd-1055): broadcast script order + solo profile on Render** — load broadcast-config/broadcast_api before LG_BASE; apply LIVE_GRID_SOLO_* from render profile; delete missed sync_broadcast_proxy_to_c0.sh. | cwn_production.html, lib/live_grid/render_profile.js, scripts/sync_broadcast_proxy_to_c0.sh, STATUS.md | — | 2026-06-13 |
+| Cursor | **fix(cpd-869): YouTube synthetic tag from job metadata** — youtube_direct derives containsSyntheticMedia via publish_synthetic (not hardcoded true); setContainsSyntheticMedia for post-upload correction. | lib/services/youtube_direct.js, STATUS.md | — | 2026-06-13 |
+| Cursor | **feat(cpd-1055): dashboard→Render proxy QA + decouple c0 env** — catch-all sidecar proxy; grid read routes on sidecar; sync from Doppler/cwn-production; QA script + Confluence HOW update. | lib/broadcast/sidecar_client.js, grid_read_routes.js, live_routes.js, server.js, scripts/sync_broadcast_env_to_render.js, scripts/broadcast_dashboard_proxy_qa.js, test/sidecar_client.test.js, STATUS.md | f7e88fe6 | 2026-06-13 |
+| Cursor | **feat(cpd-1047): per-seat YouTube solo streams** — four RTMP publishers (Q1–Q4), swap sync, solo-go route, dashboard UI, chat lineup announce; Render profile LIVE_GRID_SOLO_STREAMS=on. | lib/live_grid/solo_*.js, manager.js, live_routes.js, cwn_production.html, config/live_grid_profile_render.json, test/live_grid_solo_streams.test.js, STATUS.md | 74c1be0f | 2026-06-13 |
+| Cursor | **fix(cpd-1043): Render 1080p encode pilot** — 1920×1080 @ 6000k veryfast, autotune off, direct RTMP; sync script hardcodes Render encode (ignore c0 .env). | config/live_grid_profile_render.json, scripts/sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-20 |
+| Cursor | **fix(cpd-1043): auto pilot + sidecar auto-resume** — skip template locks when operatorMode off; release offline locks on auto pilot; sidecar auto-resumes grid after deploy; LIVE_GRID_OPERATOR_MODE=off on Render. | lib/live_grid/go_live_template.js, lib/live_grid/manager.js, scripts/live_broadcast_sidecar.js, scripts/sync_broadcast_env_to_render.js, STATUS.md | 73ab1939 | 2026-06-20 |
+| Cursor | **fix(cpd-1043): restreamer local HLS pacing** — remove `-re` on growing playlist (YouTube cutouts with 0 restarts); Render x264 superfast. | lib/live_grid/grid_restreamer.js, lib/live_grid/compositor.js, scripts/sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-19 |
+| Cursor | **fix(cpd-1043): Render broadcast stability** — restreamer `-c:a copy` (no double AAC); sync 4500k + 720p ingest + relay transcode on + MUSIC_GUARD off for Render Pro. | config/live_grid_profile_render.json, lib/live_grid/grid_restreamer.js, scripts/sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-19 |
 | Cursor | **chore(cpd-1049): Serena always-on for Render production** — committed `.serena/project.yml`; session rules + post-commit hook auto-activate `cwn-production`; Rob reminds worker "Serena QA the commit" if skipped. | .serena/, .cursor/rules/serena-pr-review.mdc, .cursor/rules/session-review.mdc, .cursor/hooks/serena-commit-qa.sh, .gitignore, STATUS.md | — | 2026-06-13 |
 | Cursor | **fix(cpd-1037): Helix CDN + yt-dlp fallback for Twitch assembly** — Helix resolves clip id; yt-dlp when clips-media-assets2 file is 0-duration on Render. | lib/assembly_service.js, STATUS.md | — | 2026-06-16 |
 | Cursor | **fix(cpd-1037): clip assembly after portal0** — `isPortal1Active` reads `portals.portal1.active`; fixes portal3a fail on clip staging jobs. | lib/services/pipeline_assembly.js, test/job_spec_portals.test.js, scripts/hub_staging_test_job.js, scripts/cpd1056_regression_matrix.js, STATUS.md | — | 2026-06-16 |

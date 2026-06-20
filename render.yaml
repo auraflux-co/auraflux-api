@@ -375,6 +375,93 @@ services:
         sync: false
       - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
         sync: false
+      # CPD-1040: internal URL of auraflux-broadcast-staging (private network)
+      - key: LIVE_SIDECAR_URL
+        sync: false
+
+  # ── Broadcast worker (CPD-1040) — Live Grid ffmpeg + MediaMTX, separate from API ──
+  - type: web
+    name: auraflux-broadcast-staging
+    runtime: docker
+    dockerfilePath: ./Dockerfile.broadcast
+    plan: pro_plus
+    region: oregon
+    branch: staging
+    healthCheckPath: /live-broadcast/health
+    autoDeploy: no
+    disk:
+      name: auraflux-broadcast-staging
+      mountPath: /app/tmp
+      sizeGB: 5
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: 10000
+      - key: LIVE_SIDECAR_PORT
+        value: 10000
+      - key: LIVE_SIDECAR_BIND
+        value: 0.0.0.0
+      - key: LIVE_BROADCAST_SIDECAR
+        value: 'on'
+      - key: LIVE_GRID_ENCODER
+        value: libx264
+      - key: LIVE_GRID_X264_PRESET
+        value: ultrafast
+      - key: LIVE_GRID_OUTPUT_W
+        value: '1920'
+      - key: LIVE_GRID_OUTPUT_H
+        value: '1080'
+      - key: LIVE_GRID_BITRATE_K
+        value: '4500'
+      - key: LIVE_GRID_CELL_FIT
+        value: cover
+      - key: LIVE_GRID_LOCAL_HLS
+        value: 'off'
+      - key: LIVE_GRID_YOUTUBE_DUAL_STREAM
+        value: 'on'
+      - key: LIVE_GRID_STUDIO_DUAL_FIRST
+        value: 'on'
+      - key: LIVE_GRID_AUTO_RESUME
+        value: 'off'
+      - key: LIVE_GRID_OPERATOR_MODE
+        value: 'off'
+      - key: LIVE_GRID_PLATFORM_BENCH
+        value: 'on'
+      - key: LIVE_GRID_DUAL_BROADCAST
+        value: 'off'
+      - key: LIVE_GRID_AUTOTUNE
+        value: 'on'
+      - key: LIVE_GRID_AUTOTUNE_LOAD
+        value: '1.0'
+      - key: LIVE_GRID_RELAY_TRANSCODE
+        value: 'off'
+      - key: LIVE_GRID_UDP_RELAY
+        value: 'on'
+      - key: LIVE_GRID_TWITCH_QUALITY
+        value: 720p60,720p,best
+      - key: LIVE_GRID_OUTPUT_MIDDLEWARE
+        value: 'off'
+      - key: LIVE_GRID_STAGED_SWAP
+        value: 'on'
+      - key: TWITCH_CLIENT_ID
+        sync: false
+      - key: TWITCH_TOKEN
+        sync: false
+      - key: YOUTUBE_CLIENT_ID
+        sync: false
+      - key: YOUTUBE_CLIENT_SECRET
+        sync: false
+      - key: YOUTUBE_REFRESH_TOKEN
+        sync: false
+      - key: LIVE_GRID_RTMP_URL
+        sync: false
+      - key: LIVE_GRID_STREAM_ID
+        sync: false
+      - key: LIVE_GRID_WATCH_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
 
 # ── No managed databases ─────────────────────────────────────────────────────
 # auraflux-pg (PostgreSQL) was manually created in Render before this Blueprint

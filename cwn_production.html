@@ -548,7 +548,15 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <option value="unlisted">UNLISTED</option>
             </select>
             <button id="lg-start-btn" class="btn btn-gold" onclick="liveGridStart()">GO LIVE</button>
+            <button id="lg-rtmp-go-btn" class="btn btn-outline" style="display:none;border-color:#c7af4f;color:#c7af4f;" onclick="liveGridRtmpGo()">START RTMP → YOUTUBE</button>
+            <button id="lg-solo-go-btn" class="btn btn-outline" style="display:none;border-color:#9146ff;color:#b794f6;" onclick="liveGridSoloGo()">START SOLO STREAMS</button>
             <button id="lg-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveGridStop()">END STREAM</button>
+          </div>
+          <div id="lg-studio-dual-row" style="display:none;margin-top:8px;font-size:10px;color:rgba(199,175,79,0.9);line-height:1.5;"></div>
+          <div id="lg-solo-row" style="display:none;margin-top:8px;font-size:10px;color:rgba(183,148,246,0.95);line-height:1.6;">
+            <div style="font-weight:700;margin-bottom:4px;">SOLO STREAMS (ClipzWorld YouTube — one per grid seat)</div>
+            <div id="lg-solo-seats"></div>
+            <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Configure 4 permanent stream keys in Studio (unlisted), then START SOLO STREAMS. Solos sync when the grid swaps.</div>
           </div>
         </div>
       </div>
@@ -9565,11 +9573,18 @@ function confirmPlatformModal() {
   _platformModalCallback = null;
 }
 </script>
+<script src="/broadcast-config.js"></script>
+<script src="/assets/broadcast_api.js"></script>
 <script>
 // ===========================================================================
 // LIVE GRID controls (CPD-952) — start/stop, click-to-listen, bench add
 // ===========================================================================
-const LG_BASE = (typeof CFG !== 'undefined' && CFG.ffmpegUrl) || 'http://localhost:3000';
+function lgSidecarBase() {
+  return (typeof BroadcastApi !== 'undefined' && BroadcastApi.sidecarUrl)
+    ? BroadcastApi.sidecarUrl()
+    : (window.__BROADCAST_SIDECAR_URL__ || 'https://auraflux-broadcast-staging.onrender.com').replace(/\/$/, '');
+}
+const LG_BASE = lgSidecarBase();
 let _lgStatus = null;
 
 async function liveGridRefresh() {
@@ -9592,6 +9607,40 @@ function liveGridRender() {
   document.getElementById('lg-start-btn').style.display = running ? 'none' : '';
   document.getElementById('lg-privacy').style.display = running ? 'none' : '';
   document.getElementById('lg-stop-btn').style.display = running ? '' : 'none';
+  const rtmpGoBtn = document.getElementById('lg-rtmp-go-btn');
+  const rtmpHeld = !!(s && s.middleware && s.middleware.rtmpHeld);
+  if (rtmpGoBtn) rtmpGoBtn.style.display = running && rtmpHeld ? '' : 'none';
+  const solo = (s && s.soloStreams) || {};
+  const soloGoBtn = document.getElementById('lg-solo-go-btn');
+  const soloRow = document.getElementById('lg-solo-row');
+  const soloSeats = document.getElementById('lg-solo-seats');
+  const soloReady = running && solo.enabled && solo.configured && !rtmpHeld;
+  if (soloGoBtn) soloGoBtn.style.display = soloReady && !solo.started ? '' : 'none';
+  if (soloRow) {
+    const showSolo = running && solo.enabled;
+    soloRow.style.display = showSolo ? '' : 'none';
+    if (showSolo && soloSeats) {
+      const seats = solo.seats || [];
+      soloSeats.innerHTML = seats.map((seat) => {
+        const login = seat.login || 'slate';
+        const dot = seat.running ? '🟢' : (seat.configured ? '⚪' : '⚫');
+        const link = seat.watchUrl ? `<a href="${seat.watchUrl}" target="_blank" style="color:#b794f6;">watch</a>` : 'no URL';
+        return `<div>${dot} Q${seat.quadrant} <b>${login}</b> · ${seat.label || ''} · ${link}${seat.running ? ' · LIVE' : ''}</div>`;
+      }).join('');
+    }
+  }
+  const studioRow = document.getElementById('lg-studio-dual-row');
+  const studioDual = s && s.middleware && s.middleware.studioDual;
+  if (studioRow) {
+    if (running && rtmpHeld && studioDual) {
+      studioRow.style.display = '';
+      studioRow.innerHTML = '<b>Studio first:</b> ' + (studioDual.summary || '')
+        + (studioDual.studioUrl ? '<br><a href="' + studioDual.studioUrl + '" target="_blank" style="color:#c7af4f;">Open YouTube Studio</a> → Dual stream ON → Auto, then START RTMP.' : '');
+    } else {
+      studioRow.style.display = 'none';
+      studioRow.innerHTML = '';
+    }
+  }
   document.getElementById('lg-bench-row').style.display = running ? '' : 'none';
   const assignRow = document.getElementById('lg-assign-row');
   if (assignRow) assignRow.style.display = running ? '' : 'none';
@@ -9723,18 +9772,50 @@ function liveGridRender() {
 
 async function liveGridStart() {
   const privacy = document.getElementById('lg-privacy').value;
-  if (!confirm(`Start the Live Grid broadcast (${privacy.toUpperCase()})?`)) return;
+  const programMode = document.getElementById('bc-program-mode')?.value || 'auto';
+  if (!confirm(`Start the Live Grid broadcast (${programMode}, ${privacy.toUpperCase()})?\n\nEnable Dual stream in YouTube Studio, then START RTMP.`)) return;
   const btn = document.getElementById('lg-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
   try {
     const r = await fetch(LG_BASE + '/live-grid/start', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ privacyStatus: privacy }),
+      body: JSON.stringify({
+        privacyStatus: privacy,
+        programMode,
+        usePrepared: false,
+        createListing: false,
+        autoPilot: true,
+        operatorMode: false,
+      }),
     });
     const d = await r.json();
     if (!d.ok) alert('Start failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Start failed: ' + e.message); }
   btn.disabled = false; btn.textContent = 'GO LIVE';
+  liveGridRefresh();
+}
+
+async function liveGridRtmpGo() {
+  const btn = document.getElementById('lg-rtmp-go-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'STARTING RTMP…'; }
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/rtmp-go', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok && !d.started) alert('RTMP start failed: ' + (d.error || d.message || 'unknown'));
+  } catch (e) { alert('RTMP start failed: ' + e.message); }
+  if (btn) { btn.disabled = false; btn.textContent = 'START RTMP → YOUTUBE'; }
+  liveGridRefresh();
+}
+
+async function liveGridSoloGo() {
+  const btn = document.getElementById('lg-solo-go-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'STARTING SOLOS…'; }
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/solo-go', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok && !d.started) alert('Solo streams failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Solo streams failed: ' + e.message); }
+  if (btn) { btn.disabled = false; btn.textContent = 'START SOLO STREAMS'; }
   liveGridRefresh();
 }
 
