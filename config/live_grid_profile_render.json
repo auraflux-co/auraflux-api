@@ -4,7 +4,7 @@
   "description": "Linux broadcast worker — libx264 compositor → local HLS → grid-restreamer → YouTube RTMP, staged swap on.",
   "env": {
     "LIVE_GRID_ENCODER": "libx264",
-    "LIVE_GRID_RELAY_TRANSCODE": "on",
+    "LIVE_GRID_RELAY_TRANSCODE": "off",
     "LIVE_GRID_UDP_RELAY": "on",
     "LIVE_GRID_TWITCH_QUALITY": "720p60,720p,best",
     "LIVE_GRID_OUTPUT_MIDDLEWARE": "on",
