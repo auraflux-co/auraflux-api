@@ -419,6 +419,10 @@ services:
       - key: LIVE_GRID_LOCAL_HLS
         value: 'off'
       - key: LIVE_GRID_YOUTUBE_DUAL_STREAM
+        value: 'on'
+      - key: LIVE_GRID_STUDIO_DUAL_FIRST
+        value: 'on'
+      - key: LIVE_GRID_AUTO_RESUME
         value: 'off'
       - key: LIVE_GRID_DUAL_BROADCAST
         value: 'off'

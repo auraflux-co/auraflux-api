@@ -1,7 +1,7 @@
 {
   "name": "render-broadcast-nightly",
   "version": "2026-06-20",
-  "description": "Render Pro Plus 4-quad grid — native YouTube CDN aspect, direct RTMP, CPU autotune.",
+  "description": "Render Pro Plus 4-quad grid — native YouTube dual-format, studio-first RTMP, CPU autotune.",
   "renderPlan": "pro_plus",
   "env": {
     "RENDER": "true",
@@ -19,7 +19,9 @@
     "LIVE_GRID_SWAP_DEBOUNCE_MS": "8000",
     "LIVE_GRID_SWAP_STABLE_MS": "3000",
     "LIVE_GRID_LOCAL_HLS": "off",
-    "LIVE_GRID_YOUTUBE_DUAL_STREAM": "off",
+    "LIVE_GRID_YOUTUBE_DUAL_STREAM": "on",
+    "LIVE_GRID_STUDIO_DUAL_FIRST": "on",
+    "LIVE_GRID_AUTO_RESUME": "off",
     "LIVE_GRID_DUAL_BROADCAST": "off",
     "LIVE_GRID_FPS": "30",
     "LIVE_GRID_OUTPUT_W": "1920",
@@ -44,9 +46,10 @@
     "LIVE_GRID_DELIVERY_HLS_STALE_MS": "8000"
   },
   "notes": [
-    "LIVE_GRID_YOUTUBE_DUAL_STREAM=off — landscape 1920×1080 RTMP; disable Dual stream in YouTube Studio before GO LIVE",
+    "CPD-1029: LIVE_GRID_STUDIO_DUAL_FIRST=on holds RTMP until Dual stream → Auto is set in YouTube Studio",
+    "POST /live-grid/rtmp-go starts encoder after Studio dual-format is configured",
+    "LIVE_GRID_AUTO_RESUME=off — sidecar reboot must not push RTMP before Studio config",
     "pro_plus (4 CPU) — libx264 4-quad compositor needs headroom",
-    "Direct RTMP only (LOCAL_HLS off); AUTOTUNE downshift to 720² if CPU saturated",
-    "Legacy LIVE_GRID_DUAL_BROADCAST stays off (CPD-1029 uses YouTube native dual, not our ffmpeg 9:16 leg)"
+    "Legacy LIVE_GRID_DUAL_BROADCAST stays off (native YouTube dual, not ffmpeg 9:16 leg)"
   ]
 }

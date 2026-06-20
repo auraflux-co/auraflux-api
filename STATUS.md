@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-20 (CPD-1043) — Dual stream off: landscape 1920×1080 encode; LIVE_GRID_YOUTUBE_DUAL_STREAM=off; Studio toggle doc.
+**Last Updated:** 2026-06-20 (CPD-1043) — Studio-first RTMP hold: Dual stream configurable in YouTube Studio before ingest; POST /live-grid/rtmp-go.
 **Last Updated:** 2026-06-20 (CPD-1043) — Render broadcast fix pack: pro_plus CPU, native YouTube aspect probe, direct RTMP CBR, autotune + delivery QA.
 **Last Updated:** 2026-06-20 (CPD-1043) — Render 1080p@6000k veryfast direct RTMP; autotune off for stability pilot.
 **Last Updated:** 2026-06-20 (CPD-1043) — On-air avatar/badge overlay asset + remove gold row gutter; deploy broadcast-staging.
