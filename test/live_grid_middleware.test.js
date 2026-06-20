@@ -28,16 +28,19 @@ describe('live_grid middleware_config', () => {
 });
 
 describe('live_grid grid_restreamer', () => {
-  test('buildRestreamerArgs — local HLS has no -re; remote URL paces realtime', () => {
+  test('buildRestreamerArgs — local HLS uses lag buffer + realtime pace', () => {
+    process.env.LIVE_GRID_RESTREAMER_HLS_LAG = '3';
+    jest.resetModules();
     const { buildRestreamerArgs } = require('../lib/live_grid/grid_restreamer');
     const local = buildRestreamerArgs('/tmp/preview/index.m3u8', 'rtmp://a/live2/key');
-    expect(local).not.toContain('-re');
-    expect(local).toContain('/tmp/preview/index.m3u8');
-    expect(local[local.indexOf('-f') + 1]).toBe('flv');
+    expect(local).toContain('-live_start_index');
+    expect(local[local.indexOf('-live_start_index') + 1]).toBe('-3');
+    expect(local).toContain('-re');
+    expect(local[local.indexOf('-i') + 1]).toBe('/tmp/preview/index.m3u8');
 
     const remote = buildRestreamerArgs('http://127.0.0.1/preview/index.m3u8', 'rtmp://a/live2/key');
     expect(remote).toContain('-re');
-    expect(remote[remote.length - 1]).toBe('rtmp://a/live2/key');
+    expect(remote).not.toContain('-live_start_index');
   });
 });
 

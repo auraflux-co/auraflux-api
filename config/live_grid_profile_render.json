@@ -1,9 +1,10 @@
 {
-  "name": "render-broadcast-staging",
-  "version": "2026-06-19",
-  "description": "Linux broadcast worker — libx264 compositor → local HLS → grid-restreamer → YouTube RTMP, staged swap on.",
+  "name": "render-broadcast-nightly",
+  "version": "2026-06-20",
+  "description": "Repeatable Render Pro 4-quad grid — 720p compositor, buffered HLS restreamer, copy relays.",
   "env": {
     "LIVE_GRID_ENCODER": "libx264",
+    "LIVE_GRID_X264_PRESET": "ultrafast",
     "LIVE_GRID_RELAY_TRANSCODE": "off",
     "LIVE_GRID_UDP_RELAY": "on",
     "LIVE_GRID_TWITCH_QUALITY": "720p60,720p,best",
@@ -13,30 +14,28 @@
     "LIVE_GRID_SWAP_DEBOUNCE_MS": "8000",
     "LIVE_GRID_SWAP_STABLE_MS": "3000",
     "LIVE_GRID_LOCAL_HLS": "on",
-    "LIVE_GRID_AUTOTUNE": "off",
-    "LIVE_GRID_BITRATE_K": "4500",
+    "LIVE_GRID_FPS": "30",
+    "LIVE_GRID_OUTPUT_W": "1280",
+    "LIVE_GRID_OUTPUT_H": "720",
+    "LIVE_GRID_BITRATE_K": "3500",
+    "LIVE_GRID_AUTOTUNE": "on",
     "LIVE_GRID_MUSIC_GUARD": "off",
-    "LIVE_GRID_AUDIO_BITRATE_K": "192",
+    "LIVE_GRID_AUDIO_BITRATE_K": "160",
     "LIVE_GRID_AUDIO_DIRECT": "on",
-    "LIVE_GRID_AUDIO_COPY": "off",
-    "LIVE_GRID_RELAY_FPS": "30",
-    "LIVE_GRID_UDP_MASTER_REFRESH_MS": "0",
+    "LIVE_GRID_AUDIO_COPY": "on",
+    "LIVE_GRID_HLS_TIME": "2",
+    "LIVE_GRID_HLS_LIST_SIZE": "24",
+    "LIVE_GRID_HLS_DELETE_SEGMENTS": "off",
+    "LIVE_GRID_RESTREAMER_HLS_LAG": "3",
     "LIVE_GRID_RESTREAMER_HLS_WAIT_MS": "45000",
     "LIVE_SIDECAR_BIND": "0.0.0.0",
-    "FFMPEG_PATH": "ffmpeg"
+    "STREAM_DELIVERY_AUTO_HEAL": "on",
+    "LIVE_SIDECAR_HEARTBEAT_MS": "30000"
   },
-  "startPayload": {
-    "privacyStatus": "private",
-    "freshListing": true,
-    "operatorMode": true,
-    "programMode": "grid"
-  },
-  "soakChecklist": [
-    "Render deploy auraflux-broadcast-staging from staging branch",
-    "bash scripts/sync_broadcast_env_to_render.js srv-d8qs41ernols73ej7720",
-    "curl https://auraflux-broadcast-staging.onrender.com/live-broadcast/health → ok: true",
-    "POST /live-grid/prepare then /live-grid/start (private)",
-    "Confirm status.middleware.restreamer.running + master encoder libx264",
-    "Scripted logoff swap test on private listing"
+  "notes": [
+    "720p@3500k ultrafast keeps compositor ahead of 2s HLS segments on Render Pro",
+    "Restreamer: live_start_index -3 + -re = steady RTMP (no burst/starve cutouts)",
+    "HLS delete_segments off avoids restreamer racing deleted .ts files",
+    "AUDIO_COPY on disables hot-switch but stabilizes AAC (swap = brief master blip only)"
   ]
 }
