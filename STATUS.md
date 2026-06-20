@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** testing — broadcast GO LIVE slate-lock + EPIPE fixes on staging; do not promote prod until retest passes.
+**Deploy Mode:** testing — broadcast reliability pack (deploy-safe stop, solo auto-start, SEO template) on staging.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -22,7 +22,7 @@
 **Last Updated:** 2026-06-13 (CPD-1043) — Slate-lock on blank quadrant remove; dashboard uses /quadrant/N/replace; EPIPE-safe feeder pipes (GO LIVE crash fix).
 **Last Updated:** 2026-06-13 (CPD-1055) — Direct dashboard→Render API (broadcast_api.js + CORS); c0 removed from encode path; static dashboard server on :3002.
 **Last Updated:** 2026-06-13 (CPD-1055) — Dashboard→Render proxy catch-all; read routes on sidecar; sync env from Doppler/cwn-production (not c0).
-**Last Updated:** 2026-06-13 (CPD-1047) — Per-seat YouTube solo streams (Q1–Q4): solo publishers, swap sync, dashboard START SOLO STREAMS, chat lineup announce.
+**Last Updated:** 2026-06-20 (CPD-1047) — Broadcast reliability: deploy-safe stop (no endLiveBroadcast on SIGTERM), auto-resume, solo auto-start, SEO template, relay transcode, autotune off.
 **Last Updated:** 2026-06-20 (CPD-1043) — Overnight bench fail-open, dashboard GO LIVE fixes, studio-first RTMP + START RTMP button.
 **Last Updated:** 2026-06-20 (CPD-1043) — Render broadcast fix pack: pro_plus CPU, native YouTube aspect probe, direct RTMP CBR, autotune + delivery QA.
 **Last Updated:** 2026-06-20 (CPD-1043) — Render 1080p@6000k veryfast direct RTMP; autotune off for stability pilot.

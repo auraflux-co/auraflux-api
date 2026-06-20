@@ -48,9 +48,21 @@ const server = app.listen(PORT, HOST, () => {
 });
 
 async function shutdown() {
-  console.log('[broadcast-sidecar] shutting down — stopping streams…');
+  console.log('[broadcast-sidecar] shutting down — stopping encoders (YouTube listings stay open)…');
+  const grid = liveState.grid;
+  if (grid?.running) {
+    try {
+      const { saveResumeFromManager } = require('../lib/live_grid/resume_state');
+      saveResumeFromManager(grid);
+      console.log('[broadcast-sidecar] resume state saved for auto-resume after restart');
+    } catch (e) {
+      console.warn(`[broadcast-sidecar] resume save failed: ${e.message}`);
+    }
+  }
   try { liveState.tv?.stop(); } catch (_) {}
-  try { await liveState.grid?.stop(); } catch (_) {}
+  try {
+    await grid?.stop({ skipEndBroadcast: true, reason: 'shutdown' });
+  } catch (_) {}
   server.close(() => process.exit(0));
 }
 

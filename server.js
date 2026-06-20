@@ -2572,9 +2572,17 @@ app.post('/live-grid/start', async (req, res) => {
 app.post('/live-grid/stop', async (req, res) => {
   if (!liveGridManager) return res.status(400).json({ ok: false, error: 'Live grid not running' });
   const watchUrl = liveGridManager.broadcast?.watchUrl || null;
-  await liveGridManager.stop();
+  const endBroadcast = req.body?.endBroadcast === true;
+  await liveGridManager.stop({ endBroadcast, skipEndBroadcast: !endBroadcast });
   liveGridManager = null;
-  res.json({ ok: true, message: 'Live grid stopped — VOD remains on the channel', watchUrl });
+  res.json({
+    ok: true,
+    message: endBroadcast
+      ? 'Live grid stopped — VOD remains on the channel'
+      : 'Encoder stopped — YouTube listing kept open',
+    watchUrl,
+    endBroadcast,
+  });
 });
 
 } // end !USE_BROADCAST_SIDECAR (grid start/stop on main)

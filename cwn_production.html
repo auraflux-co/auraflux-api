@@ -9834,7 +9834,11 @@ async function liveGridSoloGo() {
 async function liveGridStop() {
   if (!confirm('End the live stream? The VOD stays on the channel.')) return;
   try {
-    const r = await fetch(LG_BASE + '/live-grid/stop', { method: 'POST' });
+    const r = await fetch(LG_BASE + '/live-grid/stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endBroadcast: true }),
+    });
     const d = await r.json();
     if (!d.ok) alert('Stop failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Stop failed: ' + e.message); }
