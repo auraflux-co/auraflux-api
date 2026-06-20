@@ -16,7 +16,7 @@
 
 ---
 
-**Last Updated:** 2026-06-20 (CPD-1043) — Fix on-air avatar/badge stuck on audio pin: single overlay pair + compositor refresh on audio change; name-width flank positioning.
+**Last Updated:** 2026-06-20 (CPD-1043) — Render direct RTMP (middleware off); remove compositor restart on audio pin to stop YouTube spinning.
 **Last Updated:** 2026-06-20 (CPD-1043) — On-air avatar/badge overlay asset + remove gold row gutter; deploy broadcast-staging.
 **Last Updated:** 2026-06-20 (CPD-1043) — Fix deep/choppy audio: disable AAC copy on UDP+middleware; restreamer re-encodes 48kHz AAC.
 **Last Updated:** 2026-06-19 (CPD-1043) — Render delivery QA: viewer signals on /live-grid/delivery, sidecar self-heal (restreamer), HLS staleness detection.

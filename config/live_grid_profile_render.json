@@ -8,7 +8,7 @@
     "LIVE_GRID_RELAY_TRANSCODE": "off",
     "LIVE_GRID_UDP_RELAY": "on",
     "LIVE_GRID_TWITCH_QUALITY": "720p60,720p,best",
-    "LIVE_GRID_OUTPUT_MIDDLEWARE": "on",
+    "LIVE_GRID_OUTPUT_MIDDLEWARE": "off",
     "LIVE_GRID_STAGED_SWAP": "on",
     "LIVE_GRID_RESTREAMER_HOLD": "on",
     "LIVE_GRID_SWAP_DEBOUNCE_MS": "8000",
@@ -38,9 +38,8 @@
     "LIVE_GRID_DELIVERY_HLS_STALE_MS": "8000"
   },
   "notes": [
-    "720p@3500k ultrafast keeps compositor ahead of 2s HLS segments on Render Pro",
-    "Restreamer: live_start_index -3 + -re = steady RTMP (no burst/starve cutouts)",
-    "HLS delete_segments off avoids restreamer racing deleted .ts files",
-    "AUDIO_COPY on disables hot-switch but stabilizes AAC (swap = brief master blip only)"
+    "Render: LIVE_GRID_OUTPUT_MIDDLEWARE=off — compositor → YouTube RTMP directly (no HLS restreamer hop; matches localhost stability)",
+    "720p@3500k ultrafast keeps compositor ahead on Render Pro",
+    "HLS delete_segments off when middleware on avoids restreamer racing deleted .ts files"
   ]
 }
