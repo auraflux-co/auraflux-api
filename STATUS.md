@@ -1,6 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** testing — main LIVE; YouTube ingest auto-heal coded (deploy when offline).
+**Deploy Mode:** dev — solo title fix shipping to broadcast-staging.
+
+**Deploy Mode (prev):** testing — broadcast-staging live on `dbdc9915` (main + 4 solos).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -18,7 +20,7 @@
 
 ---
 
-**Last Updated:** 2026-06-13 (CPD-1043) — Studio-attach GO LIVE now syncs YouTube privacy (PUBLIC/UNLISTED) via API; privacy badge on dashboard.
+**Last Updated:** 2026-06-20 (CPD-1047) — Deploy broadcast-staging `dbdc9915`: solo RTSP fix + fresh YouTube broadcasts; main + Q1–Q4 live.
 **Last Updated:** 2026-06-13 (CPD-1043) — Slate-lock on blank quadrant remove; dashboard uses /quadrant/N/replace; EPIPE-safe feeder pipes (GO LIVE crash fix).
 **Last Updated:** 2026-06-13 (CPD-1055) — Direct dashboard→Render API (broadcast_api.js + CORS); c0 removed from encode path; static dashboard server on :3002.
 **Last Updated:** 2026-06-13 (CPD-1055) — Dashboard→Render proxy catch-all; read routes on sidecar; sync env from Doppler/cwn-production (not c0).
@@ -204,7 +206,8 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1047): solo Studio listings — RTSP input + fresh broadcast per session** — UDP default off (master owns 5010–5013); `_prepareSoloBroadcasts()` creates/reuses YouTube broadcast before solo ffmpeg; solo-go async. | lib/live_grid/solo_publishers.js, manager.js, live_routes.js, config/live_grid_profile_render.json, test/live_grid_stability.test.js, .env.example, STATUS.md | — | 2026-06-20 |
+| Cursor | **deploy(cpd-1047): broadcast-staging `dbdc9915`** — solo RTSP + fresh broadcasts; main UxG_UoTgbL4 live; solos m6d6qpP0vYU, 9_YqpIYrUTM, JrFpWAHseyw, INerV6vSUlg. | STATUS.md | dbdc9915 | 2026-06-20 17:35 ET |
+| Cursor | **fix(cpd-1047): solo Studio listings — RTSP input + fresh broadcast per session** — UDP default off (master owns 5010–5013); `_prepareSoloBroadcasts()` creates/reuses YouTube broadcast before solo ffmpeg; solo-go async. | lib/live_grid/solo_publishers.js, manager.js, live_routes.js, config/live_grid_profile_render.json, test/live_grid_stability.test.js, .env.example, STATUS.md | dbdc9915 | 2026-06-20 |
 | Cursor | **fix(cpd-1047): YouTube Upcoming auto-heal** — detect videoIngestionStarved via liveStreams API; auto master-refresh when watch page stuck ready/Upcoming. | lib/services/youtube_direct.js, lib/live_grid/manager.js, test/youtube_ingest_heal.test.js, STATUS.md | — | 2026-06-20 |
 | Cursor | **fix(cpd-1047): live grid stability — main-first, solos after YouTube live** — UDP-fed 720p solos with 15s stagger; GO LIVE polls YouTube testing/live; resume on /app/tmp + WAS_LIVE fallback; periodic resume save. | lib/live_grid/solo_publishers.js, manager.js, resume_state.js, was_live_env.js, youtube_go_live.js, live_routes.js, render_profile.js, config/live_grid_profile_render.json, scripts/live_broadcast_sidecar.js, test/live_grid_stability.test.js, .env.example, STATUS.md | — | 2026-06-20 |
 | Cursor | **fix(cpd-1043): sync YouTube listing privacy on GO LIVE** — studio-attach path applies PUBLIC/UNLISTED via API; START RTMP re-applies; privacy badge in dashboard. | lib/services/youtube_direct.js, lib/live_grid/manager.js, youtube_sync.js, live_routes.js, cwn_production.html, STATUS.md | — | 2026-06-13 |
