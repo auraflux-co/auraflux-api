@@ -2661,25 +2661,9 @@ app.post('/connect/twitch/token', async (req, res) => {
   }
 });
 
-// GET /live-grid/followed-bench — preview the bench the next stream would use
-app.get('/live-grid/followed-bench', async (req, res) => {
-  const { getFollowedBench, getAllFollows, FOLLOWS_USER, loadUserToken } = require('./lib/live_grid/follows');
-  const { DEFAULT_ROSTER } = require('./lib/live_grid/poller');
-  const all = await getAllFollows();
-  const bench = await getFollowedBench({ roster: DEFAULT_ROSTER });
-  if (!all && !bench) {
-    return res.status(400).json({ ok: false, error: `No Twitch user token (or expired) — connect at /connect/twitch as ${FOLLOWS_USER}` });
-  }
-  const tokenUser = loadUserToken()?.login || FOLLOWS_USER;
-  res.json({
-    ok: true,
-    user: tokenUser,
-    count: (all || bench || []).length,
-    follows: all || [],
-    bench: bench || [],
-    roster: DEFAULT_ROSTER,
-  });
-});
+if (!USE_BROADCAST_SIDECAR) {
+  require('./lib/broadcast/grid_read_routes').registerLiveGridReadRoutes(app);
+}
 
 if (!USE_BROADCAST_SIDECAR) {
 // POST /live-grid/roster { add?, remove?, benchAdd?, benchRemove? } — mutate the
@@ -2751,84 +2735,6 @@ app.post('/live-grid/quadrant/:n/file', (req, res) => {
 });
 
 } // end !USE_BROADCAST_SIDECAR (grid control routes)
-
-// GET /live-grid/event-feed/preview — pick allowlisted live feed for event_night (CPD-1030)
-app.get('/live-grid/event-feed/preview', async (req, res) => {
-  try {
-    const { resolveActiveEvent } = require('./lib/live_grid/event_calendar');
-    const { pickEventFeed } = require('./lib/live_grid/event_feed_picker');
-    const { loadFeedSources } = require('./lib/live_grid/feed_allowlist');
-    const activeEvent = resolveActiveEvent();
-    const eventId = req.query.eventId || activeEvent?.eventId;
-    const feed = await pickEventFeed({
-      eventId,
-      eventTitle: activeEvent?.eventTitle,
-      activeEvent: activeEvent ? { ...activeEvent, eventId: eventId || activeEvent.eventId } : null,
-    });
-    res.json({
-      ok: true,
-      activeEvent,
-      feed,
-      configPath: process.env.LIVE_GRID_FEED_SOURCES || 'config/live_grid_feed_sources.json',
-      spec: eventId ? loadFeedSources().events?.[eventId] : null,
-    });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-// GET /live-grid/discovery/bench — platform top live preview (CPD-1019)
-app.get('/live-grid/discovery/bench', async (req, res) => {
-  try {
-    const { DEFAULT_ROSTER } = require('./lib/live_grid/poller');
-    const { getFollowedBench } = require('./lib/live_grid/follows');
-    const { fetchPlatformTopLive, mergePlatformBench } = require('./lib/live_grid/discovery');
-    const roster = DEFAULT_ROSTER;
-    const follows = await getFollowedBench({ roster });
-    const platform = await fetchPlatformTopLive();
-    const bench = mergePlatformBench({ roster, follows: follows || [], platform });
-    res.json({ ok: true, followsCount: follows?.length || 0, platformTop: platform.slice(0, 20), benchCount: bench.length, bench: bench.slice(0, 50) });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-// GET /live-grid/analytics/hourly — watch time by hour + schedule recommendation (CPD-1024)
-app.get('/live-grid/analytics/hourly', async (req, res) => {
-  try {
-    const yt = require('./lib/services/youtube_direct');
-    const { fetchHourlyWatch, aggregateByHour, recommendGridWindow } = require('./lib/live_grid/hourly_analytics');
-    const ch = await yt.getChannelInfo();
-    if (!ch?.id) return res.status(400).json({ ok: false, error: 'YouTube not connected' });
-    const rows = await fetchHourlyWatch(ch.id, { days: Number(req.query.days) || 14 });
-    const hourly = aggregateByHour(rows);
-    const recommendation = recommendGridWindow(hourly);
-    res.json({ ok: true, channelId: ch.id, rows: rows.slice(-48), hourly, recommendation });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.response?.data?.error?.message || e.message });
-  }
-});
-
-// GET /live-grid/allowlist — trial events + platform rules (CPD-1023)
-app.get('/live-grid/allowlist', (req, res) => {
-  try {
-    const { loadAllowlist } = require('./lib/live_grid/rights_registry');
-    res.json({ ok: true, ...loadAllowlist() });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
-
-// GET /live-grid/files — eligible mp4 list for quadrant swap (CPD-1028)
-app.get('/live-grid/files', (req, res) => {
-  try {
-    const { listEligibleGridFiles } = require('./lib/broadcast/ops');
-    const files = listEligibleGridFiles();
-    res.json({ ok: true, count: files.length, files });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
-});
 
 // GET /calendar/plan — master week plan (production + live + publish)
 app.get('/calendar/plan', (req, res) => {
