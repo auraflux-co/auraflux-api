@@ -428,9 +428,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div class="card-header"><div class="card-title">GO LIVE</div></div>
           <div class="card-body">
             <div class="field"><label>PROGRAM MODE</label>
-              <select id="bc-program-mode" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
-                <option value="grid" selected>grid (4× Twitch multiview)</option>
-                <option value="solo_roster">solo_roster (10-slot fleet — sidecars A+B)</option>
+              <select id="bc-program-mode" onchange="liveGridRender()" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
+                <option value="grid">grid (4× Twitch multiview)</option>
+                <option value="solo_roster" selected>solo_roster (10-slot fleet — sidecars A+B)</option>
                 <option value="auto">auto (follow schedule — empty = grid)</option>
                 <option value="news_desk">news_desk (manual)</option>
                 <option value="event_night">event_night (manual)</option>
@@ -563,11 +563,16 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div id="lg-solo-seats"></div>
             <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Configure 4 permanent stream keys in Studio (unlisted), then START SOLO STREAMS. Solos sync when the grid swaps — or press SYNC SOLO TITLES if a listing is wrong.</div>
           </div>
-          <div id="lg-fleet-row" style="display:none;margin-top:8px;font-size:10px;color:rgba(199,175,79,0.95);line-height:1.65;">
-            <div style="font-weight:700;margin-bottom:4px;">SOLO ROSTER FLEET · ClipzWorld News (slots 1–10)</div>
+          <div id="lg-fleet-row" style="margin-top:8px;font-size:10px;color:rgba(199,175,79,0.95);line-height:1.65;">
+            <div style="font-weight:700;margin-bottom:4px;">SOLO ROSTER FLEET · 10 slots (Sidecar A 1–5 · Sidecar B 6–10)</div>
             <div id="lg-fleet-sidecar-a"></div>
             <div id="lg-fleet-sidecar-b"></div>
-            <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Orchestrator polls Twitch/Kick every ~45s — live source → slot goes public on YouTube. Tier C: 1080p @ 6800k per slot. Set chat to Subscribers in Studio when reviewing thumbs.</div>
+            <div class="btn-row" style="margin-top:8px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="liveGridStartFleet('a')">START FLEET · SIDECAR A</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="liveGridStartFleet('b')">START FLEET · SIDECAR B</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="liveGridRefresh()">REFRESH STATUS</button>
+            </div>
+            <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Orchestrator polls Twitch/Kick ~45s — live source → YouTube slot public. Tier C 1080p @ 6800k. Or use GO LIVE with program mode <b>solo_roster</b> (starts sidecar A).</div>
           </div>
         </div>
       </div>
@@ -9613,6 +9618,31 @@ function lgFetch(url, opts) {
   return fetch(url, Object.assign({}, opts, { headers: h }));
 }
 
+function lgFleetModeSelected() {
+  const mode = document.getElementById('bc-program-mode')?.value || 'grid';
+  return mode === 'solo_roster';
+}
+
+function lgFleetConfigSidecar(id) {
+  const cfg = window.__FLEET_ROSTER_CONFIG__;
+  if (!cfg || !cfg.sidecars) return null;
+  return cfg.sidecars.find(function (s) { return s.id === id; }) || null;
+}
+
+function lgRenderFleetStatic(elId, label, sidecarId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const sc = lgFleetConfigSidecar(sidecarId);
+  if (!sc || !sc.slots) {
+    el.innerHTML = '<div style="color:rgba(255,255,255,0.4);">' + label + ': roster config missing</div>';
+    return;
+  }
+  el.innerHTML = '<div style="margin-top:6px;font-weight:600;color:#c7af4f;">' + label + ' · roster (idle)</div>' +
+    sc.slots.map(function (s) {
+      return '<div>⚪ slot ' + s.slot + ' <b>@' + s.login + '</b> · ' + (s.platform || '') + ' · idle</div>';
+    }).join('');
+}
+
 function lgFleetPhaseDot(phase) {
   if (phase === 'live') return '🟢';
   if (phase === 'starting') return '🟡';
@@ -9640,18 +9670,18 @@ let _lgListing = null;
 
 async function liveGridRefreshListing() {
   try {
-    const r = await lgFetch( + '/live-grid/youtube-listing?probe=1');
+    const r = await lgFetch(LG_BASE + '/live-grid/youtube-listing?probe=1');
     _lgListing = await r.json();
   } catch (e) { _lgListing = null; }
 }
 
 async function liveGridRefresh() {
   try {
-    const r = await lgFetch( + '/live-grid/status');
+    const r = await lgFetch(LG_BASE + '/live-grid/status');
     _lgStatus = await r.json();
   } catch (e) { _lgStatus = null; }
   try {
-    const r2 = await lgFetch(_B + '/live-grid/status');
+    const r2 = await lgFetch(LG_BASE_B + '/live-grid/status');
     _lgStatusB = await r2.json();
   } catch (e) { _lgStatusB = null; }
   if (!_lgStatus?.running) await liveGridRefreshListing();
@@ -9663,6 +9693,7 @@ function liveGridRender() {
   const fleetA = s && s.fleetOrchestrator;
   const fleetB = _lgStatusB && _lgStatusB.fleetOrchestrator;
   const fleetMode = !!(fleetA || fleetB);
+  const fleetUi = fleetMode || lgFleetModeSelected();
   const running = fleetMode ? (!!(s && s.running) || !!(_lgStatusB && _lgStatusB.running)) : !!(s && s.running);
   const tag = document.getElementById('lg-status-tag');
   tag.innerHTML = running
@@ -9672,10 +9703,12 @@ function liveGridRender() {
 
   const fleetRow = document.getElementById('lg-fleet-row');
   if (fleetRow) {
-    fleetRow.style.display = fleetMode ? '' : 'none';
-    if (fleetMode) {
-      lgRenderFleetSidecar('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', s);
-      lgRenderFleetSidecar('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', _lgStatusB);
+    fleetRow.style.display = fleetUi ? '' : 'none';
+    if (fleetUi) {
+      if (fleetA || (s && s.running)) lgRenderFleetSidecar('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', s);
+      else lgRenderFleetStatic('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', 'a');
+      if (fleetB || (_lgStatusB && _lgStatusB.running)) lgRenderFleetSidecar('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', _lgStatusB);
+      else lgRenderFleetStatic('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', 'b');
     }
   }
 
@@ -9888,6 +9921,30 @@ function liveGridRender() {
   }).join('');
 }
 
+async function liveGridStartFleet(sidecar) {
+  const base = sidecar === 'b' ? LG_BASE_B : LG_BASE;
+  const label = sidecar === 'b' ? 'Sidecar B (slots 6–10)' : 'Sidecar A (slots 1–5)';
+  const privacy = document.getElementById('lg-privacy')?.value || 'public';
+  if (!confirm('Start solo roster fleet on ' + label + '?')) return;
+  try {
+    const r = await lgFetch(base + '/live-grid/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        privacyStatus: privacy,
+        programMode: 'solo_roster',
+        usePrepared: false,
+        autoPilot: false,
+        operatorMode: false,
+      }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert('Fleet start failed: ' + (d.error || 'unknown'));
+    else alert(label + ' fleet orchestrator started.');
+  } catch (e) { alert('Fleet start failed: ' + e.message); }
+  liveGridRefresh();
+}
+
 async function liveGridStart() {
   const privacy = document.getElementById('lg-privacy').value;
   const programMode = document.getElementById('bc-program-mode')?.value || 'grid';
@@ -9896,7 +9953,7 @@ async function liveGridStart() {
   const btn = document.getElementById('lg-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
   try {
-    const r = await lgFetch( + '/live-grid/start', {
+    const r = await lgFetch(LG_BASE + '/live-grid/start', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         privacyStatus: privacy,
@@ -9917,7 +9974,7 @@ async function liveGridRtmpGo() {
   const btn = document.getElementById('lg-rtmp-go-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'STARTING RTMP…'; }
   try {
-    const r = await lgFetch( + '/live-grid/rtmp-go', { method: 'POST' });
+    const r = await lgFetch(LG_BASE + '/live-grid/rtmp-go', { method: 'POST' });
     const d = await r.json();
     if (!d.ok && !d.started) alert('RTMP start failed: ' + (d.error || d.message || 'unknown'));
   } catch (e) { alert('RTMP start failed: ' + e.message); }
@@ -9929,7 +9986,7 @@ async function liveGridSoloGo() {
   const btn = document.getElementById('lg-solo-go-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'STARTING SOLOS…'; }
   try {
-    const r = await lgFetch( + '/live-grid/solo-go', { method: 'POST' });
+    const r = await lgFetch(LG_BASE + '/live-grid/solo-go', { method: 'POST' });
     const d = await r.json();
     if (!d.ok && !d.started) alert('Solo streams failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Solo streams failed: ' + e.message); }
@@ -9944,7 +10001,7 @@ async function liveGridSyncSoloListings(quadrant) {
   if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
   try {
     const body = quadrant ? { quadrants: [Number(quadrant)] } : {};
-    const r = await lgFetch( + '/live-grid/sync-solo-listings', {
+    const r = await lgFetch(LG_BASE + '/live-grid/sync-solo-listings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -9974,7 +10031,7 @@ async function liveGridSyncSoloListings(quadrant) {
 async function liveGridStop() {
   if (!confirm('End the live stream? The VOD stays on the channel.')) return;
   try {
-    const r = await lgFetch( + '/live-grid/stop', {
+    const r = await lgFetch(LG_BASE + '/live-grid/stop', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ endBroadcast: true }),
@@ -9987,7 +10044,7 @@ async function liveGridStop() {
 
 async function liveGridAudio(quadrant) {
   try {
-    await lgFetch( + '/live-grid/audio', {
+    await lgFetch(LG_BASE + '/live-grid/audio', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quadrant }),
     });
@@ -10000,7 +10057,7 @@ async function liveGridAddBench() {
   const login = (input.value || '').trim().toLowerCase();
   if (!login) return;
   try {
-    const r = await lgFetch( + '/live-grid/roster', {
+    const r = await lgFetch(LG_BASE + '/live-grid/roster', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ benchAdd: [login] }),
     });
@@ -10013,7 +10070,7 @@ async function liveGridAddBench() {
 
 async function liveGridReAddBench(login) {
   try {
-    const r = await lgFetch( + '/live-grid/roster', {
+    const r = await lgFetch(LG_BASE + '/live-grid/roster', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ benchAdd: [login] }),
     });
@@ -10040,7 +10097,7 @@ async function liveGridRemoveFromGrid(login) {
   if (!qNum) { alert('Could not find quadrant for ' + login); return; }
   const next = String(rep || '').trim().toLowerCase();
   try {
-    const r = await lgFetch( + `/live-grid/quadrant/${qNum}/replace`, {
+    const r = await lgFetch(LG_BASE + `/live-grid/quadrant/${qNum}/replace`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ remove: login, replace: next }),
     });
@@ -10054,7 +10111,7 @@ async function liveGridToggleOperatorMode() {
   const s = _lgStatus || {};
   const on = !!(s.poller && s.poller.operatorMode);
   try {
-    const r = await lgFetch( + '/live-grid/operator-mode', {
+    const r = await lgFetch(LG_BASE + '/live-grid/operator-mode', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ enabled: !on }),
     });
@@ -10067,7 +10124,7 @@ async function liveGridToggleOperatorMode() {
 async function liveGridRemoveBench(login) {
   if (!confirm(`Remove ${login} from the bench? (They won't re-join from your follows until you re-add them.)`)) return;
   try {
-    const r = await lgFetch( + '/live-grid/roster', {
+    const r = await lgFetch(LG_BASE + '/live-grid/roster', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ benchRemove: [login] }),
     });
@@ -10079,7 +10136,7 @@ async function liveGridRemoveBench(login) {
 
 async function liveGridAssignChannel(quadrant, login) {
   try {
-    const r = await lgFetch( + `/live-grid/quadrant/${quadrant}/channel`, {
+    const r = await lgFetch(LG_BASE + `/live-grid/quadrant/${quadrant}/channel`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ login }),
     });
@@ -10092,7 +10149,7 @@ async function liveGridAssignChannel(quadrant, login) {
 async function liveGridAssignEventFeed(login) {
   const url = `https://www.twitch.tv/${String(login).toLowerCase()}`;
   try {
-    const r = await lgFetch( + '/live-grid/quadrant/1/url', {
+    const r = await lgFetch(LG_BASE + '/live-grid/quadrant/1/url', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url, label: 'EVENT', login }),
     });
@@ -10104,7 +10161,7 @@ async function liveGridAssignEventFeed(login) {
 
 async function liveGridUnlockQuad(quadrant) {
   try {
-    const r = await lgFetch( + `/live-grid/quadrant/${quadrant}/unlock`, { method: 'POST' });
+    const r = await lgFetch(LG_BASE + `/live-grid/quadrant/${quadrant}/unlock`, { method: 'POST' });
     const d = await r.json();
     if (!d.ok) alert('Unlock failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Unlock failed: ' + e.message); }
@@ -10121,7 +10178,7 @@ let _tvStatus = null;
 
 async function liveTvRefresh() {
   try {
-    const r = await lgFetch( + '/live-tv/status');
+    const r = await lgFetch(LG_BASE + '/live-tv/status');
     _tvStatus = await r.json();
   } catch (e) { _tvStatus = null; }
   liveTvRender();
@@ -10161,7 +10218,7 @@ async function liveTvStart() {
   btn.disabled = true; btn.textContent = 'STARTING…';
   try {
     const body = typeof tvBuildStartBody === 'function' ? await tvBuildStartBody() : {};
-    const r = await lgFetch( + '/live-tv/start', {
+    const r = await lgFetch(LG_BASE + '/live-tv/start', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
@@ -10176,7 +10233,7 @@ async function liveTvStart() {
 async function liveTvStop() {
   if (!confirm('Stop ClipzWorld TV? The Twitch stream ends immediately.')) return;
   try {
-    const r = await lgFetch( + '/live-tv/stop', { method: 'POST' });
+    const r = await lgFetch(LG_BASE + '/live-tv/stop', { method: 'POST' });
     const d = await r.json();
     if (!d.ok) alert('TV stop failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('TV stop failed: ' + e.message); }

@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — broadcast sidecar auth + RTMP redact; dashboard on :8765.
 
-**Last Updated:** 2026-06-21 (CPD-1067) — Operator auth on sidecar POST/OAuth; RTMP redaction on public GETs; npm run dashboard → :8765/cwn_production.html fleet panel.
+**Last Updated:** 2026-06-21 (CPD-1067) — Broadcast tab fleet panel fixed (lgFetch URLs, roster always visible in solo_roster mode, START FLEET A/B).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

@@ -214,7 +214,12 @@
     const url = (typeof BroadcastApi !== 'undefined' && BroadcastApi.apiUrl)
       ? BroadcastApi.apiUrl(path)
       : BC_BASE + path;
-    const r = await fetch(url, opts);
+    opts = opts || {};
+    const h = Object.assign({}, opts.headers);
+    const sec = window.__BROADCAST_OPERATOR_SECRET__;
+    if (sec) h.Authorization = 'Bearer ' + sec;
+    if (opts.body && !h['Content-Type']) h['Content-Type'] = 'application/json';
+    const r = await fetch(url, Object.assign({}, opts, { headers: h }));
     return r.json();
   }
 
@@ -879,8 +884,12 @@
     if (eventTitle) body.eventTitle = eventTitle;
     if (eventFile) body.eventFile = eventFile;
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (window.__BROADCAST_OPERATOR_SECRET__) {
+        headers.Authorization = 'Bearer ' + window.__BROADCAST_OPERATOR_SECRET__;
+      }
       const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/start') : BC_BASE + '/live-grid/start'), {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers,
         body: JSON.stringify(body),
       });
       const d = await r.json();
@@ -891,11 +900,17 @@
     broadcastRefreshAll();
   };
 
+  function bcAuthHeaders(extra) {
+    const h = Object.assign({ 'Content-Type': 'application/json' }, extra || {});
+    if (window.__BROADCAST_OPERATOR_SECRET__) h.Authorization = 'Bearer ' + window.__BROADCAST_OPERATOR_SECRET__;
+    return h;
+  }
+
   window.liveGridRtmpGo = async function () {
     const btn = g('lg-rtmp-go-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'STARTING RTMP…'; }
     try {
-      const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/rtmp-go') : BC_BASE + '/live-grid/rtmp-go'), { method: 'POST' });
+      const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/rtmp-go') : BC_BASE + '/live-grid/rtmp-go'), { method: 'POST', headers: bcAuthHeaders() });
       const d = await r.json();
       if (!d.ok && !d.started) alert('RTMP start failed: ' + (d.error || d.message || 'unknown'));
     } catch (e) { alert('RTMP start failed: ' + e.message); }
@@ -907,7 +922,7 @@
     const btn = g('lg-solo-go-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'STARTING SOLOS…'; }
     try {
-      const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/solo-go') : BC_BASE + '/live-grid/solo-go'), { method: 'POST' });
+      const r = await fetch((typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/solo-go') : BC_BASE + '/live-grid/solo-go'), { method: 'POST', headers: bcAuthHeaders() });
       const d = await r.json();
       if (!d.ok && !d.started) alert('Solo streams failed: ' + (d.error || 'unknown'));
     } catch (e) { alert('Solo streams failed: ' + e.message); }
@@ -922,7 +937,7 @@
     try {
       const body = quadrant ? { quadrants: [Number(quadrant)] } : {};
       const url = (typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/sync-solo-listings') : BC_BASE + '/live-grid/sync-solo-listings');
-      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const r = await fetch(url, { method: 'POST', headers: bcAuthHeaders(), body: JSON.stringify(body) });
       const d = await r.json();
       if (r.status === 404) {
         alert('Run locally: node scripts/sync_solo_listings.js' + (quadrant ? ' --quadrant ' + quadrant : ''));

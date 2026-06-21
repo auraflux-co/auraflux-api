@@ -12,6 +12,15 @@ const path = require('path');
 
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
+const fs = require('fs');
+const fleetConfigPath = path.join(__dirname, '..', 'config', 'solo_roster_fleet.json');
+let fleetConfigJson = '{}';
+try {
+  fleetConfigJson = JSON.stringify(JSON.parse(fs.readFileSync(fleetConfigPath, 'utf8')));
+} catch (e) {
+  console.warn('[broadcast-dashboard] fleet config missing:', e.message);
+}
+
 const PORT = Number(process.env.BROADCAST_DASHBOARD_PORT || 8765);
 const SIDECAR = (process.env.LIVE_SIDECAR_URL || 'https://auraflux-broadcast-staging.onrender.com').replace(/\/$/, '');
 const SIDECAR_B = (process.env.BROADCAST_SIDECAR_B_URL || 'https://auraflux-broadcast-staging-b.onrender.com').replace(/\/$/, '');
@@ -23,7 +32,8 @@ app.get('/broadcast-config.js', (_req, res) => {
   res.type('application/javascript').send(
     `window.__BROADCAST_SIDECAR_URL__=${JSON.stringify(SIDECAR)};` +
     `window.__BROADCAST_SIDECAR_B_URL__=${JSON.stringify(SIDECAR_B)};` +
-    `window.__BROADCAST_OPERATOR_SECRET__=${JSON.stringify(OPERATOR)};`,
+    `window.__BROADCAST_OPERATOR_SECRET__=${JSON.stringify(OPERATOR)};` +
+    `window.__FLEET_ROSTER_CONFIG__=${fleetConfigJson};`,
   );
 });
 app.use(express.static(root));
