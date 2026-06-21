@@ -22,6 +22,7 @@ if (process.env.RENDER || process.env.NODE_ENV === 'staging') {
 
 const express = require('express');
 const { registerLiveBroadcastRoutes, autoResumeLiveGrid } = require('../lib/broadcast/live_routes');
+const { registerYoutubeConnectRoutes } = require('../lib/broadcast/youtube_connect_routes');
 
 const PORT = Number(process.env.PORT || process.env.LIVE_SIDECAR_PORT || 3001);
 const HOST = process.env.LIVE_SIDECAR_BIND
@@ -33,6 +34,7 @@ app.use(express.json({ limit: '2mb' }));
 const { broadcastCorsMiddleware } = require('../lib/broadcast/cors_middleware');
 app.use(broadcastCorsMiddleware());
 registerLiveBroadcastRoutes(app, liveState);
+registerYoutubeConnectRoutes(app);
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`[broadcast-sidecar] listening on http://${HOST}:${PORT} (pid ${process.pid})`);
