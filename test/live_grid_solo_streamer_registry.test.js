@@ -87,4 +87,19 @@ describe('solo_streamer_registry (CPD-1064)', () => {
     expect(reg.getBinding('ludwig').slot).toBe(1);
     expect(reg.getBinding('maya').pinned).toBe(true);
   });
+
+  test('resolveSoloEncodeSeat uses pool slot not grid quadrant', () => {
+    const reg = require('../lib/live_grid/solo_streamer_registry');
+    const { soloOutputDims } = require('../lib/live_grid/solo_publishers');
+    process.env.LIVE_GRID_SOLO_4_BITRATE_K = '6800';
+    process.env.LIVE_GRID_SOLO_4_OUTPUT_H = '1080';
+    process.env.LIVE_GRID_SOLO_2_BITRATE_K = '4500';
+    reg.applyLoginSlotMap({ maya: 4, ludwig: 2 }, ['other', 'maya', null, 'ludwig']);
+    expect(reg.resolveSoloEncodeSeat(1, 'maya')).toBe(3);
+    const dims = soloOutputDims(1, 'maya');
+    expect(dims.bitrateK).toBe(6800);
+    expect(dims.h).toBe(1080);
+    const dimsL = soloOutputDims(3, 'ludwig');
+    expect(dimsL.bitrateK).toBe(4500);
+  });
 });
