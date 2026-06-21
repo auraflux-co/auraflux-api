@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
 
-**Last Updated:** 2026-06-21 (CPD-1065) — Fix feeders.js applySources syntax (grid start blocked on Render).
+**Last Updated:** 2026-06-13 (CPD-1065) — Kick streamlink ingest with Twitch-parity probe/slate/retry on Render.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -207,6 +207,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(cpd-1065): Kick streamlink ingest — Twitch-parity health loop** — probe before seat, exponential retry, streamlink default on Render; no signed HLS token churn. | kick_config.js, stream_probe.js, feeders.js, manager.js, kick_live_resolver.js, kick_ingest.js, tests, render profile, STATUS.md | — | 2026-06-13 ET |
 | Cursor | **fix(cpd-1065): lock grid lineup — operator mode ON** — preserve Kick url locks; resume kick seats; go-live template lineup. | manager.js, resume_state.js, live_routes.js, live_grid_go_live.json, live_grid_profile_render.json, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **fix(cpd-1065): Kick resolver + HLS solo login** — stop using API token as proxy password; curl_cffi direct; preserve login on url sources. | kick_live_resolver.js, feeders.js, manager.js, live_routes.js, test, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **feat(cpd-1047): unified YouTube SEO sync on grid swap** — one debounced path (discover stream keys → main + all solos); slate seats get generic titles; dashboard sync route. | solo_listing_sync.js, manager.js, live_routes.js, broadcast_dashboard.js, cwn_production.html, sync_solo_listings.js, tests, render profile, STATUS.md | — | 2026-06-21 ET |

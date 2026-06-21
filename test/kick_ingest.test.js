@@ -6,6 +6,8 @@ const {
   isKickFeed,
   kickHlsTranscodeEnabled,
   hlsFfmpegArgs,
+  kickStreamlinkIngestEnabled,
+  kickStreamlinkFfmpegEncodeArgs,
 } = require('../lib/live_grid/kick_ingest');
 
 describe('kick_ingest', () => {
@@ -39,5 +41,21 @@ describe('kick_ingest', () => {
     const args = hlsFfmpegArgs('https://example.com/live.m3u8', {});
     expect(args).toContain('-c');
     expect(args).toContain('copy');
+  });
+
+  test('kickStreamlinkIngestEnabled reads LIVE_GRID_KICK_INGEST', () => {
+    const prev = process.env.LIVE_GRID_KICK_INGEST;
+    delete process.env.LIVE_GRID_KICK_INGEST;
+    expect(kickStreamlinkIngestEnabled()).toBe(false);
+    process.env.LIVE_GRID_KICK_INGEST = 'streamlink';
+    expect(kickStreamlinkIngestEnabled()).toBe(true);
+    if (prev) process.env.LIVE_GRID_KICK_INGEST = prev;
+    else delete process.env.LIVE_GRID_KICK_INGEST;
+  });
+
+  test('kickStreamlinkFfmpegEncodeArgs transcodes from pipe', () => {
+    const args = kickStreamlinkFfmpegEncodeArgs();
+    expect(args).toContain('pipe:0');
+    expect(args).toContain('libx264');
   });
 });
