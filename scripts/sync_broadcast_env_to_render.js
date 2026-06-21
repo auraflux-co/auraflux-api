@@ -143,6 +143,7 @@ const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'applicatio
       value: String(value),
     }, { headers });
     added++;
+    await new Promise((r) => setTimeout(r, 350));
   }
   console.log(`[sync] ${added} env vars set on ${serviceId} (source: cwn-production profile + env, not c0)`);
 })().catch((e) => {

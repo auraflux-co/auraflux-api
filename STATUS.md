@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — broadcast sidecar auth + RTMP redact; dashboard on :8765.
 
-**Last Updated:** 2026-06-21 (CPD-1067) — Broadcast tab fleet panel fixed (lgFetch URLs, roster always visible in solo_roster mode, START FLEET A/B).
+**Last Updated:** 2026-06-21 (CPD-1067) — Broadcast tab fleet panel fixed; Render env sync throttled.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -207,7 +207,8 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **feat(cpd-1067): fleet dashboard — Next.js panel + broadcast HTML + stream-only provision** | fleet-roster-panel, /api/fleet/status, cwn_production.html, clear_idle_solo_broadcasts, cancelLiveBroadcast | — | 2026-06-21 ET |
+| Cursor | **fix(cpd-1067): throttle Render env sync** — 350ms between PUTs to avoid rate limits on sidecar env push. | sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-21 ET |
+| Cursor | **fix(cpd-1067): broadcast dashboard fleet panel** — repair lgFetch URLs; roster visible in solo_roster; START FLEET A/B; static server on :8765. | cwn_production.html, broadcast_dashboard_static.js, broadcast_dashboard.js, STATUS.md | a40cf71a | 2026-06-21 ET |
 | Cursor | **feat(cpd-1067): solo roster orchestrator — poll source → per-slot YouTube; fleet auto-resume; both sidecars deployed** | solo_roster_orchestrator.js, manager.js, resume_state.js, feeders.js, fleet config, provision script, tests | 87b0be60+ | 2026-06-21 ET |
 | Cursor | **fix(cpd-1065): Kick streamlink ingest — Twitch-parity health loop** — probe before seat, exponential retry, streamlink default on Render; no signed HLS token churn. | kick_config.js, stream_probe.js, feeders.js, manager.js, kick_live_resolver.js, kick_ingest.js, tests, render profile, STATUS.md | — | 2026-06-13 ET |
 | Cursor | **fix(cpd-1065): lock grid lineup — operator mode ON** — preserve Kick url locks; resume kick seats; go-live template lineup. | manager.js, resume_state.js, live_routes.js, live_grid_go_live.json, live_grid_profile_render.json, STATUS.md | — | 2026-06-21 ET |
