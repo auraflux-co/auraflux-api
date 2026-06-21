@@ -27,10 +27,17 @@ const SIDECAR = (process.env.LIVE_SIDECAR_URL || 'https://auraflux-broadcast-sta
 const SIDECAR_B = (process.env.BROADCAST_SIDECAR_B_URL || 'https://auraflux-broadcast-staging-b.onrender.com').replace(/\/$/, '');
 const OPERATOR = process.env.BROADCAST_OPERATOR_SECRET || '';
 const root = path.join(__dirname, '..');
+const BUILD_TAG = 'cpd-1067-fleet-split-v2';
 
 const app = express();
+app.get('/cwn_production.html', (_req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(path.join(root, 'cwn_production.html'));
+});
 app.get('/broadcast-config.js', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
   res.type('application/javascript').send(
+    `window.__BROADCAST_DASHBOARD_BUILD__=${JSON.stringify(BUILD_TAG)};` +
     `window.__BROADCAST_SIDECAR_URL__=${JSON.stringify(SIDECAR)};` +
     `window.__BROADCAST_SIDECAR_B_URL__=${JSON.stringify(SIDECAR_B)};` +
     `window.__BROADCAST_OPERATOR_SECRET__=${JSON.stringify(OPERATOR)};` +
@@ -39,7 +46,7 @@ app.get('/broadcast-config.js', (_req, res) => {
 });
 app.use(express.static(root));
 const server = app.listen(PORT, HOST, () => {
-  console.log(`[broadcast-dashboard] http://127.0.0.1:${PORT}/cwn_production.html → Broadcast sidebar`);
+  console.log(`[broadcast-dashboard] build=${BUILD_TAG} http://127.0.0.1:${PORT}/cwn_production.html → Broadcast sidebar`);
   console.log(`[broadcast-dashboard] sidecar=${SIDECAR} (direct — no c0 proxy)`);
   if (!OPERATOR) console.warn('[broadcast-dashboard] BROADCAST_OPERATOR_SECRET missing — fleet start will 401');
 });

@@ -484,7 +484,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <!-- LIVE GRID (moved from Generate) -->
       <div class="card" style="margin-bottom:16px;">
         <div class="card-header">
-          <div class="card-title">LIVE GRID</div>
+          <div class="card-title" id="lg-card-title">LIVE GRID</div>
           <span class="tag tag-pending" id="lg-status-tag"><span class="tag-dot"></span> OFFLINE</span>
         </div>
         <div class="card-body">
@@ -9686,13 +9686,17 @@ async function liveGridRefresh() {
     const r = await lgFetch(LG_BASE + '/live-grid/status');
     _lgStatus = await r.json();
   } catch (e) { _lgStatus = null; }
-  if (lgFleetModeSelected()) {
-    try {
-      const r2 = await lgFetch(LG_BASE_B + '/live-grid/status');
-      _lgStatusB = await r2.json();
-    } catch (e) { _lgStatusB = null; }
-  } else {
-    _lgStatusB = null;
+  try {
+    const r2 = await lgFetch(LG_BASE_B + '/live-grid/status');
+    _lgStatusB = await r2.json();
+  } catch (e) { _lgStatusB = null; }
+  const fleetRunning = !!(
+    (_lgStatus && _lgStatus.fleetOrchestrator) ||
+    (_lgStatusB && _lgStatusB.fleetOrchestrator)
+  );
+  if (fleetRunning) {
+    const sel = document.getElementById('bc-program-mode');
+    if (sel && sel.value !== 'solo_roster') sel.value = 'solo_roster';
   }
   if (!_lgStatus?.running && !lgFleetModeSelected()) await liveGridRefreshListing();
   liveGridRender();
@@ -9703,7 +9707,7 @@ function liveGridRender() {
   const fleetA = s && s.fleetOrchestrator;
   const fleetB = _lgStatusB && _lgStatusB.fleetOrchestrator;
   const fleetMode = !!(fleetA || fleetB);
-  const fleetUi = lgFleetModeSelected();
+  const fleetUi = fleetMode || lgFleetModeSelected();
   const running = fleetUi
     ? (!!(s && s.running) || !!(_lgStatusB && _lgStatusB.running))
     : !!(s && s.running);
@@ -9717,7 +9721,7 @@ function liveGridRender() {
 
   const tag = document.getElementById('lg-status-tag');
   tag.innerHTML = running
-    ? '<span class="tag-dot" style="background:#e33;"></span> ' + (fleetUi && fleetMode ? 'FLEET LIVE' : 'LIVE')
+    ? '<span class="tag-dot" style="background:#e33;"></span> ' + (fleetUi ? 'FLEET LIVE' : 'LIVE')
     : '<span class="tag-dot"></span> OFFLINE';
   tag.style.color = running ? '#e88' : '';
 
