@@ -22,6 +22,7 @@ if (process.env.RENDER || process.env.NODE_ENV === 'staging') {
 
 const express = require('express');
 const { registerLiveBroadcastRoutes, autoResumeLiveGrid } = require('../lib/broadcast/live_routes');
+const { registerYoutubeConnectRoutes } = require('../lib/broadcast/youtube_connect_routes');
 
 const PORT = Number(process.env.PORT || process.env.LIVE_SIDECAR_PORT || 3001);
 const HOST = process.env.LIVE_SIDECAR_BIND
@@ -29,10 +30,12 @@ const HOST = process.env.LIVE_SIDECAR_BIND
 const liveState = { grid: null, tv: null };
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '2mb' }));
 const { broadcastCorsMiddleware } = require('../lib/broadcast/cors_middleware');
 app.use(broadcastCorsMiddleware());
 registerLiveBroadcastRoutes(app, liveState);
+registerYoutubeConnectRoutes(app);
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`[broadcast-sidecar] listening on http://${HOST}:${PORT} (pid ${process.pid})`);
@@ -48,9 +51,21 @@ const server = app.listen(PORT, HOST, () => {
 });
 
 async function shutdown() {
-  console.log('[broadcast-sidecar] shutting down — stopping streams…');
+  console.log('[broadcast-sidecar] shutting down — stopping encoders (YouTube listings stay open)…');
+  const grid = liveState.grid;
+  if (grid?.running) {
+    try {
+      const { saveResumeFromManager } = require('../lib/live_grid/resume_state');
+      saveResumeFromManager(grid);
+      console.log('[broadcast-sidecar] resume state saved for auto-resume after restart');
+    } catch (e) {
+      console.warn(`[broadcast-sidecar] resume save failed: ${e.message}`);
+    }
+  }
   try { liveState.tv?.stop(); } catch (_) {}
-  try { await liveState.grid?.stop(); } catch (_) {}
+  try {
+    await grid?.stop({ skipEndBroadcast: true, reason: 'shutdown' });
+  } catch (_) {}
   server.close(() => process.exit(0));
 }
 
@@ -67,7 +82,21 @@ setInterval(async () => {
   }
   if (!gridLive) return;
   try {
+    const { saveResumeFromManager } = require('../lib/live_grid/resume_state');
+    saveResumeFromManager(grid);
+  } catch (_) {}
+  try {
     grid.autoTuneEncodeIfNeeded?.();
+    if (grid._soloFocusConfig?.quadrant) {
+      const hero = await grid.maintainSoloFocus?.();
+      if (hero?.action && hero.action !== 'none') {
+        console.log(`[broadcast-sidecar] hero maintain Q${grid._soloFocusConfig.quadrant} action=${hero.action}`);
+      }
+      const seat = grid._soloFocusConfig.quadrant - 1;
+      if (!grid.soloPublishers?.procs?.[seat]) {
+        console.warn(`[broadcast-sidecar] hero solo Q${grid._soloFocusConfig.quadrant} DOWN — watchdog will restart`);
+      }
+    }
     const heal = await grid.autoHealDelivery?.();
     if (heal?.action && heal.action !== 'none') {
       console.log(`[broadcast-sidecar] delivery heal action=${heal.action} ok=${heal.ok}`);

@@ -595,7 +595,7 @@
 
   window.liveGridPrepare = async function () {
     if (!confirm('Prepare YouTube broadcast + thumbnail for tonight? (Does not start the stream)')) return;
-    const programMode = g('bc-program-mode')?.value || 'auto';
+    const programMode = g('bc-program-mode')?.value || 'grid';
     const body = { programMode, force: true };
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
@@ -638,8 +638,7 @@
     if (!p) { el.textContent = '—'; return; }
 
     const layout = (s && s.program && s.program.layout) || p.layout;
-    const active = p.activeMode || p.scheduledMode || '—';
-    const sched = p.scheduledMode || '—';
+    const active = p.activeMode || 'grid';
     const ev = layout?.activeEvent || p.layout?.activeEvent;
 
     let quads = '';
@@ -675,7 +674,7 @@
 
     el.innerHTML = `
       <div style="margin-bottom:8px;"><b style="color:#c7af4f;">${active.toUpperCase()}</b>
-        <span style="color:rgba(255,255,255,0.4);font-size:11px;"> scheduled: ${sched}${ev ? ' · ' + ev.eventTitle : ''}</span></div>
+        <span style="color:rgba(255,255,255,0.4);font-size:11px;">${ev ? ' · ' + ev.eventTitle : ''}</span></div>
       ${layout?.title ? `<div style="font-size:12px;margin-bottom:8px;">${layout.title}</div>` : ''}
       ${feedLine}
       <div class="bc-quad-grid">${quads || '<span style="color:rgba(255,255,255,0.3);font-size:11px;">Start grid to see quadrants</span>'}</div>
@@ -701,20 +700,8 @@
 
   function renderScheduleTimeline() {
     const el = g('bc-daypart-timeline');
-    if (!el || !_bcProgram) return;
-    const blocks = [
-      { mode: 'event_night', label: 'Event', start: 18, end: 20 },
-      { mode: 'news_desk', label: 'News', start: 20, end: 23 },
-      { mode: 'grid', label: 'Grid', start: 23, end: 27 },
-    ];
-    const mins = _bcProgram.et?.minutes ?? 0;
-    el.innerHTML = blocks.map(b => {
-      const end = b.end > 24 ? b.end - 24 : b.end;
-      const active = b.start <= b.end
-        ? (mins >= b.start * 60 && mins < b.end * 60)
-        : (mins >= b.start * 60 || mins < end * 60);
-      return `<div class="bc-daypart ${active ? 'active' : ''}">${b.label}<br><span>${b.start > 12 ? b.start - 12 + 'pm' : b.start + 'am'}–${b.end === 27 ? '3am' : b.end + 'pm'}</span></div>`;
-    }).join('');
+    if (!el) return;
+    el.innerHTML = '<div class="bc-daypart active" style="flex:1;">Grid<br><span>24/7 multiview</span></div>';
   }
 
   function renderAnalytics() {
@@ -874,18 +861,17 @@
   const _origLiveGridStart = window.liveGridStart;
   window.liveGridStart = async function () {
     const privacy = g('lg-privacy')?.value || 'public';
-    const programMode = g('bc-program-mode')?.value || 'auto';
+    const programMode = g('bc-program-mode')?.value || 'grid';
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
     const eventFile = g('bc-event-file')?.value || '';
-    if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?\n\nStudio-first: enable Dual stream in YouTube Studio, then click START RTMP.`)) return;
+    if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?\n\nMain + solo streams start automatically. Listing is validated — fresh if the pinned one ended.`)) return;
     const btn = g('lg-start-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'STARTING…'; }
     const body = {
       privacyStatus: privacy,
       programMode,
       usePrepared: false,
-      createListing: false,
       autoPilot: true,
       operatorMode: false,
     };
@@ -927,6 +913,32 @@
     } catch (e) { alert('Solo streams failed: ' + e.message); }
     if (btn) { btn.disabled = false; btn.textContent = 'START SOLO STREAMS'; }
     liveGridRefresh();
+  };
+
+  window.liveGridSyncSoloListings = async function (quadrant) {
+    const btn = g('lg-sync-solo-btn');
+    const label = quadrant ? 'Q' + quadrant : 'all solos';
+    if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
+    try {
+      const body = quadrant ? { quadrants: [Number(quadrant)] } : {};
+      const url = (typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/sync-solo-listings') : BC_BASE + '/live-grid/sync-solo-listings');
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (r.status === 404) {
+        alert('Run locally: node scripts/sync_solo_listings.js' + (quadrant ? ' --quadrant ' + quadrant : ''));
+        return;
+      }
+      if (!d.ok) { alert('Sync ' + label + ' failed: ' + (d.error || d.reason || 'unknown')); return; }
+      const lines = (d.results || []).map(function (row) {
+        return row.ok ? ('Q' + row.quadrant + ' ' + row.login + ' → ' + (row.title || 'updated')) : ('Q' + row.quadrant + ' FAILED: ' + (row.error || 'unknown'));
+      });
+      alert(lines.length ? lines.join('\n') : ('Sync ' + label + ' complete'));
+    } catch (e) {
+      alert('Sync failed: ' + e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'SYNC SOLO TITLES'; }
+      liveGridRefresh();
+    }
   };
 
   window.broadcastRefreshDiscovery = broadcastRefreshDiscovery;

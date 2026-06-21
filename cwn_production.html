@@ -429,10 +429,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div class="card-body">
             <div class="field"><label>PROGRAM MODE</label>
               <select id="bc-program-mode" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
-                <option value="auto" selected>auto (daypart schedule)</option>
-                <option value="grid">grid (4× Twitch multiview)</option>
-                <option value="news_desk">news_desk</option>
-                <option value="event_night">event_night</option>
+                <option value="grid" selected>grid (4× Twitch multiview)</option>
+                <option value="auto">auto (follow schedule — empty = grid)</option>
+                <option value="news_desk">news_desk (manual)</option>
+                <option value="event_night">event_night (manual)</option>
               </select></div>
             <div class="field"><label>HEADLINE (news_desk)</label>
               <input id="bc-headline" type="text" placeholder="Breaking & Analysis"></div>
@@ -489,6 +489,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         <div class="card-body">
           <div id="lg-watch-row" style="display:none;font-size:11px;margin-bottom:10px;">
             <a id="lg-watch-link" href="#" target="_blank" style="color:#c7af4f;font-weight:700;letter-spacing:1px;">▶ OPEN STREAM ON YOUTUBE</a>
+            <span id="lg-privacy-badge" style="display:none;margin-left:8px;color:#e88;font-weight:700;"></span>
             <span id="lg-uptime" style="color:rgba(255,255,255,0.35);margin-left:8px;"></span>
           </div>
           <div id="lg-quads" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;"></div>
@@ -542,21 +543,24 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               </div>
             </div>
           </div>
+          <div id="lg-listing-row" style="display:none;margin-bottom:8px;font-size:10px;color:rgba(255,255,255,0.65);line-height:1.5;"></div>
           <div class="btn-row">
             <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
               <option value="public" selected>PUBLIC</option>
               <option value="unlisted">UNLISTED</option>
+              <option value="private">PRIVATE</option>
             </select>
             <button id="lg-start-btn" class="btn btn-gold" onclick="liveGridStart()">GO LIVE</button>
             <button id="lg-rtmp-go-btn" class="btn btn-outline" style="display:none;border-color:#c7af4f;color:#c7af4f;" onclick="liveGridRtmpGo()">START RTMP → YOUTUBE</button>
             <button id="lg-solo-go-btn" class="btn btn-outline" style="display:none;border-color:#9146ff;color:#b794f6;" onclick="liveGridSoloGo()">START SOLO STREAMS</button>
+            <button id="lg-sync-solo-btn" class="btn btn-outline" style="display:none;border-color:#9146ff;color:#b794f6;font-size:10px;" onclick="liveGridSyncSoloListings()">SYNC SOLO TITLES</button>
             <button id="lg-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveGridStop()">END STREAM</button>
           </div>
           <div id="lg-studio-dual-row" style="display:none;margin-top:8px;font-size:10px;color:rgba(199,175,79,0.9);line-height:1.5;"></div>
           <div id="lg-solo-row" style="display:none;margin-top:8px;font-size:10px;color:rgba(183,148,246,0.95);line-height:1.6;">
             <div style="font-weight:700;margin-bottom:4px;">SOLO STREAMS (ClipzWorld YouTube — one per grid seat)</div>
             <div id="lg-solo-seats"></div>
-            <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Configure 4 permanent stream keys in Studio (unlisted), then START SOLO STREAMS. Solos sync when the grid swaps.</div>
+            <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Configure 4 permanent stream keys in Studio (unlisted), then START SOLO STREAMS. Solos sync when the grid swaps — or press SYNC SOLO TITLES if a listing is wrong.</div>
           </div>
         </div>
       </div>
@@ -9586,12 +9590,21 @@ function lgSidecarBase() {
 }
 const LG_BASE = lgSidecarBase();
 let _lgStatus = null;
+let _lgListing = null;
+
+async function liveGridRefreshListing() {
+  try {
+    const r = await fetch(LG_BASE + '/live-grid/youtube-listing?probe=1');
+    _lgListing = await r.json();
+  } catch (e) { _lgListing = null; }
+}
 
 async function liveGridRefresh() {
   try {
     const r = await fetch(LG_BASE + '/live-grid/status');
     _lgStatus = await r.json();
   } catch (e) { _lgStatus = null; }
+  if (!_lgStatus?.running) await liveGridRefreshListing();
   liveGridRender();
 }
 
@@ -9607,15 +9620,42 @@ function liveGridRender() {
   document.getElementById('lg-start-btn').style.display = running ? 'none' : '';
   document.getElementById('lg-privacy').style.display = running ? 'none' : '';
   document.getElementById('lg-stop-btn').style.display = running ? '' : 'none';
+  const listingRow = document.getElementById('lg-listing-row');
+  if (listingRow) {
+    if (running) {
+      listingRow.style.display = 'none';
+      listingRow.innerHTML = '';
+    } else if (_lgListing?.ok) {
+      listingRow.style.display = '';
+      const L = _lgListing.listing || {};
+      const P = _lgListing.probe || {};
+      const bid = L.broadcastId || '(none)';
+      let badge = '';
+      if (L.stale || P.attachable === false) {
+        badge = '<span style="color:#e88;">ended — fresh listing on GO LIVE</span>';
+      } else if (P.attachable === true) {
+        badge = `<span style="color:#8d8;">reusable (${P.lifeCycleStatus || 'ok'})</span>`;
+      } else {
+        badge = '<span style="color:#ca8;">will validate on GO LIVE</span>';
+      }
+      const hint = _lgListing.goLiveHint || '';
+      const link = L.watchUrl ? ` <a href="${L.watchUrl}" target="_blank" style="color:#b794f6;">watch</a>` : '';
+      listingRow.innerHTML = `<b>Main listing:</b> ${bid}${link} · ${badge}<br><span style="color:rgba(255,255,255,0.45);">${hint}</span>`;
+    } else {
+      listingRow.style.display = 'none';
+    }
+  }
   const rtmpGoBtn = document.getElementById('lg-rtmp-go-btn');
   const rtmpHeld = !!(s && s.middleware && s.middleware.rtmpHeld);
   if (rtmpGoBtn) rtmpGoBtn.style.display = running && rtmpHeld ? '' : 'none';
   const solo = (s && s.soloStreams) || {};
   const soloGoBtn = document.getElementById('lg-solo-go-btn');
+  const syncSoloBtn = document.getElementById('lg-sync-solo-btn');
   const soloRow = document.getElementById('lg-solo-row');
   const soloSeats = document.getElementById('lg-solo-seats');
   const soloReady = running && solo.enabled && solo.configured && !rtmpHeld;
   if (soloGoBtn) soloGoBtn.style.display = soloReady && !solo.started ? '' : 'none';
+  if (syncSoloBtn) syncSoloBtn.style.display = (running && solo.enabled && solo.configured) ? '' : 'none';
   if (soloRow) {
     const showSolo = running && solo.enabled;
     soloRow.style.display = showSolo ? '' : 'none';
@@ -9625,7 +9665,8 @@ function liveGridRender() {
         const login = seat.login || 'slate';
         const dot = seat.running ? '🟢' : (seat.configured ? '⚪' : '⚫');
         const link = seat.watchUrl ? `<a href="${seat.watchUrl}" target="_blank" style="color:#b794f6;">watch</a>` : 'no URL';
-        return `<div>${dot} Q${seat.quadrant} <b>${login}</b> · ${seat.label || ''} · ${link}${seat.running ? ' · LIVE' : ''}</div>`;
+        const syncBtn = `<button type="button" class="btn btn-outline btn-sm" style="font-size:9px;padding:1px 6px;margin-left:6px;border-color:#9146ff;color:#b794f6;" onclick="liveGridSyncSoloListings(${seat.quadrant})">sync title</button>`;
+        return `<div>${dot} Q${seat.quadrant} <b>${login}</b> · ${seat.label || ''} · ${link}${seat.running ? ' · LIVE' : ''}${syncBtn}</div>`;
       }).join('');
     }
   }
@@ -9649,6 +9690,17 @@ function liveGridRender() {
   const watchUrl = s && s.broadcast && s.broadcast.watchUrl;
   watchRow.style.display = (running && watchUrl) ? '' : 'none';
   if (watchUrl) document.getElementById('lg-watch-link').href = watchUrl;
+  const privBadge = document.getElementById('lg-privacy-badge');
+  const ytPriv = (s && s.youtube && s.youtube.privacyStatus) || null;
+  if (privBadge) {
+    if (running && ytPriv && ytPriv !== 'public') {
+      privBadge.style.display = '';
+      privBadge.textContent = ytPriv.toUpperCase() + (rtmpHeld ? ' — click START RTMP after Studio dual' : '');
+    } else {
+      privBadge.style.display = 'none';
+      privBadge.textContent = '';
+    }
+  }
   if (running && s.uptimeSec != null) {
     const mins = Math.floor(s.uptimeSec / 60);
     document.getElementById('lg-uptime').textContent = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
@@ -9772,8 +9824,9 @@ function liveGridRender() {
 
 async function liveGridStart() {
   const privacy = document.getElementById('lg-privacy').value;
-  const programMode = document.getElementById('bc-program-mode')?.value || 'auto';
-  if (!confirm(`Start the Live Grid broadcast (${programMode}, ${privacy.toUpperCase()})?\n\nEnable Dual stream in YouTube Studio, then START RTMP.`)) return;
+  const programMode = document.getElementById('bc-program-mode')?.value || 'grid';
+  const hint = _lgListing?.goLiveHint || 'Starts main 2×2 grid + auto-starts solo streams.';
+  if (!confirm(`Start the Live Grid (${programMode}, ${privacy.toUpperCase()})?\n\n${hint}`)) return;
   const btn = document.getElementById('lg-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
   try {
@@ -9783,7 +9836,6 @@ async function liveGridStart() {
         privacyStatus: privacy,
         programMode,
         usePrepared: false,
-        createListing: false,
         autoPilot: true,
         operatorMode: false,
       }),
@@ -9819,10 +9871,48 @@ async function liveGridSoloGo() {
   liveGridRefresh();
 }
 
+/** Push Twitch grid login → YouTube solo title (minimal API; no deploy needed on laptop via scripts/sync_solo_listings.js). */
+async function liveGridSyncSoloListings(quadrant) {
+  const btn = document.getElementById('lg-sync-solo-btn');
+  const label = quadrant ? `Q${quadrant}` : 'all solos';
+  if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
+  try {
+    const body = quadrant ? { quadrants: [Number(quadrant)] } : {};
+    const r = await fetch(LG_BASE + '/live-grid/sync-solo-listings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (r.status === 404) {
+      alert(`Sidecar sync route not deployed yet. Run locally:\nnode scripts/sync_solo_listings.js${quadrant ? ` --quadrant ${quadrant}` : ''}`);
+      return;
+    }
+    if (!d.ok) {
+      alert(`Sync ${label} failed: ` + (d.error || d.reason || 'unknown'));
+      return;
+    }
+    const lines = (d.results || []).map((row) => {
+      if (row.ok) return `Q${row.quadrant} ${row.login} → ${row.title || 'updated'}`;
+      return `Q${row.quadrant} FAILED: ${row.error || 'unknown'}`;
+    });
+    alert(lines.length ? lines.join('\n') : `Sync ${label} complete`);
+  } catch (e) {
+    alert(`Sync failed: ${e.message}\n\nFallback: node scripts/sync_solo_listings.js${quadrant ? ` --quadrant ${quadrant}` : ''}`);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'SYNC SOLO TITLES'; }
+    liveGridRefresh();
+  }
+}
+
 async function liveGridStop() {
   if (!confirm('End the live stream? The VOD stays on the channel.')) return;
   try {
-    const r = await fetch(LG_BASE + '/live-grid/stop', { method: 'POST' });
+    const r = await fetch(LG_BASE + '/live-grid/stop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endBroadcast: true }),
+    });
     const d = await r.json();
     if (!d.ok) alert('Stop failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Stop failed: ' + e.message); }
@@ -9881,15 +9971,15 @@ async function liveGridRemoveFromGrid(login) {
   msg += 'Replacement twitch login (blank = slate until you pick):';
   const rep = prompt(msg);
   if (rep === null) return;
+  if (!qNum) { alert('Could not find quadrant for ' + login); return; }
+  const next = String(rep || '').trim().toLowerCase();
   try {
-    const r = await fetch(LG_BASE + '/live-grid/roster', {
+    const r = await fetch(LG_BASE + `/live-grid/quadrant/${qNum}/replace`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ remove: [login] }),
+      body: JSON.stringify({ remove: login, replace: next }),
     });
     const d = await r.json();
     if (!d.ok) { alert('Remove failed: ' + (d.error || 'unknown')); return; }
-    const next = String(rep || '').trim().toLowerCase();
-    if (next && qNum) await liveGridAssignChannel(qNum, next);
   } catch (e) { alert('Remove failed: ' + e.message); }
   setTimeout(liveGridRefresh, 1500);
 }

@@ -2427,64 +2427,9 @@ async function _runGate5ForCard(jobId) {
   saveJobCard(jobId, card);
 }
 
-// ── Direct YouTube OAuth (CPD-923) ──────────────────────────────────────────
-// One-time connect: visit /connect/youtube in a browser, authorize the
-// ClipzWorld channel, tokens persist in data/youtube_tokens.json.
-// Publish path stays Upload-Post until YOUTUBE_DIRECT_PUBLISH=true is set.
-
-function _ytRedirectUri(req) {
-  return `${req.protocol}://${req.get('host')}/connect/youtube/callback`;
-}
-
-app.get('/connect/youtube', (req, res) => {
-  if (!process.env.YOUTUBE_CLIENT_ID || !process.env.YOUTUBE_CLIENT_SECRET) {
-    return res.status(400).send('YOUTUBE_CLIENT_ID / YOUTUBE_CLIENT_SECRET not set in .env');
-  }
-  const ytDirect = require('./lib/services/youtube_direct');
-  res.redirect(ytDirect.buildAuthUrl(_ytRedirectUri(req), 'c0'));
-});
-
-app.get('/connect/youtube/callback', async (req, res) => {
-  const { code, error } = req.query;
-  if (error) return res.status(400).send(`Google OAuth error: ${error}`);
-  if (!code) return res.status(400).send('Missing authorization code');
-  try {
-    const ytDirect = require('./lib/services/youtube_direct');
-    const tokens = await ytDirect.exchangeCode(code, _ytRedirectUri(req));
-    if (!tokens.refresh_token) {
-      return res.status(400).send('No refresh_token returned — revoke app access at myaccount.google.com/permissions and retry');
-    }
-    const stored = {
-      refresh_token: tokens.refresh_token,
-      access_token: tokens.access_token,
-      expires_at: new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString(),
-      scope: tokens.scope,
-      connectedAt: new Date().toISOString(),
-    };
-    try {
-      const info = await ytDirect.getChannelInfo(tokens.access_token);
-      if (info) Object.assign(stored, info);
-    } catch { /* channel info is cosmetic */ }
-    ytDirect.saveTokens(stored);
-    console.log(`[youtube_direct] Connected channel: ${stored.channelTitle || stored.channelId || 'unknown'}`);
-    res.send(`<h2>✅ YouTube connected</h2><p>Channel: <b>${stored.channelTitle || stored.channelId || 'unknown'}</b></p><p>Set <code>YOUTUBE_DIRECT_PUBLISH=true</code> in .env to enable direct publishing (after thumbnail parity test).</p>`);
-  } catch (e) {
-    console.error('[youtube_direct] OAuth exchange failed:', e.response?.data || e.message);
-    res.status(500).send(`Token exchange failed: ${e.response?.data?.error_description || e.message}`);
-  }
-});
-
-app.get('/connect/youtube/status', (req, res) => {
-  const ytDirect = require('./lib/services/youtube_direct');
-  const t = ytDirect.loadTokens();
-  res.json({
-    connected: ytDirect.isConnected(),
-    channelTitle: t?.channelTitle || null,
-    channelId: t?.channelId || null,
-    connectedAt: t?.connectedAt || null,
-    directPublishEnabled: process.env.YOUTUBE_DIRECT_PUBLISH === 'true',
-  });
-});
+// ── Direct YouTube OAuth (CPD-923) — also on broadcast sidecar ─────────────
+const { registerYoutubeConnectRoutes } = require('./lib/broadcast/youtube_connect_routes');
+registerYoutubeConnectRoutes(app);
 
 // POST /job/:id/schedule — set/clear a deferred publish time (CPD-924)
 // Body: { scheduledAt: ISO-8601 string } to set, { scheduledAt: null } to clear.
@@ -2572,9 +2517,17 @@ app.post('/live-grid/start', async (req, res) => {
 app.post('/live-grid/stop', async (req, res) => {
   if (!liveGridManager) return res.status(400).json({ ok: false, error: 'Live grid not running' });
   const watchUrl = liveGridManager.broadcast?.watchUrl || null;
-  await liveGridManager.stop();
+  const endBroadcast = req.body?.endBroadcast === true;
+  await liveGridManager.stop({ endBroadcast, skipEndBroadcast: !endBroadcast });
   liveGridManager = null;
-  res.json({ ok: true, message: 'Live grid stopped — VOD remains on the channel', watchUrl });
+  res.json({
+    ok: true,
+    message: endBroadcast
+      ? 'Live grid stopped — VOD remains on the channel'
+      : 'Encoder stopped — YouTube listing kept open',
+    watchUrl,
+    endBroadcast,
+  });
 });
 
 } // end !USE_BROADCAST_SIDECAR (grid start/stop on main)
@@ -9150,7 +9103,7 @@ const server = app.listen(PORT, async () => {
     console.warn('⚠️  Stream scheduler failed to start:', e.message);
   }
 
-  // YouTube Live daypart auto-switch (8pm event→news, 11pm news→grid)
+  // YouTube Live program mode — calendar daypart auto-switch disabled by default (CALENDAR_LIVE_SYNC=off)
   try {
     const { startCalendarLiveSync } = require('./lib/calendar/live_sync');
     startCalendarLiveSync({

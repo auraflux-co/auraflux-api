@@ -81,6 +81,13 @@ const env = {
   YOUTUBE_CLIENT_ID: process.env.YOUTUBE_CLIENT_ID,
   YOUTUBE_CLIENT_SECRET: process.env.YOUTUBE_CLIENT_SECRET,
   YOUTUBE_REFRESH_TOKEN: ytRefresh,
+  YOUTUBE_BACKUP_CLIENT_ID: process.env.YOUTUBE_BACKUP_CLIENT_ID,
+  YOUTUBE_BACKUP_CLIENT_SECRET: process.env.YOUTUBE_BACKUP_CLIENT_SECRET,
+  YOUTUBE_BACKUP_REFRESH_TOKEN: process.env.YOUTUBE_BACKUP_REFRESH_TOKEN,
+  // Lets /connect/youtube/backup callback persist refresh token to this service
+  RENDER_API_KEY: process.env.RENDER_API_KEY,
+  BROADCAST_RENDER_SERVICE_ID: serviceId,
+  PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL || 'https://auraflux-broadcast-staging.onrender.com',
   LIVE_GRID_RTMP_URL: process.env.LIVE_GRID_RTMP_URL,
   LIVE_GRID_STREAM_ID: process.env.LIVE_GRID_STREAM_ID,
   LIVE_GRID_BROADCAST_ID: process.env.LIVE_GRID_BROADCAST_ID,
@@ -88,6 +95,8 @@ const env = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+  APIFY_API_TOKEN: process.env.APIFY_API_TOKEN,
+  LIVE_GRID_KICK_PLAYBACK_REFRESH_MS: process.env.LIVE_GRID_KICK_PLAYBACK_REFRESH_MS || '180000',
   LIVE_GRID_OPERATOR_MODE: process.env.LIVE_GRID_OPERATOR_MODE || 'off',
   LIVE_GRID_ALLOW_NEW_STREAM: process.env.LIVE_GRID_ALLOW_NEW_STREAM || 'off',
   ...Object.fromEntries(

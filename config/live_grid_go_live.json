@@ -1,0 +1,28 @@
+{
+  "version": "2026-06-20",
+  "programMode": "grid",
+  "seo": {
+    "titleStyle": "hashtag_short_date",
+    "descriptionTemplate": "grid_v1",
+    "hashtags": [
+      "LiveStream",
+      "Twitch",
+      "WatchParty",
+      "ClipzWorldNews",
+      "Multiview"
+    ],
+    "thumbnailHeadline": "Twitch Multiview",
+    "thumbnailSubline": "4-Up Watch Party",
+    "playlistId": "PLvK0jkWRVatZ5Lq6VvQHPekN9t0N7BG4V",
+    "playlistTitle": "ClipzWorld Live streams"
+  },
+  "deadBroadcastIds": [
+    "07nAcIokb6Y"
+  ],
+  "capturedFrom": {
+    "broadcastId": "UIqtfdMc8K8",
+    "capturedAt": "2026-06-20",
+    "titleExample": "🔴 LIVE: 06.20.26 | #hasanabi #maya #joebartolozzi #ludwig #twitch",
+    "notes": "Title auto-updates from on-screen Q1–Q4 streamers each GO LIVE. Description/tags from lib/live_grid/seo.js buildGridLiveDescription + buildYoutubeTags."
+  }
+}

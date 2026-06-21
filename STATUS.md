@@ -1,5 +1,9 @@
 # CWN Production — Status & Task Tracker
 
+**Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
+
+**Last Updated:** 2026-06-21 (CPD-1065) — Kick live grid: Apify/proxy playback resolver, HLS ingest, `/quadrant/:n/kick` (commit only — deploy when Q1 off-peak).
+
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
 **HOW (Confluence — source of truth):** [Server Split — C0/C1+ Boundary](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/6881341)  
@@ -16,9 +20,12 @@
 
 ---
 
+**Last Updated:** 2026-06-20 (CPD-1047) — Deploy 0e38292f feeder login fix for solo Q1 titles.
+**Last Updated:** 2026-06-20 (CPD-1047) — Deploy broadcast-staging `dbdc9915`: solo RTSP fix + fresh YouTube broadcasts; main + Q1–Q4 live.
+**Last Updated:** 2026-06-13 (CPD-1043) — Slate-lock on blank quadrant remove; dashboard uses /quadrant/N/replace; EPIPE-safe feeder pipes (GO LIVE crash fix).
 **Last Updated:** 2026-06-13 (CPD-1055) — Direct dashboard→Render API (broadcast_api.js + CORS); c0 removed from encode path; static dashboard server on :3002.
 **Last Updated:** 2026-06-13 (CPD-1055) — Dashboard→Render proxy catch-all; read routes on sidecar; sync env from Doppler/cwn-production (not c0).
-**Last Updated:** 2026-06-13 (CPD-1047) — Per-seat YouTube solo streams (Q1–Q4): solo publishers, swap sync, dashboard START SOLO STREAMS, chat lineup announce.
+**Last Updated:** 2026-06-20 (CPD-1047) — Broadcast reliability: deploy-safe stop (no endLiveBroadcast on SIGTERM), auto-resume, solo auto-start, SEO template, relay transcode, autotune off.
 **Last Updated:** 2026-06-20 (CPD-1043) — Overnight bench fail-open, dashboard GO LIVE fixes, studio-first RTMP + START RTMP button.
 **Last Updated:** 2026-06-20 (CPD-1043) — Render broadcast fix pack: pro_plus CPU, native YouTube aspect probe, direct RTMP CBR, autotune + delivery QA.
 **Last Updated:** 2026-06-20 (CPD-1043) — Render 1080p@6000k veryfast direct RTMP; autotune off for stability pilot.
@@ -200,6 +207,16 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **feat(cpd-1047): unified YouTube SEO sync on grid swap** — one debounced path (discover stream keys → main + all solos); slate seats get generic titles; dashboard sync route. | solo_listing_sync.js, manager.js, live_routes.js, broadcast_dashboard.js, cwn_production.html, sync_solo_listings.js, tests, render profile, STATUS.md | — | 2026-06-21 ET |
+| Cursor | **fix(cpd-1047): backup auth failover on primary 401** — invalid_client/quota both route to backup GCP; SEO catchup via backup API. | youtube_api_profiles.js, youtube_direct.js, test/youtube_api_profiles.test.js, STATUS.md | 38eb8778 | 2026-06-21 ET |
+| Cursor | **fix(cpd-1047): PUBLIC_BASE_URL for backup OAuth redirect** — prefer env over proxy headers so GCP callback always matches. | youtube_connect_routes.js, sync_broadcast_env_to_render.js, STATUS.md | d2a28baf | 2026-06-21 ET |
+| Cursor | **fix(cpd-1047): OAuth redirect https on Render** — trust proxy; backup callback used http:// causing redirect_uri_mismatch. | youtube_connect_routes.js, live_broadcast_sidecar.js, STATUS.md | ffc981aa | 2026-06-21 ET |
+| Cursor | **deploy(cpd-1047): broadcast-staging `dbdc9915`** — solo RTSP + fresh broadcasts; main UxG_UoTgbL4 live; solos m6d6qpP0vYU, 9_YqpIYrUTM, JrFpWAHseyw, INerV6vSUlg. | STATUS.md | dbdc9915 | 2026-06-20 17:35 ET |
+| Cursor | **fix(cpd-1047): solo Studio listings — RTSP input + fresh broadcast per session** — UDP default off (master owns 5010–5013); `_prepareSoloBroadcasts()` creates/reuses YouTube broadcast before solo ffmpeg; solo-go async. | lib/live_grid/solo_publishers.js, manager.js, live_routes.js, config/live_grid_profile_render.json, test/live_grid_stability.test.js, .env.example, STATUS.md | dbdc9915 | 2026-06-20 |
+| Cursor | **fix(cpd-1047): YouTube Upcoming auto-heal** — detect videoIngestionStarved via liveStreams API; auto master-refresh when watch page stuck ready/Upcoming. | lib/services/youtube_direct.js, lib/live_grid/manager.js, test/youtube_ingest_heal.test.js, STATUS.md | — | 2026-06-20 |
+| Cursor | **fix(cpd-1047): live grid stability — main-first, solos after YouTube live** — UDP-fed 720p solos with 15s stagger; GO LIVE polls YouTube testing/live; resume on /app/tmp + WAS_LIVE fallback; periodic resume save. | lib/live_grid/solo_publishers.js, manager.js, resume_state.js, was_live_env.js, youtube_go_live.js, live_routes.js, render_profile.js, config/live_grid_profile_render.json, scripts/live_broadcast_sidecar.js, test/live_grid_stability.test.js, .env.example, STATUS.md | — | 2026-06-20 |
+| Cursor | **fix(cpd-1043): sync YouTube listing privacy on GO LIVE** — studio-attach path applies PUBLIC/UNLISTED via API; START RTMP re-applies; privacy badge in dashboard. | lib/services/youtube_direct.js, lib/live_grid/manager.js, youtube_sync.js, live_routes.js, cwn_production.html, STATUS.md | — | 2026-06-13 |
+| Cursor | **fix(cpd-1043): GO LIVE remove-to-slate crash** — blank replace locks slate (no auto-pilot backfill); dashboard POST /quadrant/N/replace; EPIPE-safe streamlink→ffmpeg pipes. | lib/live_grid/poller.js, manager.js, feeders.js, cwn_production.html, test/live_grid_poller.test.js, STATUS.md | — | 2026-06-13 |
 | Cursor | **chore(cpd-1047/1055): broadcast closeout** — solo YouTube listings provisioned (Q1–Q4 on Render); full QA 14+19+17 pass; PR #647 merged; broadcast-staging live. | scripts/provision_solo_youtube_listings.js, logs/cpd1055_proxy_qa.json, STATUS.md | — | 2026-06-13 |
 | Cursor | **fix(cpd-1055): broadcast script order + solo profile on Render** — load broadcast-config/broadcast_api before LG_BASE; apply LIVE_GRID_SOLO_* from render profile; delete missed sync_broadcast_proxy_to_c0.sh. | cwn_production.html, lib/live_grid/render_profile.js, scripts/sync_broadcast_proxy_to_c0.sh, STATUS.md | cd3835c1 | 2026-06-13 |
 | Cursor | **fix(cpd-869): YouTube synthetic tag from job metadata** — youtube_direct derives containsSyntheticMedia via publish_synthetic (not hardcoded true); setContainsSyntheticMedia for post-upload correction. | lib/services/youtube_direct.js, STATUS.md | — | 2026-06-13 |
