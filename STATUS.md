@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
 
-**Last Updated:** 2026-06-21 (CPD-1065) — Kick relay transcode + feeder ffmpeg hardening (follow-up deploy).
+**Last Updated:** 2026-06-21 (CPD-1065) — Kick Q1 lock survives auto pilot; SEO auto-sync off (manual refresh-all-seo).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
