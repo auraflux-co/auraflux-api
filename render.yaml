@@ -347,7 +347,7 @@ services:
     runtime: node
     rootDir: app
     branch: staging
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && NODE_OPTIONS=--max-old-space-size=4096 npm run build
     startCommand: npm start
     plan: starter
     region: oregon
