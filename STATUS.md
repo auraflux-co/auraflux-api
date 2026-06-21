@@ -207,7 +207,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1047): mount /connect/youtube/backup on broadcast sidecar** — routes were server.js-only. | youtube_connect_routes.js, live_broadcast_sidecar.js, STATUS.md | — | 2026-06-20 20:25 ET |
+| Cursor | **fix(cpd-1047): OAuth redirect https on Render** — trust proxy; backup callback used http:// causing 502/mismatch. | youtube_connect_routes.js, live_broadcast_sidecar.js, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **deploy(cpd-1047): broadcast-staging `dbdc9915`** — solo RTSP + fresh broadcasts; main UxG_UoTgbL4 live; solos m6d6qpP0vYU, 9_YqpIYrUTM, JrFpWAHseyw, INerV6vSUlg. | STATUS.md | dbdc9915 | 2026-06-20 17:35 ET |
 | Cursor | **fix(cpd-1047): solo Studio listings — RTSP input + fresh broadcast per session** — UDP default off (master owns 5010–5013); `_prepareSoloBroadcasts()` creates/reuses YouTube broadcast before solo ffmpeg; solo-go async. | lib/live_grid/solo_publishers.js, manager.js, live_routes.js, config/live_grid_profile_render.json, test/live_grid_stability.test.js, .env.example, STATUS.md | dbdc9915 | 2026-06-20 |
 | Cursor | **fix(cpd-1047): YouTube Upcoming auto-heal** — detect videoIngestionStarved via liveStreams API; auto master-refresh when watch page stuck ready/Upcoming. | lib/services/youtube_direct.js, lib/live_grid/manager.js, test/youtube_ingest_heal.test.js, STATUS.md | — | 2026-06-20 |

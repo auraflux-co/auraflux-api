@@ -30,6 +30,7 @@ const HOST = process.env.LIVE_SIDECAR_BIND
 const liveState = { grid: null, tv: null };
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '2mb' }));
 const { broadcastCorsMiddleware } = require('../lib/broadcast/cors_middleware');
 app.use(broadcastCorsMiddleware());
