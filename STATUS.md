@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — solo roster orchestrator + auto-resume; both sidecars @ pro_ultra Tier C.
 
-**Last Updated:** 2026-06-21 (CPD-1067) — Solo roster orchestrator (poll source → per-slot YouTube); fleet auto-resume; sidecar A+B env + listings provisioned.
+**Last Updated:** 2026-06-21 (CPD-1067) — Solo roster orchestrator deployed both sidecars; fleet env synced; slots 1–4 live per sidecar (slot 5 pending YouTube quota for lacy/adapt listings).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
