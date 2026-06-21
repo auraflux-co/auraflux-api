@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — grid 24/7 (schedules removed); feeder/poller reconcile on resume.
+**Deploy Mode:** dev — solo focus API for hero stream allocation (CPD-1062).
 
-**Last Updated:** 2026-06-13 (CPD-1047) — remove daypart schedules; feeder reconcile after deploy/resume; default program mode grid.
+**Last Updated:** 2026-06-21 (CPD-1062) — POST /live-grid/solo-focus: stop main + other solos, max encode one seat (Q4 plaqueboymax).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
