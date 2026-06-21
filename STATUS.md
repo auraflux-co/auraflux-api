@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
 
-**Last Updated:** 2026-06-21 (CPD-1064) — hotfix heroLogin duplicate decl blocking grid start after deploy.
+**Last Updated:** 2026-06-21 (CPD-1064) — solo pool-slot hotswap API (POST /live-grid/solo-bindings).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

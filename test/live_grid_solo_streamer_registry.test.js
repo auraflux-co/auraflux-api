@@ -76,4 +76,15 @@ describe('solo_streamer_registry (CPD-1064)', () => {
     expect(text).toContain('@maya full-screen (Screen 3): https://youtube.com/live/bid1');
     expect(text).toContain('@ludwig full-screen (Screen 4): https://youtube.com/live/bid2');
   });
+
+  test('applyLoginSlotMap hotswaps pool slots for active streamers', () => {
+    const reg = require('../lib/live_grid/solo_streamer_registry');
+    reg.syncBindingsForAssignments(['maya', 'ludwig', null, null]);
+    expect(reg.getBinding('maya').slot).toBe(1);
+    reg.applyLoginSlotMap({ maya: 3, ludwig: 1 }, ['maya', 'ludwig', null, null]);
+    expect(reg.getBinding('maya').slot).toBe(3);
+    expect(reg.getBinding('maya').watchUrl).toBe('https://youtube.com/live/bid3');
+    expect(reg.getBinding('ludwig').slot).toBe(1);
+    expect(reg.getBinding('maya').pinned).toBe(true);
+  });
 });
