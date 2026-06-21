@@ -1,6 +1,7 @@
 const {
   hasBackupProfile,
   isQuotaExceededError,
+  isPrimaryAuthFailureError,
   getProfileConfig,
   getApiProfileStatus,
 } = require('../lib/services/youtube_api_profiles');
@@ -33,6 +34,17 @@ describe('youtube_api_profiles', () => {
     })).toBe(true);
     expect(isQuotaExceededError({ response: { status: 401 } })).toBe(false);
     expect(isQuotaExceededError({ response: { status: 403, data: { error: { message: 'forbidden' } } } })).toBe(false);
+  });
+
+  test('isPrimaryAuthFailureError detects invalid_client without matching quota', () => {
+    expect(isPrimaryAuthFailureError({ response: { status: 401, data: { error: 'invalid_client' } } })).toBe(true);
+    expect(isPrimaryAuthFailureError({ response: { status: 401, data: { error: 'invalid_grant' } } })).toBe(true);
+    expect(isPrimaryAuthFailureError({
+      response: {
+        status: 403,
+        data: { error: { message: 'quota', errors: [{ reason: 'quotaExceeded' }] } },
+      },
+    })).toBe(false);
   });
 
   test('getProfileConfig reads primary refresh from YOUTUBE_REFRESH_TOKEN', () => {

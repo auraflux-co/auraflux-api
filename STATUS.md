@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — backup YouTube API env synced to broadcast-staging 2026-06-20 (quota failover deploy).
+**Deploy Mode:** testing — final broadcast-staging deploy for CPD-1047 backup auth failover; no further deploys this session.
 
-**Last Updated:** 2026-06-21 (CPD-1047) — PUBLIC_BASE_URL OAuth redirect; backup connect unblock after GCP redirect URI + deploy.
+**Last Updated:** 2026-06-21 (CPD-1047) — backup auth failover (401→backup); quota catchup SEO synced; broadcast-staging final deploy.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -207,7 +207,8 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1047): PUBLIC_BASE_URL for backup OAuth redirect** — prefer env over proxy headers so GCP callback always matches. | youtube_connect_routes.js, sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-21 ET |
+| Cursor | **fix(cpd-1047): backup auth failover on primary 401** — invalid_client/quota both route to backup GCP; SEO catchup via backup API. | youtube_api_profiles.js, youtube_direct.js, test/youtube_api_profiles.test.js, STATUS.md | — | 2026-06-21 ET |
+| Cursor | **fix(cpd-1047): PUBLIC_BASE_URL for backup OAuth redirect** — prefer env over proxy headers so GCP callback always matches. | youtube_connect_routes.js, sync_broadcast_env_to_render.js, STATUS.md | d2a28baf | 2026-06-21 ET |
 | Cursor | **fix(cpd-1047): OAuth redirect https on Render** — trust proxy; backup callback used http:// causing redirect_uri_mismatch. | youtube_connect_routes.js, live_broadcast_sidecar.js, STATUS.md | ffc981aa | 2026-06-21 ET |
 | Cursor | **deploy(cpd-1047): broadcast-staging `dbdc9915`** — solo RTSP + fresh broadcasts; main UxG_UoTgbL4 live; solos m6d6qpP0vYU, 9_YqpIYrUTM, JrFpWAHseyw, INerV6vSUlg. | STATUS.md | dbdc9915 | 2026-06-20 17:35 ET |
 | Cursor | **fix(cpd-1047): solo Studio listings — RTSP input + fresh broadcast per session** — UDP default off (master owns 5010–5013); `_prepareSoloBroadcasts()` creates/reuses YouTube broadcast before solo ffmpeg; solo-go async. | lib/live_grid/solo_publishers.js, manager.js, live_routes.js, config/live_grid_profile_render.json, test/live_grid_stability.test.js, .env.example, STATUS.md | dbdc9915 | 2026-06-20 |
