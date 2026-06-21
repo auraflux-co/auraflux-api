@@ -87,6 +87,16 @@ setInterval(async () => {
   } catch (_) {}
   try {
     grid.autoTuneEncodeIfNeeded?.();
+    if (grid._soloFocusConfig?.quadrant) {
+      const hero = await grid.maintainSoloFocus?.();
+      if (hero?.action && hero.action !== 'none') {
+        console.log(`[broadcast-sidecar] hero maintain Q${grid._soloFocusConfig.quadrant} action=${hero.action}`);
+      }
+      const seat = grid._soloFocusConfig.quadrant - 1;
+      if (!grid.soloPublishers?.procs?.[seat]) {
+        console.warn(`[broadcast-sidecar] hero solo Q${grid._soloFocusConfig.quadrant} DOWN — watchdog will restart`);
+      }
+    }
     const heal = await grid.autoHealDelivery?.();
     if (heal?.action && heal.action !== 'none') {
       console.log(`[broadcast-sidecar] delivery heal action=${heal.action} ok=${heal.ok}`);

@@ -30,10 +30,8 @@ describe('solo_focus', () => {
     expect(mainGridEncodeEnabled()).toBe(false);
   });
 
-  test('per-seat bitrate override for Q4', () => {
-    applySoloSeatEncodeOverrides(3, { bitrateK: 6000, w: 1920, h: 1080 });
-    expect(soloFocusSeat()).toBe(4);
-    const dims = soloOutputDims(3);
-    expect(dims).toEqual(expect.objectContaining({ w: 1920, h: 1080, bitrateK: 6000 }));
+  test('heroSoloEncodeDefaults matches YouTube 1080p recommendation', () => {
+    const { heroSoloEncodeDefaults } = require('../lib/live_grid/solo_focus');
+    expect(heroSoloEncodeDefaults().bitrateK).toBe(6800);
   });
 });

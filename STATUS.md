@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — solo focus API for hero stream allocation (CPD-1062).
 
-**Last Updated:** 2026-06-21 (CPD-1062) — POST /live-grid/solo-focus: stop main + other solos, max encode one seat (Q4 plaqueboymax).
+**Last Updated:** 2026-06-21 (CPD-1062) — hero solo watchdog: persist focus in resume, maintain 6800k Q4, relay copy.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
