@@ -928,6 +928,32 @@
     liveGridRefresh();
   };
 
+  window.liveGridSyncSoloListings = async function (quadrant) {
+    const btn = g('lg-sync-solo-btn');
+    const label = quadrant ? 'Q' + quadrant : 'all solos';
+    if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
+    try {
+      const body = quadrant ? { quadrants: [Number(quadrant)] } : {};
+      const url = (typeof BroadcastApi !== 'undefined' ? BroadcastApi.apiUrl('/live-grid/sync-solo-listings') : BC_BASE + '/live-grid/sync-solo-listings');
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (r.status === 404) {
+        alert('Run locally: node scripts/sync_solo_listings.js' + (quadrant ? ' --quadrant ' + quadrant : ''));
+        return;
+      }
+      if (!d.ok) { alert('Sync ' + label + ' failed: ' + (d.error || d.reason || 'unknown')); return; }
+      const lines = (d.results || []).map(function (row) {
+        return row.ok ? ('Q' + row.quadrant + ' ' + row.login + ' → ' + (row.title || 'updated')) : ('Q' + row.quadrant + ' FAILED: ' + (row.error || 'unknown'));
+      });
+      alert(lines.length ? lines.join('\n') : ('Sync ' + label + ' complete'));
+    } catch (e) {
+      alert('Sync failed: ' + e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'SYNC SOLO TITLES'; }
+      liveGridRefresh();
+    }
+  };
+
   window.broadcastRefreshDiscovery = broadcastRefreshDiscovery;
   window.broadcastRefreshAnalytics = broadcastRefreshAnalytics;
 
