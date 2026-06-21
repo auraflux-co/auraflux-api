@@ -117,10 +117,16 @@ async function main() {
   console.log(`[solo-provision] service=${SERVICE_ID} fleet=${fleetId} dry=${DRY}`);
 
   const renderEnv = await fetchRenderEnv(SERVICE_ID);
-  for (const k of ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'YOUTUBE_REFRESH_TOKEN']) {
+  const ytEnvKeys = [
+    'YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'YOUTUBE_REFRESH_TOKEN',
+    'YOUTUBE_BACKUP_CLIENT_ID', 'YOUTUBE_BACKUP_CLIENT_SECRET', 'YOUTUBE_BACKUP_REFRESH_TOKEN',
+  ];
+  for (const k of ytEnvKeys) {
     if (renderEnv[k]) process.env[k] = renderEnv[k];
   }
-  if (!process.env.YOUTUBE_REFRESH_TOKEN) {
+  const { hasBackupProfile } = require('../lib/services/youtube_api_profiles');
+  console.log(`[solo-provision] backup OAuth ${hasBackupProfile() ? 'available (quota failover enabled)' : 'NOT configured on this service'}`);
+  if (!process.env.YOUTUBE_REFRESH_TOKEN && !hasBackupProfile()) {
     console.error('[solo-provision] YOUTUBE_REFRESH_TOKEN missing on Render broadcast service');
     process.exit(1);
   }
