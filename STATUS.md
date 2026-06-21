@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
 
-**Last Updated:** 2026-06-21 (CPD-1065) — Kick proxy: auto-fetch Apify proxy password on Render; APIFY_PROXY_PASSWORD in Doppler + broadcast sync.
+**Last Updated:** 2026-06-21 (CPD-1065) — Kick proxy cache retry + /live-grid/kick/resolve diagnostic; APIFY_PROXY_PASSWORD on Doppler + Render.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -207,7 +207,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1065): Apify proxy password for Kick on Render** — auto-fetch proxy password from Apify user API; sync APIFY_PROXY_PASSWORD to broadcast-staging. | kick_live_resolver.js, sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-21 ET |
+| Cursor | **fix(cpd-1065): Kick proxy cache + resolve diagnostic** — retry Apify password fetch; GET /live-grid/kick/resolve; APIFY_PROXY_PASSWORD on Render. | kick_live_resolver.js, live_routes.js, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **fix(cpd-1065): Kick resolver + HLS solo login** — stop using API token as proxy password; curl_cffi direct; preserve login on url sources. | kick_live_resolver.js, feeders.js, manager.js, live_routes.js, test, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **feat(cpd-1047): unified YouTube SEO sync on grid swap** — one debounced path (discover stream keys → main + all solos); slate seats get generic titles; dashboard sync route. | solo_listing_sync.js, manager.js, live_routes.js, broadcast_dashboard.js, cwn_production.html, sync_solo_listings.js, tests, render profile, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **fix(cpd-1047): backup auth failover on primary 401** — invalid_client/quota both route to backup GCP; SEO catchup via backup API. | youtube_api_profiles.js, youtube_direct.js, test/youtube_api_profiles.test.js, STATUS.md | 38eb8778 | 2026-06-21 ET |
