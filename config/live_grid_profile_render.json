@@ -115,6 +115,6 @@
     "LIVE_GRID_PROGRAM_MODE=grid — 4-up multiview always (daypart schedule removed)",
     "LIVE_GRID_SCHEDULE_AHEAD=off + CALENDAR_LIVE_SYNC=off + STREAM_SCHEDULER=off — manual GO LIVE only",
     "LIVE_GRID_STUDIO_DUAL_FIRST=off — RTMP starts on GO LIVE",
-    "CPD-1065: Kick HLS transcode at feeder — clean H.264 for any Kick slug; token refresh without relay nudge",
+    "CPD-1065: Kick HLS transcode at feeder — clean H.264 for any Kick slug; token refresh without relay nudge"
   ]
 }
