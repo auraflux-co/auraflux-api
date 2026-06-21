@@ -429,8 +429,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div class="card-body">
             <div class="field"><label>PROGRAM MODE</label>
               <select id="bc-program-mode" onchange="liveGridRender()" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
-                <option value="grid">grid (4× Twitch multiview)</option>
-                <option value="solo_roster" selected>solo_roster (10-slot fleet — sidecars A+B)</option>
+                <option value="grid" selected>grid (4× Twitch multiview)</option>
+                <option value="solo_roster">solo_roster (10-slot fleet — sidecars A+B)</option>
                 <option value="auto">auto (follow schedule — empty = grid)</option>
                 <option value="news_desk">news_desk (manual)</option>
                 <option value="event_night">event_night (manual)</option>
@@ -488,6 +488,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <span class="tag tag-pending" id="lg-status-tag"><span class="tag-dot"></span> OFFLINE</span>
         </div>
         <div class="card-body">
+          <!-- 4× grid multiview — hidden when program mode is solo_roster -->
+          <div id="lg-grid-mode-panel">
           <div id="lg-watch-row" style="display:none;font-size:11px;margin-bottom:10px;">
             <a id="lg-watch-link" href="#" target="_blank" style="color:#c7af4f;font-weight:700;letter-spacing:1px;">▶ OPEN STREAM ON YOUTUBE</a>
             <span id="lg-privacy-badge" style="display:none;margin-left:8px;color:#e88;font-weight:700;"></span>
@@ -545,35 +547,39 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             </div>
           </div>
           <div id="lg-listing-row" style="display:none;margin-bottom:8px;font-size:10px;color:rgba(255,255,255,0.65);line-height:1.5;"></div>
-          <div class="btn-row">
+          </div><!-- /lg-grid-mode-panel -->
+
+          <!-- 10-slot solo roster fleet — hidden when program mode is grid -->
+          <div id="lg-fleet-mode-panel" style="display:none;margin-bottom:10px;font-size:10px;color:rgba(199,175,79,0.95);line-height:1.65;">
+            <div style="font-weight:700;margin-bottom:4px;">SOLO ROSTER FLEET · 10 slots (Sidecar A 1–5 · Sidecar B 6–10)</div>
+            <div id="lg-fleet-sidecar-a"></div>
+            <div id="lg-fleet-sidecar-b"></div>
+            <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Orchestrator polls Twitch/Kick ~45s — live source → YouTube slot public. Tier C 1080p @ 6800k.</div>
+          </div>
+
+          <div class="btn-row" id="lg-control-row">
             <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
               <option value="public" selected>PUBLIC</option>
               <option value="unlisted">UNLISTED</option>
               <option value="private">PRIVATE</option>
             </select>
             <button id="lg-start-btn" class="btn btn-gold" onclick="liveGridStart()">GO LIVE</button>
+            <button id="lg-fleet-start-a" class="btn btn-outline" style="display:none;border-color:#c7af4f;color:#c7af4f;" onclick="liveGridStartFleet('a')">START FLEET · SIDECAR A</button>
+            <button id="lg-fleet-start-b" class="btn btn-outline" style="display:none;border-color:#c7af4f;color:#c7af4f;" onclick="liveGridStartFleet('b')">START FLEET · SIDECAR B</button>
+            <button id="lg-fleet-refresh" class="btn btn-outline btn-sm" style="display:none;" onclick="liveGridRefresh()">REFRESH STATUS</button>
             <button id="lg-rtmp-go-btn" class="btn btn-outline" style="display:none;border-color:#c7af4f;color:#c7af4f;" onclick="liveGridRtmpGo()">START RTMP → YOUTUBE</button>
             <button id="lg-solo-go-btn" class="btn btn-outline" style="display:none;border-color:#9146ff;color:#b794f6;" onclick="liveGridSoloGo()">START SOLO STREAMS</button>
             <button id="lg-sync-solo-btn" class="btn btn-outline" style="display:none;border-color:#9146ff;color:#b794f6;font-size:10px;" onclick="liveGridSyncSoloListings()">SYNC SOLO TITLES</button>
             <button id="lg-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveGridStop()">END STREAM</button>
           </div>
+          <div id="lg-grid-mode-tail">
           <div id="lg-studio-dual-row" style="display:none;margin-top:8px;font-size:10px;color:rgba(199,175,79,0.9);line-height:1.5;"></div>
           <div id="lg-solo-row" style="display:none;margin-top:8px;font-size:10px;color:rgba(183,148,246,0.95);line-height:1.6;">
             <div style="font-weight:700;margin-bottom:4px;">SOLO STREAMS (ClipzWorld YouTube — one per grid seat)</div>
             <div id="lg-solo-seats"></div>
             <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Configure 4 permanent stream keys in Studio (unlisted), then START SOLO STREAMS. Solos sync when the grid swaps — or press SYNC SOLO TITLES if a listing is wrong.</div>
           </div>
-          <div id="lg-fleet-row" style="margin-top:8px;font-size:10px;color:rgba(199,175,79,0.95);line-height:1.65;">
-            <div style="font-weight:700;margin-bottom:4px;">SOLO ROSTER FLEET · 10 slots (Sidecar A 1–5 · Sidecar B 6–10)</div>
-            <div id="lg-fleet-sidecar-a"></div>
-            <div id="lg-fleet-sidecar-b"></div>
-            <div class="btn-row" style="margin-top:8px;">
-              <button type="button" class="btn btn-outline btn-sm" onclick="liveGridStartFleet('a')">START FLEET · SIDECAR A</button>
-              <button type="button" class="btn btn-outline btn-sm" onclick="liveGridStartFleet('b')">START FLEET · SIDECAR B</button>
-              <button type="button" class="btn btn-outline btn-sm" onclick="liveGridRefresh()">REFRESH STATUS</button>
-            </div>
-            <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Orchestrator polls Twitch/Kick ~45s — live source → YouTube slot public. Tier C 1080p @ 6800k. Or use GO LIVE with program mode <b>solo_roster</b> (starts sidecar A).</div>
-          </div>
+          </div><!-- /lg-grid-mode-tail -->
         </div>
       </div>
 
@@ -9600,14 +9606,16 @@ function lgSidecarBase() {
     ? BroadcastApi.sidecarUrl()
     : (window.__BROADCAST_SIDECAR_URL__ || 'https://auraflux-broadcast-staging.onrender.com').replace(/\/$/, '');
 }
+const LG_BASE = lgSidecarBase();
 function lgSidecarBBase() {
   return (typeof BroadcastApi !== 'undefined' && BroadcastApi.sidecarBUrl)
     ? BroadcastApi.sidecarBUrl()
     : (window.__BROADCAST_SIDECAR_B_URL__ || 'https://auraflux-broadcast-staging-b.onrender.com').replace(/\/$/, '');
 }
-const LG_BASE = lgSidecarBase();
 const LG_BASE_B = lgSidecarBBase();
+let _lgStatus = null;
 let _lgStatusB = null;
+let _lgListing = null;
 
 function lgFetch(url, opts) {
   opts = opts || {};
@@ -9619,8 +9627,7 @@ function lgFetch(url, opts) {
 }
 
 function lgFleetModeSelected() {
-  const mode = document.getElementById('bc-program-mode')?.value || 'grid';
-  return mode === 'solo_roster';
+  return (document.getElementById('bc-program-mode')?.value || 'grid') === 'solo_roster';
 }
 
 function lgFleetConfigSidecar(id) {
@@ -9665,10 +9672,9 @@ function lgRenderFleetSidecar(elId, label, status) {
       return '<div>' + lgFleetPhaseDot(s.phase) + ' slot ' + s.slot + ' <b>@' + s.login + '</b> · ' + (s.platform || '') + ' · ' + s.phase + link + '</div>';
     }).join('');
 }
-let _lgStatus = null;
-let _lgListing = null;
 
 async function liveGridRefreshListing() {
+  if (lgFleetModeSelected()) { _lgListing = null; return; }
   try {
     const r = await lgFetch(LG_BASE + '/live-grid/youtube-listing?probe=1');
     _lgListing = await r.json();
@@ -9680,11 +9686,15 @@ async function liveGridRefresh() {
     const r = await lgFetch(LG_BASE + '/live-grid/status');
     _lgStatus = await r.json();
   } catch (e) { _lgStatus = null; }
-  try {
-    const r2 = await lgFetch(LG_BASE_B + '/live-grid/status');
-    _lgStatusB = await r2.json();
-  } catch (e) { _lgStatusB = null; }
-  if (!_lgStatus?.running) await liveGridRefreshListing();
+  if (lgFleetModeSelected()) {
+    try {
+      const r2 = await lgFetch(LG_BASE_B + '/live-grid/status');
+      _lgStatusB = await r2.json();
+    } catch (e) { _lgStatusB = null; }
+  } else {
+    _lgStatusB = null;
+  }
+  if (!_lgStatus?.running && !lgFleetModeSelected()) await liveGridRefreshListing();
   liveGridRender();
 }
 
@@ -9693,28 +9703,42 @@ function liveGridRender() {
   const fleetA = s && s.fleetOrchestrator;
   const fleetB = _lgStatusB && _lgStatusB.fleetOrchestrator;
   const fleetMode = !!(fleetA || fleetB);
-  const fleetUi = fleetMode || lgFleetModeSelected();
-  const running = fleetMode ? (!!(s && s.running) || !!(_lgStatusB && _lgStatusB.running)) : !!(s && s.running);
+  const fleetUi = lgFleetModeSelected();
+  const running = fleetUi
+    ? (!!(s && s.running) || !!(_lgStatusB && _lgStatusB.running))
+    : !!(s && s.running);
+
+  const gridPanel = document.getElementById('lg-grid-mode-panel');
+  const gridTail = document.getElementById('lg-grid-mode-tail');
+  const fleetPanel = document.getElementById('lg-fleet-mode-panel');
+  if (gridPanel) gridPanel.style.display = fleetUi ? 'none' : '';
+  if (gridTail) gridTail.style.display = fleetUi ? 'none' : '';
+  if (fleetPanel) fleetPanel.style.display = fleetUi ? '' : 'none';
+
   const tag = document.getElementById('lg-status-tag');
   tag.innerHTML = running
-    ? '<span class="tag-dot" style="background:#e33;"></span> ' + (fleetMode ? 'FLEET LIVE' : 'LIVE')
+    ? '<span class="tag-dot" style="background:#e33;"></span> ' + (fleetUi && fleetMode ? 'FLEET LIVE' : 'LIVE')
     : '<span class="tag-dot"></span> OFFLINE';
   tag.style.color = running ? '#e88' : '';
 
-  const fleetRow = document.getElementById('lg-fleet-row');
-  if (fleetRow) {
-    fleetRow.style.display = fleetUi ? '' : 'none';
-    if (fleetUi) {
-      if (fleetA || (s && s.running)) lgRenderFleetSidecar('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', s);
-      else lgRenderFleetStatic('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', 'a');
-      if (fleetB || (_lgStatusB && _lgStatusB.running)) lgRenderFleetSidecar('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', _lgStatusB);
-      else lgRenderFleetStatic('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', 'b');
-    }
+  if (fleetUi) {
+    if (fleetA || (s && s.running)) lgRenderFleetSidecar('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', s);
+    else lgRenderFleetStatic('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', 'a');
+    if (fleetB || (_lgStatusB && _lgStatusB.running)) lgRenderFleetSidecar('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', _lgStatusB);
+    else lgRenderFleetStatic('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', 'b');
   }
 
-  document.getElementById('lg-start-btn').style.display = running ? 'none' : '';
+  document.getElementById('lg-start-btn').style.display = (!fleetUi && !running) ? '' : 'none';
+  document.getElementById('lg-fleet-start-a').style.display = (fleetUi && !running) ? '' : 'none';
+  document.getElementById('lg-fleet-start-b').style.display = (fleetUi && !running) ? '' : 'none';
+  document.getElementById('lg-fleet-refresh').style.display = fleetUi ? '' : 'none';
   document.getElementById('lg-privacy').style.display = running ? 'none' : '';
-  document.getElementById('lg-stop-btn').style.display = running ? '' : 'none';
+  const stopBtn = document.getElementById('lg-stop-btn');
+  stopBtn.style.display = running ? '' : 'none';
+  stopBtn.textContent = fleetUi ? 'END FLEET' : 'END STREAM';
+
+  if (fleetUi) return;
+
   const listingRow = document.getElementById('lg-listing-row');
   if (listingRow) {
     if (running) {
@@ -9777,9 +9801,9 @@ function liveGridRender() {
       studioRow.innerHTML = '';
     }
   }
-  document.getElementById('lg-bench-row').style.display = (running && !fleetMode) ? '' : 'none';
+  document.getElementById('lg-bench-row').style.display = running ? '' : 'none';
   const assignRow = document.getElementById('lg-assign-row');
-  if (assignRow) assignRow.style.display = (running && !fleetMode) ? '' : 'none';
+  if (assignRow) assignRow.style.display = running ? '' : 'none';
 
   const watchRow = document.getElementById('lg-watch-row');
   const watchUrl = s && s.broadcast && s.broadcast.watchUrl;
@@ -9811,10 +9835,6 @@ function liveGridRender() {
 
   const quadsEl = document.getElementById('lg-quads');
   if (!running) { quadsEl.innerHTML = '<div style="grid-column:1/3;font-size:11px;color:rgba(255,255,255,0.3);text-align:center;padding:14px 0;">Stream offline — GO LIVE starts the 2x2 grid broadcast</div>'; return; }
-  if (fleetMode) {
-    quadsEl.innerHTML = '<div style="grid-column:1/3;font-size:11px;color:rgba(199,175,79,0.75);text-align:center;padding:14px 0;">Solo roster fleet — see slot status above (no 2×2 grid in this mode)</div>';
-    return;
-  }
 
   const live = (s.poller && s.poller.live) || {};
   const operatorOn = !!(s.poller && s.poller.operatorMode);
@@ -9940,7 +9960,6 @@ async function liveGridStartFleet(sidecar) {
     });
     const d = await r.json();
     if (!d.ok) alert('Fleet start failed: ' + (d.error || 'unknown'));
-    else alert(label + ' fleet orchestrator started.');
   } catch (e) { alert('Fleet start failed: ' + e.message); }
   liveGridRefresh();
 }
@@ -10029,15 +10048,37 @@ async function liveGridSyncSoloListings(quadrant) {
 }
 
 async function liveGridStop() {
-  if (!confirm('End the live stream? The VOD stays on the channel.')) return;
+  const fleetUi = lgFleetModeSelected();
+  if (!confirm(fleetUi ? 'End fleet on both sidecars? Active YouTube slots will go offline.' : 'End the live stream? The VOD stays on the channel.')) return;
   try {
-    const r = await lgFetch(LG_BASE + '/live-grid/stop', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endBroadcast: true }),
-    });
-    const d = await r.json();
-    if (!d.ok) alert('Stop failed: ' + (d.error || 'unknown'));
+    if (fleetUi) {
+      if (_lgStatus?.running) {
+        const r = await lgFetch(LG_BASE + '/live-grid/stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endBroadcast: true }),
+        });
+        const d = await r.json();
+        if (!d.ok) alert('Sidecar A stop failed: ' + (d.error || 'unknown'));
+      }
+      if (_lgStatusB?.running) {
+        const r2 = await lgFetch(LG_BASE_B + '/live-grid/stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endBroadcast: true }),
+        });
+        const d2 = await r2.json();
+        if (!d2.ok) alert('Sidecar B stop failed: ' + (d2.error || 'unknown'));
+      }
+    } else {
+      const r = await lgFetch(LG_BASE + '/live-grid/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endBroadcast: true }),
+      });
+      const d = await r.json();
+      if (!d.ok) alert('Stop failed: ' + (d.error || 'unknown'));
+    }
   } catch (e) { alert('Stop failed: ' + e.message); }
   liveGridRefresh();
 }

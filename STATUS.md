@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — broadcast sidecar auth + RTMP redact; dashboard on :8765.
 
-**Last Updated:** 2026-06-21 (CPD-1067) — Bulk env sync fix; dashboard PM2 on cwn-production.
+**Last Updated:** 2026-06-21 (CPD-1067) — Restore pre-fleet cwn_production.html; fleet UI as separate panel.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
