@@ -87,6 +87,7 @@ const env = {
   // Lets /connect/youtube/backup callback persist refresh token to this service
   RENDER_API_KEY: process.env.RENDER_API_KEY,
   BROADCAST_RENDER_SERVICE_ID: serviceId,
+  PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL || 'https://auraflux-broadcast-staging.onrender.com',
   LIVE_GRID_RTMP_URL: process.env.LIVE_GRID_RTMP_URL,
   LIVE_GRID_STREAM_ID: process.env.LIVE_GRID_STREAM_ID,
   LIVE_GRID_BROADCAST_ID: process.env.LIVE_GRID_BROADCAST_ID,
