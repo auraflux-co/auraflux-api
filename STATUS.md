@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — solo focus API for hero stream allocation (CPD-1062).
+**Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
 
-**Last Updated:** 2026-06-21 (CPD-1062) — hero solo watchdog: persist focus in resume, maintain 6800k Q4, relay copy.
+**Last Updated:** 2026-06-21 (CPD-1064) — solo watch URL follows streamer login across grid swaps; listing sync env pin fix; 5-stream encode benchmark API.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
