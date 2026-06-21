@@ -25,10 +25,13 @@ describe('kick_live_resolver', () => {
   });
 
   test('buildApifyProxyUrl uses KICK_PROXY_URL when set', () => {
-    const prev = process.env.KICK_PROXY_URL;
+    const prevUrl = process.env.KICK_PROXY_URL;
+    const prevPwd = process.env.APIFY_PROXY_PASSWORD;
     process.env.KICK_PROXY_URL = 'http://proxy.test:8000';
+    delete process.env.APIFY_PROXY_PASSWORD;
     expect(buildApifyProxyUrl()).toBe('http://proxy.test:8000');
-    process.env.KICK_PROXY_URL = prev;
+    process.env.KICK_PROXY_URL = prevUrl;
+    if (prevPwd) process.env.APIFY_PROXY_PASSWORD = prevPwd;
   });
 
   test('Kick CDN hosts are allowlisted for live grid feeds', () => {

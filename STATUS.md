@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
 
-**Last Updated:** 2026-06-21 (CPD-1065) — Kick live grid: Apify/proxy playback resolver, HLS ingest, `/quadrant/:n/kick` (commit only — deploy when Q1 off-peak).
+**Last Updated:** 2026-06-21 (CPD-1065) — deenthegreat Q1 Kick; resolver fix (curl_cffi direct, HLS login for solos).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
