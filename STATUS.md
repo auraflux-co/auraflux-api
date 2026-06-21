@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
 
-**Last Updated:** 2026-06-21 (CPD-1065) — Kick HLS transcode deploy 1dce0abe; profile JSON fix.
+**Last Updated:** 2026-06-21 (CPD-1065) — Kick relay transcode + feeder ffmpeg hardening (follow-up deploy).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
