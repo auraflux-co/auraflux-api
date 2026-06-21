@@ -59,7 +59,8 @@ async function fetchRenderEnv(serviceId) {
 
 async function putRenderEnv(serviceId, key, value) {
   if (DRY) {
-    console.log(`[dry-run] would set ${key}=${String(value).slice(0, 40)}…`);
+    const preview = key.includes('RTMP') ? '(redacted)' : String(value).slice(0, 24);
+    console.log(`[dry-run] would set ${key}=${preview}`);
     return;
   }
   await axios.put(

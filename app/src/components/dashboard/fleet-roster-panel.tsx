@@ -1,6 +1,6 @@
 'use client';
 /**
- * FleetRosterPanel — solo roster fleet on ClipzWorld News (CPD-1067).
+ * FleetRosterPanel — solo roster fleet (CPD-1067).
  * Polls /api/fleet/status (both sidecars, Tier C encode contract, alerts).
  */
 
@@ -81,7 +81,7 @@ export function FleetRosterPanel() {
             Solo Roster Fleet
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            ClipzWorld News · 10 slots · Tier C {tier ? `${tier.w}×${tier.h} @ ${tier.bitrateK}k` : '1080p @ 6800k'} per live encode
+            AuraFlux · 10 slots · Tier C {tier ? `${tier.w}×${tier.h} @ ${tier.bitrateK}k` : '1080p @ 6800k'} per live encode
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">

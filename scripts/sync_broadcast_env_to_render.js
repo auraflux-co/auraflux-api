@@ -95,8 +95,8 @@ const env = {
   YOUTUBE_BACKUP_CLIENT_ID: process.env.YOUTUBE_BACKUP_CLIENT_ID,
   YOUTUBE_BACKUP_CLIENT_SECRET: process.env.YOUTUBE_BACKUP_CLIENT_SECRET,
   YOUTUBE_BACKUP_REFRESH_TOKEN: process.env.YOUTUBE_BACKUP_REFRESH_TOKEN,
-  // Lets /connect/youtube/backup callback persist refresh token to this service
-  RENDER_API_KEY: process.env.RENDER_API_KEY,
+  // Backup OAuth persistence runs from operator workstation scripts — not full Render API key on sidecar.
+  BROADCAST_OPERATOR_SECRET: process.env.BROADCAST_OPERATOR_SECRET,
   BROADCAST_RENDER_SERVICE_ID: serviceId,
   PUBLIC_BASE_URL: fleetId === 'b'
     ? (process.env.PUBLIC_BASE_URL_B || fleetPublicBase)

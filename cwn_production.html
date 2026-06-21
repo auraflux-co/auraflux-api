@@ -9604,6 +9604,15 @@ const LG_BASE = lgSidecarBase();
 const LG_BASE_B = lgSidecarBBase();
 let _lgStatusB = null;
 
+function lgFetch(url, opts) {
+  opts = opts || {};
+  const h = Object.assign({}, opts.headers);
+  const sec = window.__BROADCAST_OPERATOR_SECRET__;
+  if (sec) h.Authorization = 'Bearer ' + sec;
+  if (opts.body && !h['Content-Type']) h['Content-Type'] = 'application/json';
+  return fetch(url, Object.assign({}, opts, { headers: h }));
+}
+
 function lgFleetPhaseDot(phase) {
   if (phase === 'live') return '🟢';
   if (phase === 'starting') return '🟡';
@@ -9631,18 +9640,18 @@ let _lgListing = null;
 
 async function liveGridRefreshListing() {
   try {
-    const r = await fetch(LG_BASE + '/live-grid/youtube-listing?probe=1');
+    const r = await lgFetch( + '/live-grid/youtube-listing?probe=1');
     _lgListing = await r.json();
   } catch (e) { _lgListing = null; }
 }
 
 async function liveGridRefresh() {
   try {
-    const r = await fetch(LG_BASE + '/live-grid/status');
+    const r = await lgFetch( + '/live-grid/status');
     _lgStatus = await r.json();
   } catch (e) { _lgStatus = null; }
   try {
-    const r2 = await fetch(LG_BASE_B + '/live-grid/status');
+    const r2 = await lgFetch(_B + '/live-grid/status');
     _lgStatusB = await r2.json();
   } catch (e) { _lgStatusB = null; }
   if (!_lgStatus?.running) await liveGridRefreshListing();
@@ -9887,7 +9896,7 @@ async function liveGridStart() {
   const btn = document.getElementById('lg-start-btn');
   btn.disabled = true; btn.textContent = 'STARTING…';
   try {
-    const r = await fetch(LG_BASE + '/live-grid/start', {
+    const r = await lgFetch( + '/live-grid/start', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         privacyStatus: privacy,
@@ -9908,7 +9917,7 @@ async function liveGridRtmpGo() {
   const btn = document.getElementById('lg-rtmp-go-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'STARTING RTMP…'; }
   try {
-    const r = await fetch(LG_BASE + '/live-grid/rtmp-go', { method: 'POST' });
+    const r = await lgFetch( + '/live-grid/rtmp-go', { method: 'POST' });
     const d = await r.json();
     if (!d.ok && !d.started) alert('RTMP start failed: ' + (d.error || d.message || 'unknown'));
   } catch (e) { alert('RTMP start failed: ' + e.message); }
@@ -9920,7 +9929,7 @@ async function liveGridSoloGo() {
   const btn = document.getElementById('lg-solo-go-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'STARTING SOLOS…'; }
   try {
-    const r = await fetch(LG_BASE + '/live-grid/solo-go', { method: 'POST' });
+    const r = await lgFetch( + '/live-grid/solo-go', { method: 'POST' });
     const d = await r.json();
     if (!d.ok && !d.started) alert('Solo streams failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Solo streams failed: ' + e.message); }
@@ -9935,7 +9944,7 @@ async function liveGridSyncSoloListings(quadrant) {
   if (btn) { btn.disabled = true; btn.textContent = 'SYNCING…'; }
   try {
     const body = quadrant ? { quadrants: [Number(quadrant)] } : {};
-    const r = await fetch(LG_BASE + '/live-grid/sync-solo-listings', {
+    const r = await lgFetch( + '/live-grid/sync-solo-listings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -9965,7 +9974,7 @@ async function liveGridSyncSoloListings(quadrant) {
 async function liveGridStop() {
   if (!confirm('End the live stream? The VOD stays on the channel.')) return;
   try {
-    const r = await fetch(LG_BASE + '/live-grid/stop', {
+    const r = await lgFetch( + '/live-grid/stop', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ endBroadcast: true }),
@@ -9978,7 +9987,7 @@ async function liveGridStop() {
 
 async function liveGridAudio(quadrant) {
   try {
-    await fetch(LG_BASE + '/live-grid/audio', {
+    await lgFetch( + '/live-grid/audio', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quadrant }),
     });
@@ -9991,7 +10000,7 @@ async function liveGridAddBench() {
   const login = (input.value || '').trim().toLowerCase();
   if (!login) return;
   try {
-    const r = await fetch(LG_BASE + '/live-grid/roster', {
+    const r = await lgFetch( + '/live-grid/roster', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ benchAdd: [login] }),
     });
@@ -10004,7 +10013,7 @@ async function liveGridAddBench() {
 
 async function liveGridReAddBench(login) {
   try {
-    const r = await fetch(LG_BASE + '/live-grid/roster', {
+    const r = await lgFetch( + '/live-grid/roster', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ benchAdd: [login] }),
     });
@@ -10031,7 +10040,7 @@ async function liveGridRemoveFromGrid(login) {
   if (!qNum) { alert('Could not find quadrant for ' + login); return; }
   const next = String(rep || '').trim().toLowerCase();
   try {
-    const r = await fetch(LG_BASE + `/live-grid/quadrant/${qNum}/replace`, {
+    const r = await lgFetch( + `/live-grid/quadrant/${qNum}/replace`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ remove: login, replace: next }),
     });
@@ -10045,7 +10054,7 @@ async function liveGridToggleOperatorMode() {
   const s = _lgStatus || {};
   const on = !!(s.poller && s.poller.operatorMode);
   try {
-    const r = await fetch(LG_BASE + '/live-grid/operator-mode', {
+    const r = await lgFetch( + '/live-grid/operator-mode', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ enabled: !on }),
     });
@@ -10058,7 +10067,7 @@ async function liveGridToggleOperatorMode() {
 async function liveGridRemoveBench(login) {
   if (!confirm(`Remove ${login} from the bench? (They won't re-join from your follows until you re-add them.)`)) return;
   try {
-    const r = await fetch(LG_BASE + '/live-grid/roster', {
+    const r = await lgFetch( + '/live-grid/roster', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ benchRemove: [login] }),
     });
@@ -10070,7 +10079,7 @@ async function liveGridRemoveBench(login) {
 
 async function liveGridAssignChannel(quadrant, login) {
   try {
-    const r = await fetch(LG_BASE + `/live-grid/quadrant/${quadrant}/channel`, {
+    const r = await lgFetch( + `/live-grid/quadrant/${quadrant}/channel`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ login }),
     });
@@ -10083,7 +10092,7 @@ async function liveGridAssignChannel(quadrant, login) {
 async function liveGridAssignEventFeed(login) {
   const url = `https://www.twitch.tv/${String(login).toLowerCase()}`;
   try {
-    const r = await fetch(LG_BASE + '/live-grid/quadrant/1/url', {
+    const r = await lgFetch( + '/live-grid/quadrant/1/url', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url, label: 'EVENT', login }),
     });
@@ -10095,7 +10104,7 @@ async function liveGridAssignEventFeed(login) {
 
 async function liveGridUnlockQuad(quadrant) {
   try {
-    const r = await fetch(LG_BASE + `/live-grid/quadrant/${quadrant}/unlock`, { method: 'POST' });
+    const r = await lgFetch( + `/live-grid/quadrant/${quadrant}/unlock`, { method: 'POST' });
     const d = await r.json();
     if (!d.ok) alert('Unlock failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('Unlock failed: ' + e.message); }
@@ -10112,7 +10121,7 @@ let _tvStatus = null;
 
 async function liveTvRefresh() {
   try {
-    const r = await fetch(LG_BASE + '/live-tv/status');
+    const r = await lgFetch( + '/live-tv/status');
     _tvStatus = await r.json();
   } catch (e) { _tvStatus = null; }
   liveTvRender();
@@ -10152,7 +10161,7 @@ async function liveTvStart() {
   btn.disabled = true; btn.textContent = 'STARTING…';
   try {
     const body = typeof tvBuildStartBody === 'function' ? await tvBuildStartBody() : {};
-    const r = await fetch(LG_BASE + '/live-tv/start', {
+    const r = await lgFetch( + '/live-tv/start', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
@@ -10167,7 +10176,7 @@ async function liveTvStart() {
 async function liveTvStop() {
   if (!confirm('Stop ClipzWorld TV? The Twitch stream ends immediately.')) return;
   try {
-    const r = await fetch(LG_BASE + '/live-tv/stop', { method: 'POST' });
+    const r = await lgFetch( + '/live-tv/stop', { method: 'POST' });
     const d = await r.json();
     if (!d.ok) alert('TV stop failed: ' + (d.error || 'unknown'));
   } catch (e) { alert('TV stop failed: ' + e.message); }

@@ -1,6 +1,6 @@
 {
   "name": "cwn-production",
-  "version": "1.0.266",
+  "version": "1.0.267",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "logs": "pm2 logs auraflux",
     "status": "pm2 status",
     "dev": "pm2 start ecosystem.config.js --env development",
-    "dashboard": "python3 -m http.server 8765",
+    "dashboard": "node scripts/broadcast_dashboard_static.js",
     "vectcut": "cd VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py",
     "db:backfill-canonical": "node scripts/backfill_canonical_job_ids.cjs",
     "db:backfill-canonical:dry": "node scripts/backfill_canonical_job_ids.cjs --dry-run",

@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — solo roster orchestrator + auto-resume; both sidecars @ pro_ultra Tier C.
+**Deploy Mode:** dev — broadcast sidecar auth + RTMP redact; dashboard on :8765.
 
-**Last Updated:** 2026-06-21 (CPD-1067) — Fleet panel on Next.js home (superadmin) + broadcast HTML; stream-only provision; idle broadcast cleanup.
+**Last Updated:** 2026-06-21 (CPD-1067) — Operator auth on sidecar POST/OAuth; RTMP redaction on public GETs; npm run dashboard → :8765/cwn_production.html fleet panel.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
