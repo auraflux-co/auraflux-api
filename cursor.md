@@ -91,25 +91,29 @@ Quick operator rule: `manifest.json` is source-of-truth for filenames/order; `RE
 
 ## Development Environment Setup
 
-**4 terminals required:**
+**Operator dashboard (only URL — bookmark this):**
+
+**http://localhost:3000/**
+
+Served by `~/cwn-c0/server.js` (`pm2 auraflux`). Full UI: Generate, Queue, **Channel Stats**, Broadcast, etc.  
+`/cwn_production.html` on :3000 redirects to `/`. **Do not use :8765 for the dashboard** — that port is ticker/static assets for assembly only.
+
+**`cwn_production.html` lives in `~/cwn-c0`** for localhost work. The copy in `cwn-production/` is a Render-trimmed fork — not the operator dashboard.
+
+**Terminals (cwn-c0):**
 
 ```bash
-# Terminal 1 — Static file server (dashboard at localhost:8765)
-cd ~/cwn-production && python3 -m http.server 8765
+# Terminal 1 — API + dashboard (required)
+cd ~/cwn-c0 && pm2 start ecosystem.config.js --only auraflux   # or: nodemon server.js
 
-# Terminal 2 — Node API server (auto-restarts via nodemon, tees to logs/server.log)
-cd ~/cwn-production && nodemon server.js 2>&1 | tee -a logs/server.log
+# Terminal 2 — Optional: port 8765 static (ticker HTML for assembly — NOT the dashboard)
+cd ~/cwn-production && npm run dashboard
 
-# Terminal 3 — VectCut API server (port 9001, for video editing)
-cd ~/cwn-production/VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py
-
-# Terminal 4 — Dashboard monitor (optional, for real-time logs)
-cd ~/cwn-production && tail -f output/*.log
+# Terminal 3 — VectCut API (port 9001, for video editing)
+cd ~/cwn-c0/VectCutAPI && ./venv-capcut/bin/python3 capcut_server.py
 ```
 
-**Dashboard:** http://localhost:3000/ (canonical — `server.js` serves `cwn_production.html`; `/cwn_production.html` redirects here)
-**Legacy static (optional):** http://localhost:8765/cwn_production.html — same files from `cwn-c0` cwd; API still on :3000
-**API:** http://localhost:3000
+**API:** http://localhost:3000  
 **VectCut API:** http://localhost:9001
 
 **Note:** VectCut API is required for NBA/News intro card generation and short-form split-screen assembly

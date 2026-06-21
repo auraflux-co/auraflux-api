@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — broadcast sidecar auth + RTMP redact; dashboard on :8765.
 
-**Last Updated:** 2026-06-21 (CPD-1067) — :8765 serves full cwn-c0 dashboard (stats restored).
+**Last Updated:** 2026-06-21 (CPD-1067) — Canonical local dashboard: http://localhost:3000/ only.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
