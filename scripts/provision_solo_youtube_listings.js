@@ -81,7 +81,8 @@ function slotKeys(i) {
 
 function slotComplete(env, i) {
   const k = slotKeys(i);
-  return !!(env[k.rtmp] && env[k.stream] && env[k.broadcast]);
+  // Fleet roster: stream + RTMP only — broadcast is created at go-live when source is live.
+  return !!(env[k.rtmp] && env[k.stream]);
 }
 
 async function fetchStreamRtmp(accessToken, streamId) {
@@ -180,23 +181,18 @@ async function main() {
       console.log(`[solo-provision] slot ${slotDef.slot} new stream ${streamId}`);
     }
 
-    if (!broadcastId) {
-      const broadcast = await createLiveBroadcast({
-        title: copy.title,
-        description: copy.description,
-        privacyStatus: 'unlisted',
-        streamId,
-      });
-      broadcastId = broadcast.broadcastId;
-      watchUrl = broadcast.watchUrl;
-      console.log(`[solo-provision] slot ${slotDef.slot} new broadcast ${broadcastId}`);
-    }
-
+    // Do NOT create a YouTube broadcast here — that shows as Upcoming in Studio before
+    // the streamer is live on source. Orchestrator creates the broadcast on go-live only.
     updates[k.rtmp] = rtmpUrl;
     updates[k.stream] = streamId;
-    updates[k.broadcast] = broadcastId;
-    updates[k.watch] = watchUrl || `https://youtube.com/live/${broadcastId}`;
     updates[k.label] = copy.label;
+    if (broadcastId) {
+      console.log(`[solo-provision] slot ${slotDef.slot} keeping existing broadcastId for reuse (${broadcastId})`);
+      updates[k.broadcast] = broadcastId;
+      updates[k.watch] = watchUrl || `https://youtube.com/live/${broadcastId}`;
+    } else {
+      console.log(`[solo-provision] slot ${slotDef.slot} stream-only — broadcast deferred until source live`);
+    }
   }
 
   if (!Object.keys(updates).length) {

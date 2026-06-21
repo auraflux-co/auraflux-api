@@ -14,6 +14,17 @@
     return DEFAULT_SIDECAR;
   }
 
+  const DEFAULT_SIDECAR_B = 'https://auraflux-broadcast-staging-b.onrender.com';
+
+  function sidecarBUrl() {
+    if (global.__BROADCAST_SIDECAR_B_URL__) return String(global.__BROADCAST_SIDECAR_B_URL__).replace(/\/$/, '');
+    try {
+      const stored = global.localStorage && global.localStorage.getItem('BROADCAST_SIDECAR_B_URL');
+      if (stored) return stored.replace(/\/$/, '');
+    } catch (_) { /* private mode */ }
+    return DEFAULT_SIDECAR_B;
+  }
+
   function localUrl() {
     return ((typeof global.CFG !== 'undefined' && global.CFG.ffmpegUrl) || 'http://localhost:3000').replace(/\/$/, '');
   }
@@ -29,5 +40,5 @@
     return (isSidecarPath(p) ? sidecarUrl() : localUrl()) + p;
   }
 
-  global.BroadcastApi = { sidecarUrl, localUrl, apiUrl, isSidecarPath, DEFAULT_SIDECAR };
+  global.BroadcastApi = { sidecarUrl, sidecarBUrl, localUrl, apiUrl, isSidecarPath, DEFAULT_SIDECAR, DEFAULT_SIDECAR_B };
 })(typeof window !== 'undefined' ? window : global);

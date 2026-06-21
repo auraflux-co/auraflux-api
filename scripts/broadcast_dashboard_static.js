@@ -12,12 +12,14 @@ const path = require('path');
 
 const PORT = Number(process.env.BROADCAST_DASHBOARD_PORT || 3002);
 const SIDECAR = (process.env.LIVE_SIDECAR_URL || 'https://auraflux-broadcast-staging.onrender.com').replace(/\/$/, '');
+const SIDECAR_B = (process.env.BROADCAST_SIDECAR_B_URL || 'https://auraflux-broadcast-staging-b.onrender.com').replace(/\/$/, '');
 const root = path.join(__dirname, '..');
 
 const app = express();
 app.get('/broadcast-config.js', (_req, res) => {
   res.type('application/javascript').send(
-    `window.__BROADCAST_SIDECAR_URL__=${JSON.stringify(SIDECAR)};`,
+    `window.__BROADCAST_SIDECAR_URL__=${JSON.stringify(SIDECAR)};` +
+    `window.__BROADCAST_SIDECAR_B_URL__=${JSON.stringify(SIDECAR_B)};`,
   );
 });
 app.use(express.static(root));

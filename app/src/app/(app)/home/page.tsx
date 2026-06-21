@@ -2,6 +2,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { Suspense } from 'react';
 import { SetupChecklist } from '@/components/dashboard/setup-checklist';
 import { LiveTiles } from '@/components/dashboard/live-tiles';
+import { FleetRosterPanel } from '@/components/dashboard/fleet-roster-panel';
 import { CheckoutWelcomeBanner } from '@/components/dashboard/checkout-welcome-banner';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { tierLabel } from '@/lib/tier-labels';
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
         <CheckoutWelcomeBanner firstName={firstName} />
       </Suspense>
       {!isSuperAdmin && <SetupChecklist setupDismissed={setupDismissed} planTier={planTier} />}
+      <FleetRosterPanel />
       <LiveTiles />
     </PageShell>
   );

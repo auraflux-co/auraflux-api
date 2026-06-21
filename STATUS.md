@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — solo roster orchestrator + auto-resume; both sidecars @ pro_ultra Tier C.
 
-**Last Updated:** 2026-06-21 (CPD-1067) — Solo roster orchestrator deployed both sidecars; fleet env synced; slots 1–4 live per sidecar (slot 5 pending YouTube quota for lacy/adapt listings).
+**Last Updated:** 2026-06-21 (CPD-1067) — Fleet panel on Next.js home (superadmin) + broadcast HTML; stream-only provision; idle broadcast cleanup.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -207,7 +207,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1067): provision script loads backup OAuth; SOLO_5 lacy+adapt via backup quota; fleet Tier C monitor** | provision_solo_youtube_listings.js, monitor_fleet_tier_c.js | — | 2026-06-21 ET |
+| Cursor | **feat(cpd-1067): fleet dashboard — Next.js panel + broadcast HTML + stream-only provision** | fleet-roster-panel, /api/fleet/status, cwn_production.html, clear_idle_solo_broadcasts, cancelLiveBroadcast | — | 2026-06-21 ET |
 | Cursor | **feat(cpd-1067): solo roster orchestrator — poll source → per-slot YouTube; fleet auto-resume; both sidecars deployed** | solo_roster_orchestrator.js, manager.js, resume_state.js, feeders.js, fleet config, provision script, tests | 87b0be60+ | 2026-06-21 ET |
 | Cursor | **fix(cpd-1065): Kick streamlink ingest — Twitch-parity health loop** — probe before seat, exponential retry, streamlink default on Render; no signed HLS token churn. | kick_config.js, stream_probe.js, feeders.js, manager.js, kick_live_resolver.js, kick_ingest.js, tests, render profile, STATUS.md | — | 2026-06-13 ET |
 | Cursor | **fix(cpd-1065): lock grid lineup — operator mode ON** — preserve Kick url locks; resume kick seats; go-live template lineup. | manager.js, resume_state.js, live_routes.js, live_grid_go_live.json, live_grid_profile_render.json, STATUS.md | — | 2026-06-21 ET |

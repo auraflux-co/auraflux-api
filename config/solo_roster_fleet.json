@@ -8,7 +8,8 @@
     "rule": "Slot-locked mirror — source platform live state drives YouTube slot live state.",
     "behaviors": [
       "Each slot is permanently bound to one streamer (Twitch or Kick). Roster changes are rare (weekly at most).",
-      "When the locked streamer goes live on Twitch/Kick → start ingest + encode for that slot → that slot's YouTube live on ClipzWorld News goes live (reuse the same listing/URL for that slot).",
+      "When the locked streamer goes live on Twitch/Kick → start ingest + encode for that slot → create or reuse that slot's YouTube broadcast → prelive (RTMP/testing) → full SEO → public on ClipzWorld News.",
+      "YouTube broadcasts are NOT pre-created at roster setup — only reusable RTMP stream keys. No Studio Upcoming until source is live.",
       "When the locked streamer goes offline → stop that slot's encode and end that slot's YouTube live on ClipzWorld News. Other slots are unaffected.",
       "When the same streamer goes live again → same slot, same YouTube listing — no rebinding.",
       "No grid compositor in this mode — only per-slot solo pipelines."
