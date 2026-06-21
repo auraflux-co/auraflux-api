@@ -595,7 +595,7 @@
 
   window.liveGridPrepare = async function () {
     if (!confirm('Prepare YouTube broadcast + thumbnail for tonight? (Does not start the stream)')) return;
-    const programMode = g('bc-program-mode')?.value || 'auto';
+    const programMode = g('bc-program-mode')?.value || 'grid';
     const body = { programMode, force: true };
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
@@ -638,8 +638,7 @@
     if (!p) { el.textContent = '—'; return; }
 
     const layout = (s && s.program && s.program.layout) || p.layout;
-    const active = p.activeMode || p.scheduledMode || '—';
-    const sched = p.scheduledMode || '—';
+    const active = p.activeMode || 'grid';
     const ev = layout?.activeEvent || p.layout?.activeEvent;
 
     let quads = '';
@@ -675,7 +674,7 @@
 
     el.innerHTML = `
       <div style="margin-bottom:8px;"><b style="color:#c7af4f;">${active.toUpperCase()}</b>
-        <span style="color:rgba(255,255,255,0.4);font-size:11px;"> scheduled: ${sched}${ev ? ' · ' + ev.eventTitle : ''}</span></div>
+        <span style="color:rgba(255,255,255,0.4);font-size:11px;">${ev ? ' · ' + ev.eventTitle : ''}</span></div>
       ${layout?.title ? `<div style="font-size:12px;margin-bottom:8px;">${layout.title}</div>` : ''}
       ${feedLine}
       <div class="bc-quad-grid">${quads || '<span style="color:rgba(255,255,255,0.3);font-size:11px;">Start grid to see quadrants</span>'}</div>
@@ -701,20 +700,8 @@
 
   function renderScheduleTimeline() {
     const el = g('bc-daypart-timeline');
-    if (!el || !_bcProgram) return;
-    const blocks = [
-      { mode: 'event_night', label: 'Event', start: 18, end: 20 },
-      { mode: 'news_desk', label: 'News', start: 20, end: 23 },
-      { mode: 'grid', label: 'Grid', start: 23, end: 27 },
-    ];
-    const mins = _bcProgram.et?.minutes ?? 0;
-    el.innerHTML = blocks.map(b => {
-      const end = b.end > 24 ? b.end - 24 : b.end;
-      const active = b.start <= b.end
-        ? (mins >= b.start * 60 && mins < b.end * 60)
-        : (mins >= b.start * 60 || mins < end * 60);
-      return `<div class="bc-daypart ${active ? 'active' : ''}">${b.label}<br><span>${b.start > 12 ? b.start - 12 + 'pm' : b.start + 'am'}–${b.end === 27 ? '3am' : b.end + 'pm'}</span></div>`;
-    }).join('');
+    if (!el) return;
+    el.innerHTML = '<div class="bc-daypart active" style="flex:1;">Grid<br><span>24/7 multiview</span></div>';
   }
 
   function renderAnalytics() {
@@ -874,7 +861,7 @@
   const _origLiveGridStart = window.liveGridStart;
   window.liveGridStart = async function () {
     const privacy = g('lg-privacy')?.value || 'public';
-    const programMode = g('bc-program-mode')?.value || 'auto';
+    const programMode = g('bc-program-mode')?.value || 'grid';
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
     const eventFile = g('bc-event-file')?.value || '';

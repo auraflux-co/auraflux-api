@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — unified YouTube SEO sync (main + solo, stream-key discover) on broadcast-staging.
+**Deploy Mode:** dev — grid 24/7 (schedules removed); feeder/poller reconcile on resume.
 
-**Last Updated:** 2026-06-21 (CPD-1047) — single SEO sync path on grid swap; slate solos get generic titles; discover by stream key.
+**Last Updated:** 2026-06-13 (CPD-1047) — remove daypart schedules; feeder reconcile after deploy/resume; default program mode grid.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

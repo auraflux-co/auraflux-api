@@ -38,26 +38,7 @@
       ]
     }
   },
-  "schedule": [
-    {
-      "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-      "start": "18:00",
-      "end": "20:00",
-      "mode": "event_night"
-    },
-    {
-      "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-      "start": "20:00",
-      "end": "23:00",
-      "mode": "news_desk"
-    },
-    {
-      "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-      "start": "23:00",
-      "end": "03:00",
-      "mode": "grid"
-    }
-  ],
+  "schedule": [],
   "fileSources": {
     "produced_news": {
       "rights": "green",

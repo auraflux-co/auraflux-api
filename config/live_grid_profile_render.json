@@ -25,6 +25,11 @@
     "LIVE_GRID_YOUTUBE_DUAL_STREAM": "on",
     "LIVE_GRID_STUDIO_DUAL_FIRST": "off",
     "LIVE_GRID_AUTO_RESUME": "on",
+    "LIVE_GRID_PROGRAM_MODE": "grid",
+    "LIVE_GRID_SCHEDULE_AHEAD": "off",
+    "CALENDAR_LIVE_SYNC": "off",
+    "LIVE_GRID_WINDOW": "off",
+    "STREAM_SCHEDULER": "off",
     "LIVE_GRID_OPERATOR_MODE": "off",
     "LIVE_GRID_PLATFORM_BENCH": "on",
     "LIVE_GRID_BENCH": "xqc,shroud,summit1g,lirik,pokimane,sodapoppin,hasanabi,yourragegaming,jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,lacy,tarik,tenz,s1mple,aceu,timthetatman,drlupo,mizkif,emiru,xaryu,asmongold,caseoh_,jynxzi,clix,bugha,ninja,tfue,nickmercs,ibai,auronplay,rubius,quackity,moistcr1tikal",
@@ -74,6 +79,8 @@
     "LIVE_GRID_RELAY_TRANSCODE=on — normalize Twitch H264 before compositor",
     "LIVE_GRID_AUTOTUNE=off — autotune restarts ffmpeg mid-stream and drops YouTube RTMP",
     "LIVE_GRID_AUTO_RESUME=on + LIVE_GRID_RESUME_DIR=/app/tmp + LIVE_GRID_WAS_LIVE env fallback",
+    "LIVE_GRID_PROGRAM_MODE=grid — 4-up multiview always (daypart schedule removed)",
+    "LIVE_GRID_SCHEDULE_AHEAD=off + CALENDAR_LIVE_SYNC=off + STREAM_SCHEDULER=off — manual GO LIVE only",
     "LIVE_GRID_STUDIO_DUAL_FIRST=off — RTMP starts on GO LIVE",
     "LIVE_GRID_YOUTUBE_GO_LIVE_WAIT=on — /live-grid/start polls until YouTube testing/live"
   ]

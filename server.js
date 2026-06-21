@@ -9103,7 +9103,7 @@ const server = app.listen(PORT, async () => {
     console.warn('⚠️  Stream scheduler failed to start:', e.message);
   }
 
-  // YouTube Live daypart auto-switch (8pm event→news, 11pm news→grid)
+  // YouTube Live program mode — calendar daypart auto-switch disabled by default (CALENDAR_LIVE_SYNC=off)
   try {
     const { startCalendarLiveSync } = require('./lib/calendar/live_sync');
     startCalendarLiveSync({

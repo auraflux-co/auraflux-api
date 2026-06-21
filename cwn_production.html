@@ -429,10 +429,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div class="card-body">
             <div class="field"><label>PROGRAM MODE</label>
               <select id="bc-program-mode" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:12px;">
-                <option value="auto" selected>auto (daypart schedule)</option>
-                <option value="grid">grid (4× Twitch multiview)</option>
-                <option value="news_desk">news_desk</option>
-                <option value="event_night">event_night</option>
+                <option value="grid" selected>grid (4× Twitch multiview)</option>
+                <option value="auto">auto (follow schedule — empty = grid)</option>
+                <option value="news_desk">news_desk (manual)</option>
+                <option value="event_night">event_night (manual)</option>
               </select></div>
             <div class="field"><label>HEADLINE (news_desk)</label>
               <input id="bc-headline" type="text" placeholder="Breaking & Analysis"></div>
@@ -9824,7 +9824,7 @@ function liveGridRender() {
 
 async function liveGridStart() {
   const privacy = document.getElementById('lg-privacy').value;
-  const programMode = document.getElementById('bc-program-mode')?.value || 'auto';
+  const programMode = document.getElementById('bc-program-mode')?.value || 'grid';
   const hint = _lgListing?.goLiveHint || 'Starts main 2×2 grid + auto-starts solo streams.';
   if (!confirm(`Start the Live Grid (${programMode}, ${privacy.toUpperCase()})?\n\n${hint}`)) return;
   const btn = document.getElementById('lg-start-btn');

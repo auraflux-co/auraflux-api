@@ -27,9 +27,10 @@ describe('live_grid program director', () => {
     expect(ev?.eventId).toBe('sports_watchalong');
   });
 
-  test('resolveScheduledMode picks grid after 11pm ET', () => {
+  test('resolveScheduledMode defaults to grid when schedule is empty', () => {
     const config = loadPrograms(path.join(__dirname, '..', 'config', 'live_grid_programs.json'));
-    const et = { weekday: 'sat', minutes: 23 * 60 + 30, dateKey: '2026-06-13' };
+    expect(config.schedule).toEqual([]);
+    const et = { weekday: 'sat', minutes: 20 * 60 + 30, dateKey: '2026-06-13' };
     const { mode } = resolveScheduledMode(config, et);
     expect(mode).toBe('grid');
   });

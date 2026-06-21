@@ -19,7 +19,7 @@
   "guidelines": {
     "live": [
       "Twitch TV: transformative produced video only (Bobby G commentary VODs + news desk). No streamer clip comps, no 4-up grid rebroadcast.",
-      "YouTube Live: follow dayparts from this calendar — event_night → news_desk (when day-fresh VOD exists) → grid.",
+      "YouTube Live: 4-up Twitch multiview grid (no daypart auto-switch unless CALENDAR_LIVE_SYNC=on).",
       "Live overrides require owner PIN — agents and automation cannot change the calendar without it."
     ],
     "vod": [
@@ -113,25 +113,9 @@
       "label": "YouTube Live Grid",
       "dayparts": [
         {
-          "id": "yt_event",
-          "start": "18:00",
-          "end": "20:00",
-          "mode": "event_night",
-          "label": "Event watch-along",
-          "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-        },
-        {
-          "id": "yt_news",
-          "start": "20:00",
-          "end": "23:00",
-          "mode": "news_desk",
-          "label": "News desk live",
-          "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-        },
-        {
           "id": "yt_grid",
-          "start": "23:00",
-          "end": "03:00",
+          "start": "00:00",
+          "end": "24:00",
           "mode": "grid",
           "label": "Multiview grid",
           "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
