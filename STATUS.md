@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
+**Deploy Mode:** dev — 10-slot solo fleet (2×5 sidecars @ pro_ultra Tier C) + Kick streamlink deploy.
 
-**Last Updated:** 2026-06-13 (CPD-1065) — Kick streamlink ingest with Twitch-parity probe/slate/retry on Render.
+**Last Updated:** 2026-06-21 (CPD-1065/1067) — Push Kick streamlink fix; solo fleet config (sidecar A slots 1–5, B slots 6–10); YT search-rank script; deploy broadcast-staging.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

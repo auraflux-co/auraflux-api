@@ -384,7 +384,7 @@ services:
     name: auraflux-broadcast-staging
     runtime: docker
     dockerfilePath: ./Dockerfile.broadcast
-    plan: pro_plus
+    plan: pro_ultra
     region: oregon
     branch: staging
     healthCheckPath: /live-broadcast/health
@@ -459,6 +459,74 @@ services:
       - key: LIVE_GRID_STREAM_ID
         sync: false
       - key: LIVE_GRID_WATCH_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LIVE_GRID_FLEET_ID
+        value: a
+      - key: LIVE_GRID_FLEET_SLOTS
+        value: '1-5'
+      - key: LIVE_GRID_KICK_INGEST
+        value: streamlink
+
+  # ── Broadcast worker B (CPD-1067) — solo roster slots 6–10, same encode tier as A ──
+  - type: web
+    name: auraflux-broadcast-staging-b
+    runtime: docker
+    dockerfilePath: ./Dockerfile.broadcast
+    plan: pro_ultra
+    region: oregon
+    branch: staging
+    healthCheckPath: /live-broadcast/health
+    autoDeploy: no
+    disk:
+      name: auraflux-broadcast-staging-b
+      mountPath: /app/tmp
+      sizeGB: 5
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: 10000
+      - key: LIVE_SIDECAR_PORT
+        value: 10000
+      - key: LIVE_SIDECAR_BIND
+        value: 0.0.0.0
+      - key: LIVE_BROADCAST_SIDECAR
+        value: 'on'
+      - key: LIVE_GRID_PROGRAM_MODE
+        value: solo_roster
+      - key: LIVE_GRID_FLEET_ID
+        value: b
+      - key: LIVE_GRID_FLEET_SLOTS
+        value: '6-10'
+      - key: LIVE_GRID_ENCODER
+        value: libx264
+      - key: LIVE_GRID_X264_PRESET
+        value: ultrafast
+      - key: LIVE_GRID_SOLO_BITRATE_K
+        value: '6800'
+      - key: LIVE_GRID_SOLO_OUTPUT_W
+        value: '1920'
+      - key: LIVE_GRID_SOLO_OUTPUT_H
+        value: '1080'
+      - key: LIVE_GRID_AUTO_RESUME
+        value: 'on'
+      - key: LIVE_GRID_RESUME_DIR
+        value: /app/tmp
+      - key: LIVE_GRID_KICK_INGEST
+        value: streamlink
+      - key: TWITCH_CLIENT_ID
+        sync: false
+      - key: TWITCH_TOKEN
+        sync: false
+      - key: YOUTUBE_CLIENT_ID
+        sync: false
+      - key: YOUTUBE_CLIENT_SECRET
+        sync: false
+      - key: YOUTUBE_REFRESH_TOKEN
+        sync: false
+      - key: APIFY_API_TOKEN
         sync: false
       - key: GEMINI_API_KEY
         sync: false

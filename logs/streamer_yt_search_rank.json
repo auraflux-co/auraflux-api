@@ -1,0 +1,164 @@
+{
+  "generatedAt": "2026-06-21T14:43:32.226Z",
+  "methodology": "YouTube search.list order=relevance, sum totalResults across 4 query templates",
+  "rows": [
+    {
+      "name": "maya",
+      "relevanceTotal": 3995683,
+      "viewTotal": 3651098,
+      "relevanceHits": 11,
+      "sample": {
+        "q": "maya twitch live",
+        "relTotal": 995683,
+        "relTop": "wing wing 📞 #shorts #nmplol #maya #mayahiga #twitch #s"
+      }
+    },
+    {
+      "name": "marlon",
+      "relevanceTotal": 3681464,
+      "viewTotal": 3681465,
+      "relevanceHits": 8,
+      "sample": {
+        "q": "marlon twitch live",
+        "relTotal": 681464,
+        "relTop": "Marlon Plays Defense on His Cameraman 😭"
+      }
+    },
+    {
+      "name": "adapt",
+      "relevanceTotal": 3208748,
+      "viewTotal": 3004061,
+      "relevanceHits": 2,
+      "sample": {
+        "q": "adapt twitch live",
+        "relTotal": 610886,
+        "relTop": "Adapt, Lacy &amp; Ron Mock FaZe Banks"
+      }
+    },
+    {
+      "name": "hasanabi",
+      "relevanceTotal": 2522318,
+      "viewTotal": 2522355,
+      "relevanceHits": 12,
+      "sample": {
+        "q": "hasanabi twitch live",
+        "relTotal": 628092,
+        "relTop": "Hasanabi Live Stream"
+      }
+    },
+    {
+      "name": "cinna",
+      "relevanceTotal": 1404459,
+      "viewTotal": 1311536,
+      "relevanceHits": 12,
+      "sample": {
+        "q": "cinna twitch live",
+        "relTotal": 280285,
+        "relTop": "Cinna Wasn&#39;t Expecting Togi To Say This"
+      }
+    },
+    {
+      "name": "n3on",
+      "relevanceTotal": 1000000,
+      "viewTotal": 1000000,
+      "relevanceHits": 0,
+      "sample": {
+        "q": "n3on live",
+        "err": "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:281415000137'."
+      }
+    },
+    {
+      "name": "jynxzi",
+      "relevanceTotal": 596308,
+      "viewTotal": 596317,
+      "relevanceHits": 3,
+      "sample": {
+        "q": "jynxzi live",
+        "err": "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:281415000137'."
+      }
+    },
+    {
+      "name": "extraemily",
+      "relevanceTotal": 571521,
+      "viewTotal": 571528,
+      "relevanceHits": 11,
+      "sample": {
+        "q": "extraemily twitch live",
+        "relTotal": 146181,
+        "relTop": "Karen ruins ExtraEmily&#39;s stream..."
+      }
+    },
+    {
+      "name": "mizkif",
+      "relevanceTotal": 390737,
+      "viewTotal": 390737,
+      "relevanceHits": 4,
+      "sample": {
+        "q": "mizkif twitch live",
+        "err": "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:281415000137'."
+      }
+    },
+    {
+      "name": "jaycinco",
+      "relevanceTotal": 388333,
+      "viewTotal": 388340,
+      "relevanceHits": 1,
+      "sample": {
+        "q": "jaycinco twitch live",
+        "relTotal": 128944,
+        "relTop": "I Brought Raine to Meet Kai Cenat.."
+      }
+    },
+    {
+      "name": "caseoh_",
+      "relevanceTotal": 273055,
+      "viewTotal": 273056,
+      "relevanceHits": 0,
+      "sample": {
+        "q": "caseoh_ live",
+        "err": "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:281415000137'."
+      }
+    },
+    {
+      "name": "yonnajay",
+      "relevanceTotal": 41676,
+      "viewTotal": 41779,
+      "relevanceHits": 4,
+      "sample": {
+        "q": "yonnajay twitch live",
+        "relTotal": 10336,
+        "relTop": "YONNA JAY MEETS KHAN ASADI 😱✨"
+      }
+    },
+    {
+      "name": "trainwreckstv",
+      "relevanceTotal": 0,
+      "viewTotal": 0,
+      "relevanceHits": 0,
+      "sample": {
+        "q": "trainwreckstv live",
+        "err": "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:281415000137'."
+      }
+    },
+    {
+      "name": "emiru",
+      "relevanceTotal": 0,
+      "viewTotal": 0,
+      "relevanceHits": 0,
+      "sample": {
+        "q": "emiru live",
+        "err": "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:281415000137'."
+      }
+    },
+    {
+      "name": "ishowspeed",
+      "relevanceTotal": 0,
+      "viewTotal": 0,
+      "relevanceHits": 0,
+      "sample": {
+        "q": "ishowspeed live",
+        "err": "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:281415000137'."
+      }
+    }
+  ]
+}

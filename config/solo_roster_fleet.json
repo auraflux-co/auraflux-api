@@ -1,0 +1,46 @@
+{
+  "version": "2026-06-21",
+  "description": "10 permanent solo YouTube slots — 2 Render sidecars × 5 encoders each (Tier C per sidecar on pro_ultra).",
+  "programMode": "solo_roster",
+  "encodeTier": "C",
+  "sidecars": [
+    {
+      "id": "a",
+      "renderService": "auraflux-broadcast-staging",
+      "url": "https://auraflux-broadcast-staging.onrender.com",
+      "plan": "pro_ultra",
+      "maxConcurrentEncodes": 5,
+      "slots": [
+        { "slot": 1, "platform": "kick", "login": "deenthegreat", "kickSlug": "deenthegreat" },
+        { "slot": 2, "platform": "kick", "login": "neon", "kickSlug": "neon" },
+        { "slot": 3, "platform": "twitch", "login": "plaqueboymax" },
+        { "slot": 4, "platform": "twitch", "login": "stableronaldo" },
+        { "slot": 5, "platform": "twitch", "login": "lacy" }
+      ]
+    },
+    {
+      "id": "b",
+      "renderService": "auraflux-broadcast-staging-b",
+      "url": "https://auraflux-broadcast-staging-b.onrender.com",
+      "plan": "pro_ultra",
+      "maxConcurrentEncodes": 5,
+      "provisionStatus": "pending",
+      "slots": [
+        { "slot": 6, "platform": "twitch", "login": "jasontheween" },
+        { "slot": 7, "platform": "twitch", "login": "yourragegaming" },
+        { "slot": 8, "platform": "twitch", "login": "maya", "notes": "YT search relevance #1 among top-12 remainder" },
+        { "slot": 9, "platform": "twitch", "login": "marlon", "notes": "YT search relevance #2" },
+        { "slot": 10, "platform": "twitch", "login": "adapt", "notes": "YT search relevance #3; FaZe cluster with Ron/Lacy/Jason" }
+      ]
+    }
+  ],
+  "slotAlternates": {
+    "8": ["adapt", "cinna", "hasanabi"],
+    "9": ["extraemily", "marlon"],
+    "10": ["adapt", "jaycinco"]
+  },
+  "youtubeSearchRank": {
+    "methodology": "scripts/streamer_yt_search_rank.js — order=relevance, sum pageInfo.totalResults across 4 query templates",
+    "top12Remainder": ["maya", "marlon", "adapt", "hasanabi", "cinna", "extraemily", "jaycinco"]
+  }
+}
