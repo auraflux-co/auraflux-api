@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — broadcast sidecar auth + RTMP redact; dashboard on :8765.
 
-**Last Updated:** 2026-06-21 (CPD-1067) — Broadcast tab fleet panel fixed; Render env sync throttled.
+**Last Updated:** 2026-06-21 (CPD-1067) — Bulk env sync fix; dashboard PM2 on cwn-production.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -207,7 +207,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1067): throttle Render env sync** — 350ms between PUTs to avoid rate limits on sidecar env push. | sync_broadcast_env_to_render.js, STATUS.md | — | 2026-06-21 ET |
+| Cursor | **fix(cpd-1067): bulk Render env sync + dashboard port fix** — single PUT merge (not 100+ per-key PUTs); PM2 ticker-dash serves cwn-production on :8765. | sync_broadcast_env_to_render.js, broadcast_dashboard_static.js, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **fix(cpd-1067): broadcast dashboard fleet panel** — repair lgFetch URLs; roster visible in solo_roster; START FLEET A/B; static server on :8765. | cwn_production.html, broadcast_dashboard_static.js, broadcast_dashboard.js, STATUS.md | a40cf71a | 2026-06-21 ET |
 | Cursor | **feat(cpd-1067): solo roster orchestrator — poll source → per-slot YouTube; fleet auto-resume; both sidecars deployed** | solo_roster_orchestrator.js, manager.js, resume_state.js, feeders.js, fleet config, provision script, tests | 87b0be60+ | 2026-06-21 ET |
 | Cursor | **fix(cpd-1065): Kick streamlink ingest — Twitch-parity health loop** — probe before seat, exponential retry, streamlink default on Render; no signed HLS token churn. | kick_config.js, stream_probe.js, feeders.js, manager.js, kick_live_resolver.js, kick_ingest.js, tests, render profile, STATUS.md | — | 2026-06-13 ET |

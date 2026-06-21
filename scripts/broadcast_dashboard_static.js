@@ -22,6 +22,7 @@ try {
 }
 
 const PORT = Number(process.env.BROADCAST_DASHBOARD_PORT || 8765);
+const HOST = process.env.BROADCAST_DASHBOARD_HOST || '::';
 const SIDECAR = (process.env.LIVE_SIDECAR_URL || 'https://auraflux-broadcast-staging.onrender.com').replace(/\/$/, '');
 const SIDECAR_B = (process.env.BROADCAST_SIDECAR_B_URL || 'https://auraflux-broadcast-staging-b.onrender.com').replace(/\/$/, '');
 const OPERATOR = process.env.BROADCAST_OPERATOR_SECRET || '';
@@ -37,7 +38,17 @@ app.get('/broadcast-config.js', (_req, res) => {
   );
 });
 app.use(express.static(root));
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`[broadcast-dashboard] http://127.0.0.1:${PORT}/cwn_production.html`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`[broadcast-dashboard] http://127.0.0.1:${PORT}/cwn_production.html → Broadcast sidebar`);
   console.log(`[broadcast-dashboard] sidecar=${SIDECAR} (direct — no c0 proxy)`);
+  if (!OPERATOR) console.warn('[broadcast-dashboard] BROADCAST_OPERATOR_SECRET missing — fleet start will 401');
+});
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[broadcast-dashboard] Port ${PORT} in use — often stale cwn-c0 Python:`);
+    console.error(`  lsof -i :${PORT}`);
+    console.error(`  pkill -f "http.server ${PORT}"`);
+    process.exit(1);
+  }
+  throw err;
 });

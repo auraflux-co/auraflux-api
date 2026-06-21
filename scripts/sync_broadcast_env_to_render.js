@@ -3,13 +3,15 @@
 /**
  * Push Live Grid env to auraflux-broadcast-staging on Render (CPD-1042 / CPD-1055).
  *
+ * Uses ONE bulk PUT (merge with existing vars) — never per-key PUT loops (rate limits).
+ *
  * Sources (no c0 dependency):
  *   1. config/live_grid_profile_render.json — encode defaults
  *   2. process.env — run via `bash scripts/doppler_run.sh node scripts/sync_broadcast_env_to_render.js <service-id>`
- *      or export secrets from cwn-production/.env locally
  *
  * Usage:
- *   bash scripts/doppler_run.sh node scripts/sync_broadcast_env_to_render.js srv-d8qs41ernols73ej7720
+ *   bash scripts/doppler_run.sh node scripts/sync_broadcast_env_to_render.js srv-d8qs41ernols73ej7720 a
+ *   bash scripts/doppler_run.sh node scripts/sync_broadcast_env_to_render.js srv-d8rvm1sm0tmc739qq620 b
  */
 const fs = require('fs');
 const path = require('path');
@@ -41,6 +43,62 @@ if (!apiKey) {
   process.exit(1);
 }
 
+const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+
+async function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function isRateLimited(err) {
+  const status = err.response?.status;
+  const msg = JSON.stringify(err.response?.data || err.message || '').toLowerCase();
+  return status === 429 || msg.includes('rate limit');
+}
+
+async function withRetry(label, fn, { maxAttempts = 8 } = {}) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (!isRateLimited(err) || attempt === maxAttempts) throw err;
+      const waitMs = Math.min(90000, 1500 * (2 ** (attempt - 1)));
+      console.warn(`[sync] ${label} rate limited — retry in ${waitMs}ms (${attempt}/${maxAttempts})`);
+      await sleep(waitMs);
+    }
+  }
+}
+
+/** GET all env vars (paginated). Render wraps each row as { envVar: { key, value } }. */
+async function fetchAllEnvVars(sid) {
+  const map = new Map();
+  let cursor = '';
+  for (let page = 0; page < 50; page++) {
+    const url = `https://api.render.com/v1/services/${sid}/env-vars?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+    const { data } = await withRetry('GET env-vars', () => axios.get(url, { headers }));
+    const items = Array.isArray(data) ? data : [];
+    if (!items.length) break;
+    for (const item of items) {
+      const ev = item.envVar || item;
+      if (ev?.key != null) map.set(ev.key, String(ev.value ?? ''));
+    }
+    const last = items[items.length - 1];
+    cursor = last?.cursor || '';
+    if (items.length < 100 || !cursor) break;
+  }
+  return map;
+}
+
+/** PUT full merged list — Render replaces entire set; caller must include all existing keys. */
+async function putAllEnvVars(sid, rows) {
+  const body = rows.map(({ key, value }) => ({ key, value: String(value) }));
+  const { data } = await withRetry('PUT env-vars', () => axios.put(
+    `https://api.render.com/v1/services/${sid}/env-vars`,
+    body,
+    { headers },
+  ));
+  return data;
+}
+
 const profilePath = path.join(repoRoot, 'config', 'live_grid_profile_render.json');
 let profileEnv = {};
 try {
@@ -58,7 +116,7 @@ if (!ytRefresh) {
 
 const twitchUserTokenJson = process.env.TWITCH_USER_TOKEN_JSON || '';
 
-const env = {
+const desired = {
   NODE_ENV: 'staging',
   PORT: '10000',
   LIVE_SIDECAR_PORT: '10000',
@@ -95,7 +153,6 @@ const env = {
   YOUTUBE_BACKUP_CLIENT_ID: process.env.YOUTUBE_BACKUP_CLIENT_ID,
   YOUTUBE_BACKUP_CLIENT_SECRET: process.env.YOUTUBE_BACKUP_CLIENT_SECRET,
   YOUTUBE_BACKUP_REFRESH_TOKEN: process.env.YOUTUBE_BACKUP_REFRESH_TOKEN,
-  // Backup OAuth persistence runs from operator workstation scripts — not full Render API key on sidecar.
   BROADCAST_OPERATOR_SECRET: process.env.BROADCAST_OPERATOR_SECRET,
   BROADCAST_RENDER_SERVICE_ID: serviceId,
   PUBLIC_BASE_URL: fleetId === 'b'
@@ -133,19 +190,30 @@ const env = {
   ),
 };
 
-const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
-
 (async () => {
+  const existing = await fetchAllEnvVars(serviceId);
+  console.log(`[sync] fetched ${existing.size} existing vars from Render`);
+
+  let updated = 0;
   let added = 0;
-  for (const [key, value] of Object.entries(env)) {
+  for (const [key, value] of Object.entries(desired)) {
     if (!value) continue;
-    await axios.put(`https://api.render.com/v1/services/${serviceId}/env-vars/${encodeURIComponent(key)}`, {
-      value: String(value),
-    }, { headers });
-    added++;
-    await new Promise((r) => setTimeout(r, 350));
+    const next = String(value);
+    if (!existing.has(key)) {
+      existing.set(key, next);
+      added++;
+    } else if (existing.get(key) !== next) {
+      existing.set(key, next);
+      updated++;
+    }
   }
-  console.log(`[sync] ${added} env vars set on ${serviceId} (source: cwn-production profile + env, not c0)`);
+
+  const merged = [...existing.entries()].map(([key, value]) => ({ key, value }));
+  console.log(`[sync] merging ${added} new + ${updated} changed → ${merged.length} total (1 PUT)`);
+
+  const result = await putAllEnvVars(serviceId, merged);
+  const count = Array.isArray(result) ? result.length : merged.length;
+  console.log(`[sync] ok — ${count} env vars on ${serviceId} (fleet ${fleetId}, source: cwn-production profile + env)`);
 })().catch((e) => {
   console.error(e.response?.data || e.message);
   process.exit(1);
