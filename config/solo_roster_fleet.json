@@ -3,6 +3,49 @@
   "description": "10 permanent solo YouTube slots — 2 Render sidecars × 5 encoders each (Tier C per sidecar on pro_ultra).",
   "programMode": "solo_roster",
   "encodeTier": "C",
+  "orchestration": {
+    "channel": "ClipzWorld News",
+    "rule": "Slot-locked mirror — source platform live state drives YouTube slot live state.",
+    "behaviors": [
+      "Each slot is permanently bound to one streamer (Twitch or Kick). Roster changes are rare (weekly at most).",
+      "When the locked streamer goes live on Twitch/Kick → start ingest + encode for that slot → that slot's YouTube live on ClipzWorld News goes live (reuse the same listing/URL for that slot).",
+      "When the locked streamer goes offline → stop that slot's encode and end that slot's YouTube live on ClipzWorld News. Other slots are unaffected.",
+      "When the same streamer goes live again → same slot, same YouTube listing — no rebinding.",
+      "No grid compositor in this mode — only per-slot solo pipelines."
+    ],
+    "pollSources": ["twitch helix /streams", "kick streamlink probe"],
+    "mustNot": [
+      "Leave a YouTube slot live after the source streamer ended",
+      "Start a slot without the locked streamer being live on source",
+      "Swap streamers between slots without an explicit roster update"
+    ]
+  },
+  "youtubeSeo": {
+    "channel": "ClipzWorld News",
+    "onSlotGoLive": {
+      "applyFullSeo": true,
+      "privacy": "public",
+      "playlistId": "PLvK0jkWRVatZ5Lq6VvQHPekN9t0N7BG4V",
+      "playlistTitle": "ClipzWorld Live streams",
+      "containsSyntheticMedia": false,
+      "thumbnailSource": "stream_frame",
+      "thumbnailNote": "Frame from live ingest via ffmpeg; operator may override in YouTube Studio",
+      "liveChat": {
+        "enabled": true,
+        "participants": "subscribers",
+        "minimumTenure": false,
+        "note": "Set Participants → Subscribers in YouTube Studio when reviewing thumbnails; API does not set subscriber-only reliably"
+      },
+      "fields": ["title", "description", "tags", "playlist", "public", "thumbnail", "syntheticMediaFlag", "liveChatPolicy"]
+    },
+    "env": {
+      "LIVE_GRID_SEO_ON_START": "on",
+      "LIVE_GRID_SOLO_THUMBNAIL": "stream_frame",
+      "LIVE_GRID_LIVE_SYNTHETIC_MEDIA": "off",
+      "LIVE_GRID_CHAT_MEMBERS_ONLY": "off",
+      "YOUTUBE_LIVE_PLAYLIST_ID": "PLvK0jkWRVatZ5Lq6VvQHPekN9t0N7BG4V"
+    }
+  },
   "sidecars": [
     {
       "id": "a",

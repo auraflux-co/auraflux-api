@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — 10-slot solo fleet (2×5 sidecars @ pro_ultra Tier C) + Kick streamlink deploy.
+**Deploy Mode:** dev — solo roster orchestrator + auto-resume; both sidecars @ pro_ultra Tier C.
 
-**Last Updated:** 2026-06-21 (CPD-1067) — Sidecar B provisioned (srv-d8rvm1sm0tmc739qq620); LIVE_GRID_KICK_INGEST=streamlink on both; fleet slots 8–10 locked (maya, marlon, adapt).
+**Last Updated:** 2026-06-21 (CPD-1067) — Solo roster orchestrator (poll source → per-slot YouTube); fleet auto-resume; sidecar A+B env + listings provisioned.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

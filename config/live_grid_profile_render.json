@@ -25,7 +25,8 @@
     "LIVE_GRID_YOUTUBE_DUAL_STREAM": "on",
     "LIVE_GRID_STUDIO_DUAL_FIRST": "off",
     "LIVE_GRID_AUTO_RESUME": "on",
-    "LIVE_GRID_PROGRAM_MODE": "grid",
+    "LIVE_GRID_PROGRAM_MODE": "solo_roster",
+    "LIVE_GRID_FLEET_POOL_SIZE": "5",
     "LIVE_GRID_SCHEDULE_AHEAD": "off",
     "CALENDAR_LIVE_SYNC": "off",
     "LIVE_GRID_WINDOW": "off",
@@ -64,7 +65,7 @@
     "LIVE_GRID_DELIVERY_HLS_STALE_MS": "8000",
     "LIVE_GRID_SOLO_STREAMS": "on",
     "LIVE_GRID_SOLO_STREAMER_LOCK": "on",
-    "LIVE_GRID_SOLO_AUTO_START": "on",
+    "LIVE_GRID_SOLO_AUTO_START": "off",
     "LIVE_GRID_SOLO_WAIT_YOUTUBE_LIVE": "on",
     "LIVE_GRID_SOLO_START_STAGGER_MS": "15000",
     "LIVE_GRID_SOLO_UDP_INPUT": "off",
@@ -106,7 +107,12 @@
     "LIVE_GRID_YOUTUBE_GO_LIVE_POLL_MS": "5000",
     "LIVE_GRID_RESUME_DIR": "/app/tmp",
     "YOUTUBE_LIVE_PLAYLIST_ID": "PLvK0jkWRVatZ5Lq6VvQHPekN9t0N7BG4V",
-    "YOUTUBE_LIVE_PLAYLIST_TITLE": "ClipzWorld Live streams"
+    "YOUTUBE_LIVE_PLAYLIST_TITLE": "ClipzWorld Live streams",
+    "LIVE_GRID_SOLO_THUMBNAIL": "stream_frame",
+    "LIVE_GRID_LIVE_SYNTHETIC_MEDIA": "off",
+    "LIVE_GRID_CHAT_MEMBERS_ONLY": "off",
+    "LIVE_GRID_FLEET_POLL_MS": "45000",
+    "LIVE_GRID_FLEET_POOL_SIZE": "5"
   },
   "notes": [
     "CPD-1064: Tier B+ — main 6800k + solos 4500k @ 720p; pool slot 4 hero 6800k @ 1080p (algorithm URL)",
