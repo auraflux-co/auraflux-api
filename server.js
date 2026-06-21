@@ -2483,7 +2483,59 @@ app.get('/connect/youtube/status', (req, res) => {
     channelId: t?.channelId || null,
     connectedAt: t?.connectedAt || null,
     directPublishEnabled: process.env.YOUTUBE_DIRECT_PUBLISH === 'true',
+    backup: ytDirect.getYoutubeApiProfileStatus(),
   });
+});
+
+// Backup GCP project OAuth — same flow as primary; separate 10k/day quota pool.
+function _ytBackupRedirectUri(req) {
+  return `${req.protocol}://${req.get('host')}/connect/youtube/backup/callback`;
+}
+
+app.get('/connect/youtube/backup', (req, res) => {
+  const ytDirect = require('./lib/services/youtube_direct');
+  const { getProfileConfig } = require('./lib/services/youtube_api_profiles');
+  const cfg = getProfileConfig('backup');
+  if (!cfg.clientId || !cfg.clientSecret) {
+    return res.status(400).send('YOUTUBE_BACKUP_CLIENT_ID / YOUTUBE_BACKUP_CLIENT_SECRET not set');
+  }
+  res.redirect(ytDirect.buildAuthUrlForProfile('backup', _ytBackupRedirectUri(req), 'backup'));
+});
+
+app.get('/connect/youtube/backup/callback', async (req, res) => {
+  const { code, error } = req.query;
+  if (error) return res.status(400).send(`Google OAuth error: ${error}`);
+  if (!code) return res.status(400).send('Missing authorization code');
+  try {
+    const ytDirect = require('./lib/services/youtube_direct');
+    const { persistBackupRefreshToken } = require('./lib/broadcast/backup_youtube_connect');
+    const tokens = await ytDirect.exchangeCodeForProfile('backup', code, _ytBackupRedirectUri(req));
+    if (!tokens.refresh_token) {
+      return res.status(400).send('No refresh_token — revoke app at myaccount.google.com/permissions and retry with prompt=consent');
+    }
+    const saved = await persistBackupRefreshToken(tokens.refresh_token);
+    let channelLabel = 'ClipzWorld';
+    try {
+      const info = await ytDirect.getChannelInfo(tokens.access_token);
+      if (info?.channelTitle) channelLabel = info.channelTitle;
+    } catch { /* optional */ }
+    console.log(`[youtube_direct] Backup API connected: ${channelLabel} (render=${saved.render} doppler=${saved.doppler})`);
+    const notes = [];
+    if (saved.render) notes.push('Render env updated — restart sidecar if SEO sync still 403s');
+    if (saved.doppler) notes.push('Doppler prd updated');
+    if (!saved.render && !saved.doppler) {
+      notes.push('Set YOUTUBE_BACKUP_REFRESH_TOKEN in Doppler manually, then re-run sync_broadcast_env_to_render.js');
+    }
+    res.send(
+      `<h2>✅ Backup YouTube API connected</h2>`
+      + `<p>Channel: <b>${channelLabel}</b></p>`
+      + `<p>${notes.join(' · ') || 'Ready'}</p>`
+      + `<p>Primary quota 403 will auto-failover to this GCP project.</p>`,
+    );
+  } catch (e) {
+    console.error('[youtube_direct] Backup OAuth failed:', e.response?.data || e.message);
+    res.status(500).send(`Backup token exchange failed: ${e.response?.data?.error_description || e.message}`);
+  }
 });
 
 // POST /job/:id/schedule — set/clear a deferred publish time (CPD-924)
