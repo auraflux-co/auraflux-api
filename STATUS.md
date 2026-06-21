@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
 
-**Last Updated:** 2026-06-21 (CPD-1064) — pool-slot encode + Tier B+ profile (main/slot4 6800k, solos 4500k).
+**Last Updated:** 2026-06-21 (CPD-1065) — Kick live grid deployed to broadcast-staging; Apify playback resolver + `/quadrant/:n/kick`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
