@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — 10-slot solo fleet (2×5 sidecars @ pro_ultra Tier C) + Kick streamlink deploy.
 
-**Last Updated:** 2026-06-21 (CPD-1065/1067) — Push Kick streamlink fix; solo fleet config (sidecar A slots 1–5, B slots 6–10); YT search-rank script; deploy broadcast-staging.
+**Last Updated:** 2026-06-21 (CPD-1067) — Sidecar B provisioned (srv-d8rvm1sm0tmc739qq620); LIVE_GRID_KICK_INGEST=streamlink on both; fleet slots 8–10 locked (maya, marlon, adapt).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

@@ -16,19 +16,30 @@ const path = require('path');
 const axios = require('axios');
 
 const serviceId = process.argv[2];
+const fleetArg = process.argv[3];
 if (!serviceId) {
-  console.error('usage: node scripts/sync_broadcast_env_to_render.js <render-service-id>');
+  console.error('usage: node scripts/sync_broadcast_env_to_render.js <render-service-id> [fleet-id a|b]');
   process.exit(1);
 }
+
+const FLEET_BY_SERVICE = {
+  'srv-d8qs41ernols73ej7720': 'a',
+  'srv-d8rvm1sm0tmc739qq620': 'b',
+};
+const fleetId = (fleetArg || FLEET_BY_SERVICE[serviceId] || 'a').toLowerCase();
+const fleetPublicBase = fleetId === 'b'
+  ? 'https://auraflux-broadcast-staging-b.onrender.com'
+  : 'https://auraflux-broadcast-staging.onrender.com';
+const fleetSlots = fleetId === 'b' ? '6-10' : '1-5';
+
+const repoRoot = path.join(__dirname, '..');
+require('dotenv').config({ path: path.join(repoRoot, '.env') });
 
 const apiKey = process.env.RENDER_API_KEY;
 if (!apiKey) {
   console.error('RENDER_API_KEY required (cwn-production .env or doppler_run.sh)');
   process.exit(1);
 }
-
-const repoRoot = path.join(__dirname, '..');
-require('dotenv').config({ path: path.join(repoRoot, '.env') });
 
 const profilePath = path.join(repoRoot, 'config', 'live_grid_profile_render.json');
 let profileEnv = {};
@@ -87,7 +98,14 @@ const env = {
   // Lets /connect/youtube/backup callback persist refresh token to this service
   RENDER_API_KEY: process.env.RENDER_API_KEY,
   BROADCAST_RENDER_SERVICE_ID: serviceId,
-  PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL || 'https://auraflux-broadcast-staging.onrender.com',
+  PUBLIC_BASE_URL: fleetId === 'b'
+    ? (process.env.PUBLIC_BASE_URL_B || fleetPublicBase)
+    : (process.env.PUBLIC_BASE_URL || fleetPublicBase),
+  RENDER: 'true',
+  LIVE_GRID_KICK_INGEST: 'streamlink',
+  LIVE_GRID_FLEET_ID: fleetId,
+  LIVE_GRID_FLEET_SLOTS: fleetSlots,
+  LIVE_GRID_PROGRAM_MODE: fleetId === 'b' ? 'solo_roster' : (profileEnv.LIVE_GRID_PROGRAM_MODE || 'grid'),
   LIVE_GRID_RTMP_URL: process.env.LIVE_GRID_RTMP_URL,
   LIVE_GRID_STREAM_ID: process.env.LIVE_GRID_STREAM_ID,
   LIVE_GRID_BROADCAST_ID: process.env.LIVE_GRID_BROADCAST_ID,

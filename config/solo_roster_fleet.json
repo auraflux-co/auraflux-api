@@ -7,6 +7,7 @@
     {
       "id": "a",
       "renderService": "auraflux-broadcast-staging",
+      "renderServiceId": "srv-d8qs41ernols73ej7720",
       "url": "https://auraflux-broadcast-staging.onrender.com",
       "plan": "pro_ultra",
       "maxConcurrentEncodes": 5,
@@ -21,10 +22,11 @@
     {
       "id": "b",
       "renderService": "auraflux-broadcast-staging-b",
+      "renderServiceId": "srv-d8rvm1sm0tmc739qq620",
       "url": "https://auraflux-broadcast-staging-b.onrender.com",
       "plan": "pro_ultra",
       "maxConcurrentEncodes": 5,
-      "provisionStatus": "pending",
+      "provisionStatus": "active",
       "slots": [
         { "slot": 6, "platform": "twitch", "login": "jasontheween" },
         { "slot": 7, "platform": "twitch", "login": "yourragegaming" },
