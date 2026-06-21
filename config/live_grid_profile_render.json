@@ -35,6 +35,11 @@
     "LIVE_GRID_BENCH": "xqc,shroud,summit1g,lirik,pokimane,sodapoppin,hasanabi,yourragegaming,jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,lacy,tarik,tenz,s1mple,aceu,timthetatman,drlupo,mizkif,emiru,xaryu,asmongold,caseoh_,jynxzi,clix,bugha,ninja,tfue,nickmercs,ibai,auronplay,rubius,quackity,moistcr1tikal",
     "LIVE_GRID_DUAL_BROADCAST": "off",
     "LIVE_GRID_FPS": "30",
+    "LIVE_GRID_KICK_PLAYBACK_REFRESH_MS": "180000",
+    "LIVE_GRID_KICK_HLS_TRANSCODE": "on",
+    "LIVE_GRID_KICK_HLS_W": "1280",
+    "LIVE_GRID_KICK_HLS_H": "720",
+    "LIVE_GRID_KICK_HLS_BITRATE_K": "2500",
     "LIVE_GRID_OUTPUT_W": "1920",
     "LIVE_GRID_OUTPUT_H": "1080",
     "LIVE_GRID_BITRATE_K": "6800",
@@ -110,6 +115,6 @@
     "LIVE_GRID_PROGRAM_MODE=grid — 4-up multiview always (daypart schedule removed)",
     "LIVE_GRID_SCHEDULE_AHEAD=off + CALENDAR_LIVE_SYNC=off + STREAM_SCHEDULER=off — manual GO LIVE only",
     "LIVE_GRID_STUDIO_DUAL_FIRST=off — RTMP starts on GO LIVE",
-    "LIVE_GRID_YOUTUBE_GO_LIVE_WAIT=on — /live-grid/start polls until YouTube testing/live"
+    "CPD-1065: Kick HLS transcode at feeder — clean H.264 for any Kick slug; token refresh without relay nudge",
   ]
 }

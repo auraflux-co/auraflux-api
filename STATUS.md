@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — streamer-locked solo URLs + encode benchmark (CPD-1064 / CPD-1063).
 
-**Last Updated:** 2026-06-21 (CPD-1065) — Operator mode ON on Render; grid lineup locked (deen Q1 Kick, yugi2x/braeden/kaysan).
+**Last Updated:** 2026-06-21 (CPD-1065) — Kick HLS transcode at feeder + token refresh (any Kick slug); deploy broadcast-staging pending verify.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
