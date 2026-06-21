@@ -1,6 +1,13 @@
 {
-  "version": "2026-06-20",
+  "version": "2026-06-21",
   "programMode": "grid",
+  "operatorMode": true,
+  "operatorLocks": [
+    { "quadrant": 1, "type": "url", "platform": "kick", "kickSlug": "deenthegreat", "login": "deenthegreat", "label": "deenthegreat" },
+    { "quadrant": 2, "type": "channel", "login": "yugi2x" },
+    { "quadrant": 3, "type": "channel", "login": "braeden" },
+    { "quadrant": 4, "type": "channel", "login": "kaysan" }
+  ],
   "seo": {
     "titleStyle": "hashtag_short_date",
     "descriptionTemplate": "grid_v1",
