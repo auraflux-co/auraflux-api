@@ -104,16 +104,6 @@ export default function SourceChannelsPage() {
 
   const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-  // Handle OAuth callback query params
-  useEffect(() => {
-    const connected = searchParams.get('channel_connected');
-    const handle    = searchParams.get('handle');
-    const errMsg    = searchParams.get('channel_error');
-    const PLATFORM_LABELS: Record<string, string> = { youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram', twitch: 'Twitch', kick: 'Kick' };
-    if (connected) setOauthSuccess(`${PLATFORM_LABELS[connected] ?? (connected.charAt(0).toUpperCase() + connected.slice(1))} connected${handle ? ` as @${handle}` : ''} successfully.`);
-    if (errMsg)    setOauthError(decodeURIComponent(errMsg));
-  }, [searchParams]);
-
   // Load connected OAuth source channels
   const loadConnections = useCallback(async () => {
     try {
@@ -128,6 +118,19 @@ export default function SourceChannelsPage() {
       setConnections(map);
     } catch { /* non-blocking */ }
   }, [getToken]);
+
+  // Handle OAuth callback query params + refresh connection list
+  useEffect(() => {
+    const connected = searchParams.get('channel_connected');
+    const handle    = searchParams.get('handle');
+    const errMsg    = searchParams.get('channel_error');
+    const PLATFORM_LABELS: Record<string, string> = { youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram', twitch: 'Twitch', kick: 'Kick' };
+    if (connected) {
+      setOauthSuccess(`${PLATFORM_LABELS[connected] ?? (connected.charAt(0).toUpperCase() + connected.slice(1))} connected${handle ? ` as @${handle}` : ''} successfully.`);
+      void loadConnections();
+    }
+    if (errMsg) setOauthError(decodeURIComponent(errMsg));
+  }, [searchParams, loadConnections]);
 
   // Load saved channels on mount
   useEffect(() => {
