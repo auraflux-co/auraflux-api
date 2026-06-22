@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — Kick fleet slots A1/A2 paused; Twitch slots active.
+**Deploy Mode:** dev — Kick slot A1 test lane active (deenthegreat); A2/n3on paused until soak green.
 
-**Last Updated:** 2026-06-22 (CPD-1071) — Kick profile GET uses native https (fix Premature close on Render).
+**Last Updated:** 2026-06-22 (CPD-1069) — Sidecar OAuth env + unpause Kick Q1 test lane for broadcast ingest.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
