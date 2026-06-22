@@ -91,4 +91,43 @@ describe('SoloRosterOrchestrator tick', () => {
     expect(yt.endLiveBroadcast).toHaveBeenCalledWith('bid-1');
     orch.stop();
   });
+
+  test('twitch slot accepts channel feeder as ingest-ready (not kick-only url)', async () => {
+    twitchChannelLive.mockImplementation(async (login) => login === 'plaqueboymax');
+    kickChannelLive.mockResolvedValue(false);
+
+    const log = jest.fn();
+    const feederStatus = () => [
+      { kind: 'url', pids: [1] },
+      { kind: 'slate', pids: [1] },
+      { kind: 'channel', pids: [11, 22] },
+      { kind: 'slate', pids: [1] },
+      { kind: 'slate', pids: [1] },
+    ];
+    const manager = {
+      log,
+      feeders: {
+        setQuadrant: jest.fn(),
+        setQuadrantKick: jest.fn(),
+        status: feederStatus,
+      },
+      setQuadrantKick: jest.fn(),
+      soloPublishers: {
+        stopped: false,
+        started: false,
+        start: jest.fn(),
+        stopSeat: jest.fn(),
+      },
+      _canReuseBroadcastId: jest.fn().mockResolvedValue(true),
+      _applySoloYoutubeSeo: jest.fn().mockResolvedValue({ seo: {}, result: {} }),
+    };
+
+    const { SoloRosterOrchestrator } = require('../lib/live_grid/solo_roster_orchestrator');
+    const orch = new SoloRosterOrchestrator(manager, { fleetId: 'a' });
+
+    await orch.tick();
+    expect(manager.feeders.setQuadrant).toHaveBeenCalledWith(2, 'plaqueboymax');
+    expect(manager.soloPublishers.start).toHaveBeenCalledWith(2, 'plaqueboymax');
+    orch.stop();
+  });
 });
