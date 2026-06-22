@@ -4,6 +4,13 @@ const { localFleetSlots, loginSlotMapForBindings } = require('../lib/live_grid/s
 const { isSoloRosterMode, fleetPoolSize } = require('../lib/live_grid/fleet_pool');
 
 describe('solo_roster_fleet', () => {
+  test('sidecar A marks kick slots paused in roster', () => {
+    const slots = localFleetSlots('a');
+    expect(slots[0].paused).toBe(true);
+    expect(slots[1].paused).toBe(true);
+    expect(slots[2].paused).toBeUndefined();
+  });
+
   test('sidecar A has 5 slots', () => {
     const slots = localFleetSlots('a');
     expect(slots).toHaveLength(5);

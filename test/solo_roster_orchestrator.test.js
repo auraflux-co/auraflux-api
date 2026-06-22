@@ -54,20 +54,18 @@ describe('SoloRosterOrchestrator tick', () => {
     }
   });
 
-  test('starts slot when probe live and stops when offline', async () => {
+  test('paused kick slots do not start when source is live', async () => {
     twitchChannelLive.mockResolvedValue(false);
-    kickChannelLive.mockImplementation(async (slug) => slug === 'deenthegreat');
+    kickChannelLive.mockResolvedValue(true);
 
-    const log = jest.fn();
-    const feederStatus = () => Array.from({ length: 5 }, () => ({ kind: 'url', pids: [1] }));
     const manager = {
-      log,
+      log: jest.fn(),
       feeders: {
         setQuadrant: jest.fn(),
         setQuadrantKick: jest.fn(),
-        status: feederStatus,
+        status: () => Array.from({ length: 5 }, () => ({ kind: 'url', pids: [1] })),
       },
-      setQuadrantKick: jest.fn().mockResolvedValue({ kind: 'url', pids: [1], locked: true }),
+      setQuadrantKick: jest.fn(),
       soloPublishers: {
         stopped: false,
         started: false,
@@ -75,19 +73,17 @@ describe('SoloRosterOrchestrator tick', () => {
         stopSeat: jest.fn(),
       },
       _canReuseBroadcastId: jest.fn().mockResolvedValue(true),
-      _applySoloYoutubeSeo: jest.fn().mockResolvedValue({ seo: {}, result: {} }),
+      _applySoloYoutubeSeo: jest.fn(),
     };
 
     const { SoloRosterOrchestrator } = require('../lib/live_grid/solo_roster_orchestrator');
     const orch = new SoloRosterOrchestrator(manager, { fleetId: 'a' });
+    orch._slotState.set(0, { phase: 'live', login: 'deenthegreat', broadcastId: 'bid-1' });
 
     await orch.tick();
-    expect(manager.setQuadrantKick).toHaveBeenCalled();
-    expect(manager.soloPublishers.start).toHaveBeenCalled();
-
-    kickChannelLive.mockResolvedValue(false);
-    await orch.tick();
-    expect(manager.soloPublishers.stopSeat).toHaveBeenCalled();
+    expect(manager.setQuadrantKick).not.toHaveBeenCalled();
+    expect(manager.soloPublishers.start).not.toHaveBeenCalled();
+    expect(manager.soloPublishers.stopSeat).toHaveBeenCalledWith(0);
     expect(yt.endLiveBroadcast).toHaveBeenCalledWith('bid-1');
     orch.stop();
   });

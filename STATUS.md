@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — fleet Kick HLS ingest + slate guard (no YouTube live on broken ingest).
+**Deploy Mode:** dev — Kick fleet slots A1/A2 paused; Twitch slots active.
 
-**Last Updated:** 2026-06-22 (CPD-1067) — Solo FLV no_duration_filesize; Kick HLS http_proxy + 90s stall; fleet Twitch channel ingest fix.
+**Last Updated:** 2026-06-22 (CPD-1067) — Pause Kick roster slots A1/A2; end active Kick YouTube listings; `/live-grid/fleet/kick-pause`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

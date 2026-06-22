@@ -57,8 +57,8 @@
       "plan": "pro_ultra",
       "maxConcurrentEncodes": 5,
       "slots": [
-        { "slot": 1, "platform": "kick", "login": "deenthegreat", "kickSlug": "deenthegreat" },
-        { "slot": 2, "platform": "kick", "login": "n3on", "kickSlug": "n3on" },
+        { "slot": 1, "platform": "kick", "login": "deenthegreat", "kickSlug": "deenthegreat", "paused": true, "pausedReason": "Kick ingest unreliable — pause until private test lane (2026-06-22)" },
+        { "slot": 2, "platform": "kick", "login": "n3on", "kickSlug": "n3on", "paused": true, "pausedReason": "Kick ingest unreliable — pause until private test lane (2026-06-22)" },
         { "slot": 3, "platform": "twitch", "login": "plaqueboymax" },
         { "slot": 4, "platform": "twitch", "login": "stableronaldo" },
         { "slot": 5, "platform": "twitch", "login": "lacy" }
