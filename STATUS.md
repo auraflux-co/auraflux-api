@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — fleet Kick HLS ingest + slate guard (no YouTube live on broken ingest).
 
-**Last Updated:** 2026-06-22 (CPD-1067) — Fleet Twitch ingest-ready accepts channel feeder; Kick HLS proxy on Render; slot 1 pinned FHyNA2PhJU0.
+**Last Updated:** 2026-06-22 (CPD-1067) — Solo FLV no_duration_filesize; Kick HLS http_proxy + 90s stall; fleet Twitch channel ingest fix.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

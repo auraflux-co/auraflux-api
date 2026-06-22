@@ -82,4 +82,19 @@ describe('kick_ingest', () => {
       else process.env[k] = v;
     }
   });
+
+  test('kickHlsFfmpegInputEncodeArgs adds -http_proxy on Render', () => {
+    const prev = { RENDER: process.env.RENDER, KICK_PROXY_URL: process.env.KICK_PROXY_URL };
+    process.env.RENDER = 'true';
+    process.env.KICK_PROXY_URL = 'http://proxy.test:8000';
+    const args = require('../lib/live_grid/kick_ingest').kickHlsFfmpegInputEncodeArgs(
+      'https://x.playback.live-video.net/v1/a.m3u8',
+    );
+    expect(args).toContain('-http_proxy');
+    expect(args).toContain('http://proxy.test:8000');
+    for (const [k, v] of Object.entries(prev)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  });
 });
