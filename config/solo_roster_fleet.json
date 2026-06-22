@@ -18,7 +18,8 @@
     "mustNot": [
       "Leave a YouTube slot live after the source streamer ended",
       "Start a slot without the locked streamer being live on source",
-      "Swap streamers between slots without an explicit roster update"
+      "Swap streamers between slots without an explicit roster update",
+      "Use a kickSlug that does not match the Kick channel slug (verify kick.com/{slug} exists before roster lock)"
     ]
   },
   "youtubeSeo": {

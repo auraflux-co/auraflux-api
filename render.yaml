@@ -467,7 +467,7 @@ services:
       - key: LIVE_GRID_FLEET_SLOTS
         value: '1-5'
       - key: LIVE_GRID_KICK_INGEST
-        value: streamlink
+        value: hls
 
   # ── Broadcast worker B (CPD-1067) — solo roster slots 6–10, same encode tier as A ──
   - type: web
@@ -515,7 +515,7 @@ services:
       - key: LIVE_GRID_RESUME_DIR
         value: /app/tmp
       - key: LIVE_GRID_KICK_INGEST
-        value: streamlink
+        value: hls
       - key: TWITCH_CLIENT_ID
         sync: false
       - key: TWITCH_TOKEN

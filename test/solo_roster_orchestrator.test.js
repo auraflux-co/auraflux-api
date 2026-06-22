@@ -15,6 +15,10 @@ jest.mock('../lib/services/youtube_direct', () => ({
   createLiveBroadcast: jest.fn(),
 }));
 
+jest.mock('../lib/clients/kick_live_resolver', () => ({
+  fetchKickChannelApi: jest.fn().mockResolvedValue({ slug: 'deenthegreat', livestream: null }),
+}));
+
 const { twitchChannelLive, kickChannelLive } = require('../lib/live_grid/stream_probe');
 const yt = require('../lib/services/youtube_direct');
 
@@ -55,12 +59,15 @@ describe('SoloRosterOrchestrator tick', () => {
     kickChannelLive.mockImplementation(async (slug) => slug === 'deenthegreat');
 
     const log = jest.fn();
+    const feederStatus = () => Array.from({ length: 5 }, () => ({ kind: 'url', pids: [1] }));
     const manager = {
       log,
       feeders: {
         setQuadrant: jest.fn(),
         setQuadrantKick: jest.fn(),
+        status: feederStatus,
       },
+      setQuadrantKick: jest.fn().mockResolvedValue({ kind: 'url', pids: [1], locked: true }),
       soloPublishers: {
         stopped: false,
         started: false,
@@ -75,7 +82,7 @@ describe('SoloRosterOrchestrator tick', () => {
     const orch = new SoloRosterOrchestrator(manager, { fleetId: 'a' });
 
     await orch.tick();
-    expect(manager.feeders.setQuadrantKick).toHaveBeenCalled();
+    expect(manager.setQuadrantKick).toHaveBeenCalled();
     expect(manager.soloPublishers.start).toHaveBeenCalled();
 
     kickChannelLive.mockResolvedValue(false);

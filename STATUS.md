@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — fleet slot 2 Kick roster n3on + Kick API live probe.
+**Deploy Mode:** dev — fleet Kick HLS ingest + slate guard (no YouTube live on broken ingest).
 
-**Last Updated:** 2026-06-22 (CPD-1067) — Slot 2 Kick: neon → n3on (kick.com/n3on); Kick API-first live detection in stream_probe.
+**Last Updated:** 2026-06-22 (CPD-1067) — Kick HLS ingest on Render; fleet won't go public on slate; roster kickSlug validation.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

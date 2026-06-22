@@ -159,7 +159,7 @@ const desired = {
     ? (process.env.PUBLIC_BASE_URL_B || fleetPublicBase)
     : (process.env.PUBLIC_BASE_URL || fleetPublicBase),
   RENDER: 'true',
-  LIVE_GRID_KICK_INGEST: 'streamlink',
+  LIVE_GRID_KICK_INGEST: 'hls',
   LIVE_GRID_FLEET_ID: fleetId,
   LIVE_GRID_FLEET_SLOTS: fleetSlots,
   LIVE_GRID_PROGRAM_MODE: 'solo_roster',
