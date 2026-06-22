@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — fleet Kick HLS ingest + slate guard (no YouTube live on broken ingest).
 
-**Last Updated:** 2026-06-22 (CPD-1067) — Kick HLS ingest on Render; slate guard; roster validation tolerates Kick API blips.
+**Last Updated:** 2026-06-22 (CPD-1067) — Kick HLS ffmpeg CDN headers + Apify proxy on Render; operator auth trim; Helix probe; fleet poller priority; Sidecar A deploy.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

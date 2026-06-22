@@ -9,14 +9,25 @@
  */
 
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env'), override: true });
+const onRender = !!(process.env.RENDER || process.env.NODE_ENV === 'staging');
+// Never let a baked/local .env override Render-injected secrets (BROADCAST_OPERATOR_SECRET).
+require('dotenv').config({
+  path: path.join(__dirname, '..', '.env'),
+  override: !onRender,
+});
 
-if (process.env.RENDER || process.env.NODE_ENV === 'staging') {
+if (onRender) {
   try {
     const { applyRenderProfile } = require('../lib/live_grid/render_profile');
     applyRenderProfile((m) => console.log(`[broadcast-sidecar] ${m}`));
   } catch (e) {
     console.warn(`[broadcast-sidecar] render profile skipped: ${e.message}`);
+  }
+  const { operatorAuthRequired, operatorSecret } = require('../lib/broadcast/operator_auth');
+  const secretLen = operatorSecret().length;
+  console.log(`[broadcast-sidecar] operator auth required=${operatorAuthRequired()} secretLen=${secretLen}`);
+  if (operatorAuthRequired() && !secretLen) {
+    console.warn('[broadcast-sidecar] BROADCAST_OPERATOR_SECRET missing — POST /live-grid/* will 401 until env sync');
   }
 }
 

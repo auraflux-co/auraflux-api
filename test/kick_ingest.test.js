@@ -8,6 +8,8 @@ const {
   hlsFfmpegArgs,
   kickStreamlinkIngestEnabled,
   kickStreamlinkFfmpegEncodeArgs,
+  kickHlsFfmpegSpawnEnv,
+  KICK_CDN_HTTP_HEADERS,
 } = require('../lib/live_grid/kick_ingest');
 
 describe('kick_ingest', () => {
@@ -34,6 +36,8 @@ describe('kick_ingest', () => {
     const args = hlsFfmpegArgs('https://x.playback.live-video.net/v1/a.m3u8', { kickSlug: 'x' });
     expect(args).toContain('libx264');
     expect(args).not.toContain('copy');
+    expect(args).toContain('-headers');
+    expect(args).toContain(KICK_CDN_HTTP_HEADERS);
     if (prev) process.env.LIVE_GRID_KICK_HLS_TRANSCODE = prev;
   });
 
@@ -57,5 +61,25 @@ describe('kick_ingest', () => {
     const args = kickStreamlinkFfmpegEncodeArgs();
     expect(args).toContain('pipe:0');
     expect(args).toContain('libx264');
+  });
+
+  test('kickHlsFfmpegSpawnEnv sets proxy on Render when configured', () => {
+    const prev = {
+      RENDER: process.env.RENDER,
+      NODE_ENV: process.env.NODE_ENV,
+      KICK_PROXY_URL: process.env.KICK_PROXY_URL,
+      APIFY_PROXY_PASSWORD: process.env.APIFY_PROXY_PASSWORD,
+    };
+    process.env.RENDER = 'true';
+    delete process.env.NODE_ENV;
+    process.env.KICK_PROXY_URL = 'http://proxy.test:8000';
+    delete process.env.APIFY_PROXY_PASSWORD;
+    const env = kickHlsFfmpegSpawnEnv();
+    expect(env.HTTP_PROXY).toBe('http://proxy.test:8000');
+    expect(env.HTTPS_PROXY).toBe('http://proxy.test:8000');
+    for (const [k, v] of Object.entries(prev)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
   });
 });

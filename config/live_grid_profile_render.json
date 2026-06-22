@@ -112,7 +112,9 @@
     "LIVE_GRID_LIVE_SYNTHETIC_MEDIA": "off",
     "LIVE_GRID_CHAT_MEMBERS_ONLY": "off",
     "LIVE_GRID_FLEET_POLL_MS": "45000",
-    "LIVE_GRID_FLEET_POOL_SIZE": "5"
+    "LIVE_GRID_FLEET_POOL_SIZE": "5",
+    "LIVE_GRID_KICK_INGEST": "hls",
+    "LIVE_GRID_TWITCH_PROBE": "helix"
   },
   "notes": [
     "CPD-1064: Tier B+ — main 6800k + solos 4500k @ 720p; pool slot 4 hero 6800k @ 1080p (algorithm URL)",
@@ -124,7 +126,8 @@
     "LIVE_GRID_PROGRAM_MODE=grid — 4-up multiview always (daypart schedule removed)",
     "LIVE_GRID_SCHEDULE_AHEAD=off + CALENDAR_LIVE_SYNC=off + STREAM_SCHEDULER=off — manual GO LIVE only",
     "LIVE_GRID_STUDIO_DUAL_FIRST=off — RTMP starts on GO LIVE",
-    "CPD-1065: Kick streamlink default on Render (kick.com/{slug}) — Twitch-parity probe/slate/retry; no signed HLS token churn",
+    "CPD-1065: Kick HLS ingest on Render (LIVE_GRID_KICK_INGEST=hls) — streamlink exits code 2 on datacenter IPs",
+    "CPD-1065: Twitch live probes use Helix on Render — streamlink false-negatives miss roster go-live",
     "CPD-1065: Kick HLS transcode at feeder — clean H.264 for any Kick slug; token refresh without relay nudge"
   ]
 }

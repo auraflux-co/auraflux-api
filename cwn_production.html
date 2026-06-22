@@ -9621,9 +9621,16 @@ function lgFetch(url, opts) {
   opts = opts || {};
   const h = Object.assign({}, opts.headers);
   const sec = window.__BROADCAST_OPERATOR_SECRET__;
-  if (sec) h.Authorization = 'Bearer ' + sec;
+  let target = url;
+  if (sec) {
+    h.Authorization = 'Bearer ' + sec;
+    // Belt-and-suspenders — some proxies strip Authorization; query param is supported too.
+    if (!/[?&]operator=/.test(url)) {
+      target += (url.indexOf('?') >= 0 ? '&' : '?') + 'operator=' + encodeURIComponent(sec);
+    }
+  }
   if (opts.body && !h['Content-Type']) h['Content-Type'] = 'application/json';
-  return fetch(url, Object.assign({}, opts, { headers: h }));
+  return fetch(target, Object.assign({}, opts, { headers: h }));
 }
 
 function lgFleetModeSelected() {
@@ -9718,6 +9725,8 @@ function liveGridRender() {
   if (gridPanel) gridPanel.style.display = fleetUi ? 'none' : '';
   if (gridTail) gridTail.style.display = fleetUi ? 'none' : '';
   if (fleetPanel) fleetPanel.style.display = fleetUi ? '' : 'none';
+  const cardTitle = document.getElementById('lg-card-title');
+  if (cardTitle) cardTitle.textContent = fleetUi ? 'SOLO ROSTER FLEET' : 'LIVE GRID';
 
   const tag = document.getElementById('lg-status-tag');
   tag.innerHTML = running
