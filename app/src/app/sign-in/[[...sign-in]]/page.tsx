@@ -37,6 +37,17 @@ export default function SignInPage() {
   }, [searchParams, router]);
 
   useEffect(() => {
+    // Clerk custom domain (clerk.auraflux.co) is bound to app.auraflux.co — the
+    // Render *.onrender.com hostname fails Clerk init (status: error).
+    const host = window.location.hostname;
+    if (host === 'auraflux-app.onrender.com' || host === 'auraflux-app-staging.onrender.com') {
+      window.location.replace(
+        `https://app.auraflux.co${window.location.pathname}${window.location.search}`,
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     // Detect Clerk JS load failure — if the sign-in form hasn't mounted
     // within 10 seconds, Clerk JS likely failed to load from the CDN.
     const timer = setTimeout(() => {
@@ -53,8 +64,12 @@ export default function SignInPage() {
           <div className="text-4xl">⚠️</div>
           <h1 className="text-xl font-semibold text-foreground">Sign-in unavailable</h1>
           <p className="text-sm text-muted-foreground">
-            The authentication service failed to load. This is a temporary infrastructure
-            issue — please try again in a few minutes.
+            The authentication service failed to load. If you opened an{' '}
+            <code className="text-xs">*.onrender.com</code> link, use{' '}
+            <a href="https://app.auraflux.co/sign-in" className="text-primary underline">
+              app.auraflux.co/sign-in
+            </a>{' '}
+            instead — Clerk is configured for that domain only.
           </p>
           <div className="flex gap-3 justify-center pt-2">
             <button

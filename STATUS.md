@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — Kick fleet slots A1/A2 paused; Twitch slots active.
 
-**Last Updated:** 2026-06-22 (CPD-1070) — Fleet health API + dashboard panel; Kick OAuth HOW on Confluence; monitor script.
+**Last Updated:** 2026-06-22 (CPD-1071) — Kick OAuth token exchange retries; app.auraflux.co sign-in redirect; dashboard OAuth link fix.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
