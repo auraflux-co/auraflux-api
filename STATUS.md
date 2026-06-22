@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — CPD-1068 fleet encode gate + Sidecar B rollout (maya slot 8).
 
-**Last Updated:** 2026-06-22 (CPD-1068) — Kick HLS warm handoff + solo RTSP reconnect shipping to sidecars; B8 @maya GREEN (100); A1 @deenthegreat private test lane (encode heal target).
+**Last Updated:** 2026-06-22 (CPD-1068) — Hotfix: revert invalid solo RTSP reconnect flags (ffmpeg exit loop). Kick warm handoff remains on sidecars.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
