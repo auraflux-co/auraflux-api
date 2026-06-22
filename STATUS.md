@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — Kick fleet slots A1/A2 paused; Twitch slots active.
 
-**Last Updated:** 2026-06-22 (CPD-1071) — Kick OAuth status via source-channels + isLoaded gate on settings UI.
+**Last Updated:** 2026-06-22 (CPD-1071) — Kick profile via /users + /channels (fix /user 404); backfill handle on load.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
