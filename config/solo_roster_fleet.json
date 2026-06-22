@@ -14,7 +14,7 @@
       "When the same streamer goes live again → same slot, same YouTube listing — no rebinding.",
       "No grid compositor in this mode — only per-slot solo pipelines."
     ],
-    "pollSources": ["twitch helix /streams", "kick streamlink probe"],
+    "pollSources": ["twitch helix /streams", "kick API + streamlink probe"],
     "mustNot": [
       "Leave a YouTube slot live after the source streamer ended",
       "Start a slot without the locked streamer being live on source",
@@ -57,7 +57,7 @@
       "maxConcurrentEncodes": 5,
       "slots": [
         { "slot": 1, "platform": "kick", "login": "deenthegreat", "kickSlug": "deenthegreat" },
-        { "slot": 2, "platform": "kick", "login": "neon", "kickSlug": "neon" },
+        { "slot": 2, "platform": "kick", "login": "n3on", "kickSlug": "n3on" },
         { "slot": 3, "platform": "twitch", "login": "plaqueboymax" },
         { "slot": 4, "platform": "twitch", "login": "stableronaldo" },
         { "slot": 5, "platform": "twitch", "login": "lacy" }

@@ -1,0 +1,41 @@
+{
+  "updatedAt": "2026-06-21T15:24:13.359Z",
+  "fleetId": "a",
+  "slots": [
+    {
+      "slot": 1,
+      "localIndex": 0,
+      "login": "deenthegreat",
+      "phase": "idle",
+      "broadcastId": null
+    },
+    {
+      "slot": 2,
+      "localIndex": 1,
+      "login": "n3on",
+      "phase": "idle",
+      "broadcastId": null
+    },
+    {
+      "slot": 3,
+      "localIndex": 2,
+      "login": "plaqueboymax",
+      "phase": "idle",
+      "broadcastId": null
+    },
+    {
+      "slot": 4,
+      "localIndex": 3,
+      "login": "stableronaldo",
+      "phase": "idle",
+      "broadcastId": null
+    },
+    {
+      "slot": 5,
+      "localIndex": 4,
+      "login": "lacy",
+      "phase": "idle",
+      "broadcastId": null
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — Ko-fi support promo on fleet live + generate publish copy.
+**Deploy Mode:** dev — fleet slot 2 Kick roster n3on + Kick API live probe.
 
-**Last Updated:** 2026-06-22 (CPD-1057) — Ko-fi promo: fleet SEO + live chat + generate publishCopy descriptions.
+**Last Updated:** 2026-06-22 (CPD-1067) — Slot 2 Kick: neon → n3on (kick.com/n3on); Kick API-first live detection in stream_probe.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -212,7 +212,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 | Cursor | **fix(cpd-1067): broadcast dashboard fleet panel** — repair lgFetch URLs; roster visible in solo_roster; START FLEET A/B; static server on :8765. | cwn_production.html, broadcast_dashboard_static.js, broadcast_dashboard.js, STATUS.md | a40cf71a | 2026-06-21 ET |
 | Cursor | **feat(cpd-1067): solo roster orchestrator — poll source → per-slot YouTube; fleet auto-resume; both sidecars deployed** | solo_roster_orchestrator.js, manager.js, resume_state.js, feeders.js, fleet config, provision script, tests | 87b0be60+ | 2026-06-21 ET |
 | Cursor | **fix(cpd-1065): Kick streamlink ingest — Twitch-parity health loop** — probe before seat, exponential retry, streamlink default on Render; no signed HLS token churn. | kick_config.js, stream_probe.js, feeders.js, manager.js, kick_live_resolver.js, kick_ingest.js, tests, render profile, STATUS.md | — | 2026-06-13 ET |
-| Cursor | **feat(cpd-1057): Ko-fi support promo — fleet live SEO/chat + generate publishCopy** — clipzworld_support.js; fleet orchestrator chat post; solo SEO description; Gate 1 publish + YouTube upload adapter. | lib/clipzworld_support.js, solo_seo.js, solo_roster_orchestrator.js, publish.js, youtube.js, pipeline_assembly.js, test, .env.example, STATUS.md | pending | 2026-06-22 |
+| Cursor | **feat(cpd-1057): Ko-fi support promo — fleet live SEO/chat + generate publishCopy** — clipzworld_support.js; fleet orchestrator chat post; solo SEO description; Gate 1 publish + YouTube upload adapter. | lib/clipzworld_support.js, solo_seo.js, solo_roster_orchestrator.js, publish.js, youtube.js, pipeline_assembly.js, test, .env.example, STATUS.md | c9a14ad7 | 2026-06-22 |
 | Cursor | **fix(cpd-1065): lock grid lineup — operator mode ON** — preserve Kick url locks; resume kick seats; go-live template lineup. | manager.js, resume_state.js, live_routes.js, live_grid_go_live.json, live_grid_profile_render.json, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **fix(cpd-1065): Kick resolver + HLS solo login** — stop using API token as proxy password; curl_cffi direct; preserve login on url sources. | kick_live_resolver.js, feeders.js, manager.js, live_routes.js, test, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **feat(cpd-1047): unified YouTube SEO sync on grid swap** — one debounced path (discover stream keys → main + all solos); slate seats get generic titles; dashboard sync route. | solo_listing_sync.js, manager.js, live_routes.js, broadcast_dashboard.js, cwn_production.html, sync_solo_listings.js, tests, render profile, STATUS.md | — | 2026-06-21 ET |
