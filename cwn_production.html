@@ -554,6 +554,16 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div style="font-weight:700;margin-bottom:4px;">SOLO ROSTER FLEET · 10 slots (Sidecar A 1–5 · Sidecar B 6–10)</div>
             <div id="lg-fleet-sidecar-a"></div>
             <div id="lg-fleet-sidecar-b"></div>
+            <div id="lg-fleet-health-panel" style="margin-top:10px;padding:8px;border:1px solid rgba(199,175,79,0.25);border-radius:4px;background:rgba(0,0,0,0.2);">
+              <div style="font-weight:700;margin-bottom:6px;color:#c7af4f;">FLEET HEALTH · auto-refresh 45s</div>
+              <div id="lg-fleet-health-summary" style="margin-bottom:6px;color:rgba(255,255,255,0.55);">Loading…</div>
+              <div id="lg-fleet-health-slots"></div>
+              <div id="lg-kick-oauth-row" style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);">
+                <b>Kick OAuth (CPD-1071):</b>
+                <a id="lg-kick-oauth-link" href="https://auraflux-app.onrender.com/settings/channels" target="_blank" style="color:#53fc18;margin-left:6px;">Connect Kick in Settings → Channels</a>
+                · then set <code style="color:#ca8;">LIVE_GRID_KICK_OAUTH_CUSTOMER_ID</code> on Sidecar A to your Clerk user id
+              </div>
+            </div>
             <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Orchestrator polls Twitch/Kick ~45s — live source → YouTube slot public. Tier C 1080p @ 6800k.</div>
           </div>
 
@@ -9663,6 +9673,69 @@ function lgFleetPhaseDot(phase) {
   return '⚪';
 }
 
+let _lgFleetHealthA = null;
+let _lgFleetHealthB = null;
+const LG_FLEET_HEALTH_POLL_MS = 45000;
+
+function lgHealthLevelColor(level) {
+  if (level === 'good') return '#6d6';
+  if (level === 'degraded') return '#ca8';
+  if (level === 'bad') return '#e88';
+  if (level === 'paused') return '#888';
+  return 'rgba(255,255,255,0.45)';
+}
+
+function lgRenderFleetHealthPanel() {
+  const sumEl = document.getElementById('lg-fleet-health-summary');
+  const slotsEl = document.getElementById('lg-fleet-health-slots');
+  if (!sumEl || !slotsEl) return;
+  const summaries = [];
+  const slotRows = [];
+  function addBlock(label, health) {
+    if (!health || !health.ok) {
+      summaries.push(label + ': unavailable');
+      return;
+    }
+    const tag = health.tag || 'idle';
+    const worst = health.worstLiveScore;
+    const worstTxt = worst != null ? worst + '/100' : '—';
+    summaries.push('<span style="color:' + lgHealthLevelColor(tag === 'BAD' ? 'bad' : tag === 'DEGRADED' ? 'degraded' : 'good') + ';">'
+      + label + ' · ' + tag + '</span> · worst ' + worstTxt + ' · ' + (health.liveCount || 0) + ' live');
+    (health.slots || []).forEach(function (s) {
+      const scoreTxt = s.score != null ? s.score + '/100' : s.level || '—';
+      const watch = s.watchUrl ? ' · <a href="' + s.watchUrl + '" target="_blank" style="color:#b794f6;">yt</a>' : '';
+      const pause = s.paused ? ' · <span style="color:#888;">PAUSED</span>' : '';
+      const reasons = (s.reasons || []).slice(0, 2).join('; ');
+      slotRows.push('<div style="margin:2px 0;">'
+        + '<span style="color:' + lgHealthLevelColor(s.level) + ';">' + scoreTxt + '</span>'
+        + ' · ' + s.label + ' · ' + s.phase
+        + ' · feeder <b>' + (s.feeder || '—') + '</b>'
+        + (s.ffmpeg ? ' · ffmpeg✓' : ' · ffmpeg✗')
+        + pause + watch
+        + (reasons ? '<span style="color:rgba(255,255,255,0.35);"> · ' + reasons + '</span>' : '')
+        + '</div>');
+    });
+  }
+  addBlock('Sidecar A', _lgFleetHealthA);
+  addBlock('Sidecar B', _lgFleetHealthB);
+  sumEl.innerHTML = summaries.join(' · ') || 'Loading…';
+  slotsEl.innerHTML = slotRows.join('') || '<div style="color:rgba(255,255,255,0.35);">no fleet data</div>';
+}
+
+async function liveGridRefreshFleetHealth() {
+  try {
+    const r = await lgFetch(LG_BASE + '/live-grid/fleet/health');
+    const j = await r.json();
+    _lgFleetHealthA = j.health || null;
+  } catch (e) { _lgFleetHealthA = null; }
+  try {
+    const r2 = await lgFetch(LG_BASE_B + '/live-grid/fleet/health');
+    const j2 = await r2.json();
+    _lgFleetHealthB = j2.health || null;
+  } catch (e) { _lgFleetHealthB = null; }
+  lgRenderFleetHealthPanel();
+}
+
 function lgRenderFleetSidecar(elId, label, status) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -9706,6 +9779,7 @@ async function liveGridRefresh() {
     if (sel && sel.value !== 'solo_roster') sel.value = 'solo_roster';
   }
   if (!_lgStatus?.running && !lgFleetModeSelected()) await liveGridRefreshListing();
+  if (fleetRunning || lgFleetModeSelected()) await liveGridRefreshFleetHealth();
   liveGridRender();
 }
 
@@ -9739,6 +9813,7 @@ function liveGridRender() {
     else lgRenderFleetStatic('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', 'a');
     if (fleetB || (_lgStatusB && _lgStatusB.running)) lgRenderFleetSidecar('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', _lgStatusB);
     else lgRenderFleetStatic('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', 'b');
+    lgRenderFleetHealthPanel();
   }
 
   document.getElementById('lg-start-btn').style.display = (!fleetUi && !running) ? '' : 'none';
@@ -10224,6 +10299,11 @@ async function liveGridUnlockQuad(quadrant) {
 
 liveGridRefresh();
 setInterval(liveGridRefresh, 15000);
+setInterval(function () {
+  if (lgFleetModeSelected() || (_lgStatus && _lgStatus.fleetOrchestrator) || (_lgStatusB && _lgStatusB.fleetOrchestrator)) {
+    liveGridRefreshFleetHealth();
+  }
+}, LG_FLEET_HEALTH_POLL_MS);
 
 // ===========================================================================
 // CLIPZWORLD TV controls (CPD-958) — start/stop + now-playing rotation
