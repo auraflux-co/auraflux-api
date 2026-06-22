@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — Kick fleet slots A1/A2 paused; Twitch slots active.
 
-**Last Updated:** 2026-06-22 (CPD-1071) — Kick OAuth token exchange retries; app.auraflux.co sign-in redirect; dashboard OAuth link fix.
+**Last Updated:** 2026-06-22 (CPD-1071) — Kick OAuth single-shot token exchange + pinned redirect_uri; no retry on one-time codes.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

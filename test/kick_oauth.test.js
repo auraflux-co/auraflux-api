@@ -14,5 +14,6 @@ describe('kick_oauth token retry', () => {
     assert.equal(isRetryableKickTokenError(new Error('Premature close')), true);
     assert.equal(isRetryableKickTokenError(new Error('read ECONNRESET')), true);
     assert.equal(isRetryableKickTokenError(new Error('Kick token exchange failed (400): invalid_grant')), false);
+    assert.equal(isRetryableKickTokenError(new Error('Kick authorization code invalid or already used')), false);
   });
 });
