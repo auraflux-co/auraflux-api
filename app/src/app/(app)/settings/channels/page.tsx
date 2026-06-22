@@ -21,21 +21,19 @@ import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { formatUserError } from '@/lib/job-labels';
 import {
   getSourceChannels,
+  getChannelConnections,
+  disconnectChannelConnection,
   saveSourceChannels,
   resolveSourceChannel,
   type SourceChannels,
   type SourcePlatform,
+  type SourceChannelOAuthConnection,
   type ResolvedChannel,
 } from '@/lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface SourceConnection {
-  platform: string;
-  handle: string | null;
-  platformUserId: string | null;
-  connectedAt: string | null;
-}
+interface SourceConnection extends SourceChannelOAuthConnection {}
 
 // ── Platform config ──────────────────────────────────────────────────────────
 
@@ -79,10 +77,15 @@ interface ChannelVerification {
 }
 
 const DEBOUNCE_MS = 500;
-const API_BASE    = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
+
+function connectionsMap(list: SourceChannelOAuthConnection[] | undefined): Record<string, SourceConnection> {
+  const map: Record<string, SourceConnection> = {};
+  for (const c of list ?? []) map[c.platform] = c;
+  return map;
+}
 
 export default function SourceChannelsPage() {
-  const { getToken }  = useAuth();
+  const { isLoaded, getToken } = useAuth();
   const searchParams  = useSearchParams();
   const { activeBrand } = useBrand();
   const activeBrandId   = activeBrand?.id;
@@ -104,23 +107,21 @@ export default function SourceChannelsPage() {
 
   const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-  // Load connected OAuth source channels
-  const loadConnections = useCallback(async () => {
+  // Load connected OAuth source channels (same apiFetch path as saved usernames)
+  const loadConnections = useCallback(async (token?: string | null) => {
+    const t = token ?? (await getToken());
+    if (!t) return;
     try {
-      const token = await getToken();
-      const res   = await fetch(`${API_BASE}/channels/connections`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      const map: Record<string, SourceConnection> = {};
-      for (const c of data.connections ?? []) map[c.platform] = c;
-      setConnections(map);
-    } catch { /* non-blocking */ }
+      const data = await getChannelConnections(t);
+      setConnections(connectionsMap(data.connections));
+    } catch (e) {
+      setOauthError(e instanceof Error ? e.message : 'Failed to load channel connections');
+    }
   }, [getToken]);
 
   // Handle OAuth callback query params + refresh connection list
   useEffect(() => {
+    if (!isLoaded) return;
     const connected = searchParams.get('channel_connected');
     const handle    = searchParams.get('handle');
     const errMsg    = searchParams.get('channel_error');
@@ -130,34 +131,40 @@ export default function SourceChannelsPage() {
       void loadConnections();
     }
     if (errMsg) setOauthError(decodeURIComponent(errMsg));
-  }, [searchParams, loadConnections]);
+  }, [searchParams, loadConnections, isLoaded]);
 
-  // Load saved channels on mount
+  // Load saved channels + OAuth status once Clerk session is ready
   useEffect(() => {
+    if (!isLoaded) return;
     let cancelled = false;
     (async () => {
       try {
         const token = await getToken();
-        const [res] = await Promise.all([
-          getSourceChannels(token ?? undefined),
-          loadConnections(),
-        ]);
+        if (!token || cancelled) return;
+        const res = await getSourceChannels(token);
         if (cancelled) return;
         const sc = res.sourceChannels ?? {};
         setChannels(sc);
+        setConnections(connectionsMap(res.oauthConnections));
         for (const p of PLATFORMS) {
           const val = sc[p.key];
-          if (val) scheduleVerify(p.key, p.platform, val, token ?? undefined);
+          if (val) scheduleVerify(p.key, p.platform, val, token);
         }
-      } catch { /* non-blocking */ }
+      } catch (e) {
+        if (!cancelled) {
+          setOauthError(e instanceof Error ? e.message : 'Failed to load channels');
+        }
+      }
     })();
     return () => { cancelled = true; };
-  }, [getToken, loadConnections, activeBrandId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoaded, getToken, activeBrandId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleConnect(oauthPlatform: string) {
     try {
       const token = await getToken();
-      window.location.href = `${API_BASE}/channels/connect/${oauthPlatform}?token=${token}`;
+      if (!token) throw new Error('Session not ready — please wait a moment and try again');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
+      window.location.href = `${apiBase}/channels/connect/${oauthPlatform}?token=${token}`;
     } catch (e) {
       setOauthError(e instanceof Error ? e.message : 'Failed to start OAuth');
     }
@@ -166,10 +173,8 @@ export default function SourceChannelsPage() {
   async function handleDisconnect(oauthPlatform: string) {
     try {
       const token = await getToken();
-      await fetch(`${API_BASE}/channels/connections/${oauthPlatform}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      if (!token) throw new Error('Session not ready');
+      await disconnectChannelConnection(oauthPlatform, token);
       setConnections((prev) => {
         const next = { ...prev };
         delete next[oauthPlatform];

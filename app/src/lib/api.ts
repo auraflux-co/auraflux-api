@@ -1300,10 +1300,30 @@ export async function saveSchedulePrefs(
   });
 }
 
+export interface SourceChannelOAuthConnection {
+  platform:       string;
+  handle:         string | null;
+  platformUserId: string | null;
+  connectedAt:    string | null;
+}
+
 export async function getSourceChannels(
   token?: string,
-): Promise<{ ok: boolean; sourceChannels: SourceChannels }> {
+): Promise<{ ok: boolean; sourceChannels: SourceChannels; oauthConnections?: SourceChannelOAuthConnection[] }> {
   return apiFetch('/account/source-channels', { token });
+}
+
+export async function getChannelConnections(
+  token?: string,
+): Promise<{ ok: boolean; connections: SourceChannelOAuthConnection[] }> {
+  return apiFetch('/channels/connections', { token });
+}
+
+export async function disconnectChannelConnection(
+  platform: string,
+  token?: string,
+): Promise<{ ok: boolean; disconnected: string }> {
+  return apiFetch(`/channels/connections/${platform}`, { method: 'DELETE', token });
 }
 
 export async function saveSourceChannels(

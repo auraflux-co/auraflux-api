@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — Kick fleet slots A1/A2 paused; Twitch slots active.
 
-**Last Updated:** 2026-06-22 (CPD-1071) — Fix token_store NULL brand_id SQL (Kick OAuth connections list).
+**Last Updated:** 2026-06-22 (CPD-1071) — Kick OAuth status via source-channels + isLoaded gate on settings UI.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
