@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — CPD-1068 fleet encode gate + Sidecar B rollout (maya slot 8).
 
-**Last Updated:** 2026-06-22 (CPD-1068) — Both sidecars on `2ad1a5c5`; B8 @maya GREEN (100); A1 @deenthegreat private test lane live (encoder heal loop on Kick token refresh).
+**Last Updated:** 2026-06-22 (CPD-1068) — Kick HLS warm handoff + solo RTSP reconnect shipping to sidecars; B8 @maya GREEN (100); A1 @deenthegreat private test lane (encode heal target).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
