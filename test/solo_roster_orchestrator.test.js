@@ -35,6 +35,8 @@ describe('SoloRosterOrchestrator tick', () => {
     process.env.LIVE_GRID_RESUME_DIR = '/tmp/cwn-fleet-test';
     process.env.LIVE_GRID_YOUTUBE_GO_LIVE_WAIT = 'off';
     process.env.LIVE_GRID_FLEET_RTSP_WAIT_MS = '100';
+    process.env.LIVE_GRID_FLEET_KICK_RTSP_WAIT_MS = '100';
+    process.env.LIVE_GRID_FLEET_SOLO_WAIT_MS = '100';
     process.env.LIVE_GRID_FLEET_ID = 'a';
     for (let i = 1; i <= 5; i++) {
       process.env[`LIVE_GRID_SOLO_${i}_RTMP_URL`] = `rtmp://a.rtmp.youtube.com/live2/key${i}`;
@@ -56,7 +58,7 @@ describe('SoloRosterOrchestrator tick', () => {
 
   test('paused kick slots do not start when source is live', async () => {
     twitchChannelLive.mockResolvedValue(false);
-    kickChannelLive.mockResolvedValue(true);
+    kickChannelLive.mockImplementation(async (slug) => slug === 'n3on');
 
     const manager = {
       log: jest.fn(),
@@ -71,6 +73,7 @@ describe('SoloRosterOrchestrator tick', () => {
         started: false,
         start: jest.fn(),
         stopSeat: jest.fn(),
+        procs: [{ exitCode: null, killed: false }, null, null, null, null],
       },
       _canReuseBroadcastId: jest.fn().mockResolvedValue(true),
       _applySoloYoutubeSeo: jest.fn(),
@@ -78,13 +81,13 @@ describe('SoloRosterOrchestrator tick', () => {
 
     const { SoloRosterOrchestrator } = require('../lib/live_grid/solo_roster_orchestrator');
     const orch = new SoloRosterOrchestrator(manager, { fleetId: 'a' });
-    orch._slotState.set(0, { phase: 'live', login: 'deenthegreat', broadcastId: 'bid-1' });
+    orch._slotState.set(1, { phase: 'live', login: 'n3on', broadcastId: 'bid-2' });
 
     await orch.tick();
     expect(manager.setQuadrantKick).not.toHaveBeenCalled();
     expect(manager.soloPublishers.start).not.toHaveBeenCalled();
-    expect(manager.soloPublishers.stopSeat).toHaveBeenCalledWith(0);
-    expect(yt.endLiveBroadcast).toHaveBeenCalledWith('bid-1');
+    expect(manager.soloPublishers.stopSeat).toHaveBeenCalledWith(1);
+    expect(yt.endLiveBroadcast).toHaveBeenCalledWith('bid-2');
     orch.stop();
   });
 
@@ -113,6 +116,7 @@ describe('SoloRosterOrchestrator tick', () => {
         started: false,
         start: jest.fn(),
         stopSeat: jest.fn(),
+        procs: [null, null, { exitCode: null, killed: false }, null, null],
       },
       _canReuseBroadcastId: jest.fn().mockResolvedValue(true),
       _applySoloYoutubeSeo: jest.fn().mockResolvedValue({ seo: {}, result: {} }),

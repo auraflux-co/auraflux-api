@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — Kick slot A1 test lane active (deenthegreat); A2/n3on paused until soak green.
+**Deploy Mode:** dev — CPD-1068 fleet encode gate + Sidecar B rollout (maya slot 8).
 
-**Last Updated:** 2026-06-22 (CPD-1069) — Sidecar OAuth env + unpause Kick Q1 test lane for broadcast ingest.
+**Last Updated:** 2026-06-22 (CPD-1068) — Kick ingest heal without slate; solo encoder must run before public; Sidecar B deploy + provision.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
