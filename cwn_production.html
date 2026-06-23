@@ -90,6 +90,16 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .gen-comp-lineup { border:1px solid rgba(145,70,255,0.35); border-radius:8px; padding:10px 12px; background:rgba(145,70,255,0.06); flex-shrink:0; }
 .gen-comp-lineup-head { font-size:10px; letter-spacing:1px; color:rgba(145,70,255,0.85); font-family:monospace; margin-bottom:8px; }
 .gen-comp-lineup-grid { display:flex; flex-direction:column; gap:6px; }
+/* Clip groups — saved 4-creator picker shortcuts (CPD-1086) */
+.clip-groups-list { display:flex; flex-direction:column; gap:8px; padding:0 4px 8px; max-height:280px; overflow-y:auto; }
+.clip-group-card { border:1px solid rgba(199,175,79,0.2); border-radius:8px; padding:10px; background:rgba(10,16,24,0.55); }
+.clip-group-card.is-active { border-color:rgba(145,70,255,0.55); background:rgba(145,70,255,0.06); }
+.clip-group-name { font-size:12px; font-weight:700; color:#c7af4f; margin-bottom:4px; letter-spacing:0.3px; }
+.clip-group-handles { font-size:10px; color:rgba(255,255,255,0.5); line-height:1.45; margin-bottom:8px; }
+.clip-group-actions { display:flex; flex-wrap:wrap; gap:4px; }
+.clip-group-editor { border:1px dashed rgba(199,175,79,0.35); border-radius:8px; padding:10px; margin:0 4px 8px; background:#0a1018; }
+.clip-group-editor-slots { display:flex; flex-direction:column; gap:6px; margin:8px 0; }
+.clip-group-editor-hint { font-size:9px; color:rgba(255,255,255,0.35); line-height:1.4; margin-bottom:6px; }
 .gen-comp-slot { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid rgba(255,255,255,0.08); border-radius:6px; background:rgba(0,0,0,0.25); }
 .gen-comp-slot-num { font-size:11px; font-weight:700; color:#9146ff; min-width:18px; font-family:monospace; }
 .gen-comp-slot-thumb { width:48px; height:27px; object-fit:cover; border-radius:3px; background:#1a2035; flex-shrink:0; }
@@ -763,6 +773,25 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                     <div id="streamer-section-kick" class="creator-chip-grid is-section"></div>
                     <div class="streamer-section-actions">
                       <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()" style="color:#53fc18;border-color:rgba(83,252,24,0.4);">+ Kick URL</button>
+                    </div>
+                  </details>
+                  <details open class="streamer-roster-section" id="streamer-section-clip-groups-wrap">
+                    <summary><span>Clip groups · saved 4-packs</span><span class="streamer-section-count" id="streamer-count-clip-groups">0</span></summary>
+                    <div class="clip-group-editor-hint" style="padding:0 8px 6px;">Quick picker targets only — does not change Templates, Following, or Bench listings.</div>
+                    <div id="clip-group-editor" class="clip-group-editor" style="display:none;">
+                      <input type="hidden" id="clip-group-editor-id" value="">
+                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Group name</div>
+                        <input id="clip-group-editor-name" type="text" maxlength="48" placeholder="e.g. Kick test A" class="field-input-compact"></div>
+                      <div id="clip-group-editor-slots" class="clip-group-editor-slots"></div>
+                      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                        <button type="button" class="btn btn-gold btn-sm" onclick="saveClipGroupEditor()">Save group</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="fillClipGroupEditorFromSelection()">Use current selection</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="cancelClipGroupEditor()">Cancel</button>
+                      </div>
+                    </div>
+                    <div id="streamer-clip-groups-list" class="clip-groups-list"></div>
+                    <div class="streamer-section-actions">
+                      <button type="button" class="btn btn-outline btn-sm" onclick="openClipGroupEditor(null)">+ New group</button>
                     </div>
                   </details>
                   <div id="streamer-add-section" class="creator-add-section" style="display:none;">
@@ -12047,11 +12076,13 @@ function getSelectedStreamers() {
     .split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
 }
 
-function setSelectedStreamers(list) {
+function setSelectedStreamers(list, opts) {
+  opts = opts || {};
   var el = g('twitch-streamers');
   if (!el) return;
   el.value = list.join(',');
   saveStreamerList();
+  if (!opts.fromClipGroup) syncActiveClipPickerGroup();
   renderStreamerChips();
 }
 
@@ -12158,7 +12189,7 @@ function renderStreamerSelectedSummary(sel) {
   if (!bar) return;
   sel = sel || getSelectedStreamers();
   if (!sel.length) {
-    bar.innerHTML = '<span style="color:rgba(255,255,255,0.35);">No creators selected — use Templates, Following, Bench, or Kick above.</span>';
+    bar.innerHTML = '<span style="color:rgba(255,255,255,0.35);">No creators selected — use a <strong>Clip group</strong>, Templates, Following, Bench, or Kick.</span>';
     return;
   }
   bar.innerHTML = '<strong style="color:#9146ff;">' + sel.length + ' selected</strong> — Pick clips when ready.';
@@ -12358,6 +12389,178 @@ function applyStreamerTemplateSelection() {
   setSelectedStreamers(Object.keys(set));
 }
 
+// ── Clip groups — saved 4-creator picker shortcuts (does not affect roster buckets) ──
+window._activeClipPickerGroupId = window._activeClipPickerGroupId || null;
+
+function clipPickerGroupsApi() {
+  return window.ClipPickerGroups || null;
+}
+
+function getClipPickerGroups() {
+  var api = clipPickerGroupsApi();
+  if (!api) return [];
+  try {
+    return api.parseStoredGroups(localStorage.getItem(api.STORAGE_KEY));
+  } catch (e) { return []; }
+}
+
+function saveClipPickerGroups(groups) {
+  var api = clipPickerGroupsApi();
+  if (!api) return;
+  localStorage.setItem(api.STORAGE_KEY, api.serializeGroups(groups));
+  renderClipPickerGroupsList();
+}
+
+function streamerSetsEqual(a, b) {
+  if (!a || !b || a.length !== b.length) return false;
+  return a.slice().sort().join(',') === b.slice().sort().join(',');
+}
+
+function syncActiveClipPickerGroup() {
+  var sel = getSelectedStreamers();
+  var groups = getClipPickerGroups();
+  var match = null;
+  for (var i = 0; i < groups.length; i++) {
+    if (streamerSetsEqual(groups[i].streamers, sel)) { match = groups[i]; break; }
+  }
+  window._activeClipPickerGroupId = match ? match.id : null;
+}
+
+function renderClipPickerGroupEditorSlots(values) {
+  var wrap = g('clip-group-editor-slots');
+  var api = clipPickerGroupsApi();
+  if (!wrap || !api) return;
+  values = values || [];
+  var html = '';
+  for (var i = 0; i < api.MAX_STREAMERS_PER_GROUP; i++) {
+    html += '<div><div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:3px;">Creator ' + (i + 1) + '</div>';
+    html += '<input type="text" class="field-input-compact clip-group-slot-input" data-slot="' + i + '" placeholder="@handle" value="' + escapeHtml(values[i] || '') + '"></div>';
+  }
+  wrap.innerHTML = html;
+}
+
+function openClipGroupEditor(id) {
+  var editor = g('clip-group-editor');
+  if (!editor) return;
+  var groups = getClipPickerGroups();
+  var existing = null;
+  if (id) {
+    for (var i = 0; i < groups.length; i++) {
+      if (groups[i].id === id) { existing = groups[i]; break; }
+    }
+  }
+  g('clip-group-editor-id').value = existing ? existing.id : '';
+  g('clip-group-editor-name').value = existing ? existing.name : '';
+  renderClipPickerGroupEditorSlots(existing ? existing.streamers : []);
+  editor.style.display = 'block';
+  var details = g('streamer-section-clip-groups-wrap');
+  if (details) details.open = true;
+}
+
+function cancelClipGroupEditor() {
+  var editor = g('clip-group-editor');
+  if (editor) editor.style.display = 'none';
+}
+
+function readClipGroupEditorValues() {
+  var api = clipPickerGroupsApi();
+  if (!api) return [];
+  var slots = document.querySelectorAll('.clip-group-slot-input');
+  var streamers = [];
+  for (var i = 0; i < slots.length; i++) {
+    var v = api.normalizeHandle(slots[i].value);
+    if (v) streamers.push(v);
+  }
+  return streamers;
+}
+
+function fillClipGroupEditorFromSelection() {
+  var api = clipPickerGroupsApi();
+  if (!api) return;
+  var sel = getSelectedStreamers().slice(0, api.MAX_STREAMERS_PER_GROUP);
+  if (!sel.length) {
+    alert('Select 1–4 creators first (or type handles in the slots).');
+    return;
+  }
+  renderClipPickerGroupEditorSlots(sel);
+}
+
+function saveClipGroupEditor() {
+  var api = clipPickerGroupsApi();
+  if (!api) return;
+  var id = (g('clip-group-editor-id') || {}).value || '';
+  var name = ((g('clip-group-editor-name') || {}).value || '').trim();
+  var streamers = readClipGroupEditorValues();
+  var payload = { name: name, streamers: streamers };
+  if (id) payload.id = id;
+  var result = api.upsertGroup(getClipPickerGroups(), payload);
+  if (!result.ok) {
+    alert('Could not save group:\n' + result.errors.join('\n'));
+    return;
+  }
+  saveClipPickerGroups(result.groups);
+  cancelClipGroupEditor();
+}
+
+function applyClipPickerGroup(id, andPick) {
+  var groups = getClipPickerGroups();
+  var group = null;
+  for (var i = 0; i < groups.length; i++) {
+    if (groups[i].id === id) { group = groups[i]; break; }
+  }
+  if (!group) return;
+  var roster = getStreamerRoster();
+  var changed = false;
+  group.streamers.forEach(function(h) {
+    if (roster.indexOf(h) === -1) { roster.push(h); changed = true; }
+  });
+  if (changed) saveStreamerRoster(roster);
+  setSelectedStreamers(group.streamers.slice(), { fromClipGroup: true });
+  window._activeClipPickerGroupId = id;
+  renderClipPickerGroupsList();
+  if (andPick) previewTwitchClips();
+}
+
+function deleteClipPickerGroup(id) {
+  if (!confirm('Delete this clip group?')) return;
+  var api = clipPickerGroupsApi();
+  if (!api) return;
+  var result = api.deleteGroup(getClipPickerGroups(), id);
+  if (!result.ok) return;
+  if (window._activeClipPickerGroupId === id) window._activeClipPickerGroupId = null;
+  saveClipPickerGroups(result.groups);
+}
+
+function renderClipPickerGroupsList() {
+  var list = g('streamer-clip-groups-list');
+  var api = clipPickerGroupsApi();
+  if (!list || !api) return;
+  var groups = getClipPickerGroups();
+  updateStreamerSectionCount('streamer-count-clip-groups', groups.length, groups.length);
+  if (!groups.length) {
+    list.innerHTML = '<span style="color:rgba(255,255,255,0.35);font-size:11px;padding:4px 8px;">No saved groups yet — create a 4-creator pack, then hit <strong>Pick clips</strong>.</span>';
+    return;
+  }
+  list.innerHTML = groups.map(function(group) {
+    var active = window._activeClipPickerGroupId === group.id;
+    var labels = group.streamers.map(function(h) {
+      var meta = window._creatorRegistryMap[h] || {};
+      return escapeHtml(meta.displayName || h);
+    }).join(' · ');
+    var handles = group.streamers.map(function(h) { return '@' + h; }).join(', ');
+    var gid = jsQuote(group.id);
+    return '<div class="clip-group-card' + (active ? ' is-active' : '') + '">'
+      + '<div class="clip-group-name">' + escapeHtml(group.name) + '</div>'
+      + '<div class="clip-group-handles">' + labels + '<br><span style="opacity:0.65">' + escapeHtml(handles) + '</span></div>'
+      + '<div class="clip-group-actions">'
+      + '<button type="button" class="btn btn-outline btn-sm" onclick="applyClipPickerGroup(\'' + gid + '\', false)">Use</button>'
+      + '<button type="button" class="btn btn-gold btn-sm" onclick="applyClipPickerGroup(\'' + gid + '\', true)">Pick clips</button>'
+      + '<button type="button" class="btn btn-outline btn-sm" onclick="openClipGroupEditor(\'' + gid + '\')">Edit</button>'
+      + '<button type="button" class="btn btn-outline btn-sm" onclick="deleteClipPickerGroup(\'' + gid + '\')" style="color:#ff6b6b;border-color:rgba(255,107,107,0.35);">Delete</button>'
+      + '</div></div>';
+  }).join('');
+}
+
 function classifyStreamerSections(roster) {
   var templates = {};
   getStreamerTemplateHandles().forEach(function(h) { templates[h] = true; });
@@ -12446,7 +12649,7 @@ function countSelectedIn(handles, selSet) {
 }
 
 function setStreamerSectionsExpanded(open) {
-  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap'].forEach(function(id) {
+  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap', 'streamer-section-clip-groups-wrap'].forEach(function(id) {
     var d = g(id);
     if (d) {
       d.open = !!open;
@@ -12462,7 +12665,7 @@ function setStreamerSectionsExpanded(open) {
 function initStreamerSectionAccordion() {
   if (window._streamerSectionsInited) return;
   window._streamerSectionsInited = true;
-  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap'].forEach(function(id) {
+  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap', 'streamer-section-clip-groups-wrap'].forEach(function(id) {
     var d = g(id);
     if (!d) return;
     d.addEventListener('toggle', function() { d.dataset.userToggled = '1'; });
@@ -12594,7 +12797,7 @@ function renderStreamerChips() {
   });
   if (!selectedSorted.length) {
     selWrap.className = 'creator-chip-grid is-compact is-empty-hint';
-    selWrap.innerHTML = 'No creators selected.<br>Use <strong>Templates</strong>, <strong>Following</strong>, <strong>Bench</strong>, or search.';
+    selWrap.innerHTML = 'No creators selected.<br>Use a <strong>Clip group</strong>, <strong>Templates</strong>, <strong>Following</strong>, <strong>Bench</strong>, or search.';
   } else {
     selWrap.className = 'creator-chip-grid is-compact';
     selWrap.innerHTML = selectedSorted.map(function(h) {
@@ -12665,6 +12868,7 @@ function renderStreamerChips() {
   var cnt = g('streamer-chip-count');
   if (cnt) cnt.textContent = sel.length + ' selected';
   renderStreamerSelectedSummary(sel);
+  renderClipPickerGroupsList();
 }
 
 function saveClipsPerStreamer() {
@@ -15089,6 +15293,7 @@ async function liveTvStop() {
 liveTvRefresh();
 setInterval(liveTvRefresh, 15000);
 </script>
+<script src="/assets/clip_picker_groups.js"></script>
 <script src="/assets/calendar_dashboard.js"></script>
 <script src="/assets/broadcast_dashboard.js"></script>
 <script>

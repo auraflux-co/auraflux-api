@@ -11,6 +11,14 @@ const {
   hookCopiesClipTitle,
 } = require('../lib/clip_comp_hooks');
 
+test('isJunkHook rejects hooks over max word count', () => {
+  const prev = process.env.CLIP_HOOK_MAX_WORDS;
+  process.env.CLIP_HOOK_MAX_WORDS = '7';
+  assert.equal(isJunkHook('one two three four five six seven eight'), true);
+  assert.equal(isJunkHook('Wrong Shirt Gift'), false);
+  process.env.CLIP_HOOK_MAX_WORDS = prev;
+});
+
 test('isJunkHook rejects twitch passthrough junk and streamer-prefixed lines', () => {
   assert.equal(isJunkHook('dsda'), true);
   assert.equal(isJunkHook('wisdom'), true);

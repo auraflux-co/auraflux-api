@@ -34,9 +34,10 @@ describe('streamer picker config', () => {
     expect(s.platform).toBe('kick');
   });
 
-  test('resolveStreamer reads lacy as kick after CPD-1053', () => {
+  test('resolveStreamer prefers registry primaryPlatform over config seed', () => {
     const s = resolveStreamer('lacy');
-    expect(s.platform).toBe('kick');
+    expect(s.platform).toBe('twitch');
+    expect(s.displayName).toBe('Lacy');
   });
 
   test('listPlatforms returns enabled platforms', () => {

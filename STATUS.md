@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-24 (CPD-1086) — Hook Machine: few-shot examples (`clip_hook_examples.json`), 5 ranked Gemini candidates + 3-second rule, curiosity-gap prompts, Claude QA model fix; clip picker groups (saved 4-packs); Lacy registry→Twitch platform fix.
 **Last Updated:** 2026-06-24 (CPD-1085) — Clip comp burned hooks: Gemini multi-pass observation (visual+audio+merge on one upload), Claude pre-burn QA (`clip_hook_qa.js`), strict video rewatch fallback; creative brief → GPT SEO handoff.
 **Last Updated:** 2026-06-13 (CPD-1060) — North Star reporting date range: preset 7/14/28/90d, end-date picker, `resolveReportingRange`, API query params, sessionStorage prefs on Channel Stats.
 **Last Updated:** 2026-06-23 (CPD-1077) — Fleet pause UI on Broadcast dashboard; held live-grid middleware, post-live, clip comp, and sidecar work committed after fleet stop.

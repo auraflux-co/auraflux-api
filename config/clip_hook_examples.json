@@ -1,0 +1,45 @@
+{
+  "version": "2026-06-24",
+  "description": "Few-shot hook patterns for clip-comp burned captions — in-context learning for Gemini Hook Machine.",
+  "patterns": [
+    "Immediate emotion or reaction beat — not the clip title",
+    "Curiosity gap — tease the moment, never the punchline",
+    "Pattern interrupt — surprising juxtaposition or contradiction",
+    "≤7 words ideal; hard max 12 words; readable in under 3 seconds",
+    "No streamer name, no colon prefix, TV-clean"
+  ],
+  "examples": [
+    {
+      "hook": "Wrong Shirt Gift",
+      "why": "Specific embarrassment beat; viewer must watch to see the gift go wrong"
+    },
+    {
+      "hook": "Shorts Won't Zip!",
+      "why": "Visual struggle + relatable tension; doesn't spoil the beach payoff"
+    },
+    {
+      "hook": "Forks, Sushi, and Confidence",
+      "why": "Pattern interrupt — odd detail stops the scroll"
+    },
+    {
+      "hook": "LeBron James in a Barrel?",
+      "why": "Shocking visual tease with question mark — curiosity gap"
+    },
+    {
+      "hook": "Music Drops, Crowd Erupts",
+      "why": "High-energy audio beat without revealing what triggered it"
+    },
+    {
+      "hook": "Scream to Manic Goal Grin",
+      "why": "Emotional arc in 5 words — tension before the celebration"
+    },
+    {
+      "hook": "Miami Food Meltdown",
+      "why": "Place + disaster hint — must watch for the meltdown"
+    },
+    {
+      "hook": "Did Not See That Coming",
+      "why": "Meta curiosity gap — only works when observation supports a real twist"
+    }
+  ]
+}
