@@ -198,6 +198,7 @@
     } catch (_) {
       _calPlan = null;
     }
+    await renderNorthStarCadence();
     if (!_calPlan?.ok) {
       if (typeof buildCalendar === 'function') buildCalendar();
       return;
@@ -206,6 +207,44 @@
     renderWeek(_calPlan);
     renderPublishRules(_calPlan);
   };
+
+  async function renderNorthStarCadence() {
+    const el = g('cal-northstar');
+    const card = g('cal-northstar-card');
+    if (!el) return;
+    try {
+      const stats = await calFetch('/stats/channel');
+      const ns = stats.northStar;
+      if (!ns) {
+        el.innerHTML = 'Open <b>Channel Stats</b> and Refresh once to load north star cadence.';
+        return;
+      }
+      const c = ns.cadence || {};
+      const avg = c.avgPerDay || {};
+      const y = c.yesterday || {};
+      const t = ns.config && ns.config.cadence ? ns.config.cadence : {};
+      const alertHtml = (ns.alerts || []).map((a) =>
+        `<div class="ns-alert-${a.level || 'warn'}" style="margin-top:4px;">⚠ ${a.message}</div>`).join('');
+      el.innerHTML = `
+        <div><b style="color:#c7af4f;">Yesterday</b> · ${y.streams || 0} live · ${y.videos || 0} VOD · ${y.shorts || 0} Shorts</div>
+        <div style="margin-top:6px;"><b style="color:#c7af4f;">7d avg</b> · ${(avg.shorts || 0).toFixed(1)} Shorts (target ${t.shorts?.min || 3}–${t.shorts?.max || 5}) ·
+          ${(avg.videos || 0).toFixed(1)} VOD (${t.videos?.min || 1}–${t.videos?.max || 2}) ·
+          ${(avg.streams || 0).toFixed(1)} live (${t.streams?.min || 0}–${t.streams?.max || 2})</div>
+        <div style="margin-top:6px;font-size:10px;color:rgba(255,255,255,0.4);">
+          Progress: ${ns.progress?.pctOfTarget || 0}% toward $${ns.config?.dailyUsdTarget || 300}/day
+          · back catalog ${ns.backCatalogRatio != null ? (ns.backCatalogRatio * 100).toFixed(1) + '%' : '—'}
+        </div>
+        ${alertHtml}
+        <div style="margin-top:8px;"><a href="#" onclick="nav('stats');return false;" style="color:#c7af4f;font-size:10px;">→ Channel Stats</a></div>`;
+      if (card && (ns.alerts || []).some((a) => a.level === 'warn')) {
+        card.style.borderColor = 'rgba(243,156,18,0.45)';
+      } else if (card) {
+        card.style.borderColor = '';
+      }
+    } catch (_) {
+      el.textContent = 'Could not load north star cadence (stats cache).';
+    }
+  }
 
   function renderPublishRules(plan) {
     const el = g('cal-publish-rules');

@@ -230,6 +230,30 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .stats-cat-sports { color:#6cb6ff; }
 .stats-cat-news { color:#f39c12; }
 .stats-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center; }
+/* North Star — $300/day progress (ClipzWorld YT) */
+.ns-section { margin-bottom:18px; }
+.ns-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.ns-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; color:#c7af4f; }
+.ns-progress-wrap { background:#0a1018; border:1px solid rgba(199,175,79,0.2); border-radius:8px; padding:14px 16px; margin-bottom:12px; }
+.ns-progress-bar { height:10px; background:rgba(255,255,255,0.06); border-radius:5px; overflow:hidden; margin:8px 0; }
+.ns-progress-fill { height:100%; background:linear-gradient(90deg,#8b6914,#c7af4f); border-radius:5px; transition:width 0.3s; }
+.ns-kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px; margin-bottom:12px; }
+.ns-kpi { background:#0d1524; border:1px solid rgba(199,175,79,0.12); border-radius:8px; padding:10px 12px; }
+.ns-kpi-label { font-size:8px; font-weight:900; letter-spacing:1.2px; color:rgba(199,175,79,0.45); margin-bottom:4px; }
+.ns-kpi-val { font-family:'Bebas Neue',sans-serif; font-size:22px; color:#c7af4f; line-height:1; }
+.ns-kpi-sub { font-size:9px; color:rgba(255,255,255,0.35); margin-top:4px; }
+.ns-chart { display:flex; align-items:flex-end; gap:2px; height:48px; padding:8px 4px 0; }
+.ns-chart-bar { flex:1; min-width:3px; background:rgba(199,175,79,0.35); border-radius:2px 2px 0 0; }
+.ns-chart-bar:hover { background:#c7af4f; }
+.ns-matrix { width:100%; border-collapse:collapse; font-size:10px; }
+.ns-matrix th, .ns-matrix td { padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.05); text-align:right; }
+.ns-matrix th:first-child, .ns-matrix td:first-child { text-align:left; }
+.ns-decay { display:flex; align-items:flex-end; gap:6px; height:56px; padding:8px 0; }
+.ns-decay-col { flex:1; text-align:center; font-size:8px; color:rgba(255,255,255,0.4); }
+.ns-decay-bar { background:rgba(145,70,255,0.45); border-radius:3px 3px 0 0; margin:0 auto 4px; width:80%; min-height:2px; }
+.ns-warn { font-size:10px; color:rgba(243,156,18,0.85); margin-top:6px; line-height:1.5; }
+.ns-alert-warn { color:#f39c12; }
+.ns-alert-info { color:rgba(255,255,255,0.45); }
 #streamer-connect-bar { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; margin-bottom:6px; padding:0; background:transparent; border:none; }
 .streamer-connect-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; font-size:10px; line-height:1.2; white-space:nowrap; max-width:100%; }
 .streamer-connect-pill .scp-name { font-weight:800; letter-spacing:0.2px; }
@@ -1229,6 +1253,33 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         </div>
       </div>
       <div id="stats-banner"></div>
+      <div id="stats-northstar" class="ns-section card" style="margin-bottom:14px;">
+        <div class="card-header ns-head">
+          <div class="card-title ns-title">NORTH STAR — $300/DAY</div>
+          <span id="ns-window-label" style="font-size:10px;color:rgba(255,255,255,0.35);">28d window</span>
+        </div>
+        <div class="card-body">
+          <div class="ns-progress-wrap">
+            <div id="ns-progress-label" style="font-size:11px;color:rgba(255,255,255,0.6);">Loading north star…</div>
+            <div class="ns-progress-bar"><div id="ns-progress-fill" class="ns-progress-fill" style="width:0%;"></div></div>
+            <div id="ns-yesterday-line" style="font-size:10px;color:rgba(255,255,255,0.4);">—</div>
+          </div>
+          <div class="ns-kpi-row" id="ns-kpi-row"></div>
+          <div class="card" style="margin-bottom:10px;background:#0a1018;">
+            <div class="card-header"><div class="card-title" style="font-size:10px;">DAILY VIEWS</div></div>
+            <div class="card-body"><div id="ns-daily-chart" class="ns-chart"></div></div>
+          </div>
+          <div class="card" style="margin-bottom:10px;background:#0a1018;">
+            <div class="card-header"><div class="card-title" style="font-size:10px;">VIEWS BY AGE × SURFACE (YESTERDAY)</div></div>
+            <div class="card-body" id="ns-age-matrix">—</div>
+          </div>
+          <div class="card" style="margin-bottom:0;background:#0a1018;">
+            <div class="card-header"><div class="card-title" style="font-size:10px;">SHORTS DECAY (VIEWS BY AGE DAY 1–7)</div></div>
+            <div class="card-body"><div id="ns-shorts-decay" class="ns-decay">—</div></div>
+          </div>
+          <div id="ns-warnings" class="ns-warn"></div>
+        </div>
+      </div>
       <div class="stats-cards" id="stats-cards">
         <div class="stats-card"><div class="stats-card-label">Loading</div><div class="stats-card-value">…</div></div>
       </div>
@@ -1291,9 +1342,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         <button class="btn btn-gold btn-sm" onclick="calUnlockOwner()">OWNER UNLOCK</button>
         <span style="font-size:10px;color:rgba(255,255,255,0.4);align-self:center;">Production · Live streams · VOD publish — hard rules; only you override with PIN</span>
       </div>
+      <div class="card" style="margin-bottom:16px;" id="cal-northstar-card">
+        <div class="card-header"><div class="card-title">NORTH STAR CADENCE (YOUTUBE)</div></div>
+        <div class="card-body" id="cal-northstar" style="font-size:11px;line-height:1.6;color:rgba(255,255,255,0.55);">Loading…</div>
+      </div>
       <div class="card" style="margin-bottom:16px;">
-        <details class="dash-details">
-          <summary>Calendar guidelines &amp; publish rules <span class="dash-readonly-note">read-only policy</span></summary>
         <div class="card-header" style="border-top:1px solid rgba(199,175,79,0.1);margin-top:8px;"><div class="card-title">GUIDELINES</div></div>
         <div class="card-body cal-guidelines-grid" id="cal-guidelines">Loading…</div>
         <div class="card-header" style="border-top:1px solid rgba(199,175,79,0.1);"><div class="card-title">PUBLISH BY PLATFORM</div></div>
@@ -3116,6 +3169,7 @@ function loadChannelStats(refresh) {
 }
 
 function renderChannelStats(d) {
+  renderNorthStarStats(d);
   var cat = d.catalog || {};
   var items = cat.items || [];
   var byTab = cat.byTab || {};
@@ -3200,6 +3254,131 @@ function renderChannelStats(d) {
   }
 
   renderChannelStatsTable();
+}
+
+function fmtUsd(n) {
+  if (n == null || n === '' || isNaN(n)) return '—';
+  return '$' + Number(n).toFixed(2);
+}
+
+function renderNorthStarStats(d) {
+  var ns = d && d.northStar;
+  var progEl = g('ns-progress-label');
+  var fillEl = g('ns-progress-fill');
+  var yEl = g('ns-yesterday-line');
+  var kpiEl = g('ns-kpi-row');
+  var chartEl = g('ns-daily-chart');
+  var matrixEl = g('ns-age-matrix');
+  var decayEl = g('ns-shorts-decay');
+  var warnEl = g('ns-warnings');
+  var winEl = g('ns-window-label');
+
+  if (!ns) {
+    if (progEl) progEl.textContent = 'North star data unavailable — refresh stats.';
+    return;
+  }
+
+  var p = ns.progress || {};
+  var target = ns.config && ns.config.dailyUsdTarget ? ns.config.dailyUsdTarget : 300;
+  var pct = Math.min(100, p.pctOfTarget || 0);
+
+  if (winEl) winEl.textContent = (ns.config && ns.config.windowDays ? ns.config.windowDays : 28) + 'd window';
+
+  if (progEl) {
+    if (p.mode === 'revenue') {
+      progEl.innerHTML = '<strong style="color:#c7af4f;">' + fmtUsd(p.avgDailyUsd) + '</strong> / ' + fmtUsd(target) +
+        ' avg/day · <span style="opacity:0.7;">' + pct + '% of north star</span>';
+    } else {
+      progEl.innerHTML = '<strong style="color:#c7af4f;">' + fmtNum(p.avgDailyViews) + '</strong> avg views/day' +
+        ' (proxy toward ' + fmtUsd(target) + ') · <span style="opacity:0.7;">' + pct + '% · target ~' +
+        fmtNum(p.viewsProxyPerDay) + ' views/day</span>';
+    }
+  }
+  if (fillEl) fillEl.style.width = pct + '%';
+
+  var y = ns.cadence && ns.cadence.yesterday ? ns.cadence.yesterday : {};
+  if (yEl) {
+    yEl.textContent = 'Yesterday uploads: ' + (y.streams || 0) + ' live · ' + (y.videos || 0) + ' VOD · ' +
+      (y.shorts || 0) + ' Shorts · ' + fmtNum(p.yesterdayViews) + ' views' +
+      (p.yesterdayUsd != null ? ' · ' + fmtUsd(p.yesterdayUsd) + ' est.' : '');
+  }
+
+  var bcPct = ns.backCatalogRatio != null ? (ns.backCatalogRatio * 100).toFixed(1) + '%' : '—';
+  var bcTarget = ns.backCatalogTargetPct != null ? Math.round(ns.backCatalogTargetPct * 100) : 30;
+  var rpm = ns.formatRpm || {};
+  var cad = ns.cadence && ns.cadence.avgPerDay ? ns.cadence.avgPerDay : {};
+
+  if (kpiEl) {
+    kpiEl.innerHTML =
+      nsKpi('28d avg views', fmtNum(p.avgDailyViews), (ns.trend && ns.trend.totals ? fmtNum(ns.trend.totals.views) + ' total' : '')) +
+      nsKpi('Back catalog', bcPct, 'Day 4+ share · target ' + bcTarget + '%+') +
+      nsKpi('VOD RPM', rpm.videos != null ? fmtUsd(rpm.videos) + '/1k' : '—', ns.monetaryScope ? 'from Analytics' : 'reconnect OAuth for $') +
+      nsKpi('Cadence 7d', (cad.shorts || 0).toFixed(1) + ' Shorts/d', 'target ' + (ns.config.cadence.shorts.min) + '–' + (ns.config.cadence.shorts.max));
+  }
+
+  if (chartEl) {
+    var days = (ns.trend && ns.trend.days) || [];
+    var maxV = Math.max(1, ...days.map(function(x) { return x.views || 0; }));
+    if (!days.length) {
+      chartEl.innerHTML = '<span style="font-size:10px;color:rgba(255,255,255,0.35);">No daily data — connect YouTube Analytics</span>';
+    } else {
+      chartEl.innerHTML = days.map(function(row) {
+        var h = Math.max(2, Math.round(((row.views || 0) / maxV) * 40));
+        return '<div class="ns-chart-bar" style="height:' + h + 'px;" title="' + row.day + ': ' + fmtNum(row.views) + ' views"></div>';
+      }).join('');
+    }
+  }
+
+  if (matrixEl) {
+    var m = ns.ageMatrix;
+    if (!m) {
+      matrixEl.innerHTML = '<span style="font-size:10px;color:rgba(255,255,255,0.35);">Age matrix loads with OAuth + Refresh (may take ~30s)</span>';
+    } else {
+      matrixEl.innerHTML = '<table class="ns-matrix"><thead><tr><th>Surface</th><th>Day 1</th><th>Day 2</th><th>Day 3</th><th>Day 4+</th></tr></thead><tbody>' +
+        nsMatrixRow('Shorts', m.shorts) +
+        nsMatrixRow('VODs', m.videos) +
+        nsMatrixRow('Lives', m.streams) +
+        '</tbody></table>' +
+        (ns.ageMatrixFocusDate ? '<div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:6px;">Focus date: ' + ns.ageMatrixFocusDate + '</div>' : '');
+    }
+  }
+
+  if (decayEl) {
+    var sd = ns.shortsDecay;
+    if (!sd) {
+      decayEl.innerHTML = '<span style="font-size:10px;color:rgba(255,255,255,0.35);">—</span>';
+    } else {
+      var keys = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7'];
+      var maxD = Math.max(1, ...keys.map(function(k) { return sd[k] || 0; }));
+      decayEl.innerHTML = keys.map(function(k, i) {
+        var v = sd[k] || 0;
+        var h = Math.max(2, Math.round((v / maxD) * 44));
+        return '<div class="ns-decay-col"><div class="ns-decay-bar" style="height:' + h + 'px;"></div>D' + (i + 1) + '<br>' + fmtNum(v) + '</div>';
+      }).join('');
+    }
+  }
+
+  if (warnEl) {
+    var parts = (ns.warnings || []).map(function(w) { return '<div>' + w + '</div>'; });
+    (ns.alerts || []).forEach(function(a) {
+      parts.push('<div class="ns-alert-' + (a.level || 'warn') + '">⚠ ' + a.message + '</div>');
+    });
+    if (!ns.monetaryScope && d.analytics && d.analytics.ok) {
+      parts.push('<div>Revenue/RPM: revoke Google access and reconnect at /connect/youtube for monetary scope.</div>');
+    }
+    warnEl.innerHTML = parts.join('');
+  }
+}
+
+function nsKpi(label, val, sub) {
+  return '<div class="ns-kpi"><div class="ns-kpi-label">' + label + '</div><div class="ns-kpi-val">' + val +
+    '</div><div class="ns-kpi-sub">' + (sub || '') + '</div></div>';
+}
+
+function nsMatrixRow(label, row) {
+  row = row || {};
+  return '<tr><td>' + label + '</td><td>' + fmtNum(row.day1) + '</td><td>' + fmtNum(row.day2) + '</td><td>' +
+    fmtNum(row.day3) + '</td><td>' + fmtNum(row.day4plus) + '</td></tr>';
 }
 
 function renderChannelStatsTable() {
