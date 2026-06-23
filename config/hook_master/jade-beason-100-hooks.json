@@ -3,13 +3,662 @@
   "url": "https://www.youtube.com/watch?v=dNT7gd3ulAg",
   "title": "I studied 100+ hooks, this strategy will make you go viral",
   "type": "video",
-  "ingestedAt": "2026-06-23T22:19:29.265Z",
+  "ingestedAt": "2026-06-23T23:02:36.934Z",
   "passes": 5,
+  "passStats": [
+    {
+      "pass": 1,
+      "ok": true,
+      "attempts": 1
+    },
+    {
+      "pass": 2,
+      "ok": true,
+      "attempts": 1
+    },
+    {
+      "pass": 3,
+      "ok": true,
+      "attempts": 1
+    },
+    {
+      "pass": 4,
+      "ok": true,
+      "attempts": 1
+    },
+    {
+      "pass": 5,
+      "ok": true,
+      "attempts": 1
+    }
+  ],
   "extractions": {
-    "principles": [],
-    "formulas": [],
-    "anti_patterns": [],
-    "verbatim_hooks": [],
-    "twitch_comp_notes": []
+    "principles": [
+      {
+        "id": "dopamine_surprise_drama",
+        "text": "Use surprising or dramatic elements to trigger dopamine and grab attention.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "curiosity_loops",
+        "text": "Create tension or ask questions that spark curiosity.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "pattern_interrupts",
+        "text": "Employ unexpected visuals, angles, or editing to break scrolling patterns.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "loss_aversion",
+        "text": "Frame hooks to highlight what the audience might miss or lose.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "three_second_clarity",
+        "text": "Deliver the core message or intrigue within the first 3 seconds.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "emotional_vulnerable_words",
+        "text": "Use emotional or vulnerable language to create connection and grab attention.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "audience_centric_crafting",
+        "text": "Craft hooks specifically with your target audience's interests in mind.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "dynamic_visuals_pacing",
+        "text": "Combine fast pacing with engaging visuals for maximum impact.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "creative_text_sync",
+        "text": "Synchronize on-screen text with spoken words to enhance engagement.",
+        "layer": "text",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "effective_pauses",
+        "text": "Use pauses strategically for dramatic effect, not as dead air.",
+        "layer": "verbal",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "multiple_takes",
+        "text": "Record hooks multiple times to select the most impactful version.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "hooks_as_a_moment",
+        "text": "Hooks are a 'moment' combining words, visuals, and pacing to grab attention.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "specific_surprising_tension",
+        "text": "Text hooks should be specific, surprising, and create tension.",
+        "layer": "text",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "dramatic_words",
+        "text": "The more dramatic the words, the more likely they are to capture attention and stop scrolling.",
+        "layer": "text",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "audience_in_mind",
+        "text": "Craft your hook with your audience's interests and pain points in mind.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "word_by_word_captions",
+        "text": "Display captions word-by-word as they are spoken to encourage reading along and increase engagement.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "effective_pauses_text",
+        "text": "Use pauses in speech for dramatic effect, which can be visually represented by text appearing after a brief, intentional delay.",
+        "layer": "text",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "dynamic_editing_visuals",
+        "text": "Dynamic editing, including unique angles and unexpected visual transitions, makes hooks more engaging.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "repurpose_separate_hook",
+        "text": "If repurposing long-form videos into short clips, film a separate, tailored hook for them.",
+        "layer": "text",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "record_multiple_takes",
+        "text": "Record your hooks multiple times (at least three takes) to refine delivery and impact.",
+        "layer": "verbal",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "hooks_are_moments",
+        "text": "Hooks are a 'moment' combining words, visuals, and pacing.",
+        "layer": "psychology|visual|text|verbal",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "grab_attention_early",
+        "text": "Hooks must grab attention in the first few seconds.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "three_hook_elements",
+        "text": "A fantastic hook combines words, visuals, and pacing.",
+        "layer": "psychology|visual|text|verbal",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "words_specific_surprising_tension",
+        "text": "Words should be specific, surprising, and create tension.",
+        "layer": "text|verbal",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "visuals_grab_attention",
+        "text": "Visual elements (captions, effects, graphics) should grab attention.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "pacing_energy_no_slow_start",
+        "text": "Maintain high energy and fast pacing; avoid slow starts.",
+        "layer": "verbal|visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "use_pauses_for_dramatic_effect",
+        "text": "Use pauses strategically for dramatic effect.",
+        "layer": "verbal|visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "highlight_relevant_words",
+        "text": "Highlight relevant words in burned captions.",
+        "layer": "text|visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "craft_hook_with_audience_in_mind",
+        "text": "Craft your hook with your audience in mind.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "film_separate_hook_for_repurposed_content",
+        "text": "Film separate hooks for repurposed long-form videos.",
+        "layer": "visual|text|verbal",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "dynamic_editing_unexpected_visuals",
+        "text": "Employ dynamic editing and unexpected visuals.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "unique_camera_angles",
+        "text": "Use unique camera angles.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "creative_word_by_word_captions",
+        "text": "Display captions word-by-word as you speak.",
+        "layer": "text|visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "hook_as_a_moment",
+        "text": "Think of a hook as a moment, a mixture of words, visuals, and pacing designed to grab attention.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "visual_elements_attention",
+        "text": "Good hooks use visual elements (captions, effects, graphics, interesting actions) to grab attention.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "use_pauses_for_effect",
+        "text": "Use pauses for dramatic effect to land what you're trying to say better.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "dynamic_editing_unexpected",
+        "text": "Dynamic editing involves doing something unexpected with editing or filming (e.g., unique angles, B-roll + voice-over).",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "creative_text_captions",
+        "text": "Get creative with captions by writing out every word to appear on screen as it's spoken, encouraging reading and listening.",
+        "layer": "text",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "craft_with_audience_in_mind",
+        "text": "Craft your hook with your audience in mind, focusing on what will grab their specific attention.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "hook_as_moment",
+        "text": "Think of a hook as a 'moment' combining words, visuals, and pacing, not just a catchy sentence.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "drama_test",
+        "text": "Apply a 'drama test' to your hook words; the more dramatic, the more likely to capture attention.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "pacing_energetic",
+        "text": "Maintain energetic pacing in the initial seconds of the video.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "pauses_for_effect",
+        "text": "Use pauses intentionally for dramatic effect, not as unintentional filler.",
+        "layer": "verbal",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "craft_for_audience",
+        "text": "Craft your hook with your target audience's interests and attention in mind.",
+        "layer": "psychology",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "dynamic_editing",
+        "text": "Employ dynamic editing techniques, such as unexpected cuts or unique camera angles, to keep viewers engaged.",
+        "layer": "visual",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "id": "practice_hooks",
+        "text": "Record hooks multiple times (e.g., 3 takes) to refine delivery and impact, as the hook is critical.",
+        "layer": "verbal",
+        "sourceId": "jade-beason-100-hooks"
+      }
+    ],
+    "formulas": [
+      {
+        "name": "Dramatic Statement",
+        "template": "[Problem/Pain Point] nobody cares about your [topic]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "Nobody cares about your Instagram posts"
+        ]
+      },
+      {
+        "name": "Curiosity Question",
+        "template": "Something weird is happening on [platform]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "Something weird is happening on Instagram."
+        ]
+      },
+      {
+        "name": "Vulnerable Confession",
+        "template": "I cried over [topic]. I'm flopping.",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "I cried over social media. I'm flopping."
+        ]
+      },
+      {
+        "name": "Unexpected Revelation",
+        "template": "I got ghosted. [frequency]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "I got ghosted. Hundreds of times."
+        ]
+      },
+      {
+        "name": "Call to Discussion",
+        "template": "We need to talk about [person/topic]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "We need to talk about Becca Bloom."
+        ]
+      },
+      {
+        "name": "Contrarian",
+        "template": "Why [common belief] is wrong",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "Nobody cares about your posts"
+        ]
+      },
+      {
+        "name": "Fortune Teller",
+        "template": "Something weird is happening [topic]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "Something weird is happening"
+        ]
+      },
+      {
+        "name": "Result Preview",
+        "template": "[Achieved result] in [time]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "Full-time creator in 6 months"
+        ]
+      },
+      {
+        "name": "Context Lean",
+        "template": "[Intriguing statement] (context needed)",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "I'm flopping"
+        ]
+      },
+      {
+        "name": "Scroll-Stop",
+        "template": "[Dramatic statement]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "I got ghosted",
+          "We need to talk about Becca Bloom"
+        ]
+      },
+      {
+        "name": "Dramatic Pause",
+        "template": "Start with a statement, pause for effect, then deliver the punchline or reveal.",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "I got ghosted. (pause) like hundreds of times.",
+          "We need to talk about Becca Bloom. (pause) (sip coffee)."
+        ]
+      },
+      {
+        "name": "B-Roll + Voice-Over + Direct Address",
+        "template": "Open with B-roll and voice-over, then transition to direct address to the camera.",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "I'm Jade Beason, 4x creator in 6 months."
+        ]
+      },
+      {
+        "name": "Emotional Opening",
+        "template": "[Emotional/Vulnerable Statement]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "I cried over social media this morning",
+          "I'm flopping"
+        ]
+      },
+      {
+        "name": "Curiosity Spark",
+        "template": "[Intriguing/Unexpected Statement]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "Something weird is happening on Instagram right now",
+          "Trends are emerging which are helping creators blow up"
+        ]
+      },
+      {
+        "name": "Contrasting Statement",
+        "template": "Here's the reason nobody cares about your [topic]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "Here's the reason nobody cares about your Instagram posts"
+        ]
+      },
+      {
+        "name": "Problem-Oriented Hook",
+        "template": "Here's the reason nobody cares about your [X]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "Here's the reason nobody cares about your Instagram posts"
+        ]
+      },
+      {
+        "name": "Curiosity-Driven Event Hook",
+        "template": "Something weird is happening on [Platform] right now",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "Something weird is happening on Instagram right now"
+        ]
+      },
+      {
+        "name": "Vulnerable/Emotional Hook",
+        "template": "I [emotional state/event]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "I cried over social media this morning",
+          "I'm flopping",
+          "I got ghosted"
+        ]
+      },
+      {
+        "name": "Call to Attention Hook",
+        "template": "We need to talk about [X]",
+        "sourceId": "jade-beason-100-hooks",
+        "examples": [
+          "We need to talk about Becca Bloom"
+        ]
+      }
+    ],
+    "anti_patterns": [
+      "Generic statements (e.g., 'Here are 3 tips to grow on Instagram')",
+      "Slow starts or unintentional pauses ('Millennial pause')",
+      "Leading with statistics without immediate intrigue (e.g., '80% of adults consume content...')",
+      "Highlighting the wrong words in on-screen text",
+      "Lack of dynamic visuals or interesting actions",
+      "Repurposing long-form video snippets as hooks without re-filming for short-form",
+      "Generic, non-dramatic words (e.g., 'Here are 3 tips to grow on Instagram')",
+      "Slow starts or unnecessary pauses ('millennial pause')",
+      "Highlighting the wrong words in burned captions",
+      "Leading with a stat (e.g., '80% of adults...') without immediate context or drama",
+      "Repurposing long-form video snippets as hooks without a separate, tailored hook",
+      "Here are 3 tips to grow on Instagram",
+      "Instagram is constantly changing.",
+      "80% of adults consume content.",
+      "Millennial pause",
+      "Generic, non-dramatic statements (e.g., 'Here are 3 tips to grow on Instagram')",
+      "Slow starts or 'millennial pauses' (unless used for dramatic effect)",
+      "Lack of engaging visuals or dynamic editing",
+      "Highlighting the wrong words in captions (not audience-centric)",
+      "Leading with uninteresting stats (e.g., '80% of adults consume content across multiple formats')",
+      "Leading with statistics (e.g., '80% of adults consume content...')",
+      "The 'millennial pause' (unintentional breath/pause before speaking)",
+      "Highlighting the wrong words in captions, failing to emphasize key terms"
+    ],
+    "verbatim_hooks": [
+      {
+        "text": "Nobody cares about your Instagram posts",
+        "why": "Creates tension and implies loss aversion, making the audience curious about why their posts might be ignored.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "I cried over social media. I'm flopping.",
+        "why": "Uses emotional and vulnerable language to immediately grab attention and create empathy/curiosity.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Something weird is happening on Instagram.",
+        "why": "Sparks curiosity and creates a 'what's next?' loop, encouraging viewers to continue watching.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "I got ghosted. Hundreds of times.",
+        "why": "Uses a dramatic pause for effect, building anticipation and relatability.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "We need to talk about Becca Bloom.",
+        "why": "Creates intrigue and a sense of urgency, making the audience wonder who Becca Bloom is and why she's important.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Instagram is constantly changing.",
+        "why": "While not as effective as others, it's a direct, short statement that identifies a relevant topic for the audience.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "80% of adults consume content.",
+        "why": "This is an example of a less effective hook because it leads with a stat that isn't immediately engaging or surprising.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Nobody cares about your posts",
+        "why": "Contrarian, dramatic, creates tension and implies a solution will follow.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "I'm flopping",
+        "why": "Emotional, vulnerable, creates curiosity and leans on context from the full clip.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Something weird is happening",
+        "why": "Fortune Teller, sparks curiosity and makes the viewer wonder what's happening.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "I got ghosted",
+        "why": "Uses a dramatic pause for effect, relatable, and creates intrigue.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "We need to talk about Becca Bloom",
+        "why": "Uses a dramatic pause for effect, creates intrigue and implies a story is coming.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Full-time creator in 6 months",
+        "why": "Result Preview, highlights a desirable outcome upfront, often paired with dynamic editing.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Nobody cares about your Instagram posts.",
+        "why": "Dramatic, creates tension, grabs attention.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "I'm flopping.",
+        "why": "Emotional, vulnerable, creates immediate intrigue. Word-by-word captions encourage engagement.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Something weird is happening on Instagram right now.",
+        "why": "Sparks curiosity and immediate interest, uses dynamic visuals and synced text.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "I got ghosted.",
+        "why": "Emotional, relatable, uses a dramatic pause for effect.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "I'm Jade Beason, 4x creator in 6 months.",
+        "why": "Establishes authority and quick achievement, uses dynamic editing/B-roll.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Here are 3 tips to grow on Instagram",
+        "why": "Ineffective due to being generic and lacking drama/tension.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Here's the reason nobody cares about your Instagram posts",
+        "why": "Effective due to being dramatic, specific, and creating tension/curiosity.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "I cried over social media this morning",
+        "why": "Effective due to being emotional and vulnerable, grabbing attention.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Instagram is constantly changing. Here are a few things that you should be doing to make sure that you don't fall behind.",
+        "why": "Ineffective because the words are not engaging enough, and visuals were lacking. The hook itself was not as effective despite the video's value.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Something weird is happening on Instagram right now",
+        "why": "Effective due to sparking curiosity and making the audience wonder what's happening.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Trends are emerging which are helping creators blow up",
+        "why": "Effective due to sparking curiosity and promising valuable information.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "I'm Jade Beason, I became a full-time content creator in just six months. And this is my content to cash series episode three.",
+        "why": "Effective due to dynamic editing (B-roll + voice-over, then direct address) and a strong, concise introduction.",
+        "sourceId": "jade-beason-100-hooks"
+      },
+      {
+        "text": "Your fear of looking cringe",
+        "why": "Effective use of creative text, appearing word-by-word to encourage reading along and engagement.",
+        "sourceId": "jade-beason-100-hooks"
+      }
+    ],
+    "twitch_comp_notes": [
+      "Prioritize burned text captions for mute-first viewing, ensuring they are large, clear, and appear dynamically.",
+      "Utilize fast-paced visual cuts and unexpected camera angles (pattern interrupts) to maintain engagement without audio.",
+      "Ensure short, dramatic, and curiosity-sparking text is immediately visible within the first 3 seconds.",
+      "Implement creative text where words appear on screen precisely as they are spoken to encourage reading and listening along, boosting attention and engagement.",
+      "Focus on visual storytelling and text-based tension/curiosity to compensate for potential lack of sound.",
+      "For mute-first burned text hooks on Twitch reaction clips, prioritize concise (3-8 words), impactful text.",
+      "Leverage Contrarian, Fortune Teller, and Result Preview formulas to immediately grab attention.",
+      "Ensure text is specific, surprising, and creates tension or curiosity.",
+      "Implement dynamic text appearance (word-by-word) to encourage reading along and boost engagement.",
+      "Use visual cues and fast pacing to complement the burned text, even if the audio is muted.",
+      "Avoid generic or stat-heavy text hooks; focus on emotional or curiosity-driven language.",
+      "If using a longer clip, create a custom, short burned text hook specifically for the beginning of the reaction clip.",
+      "Burned text captions are crucial for mute-first platforms like Twitch, ensuring the visual element of words is always present.",
+      "Word-by-word captions are essential for mute-first platforms like Twitch, ensuring the hook's message is conveyed even without sound.",
+      "For Twitch clips, ensure burned text hooks are 3-8 words, highly impactful, and visually dynamic to capture attention quickly.",
+      "Adapt verbal hooks to be visually compelling text hooks for mute-first consumption.",
+      "Leverage dramatic pauses in verbal delivery by using them to punctuate burned text reveals.",
+      "For mute-first burned captions, ensure the text itself is highly engaging, specific, surprising, and creates tension, as it's the primary initial hook.",
+      "Utilize dynamic text animation (e.g., words appearing as spoken, quick changes, bolding) to mimic 'pacing' and 'movement' in the absence of audio or complex visual effects.",
+      "Use contrasting visuals from the clip (e.g., a moment of high action, a surprising facial expression, a dramatic scene) to pair with the burned text, even if the text describes something not directly shown.",
+      "Focus on 3-8 word phrases that are impactful and easily digestible at a glance, leveraging the 'drama test' for conciseness and punch.",
+      "If repurposing longer clips, craft a *separate* 3-8 word burned text hook specifically for the short-form, mute-first context, rather than relying on a snippet from the original script.",
+      "Avoid generic or overly descriptive text; instead, aim for curiosity-driven or emotionally charged statements that make viewers pause and read.",
+      "For mute-first Twitch reaction clips, burned captions (3-8 words) are paramount for conveying the hook.",
+      "Captions must be highly concise and impactful to grab attention quickly without audio context.",
+      "Utilize creative text (word-by-word appearance) to guide the viewer's eye and maintain engagement in a mute-first environment.",
+      "Dynamic editing, including quick cuts, zooms, and unexpected visual shifts, is crucial to compensate for the lack of sound.",
+      "Information gap is vital: the burned caption should hint at the clip's content or the streamer's reaction without spoiling the 'punchline' of the clip.",
+      "Visual pauses (e.g., a blank screen for a beat, or a single word holding longer) can be used to create dramatic effect in text-only hooks.",
+      "If repurposing longer content, always film or create a separate, short, and visually dynamic hook specifically for the mute-first short-form format."
+    ]
   }
 }

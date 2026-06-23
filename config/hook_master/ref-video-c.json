@@ -3,13 +3,458 @@
   "url": "https://www.youtube.com/watch?v=xnOe8aA9Pmw",
   "title": "Reference video C",
   "type": "video",
-  "ingestedAt": "2026-06-23T22:34:06.558Z",
+  "ingestedAt": "2026-06-23T23:05:43.627Z",
   "passes": 5,
+  "passStats": [
+    {
+      "pass": 1,
+      "ok": true,
+      "attempts": 1
+    },
+    {
+      "pass": 2,
+      "ok": true,
+      "attempts": 1
+    },
+    {
+      "pass": 3,
+      "ok": true,
+      "attempts": 1
+    },
+    {
+      "pass": 4,
+      "ok": true,
+      "attempts": 1
+    },
+    {
+      "pass": 5,
+      "ok": true,
+      "attempts": 1
+    }
+  ],
   "extractions": {
-    "principles": [],
-    "formulas": [],
+    "principles": [
+      {
+        "id": "curiosity_loop",
+        "text": "Hooks are designed to create a curiosity loop, like a rabbit hole in the viewer's brain, making them unable to stop watching.",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "contrast_creates_curiosity",
+        "text": "Create curiosity by introducing a contrasting alternative to the viewer's initial belief (A vs. B).",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "five_second_stick",
+        "text": "Hooks must make an impact and stick within the first five seconds.",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "future_focus",
+        "text": "The Fortuneteller hook leverages the brain's natural tendency to think about the future.",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "pattern_interrupt",
+        "text": "The Magician hook acts as a 'stun gun' using outlandish, rhythmic, or visually popping elements to stop the scroll and force attention.",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "visual_pacifier",
+        "text": "A passive visual activity in the background (visual pacifier) occupies subconscious attention, allowing the viewer to focus on the main content without churning.",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "contrast",
+        "text": "The best way to create curiosity is with contrast. The hook introduces an alternative (B) to what the viewer currently believes (A), and the distance between A and B is the contrast. Bigger contrast leads to more curiosity.",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "five_second_rule",
+        "text": "You only have approximately 5 seconds to make the hook stick and grab the viewer's attention.",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "scroll_stop_visual_pop",
+        "text": "Use outlandish, rhythmic, or visually popping elements to stop the scroll and capture immediate attention.",
+        "layer": "visual",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "contrast_drives_curiosity",
+        "text": "The best way to create a curiosity loop is with contrast; the bigger the contrast, the more curiosity and deeper the hook.",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "leverage_future_thinking",
+        "text": "The human brain is designed to constantly think about the future, which can be leveraged for hooks.",
+        "layer": "psychology",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "visual_attention_force",
+        "text": "Strategically use visuals and/or language to visually force the viewer's attention to a specific thing.",
+        "layer": "visual",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "id": "visual_attention_forcing",
+        "text": "Strategic visuals can force viewer attention to a specific thing.",
+        "layer": "visual",
+        "sourceId": "ref-video-c"
+      }
+    ],
+    "formulas": [
+      {
+        "name": "Fortuneteller",
+        "template": "Present vs. Future: Establish current reality, hint at future change, tease new future as possibility.",
+        "sourceId": "ref-video-c",
+        "examples": [
+          "New microwave changes cooking forever.",
+          "Blue light will impact traffic.",
+          "Largest breakthroughs in marketing.",
+          "Animation just changed forever."
+        ]
+      },
+      {
+        "name": "Experimenter",
+        "template": "Peer-to-Peer Demo: Establish pain point, show how a new method/tool solved it via experiment, explain why it works.",
+        "sourceId": "ref-video-c",
+        "examples": [
+          "Does anything look weird about this shot?",
+          "I'm recording with these glasses.",
+          "ChatGPT's new AI agent controls my computer!"
+        ]
+      },
+      {
+        "name": "Teacher",
+        "template": "Teacher-to-Student Lesson: Establish pain point, present a solution/learning, explain how it works to help them win.",
+        "sourceId": "ref-video-c",
+        "examples": [
+          "3 things you can learn from Aritzia.",
+          "Here's how I got this shot.",
+          "Ecom brand made $1M in 12 hours."
+        ]
+      },
+      {
+        "name": "Magician",
+        "template": "Stun Gun: Use a quick, atypical, visually/audibly stunning element to grab attention, then transition to another hook format.",
+        "sourceId": "ref-video-c",
+        "examples": [
+          "China China China",
+          "What's up MTV Cribs!",
+          "Yo, check this out.",
+          "Check this out..."
+        ]
+      },
+      {
+        "name": "Investigator",
+        "template": "Secret/Unknown: Tee up a secret or unknown finding, then reveal it, creating contrast between not knowing and knowing.",
+        "sourceId": "ref-video-c",
+        "examples": [
+          "Sneakier marketing campaigns I've seen.",
+          "Secret Japanese city at Mount Fuji."
+        ]
+      },
+      {
+        "name": "Contrarian",
+        "template": "Direct Challenge: State a belief that directly contradicts conventional wisdom or common practice.",
+        "sourceId": "ref-video-c",
+        "examples": [
+          "Why don't more brands do this?",
+          "Your space sucks, no creative ideas.",
+          "Multimillionaire from his clothing brand."
+        ]
+      },
+      {
+        "name": "Fortune Teller",
+        "template": "This [new thing] will change [topic] forever.",
+        "sourceId": "ref-video-c",
+        "examples": [
+          "Microwave changes cooking forever.",
+          "Blue light impacts traffic.",
+          "Breakthroughs in marketing.",
+          "Animation just changed forever."
+        ]
+      }
+    ],
     "anti_patterns": [],
-    "verbatim_hooks": [],
-    "twitch_comp_notes": []
+    "verbatim_hooks": [
+      {
+        "text": "New microwave changes cooking forever.",
+        "why": "Fortuneteller, teases future change.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Animation just changed forever.",
+        "why": "Fortuneteller, teases future change.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Does anything look weird about this shot?",
+        "why": "Experimenter, sets up a peer-to-peer demo.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "ChatGPT's new AI agent controls my computer!",
+        "why": "Experimenter, showcases a new tool/method.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "3 things you can learn from Aritzia.",
+        "why": "Teacher, frames a lesson.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Here's how I got this shot.",
+        "why": "Teacher, explains a method.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Ecom brand made $1M in 12 hours.",
+        "why": "Teacher, presents a successful method.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "China China China",
+        "why": "Magician, uses rhythmic sound/visual for pattern interrupt.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "What's up MTV Cribs!",
+        "why": "Magician, uses a surprising visual reveal.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Yo, check this out.",
+        "why": "Magician, uses a direct call to attention.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Check this out...",
+        "why": "Magician, uses a repetitive pattern interrupt.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Sneakier marketing campaigns I've seen.",
+        "why": "Investigator, hints at unknown secrets.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Secret Japanese city at Mount Fuji.",
+        "why": "Investigator, reveals an unknown finding.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Why don't more brands do this?",
+        "why": "Contrarian, challenges conventional wisdom.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Your space sucks, no creative ideas.",
+        "why": "Contrarian, directly contradicts common belief.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Multimillionaire from his clothing brand.",
+        "why": "Contrarian, presents a surprising success against expectations.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "That new microwave is going to change cooking forever.",
+        "why": "Fortune Teller: Teases a future impact of a new product, building curiosity about how things will evolve.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "That little blue light is going to impact traffic moving forward.",
+        "why": "Fortune Teller: Predicts a future change based on a current observation, creating intrigue about the unknown future.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "We're witnessing one of the largest breakthroughs in marketing.",
+        "why": "Fortune Teller: Creates curiosity about a significant, transformative future event in a specific field.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "You have no creative ideas because your space sucks to live in.",
+        "why": "Contrarian: Directly contradicts a common belief about creativity by linking it to environment, provoking a strong reaction.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "This guy is a multi-millionaire from his clothing brand and the weird thing is their best seller...",
+        "why": "Contrarian: Sets up an unexpected twist or secret about success, challenging assumptions and building suspense.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "You're doing your branding wrong, you should be doing it this way.",
+        "why": "Contrarian: A direct 'contrarian snapback' challenging current methods and offering an alternative, designed for immediate engagement.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "ANIMATION JUST CHANGED FOREVER",
+        "why": "Fortuneteller: Bold statement about a future impact, creating immediate curiosity.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Does anything look weird about this shot to you?",
+        "why": "Experimenter: Directly engages the viewer with a question about a visual anomaly, setting up a reveal.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "CHATGPT'S NEW AI AGENT THAT CONTROLS MY COMPUTER !!!!",
+        "why": "Experimenter: Highlights a novel and impactful technological demonstration.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "3 things you can learn from Aritzia",
+        "why": "Teacher: Promises actionable insights from a successful entity, appealing to self-improvement.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Here's how I got this shot",
+        "why": "Teacher: Offers a direct explanation of a desirable outcome, building authority.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "I made this Ecom brand a million dollars",
+        "why": "Teacher: Highlights a significant achievement and implies a teachable method.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Central Cee's brand sells out in seconds.",
+        "why": "Investigator: Highlights an impressive, possibly unknown, success and implies a hidden reason.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "SECRET TECH CITY IN JAPAN",
+        "why": "Investigator: Reveals an unknown, intriguing fact, creating curiosity.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Your space sucks to live in.",
+        "why": "Contrarian: Direct, provocative statement that immediately creates contrast with the viewer's potential reality.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "ChatGPT's new AI agent controls my computer!!!!",
+        "why": "Experimenter: Highlights a novel solution/tool with a strong claim.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "I made this Ecom brand $1M.",
+        "why": "Teacher: Presents a successful outcome and implies a teachable method.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Secret Japanese city built at Mount Fuji.",
+        "why": "Investigator: Unearths an unknown, intriguing fact about a location.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "This guy is a multi millionaire.",
+        "why": "Contrarian: Presents a surprising success, hinting at unconventional methods.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "That new microwave is going to change cooking forever",
+        "why": "Fortuneteller: Teases a future change based on a new product.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "That little blue light is going to impact traffic moving forward",
+        "why": "Fortuneteller: Teases a future impact of a current phenomenon.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "We're witnessing one of the largest breakthroughs in marketing",
+        "why": "Fortuneteller: Positions the present against a significant future development in marketing.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "I actually don't have a camera in my hands.",
+        "why": "Experimenter: Reveals a surprising method for recording, creating an information gap.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "I'm recording with these glasses on my face.",
+        "why": "Experimenter: Explains the new method (smart glasses) that solves a problem.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "These are the Rayban Meta Smart Glasses.",
+        "why": "Experimenter: Directly identifies the new tool being demonstrated.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "ChatGPT's new AI agent that controls my computer!!!!",
+        "why": "Experimenter: Showcases a new tool/method (AI agent) that performs a novel function.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "I made this Ecom brand a million dollars in 12 hours using something called the product drop method.",
+        "why": "Teacher: Highlights a successful outcome and promises to teach the method behind it.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "So this is one of the sneakier marketing campaigns I've seen.",
+        "why": "Investigator: Teases an unknown secret (sneaky campaign) that the viewer will learn about.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "Central Cee's brand sells out in seconds and what's crazy is that it's not just because he's a rapper.",
+        "why": "Investigator: Presents a known outcome (brand selling out) and teases an unknown reason behind it.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "This is a secret Japanese city built at the base of Mount Fuji.",
+        "why": "Investigator: Reveals a hidden or unknown fact (secret city) to pique curiosity.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "But it's not just any city.",
+        "why": "Investigator: Builds on the previous secret, implying deeper, unknown details.",
+        "sourceId": "ref-video-c"
+      },
+      {
+        "text": "So I think this is probably the most important thing that you need to be doing if you run a brand that you are probably not doing and this is having one-on-one conversations with your customers.",
+        "why": "Contrarian: Directly states a belief that contradicts common practice and offers a solution.",
+        "sourceId": "ref-video-c"
+      }
+    ],
+    "twitch_comp_notes": [
+      "For mute-first burned captions on Twitch reaction clips, leverage visual 'stun gun' tactics (Magician hook) and rhythmic elements to grab attention quickly.",
+      "Utilize 'visual pacifiers' (passive background activity) to maintain subconscious engagement while the main text hook is processed.",
+      "For mute-first burned captions on Twitch reaction clips, hooks must be 3-8 words and convey the core contrast/curiosity without relying on audio, requiring a 'context lean' for immediate understanding.",
+      "Leverage visual elements (as in the 'Magician' hook concept) to 'stun' and stop the scroll, even if the burned text is the primary hook.",
+      "Direct 'Contrarian' statements (a 'contrarian snapback') work exceptionally well for immediate attention in a mute-first environment.",
+      "'Fortune Teller' hooks should concisely hint at future changes or impacts to spark curiosity, as the text is the primary information carrier.",
+      "The concept of 'Result Preview' (showing a solution or outcome) is highly effective for burned text hooks, often achieved through Experimenter or Investigator style content, where the visual demonstrates the result and the text explains it.",
+      "Consider 'visual pacifiers' (passive background activity) to keep viewers engaged and prevent them from scrolling while they read the burned text hook.",
+      "Prioritize visual 'stun gun' tactics and rhythmic visual pops to immediately stop the scroll, as clips are often mute-first.",
+      "Burned text hooks should be concise (ideally 3-8 words) and immediately convey the core contrast or curiosity loop.",
+      "Leverage visual pacifiers (passive actions in the clip) to maintain subconscious attention while the main text hook is processed.",
+      "Ensure text is highly readable, contrasting with the background, and appears quickly within the first 5 seconds.",
+      "Consider using unique visual patterns or text animations as a 'signature' to build recognition even without sound.",
+      "Prioritize visual 'stun gun' tactics (Magician format) to immediately stop the scroll in mute-first environments.",
+      "Utilize 'visual pacifiers' (passive, engaging background activity) to hold subconscious attention, allowing viewers to process burned text hooks.",
+      "Burned text hooks are crucial for mute-first consumption; ensure they are concise (3-8 words) for quick readability within the initial 5-second window.",
+      "Combine visual stuns with other hook formats by layering a visually impactful element with a compelling burned text caption.",
+      "For Twitch clip-comp burned captions, prioritize extreme conciseness (3-8 words) due to limited screen space and fast-paced viewing.",
+      "Focus on creating an 'information gap' or 'curiosity loop' with the burned text, without spoiling the clip's punchline.",
+      "Since Twitch clips are often mute-first, the burned caption must be visually impactful and self-explanatory, immediately grabbing attention.",
+      "Many of the video's verbatim examples exceed the 3-8 word limit; for burned captions, these would need significant shortening (e.g., 'Animation changed forever' instead of 'Animation just changed forever').",
+      "Utilize Magician-style visual cues (e.g., quick cuts, text animations, bolding) in conjunction with short text to enhance the 'stun gun' effect and direct viewer attention.",
+      "Consider using question-based hooks (Fortuneteller, Investigator) or direct, contrasting statements (Contrarian) that fit within the word count to maximize curiosity.",
+      "Avoid complex sentences or multiple clauses; opt for punchy, direct phrases that hint at the video's core revelation or conflict."
+    ]
   }
 }

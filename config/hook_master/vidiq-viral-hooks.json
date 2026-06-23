@@ -3,13 +3,226 @@
   "url": "https://vidiq.com/blog/post/viral-video-hooks-youtube-shorts/",
   "title": "Viral Video Hooks for YouTube Shorts",
   "type": "article",
-  "ingestedAt": "2026-06-23T22:34:40.367Z",
+  "ingestedAt": "2026-06-23T23:06:15.586Z",
   "passes": 1,
+  "parseOk": true,
   "extractions": {
-    "principles": [],
-    "formulas": [],
-    "anti_patterns": [],
-    "verbatim_hooks": [],
-    "twitch_comp_notes": []
+    "principles": [
+      {
+        "id": "curiosity_gap",
+        "text": "We want to know missing details when something is left unsaid.",
+        "layer": "psychology",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "id": "fomo",
+        "text": "Fear of missing out (FOMO) makes viewers want to know cool things.",
+        "layer": "psychology",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "id": "pattern_interruption",
+        "text": "Surprise viewers by breaking usual flow.",
+        "layer": "psychology",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "id": "social_proof",
+        "text": "People follow what others find interesting.",
+        "layer": "psychology",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "id": "one_idea_only",
+        "text": "Hook must convey one idea, not complex.",
+        "layer": "text",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "id": "specific_promise",
+        "text": "Name the outcome, mistake, or surprise.",
+        "layer": "text",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "id": "instant_context",
+        "text": "Viewer should know who it's for right away.",
+        "layer": "text",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "id": "sharpen_promise",
+        "text": "Sharpen the promise: highlight result, mistake, secret, comparison.",
+        "layer": "text",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "id": "grab_attention_fast",
+        "text": "Grab attention in the first 1-2 seconds.",
+        "layer": "psychology",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "id": "reinforce_message",
+        "text": "Visual, text, verbal should reinforce same message.",
+        "layer": "psychology",
+        "sourceId": "vidiq-viral-hooks"
+      }
+    ],
+    "formulas": [
+      {
+        "name": "Have You Heard About",
+        "template": "Have you heard about [X]?",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "Have you heard about the world’s loneliest toilet?"
+        ]
+      },
+      {
+        "name": "They Don't Want You To Know",
+        "template": "They don't want you to know this [X] secret.",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "Apple doesn’t want people to know"
+        ]
+      },
+      {
+        "name": "You've Never Seen Anything Like This",
+        "template": "You've never seen anything like [X].",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "You’ve never seen headphones like these."
+        ]
+      },
+      {
+        "name": "I Never Do This",
+        "template": "I never do [X], here's why.",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "I never buy silk, here's why."
+        ]
+      },
+      {
+        "name": "Best Product Ever",
+        "template": "This is the best [X] I’ve ever used.",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "Most powerful charger I’ve ever used."
+        ]
+      },
+      {
+        "name": "Today Years Old",
+        "template": "I was 'today years old' when I found [X].",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": []
+      },
+      {
+        "name": "Questions I Get Asked A Lot",
+        "template": "Questions I get asked a lot: [X]?",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "Questions I get asked a lot."
+        ]
+      },
+      {
+        "name": "I Asked Google",
+        "template": "I asked Google: [X]?",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "What's the longest jump in history?"
+        ]
+      },
+      {
+        "name": "Three Things I Do Before",
+        "template": "Three things I do before [X].",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "3 things I do before every flight."
+        ]
+      },
+      {
+        "name": "Try This To",
+        "template": "Try this to [Accomplish Goal].",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "Try this to get more views."
+        ]
+      },
+      {
+        "name": "Did You Know That",
+        "template": "Did you know that [X]?",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "Did you know this book is poisonous?"
+        ]
+      },
+      {
+        "name": "X vs Y",
+        "template": "[X] vs. [Y].",
+        "sourceId": "vidiq-viral-hooks",
+        "examples": [
+          "iPhone vs Android."
+        ]
+      }
+    ],
+    "anti_patterns": [
+      "Too complex / needs second sentence",
+      "Bad clickbait"
+    ],
+    "verbatim_hooks": [
+      {
+        "text": "Have You Heard About..?",
+        "why": "FOMO, curiosity",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "text": "They Don’t Want You to Know This Secret…",
+        "why": "Conspiracy, intrigue, us vs them dynamic",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "text": "You’ve Never Seen Anything Like This…",
+        "why": "Challenge, rarity",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "text": "I Never Do THIS, and Here’s Why…",
+        "why": "Unpopular opinion, intrigue",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "text": "Questions I Get Asked a Lot…",
+        "why": "Implies relevance, authority",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "text": "I Asked Google…",
+        "why": "Curiosity, relatable action",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "text": "Three Things I Do Before…",
+        "why": "Practicality, value",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "text": "Did You Know That..?",
+        "why": "Surprise, rare knowledge",
+        "sourceId": "vidiq-viral-hooks"
+      },
+      {
+        "text": "X vs. Y…",
+        "why": "Sparks competition",
+        "sourceId": "vidiq-viral-hooks"
+      }
+    ],
+    "twitch_comp_notes": [
+      "Text hook must be 3-8 words, burned on-screen.",
+      "Text hook should sharpen promise: highlight result, mistake, secret, comparison.",
+      "Text hook needs to work with visual (Twitch clip) and verbal (streamer reaction).",
+      "Show the payoff, not the setup, in the clip and text hook.",
+      "Text hook must be self-sufficient for mute-first viewing.",
+      "Text hook should convey one idea only to avoid complexity."
+    ]
   }
 }
