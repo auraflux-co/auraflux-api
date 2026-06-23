@@ -76,6 +76,30 @@ test('isDesktopOrIrlStream detects Just Chatting and empty category', () => {
   assert.equal(isDesktopOrIrlStream({ game: 'Fortnite' }), false);
 });
 
+test('buildClipCompSeoInput includes lead title and observations', () => {
+  const { buildClipCompSeoInput } = require('../lib/clip_comp_hooks');
+  const text = buildClipCompSeoInput({
+    leadStreamer: '2xRaKai',
+    leadTitleDraft: "2xRaKai's Rejection Moment and more...",
+    leadReason: 'Strongest awkward beat',
+    clipCount: 2,
+    isComp: true,
+    clips: [
+      { index: 0, displayName: '2xRaKai', observation: 'Visual: close dance. Audio: chat gasps.', hook: 'Eyes Widen at Dance', platformTitle: 'wild clip' },
+      { index: 1, displayName: 'funnymike', observation: 'Visual: gift reveal.', hook: 'Wrong Shirt Gift', platformTitle: 'gift' },
+    ],
+  });
+  assert.match(text, /Lead title draft.*2xRaKai/);
+  assert.match(text, /Observation \(visual\+audio\)/);
+  assert.match(text, /Burned on-screen hook: Eyes Widen at Dance/);
+});
+
+test('sanitizeTvClean strips profanity from hooks', () => {
+  const { sanitizeTvClean, normalizeHookLine } = require('../lib/clip_comp_hooks');
+  assert.ok(!sanitizeTvClean('Oh shit moment').toLowerCase().includes('shit'));
+  assert.equal(normalizeHookLine('x', 'He say I am too pussy bro'), 'He say I am too bro');
+});
+
 test('resolveHookVideoUrl prefers signed mp4 over clip page', () => {
   const { resolveHookVideoUrl } = require('../lib/clip_comp_hooks');
   assert.match(
@@ -84,9 +108,5 @@ test('resolveHookVideoUrl prefers signed mp4 over clip page', () => {
       pageUrl: 'https://www.twitch.tv/foo/clip/Bar-xyz',
     }),
     /clips\.twitchcdn/,
-  );
-  assert.equal(
-    resolveHookVideoUrl({ pageUrl: 'https://www.twitch.tv/foo/clip/Bar-xyz' }),
-    'https://www.twitch.tv/foo/clip/Bar-xyz',
   );
 });

@@ -4196,10 +4196,11 @@ app.post('/job/:id/reassemble', async (req, res) => {
   // ── Fire /assemble (internal axios call so all middleware runs normally) ───
   const port = process.env.PORT || 3000;
   const { buildClipCompDesignSpec, resolveClipCompPublishContentType, buildClipCompDeliverySpec, buildClipCompPublishOrder } = require('./lib/clip_comp');
-  const { generateClipCompHooks, buildClipCompTitleContext } = require('./lib/clip_comp_hooks');
+  const { generateClipCompCreativeBrief, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
   let reassembleDesignSpec = card.designSpec || null;
   let reassembleFullScript = card.script?.raw || card.script || null;
   let reassembleClipHookTitles = null;
+  let reassembleClipCompBrief = card.clipCompBrief || null;
   if (card.clipsOnly) {
     reassembleDesignSpec = buildClipCompDesignSpec({
       clipCount: orderedClips.length || segmentData.length,
@@ -4224,12 +4225,14 @@ app.post('/job/:id/reassemble', async (req, res) => {
       game: c.game || '',
       viewCount: c.views || c.viewCount || null,
     }));
-    console.log(`[reassemble] ${jobId}: regenerating Gemini hooks for ${orderedClips.length} clips...`);
-    reassembleClipHookTitles = await generateClipCompHooks(orderedClips, hookItems, {
+    console.log(`[reassemble] ${jobId}: regenerating Gemini creative brief for ${orderedClips.length} clips...`);
+    reassembleClipCompBrief = await generateClipCompCreativeBrief(orderedClips, hookItems, {
       log: (m) => console.log(`[reassemble] ${jobId}${m}`),
     });
+    reassembleClipHookTitles = reassembleClipCompBrief.clips.map((c) => c.hook);
     card.clipHookTitles = reassembleClipHookTitles;
-    reassembleFullScript = buildClipCompTitleContext(orderedClips.length ? orderedClips : segmentData, reassembleClipHookTitles);
+    card.clipCompBrief = reassembleClipCompBrief;
+    reassembleFullScript = buildClipCompSeoInput(reassembleClipCompBrief);
   }
   saveJobCard(jobId, card);
 
@@ -4264,6 +4267,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
     })) || [],
     orderedClipUrls: orderedClips,
     clipHookTitles: reassembleClipHookTitles || card.clipHookTitles || null,
+    clipCompBrief: reassembleClipCompBrief || card.clipCompBrief || null,
     regenerateClipHooks: false,
     clipsOnly:   !!card.clipsOnly,
     expectedClips: orderedClips.length || segmentData.filter(s => s.type === 'source_clip').length,
@@ -4573,7 +4577,7 @@ app.post('/generate-clip-comp', async (req, res) => {
 
   setImmediate(async () => {
     try {
-      const { generateClipCompHooks, buildClipCompTitleContext } = require('./lib/clip_comp_hooks');
+      const { generateClipCompCreativeBrief, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
       const hookItems = clips.map(c => ({
         title: c.title || '',
         headline: c.title || '',
@@ -4584,13 +4588,16 @@ app.post('/generate-clip-comp', async (req, res) => {
         game: c.game || '',
         viewCount: c.views || c.viewCount || null,
       }));
-      console.log(`[clip-comp] ${jobId}: generating Gemini hooks for ${orderedClipUrls.length} clips...`);
-      const clipHookTitles = await generateClipCompHooks(orderedClipUrls, hookItems, {
+      console.log(`[clip-comp] ${jobId}: generating Gemini creative brief for ${orderedClipUrls.length} clips...`);
+      const clipCompBrief = await generateClipCompCreativeBrief(orderedClipUrls, hookItems, {
         log: (m) => console.log(`[clip-comp] ${jobId}${m}`),
       });
+      const clipHookTitles = clipCompBrief.clips.map((c) => c.hook);
       card.clipHookTitles = clipHookTitles;
+      card.clipCompBrief = clipCompBrief;
       payload.clipHookTitles = clipHookTitles;
-      payload.fullScript = buildClipCompTitleContext(orderedClipUrls, clipHookTitles);
+      payload.clipCompBrief = clipCompBrief;
+      payload.fullScript = buildClipCompSeoInput(clipCompBrief);
       payload.regenerateClipHooks = false;
       saveJobCard(jobId, card);
       await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
