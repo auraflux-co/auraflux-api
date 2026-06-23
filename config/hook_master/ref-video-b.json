@@ -1,0 +1,142 @@
+{
+  "sourceId": "ref-video-b",
+  "url": "https://www.youtube.com/watch?v=VQMPTvnkEAQ",
+  "title": "Reference video B",
+  "type": "video",
+  "ingestedAt": "2026-06-23T22:30:33.790Z",
+  "passes": 5,
+  "extractions": {
+    "principles": [
+      {
+        "id": "three_second_rule",
+        "text": "Hooks must grab attention within the first 3 seconds.",
+        "layer": "psychology",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "id": "create_cognitive_tension",
+        "text": "Strong hooks create cognitive tension; the brain can't move on until it gets the answer.",
+        "layer": "psychology",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "id": "exploit_curiosity_gap",
+        "text": "Exploit the curiosity gap by promising valuable information without revealing it immediately.",
+        "layer": "psychology",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "id": "use_pattern_interrupts",
+        "text": "Break the viewer's scrolling trance with pattern interrupts to force attention.",
+        "layer": "psychology",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "id": "establish_stakes",
+        "text": "Establish stakes by answering 'What happens if I don't watch this?'",
+        "layer": "psychology",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "id": "context_lean",
+        "text": "Good hooks are context lean; avoid easing into the topic or lengthy introductions.",
+        "layer": "text",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "id": "scroll_stop",
+        "text": "Hooks must immediately grab the viewer to stop them from swiping away.",
+        "layer": "psychology",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "id": "contrarian_snapback",
+        "text": "Challenge common beliefs or expectations to create immediate engagement.",
+        "layer": "psychology",
+        "sourceId": "ref-video-b"
+      }
+    ],
+    "formulas": [
+      {
+        "name": "Contrarian (Counterintuitive Truth)",
+        "template": "Why [Common Belief] is actually hurting your [Desired Outcome]",
+        "sourceId": "ref-video-b",
+        "examples": [
+          "Posting daily kills engagement",
+          "Cardio prevents weight loss"
+        ]
+      },
+      {
+        "name": "Fortune Teller (Secret Reveal)",
+        "template": "[Number] secrets [Authority Figure] doesn't want you to know",
+        "sourceId": "ref-video-b",
+        "examples": [
+          "3 YouTube secrets Mr. Beast hides",
+          "5 contractor secrets stores hide"
+        ]
+      },
+      {
+        "name": "Result Preview (Transformation Tease)",
+        "template": "How I went from [Bad Situation] to [Good Situation] in [Timeframe]",
+        "sourceId": "ref-video-b",
+        "examples": [
+          "10 leads to 1000 in 90 days",
+          "2 home sales to 50 yearly"
+        ]
+      }
+    ],
+    "anti_patterns": [
+      "Easing into the topic",
+      "Providing context upfront",
+      "Introducing yourself first",
+      "Giving away the entire lesson/story upfront",
+      "Vague hooks with no specific benefit",
+      "Generic sounding hooks"
+    ],
+    "verbatim_hooks": [
+      {
+        "text": "Stop doing this",
+        "why": "A pattern interrupt that creates immediate curiosity and urgency.",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "text": "Everyone gets this wrong",
+        "why": "A pattern interrupt that challenges common knowledge and creates cognitive tension.",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "text": "The number 1 mistake coaches make",
+        "why": "Creates urgency by highlighting a costly mistake, appealing to fear of loss.",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "text": "Why posting daily kills engagement",
+        "why": "A counterintuitive truth that challenges a common belief, creating cognitive dissonance.",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "text": "10 leads to 1000 in 90 days",
+        "why": "Promises a specific, desirable transformation within a clear timeframe.",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "text": "Stop using these #hashtags",
+        "why": "An urgent warning that leverages fear of loss (shadow ban).",
+        "sourceId": "ref-video-b"
+      },
+      {
+        "text": "3 YouTube secrets Mr. Beast hides",
+        "why": "Creates a curiosity gap by promising exclusive, insider information.",
+        "sourceId": "ref-video-b"
+      }
+    ],
+    "twitch_comp_notes": [
+      "For mute-first burned captions, hooks must be visually striking and immediately comprehensible.",
+      "Keep hooks to 3-8 words for quick readability on screen.",
+      "Hooks should be self-contained and impactful without relying on audio.",
+      "Adapt formulas to be highly concise and direct for on-screen text.",
+      "Use strong verbs and intriguing nouns to maximize impact in limited space.",
+      "Consider using emojis or simple visual cues within the burned text if appropriate for the platform/brand."
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "sourceId": "ref-video-c",
+  "url": "https://www.youtube.com/watch?v=xnOe8aA9Pmw",
+  "title": "Reference video C",
+  "type": "video",
+  "ingestedAt": "2026-06-23T22:34:06.558Z",
+  "passes": 5,
+  "extractions": {
+    "principles": [],
+    "formulas": [],
+    "anti_patterns": [],
+    "verbatim_hooks": [],
+    "twitch_comp_notes": []
+  }
+}

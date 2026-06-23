@@ -1,21 +1,61 @@
 {
   "version": 1,
-  "updatedAt": "2026-06-23T22:15:08.270Z",
+  "updatedAt": "2026-06-23T22:34:40.374Z",
   "sources": [
+    {
+      "sourceId": "jade-beason-100-hooks",
+      "url": "https://www.youtube.com/watch?v=dNT7gd3ulAg",
+      "title": "I studied 100+ hooks, this strategy will make you go viral",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:19:29.265Z",
+      "passes": 5
+    },
+    {
+      "sourceId": "kallaway-irresistible-hooks",
+      "url": "https://www.youtube.com/watch?v=LmXpbP7dD48",
+      "title": "How to Create Irresistible Hooks (and blow up your content)",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:23:44.410Z",
+      "passes": 5
+    },
     {
       "sourceId": "opus-shorts-hook-formulas",
       "url": "https://www.opus.pro/blog/youtube-shorts-hook-formulas",
       "title": "YouTube Shorts Hook Formulas",
       "type": "article",
-      "ingestedAt": "2026-06-23T22:14:50.849Z",
+      "ingestedAt": "2026-06-23T22:34:22.150Z",
       "passes": 1
+    },
+    {
+      "sourceId": "ref-short-a",
+      "url": "https://www.youtube.com/shorts/gwc9_z6Zce0",
+      "title": "Reference Short A",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:25:07.104Z",
+      "passes": 5
+    },
+    {
+      "sourceId": "ref-video-b",
+      "url": "https://www.youtube.com/watch?v=VQMPTvnkEAQ",
+      "title": "Reference video B",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:30:33.790Z",
+      "passes": 5
+    },
+    {
+      "sourceId": "ref-video-c",
+      "url": "https://www.youtube.com/watch?v=xnOe8aA9Pmw",
+      "title": "Reference video C",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:34:06.558Z",
+      "passes": 5
     },
     {
       "sourceId": "vidiq-viral-hooks",
       "url": "https://vidiq.com/blog/post/viral-video-hooks-youtube-shorts/",
       "title": "Viral Video Hooks for YouTube Shorts",
       "type": "article",
-      "ingestedAt": "2026-06-23T22:15:08.268Z",
+      "ingestedAt": "2026-06-23T22:34:40.367Z",
       "passes": 1
     }
   ]

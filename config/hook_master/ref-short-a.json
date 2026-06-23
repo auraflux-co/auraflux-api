@@ -1,0 +1,239 @@
+{
+  "sourceId": "ref-short-a",
+  "url": "https://www.youtube.com/shorts/gwc9_z6Zce0",
+  "title": "Reference Short A",
+  "type": "video",
+  "ingestedAt": "2026-06-23T22:25:07.104Z",
+  "passes": 5,
+  "extractions": {
+    "principles": [
+      {
+        "id": "dopamine_hit_trigger",
+        "text": "Trigger the 'Wait, tell me more...' response.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "curiosity_loop_initiation",
+        "text": "Tease curiosity to make viewers want to know more.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "pattern_interrupt_text",
+        "text": "Use unexpected or intriguing text to break scrolling patterns.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "loss_aversion_appeal",
+        "text": "Hint at missing out on valuable information if they scroll past.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "three_second_clarity",
+        "text": "Align text with visuals for instant clarity and curiosity within 3 seconds.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "written_hook_length",
+        "text": "3-8 word title on screen.",
+        "layer": "text",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "promise_or_curiosity",
+        "text": "Written hook makes a promise or teases curiosity.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "visuals_first_reinforce_text",
+        "text": "Visuals hit the viewer first, then your words reinforce what they saw.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "align_visual_written_verbal",
+        "text": "Visual, written, and verbal hooks must align in the first three seconds to create instant clarity and curiosity.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "first_frame_matters",
+        "text": "The first frame (visual + text) matters for immediate engagement.",
+        "layer": "visual",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "brain_sees_faster_than_hears",
+        "text": "Your brain sees faster than it hears, making visuals the first point of contact.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "written_reinforces_visual",
+        "text": "The burned text hook should reinforce what the viewer sees visually.",
+        "layer": "text",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "align_all_hooks_early",
+        "text": "Visual, written, and verbal hooks must align in the first 3 seconds to create instant clarity and curiosity.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "written_hook_purpose",
+        "text": "A burned text hook should make a promise or tease curiosity.",
+        "layer": "text",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "text_hook_length",
+        "text": "Keep text hooks concise, ideally 3-8 words.",
+        "layer": "text",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "information_gap_creation",
+        "text": "Text hooks should make a promise or tease curiosity without spoiling the punchline.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "visual_priority",
+        "text": "Visuals are processed faster than audio; text hooks reinforce the initial visual impact.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "id": "hook_alignment",
+        "text": "Visual, written, and verbal hooks should align in the first few seconds to create clarity and curiosity.",
+        "layer": "psychology",
+        "sourceId": "ref-short-a"
+      }
+    ],
+    "formulas": [
+      {
+        "name": "Promise or Curiosity Hook",
+        "template": "[3-8 word title] (makes a promise or teases curiosity)",
+        "sourceId": "ref-short-a",
+        "examples": [
+          "Whole Foods has gotten SHADIER than ever 😳",
+          "PSYCHOLOGIST EXPLAINS HOW TO STOP FEELING EXHAUSTED 😩",
+          "How To Fix Shoulder Blade Pain"
+        ]
+      },
+      {
+        "name": "Result Preview",
+        "template": "[Problem] [Solution/Outcome]",
+        "sourceId": "ref-short-a",
+        "examples": [
+          "PSYCHOLOGIST EXPLAINS HOW TO STOP FEELING EXHAUSTED",
+          "How To Fix Shoulder Blade Pain"
+        ]
+      },
+      {
+        "name": "Contrarian",
+        "template": "[Common Belief] is [Unexpected/Negative Outcome]",
+        "sourceId": "ref-short-a",
+        "examples": [
+          "Whole Foods has gotten SHADIER than ever"
+        ]
+      },
+      {
+        "name": "Promise or Curiosity Teaser",
+        "template": "[3-8 words] that makes a promise or teases curiosity.",
+        "sourceId": "ref-short-a",
+        "examples": [
+          "Whole Foods has gotten SHADIER than ever",
+          "PSYCHOLOGIST EXPLAINS HOW TO STOP FEELING EXHAUSTED",
+          "How To Fix Shoulder Blade Pain",
+          "developers don't even need a keyboard anymore"
+        ]
+      },
+      {
+        "name": "Promise or Curiosity",
+        "template": "[Benefit/Problem] + [Action/Question/Surprise]",
+        "sourceId": "ref-short-a",
+        "examples": [
+          "How To Fix Shoulder Blade Pain",
+          "PSYCHOLOGIST EXPLAINS HOW TO STOP FEELING EXHAUSTED 😩"
+        ]
+      }
+    ],
+    "anti_patterns": [
+      "Generic or misleading text that doesn't instantly match the visual content.",
+      "Visual and written hooks don't instantly match what you're saying, causing audience to check out before message lands.",
+      "Visual and written hooks that don't instantly match what's being shown or implied verbally (causes audience to check out).",
+      "Misalignment between visual, written, and verbal elements, causing audience disengagement.",
+      "Spoiling the main reveal or punchline of the content in the hook.",
+      "Overly long or complex text hooks that are hard to read quickly."
+    ],
+    "verbatim_hooks": [
+      {
+        "text": "Whole Foods has gotten SHADIER than ever 😳",
+        "why": "Teases curiosity about a negative change, uses an emoji for emotional impact.",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "text": "PSYCHOLOGIST EXPLAINS HOW TO STOP FEELING EXHAUSTED 😩",
+        "why": "Makes a promise to solve a common problem, uses an emoji for relatability.",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "text": "How To Fix Shoulder Blade Pain",
+        "why": "Directly promises a solution to a specific pain point.",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "text": "Whole Foods has gotten SHADIER than ever",
+        "why": "Teases curiosity by presenting a contrarian view on a well-known brand.",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "text": "PSYCHOLOGIST EXPLAINS HOW TO STOP FEELING EXHAUSTED",
+        "why": "Makes a promise of a solution to a common problem (Result Preview).",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "text": "developers don't even need a keyboard anymore",
+        "why": "Teases curiosity with a surprising, counter-intuitive statement.",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "text": "Whole Foods has gotten SHADIER than ever 😲",
+        "why": "Creates an information gap and curiosity about what makes Whole Foods 'shadier', uses an emoji for quick emotional context.",
+        "sourceId": "ref-short-a"
+      },
+      {
+        "text": "developers don't even need a keyboard anymore 🤯",
+        "why": "Creates strong curiosity and surprise about a technological advancement, uses an emoji to amplify the shock.",
+        "sourceId": "ref-short-a"
+      }
+    ],
+    "twitch_comp_notes": [
+      "Prioritize burned text hooks as viewers often watch mute-first; the brain sees faster than it hears.",
+      "Ensure burned text instantly aligns with the visual clip to create clarity and curiosity.",
+      "The burned text in the first frame is critical for immediate engagement and context.",
+      "In a mute-first environment, burned text hooks are even more critical for initial engagement and conveying the clip's value.",
+      "The 3-8 word limit is essential for quick readability on a small screen, especially without immediate audio context.",
+      "Written hooks must clearly make a promise or tease curiosity to compel viewers to unmute or continue watching, as verbal cues are initially absent.",
+      "Strong alignment between the visual content of the clip and the burned text is paramount, as the text needs to carry more weight without immediate verbal reinforcement.",
+      "Focus on scroll-stopping text that immediately conveys value or intrigue, as the viewer's attention span is extremely short on platforms like YouTube Shorts/Twitch clips.",
+      "**Mute-First Priority:** For Twitch reaction clips, the burned text hook is paramount as viewers often scroll with sound off. It must work independently of audio.",
+      "**Visual-Text Synergy:** The burned text must immediately clarify or amplify the visual action/emotion (e.g., streamer's reaction, game event) to create instant curiosity or a clear promise without sound.",
+      "**Conciseness is Key:** Adhere strictly to the 3-8 word limit for maximum readability and quick comprehension on a small screen.",
+      "**Emotional/Curiosity Triggers:** Use words that evoke strong emotions, pose a question, or hint at a surprising outcome to encourage unmuting and continued viewing.",
+      "**Contextual Relevance:** The burned text should leverage the visual context of the reaction clip (e.g., streamer's expression, specific game moment) to make immediate sense and be impactful.",
+      "For mute-first Twitch reaction clips, the burned text hook is even more critical as it often serves as the primary initial engagement point.",
+      "The 'visual hook' for a reaction clip is the streamer's reaction itself. The text hook must complement this, creating an information gap about *what* the streamer is reacting to, or *why* their reaction is significant.",
+      "Since verbal context might be absent or delayed (due to mute-first viewing), the text hook must be self-sufficient in generating curiosity.",
+      "Prioritize the 'teases curiosity' aspect of the hook formula to avoid spoiling the clip's core moment or the reason for the reaction.",
+      "Utilize emojis within the 3-8 word limit to quickly convey emotion, tone, or amplify the information gap, as they are highly effective in a visual-first, text-burned format."
+    ]
+  }
+}

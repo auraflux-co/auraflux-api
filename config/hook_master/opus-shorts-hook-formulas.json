@@ -3,45 +3,51 @@
   "url": "https://www.opus.pro/blog/youtube-shorts-hook-formulas",
   "title": "YouTube Shorts Hook Formulas",
   "type": "article",
-  "ingestedAt": "2026-06-23T22:14:50.849Z",
+  "ingestedAt": "2026-06-23T22:34:22.150Z",
   "passes": 1,
   "extractions": {
     "principles": [
       {
         "id": "three_second_clarity",
-        "text": "Hooks must grab attention within the first three seconds.",
+        "text": "Hooks must grab attention within the first 3 seconds to prevent immediate swipe-away.",
         "layer": "psychology",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
-        "id": "curiosity_gap",
-        "text": "Create an information gap or unresolved tension.",
+        "id": "information_gap",
+        "text": "Create an information gap or trigger curiosity to compel viewers to keep watching.",
         "layer": "psychology",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
-        "id": "dopamine_promise",
-        "text": "Promise immediate value or transformation.",
+        "id": "curiosity_loop",
+        "text": "Leverage the brain's discomfort with unresolved information to create a 'curiosity gap' that demands resolution.",
         "layer": "psychology",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
-        "id": "text_pattern_interrupt",
-        "text": "Use unexpected or contradictory statements to break scrolling.",
+        "id": "pattern_interrupt",
+        "text": "Shatter the viewer's scrolling autopilot with something unexpected (e.g., a contradictory statement).",
         "layer": "psychology",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
-        "id": "mute_first_design",
-        "text": "Design text hooks for mute-first viewing.",
+        "id": "dopamine_hit",
+        "text": "Frontload intensity and promise transformation or immediate value to signal worth.",
+        "layer": "psychology",
+        "sourceId": "opus-shorts-hook-formulas"
+      },
+      {
+        "id": "brevity",
+        "text": "Text hooks should be 3-8 words for quick comprehension and impact.",
         "layer": "text",
         "sourceId": "opus-shorts-hook-formulas"
       }
     ],
     "formulas": [
       {
-        "name": "Contrarian Hook",
-        "template": "I did X, but Y happened.",
+        "name": "Contrarian",
+        "template": "Say something counterintuitive or seemingly wrong.",
         "sourceId": "opus-shorts-hook-formulas",
         "examples": [
           "I made more money after I stopped posting daily",
@@ -50,18 +56,18 @@
       },
       {
         "name": "Direct Promise",
-        "template": "This [X] will [Y] in [Z].",
+        "template": "Tell viewers exactly what they'll get and why it matters, with specificity and numbers.",
         "sourceId": "opus-shorts-hook-formulas",
         "examples": [
-          "This 5-second edit doubled my watch time.",
-          "Master the J-cut in 30 seconds.",
-          "I'm about to show you why everyone's doing captions wrong.",
-          "Watch me turn this disaster into my best video"
+          "This 5-second edit doubled my watch time",
+          "Watch me turn this disaster into my best video",
+          "I'm about to show you why everyone's doing captions wrong",
+          "Master the J-cut in 30 seconds"
         ]
       },
       {
         "name": "Question Hook",
-        "template": "Why does X happen?",
+        "template": "Ask a highly relatable or intriguing question that identifies a struggle, challenges an assumption, or teases insider knowledge.",
         "sourceId": "opus-shorts-hook-formulas",
         "examples": [
           "Why do your Shorts die at 40% watch time?",
@@ -71,62 +77,62 @@
       }
     ],
     "anti_patterns": [
-      "Generic filler",
-      "Vague promises (e.g., 'Learn about editing')",
-      "Generic questions (e.g., 'Want more views?')"
+      "generic filler",
+      "vague promises like 'Learn about editing'",
+      "generic questions like 'Want more views?'"
     ],
     "verbatim_hooks": [
       {
         "text": "I made more money after I stopped posting daily",
-        "why": "Contrarian, creates cognitive dissonance and curiosity.",
+        "why": "Contradiction hook, creates cognitive dissonance.",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
         "text": "This editing mistake actually increased my views by 300%",
-        "why": "Contrarian, specific, counterintuitive, and promises a measurable outcome.",
+        "why": "Contradiction hook, specific numbers add credibility and intrigue.",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
-        "text": "This 5-second edit doubled my watch time.",
-        "why": "Direct promise, specific, measurable outcome, and time-bound.",
+        "text": "This 5-second edit doubled my watch time",
+        "why": "Direct promise, specific outcome, measurable benefit, and time frame.",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
         "text": "Watch me turn this disaster into my best video",
-        "why": "Direct promise, implies transformation and high stakes.",
+        "why": "Direct promise, sets clear expectations, implies transformation.",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
-        "text": "I'm about to show you why everyone's doing captions wrong.",
-        "why": "Direct promise, challenges assumption, and teases insider knowledge.",
+        "text": "I'm about to show you why everyone's doing captions wrong",
+        "why": "Direct promise, challenges common assumption, teases insider knowledge.",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
-        "text": "Master the J-cut in 30 seconds.",
-        "why": "Direct promise, specific skill, and time-bound.",
+        "text": "Master the J-cut in 30 seconds",
+        "why": "Direct promise, specific skill, clear time frame, measurable.",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
         "text": "Why do your Shorts die at 40% watch time?",
-        "why": "Question hook, identifies a specific pain point, and implies a solution.",
+        "why": "Question hook, identifies a specific pain point, implies an answer.",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
         "text": "Ever wonder why big creators never show their full process?",
-        "why": "Question hook, teases insider knowledge, and creates curiosity.",
+        "why": "Question hook, teases insider knowledge, creates curiosity.",
         "sourceId": "opus-shorts-hook-formulas"
       },
       {
         "text": "What if I told you captions are hurting your retention?",
-        "why": "Question hook, challenges a common assumption, and creates cognitive dissonance.",
+        "why": "Question hook, challenges a common assumption, creates cognitive dissonance.",
         "sourceId": "opus-shorts-hook-formulas"
       }
     ],
     "twitch_comp_notes": [
-      "Twitch clips are often watched mute-first, making burned text hooks essential for initial engagement.",
-      "Keep burned captions concise (3-8 words) for quick readability and impact.",
-      "Text hooks must create an information gap, trigger curiosity, or promise value instantly to stop the scroll.",
-      "Utilize text overlay as a primary hook mechanism, as visual and auditory cues may be missed."
+      "Twitch reaction clips, like YouTube Shorts, are often consumed mute-first; burned captions are critical for immediate engagement.",
+      "The 3-8 word limit for burned captions is essential for readability and impact in a mute-first, fast-scrolling environment.",
+      "Text hooks must carry the full weight of creating an information gap, triggering curiosity, or promising immediate value, as sound may be absent.",
+      "Psychological triggers like curiosity gaps and pattern interrupts are amplified when conveyed solely through concise, impactful text."
     ]
   }
 }

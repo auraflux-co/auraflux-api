@@ -1,0 +1,135 @@
+{
+  "sourceId": "kallaway-irresistible-hooks",
+  "url": "https://www.youtube.com/watch?v=LmXpbP7dD48",
+  "title": "How to Create Irresistible Hooks (and blow up your content)",
+  "type": "video",
+  "ingestedAt": "2026-06-23T22:23:44.410Z",
+  "passes": 5,
+  "extractions": {
+    "principles": [
+      {
+        "id": "topic_clarity",
+        "text": "Clearly define the video's topic for self-selection.",
+        "layer": "text",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "id": "draw_audience_in",
+        "text": "Draw the audience in by leaning on relatable scenarios.",
+        "layer": "psychology",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "id": "scroll_stop_interjection",
+        "text": "Use a single contrasting word or phrase to 'stun' the viewer and stop their scroll.",
+        "layer": "text",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "id": "contrarian_snapback",
+        "text": "Introduce a surprising twist that goes against the initial lean, keeping the viewer curious.",
+        "layer": "text",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "id": "visual_hooks_power",
+        "text": "Visual hooks are significantly more powerful than spoken word hooks.",
+        "layer": "visual",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "id": "read_faster_than_hear",
+        "text": "People read text faster than they can hear or visually comprehend a full scene.",
+        "layer": "psychology",
+        "sourceId": "kallaway-irresistible-hooks"
+      }
+    ],
+    "formulas": [
+      {
+        "name": "3-Step Hook Formula (Text Adaptation)",
+        "template": "[Context Lean] + [Scroll Stop Interjection] + [Contrarian Snapback]",
+        "sourceId": "kallaway-irresistible-hooks",
+        "examples": [
+          "Vegas Sphere has wild tech. But get this... Least impressive part.",
+          "3 mortgage mistakes. But it's not interest rates. It's coming from..."
+        ]
+      },
+      {
+        "name": "X-Y-Z Compelling Hook",
+        "template": "Achieve X? Don't do Y, do Z.",
+        "sourceId": "kallaway-irresistible-hooks",
+        "examples": [
+          "Go viral? Don't list hooks, learn psychology."
+        ]
+      }
+    ],
+    "anti_patterns": [
+      "Generic filler (e.g., '25 viral hooks' without explaining why they work)"
+    ],
+    "verbatim_hooks": [
+      {
+        "text": "Make better Hooks",
+        "why": "Establishes context and common ground, signaling the video's topic and benefit.",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "Vegas Sphere has wild tech",
+        "why": "Provides immediate context and creates interest in a novel topic.",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "The tech in the Vegas Sphere is insane.",
+        "why": "Draws the audience in with an exciting statement about the topic.",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "Biggest screen ever built.",
+        "why": "Uses a compelling fact to lean the audience in.",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "20x bigger than an IMAX.",
+        "why": "Simplifies a complex idea (screen size) with a relatable metaphor.",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "But get this...",
+        "why": "A contrasting interjection to stop the scroll and build anticipation.",
+        "layer": "text",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "Least impressive part.",
+        "why": "The contrarian snapback, creating curiosity by challenging expectations.",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "Blow your mind",
+        "why": "A direct call to action/promise of surprising information.",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "3 massive mistakes",
+        "why": "Establishes context and a pain point for the target audience.",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "It's not interest rates",
+        "why": "A scroll-stopping interjection that challenges a common belief.",
+        "sourceId": "kallaway-irresistible-hooks"
+      },
+      {
+        "text": "Understand psychology",
+        "why": "The contrarian snapback, offering a deeper, more compelling solution.",
+        "sourceId": "kallaway-irresistible-hooks"
+      }
+    ],
+    "twitch_comp_notes": [
+      "For mute-first viewing, burned text hooks are paramount. They must convey the core message and create curiosity instantly.",
+      "Use 3-5 bold words on screen to establish context and lean-in points.",
+      "Employ contrasting words (e.g., 'BUT', 'YET', 'HOWEVER') as burned text to create a 'scroll stop interjection'.",
+      "The 'contrarian snapback' should be a short, surprising text phrase that re-engages the viewer.",
+      "Visual cues like movement, quick cuts, and emotional reactions from the streamer should complement the burned text hooks to enhance engagement without sound."
+    ]
+  }
+}

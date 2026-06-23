@@ -56,6 +56,176 @@
       "text": "Design text hooks for mute-first viewing.",
       "sourceId": "opus-shorts-hook-formulas",
       "layer": "text"
+    },
+    {
+      "text": "Clearly define the video's topic for self-selection.",
+      "sourceId": "kallaway-irresistible-hooks",
+      "layer": "text"
+    },
+    {
+      "text": "Draw the audience in by leaning on relatable scenarios.",
+      "sourceId": "kallaway-irresistible-hooks",
+      "layer": "psychology"
+    },
+    {
+      "text": "Use a single contrasting word or phrase to 'stun' the viewer and stop their scroll.",
+      "sourceId": "kallaway-irresistible-hooks",
+      "layer": "text"
+    },
+    {
+      "text": "Introduce a surprising twist that goes against the initial lean, keeping the viewer curious.",
+      "sourceId": "kallaway-irresistible-hooks",
+      "layer": "text"
+    },
+    {
+      "text": "People read text faster than they can hear or visually comprehend a full scene.",
+      "sourceId": "kallaway-irresistible-hooks",
+      "layer": "psychology"
+    },
+    {
+      "text": "Hooks must grab attention within the first 3 seconds to prevent immediate swipe-away.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "psychology"
+    },
+    {
+      "text": "Create an information gap or trigger curiosity to compel viewers to keep watching.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "psychology"
+    },
+    {
+      "text": "Leverage the brain's discomfort with unresolved information to create a 'curiosity gap' that demands resolution.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "psychology"
+    },
+    {
+      "text": "Shatter the viewer's scrolling autopilot with something unexpected (e.g., a contradictory statement).",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "psychology"
+    },
+    {
+      "text": "Frontload intensity and promise transformation or immediate value to signal worth.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "psychology"
+    },
+    {
+      "text": "Text hooks should be 3-8 words for quick comprehension and impact.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "text"
+    },
+    {
+      "text": "Trigger the 'Wait, tell me more...' response.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "Tease curiosity to make viewers want to know more.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "Use unexpected or intriguing text to break scrolling patterns.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "Hint at missing out on valuable information if they scroll past.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "3-8 word title on screen.",
+      "sourceId": "ref-short-a",
+      "layer": "text"
+    },
+    {
+      "text": "Written hook makes a promise or teases curiosity.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "Visuals hit the viewer first, then your words reinforce what they saw.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "Visual, written, and verbal hooks must align in the first three seconds to create instant clarity and curiosity.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "Your brain sees faster than it hears, making visuals the first point of contact.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "The burned text hook should reinforce what the viewer sees visually.",
+      "sourceId": "ref-short-a",
+      "layer": "text"
+    },
+    {
+      "text": "Visual, written, and verbal hooks must align in the first 3 seconds to create instant clarity and curiosity.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "A burned text hook should make a promise or tease curiosity.",
+      "sourceId": "ref-short-a",
+      "layer": "text"
+    },
+    {
+      "text": "Keep text hooks concise, ideally 3-8 words.",
+      "sourceId": "ref-short-a",
+      "layer": "text"
+    },
+    {
+      "text": "Text hooks should make a promise or tease curiosity without spoiling the punchline.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "Visuals are processed faster than audio; text hooks reinforce the initial visual impact.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "Visual, written, and verbal hooks should align in the first few seconds to create clarity and curiosity.",
+      "sourceId": "ref-short-a",
+      "layer": "psychology"
+    },
+    {
+      "text": "Hooks must grab attention within the first 3 seconds.",
+      "sourceId": "ref-video-b",
+      "layer": "psychology"
+    },
+    {
+      "text": "Strong hooks create cognitive tension; the brain can't move on until it gets the answer.",
+      "sourceId": "ref-video-b",
+      "layer": "psychology"
+    },
+    {
+      "text": "Exploit the curiosity gap by promising valuable information without revealing it immediately.",
+      "sourceId": "ref-video-b",
+      "layer": "psychology"
+    },
+    {
+      "text": "Break the viewer's scrolling trance with pattern interrupts to force attention.",
+      "sourceId": "ref-video-b",
+      "layer": "psychology"
+    },
+    {
+      "text": "Establish stakes by answering 'What happens if I don't watch this?'",
+      "sourceId": "ref-video-b",
+      "layer": "psychology"
+    },
+    {
+      "text": "Good hooks are context lean; avoid easing into the topic or lengthy introductions.",
+      "sourceId": "ref-video-b",
+      "layer": "text"
+    },
+    {
+      "text": "Hooks must immediately grab the viewer to stop them from swiping away.",
+      "sourceId": "ref-video-b",
+      "layer": "psychology"
     }
   ],
   "formulas": [
@@ -136,6 +306,80 @@
         "Ever wonder why big creators never show their full process?",
         "What if I told you captions are hurting your retention?"
       ]
+    },
+    {
+      "name": "3-Step Hook Formula (Text Adaptation)",
+      "template": "[Context Lean] + [Scroll Stop Interjection] + [Contrarian Snapback]",
+      "sourceId": "kallaway-irresistible-hooks",
+      "examples": [
+        "Vegas Sphere has wild tech. But get this... Least impressive part.",
+        "3 mortgage mistakes. But it's not interest rates. It's coming from..."
+      ]
+    },
+    {
+      "name": "X-Y-Z Compelling Hook",
+      "template": "Achieve X? Don't do Y, do Z.",
+      "sourceId": "kallaway-irresistible-hooks",
+      "examples": [
+        "Go viral? Don't list hooks, learn psychology."
+      ]
+    },
+    {
+      "name": "Promise or Curiosity Hook",
+      "template": "[3-8 word title] (makes a promise or teases curiosity)",
+      "sourceId": "ref-short-a",
+      "examples": [
+        "Whole Foods has gotten SHADIER than ever 😳",
+        "PSYCHOLOGIST EXPLAINS HOW TO STOP FEELING EXHAUSTED 😩",
+        "How To Fix Shoulder Blade Pain"
+      ]
+    },
+    {
+      "name": "Promise or Curiosity Teaser",
+      "template": "[3-8 words] that makes a promise or teases curiosity.",
+      "sourceId": "ref-short-a",
+      "examples": [
+        "Whole Foods has gotten SHADIER than ever",
+        "PSYCHOLOGIST EXPLAINS HOW TO STOP FEELING EXHAUSTED",
+        "How To Fix Shoulder Blade Pain",
+        "developers don't even need a keyboard anymore"
+      ]
+    },
+    {
+      "name": "Promise or Curiosity",
+      "template": "[Benefit/Problem] + [Action/Question/Surprise]",
+      "sourceId": "ref-short-a",
+      "examples": [
+        "How To Fix Shoulder Blade Pain",
+        "PSYCHOLOGIST EXPLAINS HOW TO STOP FEELING EXHAUSTED 😩"
+      ]
+    },
+    {
+      "name": "Contrarian (Counterintuitive Truth)",
+      "template": "Why [Common Belief] is actually hurting your [Desired Outcome]",
+      "sourceId": "ref-video-b",
+      "examples": [
+        "Posting daily kills engagement",
+        "Cardio prevents weight loss"
+      ]
+    },
+    {
+      "name": "Fortune Teller (Secret Reveal)",
+      "template": "[Number] secrets [Authority Figure] doesn't want you to know",
+      "sourceId": "ref-video-b",
+      "examples": [
+        "3 YouTube secrets Mr. Beast hides",
+        "5 contractor secrets stores hide"
+      ]
+    },
+    {
+      "name": "Result Preview (Transformation Tease)",
+      "template": "How I went from [Bad Situation] to [Good Situation] in [Timeframe]",
+      "sourceId": "ref-video-b",
+      "examples": [
+        "10 leads to 1000 in 90 days",
+        "2 home sales to 50 yearly"
+      ]
     }
   ],
   "anti_patterns": [
@@ -146,7 +390,23 @@
     "Wildest Moments / You Won't Believe / Chat Goes Wild filler",
     "Generic filler",
     "Vague promises (e.g., 'Learn about editing')",
-    "Generic questions (e.g., 'Want more views?')"
+    "Generic questions (e.g., 'Want more views?')",
+    "Generic filler (e.g., '25 viral hooks' without explaining why they work)",
+    "generic filler",
+    "vague promises like 'Learn about editing'",
+    "generic questions like 'Want more views?'",
+    "Generic or misleading text that doesn't instantly match the visual content.",
+    "Visual and written hooks don't instantly match what you're saying, causing audience to check out before message lands.",
+    "Visual and written hooks that don't instantly match what's being shown or implied verbally (causes audience to check out).",
+    "Misalignment between visual, written, and verbal elements, causing audience disengagement.",
+    "Spoiling the main reveal or punchline of the content in the hook.",
+    "Overly long or complex text hooks that are hard to read quickly.",
+    "Easing into the topic",
+    "Providing context upfront",
+    "Introducing yourself first",
+    "Giving away the entire lesson/story upfront",
+    "Vague hooks with no specific benefit",
+    "Generic sounding hooks"
   ],
   "twitch_comp_adaptations": [
     "Burned hook = TEXT layer only — visual interrupt comes from the clip itself; text adds curiosity gap",
@@ -157,7 +417,40 @@
     "Twitch clips are often watched mute-first, making burned text hooks essential for initial engagement.",
     "Keep burned captions concise (3-8 words) for quick readability and impact.",
     "Text hooks must create an information gap, trigger curiosity, or promise value instantly to stop the scroll.",
-    "Utilize text overlay as a primary hook mechanism, as visual and auditory cues may be missed."
+    "Utilize text overlay as a primary hook mechanism, as visual and auditory cues may be missed.",
+    "For mute-first viewing, burned text hooks are paramount. They must convey the core message and create curiosity instantly.",
+    "Use 3-5 bold words on screen to establish context and lean-in points.",
+    "Employ contrasting words (e.g., 'BUT', 'YET', 'HOWEVER') as burned text to create a 'scroll stop interjection'.",
+    "The 'contrarian snapback' should be a short, surprising text phrase that re-engages the viewer.",
+    "Visual cues like movement, quick cuts, and emotional reactions from the streamer should complement the burned text hooks to enhance engagement without sound.",
+    "Twitch reaction clips, like YouTube Shorts, are often consumed mute-first; burned captions are critical for immediate engagement.",
+    "The 3-8 word limit for burned captions is essential for readability and impact in a mute-first, fast-scrolling environment.",
+    "Text hooks must carry the full weight of creating an information gap, triggering curiosity, or promising immediate value, as sound may be absent.",
+    "Psychological triggers like curiosity gaps and pattern interrupts are amplified when conveyed solely through concise, impactful text.",
+    "Prioritize burned text hooks as viewers often watch mute-first; the brain sees faster than it hears.",
+    "Ensure burned text instantly aligns with the visual clip to create clarity and curiosity.",
+    "The burned text in the first frame is critical for immediate engagement and context.",
+    "In a mute-first environment, burned text hooks are even more critical for initial engagement and conveying the clip's value.",
+    "The 3-8 word limit is essential for quick readability on a small screen, especially without immediate audio context.",
+    "Written hooks must clearly make a promise or tease curiosity to compel viewers to unmute or continue watching, as verbal cues are initially absent.",
+    "Strong alignment between the visual content of the clip and the burned text is paramount, as the text needs to carry more weight without immediate verbal reinforcement.",
+    "Focus on scroll-stopping text that immediately conveys value or intrigue, as the viewer's attention span is extremely short on platforms like YouTube Shorts/Twitch clips.",
+    "**Mute-First Priority:** For Twitch reaction clips, the burned text hook is paramount as viewers often scroll with sound off. It must work independently of audio.",
+    "**Visual-Text Synergy:** The burned text must immediately clarify or amplify the visual action/emotion (e.g., streamer's reaction, game event) to create instant curiosity or a clear promise without sound.",
+    "**Conciseness is Key:** Adhere strictly to the 3-8 word limit for maximum readability and quick comprehension on a small screen.",
+    "**Emotional/Curiosity Triggers:** Use words that evoke strong emotions, pose a question, or hint at a surprising outcome to encourage unmuting and continued viewing.",
+    "**Contextual Relevance:** The burned text should leverage the visual context of the reaction clip (e.g., streamer's expression, specific game moment) to make immediate sense and be impactful.",
+    "For mute-first Twitch reaction clips, the burned text hook is even more critical as it often serves as the primary initial engagement point.",
+    "The 'visual hook' for a reaction clip is the streamer's reaction itself. The text hook must complement this, creating an information gap about *what* the streamer is reacting to, or *why* their reaction is significant.",
+    "Since verbal context might be absent or delayed (due to mute-first viewing), the text hook must be self-sufficient in generating curiosity.",
+    "Prioritize the 'teases curiosity' aspect of the hook formula to avoid spoiling the clip's core moment or the reason for the reaction.",
+    "Utilize emojis within the 3-8 word limit to quickly convey emotion, tone, or amplify the information gap, as they are highly effective in a visual-first, text-burned format.",
+    "For mute-first burned captions, hooks must be visually striking and immediately comprehensible.",
+    "Keep hooks to 3-8 words for quick readability on screen.",
+    "Hooks should be self-contained and impactful without relying on audio.",
+    "Adapt formulas to be highly concise and direct for on-screen text.",
+    "Use strong verbs and intriguing nouns to maximize impact in limited space.",
+    "Consider using emojis or simple visual cues within the burned text if appropriate for the platform/brand."
   ],
   "examples": [
     {
@@ -228,23 +521,118 @@
       "hook": "What if I told you captions are hurting your retention?",
       "why": "Question hook, challenges a common assumption, and creates cognitive dissonance.",
       "sourceId": "opus-shorts-hook-formulas"
+    },
+    {
+      "hook": "Make better Hooks",
+      "why": "Establishes context and common ground, signaling the video's topic and benefit.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "Vegas Sphere has wild tech",
+      "why": "Provides immediate context and creates interest in a novel topic.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "The tech in the Vegas Sphere is insane.",
+      "why": "Draws the audience in with an exciting statement about the topic.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "Biggest screen ever built.",
+      "why": "Uses a compelling fact to lean the audience in.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "20x bigger than an IMAX.",
+      "why": "Simplifies a complex idea (screen size) with a relatable metaphor.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "But get this...",
+      "why": "A contrasting interjection to stop the scroll and build anticipation.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "Least impressive part.",
+      "why": "The contrarian snapback, creating curiosity by challenging expectations.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "Blow your mind",
+      "why": "A direct call to action/promise of surprising information.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "3 massive mistakes",
+      "why": "Establishes context and a pain point for the target audience.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "It's not interest rates",
+      "why": "A scroll-stopping interjection that challenges a common belief.",
+      "sourceId": "kallaway-irresistible-hooks"
+    },
+    {
+      "hook": "Understand psychology",
+      "why": "The contrarian snapback, offering a deeper, more compelling solution.",
+      "sourceId": "kallaway-irresistible-hooks"
     }
   ],
   "citations": [
+    {
+      "sourceId": "jade-beason-100-hooks",
+      "url": "https://www.youtube.com/watch?v=dNT7gd3ulAg",
+      "title": "I studied 100+ hooks, this strategy will make you go viral",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:19:29.265Z",
+      "passes": 5
+    },
+    {
+      "sourceId": "kallaway-irresistible-hooks",
+      "url": "https://www.youtube.com/watch?v=LmXpbP7dD48",
+      "title": "How to Create Irresistible Hooks (and blow up your content)",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:23:44.410Z",
+      "passes": 5
+    },
     {
       "sourceId": "opus-shorts-hook-formulas",
       "url": "https://www.opus.pro/blog/youtube-shorts-hook-formulas",
       "title": "YouTube Shorts Hook Formulas",
       "type": "article",
-      "ingestedAt": "2026-06-23T22:14:50.849Z",
+      "ingestedAt": "2026-06-23T22:34:22.150Z",
       "passes": 1
+    },
+    {
+      "sourceId": "ref-short-a",
+      "url": "https://www.youtube.com/shorts/gwc9_z6Zce0",
+      "title": "Reference Short A",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:25:07.104Z",
+      "passes": 5
+    },
+    {
+      "sourceId": "ref-video-b",
+      "url": "https://www.youtube.com/watch?v=VQMPTvnkEAQ",
+      "title": "Reference video B",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:30:33.790Z",
+      "passes": 5
+    },
+    {
+      "sourceId": "ref-video-c",
+      "url": "https://www.youtube.com/watch?v=xnOe8aA9Pmw",
+      "title": "Reference video C",
+      "type": "video",
+      "ingestedAt": "2026-06-23T22:34:06.558Z",
+      "passes": 5
     },
     {
       "sourceId": "vidiq-viral-hooks",
       "url": "https://vidiq.com/blog/post/viral-video-hooks-youtube-shorts/",
       "title": "Viral Video Hooks for YouTube Shorts",
       "type": "article",
-      "ingestedAt": "2026-06-23T22:15:08.268Z",
+      "ingestedAt": "2026-06-23T22:34:40.367Z",
       "passes": 1
     }
   ]
