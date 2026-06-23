@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — CPD-1068 fleet encode gate + Sidecar B rollout (maya slot 8).
+**Deploy Mode:** dev — Fleet paused (fleetPaused); CPD-1072–1074 committed; sidecar deploy when unpaused.
 
-**Last Updated:** 2026-06-22 (CPD-1068) — Hotfix: revert invalid solo RTSP reconnect flags (ffmpeg exit loop). Kick warm handoff remains on sidecars.
+**Last Updated:** 2026-06-23 (CPD-1077) — fleetPaused operator hold; roster refresh API; mirror disclaimers; solo brand frame; fleet CPU monitor scripts.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -207,6 +207,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **feat(cpd-1072): live mirror disclaimers** — LIVE_MIRROR_DISCLAIMER + grid co-stream block in solo SEO. | seo.js, solo_seo.js, test/solo_seo_fleet.test.js, STATUS.md | — | 2026-06-23 ET |
 | Cursor | **fix(cpd-1067): staging deploy failures** — lazy OpenAI in publish.js (api-staging crash); app-staging build heap 4096MB. | lib/publish.js, render.yaml, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **fix(cpd-1067): restore cwn_production.html + clean fleet panel** — revert to pre-fleet baseline (3a7d0aa3); solo_roster is separate panel hiding grid hot-swap/solo Q1–Q5; fleet auth via lgFetch. | cwn_production.html, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **fix(cpd-1067): broadcast dashboard fleet panel** — repair lgFetch URLs; roster visible in solo_roster; START FLEET A/B; static server on :8765. | cwn_production.html, broadcast_dashboard_static.js, broadcast_dashboard.js, STATUS.md | a40cf71a | 2026-06-21 ET |

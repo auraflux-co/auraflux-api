@@ -18,5 +18,8 @@ describe('solo_seo fleet mode', () => {
     expect(seo.description).toMatch(/ko-fi\.com\/clipzworldnews/);
     expect(seo.description).not.toMatch(/MAIN 2×2 GRID/);
     expect(seo.description).not.toMatch(/no minimum time/i);
+    expect(seo.description).toMatch(/COPYRIGHT & FORMAT NOTICE/);
+    expect(seo.description).toMatch(/NOT rebroadcast, simulcast, or replace licensed sports/i);
+    expect(seo.description).not.toMatch(/restream \/ co-stream format only; we do not rebroadcast sports broadcasts/i);
   });
 });
