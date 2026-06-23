@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-24 (CPD-1086) — Hook Master training corpus: playbook JSON + ingest script (Gemini 5× video extract), playbook wired into Hook Machine + Claude QA prompts.
 **Last Updated:** 2026-06-24 (CPD-1086) — Hook pipeline hardening: Gemini JSON repair + Hook Machine retry, observation completeness + merge token bump, vague-hook local/Claude QA fail, lead-title JSON retry, clip-comp publish-copy timeout 120s; FIX SEO renderQueue fix.
 **Last Updated:** 2026-06-24 (CPD-1086) — Hook Machine: few-shot examples (`clip_hook_examples.json`), 5 ranked Gemini candidates + 3-second rule, curiosity-gap prompts, Claude QA model fix; clip picker groups (saved 4-packs); Lacy registry→Twitch platform fix.
 **Last Updated:** 2026-06-24 (CPD-1085) — Clip comp burned hooks: Gemini multi-pass observation (visual+audio+merge on one upload), Claude pre-burn QA (`clip_hook_qa.js`), strict video rewatch fallback; creative brief → GPT SEO handoff.

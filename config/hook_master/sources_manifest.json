@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "updatedAt": "2026-06-23T22:15:08.270Z",
+  "sources": [
+    {
+      "sourceId": "opus-shorts-hook-formulas",
+      "url": "https://www.opus.pro/blog/youtube-shorts-hook-formulas",
+      "title": "YouTube Shorts Hook Formulas",
+      "type": "article",
+      "ingestedAt": "2026-06-23T22:14:50.849Z",
+      "passes": 1
+    },
+    {
+      "sourceId": "vidiq-viral-hooks",
+      "url": "https://vidiq.com/blog/post/viral-video-hooks-youtube-shorts/",
+      "title": "Viral Video Hooks for YouTube Shorts",
+      "type": "article",
+      "ingestedAt": "2026-06-23T22:15:08.268Z",
+      "passes": 1
+    }
+  ]
+}

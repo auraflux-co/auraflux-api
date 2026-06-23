@@ -1,0 +1,251 @@
+{
+  "version": "2026-06-23",
+  "description": "Hook Master playbook — merged from reference sources (CPD-1086)",
+  "psychology": [
+    {
+      "text": "Stop the scroll in 3 seconds — one question in the viewer's mind with a promised payoff",
+      "sourceId": "jade-beason-100-hooks",
+      "layer": "psychology"
+    },
+    {
+      "text": "Pattern interrupt triggers orienting response — brain notices movement, intense emotion, sudden contrast",
+      "sourceId": "jade-beason-100-hooks",
+      "layer": "visual"
+    },
+    {
+      "text": "Curiosity loop / information gap — text teases without resolving; viewer needs completion",
+      "sourceId": "kallaway-irresistible-hooks",
+      "layer": "text"
+    },
+    {
+      "text": "Loss aversion — tease a mistake, secret, or costly miss; FOMO on the reveal",
+      "sourceId": "kallaway-irresistible-hooks",
+      "layer": "psychology"
+    },
+    {
+      "text": "Mute-first: >60% watch without sound — burned text must carry subtext alone",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "text"
+    },
+    {
+      "text": "Instant clarity — dense staccato words; specific numbers or objects build trust fast",
+      "sourceId": "vidiq-viral-hooks",
+      "layer": "text"
+    },
+    {
+      "text": "Hooks must grab attention within the first three seconds.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "psychology"
+    },
+    {
+      "text": "Create an information gap or unresolved tension.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "psychology"
+    },
+    {
+      "text": "Promise immediate value or transformation.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "psychology"
+    },
+    {
+      "text": "Use unexpected or contradictory statements to break scrolling.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "psychology"
+    },
+    {
+      "text": "Design text hooks for mute-first viewing.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "layer": "text"
+    }
+  ],
+  "formulas": [
+    {
+      "name": "Contrarian",
+      "template": "Stop [common action] — here's why",
+      "sourceId": "opus-shorts-hook-formulas",
+      "examples": [
+        "Wrong Answer Gets Roasted"
+      ]
+    },
+    {
+      "name": "Fortune Teller",
+      "template": "[Trend] will change [niche] forever",
+      "sourceId": "opus-shorts-hook-formulas",
+      "examples": [
+        "This DM Changes Everything"
+      ]
+    },
+    {
+      "name": "Result Preview",
+      "template": "Show outcome tease before process",
+      "sourceId": "opus-shorts-hook-formulas",
+      "examples": [
+        "5'6 Went To The DM"
+      ]
+    },
+    {
+      "name": "Context Lean",
+      "template": "Name the topic in 2–3 words",
+      "sourceId": "kallaway-irresistible-hooks",
+      "examples": [
+        "Height DM On Couch"
+      ]
+    },
+    {
+      "name": "Scroll-Stop Interjection",
+      "template": "Contrast word that breaks rhythm",
+      "sourceId": "kallaway-irresistible-hooks",
+      "examples": [
+        "Wait — Wrong Shirt?"
+      ]
+    },
+    {
+      "name": "Contrarian Snapback",
+      "template": "Setup → interrupt → surprising turn",
+      "sourceId": "kallaway-irresistible-hooks",
+      "examples": [
+        "They Thought It Was Joke"
+      ]
+    },
+    {
+      "name": "Contrarian Hook",
+      "template": "I did X, but Y happened.",
+      "sourceId": "opus-shorts-hook-formulas",
+      "examples": [
+        "I made more money after I stopped posting daily",
+        "This editing mistake actually increased my views by 300%"
+      ]
+    },
+    {
+      "name": "Direct Promise",
+      "template": "This [X] will [Y] in [Z].",
+      "sourceId": "opus-shorts-hook-formulas",
+      "examples": [
+        "This 5-second edit doubled my watch time.",
+        "Master the J-cut in 30 seconds.",
+        "I'm about to show you why everyone's doing captions wrong.",
+        "Watch me turn this disaster into my best video"
+      ]
+    },
+    {
+      "name": "Question Hook",
+      "template": "Why does X happen?",
+      "sourceId": "opus-shorts-hook-formulas",
+      "examples": [
+        "Why do your Shorts die at 40% watch time?",
+        "Ever wonder why big creators never show their full process?",
+        "What if I told you captions are hurting your retention?"
+      ]
+    }
+  ],
+  "anti_patterns": [
+    "Pure Chaos / Intense Face / Sudden Roar without a concrete noun",
+    "Mood-only template hooks that fit any clip",
+    "Copying Twitch clip title or streamer prefix",
+    "Spoiling the punchline or full joke in the hook",
+    "Wildest Moments / You Won't Believe / Chat Goes Wild filler",
+    "Generic filler",
+    "Vague promises (e.g., 'Learn about editing')",
+    "Generic questions (e.g., 'Want more views?')"
+  ],
+  "twitch_comp_adaptations": [
+    "Burned hook = TEXT layer only — visual interrupt comes from the clip itself; text adds curiosity gap",
+    "3–6 words ideal on screen; hard max 12 words / 72 chars",
+    "Anchor every hook to one concrete noun from Gemini observation (object, action, quoted detail)",
+    "Question marks and contrast words boost scroll-stop when observation supports a twist",
+    "Never name the streamer — moment beat only",
+    "Twitch clips are often watched mute-first, making burned text hooks essential for initial engagement.",
+    "Keep burned captions concise (3-8 words) for quick readability and impact.",
+    "Text hooks must create an information gap, trigger curiosity, or promise value instantly to stop the scroll.",
+    "Utilize text overlay as a primary hook mechanism, as visual and auditory cues may be missed."
+  ],
+  "examples": [
+    {
+      "hook": "Wrong Shirt Gift",
+      "why": "Specific embarrassment beat; curiosity gap",
+      "sourceId": "clip_hook_examples",
+      "formula": "Result Preview"
+    },
+    {
+      "hook": "5'6 Went To The DM",
+      "why": "Concrete object + action from observation",
+      "sourceId": "operator",
+      "formula": "Result Preview"
+    },
+    {
+      "hook": "Miami Food Meltdown",
+      "why": "Place + disaster tease",
+      "sourceId": "clip_hook_examples",
+      "formula": "Fortune Teller"
+    },
+    {
+      "hook": "Scream to Manic Goal Grin",
+      "why": "Emotional arc without spoiling goal clip",
+      "sourceId": "clip_hook_examples",
+      "formula": "Context Lean"
+    },
+    {
+      "hook": "I made more money after I stopped posting daily",
+      "why": "Contrarian, creates cognitive dissonance and curiosity.",
+      "sourceId": "opus-shorts-hook-formulas"
+    },
+    {
+      "hook": "This editing mistake actually increased my views by 300%",
+      "why": "Contrarian, specific, counterintuitive, and promises a measurable outcome.",
+      "sourceId": "opus-shorts-hook-formulas"
+    },
+    {
+      "hook": "This 5-second edit doubled my watch time.",
+      "why": "Direct promise, specific, measurable outcome, and time-bound.",
+      "sourceId": "opus-shorts-hook-formulas"
+    },
+    {
+      "hook": "Watch me turn this disaster into my best video",
+      "why": "Direct promise, implies transformation and high stakes.",
+      "sourceId": "opus-shorts-hook-formulas"
+    },
+    {
+      "hook": "I'm about to show you why everyone's doing captions wrong.",
+      "why": "Direct promise, challenges assumption, and teases insider knowledge.",
+      "sourceId": "opus-shorts-hook-formulas"
+    },
+    {
+      "hook": "Master the J-cut in 30 seconds.",
+      "why": "Direct promise, specific skill, and time-bound.",
+      "sourceId": "opus-shorts-hook-formulas"
+    },
+    {
+      "hook": "Why do your Shorts die at 40% watch time?",
+      "why": "Question hook, identifies a specific pain point, and implies a solution.",
+      "sourceId": "opus-shorts-hook-formulas"
+    },
+    {
+      "hook": "Ever wonder why big creators never show their full process?",
+      "why": "Question hook, teases insider knowledge, and creates curiosity.",
+      "sourceId": "opus-shorts-hook-formulas"
+    },
+    {
+      "hook": "What if I told you captions are hurting your retention?",
+      "why": "Question hook, challenges a common assumption, and creates cognitive dissonance.",
+      "sourceId": "opus-shorts-hook-formulas"
+    }
+  ],
+  "citations": [
+    {
+      "sourceId": "opus-shorts-hook-formulas",
+      "url": "https://www.opus.pro/blog/youtube-shorts-hook-formulas",
+      "title": "YouTube Shorts Hook Formulas",
+      "type": "article",
+      "ingestedAt": "2026-06-23T22:14:50.849Z",
+      "passes": 1
+    },
+    {
+      "sourceId": "vidiq-viral-hooks",
+      "url": "https://vidiq.com/blog/post/viral-video-hooks-youtube-shorts/",
+      "title": "Viral Video Hooks for YouTube Shorts",
+      "type": "article",
+      "ingestedAt": "2026-06-23T22:15:08.268Z",
+      "passes": 1
+    }
+  ]
+}
