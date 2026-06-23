@@ -3287,33 +3287,50 @@ function renderNorthStarStats(d) {
   if (progEl) {
     if (p.mode === 'revenue') {
       progEl.innerHTML = '<strong style="color:#c7af4f;">' + fmtUsd(p.avgDailyUsd) + '</strong> / ' + fmtUsd(target) +
-        ' avg/day · <span style="opacity:0.7;">' + pct + '% of north star</span>';
+        ' avg/day · <span style="opacity:0.7;">' + pct + '% of north star</span> · <span style="opacity:0.55;">YouTube ad revenue</span>';
+    } else if (p.mode === 'projected') {
+      var blend = ns.projection && ns.projection.blendedRpm ? fmtUsd(ns.projection.blendedRpm) + '/1k blended' : '';
+      progEl.innerHTML = '<strong style="color:#c7af4f;">' + fmtUsd(p.avgDailyUsd) + '</strong> / ' + fmtUsd(target) +
+        ' projected avg/day · <span style="opacity:0.7;">' + pct + '% of north star</span>' +
+        (blend ? ' · <span style="opacity:0.55;">' + blend + ' (pre-YPP)</span>' : '');
     } else {
       progEl.innerHTML = '<strong style="color:#c7af4f;">' + fmtNum(p.avgDailyViews) + '</strong> avg views/day' +
         ' (proxy toward ' + fmtUsd(target) + ') · <span style="opacity:0.7;">' + pct + '% · target ~' +
-        fmtNum(p.viewsProxyPerDay) + ' views/day</span>';
+        fmtNum(p.viewsNeededForTarget || p.viewsProxyPerDay) + ' views/day</span>';
     }
   }
   if (fillEl) fillEl.style.width = pct + '%';
 
   var y = ns.cadence && ns.cadence.yesterday ? ns.cadence.yesterday : {};
   if (yEl) {
+    var yUsd = p.yesterdayUsd != null ? fmtUsd(p.yesterdayUsd) : null;
+    var yLabel = p.mode === 'projected' ? ' projected' : (p.mode === 'revenue' ? ' est.' : '');
     yEl.textContent = 'Yesterday uploads: ' + (y.streams || 0) + ' live · ' + (y.videos || 0) + ' VOD · ' +
       (y.shorts || 0) + ' Shorts · ' + fmtNum(p.yesterdayViews) + ' views' +
-      (p.yesterdayUsd != null ? ' · ' + fmtUsd(p.yesterdayUsd) + ' est.' : '');
+      (yUsd ? ' · ' + yUsd + yLabel : '');
   }
 
   var bcPct = ns.backCatalogRatio != null ? (ns.backCatalogRatio * 100).toFixed(1) + '%' : '—';
   var bcTarget = ns.backCatalogTargetPct != null ? Math.round(ns.backCatalogTargetPct * 100) : 30;
   var rpm = ns.formatRpm || {};
   var cad = ns.cadence && ns.cadence.avgPerDay ? ns.cadence.avgPerDay : {};
+  var rpmSub = ns.isMonetized ? 'YouTube Analytics' : (ns.projection ? 'assumed pre-YPP' : '—');
+  var projViews = p.viewsNeededForTarget ? fmtNum(p.viewsNeededForTarget) + '/day for $' + target : '—';
 
   if (kpiEl) {
-    kpiEl.innerHTML =
-      nsKpi('28d avg views', fmtNum(p.avgDailyViews), (ns.trend && ns.trend.totals ? fmtNum(ns.trend.totals.views) + ' total' : '')) +
-      nsKpi('Back catalog', bcPct, 'Day 4+ share · target ' + bcTarget + '%+') +
-      nsKpi('VOD RPM', rpm.videos != null ? fmtUsd(rpm.videos) + '/1k' : '—', ns.monetaryScope ? 'from Analytics' : 'reconnect OAuth for $') +
-      nsKpi('Cadence 7d', (cad.shorts || 0).toFixed(1) + ' Shorts/d', 'target ' + (ns.config.cadence.shorts.min) + '–' + (ns.config.cadence.shorts.max));
+    if (p.mode === 'projected') {
+      kpiEl.innerHTML =
+        nsKpi('28d avg views', fmtNum(p.avgDailyViews), (ns.trend && ns.trend.totals ? fmtNum(ns.trend.totals.views) + ' total' : '')) +
+        nsKpi('Projected $/day', fmtUsd(p.avgDailyUsd), pct + '% of $' + target + ' north star') +
+        nsKpi('VOD RPM', rpm.videos != null ? fmtUsd(rpm.videos) + '/1k' : '—', rpmSub) +
+        nsKpi('Views for $' + target, projViews, 'at blended ' + (ns.projection && ns.projection.blendedRpm ? fmtUsd(ns.projection.blendedRpm) : '—') + '/1k');
+    } else {
+      kpiEl.innerHTML =
+        nsKpi('28d avg views', fmtNum(p.avgDailyViews), (ns.trend && ns.trend.totals ? fmtNum(ns.trend.totals.views) + ' total' : '')) +
+        nsKpi('Back catalog', bcPct, 'Day 4+ share · target ' + bcTarget + '%+') +
+        nsKpi('VOD RPM', rpm.videos != null ? fmtUsd(rpm.videos) + '/1k' : '—', rpmSub) +
+        nsKpi('Cadence 7d', (cad.shorts || 0).toFixed(1) + ' Shorts/d', 'target ' + (ns.config.cadence.shorts.min) + '–' + (ns.config.cadence.shorts.max));
+    }
   }
 
   if (chartEl) {
@@ -3363,8 +3380,8 @@ function renderNorthStarStats(d) {
     (ns.alerts || []).forEach(function(a) {
       parts.push('<div class="ns-alert-' + (a.level || 'warn') + '">⚠ ' + a.message + '</div>');
     });
-    if (!ns.monetaryScope && d.analytics && d.analytics.ok) {
-      parts.push('<div>Revenue/RPM: revoke Google access and reconnect at /connect/youtube for monetary scope.</div>');
+    if (!ns.isMonetized && !ns.projection && d.analytics && d.analytics.ok) {
+      parts.push('<div>Connect YouTube Analytics or Refresh stats for projection model.</div>');
     }
     warnEl.innerHTML = parts.join('');
   }

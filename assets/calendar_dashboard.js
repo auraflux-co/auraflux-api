@@ -231,7 +231,8 @@
           ${(avg.videos || 0).toFixed(1)} VOD (${t.videos?.min || 1}–${t.videos?.max || 2}) ·
           ${(avg.streams || 0).toFixed(1)} live (${t.streams?.min || 0}–${t.streams?.max || 2})</div>
         <div style="margin-top:6px;font-size:10px;color:rgba(255,255,255,0.4);">
-          Progress: ${ns.progress?.pctOfTarget || 0}% toward $${ns.config?.dailyUsdTarget || 300}/day
+          ${ns.isMonetized ? 'Revenue' : (ns.projection ? 'Projected' : 'Progress')}: ${ns.progress?.pctOfTarget || 0}% toward $${ns.config?.dailyUsdTarget || 300}/day
+          ${ns.projection && ns.projection.avgDailyUsd != null ? ' · ~' + ns.projection.avgDailyUsd.toFixed(2) + '/day projected' : ''}
           · back catalog ${ns.backCatalogRatio != null ? (ns.backCatalogRatio * 100).toFixed(1) + '%' : '—'}
         </div>
         ${alertHtml}

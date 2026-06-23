@@ -9,6 +9,7 @@ const {
   cadenceAlerts,
   computeDailyTrend,
   aggregateAgeRows,
+  computeProjection,
   buildNorthStarBlock,
 } = require('../lib/services/north_star_stats');
 
@@ -74,24 +75,64 @@ test('aggregateAgeRows builds matrix and back-catalog ratio', () => {
   assert.equal(agg.focusMatrix.videos.day4plus, 100);
 });
 
-test('buildNorthStarBlock includes progress and cadence', () => {
+test('computeProjection uses age matrix views × RPM', () => {
+  const projection = computeProjection({
+    trend: { avgDailyViews: 290 },
+    yesterdayViews: 50,
+    ageAnalytics: {
+      periodMatrix: {
+        shorts: { day1: 1000, day2: 500, day3: 0, day4plus: 0 },
+        videos: { day1: 200, day2: 0, day3: 0, day4plus: 0 },
+        streams: { day1: 800, day2: 0, day3: 0, day4plus: 0 },
+      },
+      focusMatrix: {
+        shorts: { day1: 10, day2: 0, day3: 0, day4plus: 0 },
+        videos: { day1: 0, day2: 0, day3: 0, day4plus: 0 },
+        streams: { day1: 40, day2: 0, day3: 0, day4plus: 0 },
+      },
+    },
+    catalog: {},
+    config: {
+      projectionEnabled: true,
+      dailyUsdTarget: 300,
+      analyticsWindowDays: 28,
+      projectedRpm: { shorts: 0.03, videos: 3.5, streams: 2 },
+    },
+  });
+  assert.ok(projection);
+  assert.equal(projection.source, 'age_matrix');
+  assert.ok(projection.avgDailyUsd > 0);
+  assert.ok(projection.yesterdayUsd > 0);
+  assert.ok(projection.viewsNeededForTarget > 0);
+});
+
+test('buildNorthStarBlock uses projected mode pre-YPP', () => {
   const block = buildNorthStarBlock({
     catalog: {
       items: [{ id: 'x', tab: 'shorts', published: '2026-06-22' }],
+      byTab: { shorts: { views: 1000 }, videos: { views: 200 }, streams: { views: 800 } },
     },
     analytics: {
       ok: true,
       channelSummary: {
-        daily: [{ day: '2026-06-22', views: 500 }],
+        daily: [{ day: '2026-06-22', views: 500, estimatedRevenue: 0 }],
       },
     },
     ageAnalytics: {
       ok: true,
-      focusMatrix: { shorts: { day1: 10, day2: 0, day3: 0, day4plus: 0 }, videos: { day1: 0, day2: 0, day3: 0, day4plus: 0 }, streams: { day1: 0, day2: 0, day3: 0, day4plus: 0 } },
-      periodMatrix: {},
+      periodMatrix: {
+        shorts: { day1: 1000, day2: 0, day3: 0, day4plus: 0 },
+        videos: { day1: 100, day2: 0, day3: 0, day4plus: 0 },
+        streams: { day1: 500, day2: 0, day3: 0, day4plus: 0 },
+      },
+      focusMatrix: {
+        shorts: { day1: 10, day2: 0, day3: 0, day4plus: 0 },
+        videos: { day1: 0, day2: 0, day3: 0, day4plus: 0 },
+        streams: { day1: 40, day2: 0, day3: 0, day4plus: 0 },
+      },
       backCatalogRatio: 0.1,
       shortsDecay: { d1: 5, d2: 2, d3: 0, d4: 0, d5: 0, d6: 0, d7: 0 },
-      formatRpm: { shorts: null, videos: 2.5, streams: null },
+      formatRpm: { shorts: null, videos: null, streams: null },
       hasRevenue: false,
     },
     config: {
@@ -99,6 +140,8 @@ test('buildNorthStarBlock includes progress and cadence', () => {
       viewsProxyPerDay: 100000,
       analyticsWindowDays: 28,
       ageMatrixDays: 28,
+      projectionEnabled: true,
+      projectedRpm: { shorts: 0.03, videos: 3.5, streams: 2 },
       cadence: {
         shorts: { min: 3, max: 5 },
         videos: { min: 1, max: 2 },
@@ -107,7 +150,8 @@ test('buildNorthStarBlock includes progress and cadence', () => {
       backCatalogTargetPct: 30,
     },
   });
-  assert.equal(block.config.dailyUsdTarget, 300);
-  assert.ok(block.progress);
-  assert.ok(block.cadence);
+  assert.equal(block.isMonetized, false);
+  assert.equal(block.progress.mode, 'projected');
+  assert.ok(block.progress.avgDailyUsd > 0);
+  assert.ok(block.projection);
 });
