@@ -207,7 +207,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **feat(cpd-1074/1077): fleet pause + roster refresh + ops monitors** — fleetPaused gate; pause-all API; dashboard FLEET PAUSED; CPU/concurrent watchers. | solo_roster_fleet.json, orchestrator, manager, live_routes, fleet_health, dashboard, monitors, .env.example, STATUS.md | — | 2026-06-23 ET |
+| Cursor | **feat(cpd-1074/1077): fleet pause + roster refresh + ops monitors** — fleetPaused gate; pause-all API; dashboard FLEET PAUSED; CPU/concurrent watchers. | solo_roster_fleet.json, orchestrator, manager, live_routes, fleet_health, dashboard, monitors, .env.example, STATUS.md | 2016eb70 | 2026-06-23 ET |
 | Cursor | **feat(cpd-1073): brand frame overlay** — optional 720p PNG frame on solo ffmpeg before RTMP. | solo_brand_frame.js, solo_publishers.js, test/solo_brand_frame.test.js, STATUS.md | 61097349 | 2026-06-23 ET |
 | Cursor | **feat(cpd-1072): live mirror disclaimers** — LIVE_MIRROR_DISCLAIMER + grid co-stream block in solo SEO. | seo.js, solo_seo.js, test/solo_seo_fleet.test.js, STATUS.md | 0a349cb5 | 2026-06-23 ET |
 | Cursor | **fix(cpd-1067): staging deploy failures** — lazy OpenAI in publish.js (api-staging crash); app-staging build heap 4096MB. | lib/publish.js, render.yaml, STATUS.md | — | 2026-06-21 ET |
