@@ -4,8 +4,8 @@
   "operate": {
     "title": "DIY / API",
     "subtitle": "Automated processing via self-serve dashboard & API access only.",
-    "price": "$499",
-    "credits": "50 credits/month \u00b7 Self-serve instant checkout",
+    "price": "$999",
+    "credits": "400 credits/month · Self-serve instant checkout",
     "features": [
       "Full API access & raw endpoints",
       "Comprehensive developer documentation",
@@ -20,8 +20,8 @@
   "guided": {
     "title": "Collab Assist",
     "subtitle": "Complete platform toolkit plus built-in Collab workspace assistance.",
-    "price": "$999",
-    "credits": "200 credits/month \u00b7 Self-serve subscription upgrade",
+    "price": "$2,499",
+    "credits": "1,200 credits/month · Self-serve subscription upgrade",
     "features": [
       "Everything in Operate",
       "Interactive in-app flows",
@@ -37,7 +37,8 @@
   "managed": {
     "title": "Done-For-You",
     "subtitle": "Full Collab platform plus a dedicated human account manager.",
-    "credits": "1000+ credits/month \u00b7 Custom onboarding & sales intake",
+    "price": "$4,499",
+    "credits": "2,000 credits/month · Custom onboarding & sales intake",
     "features": [
       "Everything in Guided",
       "Dedicated Account Manager",

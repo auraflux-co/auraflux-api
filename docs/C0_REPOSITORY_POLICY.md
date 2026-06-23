@@ -11,7 +11,13 @@
 
 Both currently push to `auraflux-co/auraflux-api`. **Never merge C0 → `main`.** Cherry-pick shared `lib/` fixes only when intentional.
 
-**Status (2026-06-21, CPD-1024):** `~/cwn-c0` is on branch `c0/main` but `origin` still points at `auraflux-api`. Creating `auraflux-co/auraflux-c0` and repointing the remote is the remaining infra step (requires GitHub admin).
+**Status (2026-06-21, CPD-1024):** `auraflux-co/auraflux-c0` repo exists. Repoint `~/cwn-c0` origin from `auraflux-api` → `auraflux-c0` and push `c0/main`:
+
+```bash
+cd ~/cwn-c0
+git remote set-url origin https://github.com/auraflux-co/auraflux-c0.git
+git push -u origin c0/main
+```
 
 ## Long-term: dedicated repo (recommended)
 

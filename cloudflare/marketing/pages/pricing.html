@@ -194,8 +194,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="plan-name">Operate</div>
       <div class="plan-title">DIY / API</div>
       <div class="plan-sub">Automated processing via self-serve dashboard &amp; API access only.</div>
-      <div class="price price-loading" id="price-operate"><span class="price-val">$499</span><span class="period">/mo</span></div>
-      <div class="credits">50 credits/month · Self-serve instant checkout</div>
+      <div class="price price-loading" id="price-operate"><span class="price-val">$999</span><span class="period">/mo</span></div>
+      <div class="credits">400 credits/month · Self-serve instant checkout</div>
       <ul class="features">
         <li>Full API access &amp; raw endpoints</li>
         <li>Comprehensive developer documentation</li>
@@ -217,8 +217,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="plan-name">Guided</div>
       <div class="plan-title">Collab Assist</div>
       <div class="plan-sub">Complete platform toolkit plus built-in Collab workspace assistance.</div>
-      <div class="price price-loading" id="price-guided"><span class="price-val">$999</span><span class="period">/mo</span></div>
-      <div class="credits">200 credits/month · Self-serve subscription upgrade</div>
+      <div class="price price-loading" id="price-guided"><span class="price-val">$2,499</span><span class="period">/mo</span></div>
+      <div class="credits">1,200 credits/month · Self-serve subscription upgrade</div>
       <ul class="features">
         <li>Everything in Operate</li>
         <li>Interactive in-app flows</li>
@@ -239,8 +239,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="plan-name">Managed</div>
       <div class="plan-title">Done-For-You</div>
       <div class="plan-sub">Full Collab platform plus a dedicated human account manager.</div>
-      <div class="price">Custom</div>
-      <div class="credits">1000+ credits/month · Custom onboarding &amp; sales intake</div>
+      <div class="price">$4,499<span class="period">/mo</span></div>
+      <div class="credits">2,000 credits/month · Custom onboarding &amp; sales intake</div>
       <ul class="features">
         <li>Everything in Guided</li>
         <li>Dedicated Account Manager</li>
@@ -327,7 +327,7 @@ ${FRAMER_FOOTER || FALLBACK_FOOTER}
 <script>
 // Try to load live prices; fall back gracefully to hardcoded values
 (function() {
-  var fallback = { operate: '$499', guided: '$999' };
+  var fallback = { operate: '$999', guided: '$2,499' };
   fetch('/api/public/plans')
     .then(function(r) { return r.json(); })
     .then(function(plans) {

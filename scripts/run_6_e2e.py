@@ -31,6 +31,7 @@ Usage:
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 import urllib.request
@@ -747,6 +748,42 @@ Return ONLY JSON:
         return score, score >= 70, f'Gemini QA failed ({e}), scored from observable facts'
 
 
+def run_gemini_ux_gate(job_id, job_result, auth, test_id):
+    """CPD-592: dashboard screenshot + Gemini UX review; caps score without uxPass."""
+    output_url = (job_result.get('outputUrl') or job_result.get('output_url')
+                  or job_result.get('assembledVideoUrl') or '')
+    auth_token = auth.get('Authorization', '').replace('Bearer ', '')
+    app_base = os.environ.get('AURAFLUX_APP_URL', 'https://app.auraflux.co')
+    cmd = [
+        'node', str(REPO_DIR / 'scripts' / 'e2e_gemini_ux_gate.js'),
+        '--job-id', job_id,
+        '--app-base', app_base,
+        '--api-base', BASE,
+        '--run-id', test_id,
+    ]
+    if auth_token:
+        cmd.extend(['--auth-token', auth_token])
+    if output_url:
+        cmd.extend(['--output-url', output_url])
+    try:
+        proc = subprocess.run(cmd, cwd=str(REPO_DIR), capture_output=True, text=True, timeout=300)
+        report_path = REPO_DIR / 'logs' / 'e2e_ux' / test_id / 'ux_report.json'
+        report = {}
+        if report_path.exists():
+            report = json.loads(report_path.read_text())
+        elif proc.stdout.strip():
+            report = json.loads(proc.stdout.strip())
+        if proc.returncode != 0 and not report:
+            return False, 99, (proc.stderr or proc.stdout or 'UX gate failed')[:200]
+        review = report.get('review') or {}
+        cap = int(review.get('scoreCap') or 99)
+        notes = review.get('notes') or 'UX gate passed'
+        ux_ok = bool(review.get('uxPass', proc.returncode == 0))
+        return ux_ok, cap, notes
+    except Exception as e:
+        return False, 99, f'UX gate error: {e}'
+
+
 # ── Test runner ───────────────────────────────────────────────────────────────
 
 def run_test(test, args):
@@ -849,6 +886,14 @@ def run_test(test, args):
         print(f'  7. Gemini QA scoring…')
         score, passed, notes = gemini_qa_score(test, job_result, source_items)
         print(f'     score={score}/100  pass={passed}  {notes[:80]}')
+        print(f'  8. Gemini UX gate (CPD-592)…')
+        ux_pass, score_cap, ux_notes = run_gemini_ux_gate(job_id, job_result, auth, tid)
+        if score is not None and score > score_cap:
+            score = score_cap
+        if not ux_pass:
+            passed = False
+        notes = f'{notes} | UX: {ux_notes[:120]}'
+        print(f'     ux_pass={ux_pass}  score_cap={score_cap}  {ux_notes[:80]}')
     else:
         score, passed, notes = None, final_status in ('complete', 'published'), 'QA skipped'
 

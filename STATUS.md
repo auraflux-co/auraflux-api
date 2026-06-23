@@ -1,8 +1,9 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — Fleet paused (fleetPaused); Sprint 7 pipeline fixes staged (CPD-1013/1014/999/1026).
+**Deploy Mode:** dev — Sprint 7 complete (CPD-318/592/554/974/399/963 docs + UX gate); commit 8d55f51f+ pending push.
 
-**Last Updated:** 2026-06-21 (Sprint 7) — CPD-1014 Twitch/Kick trusted domains; CPD-1013 fail-closed script + publish guard; CPD-999 worker rootCause persist; CPD-1026 poll path regression test.
+**Last Updated:** 2026-06-21 (Sprint 7 close) — pricing sync, E2E Gemini UX gate, ops runbooks, C0 repo policy.
+**Last Updated:** 2026-06-21 (CPD-1013/1014/999/1026) — trusted domains, publish guard, worker rootCause, portal5 poll test.
 **Last Updated:** 2026-06-23 (CPD-1077) — fleetPaused operator hold; roster refresh API; mirror disclaimers; solo brand frame; fleet CPU monitor scripts.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
