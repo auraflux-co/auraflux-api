@@ -1,7 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — Fleet paused (fleetPaused); CPD-1072–1074 committed; sidecar deploy when unpaused.
+**Deploy Mode:** dev — Fleet paused (fleetPaused); Sprint 7 pipeline fixes staged (CPD-1013/1014/999/1026).
 
+**Last Updated:** 2026-06-21 (Sprint 7) — CPD-1014 Twitch/Kick trusted domains; CPD-1013 fail-closed script + publish guard; CPD-999 worker rootCause persist; CPD-1026 poll path regression test.
 **Last Updated:** 2026-06-23 (CPD-1077) — fleetPaused operator hold; roster refresh API; mirror disclaimers; solo brand frame; fleet CPU monitor scripts.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)

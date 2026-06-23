@@ -142,7 +142,7 @@ describe('_extractSourceUrls priority order', () => {
 });
 
 describe('generateJobScript — Gemini analysis failure fallback', () => {
-  test('falls back to placeholder description if geminiAnalyzeClip throws for one clip', async () => {
+  test('throws when geminiAnalyzeClip fails (fail-closed, CPD-1013)', async () => {
     const spec = {
       ...baseSpec,
       sourceConfig: { urls: ['https://ok.example.com/ok.mp4', 'https://bad.example.com/bad.mp4'] },
@@ -151,13 +151,8 @@ describe('generateJobScript — Gemini analysis failure fallback', () => {
       .mockResolvedValueOnce('Analysis of first clip.')
       .mockRejectedValueOnce(new Error('Gemini timeout'));
 
-    await generateJobScript(spec);
-
-    // Should still call geminiScriptGeneration despite one clip failing
-    expect(geminiScriptGeneration).toHaveBeenCalledTimes(1);
-    const userPrompt = geminiScriptGeneration.mock.calls[0][0];
-    expect(userPrompt).toContain('CLIP 1');
-    expect(userPrompt).toContain('CLIP 2');
+    await expect(generateJobScript(spec)).rejects.toThrow(/Gemini clip analysis required but failed/);
+    expect(geminiScriptGeneration).not.toHaveBeenCalled();
   });
 });
 

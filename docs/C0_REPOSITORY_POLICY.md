@@ -11,6 +11,8 @@
 
 Both currently push to `auraflux-co/auraflux-api`. **Never merge C0 → `main`.** Cherry-pick shared `lib/` fixes only when intentional.
 
+**Status (2026-06-21, CPD-1024):** `~/cwn-c0` is on branch `c0/main` but `origin` still points at `auraflux-api`. Creating `auraflux-co/auraflux-c0` and repointing the remote is the remaining infra step (requires GitHub admin).
+
 ## Long-term: dedicated repo (recommended)
 
 1. Create private GitHub repo **`auraflux-c0`** (or `clipzworld-c0`).

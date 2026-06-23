@@ -118,4 +118,12 @@ describe('platformOutcome semantics', () => {
     validOutcomes.forEach((v) => expect(typeof v).toBe('string'));
     expect(validOutcomes).toHaveLength(4);
   });
+
+  test('CPD-1026: polls Upload-Post /uploadposts/status (not legacy /api/status)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const src = fs.readFileSync(path.join(__dirname, '../lib/portals/portal5.js'), 'utf8');
+    expect(src).toContain("UPLOADPOST_STATUS_PATH = process.env.UPLOADPOST_STATUS_PATH || '/uploadposts/status'");
+    expect(src).not.toMatch(/['"]\/api\/status['"]/);
+  });
 });
