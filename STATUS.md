@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-13 (CPD-1060) — North Star reporting date range: preset 7/14/28/90d, end-date picker, `resolveReportingRange`, API query params, sessionStorage prefs on Channel Stats.
 **Last Updated:** 2026-06-23 (CPD-1077) — Fleet pause UI on Broadcast dashboard; held live-grid middleware, post-live, clip comp, and sidecar work committed after fleet stop.
 **Last Updated:** 2026-06-20 (CPD-1053) — C0 streamer pillar: multi-platform clip fetch (`/streamers/clips`), unified `/clip-url`, `/streamers/vods`, `generateTwitch()` off Helix-only path; Lacy→Kick; Confluence HOW page 35291137.
 **Last Updated:** 2026-06-19 (CPD-1049) — Serena onboarded for cwn-c0: project.yml committed, memories (core/pipeline/conventions), serena-pr-review rule uses activate_project(cwn-c0).

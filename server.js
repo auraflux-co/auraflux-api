@@ -2719,11 +2719,17 @@ app.get('/stats/channel', async (req, res) => {
     const { buildChannelStatsReport } = require('./lib/services/channel_stats');
     const refresh = req.query.refresh === '1' || req.query.refresh === 'true';
     const handle = req.query.handle || process.env.YOUTUBE_CHANNEL_HANDLE || 'clipzworldnews';
-    const report = await buildChannelStatsReport({ handle, refresh });
+    const report = await buildChannelStatsReport({
+      handle,
+      refresh,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+      days: req.query.days,
+    });
     res.json(report);
   } catch (e) {
     console.error('[stats/channel]', e.message);
-    res.status(500).json({ ok: false, error: e.message });
+    res.status(400).json({ ok: false, error: e.message });
   }
 });
 
