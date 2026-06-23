@@ -11568,8 +11568,10 @@ function regeneratePublishCopy(jobId) {
         job.publishCopy = resp.publishCopy;
         job.stage = resp.stage;
         job.metadataQaViolations = resp.passed ? null : resp.violations;
+        if (resp.passed) job.status = 'completed';
+        saveJobs();
       }
-      renderJobs();
+      renderQueue();
       navToPublishPrep(jobId);
       if (statusEl) statusEl.textContent = resp.passed ? '✅ SEO QA passed — ready for review' : '⚠️ SEO still has issues: ' + (resp.violations || []).slice(0, 2).join('; ');
     } catch(e) {

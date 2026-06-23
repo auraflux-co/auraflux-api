@@ -27,6 +27,27 @@ test('isJunkHook rejects twitch passthrough junk and streamer-prefixed lines', (
   assert.equal(isJunkHook('Wrong Shirt Gift'), false);
 });
 
+test('isJunkHook rejects vague mood-template hooks', () => {
+  const obs = 'Three men on a couch read a DM about height and laugh.';
+  assert.equal(isJunkHook('Screaming Faces, Pure Chaos', { observation: obs }), true);
+  assert.equal(isJunkHook('Rapid Game Sounds, Intense Face', { observation: obs }), true);
+  assert.equal(isJunkHook('5\'6 Went To The DM', { observation: obs }), false);
+});
+
+test('isObservationComplete rejects truncated observations', () => {
+  const { isObservationComplete } = require('../lib/clip_comp_hooks');
+  const prev = process.env.CLIP_HOOK_OBS_MIN_CHARS;
+  process.env.CLIP_HOOK_OBS_MIN_CHARS = '80';
+  assert.equal(isObservationComplete('They scream with wide-open mouths and often with their'), false);
+  assert.equal(
+    isObservationComplete(
+      'Three men on a couch read a height DM aloud and the group erupts in laughter while one covers his face.',
+    ),
+    true,
+  );
+  process.env.CLIP_HOOK_OBS_MIN_CHARS = prev;
+});
+
 test('hookCopiesClipTitle detects twitch title reuse', () => {
   assert.equal(hookCopiesClipTitle('emily fades in to the old clips', 'emily fades in to the old clips'), true);
   assert.equal(hookCopiesClipTitle('Wrong Shirt Gift', 'emily fades in to the old clips'), false);

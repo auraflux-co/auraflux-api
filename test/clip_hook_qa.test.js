@@ -59,6 +59,23 @@ test('claudeClipHookQA fails empty hook without API call', async () => {
   process.env.ANTHROPIC_API_KEY = prevKey;
 });
 
+test('claudeClipHookQA fails vague mood-only hooks locally', async () => {
+  const prev = process.env.CLIP_HOOK_CLAUDE_QA;
+  const prevKey = process.env.ANTHROPIC_API_KEY;
+  const prevMin = process.env.CLIP_HOOK_OBS_MIN_CHARS;
+  process.env.CLIP_HOOK_CLAUDE_QA = '1';
+  process.env.ANTHROPIC_API_KEY = 'test-key';
+  process.env.CLIP_HOOK_OBS_MIN_CHARS = '80';
+  const obs =
+    'Two men in face paint scream in a stadium as the crowd reacts to a goal and the camera pans across the stands.';
+  const r = await claudeClipHookQA({ observation: obs, hook: 'Screaming Faces, Pure Chaos' });
+  assert.equal(r.passed, false);
+  assert.match(r.violations.join(' '), /vague/);
+  process.env.CLIP_HOOK_CLAUDE_QA = prev;
+  process.env.ANTHROPIC_API_KEY = prevKey;
+  process.env.CLIP_HOOK_OBS_MIN_CHARS = prevMin;
+});
+
 test('clipHookGeminiPassCount clamps 1-3', () => {
   const prev = process.env.CLIP_HOOK_GEMINI_PASSES;
   process.env.CLIP_HOOK_GEMINI_PASSES = '9';

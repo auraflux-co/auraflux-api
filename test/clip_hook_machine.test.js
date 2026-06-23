@@ -40,6 +40,13 @@ test('parseHookMachineResponse parses ranked JSON hooks', () => {
   assert.equal(hooks[0].rank, 1);
 });
 
+test('parseHookMachineResponse parses markdown-fenced JSON', () => {
+  const raw = '```json\n{"hooks":[{"text":"5\'6 Went To The DM","rank":1,"tensionScore":91,"why":"specific"}]}\n```';
+  const hooks = parseHookMachineResponse(raw);
+  assert.equal(hooks.length, 1);
+  assert.match(hooks[0].text, /DM/);
+});
+
 test('sortHookCandidates prefers rank 1 over rank 2', () => {
   const sorted = sortHookCandidates([
     { text: 'B', rank: 2, tensionScore: 99 },
