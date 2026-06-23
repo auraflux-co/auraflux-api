@@ -16,6 +16,20 @@ describe('_ytText', () => {
   });
 });
 
+describe('resolveContainsSyntheticMedia', () => {
+  const { resolveContainsSyntheticMedia } = require('../lib/services/youtube_direct');
+
+  test('twitch-short clip comp is not synthetic', () => {
+    expect(resolveContainsSyntheticMedia({ contentType: 'twitch-short' })).toBe(false);
+  });
+  test('long-form twitch with HeyGen is synthetic', () => {
+    expect(resolveContainsSyntheticMedia({ contentType: 'twitch', heygenUsed: true })).toBe(true);
+  });
+  test('explicit override wins', () => {
+    expect(resolveContainsSyntheticMedia({ contentType: 'twitch-short', containsSyntheticMedia: true })).toBe(true);
+  });
+});
+
 describe('_ytTags', () => {
   test('strips # prefixes and dedupes', () => {
     expect(_ytTags(['#twitch', 'twitch', '#gaming'])).toEqual(['twitch', 'gaming']);
@@ -28,11 +42,11 @@ describe('_ytTags', () => {
     expect(_ytTags(undefined)).toEqual([]);
     expect(_ytTags({ not: 'array' })).toEqual([]);
   });
-  test('enforces the cumulative 500-char API limit with headroom', () => {
+  test('enforces the cumulative 500-char API limit', () => {
     const tags = Array.from({ length: 60 }, (_, i) => `averylongtagname${i}padpadpad`);
     const out = _ytTags(tags);
     const total = out.reduce((s, t) => s + t.length + (t.includes(' ') ? 2 : 0) + 1, 0);
-    expect(total).toBeLessThanOrEqual(450);
+    expect(total).toBeLessThanOrEqual(500);
     expect(out.length).toBeLessThan(60);
   });
   test('caps at 50 tags', () => {

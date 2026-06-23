@@ -1144,7 +1144,7 @@ Run before every upload. Hard fail on any violation — metadata is corrected be
 **YouTube:**
 - Title ≤ 100 chars, no `<` or `>`
 - Description ≤ 5,000 bytes
-- All tags combined ≤ 500 chars
+- All tags combined **490–500 chars** (hard max 500 — use the full tag budget; not required to hit exactly 500)
 - categoryId present and valid
 - If scheduled: `privacyStatus === 'PRIVATE'` and `publishAt` is valid ISO-8601 in the future
 - Thumbnail ≤ 2MB, dimensions ≥ 1280×720

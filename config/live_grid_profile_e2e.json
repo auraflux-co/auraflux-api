@@ -1,0 +1,52 @@
+{
+  "name": "c0-live-grid-e2e-lockdown",
+  "version": "2026-06-18",
+  "description": "Locked E2E profile for nightly 4-up Twitch → YouTube livestream. Apply when grid is OFF: bash scripts/live_grid_e2e_lockdown.sh apply",
+  "baselineProfile": "config/live_grid_profile_baseline.json",
+  "goLiveConfig": "config/live_grid_go_live.json",
+  "restoreCommand": "bash scripts/live_grid_e2e_lockdown.sh restore",
+  "verifyCommand": "bash scripts/live_grid_e2e_lockdown.sh verify",
+  "preflightCommand": "bash scripts/live_grid_e2e_lockdown.sh preflight",
+  "localWatchUrl": "http://127.0.0.1:3000/broadcast/preview-hls/index.m3u8",
+  "envExtra": {
+    "FFMPEG_PATH": "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg",
+    "LIVE_GRID_SCHEDULE_AHEAD": "off",
+    "LIVE_GRID_OPERATOR_MODE": "on"
+  },
+  "ecosystemLocked": {
+    "LIVE_GRID_ENCODER": "videotoolbox",
+    "LIVE_GRID_LOCAL_HLS": "on",
+    "LIVE_GRID_AUDIO_DIRECT": "on",
+    "LIVE_GRID_AUDIO_COPY": "off",
+    "LIVE_GRID_SCHEDULE_AHEAD": "off"
+  },
+  "startPayload": {
+    "createListing": false,
+    "usePrepared": false,
+    "privacyStatus": "private",
+    "goPublicAt": "18:00",
+    "_stickTemplateLocks": true
+  },
+  "runtimeChecks": {
+    "masterEncoder": "videotoolbox",
+    "forbidMasterEncoder": ["libx264"],
+    "requireFfmpegDrawtext": true,
+    "requireRtmpSize": "1920x1080",
+    "forbidSquarePad": true
+  },
+  "e2eSteps": [
+    "bash scripts/live_grid_e2e_lockdown.sh verify",
+    "bash scripts/live_grid_e2e_lockdown.sh preflight",
+    "GO LIVE via dashboard or bash scripts/live_grid_go_live.sh (uses locked start payload)",
+    "Confirm YouTube stream health good + watch URL plays",
+    "At goPublicAt: listing flips public (sidecar _scheduleGoPublic)"
+  ],
+  "doNotChangeForE2E": [
+    "LIVE_GRID_ENCODER=libx264 (CPU starves YouTube — videoIngestionStarved)",
+    "LIVE_GRID_DUAL_BROADCAST=on (second listing + 9:16 leg)",
+    "LIVE_GRID_ALWAYS_FRESH_LISTING=on (duplicate Upcoming listings)",
+    "createListing:true on GO LIVE (same — spawns orphan listings)",
+    "Manual Studio Go Live (API+RTMP path; Studio button not required)",
+    "Poller-driven SEO at create (use config/live_grid_go_live.json template)"
+  ]
+}

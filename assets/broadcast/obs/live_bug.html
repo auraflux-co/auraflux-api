@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ClipzWorld — LIVE</title>
+  <meta name="viewport" content="width=1920, height=1080" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+    .bug {
+      position: absolute;
+      top: 36px; right: 48px;
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 20px 8px 14px;
+      border: 1px solid rgba(229,57,53,0.55);
+      border-radius: 999px;
+      background: rgba(6,10,18,0.75);
+      backdrop-filter: blur(8px);
+    }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #e53935;
+      box-shadow: 0 0 12px rgba(229,57,53,0.8);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.35; } }
+    .bug span {
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 18px; font-weight: 600;
+      letter-spacing: 5px; color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="bug"><div class="dot"></div><span>LIVE</span></div>
+</body>
+</html>

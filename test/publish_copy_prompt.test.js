@@ -49,4 +49,15 @@ describe('publish copy prompt — long-form structured description (CPD-962)', (
     expect(out).toContain('Short (60-90 sec vertical)');
     expect(out).not.toContain('EVERY story');
   });
+
+  test('twitch clip comp prompt treats YT title as rewritten headline not burned caption', () => {
+    const out = buildPublishCopySystemPrompt({
+      ...base,
+      contentType: 'twitch-short',
+      isShort: true,
+    });
+    expect(out).toContain('SEPARATE rewritten headline');
+    expect(out).toContain('do NOT copy burned caption text');
+    expect(out).not.toContain('Burned on-screen hooks use');
+  });
 });

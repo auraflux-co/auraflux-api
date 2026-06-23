@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ClipzWorld — Host Backdrop</title>
+  <meta name="viewport" content="width=1920, height=1080" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #060a12;
+    }
+    .desk-streaming { --accent: #6441A5; --accent-rgb: 100,65,165; }
+    .desk-news { --accent: #c7af4f; --accent-rgb: 199,175,79; }
+    .desk-sports { --accent: #17408B; --accent-rgb: 23,64,139; --accent2: #C9082A; }
+
+    .studio-bg {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(105deg, rgba(var(--accent-rgb), 0.14) 0%, transparent 42%),
+        radial-gradient(ellipse 90% 80% at 72% 35%, #22304b 0%, #0d1424 55%, #060a12 100%);
+    }
+    .grid {
+      position: absolute; inset: 0; opacity: 0.04;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    /* Camera zone — position OBS webcam over this panel (left ~920×690 at ~80,120) */
+    .cam-frame {
+      position: absolute;
+      left: 64px; top: 96px;
+      width: 952px; height: 720px;
+      border-radius: 12px;
+      border: 2px solid rgba(var(--accent-rgb), 0.45);
+      box-shadow:
+        inset 0 0 80px rgba(0,0,0,0.35),
+        0 0 60px rgba(var(--accent-rgb), 0.12);
+      background: linear-gradient(145deg, #0a1018 0%, #121a28 100%);
+    }
+    .cam-frame::before {
+      content: '';
+      position: absolute; inset: 8px;
+      border-radius: 8px;
+      border: 1px dashed rgba(var(--accent-rgb), 0.2);
+      pointer-events: none;
+    }
+    .cam-hint {
+      position: absolute;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 14px; letter-spacing: 4px; text-transform: uppercase;
+      color: rgba(255,255,255,0.12);
+      pointer-events: none;
+    }
+    .brand-panel {
+      position: absolute;
+      right: 0; top: 0; bottom: 0; width: 720px;
+      padding: 72px 64px 64px 48px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .logo-mark {
+      width: 88px; height: 88px;
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 40px; color: var(--accent); letter-spacing: 3px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 32px rgba(var(--accent-rgb), 0.25);
+    }
+    .network {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 22px; letter-spacing: 10px; color: rgba(255,255,255,0.45);
+      margin-bottom: 32px;
+    }
+    .show-title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 72px; line-height: 0.95;
+      color: #fff; letter-spacing: 4px;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.5);
+      max-width: 580px;
+    }
+    .desk-tag {
+      margin-top: 28px;
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 24px; font-weight: 600;
+      letter-spacing: 8px; text-transform: uppercase;
+      color: var(--accent);
+    }
+    .accent-bar {
+      position: absolute;
+      left: 0; top: 0; bottom: 0; width: 6px;
+      background: linear-gradient(180deg, var(--accent), transparent 80%);
+    }
+    .desk-sports .accent-bar {
+      background: linear-gradient(180deg, #17408B 0%, #C9082A 50%, transparent 100%);
+    }
+    .bottom-strip {
+      position: absolute;
+      left: 0; right: 0; bottom: 0; height: 120px;
+      background: linear-gradient(0deg, rgba(6,10,18,0.95) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .gold-line {
+      position: absolute;
+      left: 64px; right: 64px; bottom: 118px; height: 1px;
+      background: linear-gradient(90deg, var(--accent), transparent 70%);
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body class="desk-news" id="root">
+  <div class="studio-bg"></div>
+  <div class="grid"></div>
+  <div class="accent-bar"></div>
+  <div class="cam-frame"><div class="cam-hint">Host camera</div></div>
+  <div class="brand-panel">
+    <div class="logo-mark">CW</div>
+    <div class="network">CLIPZ WORLD</div>
+    <div class="show-title" id="show-title">BECAUSE THE LIGHT WAS ON</div>
+    <div class="desk-tag" id="desk-tag">News desk</div>
+  </div>
+  <div class="gold-line"></div>
+  <div class="bottom-strip"></div>
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var desk = (q.get('desk') || 'news').toLowerCase();
+      var presets = {
+        streaming: { show: 'TWITCH SOUP', tag: 'Streaming desk', cls: 'desk-streaming' },
+        news: { show: 'BECAUSE THE LIGHT WAS ON', tag: 'News desk', cls: 'desk-news' },
+        sports: { show: 'SPORTS DESK', tag: 'Sports desk', cls: 'desk-sports' }
+      };
+      var p = presets[desk] || presets.news;
+      var root = document.getElementById('root');
+      root.className = p.cls;
+      document.getElementById('show-title').textContent = q.get('show') || p.show;
+      document.getElementById('desk-tag').textContent = p.tag;
+    })();
+  </script>
+  <!-- OBS: Browser 1920×1080 bottom layer. Webcam on top — NO chroma key. Align cam to left panel. -->
+</body>
+</html>

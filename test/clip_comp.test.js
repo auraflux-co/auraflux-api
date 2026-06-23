@@ -44,3 +44,19 @@ test('publish content type passes through job card type', () => {
   assert.equal(resolveClipCompPublishContentType('news-short'), 'news-short');
   assert.equal(resolveClipCompPublishContentType('twitch-short'), 'twitch-short');
 });
+
+test('appendClipCompTitleSuffix adds " and more..." for multi-clip comps', () => {
+  const { appendClipCompTitleSuffix } = require('../lib/clip_comp');
+  assert.equal(
+    appendClipCompTitleSuffix('ExtraEmily Wrong Shirt Gift #Shorts', { clipCount: 4 }),
+    'ExtraEmily Wrong Shirt Gift and more... #Shorts',
+  );
+  assert.equal(
+    appendClipCompTitleSuffix('Single Clip Moment #Shorts', { clipCount: 1 }),
+    'Single Clip Moment #Shorts',
+  );
+  assert.equal(
+    appendClipCompTitleSuffix('Already Has and more... #Shorts', { clipCount: 4 }),
+    'Already Has and more... #Shorts',
+  );
+});

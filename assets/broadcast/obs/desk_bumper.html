@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ClipzWorld — Desk Bumper</title>
+  <meta name="viewport" content="width=1920, height=1080" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1920px; height: 1080px; overflow: hidden; background: #060a12; }
+    .desk-news { --accent: #c7af4f; }
+    .desk-sports { --accent: #17408B; }
+    .desk-streaming { --accent: #6441A5; }
+    .bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, #22304b 0%, #060a12 75%);
+    }
+    .bar {
+      position: absolute; left: 0; right: 0; top: 50%; height: 4px;
+      background: var(--accent, #c7af4f);
+      transform: scaleX(0);
+      animation: bar 0.5s ease-out 0.1s forwards;
+    }
+    @keyframes bar { to { transform: scaleX(1); } }
+    .label {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -80px);
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 72px; letter-spacing: 8px; color: #fff;
+      opacity: 0;
+      animation: up 0.45s ease-out 0.35s forwards;
+    }
+    .sub {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, 20px);
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 28px; letter-spacing: 10px; text-transform: uppercase;
+      color: var(--accent, #c7af4f);
+      opacity: 0;
+      animation: up 0.45s ease-out 0.55s forwards;
+    }
+    @keyframes up {
+      from { opacity: 0; transform: translate(-50%, calc(-80px + 16px)); }
+      to { opacity: 1; transform: translate(-50%, -80px); }
+    }
+    .sub { animation-name: upSub; }
+    @keyframes upSub {
+      from { opacity: 0; transform: translate(-50%, 36px); }
+      to { opacity: 1; transform: translate(-50%, 20px); }
+    }
+    .fade {
+      position: absolute; inset: 0; background: #060a12;
+      opacity: 0; animation: out 0.4s ease-in 4.2s forwards;
+    }
+    @keyframes out { to { opacity: 1; } }
+  </style>
+</head>
+<body class="desk-news" id="root">
+  <div class="bg"></div>
+  <div class="bar"></div>
+  <div class="label" id="show">BECAUSE THE LIGHT WAS ON</div>
+  <div class="sub" id="next">Up next</div>
+  <div class="fade"></div>
+  <script>
+    var presets = {
+      news: { show: 'BECAUSE THE LIGHT WAS ON', sub: 'News desk', cls: 'desk-news' },
+      sports: { show: 'SPORTS DESK', sub: 'Sports desk', cls: 'desk-sports' },
+      streaming: { show: 'TWITCH SOUP', sub: 'Streaming desk', cls: 'desk-streaming' }
+    };
+    var q = new URLSearchParams(location.search);
+    var desk = (q.get('desk') || 'news').toLowerCase();
+    var p = presets[desk] || presets.news;
+    document.getElementById('root').className = p.cls;
+    document.getElementById('show').textContent = q.get('show') || p.show;
+    document.getElementById('next').textContent = q.get('sub') || p.sub;
+  </script>
+</body>
+</html>

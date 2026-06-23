@@ -2112,6 +2112,7 @@ app.get('/jobs', (req, res) => {
     if (status === 'dismissed') return false;
     const stage = job.stage || inferJobStage(job);
     if (stage === 'published') return false;
+    if (stage === 'failed') return !!job.clipsOnly;
     return allowedStages.has(stage);
   }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
 
@@ -2526,6 +2527,13 @@ async function _runGate5ForCard(jobId) {
   const card = persistedJobs[jobId];
   if (!card) throw new Error(`Job not found: ${jobId}`);
 
+  const { isClipCompPublishHeld } = require('./lib/clip_comp');
+  if (isClipCompPublishHeld(card) && !card._forcePostLivePublish) {
+    throw new Error(
+      'Publish held — use Twitch show cut with host reaction, not raw news/sports comp: POST /job/:id/release-post-live-publish'
+    );
+  }
+
   if (card.stage === 'published') {
     console.log(`[run-gate5] ${jobId}: already published — skipping duplicate upload`);
     return;
@@ -2582,6 +2590,7 @@ async function _runGate5ForCard(jobId) {
     contentType,
     clipsOnly: !!card.clipsOnly,
     driveUrl,
+    publishSeoAudit: card.publishSeoAudit || savedOutputs.publishSeoAudit || null,
     state: {
       ...(card.state || {}),
       savedOutputs: { ...savedOutputs, publishCopy, thumbnailDriveUrl }
@@ -2619,6 +2628,12 @@ async function _runGate5ForCard(jobId) {
   }
 
   card.gate5Result = g5Result;
+  if (g5Result.publishSeoAudit) {
+    card.publishSeoAudit = g5Result.publishSeoAudit;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.publishSeoAudit = g5Result.publishSeoAudit;
+  }
   if (g5Result.passed) {
     card.stage = 'published';
     card.publishedAt = new Date().toISOString();
@@ -2636,7 +2651,7 @@ async function _runGate5ForCard(jobId) {
 // ── Direct YouTube OAuth (CPD-923) ──────────────────────────────────────────
 // One-time connect: visit /connect/youtube in a browser, authorize the
 // ClipzWorld channel, tokens persist in data/youtube_tokens.json.
-// Publish path stays Upload-Post until YOUTUBE_DIRECT_PUBLISH=true is set.
+// Publish path stays YouTube Data API (OAuth at /connect/youtube). Upload-Post = TikTok/IG only.
 
 function _ytRedirectUri(req) {
   return `${req.protocol}://${req.get('host')}/connect/youtube/callback`;
@@ -2673,7 +2688,7 @@ app.get('/connect/youtube/callback', async (req, res) => {
     } catch { /* channel info is cosmetic */ }
     ytDirect.saveTokens(stored);
     console.log(`[youtube_direct] Connected channel: ${stored.channelTitle || stored.channelId || 'unknown'}`);
-    res.send(`<h2>✅ YouTube connected</h2><p>Channel: <b>${stored.channelTitle || stored.channelId || 'unknown'}</b></p><p>Set <code>YOUTUBE_DIRECT_PUBLISH=true</code> in .env to enable direct publishing (after thumbnail parity test).</p>`);
+    res.send(`<h2>✅ YouTube connected</h2><p>Channel: <b>${stored.channelTitle || stored.channelId || 'unknown'}</b></p><p>Gate 5 uploads YouTube via the Data API using these tokens. Upload-Post is only used for TikTok and Instagram.</p>`);
   } catch (e) {
     console.error('[youtube_direct] OAuth exchange failed:', e.response?.data || e.message);
     res.status(500).send(`Token exchange failed: ${e.response?.data?.error_description || e.message}`);
@@ -2689,11 +2704,14 @@ app.get('/connect/youtube/status', (req, res) => {
     channelTitle: t?.channelTitle || null,
     channelId: t?.channelId || null,
     connectedAt: t?.connectedAt || null,
-    directPublishEnabled: process.env.YOUTUBE_DIRECT_PUBLISH === 'true',
+    directPublishEnabled: true,
     analyticsScope: scope.includes('yt-analytics.readonly'),
     needsAnalyticsReconnect: ytDirect.isConnected() && !scope.includes('yt-analytics.readonly'),
   });
 });
+
+// Post-live VOD registry — channel lives + claims CSV + Gemini review (skip claimed ranges)
+app.use(require('./lib/routes/post_live'));
 
 // GET /stats/channel — Videos + Shorts + Streams catalog; YouTube Analytics when OAuth connected
 app.get('/stats/channel', async (req, res) => {
@@ -3569,7 +3587,11 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
     }
 
     const cc = buildChannelConfig();
-    ensurePublishMetadataComplete(publishCopy, { streamers, cc, isShort });
+    const regenClipCount = (card.orderedClipUrls || []).length
+      || (card.segments || []).filter((s) => s.type === 'source_clip').length
+      || items.length
+      || 0;
+    ensurePublishMetadataComplete(publishCopy, { streamers, cc, isShort, clipCount: regenClipCount });
     publishCopy = normalizePublishCopyShape(publishCopy);
 
     const jobSpec = { ...card, contentType, formType: isShort ? 'short' : 'compilation', streamers, items };
@@ -3579,6 +3601,11 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
     card.state = card.state || {};
     card.state.savedOutputs = card.state.savedOutputs || {};
     card.state.savedOutputs.publishCopy = publishCopy;
+    try {
+      const { recordPublishCopySnapshot } = require('./lib/publish_seo_audit');
+      card.publishSeoAudit = recordPublishCopySnapshot(card.publishSeoAudit, publishCopy, 'regenerated');
+      card.state.savedOutputs.publishSeoAudit = card.publishSeoAudit;
+    } catch (_a) { /* non-fatal */ }
     card.metadataQaViolations = metaCheck.passed ? null : metaCheck.violations;
     card.stage = metaCheck.passed ? 'awaiting_review' : 'metadata_review';
     saveJobCard(jobId, card);
@@ -3622,6 +3649,20 @@ app.post('/job/:id/run-gate5', async (req, res) => {
   const stage = card.stage || '';
   if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked', 'awaiting_review', 'metadata_review', 'publish_scheduled'].includes(stage)) {
     return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/heygen_done/awaiting_review/metadata_review/publish_scheduled/gate5_forced/gate5_failed/gate5_running` });
+  }
+
+  const { isClipCompPublishHeld, releaseClipCompPostLiveHold } = require('./lib/clip_comp');
+  if (isClipCompPublishHeld(card) && !req.body.releasePostLivePublish && !req.body.forcePublish) {
+    return res.status(409).json({
+      ok: false,
+      code: 'publish_hold_post_live',
+      error: 'News/sports comp held — do not publish fetched source clips. After live, attach driveUrl from your Twitch cut (host on camera reacting), then release publish.',
+      publishHold: 'post_live',
+    });
+  }
+  if (req.body.releasePostLivePublish) {
+    releaseClipCompPostLiveHold(card);
+    saveJobCard(jobId, card);
   }
 
   // Allow caller to inject driveUrl / assembledPath when Gate 3b blocked the normal save path
@@ -4149,7 +4190,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
   // ── Fire /assemble (internal axios call so all middleware runs normally) ───
   const port = process.env.PORT || 3000;
   const { buildClipCompDesignSpec, resolveClipCompPublishContentType, buildClipCompDeliverySpec, buildClipCompPublishOrder } = require('./lib/clip_comp');
-  const { generateClipCompHooks, buildHookScript } = require('./lib/clip_comp_hooks');
+  const { generateClipCompHooks, buildClipCompTitleContext } = require('./lib/clip_comp_hooks');
   let reassembleDesignSpec = card.designSpec || null;
   let reassembleFullScript = card.script?.raw || card.script || null;
   let reassembleClipHookTitles = null;
@@ -4182,7 +4223,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
       log: (m) => console.log(`[reassemble] ${jobId}${m}`),
     });
     card.clipHookTitles = reassembleClipHookTitles;
-    reassembleFullScript = buildHookScript(orderedClips.length ? orderedClips : segmentData, reassembleClipHookTitles);
+    reassembleFullScript = buildClipCompTitleContext(orderedClips.length ? orderedClips : segmentData, reassembleClipHookTitles);
   }
   saveJobCard(jobId, card);
 
@@ -4255,13 +4296,86 @@ app.post('/job/:id/reassemble', async (req, res) => {
 // News VOD (long form) keeps the script + HeyGen avatar path; shorts stay clips-only.
 app.post('/generate-clip-comp', async (req, res) => {
   const { buildClipCompDesignSpec, resolveClipCompPublishContentType, buildClipCompDeliverySpec, buildClipCompPublishOrder } = require('./lib/clip_comp');
-  const clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
+  let clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
   if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
   if (clips.length > 10) return res.status(400).json({ error: `Too many clips (${clips.length} > 10 max)` });
 
   const contentType = ['twitch-short', 'news-short', 'sports-short'].includes(req.body.contentType)
     ? req.body.contentType : 'twitch-short';
-  const platforms = Array.isArray(req.body.platforms) && req.body.platforms.length ? req.body.platforms : ['tiktok'];
+
+  const postLiveVodSessionId = req.body.postLiveVodSessionId || null;
+  let postLiveMuteRanges = Array.isArray(req.body.postLiveMuteRanges) ? req.body.postLiveMuteRanges : [];
+  if (postLiveVodSessionId) {
+    try {
+      const { getSession } = require('./lib/post_live/vod_sessions');
+      const plSession = getSession(postLiveVodSessionId);
+      if (plSession?.muteRanges?.length && !postLiveMuteRanges.length) {
+        postLiveMuteRanges = plSession.muteRanges;
+      }
+    } catch (_pl) { /* non-fatal */ }
+  }
+
+  const isPostLiveVodClip = (c) => {
+    if (postLiveVodSessionId || c.postLiveVod) return true;
+    const page = c.pageUrl || c.url || c.clipUrl || '';
+    return /youtube\.com|youtu\.be/.test(page)
+      && (c.trimStart != null || c.trimEnd != null);
+  };
+
+  // Server-side Twitch resolve — skip post-live YouTube VOD segments (yt-dlp extract at assembly).
+  if (contentType === 'twitch-short') {
+    const { resolveClipUrl } = require('./lib/pickers/streamers/clip_resolve');
+    const resolved = [];
+    for (let i = 0; i < clips.length; i++) {
+      const c = clips[i];
+      const pageUrl = c.pageUrl || c.url || c.clipUrl || '';
+      const rawUrl = c.url || c.clipUrl || '';
+      if (isPostLiveVodClip(c)) {
+        resolved.push({
+          ...c,
+          url: pageUrl || rawUrl,
+          clipUrl: pageUrl || rawUrl,
+          pageUrl: pageUrl || rawUrl,
+          postLiveVod: true,
+          trimStart: c.trimStart != null ? Number(c.trimStart) : 0,
+          trimEnd: c.trimEnd != null ? Number(c.trimEnd) : (Number(c.trimStart) || 0) + 60,
+        });
+        continue;
+      }
+      const looksSignedMp4 = /\.mp4(\?|$)/i.test(rawUrl) && /sig=/.test(rawUrl);
+      if (looksSignedMp4) {
+        resolved.push({ ...c, pageUrl: pageUrl || rawUrl, url: rawUrl, clipUrl: rawUrl });
+        continue;
+      }
+      try {
+        const r = await resolveClipUrl({ url: pageUrl || rawUrl, pageUrl, platform: 'twitch' }, { twitchClient });
+        if (!r.mp4Url || r.quality === 'page-url-ytdlp') {
+          return res.status(422).json({
+            error: `Could not resolve Twitch clip ${i + 1} to MP4 — try re-picking clips`,
+            clip: pageUrl || rawUrl,
+            quality: r.quality || null,
+          });
+        }
+        resolved.push({
+          ...c,
+          url: r.mp4Url,
+          clipUrl: r.mp4Url,
+          pageUrl: r.pageUrl || pageUrl || rawUrl,
+          title: c.title || r.title || '',
+          thumbnailUrl: c.thumbnailUrl || '',
+        });
+      } catch (resolveErr) {
+        return res.status(422).json({
+          error: `Could not resolve Twitch clip ${i + 1}: ${resolveErr.message}`,
+          clip: pageUrl || rawUrl,
+        });
+      }
+    }
+    clips = resolved;
+  }
+  const platforms = Array.isArray(req.body.platforms) && req.body.platforms.length
+    ? req.body.platforms
+    : ['youtube', 'tiktok', 'instagram'];
   const scheduledAtRaw = req.body.scheduledAt;
   let scheduledAt = null;
   if (scheduledAtRaw) {
@@ -4300,9 +4414,10 @@ app.post('/generate-clip-comp', async (req, res) => {
       clipCount: clips.length,
       sourceContentType: contentType,
     });
+    const deliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType });
     jobSpec = updateJobSpec(jobSpec.jobId, {
       clipsOnly: true,
-      deliverySpec: buildClipCompDeliverySpec({ platforms, scheduledAt }),
+      deliverySpec,
       order: { publish: buildClipCompPublishOrder() },
       // Spec-driven routing: declare the stages this job actually skips. Clips-only
       // comps have no script generation and no HeyGen avatar — the spec must say so.
@@ -4347,8 +4462,13 @@ app.post('/generate-clip-comp', async (req, res) => {
     game:        c.game || '',
     views:       c.views || c.viewCount || null,
     orientation: c.orientation || 'landscape',
-    pillarboxFilter: c.pillarboxFilter != null ? c.pillarboxFilter : null
+    pillarboxFilter: c.pillarboxFilter != null ? c.pillarboxFilter : null,
+    trimStart:   c.trimStart != null ? Number(c.trimStart) : undefined,
+    trimEnd:     c.trimEnd != null ? Number(c.trimEnd) : undefined,
+    postLiveVod: !!c.postLiveVod,
   }));
+
+  const compDeliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType });
 
   const card = {
     id:          jobId,
@@ -4358,7 +4478,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     streamers,
     platforms,
     scheduledPublishAt: scheduledAt,
-    deliverySpec: buildClipCompDeliverySpec({ platforms, scheduledAt }),
+    deliverySpec: compDeliverySpec,
+    publishHold: compDeliverySpec.publishHold || null,
     publishPrivacy: 'private',
     repurposedFrom: req.body.repurposedFrom || null, // CPD-998: spawned from a published longform
     specId:      jobSpec?.jobId || null,
@@ -4379,9 +4500,18 @@ app.post('/generate-clip-comp', async (req, res) => {
     heygen: { videoJobs: [] },
     designSpec: jobSpec?.designSpec || buildClipCompDesignSpec({ clipCount: clips.length, sourceContentType: contentType }),
     clipCompProfile: 'streamer',
+    postLiveVodSessionId: postLiveVodSessionId || null,
+    postLiveMuteRanges: postLiveMuteRanges.length ? postLiveMuteRanges : null,
     _assemblyRetryCount: 1
   };
   saveJobCard(jobId, card);
+
+  try {
+    const { recordCompClipsForLiveShow } = require('./lib/live_show/pack');
+    recordCompClipsForLiveShow({ contentType, clips, jobId, title });
+  } catch (packErr) {
+    console.warn('[/generate-clip-comp] live show pack update failed (non-fatal):', packErr.message);
+  }
 
   const segmentData = orderedClipUrls.map(c => ({
     url:             c.clipUrl,
@@ -4391,6 +4521,9 @@ app.post('/generate-clip-comp', async (req, res) => {
     clipUrl:         c.clipUrl,
     pillarboxFilter: c.pillarboxFilter,
     orientation:     c.orientation,
+    trimStart:       c.trimStart,
+    trimEnd:         c.trimEnd,
+    postLiveVod:     c.postLiveVod,
     clipTimingTargets: [],
     clipTimingFormat: 'none'
   }));
@@ -4413,6 +4546,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     streamers,
     clipsOnly:     true,
     orderedClipUrls,
+    postLiveVodSessionId: postLiveVodSessionId || null,
+    postLiveMuteRanges: postLiveMuteRanges.length ? postLiveMuteRanges : null,
     expectedClips: segmentData.length,
     designSpec:    card.designSpec,
     captionText:   null, // CPD-935: no hook caption — whisper captions only
@@ -4432,7 +4567,7 @@ app.post('/generate-clip-comp', async (req, res) => {
 
   setImmediate(async () => {
     try {
-      const { generateClipCompHooks, buildHookScript } = require('./lib/clip_comp_hooks');
+      const { generateClipCompHooks, buildClipCompTitleContext } = require('./lib/clip_comp_hooks');
       const hookItems = clips.map(c => ({
         title: c.title || '',
         headline: c.title || '',
@@ -4449,7 +4584,7 @@ app.post('/generate-clip-comp', async (req, res) => {
       });
       card.clipHookTitles = clipHookTitles;
       payload.clipHookTitles = clipHookTitles;
-      payload.fullScript = buildHookScript(orderedClipUrls, clipHookTitles);
+      payload.fullScript = buildClipCompTitleContext(orderedClipUrls, clipHookTitles);
       payload.regenerateClipHooks = false;
       saveJobCard(jobId, card);
       await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
@@ -4457,6 +4592,53 @@ app.post('/generate-clip-comp', async (req, res) => {
     } catch (err) {
       console.error(`[clip-comp] ${jobId}: /assemble failed — ${err.message}`);
     }
+  });
+});
+
+// ── Operator live show pack (comps → OBS rundown + YT cut workflow) ─────────
+app.get('/live-show/pack', (req, res) => {
+  try {
+    const { loadPack } = require('./lib/live_show/pack');
+    const date = req.query.date || new Date().toISOString().slice(0, 10);
+    res.json({ ok: true, pack: loadPack(date) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message || String(e) });
+  }
+});
+
+app.get('/live-show/rundown', (req, res) => {
+  try {
+    const { loadPack, buildRundown } = require('./lib/live_show/pack');
+    const date = req.query.date || new Date().toISOString().slice(0, 10);
+    const pack = loadPack(date);
+    res.json({ ok: true, rundown: buildRundown(pack), pack });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message || String(e) });
+  }
+});
+
+// POST /job/:id/release-post-live-publish — clear copyright hold on news/sports clip comps
+app.post('/job/:id/release-post-live-publish', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  const { releaseClipCompPostLiveHold, isClipCompPublishHeld } = require('./lib/clip_comp');
+  if (!isClipCompPublishHeld(card) && !card.postLivePublishReleased) {
+    return res.json({ ok: true, jobId, message: 'No post-live hold on this job — publish already allowed.' });
+  }
+  releaseClipCompPostLiveHold(card);
+  if (req.body.driveUrl) {
+    card.driveUrl = req.body.driveUrl;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.driveUrl = req.body.driveUrl;
+  }
+  saveJobCard(jobId, card);
+  res.json({
+    ok: true,
+    jobId,
+    stage: card.stage,
+    message: 'Post-live publish released — APPROVE & PUBLISH or run-gate5 when ready.',
   });
 });
 
@@ -4662,11 +4844,39 @@ app.get('/market-keys', (req, res) => {
   });
 });
 
+// Fleet roster + Render sidecar URLs for broadcast dashboard (CPD-1067)
+app.get('/broadcast-config.js', (req, res) => {
+  const fs = require('fs');
+  const os = require('os');
+  const prodRoot = process.env.CWN_PRODUCTION_ROOT || path.join(os.homedir(), 'cwn-production');
+  const fleetPath = path.join(prodRoot, 'config', 'solo_roster_fleet.json');
+  let fleet = {};
+  try {
+    fleet = JSON.parse(fs.readFileSync(fleetPath, 'utf8'));
+  } catch (_) { /* optional */ }
+  const sidecarA = (process.env.LIVE_SIDECAR_URL || fleet.sidecars?.[0]?.url || 'https://auraflux-broadcast-staging.onrender.com').replace(/\/$/, '');
+  const sidecarB = (process.env.LIVE_SIDECAR_B_URL || fleet.sidecars?.[1]?.url || 'https://auraflux-broadcast-staging-b.onrender.com').replace(/\/$/, '');
+  const opSecret = process.env.BROADCAST_OPERATOR_SECRET || '';
+  res.set('Cache-Control', 'no-store');
+  res.type('application/javascript');
+  res.send(
+    `window.__BROADCAST_SIDECAR_URL__=${JSON.stringify(sidecarA)};\n`
+    + `window.__BROADCAST_SIDECAR_B_URL__=${JSON.stringify(sidecarB)};\n`
+    + `window.__BROADCAST_OPERATOR_SECRET__=${JSON.stringify(opSecret)};\n`
+    + `window.__FLEET_ROSTER_CONFIG__=${JSON.stringify(fleet)};\n`
+    + `window.__BROADCAST_DASHBOARD_BUILD__=${JSON.stringify(new Date().toISOString().slice(0, 19))};\n`,
+  );
+});
+
 // Serve assets folder for images (Bobby G, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // Serve dashboard — no-cache so hard refresh always picks up latest on-disk version
 app.get('/', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(path.join(__dirname, 'cwn_production.html'));
+});
+app.get('/broadcast', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'cwn_production.html'));
 });

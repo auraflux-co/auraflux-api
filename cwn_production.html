@@ -87,6 +87,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .gen-picker-card .picker-source { font-size:8px; font-family:monospace; margin-bottom:4px; }
 .gen-picker-card .picker-when { font-size:8px; color:rgba(255,200,80,0.65); font-family:monospace; margin-bottom:4px; }
 .gen-picker-card .picker-dur { font-size:9px; font-family:monospace; font-weight:700; }
+.gen-comp-lineup { border:1px solid rgba(145,70,255,0.35); border-radius:8px; padding:10px 12px; background:rgba(145,70,255,0.06); flex-shrink:0; }
+.gen-comp-lineup-head { font-size:10px; letter-spacing:1px; color:rgba(145,70,255,0.85); font-family:monospace; margin-bottom:8px; }
+.gen-comp-lineup-grid { display:flex; flex-direction:column; gap:6px; }
+.gen-comp-slot { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid rgba(255,255,255,0.08); border-radius:6px; background:rgba(0,0,0,0.25); }
+.gen-comp-slot-num { font-size:11px; font-weight:700; color:#9146ff; min-width:18px; font-family:monospace; }
+.gen-comp-slot-thumb { width:48px; height:27px; object-fit:cover; border-radius:3px; background:#1a2035; flex-shrink:0; }
+.gen-comp-slot-meta { flex:1; min-width:0; }
+.gen-comp-slot-name { font-size:11px; font-weight:700; color:#fff; }
+.gen-comp-slot-title { font-size:9px; color:rgba(255,255,255,0.45); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gen-comp-slot-actions { display:flex; gap:4px; flex-shrink:0; }
+.gen-comp-slot-actions button { font-size:10px; padding:2px 6px; }
 .gen-picker-card .picker-check { position:absolute; top:6px; left:6px; z-index:2; }
 .gen-picker-scroll { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:4px; padding:4px; border:1px solid rgba(199,175,79,0.15); border-radius:8px; background:#060a12; }
 .gen-picker-list-row { display:grid; grid-template-columns:28px 40px minmax(0,1fr) 32px; align-items:center; gap:10px; padding:10px 12px; border:1px solid rgba(255,255,255,0.06); border-radius:6px; background:#0d1524; cursor:pointer; transition:border-color 0.15s,background 0.15s; min-height:52px; }
@@ -229,6 +240,13 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .card-header { background:linear-gradient(90deg,#131f38,#0f1a30); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(199,175,79,0.1); }
 .card-title { font-family:'Bebas Neue',sans-serif; font-size:14px; color:#c7af4f; letter-spacing:2px; }
 .card-body { padding:14px 16px; }
+.postlive-candidates-open { border-color:rgba(199,175,79,0.55) !important; box-shadow:0 0 0 1px rgba(199,175,79,0.35), 0 8px 24px rgba(0,0,0,0.35); }
+.postlive-session-active td { background:rgba(199,175,79,0.08) !important; }
+.postlive-cand-row { display:grid; grid-template-columns:minmax(200px,280px) 1fr; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); align-items:start; }
+@media (max-width:700px) { .postlive-cand-row { grid-template-columns:1fr; } }
+.postlive-cand-video { background:#000; border-radius:6px; overflow:hidden; border:1px solid rgba(255,255,255,0.08); min-height:120px; }
+.postlive-cand-video video { width:100%; max-height:220px; display:block; background:#000; }
+.postlive-cand-video .postlive-prev-placeholder { padding:24px 10px; text-align:center; font-size:10px; color:rgba(255,255,255,0.35); }
 
 /* Live Grid quadrant tiles — mirrors on-stream gold AUDIO badge */
 .lg-quad-tile { position:relative; padding:8px; border-radius:4px; background:#0d1524; min-height:72px; }
@@ -491,6 +509,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="sidebar-lbl">TOOLS</div>
       <button class="sidebar-btn" onclick="nav('publish')"><span class="icon">Y</span> Publish Prep</button>
       <button class="sidebar-btn" onclick="nav('stats')"><span class="icon">S</span> Channel Stats</button>
+      <button class="sidebar-btn" onclick="nav('postlive')"><span class="icon">L</span> Post-Live VODs</button>
       <button class="sidebar-btn" onclick="nav('abtest')"><span class="icon">T</span> Thumbnails</button>
       <button class="sidebar-btn" onclick="nav('settings')"><span class="icon">~</span> Settings</button>
     </div>
@@ -784,10 +803,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <main class="gen-main">
                 <div class="gen-main-head">
                   <h3 class="gen-main-title" id="twitch-main-title">CLIP PICKER</h3>
-                  <span class="gen-main-hint">Checked clips feed VOD, Short, and Comp</span>
+                  <span class="gen-main-hint">Checked clips feed VOD, Short, and Comp — reorder comp lineup below picker</span>
                 </div>
                 <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, then <strong>Pick clips</strong>.</div>
                 <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
+                <div id="twitch-comp-lineup" class="gen-comp-lineup" style="display:none;"></div>
               </main>
             </div>
           </div>
@@ -823,7 +843,37 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="sec-title">BROADCAST CONTROL <span class="badge">LIVE GRID + CLIPZWORLD TV</span></div>
 
       <div id="bc-cal-banner" class="bc-cal-banner" style="display:none;"></div>
+      <div id="bc-live-show-pack" class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-title">OPERATOR LIVE SHOW</div>
+          <span class="tag tag-pending" id="lsp-status-tag"><span class="tag-dot"></span> —</span>
+        </div>
+        <div class="card-body" style="font-size:11px;line-height:1.6;color:rgba(255,255,255,0.55);">
+          <div style="margin-bottom:8px;">
+            <b style="color:#c7af4f;">News → Sports → Streamers</b> — generate <b>Comp</b> on each Generate pillar (4 clips, all 3 platforms).
+            Same source clips feed tonight&apos;s OBS rundown; portrait comps publish to YouTube / TikTok / Instagram.
+            <span style="color:#d7bde2;">News/Sports: comp for live + SEO; publish from Twitch cut (you reacting) — not raw source clips.</span>
+          </div>
+          <div id="lsp-summary">Loading pack…</div>
+          <div class="btn-row" style="margin-top:10px;">
+            <a class="btn btn-outline btn-sm" href="/assets/broadcast/live_show_rundown.html" target="_blank" rel="noopener">OPEN RUNDOWN</a>
+            <button type="button" class="btn btn-outline btn-sm" onclick="liveShowPackRefresh()">↻ REFRESH</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="liveShowPackDownload()">DOWNLOAD JSON</button>
+          </div>
+        </div>
+      </div>
       <div id="bc-ops-bar" class="bc-ops-bar">Loading ops…</div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="card-title">YOUTUBE HOURLY ANALYTICS</div>
+          <select id="bc-analytics-days" onchange="broadcastRefreshAnalytics()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;">
+            <option value="7">7 days</option><option value="14" selected>14 days</option><option value="28">28 days</option>
+          </select>
+        </div>
+        <div class="card-body" id="bc-analytics-body" style="padding:0 0 16px;">Loading analytics…</div>
+      </div>
+
       <div id="bc-stream-health-panel" class="bc-stream-health-panel" style="display:none;">
         <div class="bc-stream-health-head">
           <span style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.5);">LIVE STREAM DIAGNOSTICS</span>
@@ -845,10 +895,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <!-- LIVE GRID -->
       <div class="card" style="margin-bottom:16px;">
         <div class="card-header">
-          <div class="card-title">LIVE GRID</div>
+          <div class="card-title" id="lg-card-title">SOLO ROSTER FLEET</div>
           <span class="tag tag-pending" id="lg-status-tag"><span class="tag-dot"></span> OFFLINE</span>
         </div>
         <div class="card-body">
+          <div id="lg-grid-mode-panel" style="display:none;">
           <div id="lg-listing-bar" style="margin-bottom:12px;padding:10px 12px;background:rgba(199,175,79,0.08);border:1px solid rgba(199,175,79,0.35);border-radius:4px;">
             <div style="font-size:10px;color:rgba(255,255,255,0.55);line-height:1.5;">
               <b style="color:#c7af4f;">GO LIVE</b> reuses your current YouTube listing when possible — one listing per session, no duplicate Upcoming spam.
@@ -946,28 +997,62 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               </div>
             </div>
           </div>
+          </div><!-- /lg-grid-mode-panel -->
+
+          <div id="lg-fleet-mode-panel" style="margin-bottom:10px;font-size:10px;color:rgba(199,175,79,0.95);line-height:1.65;">
+            <div id="lg-fleet-pause-banner" style="display:none;margin-bottom:8px;padding:8px 10px;border:1px solid rgba(200,160,80,0.45);border-radius:4px;background:rgba(80,60,20,0.35);color:#eca;">
+              <b>FLEET PAUSED</b> — <span id="lg-fleet-pause-reason">All solo mirror slots held. Clear fleetPaused in roster config before START FLEET.</span>
+            </div>
+            <div style="font-weight:700;margin-bottom:4px;">SOLO ROSTER FLEET · 10 slots (Sidecar A 1–5 · Sidecar B 6–10)</div>
+            <div id="lg-fleet-sidecar-a"></div>
+            <div id="lg-fleet-sidecar-b"></div>
+            <div id="lg-fleet-health-panel" style="margin-top:10px;padding:8px;border:1px solid rgba(199,175,79,0.25);border-radius:4px;background:rgba(0,0,0,0.2);">
+              <div style="font-weight:700;margin-bottom:6px;color:#c7af4f;">FLEET HEALTH · auto-refresh 45s</div>
+              <div id="lg-fleet-health-summary" style="margin-bottom:6px;color:rgba(255,255,255,0.55);">Loading…</div>
+              <div id="lg-fleet-health-slots"></div>
+              <div id="lg-kick-oauth-row" style="display:none;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);">
+                <b>Kick OAuth:</b> fleet roster is Twitch-only (Kick removed 2026-06-22)
+              </div>
+            </div>
+            <div style="margin-top:4px;color:rgba(255,255,255,0.45);">Orchestrator polls Twitch ~45s — live source → YouTube slot public. Tier C (option C) 1080p @ 6800k on both sidecars.</div>
+          </div>
+
           <div class="btn-row" style="flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px;">
+            <input type="hidden" id="bc-program-mode" value="solo_roster" />
             <select id="lg-privacy" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
               <option value="private" selected>PRIVATE (rehearsal)</option>
               <option value="unlisted">UNLISTED</option>
               <option value="public">PUBLIC</option>
             </select>
-            <label style="font-size:10px;color:rgba(255,255,255,0.55);display:inline-flex;align-items:center;gap:4px;cursor:pointer;" title="Full ffmpeg encode to localhost HLS only — zero YouTube listing">
+            <label style="font-size:10px;color:rgba(255,255,255,0.55);display:none;align-items:center;gap:4px;cursor:pointer;" id="lg-local-only-wrap" title="Full ffmpeg encode to localhost HLS only — zero YouTube listing">
               <input type="checkbox" id="lg-local-only" style="accent-color:#c7af4f;" onchange="liveGridRehearsalToggle()" />
               Local only
             </label>
-            <a id="lg-local-watch-link" href="/broadcast/local-watch" target="_blank" rel="noopener" style="font-size:10px;color:#c7af4f;letter-spacing:0.5px;">▶ LOCAL WATCH</a>
-            <label style="font-size:10px;color:rgba(255,255,255,0.45);">Mode:</label>
-            <select id="lg-seo-mode" title="Controls quadrants + YouTube title, description, and thumbnail" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
+            <a id="lg-local-watch-link" href="/broadcast/local-watch" target="_blank" rel="noopener" style="display:none;font-size:10px;color:#c7af4f;letter-spacing:0.5px;">▶ LOCAL WATCH</a>
+            <label id="lg-seo-mode-wrap" style="display:none;font-size:10px;color:rgba(255,255,255,0.45);">Mode:</label>
+            <select id="lg-seo-mode" title="Controls quadrants + YouTube title, description, and thumbnail" style="display:none;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 10px;font-size:12px;">
               <option value="grid" selected>Twitch multiview grid</option>
               <option value="news_desk">News desk</option>
               <option value="event_night">Event night</option>
             </select>
-            <button id="lg-start-btn" class="btn btn-gold" onclick="liveGridStart()">GO LIVE</button>
+            <button id="lg-start-btn" class="btn btn-gold" style="display:none;" onclick="liveGridStart()">GO LIVE</button>
+            <button id="lg-fleet-start-a" class="btn btn-outline" style="border-color:#c7af4f;color:#c7af4f;" onclick="liveGridStartFleet('a')">START FLEET · SIDECAR A</button>
+            <button id="lg-fleet-start-b" class="btn btn-outline" style="border-color:#c7af4f;color:#c7af4f;" onclick="liveGridStartFleet('b')">START FLEET · SIDECAR B</button>
+            <button id="lg-fleet-refresh" class="btn btn-outline btn-sm" onclick="liveGridRefresh()">REFRESH FLEET</button>
             <button id="lg-panic-mute-btn" class="btn btn-outline" style="display:none;border-color:rgba(255,120,120,0.5);color:#e88;" onclick="liveGridPanicMute()" title="Instant copyright-safe audio — Epidemic Sound bed or mute">🔇 PANIC MUTE</button>
             <button id="lg-unmute-btn" class="btn btn-outline" style="display:none;font-size:11px;" onclick="liveGridUnmute()" title="Restore Twitch quadrant audio">🔊 RESTORE AUDIO</button>
             <button id="lg-stop-btn" class="btn btn-outline" style="display:none;border-color:#a33;color:#e88;" onclick="liveGridStop()">END STREAM</button>
           </div>
+          <details class="dash-details" id="lg-local-grid-advanced" style="margin-top:8px;">
+            <summary>Advanced: local 4× Twitch grid (localhost rehearsal)</summary>
+            <div style="padding-top:8px;font-size:10px;color:rgba(255,255,255,0.45);line-height:1.5;">
+              Fleet is the default operator surface. Use this only for local multiview rehearsal — not Render sidecars.
+              <div class="btn-row" style="margin-top:8px;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="liveGridUseLocalGrid()">SHOW LOCAL GRID</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="liveGridUseFleet()">BACK TO FLEET</button>
+              </div>
+            </div>
+          </details>
           <details class="dash-details">
             <summary>News &amp; event options <span class="dash-readonly-note">only when using news_desk or event_night</span></summary>
             <div style="padding-top:10px;">
@@ -1055,17 +1140,78 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="card-header" style="margin-bottom:8px;"><div class="card-title">ON AIR / PROGRAM</div></div>
             <div class="card-body" id="bc-on-air" style="padding:0 0 8px;">—</div>
             <div id="bc-daypart-timeline" class="bc-daypart-timeline" style="padding:0 0 16px;"></div>
-            <div class="card-header" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-              <div class="card-title">YOUTUBE HOURLY ANALYTICS</div>
-              <select id="bc-analytics-days" onchange="broadcastRefreshAnalytics()" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;">
-                <option value="7">7 days</option><option value="14" selected>14 days</option><option value="28">28 days</option>
-              </select>
-            </div>
-            <div class="card-body" id="bc-analytics-body" style="padding:0 0 16px;">Expand to load analytics.</div>
             <div class="card-header" style="margin-bottom:8px;"><div class="card-title">ALLOWLIST &amp; PLATFORM RULES</div></div>
             <div class="card-body" id="bc-allowlist-body" style="padding:0;">—</div>
           </div>
         </details>
+      </div>
+    </div>
+
+    <!-- POST-LIVE VOD PAGE -->
+    <div class="page stats-page" id="page-postlive">
+      <div class="stats-head">
+        <div>
+          <h2 class="gen-page-title" style="margin:0;">Post-Live VODs</h2>
+          <div id="postlive-subtitle" style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">Pull YouTube lives → claims CSV → Gemini watches VOD samples + learns from recent clip comps</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="postLiveLoadVods(true)">↻ Refresh lives</button>
+          <button class="btn btn-outline btn-sm" onclick="postLiveSyncSessions()">⇄ Sync to sessions</button>
+          <a class="btn btn-outline btn-sm" href="/post-live/claims/template.csv" download style="text-decoration:none;line-height:1.6;">↓ Claims CSV template</a>
+        </div>
+      </div>
+      <div id="postlive-banner" class="stats-banner stats-banner-warn" style="margin-bottom:12px;">
+        <strong>Workflow:</strong> 1) Sync lives from @clipzworldnews · 2) Export claims from YouTube Studio into CSV · 3) Upload CSV · 4) Run Gemini review · 5) Pick clips (picker wiring next).
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-header"><div class="card-title">UPLOAD CLAIMS CSV</div></div>
+        <div class="card-body" style="font-size:12px;line-height:1.7;">
+          <p style="color:rgba(255,255,255,0.55);margin:0 0 10px;">
+            Columns: <code style="color:#c7af4f;">title, url, streamer, claim_start, claim_end, action, notes</code>.
+            <code>action=exclude</code> → Gemini skips that window.
+            <code>action=mute</code> → skip in Gemini + saved for later audio mute on export.
+            Omit claim columns to register a clean VOD only.
+          </p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <input type="file" id="postlive-csv-file" accept=".csv,text/csv" onchange="postLiveCsvSelected(this)">
+            <label style="font-size:11px;color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="postlive-replace-claims"> Replace existing claims (don’t merge)
+            </label>
+            <button class="btn btn-gold btn-sm" onclick="postLiveImportCsv()">Import CSV</button>
+            <span id="postlive-import-status" style="font-size:11px;color:rgba(255,255,255,0.4);"></span>
+          </div>
+        </div>
+      </div>
+      <div class="sec-title">YOUTUBE LIVE ARCHIVE <span class="badge" id="postlive-vod-count">0</span></div>
+      <div class="stats-table-wrap" style="margin-bottom:18px;">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Title</th><th>Streamer</th><th>Duration</th><th>Views</th><th>Published</th><th></th>
+          </tr></thead>
+          <tbody id="postlive-vod-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Click Refresh lives…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="sec-title">SESSIONS (CLAIMS + GEMINI) <span class="badge" id="postlive-session-count">0</span></div>
+      <div class="stats-table-wrap">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Title</th><th>Claims</th><th>Analyze</th><th>Candidates</th><th>Updated</th><th></th>
+          </tr></thead>
+          <tbody id="postlive-session-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">No sessions yet</td></tr></tbody>
+        </table>
+      </div>
+      <div id="postlive-candidates" style="margin-top:16px;display:none;" class="card postlive-candidates-panel">
+        <div class="card-header">
+          <div class="card-title" id="postlive-candidates-title">GEMINI CANDIDATES</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" onclick="postLiveSelectAllCandidates(true)">Select all</button>
+            <button class="btn btn-outline btn-sm" onclick="postLiveSelectAllCandidates(false)">Clear</button>
+            <button class="btn btn-outline btn-sm" onclick="postLivePreviewSelected()">▶ Load MP4 previews</button>
+            <button class="btn btn-outline btn-sm" onclick="postLiveSendToStreamerPicker()">→ Streamers picker</button>
+            <button class="btn btn-gold btn-sm" onclick="postLiveDispatchComp()">CLIPS COMP</button>
+          </div>
+        </div>
+        <div class="card-body" id="postlive-candidates-body" style="font-size:12px;"></div>
       </div>
     </div>
 
@@ -1219,6 +1365,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             </div>
           </div>
           <div id="pub-status" style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;"></div>
+          <div id="pub-seo-audit" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(52,152,219,0.06);border:1px solid rgba(52,152,219,0.2);border-radius:4px;font-size:10px;font-family:monospace;color:rgba(255,255,255,0.55);white-space:pre-wrap;"></div>
         </div>
       </div>
 
@@ -2320,6 +2467,7 @@ function nav(page) {
   if (page === 'publish') pubPopulateJobDropdown();
   if (page === 'abtest') thumbPopulateDropdown();
   if (page === 'stats') statsPageInit();
+  if (page === 'postlive') postLivePageInit();
 }
 
 function switchTab(name) {
@@ -2407,6 +2555,530 @@ function exportChannelStatsCsv() {
 function statsTabPill(tab) {
   var cls = tab === 'shorts' ? 'stats-tab-shorts' : (tab === 'streams' ? 'stats-tab-streams' : 'stats-tab-videos');
   return '<span class="stats-tab-pill ' + cls + '">' + tab + '</span>';
+}
+
+// ── POST-LIVE VOD PAGE ─────────────────────────────────────────────
+window._postLiveVods = [];
+window._postLiveSessions = [];
+window._postLiveCsvText = '';
+window._postLiveActiveSession = null;
+window._postLiveCandidateSelection = {};
+window._postLiveViewVideoId = null;
+
+function postLiveEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;');
+}
+
+function postLivePageInit() {
+  postLiveLoadVods(false);
+  postLiveLoadSessions();
+}
+
+function postLiveFmtDuration(sec) {
+  if (!sec) return '—';
+  var h = Math.floor(sec / 3600);
+  var m = Math.floor((sec % 3600) / 60);
+  if (h > 0) return h + 'h ' + m + 'm';
+  return m + 'm';
+}
+
+function postLiveLoadVods(refresh) {
+  var tbody = g('postlive-vod-body');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Loading YouTube lives…</td></tr>';
+  fetch(CFG.ffmpegUrl + '/post-live/vods?limit=40' + (refresh ? '&refresh=1' : ''))
+    .then(function(r) {
+      return r.text().then(function(t) {
+        try { return JSON.parse(t); } catch (e) {
+          throw new Error(r.status === 404
+            ? 'Post-live API not loaded — run: pm2 restart auraflux (not broadcast-sidecar)'
+            : 'Server returned non-JSON (HTTP ' + r.status + ')');
+        }
+      });
+    })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'fetch failed');
+      window._postLiveVods = d.vods || [];
+      if (g('postlive-vod-count')) g('postlive-vod-count').textContent = String(window._postLiveVods.length);
+      if (g('postlive-subtitle')) {
+        g('postlive-subtitle').textContent = '@' + (d.handle || 'clipzworldnews') + ' · ' + window._postLiveVods.length + ' streaming lives' +
+          (d.stale ? ' (cached)' : '') + ' · updated ' + new Date(d.fetchedAt || Date.now()).toLocaleString();
+      }
+      postLiveRenderVods();
+    })
+    .catch(function(e) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:#e74c3c;">' + e.message + '</td></tr>';
+    });
+}
+
+function postLiveRenderVods() {
+  var tbody = g('postlive-vod-body');
+  if (!tbody) return;
+  var rows = window._postLiveVods || [];
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">No live archive items found</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(v) {
+    return '<tr>'
+      + '<td style="max-width:320px;"><a href="' + v.url + '" target="_blank" style="color:#fff;">' + (v.title || v.videoId) + '</a></td>'
+      + '<td>' + (v.streamer || '—') + '</td>'
+      + '<td>' + postLiveFmtDuration(v.durationSec) + '</td>'
+      + '<td>' + fmtNum(v.views) + '</td>'
+      + '<td>' + fmtDate(v.published) + '</td>'
+      + '<td><button class="btn btn-outline btn-sm" onclick="postLiveRegisterVod(\'' + v.videoId + '\')">Register</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function postLiveRegisterVod(videoId) {
+  var v = (window._postLiveVods || []).find(function(x) { return x.videoId === videoId; });
+  if (!v) return;
+  fetch(CFG.ffmpegUrl + '/post-live/vods/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(v)
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (!d.ok) throw new Error(d.error || 'register failed');
+    postLiveLoadSessions();
+    alert('Registered: ' + (d.session.title || videoId));
+  }).catch(function(e) { alert(e.message); });
+}
+
+function postLiveSyncSessions() {
+  var st = g('postlive-import-status');
+  if (st) st.textContent = 'Syncing…';
+  fetch(CFG.ffmpegUrl + '/post-live/vods/sync-from-channel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh: true, limit: 40 })
+  }).then(function(r) {
+    return r.text().then(function(t) {
+      try { return JSON.parse(t); } catch (e) {
+        throw new Error(r.status === 404
+          ? 'Post-live API not loaded — pm2 restart auraflux'
+          : 'Server returned non-JSON (HTTP ' + r.status + ')');
+      }
+    });
+  }).then(function(d) {
+    if (!d.ok) throw new Error(d.error || 'sync failed');
+    if (st) st.textContent = 'Synced ' + d.synced + ' live VOD(s)';
+    postLiveLoadSessions();
+    postLiveLoadVods(false);
+  }).catch(function(e) {
+    if (st) st.textContent = 'Sync failed: ' + e.message;
+  });
+}
+
+function postLiveLoadSessions() {
+  fetch(CFG.ffmpegUrl + '/post-live/sessions')
+    .then(function(r) {
+      return r.text().then(function(t) {
+        try { return JSON.parse(t); } catch (e) {
+          if (r.status === 404) throw new Error('Post-live API not loaded — pm2 restart auraflux');
+          throw new Error('Server returned non-JSON (HTTP ' + r.status + ')');
+        }
+      });
+    })
+    .then(function(d) {
+      window._postLiveSessions = d.sessions || [];
+      if (g('postlive-session-count')) g('postlive-session-count').textContent = String(window._postLiveSessions.length);
+      postLiveRenderSessions();
+    })
+    .catch(function() {});
+}
+
+function postLiveRenderSessions() {
+  var tbody = g('postlive-session-body');
+  if (!tbody) return;
+  var rows = window._postLiveSessions || [];
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Sync lives or import claims CSV</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(s) {
+    var ex = (s.excludeRanges || []).length;
+    var mu = (s.muteRanges || []).length;
+    var claims = ex + mu;
+    var st = s.analyzeStatus || 'idle';
+    var stColor = st === 'ready' ? '#2ecc71' : (st === 'running' ? '#c7af4f' : (st === 'failed' ? '#e74c3c' : 'rgba(255,255,255,0.4)'));
+    var rowCls = window._postLiveViewVideoId === s.videoId ? ' class="postlive-session-active"' : '';
+    return '<tr' + rowCls + ' data-video-id="' + postLiveEsc(s.videoId) + '">'
+      + '<td style="max-width:280px;"><a href="' + s.url + '" target="_blank" style="color:#fff;">' + (s.title || s.videoId) + '</a>'
+      + (s.streamer ? '<div style="font-size:10px;color:rgba(255,255,255,0.35);">' + s.streamer + '</div>' : '') + '</td>'
+      + '<td>' + claims + ' <span style="font-size:9px;opacity:0.6;">(' + ex + ' ex / ' + mu + ' mute)</span></td>'
+      + '<td style="color:' + stColor + ';">' + st + (s.analyzeError ? ' — ' + s.analyzeError.slice(0, 40) : '') + '</td>'
+      + '<td>' + ((s.candidates || []).length) + '</td>'
+      + '<td>' + fmtDate(s.updatedAt) + '</td>'
+      + '<td style="white-space:nowrap;">'
+      + '<button class="btn btn-gold btn-sm" onclick="postLiveAnalyze(\'' + s.videoId + '\')">Review</button> '
+      + '<button class="btn btn-outline btn-sm" onclick="postLiveShowCandidates(\'' + s.videoId + '\')">View</button>'
+      + '</td></tr>';
+  }).join('');
+}
+
+function postLiveCsvSelected(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() { window._postLiveCsvText = reader.result || ''; };
+  reader.readAsText(file);
+}
+
+function postLiveImportCsv() {
+  var csv = window._postLiveCsvText;
+  if (!csv) { alert('Choose a CSV file first'); return; }
+  var st = g('postlive-import-status');
+  if (st) st.textContent = 'Importing…';
+  var replaceClaims = !!(g('postlive-replace-claims') && g('postlive-replace-claims').checked);
+  fetch(CFG.ffmpegUrl + '/post-live/claims/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ csv: csv, replaceClaims: replaceClaims })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (!d.ok) throw new Error(d.error || 'import failed');
+    var msg = 'Imported ' + d.imported + ' session(s)';
+    if (d.errors && d.errors.length) msg += ' · ' + d.errors.length + ' row warning(s)';
+    if (st) st.textContent = msg;
+    postLiveLoadSessions();
+  }).catch(function(e) {
+    if (st) st.textContent = 'Import failed: ' + e.message;
+  });
+}
+
+function postLiveAnalyze(videoId) {
+  var st = g('postlive-import-status');
+  if (st) st.textContent = 'Gemini review running — extracting VOD samples + loading comp style (~3-8 min)…';
+  fetch(CFG.ffmpegUrl + '/post-live/sessions/' + encodeURIComponent(videoId) + '/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clipCount: 8 })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (!d.ok) throw new Error(d.error || 'analyze failed');
+    postLiveLoadSessions();
+    setTimeout(postLivePollSession, 8000, videoId, 0);
+  }).catch(function(e) { alert(e.message); });
+}
+
+function postLivePollSession(videoId, attempt) {
+  fetch(CFG.ffmpegUrl + '/post-live/sessions/' + encodeURIComponent(videoId))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var s = d.session;
+      if (!s) return;
+      postLiveLoadSessions();
+      if (s.analyzeStatus === 'running' && attempt < 40) {
+        var stRun = g('postlive-import-status');
+        if (stRun) stRun.textContent = 'Gemini watching VOD samples + comp references… (' + Math.round((attempt + 1) * 8 / 60) + ' min)';
+        setTimeout(postLivePollSession, 8000, videoId, attempt + 1);
+      } else if (s.analyzeStatus === 'ready') {
+        postLiveShowCandidates(videoId);
+      }
+    });
+}
+
+function postLiveShowCandidates(videoId) {
+  window._postLiveViewVideoId = videoId;
+  postLiveRenderSessions();
+  var st = g('postlive-import-status');
+  if (st) st.textContent = 'Loading Gemini candidates…';
+  var panel = g('postlive-candidates');
+  if (panel) {
+    panel.style.display = 'block';
+    panel.classList.add('postlive-candidates-open');
+  }
+  fetch(CFG.ffmpegUrl + '/post-live/sessions/' + encodeURIComponent(videoId))
+    .then(function(r) {
+      return r.text().then(function(t) {
+        try { return { ok: r.ok, status: r.status, data: JSON.parse(t) }; }
+        catch (e) {
+          throw new Error(r.status === 404
+            ? 'Post-live API not loaded — pm2 restart auraflux'
+            : 'Server returned non-JSON (HTTP ' + r.status + ')');
+        }
+      });
+    })
+    .then(function(resp) {
+      if (!resp.ok || !resp.data || !resp.data.session) {
+        throw new Error((resp.data && resp.data.error) || 'Session not found');
+      }
+      var s = resp.data.session;
+      window._postLiveActiveSession = s;
+      if (!window._postLiveCandidateSelection[s.videoId]) {
+        window._postLiveCandidateSelection[s.videoId] = {};
+      }
+      var body = g('postlive-candidates-body');
+      var title = g('postlive-candidates-title');
+      if (title) {
+        var styleHint = s.styleContext && s.styleContext.compCount
+          ? ' · style from ' + s.styleContext.compCount + ' recent comp(s), ~' + (s.styleContext.preferredClipDurationSec || 60) + 's clips'
+          : '';
+        var mediaHint = s.mediaContext && s.mediaContext.mode === 'multimodal'
+          ? ' · watched ' + (s.mediaContext.vodSampleCount || 0) + ' VOD sample(s)'
+            + (s.mediaContext.referenceCompIncluded ? ' + ref comp' : '')
+            + ((s.mediaContext.retentionPeakCount || s.retentionContext?.peakCount)
+              ? ' · ' + (s.mediaContext.retentionPeakCount || s.retentionContext.peakCount) + ' retention peak(s)'
+              : '')
+          : (s.retentionContext && s.retentionContext.peakCount
+            ? ' · ' + s.retentionContext.peakCount + ' retention peak(s)'
+            : '');
+        title.textContent = 'GEMINI CANDIDATES — ' + (s.title || s.videoId) + styleHint + mediaHint;
+      }
+      if (!panel || !body) {
+        alert('Candidates panel missing — hard refresh the page (Cmd+Shift+R)');
+        return;
+      }
+      var cands = s.candidates || [];
+      if (s.analyzeStatus === 'running') {
+        body.innerHTML = '<p style="color:#c7af4f;">Gemini still running… wait for Analyze = <strong>ready</strong>, then click View again.</p>';
+        if (st) st.textContent = 'Gemini still running…';
+        postLiveScrollToCandidates();
+        return;
+      }
+      if (!cands.length) {
+        body.innerHTML = '<p style="color:rgba(255,255,255,0.55);">No candidates yet.</p>'
+          + '<p style="color:rgba(255,255,255,0.45);margin-top:8px;">Click <strong>Review</strong> on this row first. '
+          + (s.analyzeStatus === 'failed' && s.analyzeError
+            ? ('Last error: ' + postLiveEsc(s.analyzeError))
+            : 'Analyze status: ' + postLiveEsc(s.analyzeStatus || 'idle')) + '</p>';
+        if (st) st.textContent = 'No candidates — run Review first';
+        postLiveScrollToCandidates();
+        return;
+      }
+      var sel = window._postLiveCandidateSelection[s.videoId];
+      body.innerHTML = cands.map(function(c, i) {
+        var start = c.start_s || 0;
+        var end = c.end_s || (start + 60);
+        var key = String(start) + '-' + String(end);
+        if (sel[key] == null) sel[key] = i < 4;
+        var mins = Math.floor(start / 60);
+        var secs = start % 60;
+        var prevId = 'postlive-prev-' + s.videoId + '-' + i;
+        var ytJump = s.url + (s.url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Math.floor(start) + 's';
+        var previewSrc = c.previewUrl ? (resolveApiBase() + c.previewUrl) : '';
+        var videoHtml = previewSrc
+          ? '<video controls playsinline preload="metadata" src="' + postLiveEsc(previewSrc) + '"></video>'
+          : '<div class="postlive-prev-placeholder" id="' + prevId + '">'
+            + '<button type="button" class="btn btn-outline btn-sm" onclick="postLiveLoadPreview(\'' + s.videoId + '\',' + start + ',' + end + ',' + i + ')">▶ Extract MP4</button>'
+            + '<div style="margin-top:6px;"><a href="' + postLiveEsc(ytJump) + '" target="_blank" style="color:rgba(199,175,79,0.7);font-size:10px;">Open on YouTube ↗</a></div>'
+            + '</div>';
+        return '<div class="postlive-cand-row">'
+          + '<div class="postlive-cand-video">' + videoHtml + '</div>'
+          + '<label style="display:block;cursor:pointer;">'
+          + '<div style="display:flex;gap:10px;align-items:flex-start;">'
+          + '<input type="checkbox" style="margin-top:3px;" '
+          + (sel[key] ? 'checked' : '') + ' onchange="postLiveToggleCandidate(\'' + s.videoId + '\',\'' + key + '\',this.checked)">'
+          + '<div style="flex:1;">'
+          + '<strong style="color:#c7af4f;">#' + (i + 1) + '</strong> '
+          + '<span style="font-family:monospace;">' + mins + ':' + String(secs).padStart(2, '0') + '–' + Math.floor(end / 60) + ':' + String(end % 60).padStart(2, '0') + '</span> '
+          + '<span style="opacity:0.5;">score ' + (c.score != null ? Number(c.score).toFixed(2) : '—') + '</span><br>'
+          + '<span style="color:#fff;">' + postLiveEsc(c.title || 'Moment') + '</span>'
+          + (c.summary ? '<div style="color:rgba(255,255,255,0.45);margin-top:4px;">' + postLiveEsc(c.summary) + '</div>' : '')
+          + '</div></div></label></div>';
+      }).join('');
+      if (st) st.textContent = 'Showing ' + cands.length + ' candidate(s) below';
+      postLiveScrollToCandidates();
+    })
+    .catch(function(e) {
+      if (st) st.textContent = 'View failed: ' + e.message;
+      alert('View failed: ' + e.message);
+    });
+}
+
+function postLiveScrollToCandidates() {
+  var panel = g('postlive-candidates');
+  if (!panel) return;
+  try {
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    panel.scrollIntoView(true);
+  }
+}
+
+function postLiveLoadPreview(videoId, start_s, end_s, candidateIndex, onDone) {
+  var slot = g('postlive-prev-' + videoId + '-' + candidateIndex);
+  if (slot) slot.innerHTML = '<div class="postlive-prev-placeholder" style="color:#c7af4f;">Extracting MP4 (~30–90s)…</div>';
+  var st = g('postlive-import-status');
+  if (st) st.textContent = 'Extracting preview ' + (candidateIndex + 1) + '…';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', resolveApiBase() + '/post-live/sessions/' + encodeURIComponent(videoId) + '/preview', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 300000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText || '{}');
+      if (xhr.status !== 200 || !d.ok) throw new Error(d.error || ('HTTP ' + xhr.status));
+      var src = resolveApiBase() + d.previewUrl;
+      var videoSlot = g('postlive-prev-' + videoId + '-' + candidateIndex);
+      var parent = videoSlot && videoSlot.parentNode;
+      if (parent) {
+        parent.innerHTML = '<video controls playsinline preload="metadata" src="' + postLiveEsc(src) + '"></video>';
+      }
+      if (window._postLiveActiveSession && window._postLiveActiveSession.videoId === videoId) {
+        var cands = window._postLiveActiveSession.candidates || [];
+        if (cands[candidateIndex]) {
+          cands[candidateIndex].previewUrl = d.previewUrl;
+          cands[candidateIndex].previewCached = d.cached;
+        }
+      }
+      if (st) st.textContent = 'Preview ready' + (d.cached ? ' (cached)' : '');
+      if (onDone) onDone(null);
+    } catch (e) {
+      if (slot) slot.innerHTML = '<div class="postlive-prev-placeholder" style="color:#e74c3c;">' + postLiveEsc(e.message) + '</div>';
+      if (st) st.textContent = 'Preview failed: ' + e.message;
+      if (onDone) onDone(e);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    var msg = 'Preview timed out — try again or open on YouTube';
+    if (slot) slot.innerHTML = '<div class="postlive-prev-placeholder" style="color:#e74c3c;">' + msg + '</div>';
+    if (st) st.textContent = msg;
+    if (onDone) onDone(new Error(msg));
+  };
+  xhr.send(JSON.stringify({ start_s: start_s, end_s: end_s, candidateIndex: candidateIndex }));
+}
+
+function postLivePreviewSelected() {
+  var s = window._postLiveActiveSession;
+  if (!s || !s.candidates) {
+    alert('Click View on a session first.');
+    return;
+  }
+  var indices = [];
+  var sel = window._postLiveCandidateSelection[s.videoId] || {};
+  (s.candidates || []).forEach(function(c, i) {
+    if (c.previewUrl) return;
+    var key = String(c.start_s || 0) + '-' + String(c.end_s || (c.start_s || 0) + 60);
+    if (sel[key]) indices.push(i);
+  });
+  if (!indices.length) {
+    alert('Selected candidates already have previews — or none selected.');
+    return;
+  }
+  var queue = indices.slice();
+  function step() {
+    if (!queue.length) {
+      var st = g('postlive-import-status');
+      if (st) st.textContent = 'All selected MP4 previews loaded';
+      return;
+    }
+    var i = queue.shift();
+    var c = s.candidates[i];
+    postLiveLoadPreview(s.videoId, c.start_s, c.end_s, i, function() { step(); });
+  }
+  step();
+}
+
+function postLiveToggleCandidate(videoId, key, checked) {
+  if (!window._postLiveCandidateSelection[videoId]) window._postLiveCandidateSelection[videoId] = {};
+  window._postLiveCandidateSelection[videoId][key] = !!checked;
+}
+
+function postLiveSelectAllCandidates(on) {
+  var s = window._postLiveActiveSession;
+  if (!s || !s.candidates) return;
+  if (!window._postLiveCandidateSelection[s.videoId]) window._postLiveCandidateSelection[s.videoId] = {};
+  var sel = window._postLiveCandidateSelection[s.videoId];
+  s.candidates.forEach(function(c) {
+    var key = String(c.start_s || 0) + '-' + String(c.end_s || (c.start_s || 0) + 60);
+    sel[key] = !!on;
+  });
+  postLiveShowCandidates(s.videoId);
+}
+
+function postLiveGetSelectedCandidates() {
+  var s = window._postLiveActiveSession;
+  if (!s || !s.candidates) return [];
+  var sel = window._postLiveCandidateSelection[s.videoId] || {};
+  return s.candidates.filter(function(c) {
+    var key = String(c.start_s || 0) + '-' + String(c.end_s || (c.start_s || 0) + 60);
+    return sel[key];
+  });
+}
+
+function postLiveBuildCompClips(session, candidates) {
+  var streamer = session.streamer || 'streamer';
+  return candidates.map(function(c) {
+    return {
+      url: session.url,
+      pageUrl: session.url,
+      clipUrl: session.url,
+      title: c.title || 'Highlight',
+      streamer: streamer,
+      displayName: streamer,
+      trimStart: c.start_s || 0,
+      trimEnd: c.end_s || (c.start_s || 0) + 60,
+      postLiveVod: true,
+      platform: 'youtube'
+    };
+  });
+}
+
+function postLiveSendToStreamerPicker() {
+  var s = window._postLiveActiveSession;
+  var picked = postLiveGetSelectedCandidates();
+  if (!s) { alert('Open candidates for a session first (View).'); return; }
+  if (!picked.length) { alert('Select at least one candidate.'); return; }
+  var streamer = (s.streamer || 'streamer').toLowerCase();
+  var displayName = s.streamer || streamer;
+  _twitchPickerStreamers = [{
+    name: streamer,
+    displayName: displayName,
+    platform: 'youtube',
+    selected: true,
+    clips: picked.map(function(c, ci) {
+      return {
+        title: c.title || ('Highlight ' + (ci + 1)),
+        url: s.url,
+        pageUrl: s.url,
+        views: 0,
+        game: 'post-live',
+        thumbnailUrl: '',
+        duration: (c.end_s || 0) - (c.start_s || 0),
+        selected: true,
+        platform: 'youtube',
+        postLiveVod: true,
+        trimStart: c.start_s || 0,
+        trimEnd: c.end_s || (c.start_s || 0) + 60
+      };
+    }),
+    clipsRaw: [],
+    dropReason: null
+  }];
+  if (g('twitch-streamers')) g('twitch-streamers').value = streamer;
+  nav('generate');
+  switchGeneratePillar('twitch');
+  var btn = g('btn-preview-twitch');
+  renderTwitchPicker(btn, picked.length);
+  setPickerPanelVisible('twitch', true);
+  if (btn) btn.textContent = 'HIDE PICKER';
+  var st = g('twitch-fetch-status');
+  if (st) st.textContent = picked.length + ' post-live Gemini pick(s) loaded — use Short or Comp';
+}
+
+function postLiveDispatchComp() {
+  var s = window._postLiveActiveSession;
+  var picked = postLiveGetSelectedCandidates();
+  if (!s) { alert('Open candidates for a session first (View).'); return; }
+  if (!picked.length) { alert('Select at least one candidate for CLIPS COMP.'); return; }
+  if (picked.length > 4) {
+    if (!confirm(picked.length + ' selected — comp uses first 4 in rank order. Continue?')) return;
+    picked = picked.slice(0, 4);
+  }
+  showPlatformModal(function(sel) {
+    var pub = parsePlatformModalSelection(sel);
+    var clips = postLiveBuildCompClips(s, picked);
+    var statusEl = g('postlive-import-status');
+    if (statusEl) statusEl.textContent = 'CLIPS COMP — ' + clips.length + ' segment(s) from ' + (s.title || s.videoId).slice(0, 40);
+    _dispatchClipCompFromPicker(clips, 'twitch-short', pub.platforms, null, statusEl, pub.scheduledAt, {
+      postLiveVodSessionId: s.videoId,
+      postLiveMuteRanges: s.muteRanges || []
+    });
+    nav('queue');
+  });
 }
 
 function loadChannelStats(refresh) {
@@ -3382,10 +4054,11 @@ function clearAllJobs() {
 // localStorage. Called on init (silent) and via ↩ RESTORE JOBS button.
 // Server persists job cards when Gate 1 passes + HeyGen is submitted.
 // Reconstructs segments in 'rendering' status so REFRESH IDs button appears.
-function restoreJobsFromServer(showAlert) {
+function restoreJobsFromServer(showAlert, _retryCount) {
+  var retryCount = _retryCount || 0;
   var xhr = new XMLHttpRequest();
   xhr.open('GET', CFG.ffmpegUrl + '/jobs' + (showAlert ? '?restore=1' : ''), true);
-  xhr.timeout = 10000;
+  xhr.timeout = 30000;
   xhr.onload = function() {
     try {
       var resp = JSON.parse(xhr.responseText);
@@ -3550,13 +4223,13 @@ function restoreJobsFromServer(showAlert) {
         var serverStage = serverJob.stage || '';
         var qaOutcome   = serverJob.qaOutcome || '';
 
-        // Skip failed jobs — do not restore as actionable
-        // A failed job restored as 'all_sent' will show the Assemble button and re-run the broken assembly
+        // Skip failed avatar/script jobs — restoring as 'all_sent' would show Assemble and re-run a broken pipeline.
+        // Clip comps (clipsOnly) are restored so the operator sees the assembly error in Queue.
         var isFailed = serverStage === 'failed' ||
                        qaOutcome === 'fail' ||
                        qaOutcome === 'pre_flight_fail' ||
                        serverJob.status === 'failed';
-        if (isFailed) {
+        if (isFailed && !serverJob.clipsOnly) {
           cwn_log('[restore] Skipping failed job ' + serverJob.jobId + ' (stage: ' + serverStage + ', qaOutcome: ' + qaOutcome + ')', false);
           return;
         }
@@ -3588,7 +4261,8 @@ function restoreJobsFromServer(showAlert) {
 
         var isAssembled = isAwaitingOperator || !!(serverJob.assembledAt);
         var isAssembling = serverJob.status === 'assembling';
-        var restoredStatus = isAssembling ? 'assembling'
+        var restoredStatus = (isFailed && serverJob.clipsOnly) ? 'failed'
+          : isAssembling ? 'assembling'
           : isAssembled ? 'completed'
           : (serverJob.clipsOnly ? 'processing' : 'all_sent');
 
@@ -3646,11 +4320,15 @@ function restoreJobsFromServer(showAlert) {
           driveUrl:    restoredDriveUrl,
           assembledAt: serverJob.assembledAt || null,
           assemblyId: serverJob.assemblyId || null,
+          assemblyError: serverJob.assemblyError || null,
           clipHookTitles: serverJob.clipHookTitles || null,
           captionsApplied: serverJob.captionsApplied,
           clipCompTransformApplied: serverJob.clipCompTransformApplied,
           publishCopy: restoredPublishCopy,
           metadataQaViolations: serverJob.metadataQaViolations || null,
+          publishHold: serverJob.publishHold || null,
+          deliverySpec: serverJob.deliverySpec || null,
+          postLivePublishReleased: !!serverJob.postLivePublishReleased,
           canvaUrl:    null, thumbnail: null, publishPrep: null,
           platforms:   { youtube: 'pending', tiktok: 'pending', instagram: 'pending' },
           _restoredFromServer: true
@@ -3697,6 +4375,11 @@ function restoreJobsFromServer(showAlert) {
     }
   };
   xhr.onerror = xhr.ontimeout = function() {
+    if (retryCount < 2) {
+      cwn_log('[restore] Server unreachable — retrying in 5s…', true);
+      setTimeout(function() { restoreJobsFromServer(showAlert, retryCount + 1); }, 5000);
+      return;
+    }
     cwn_log('[restore] Server unreachable — is server.js running on ' + CFG.ffmpegUrl + '?', true);
     if (showAlert) alert('❌ Server unreachable — make sure server.js is running on ' + CFG.ffmpegUrl);
   };
@@ -3729,6 +4412,48 @@ function pipeStep(label, done, active, color) {
     +'<span style="width:8px;height:8px;border-radius:50%;background:'+c+';flex-shrink:0;'+(active&&!done?'animation:pulse 1.2s infinite;':'')+'"></span>'
     +'<span style="font-size:9px;font-weight:700;letter-spacing:1px;color:'+tc+';">'+label+'</span>'
     +'</div>';
+}
+
+function isPostLivePublishHeld(job) {
+  if (!job || job.postLivePublishReleased) return false;
+  if (job.publishHold === 'post_live') return true;
+  if (job.deliverySpec && job.deliverySpec.publishHold === 'post_live') return true;
+  var ct = String(job.contentType || job.type || '').toLowerCase();
+  return ct === 'news-short' || ct === 'sports-short';
+}
+
+function releasePostLivePublish(jobId) {
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  if (!job) { alert('Job not found'); return; }
+  if (!isPostLivePublishHeld(job)) {
+    alert('This job has no post-live publish hold.');
+    return;
+  }
+  var driveUrl = prompt(
+    'Paste Drive URL of the portrait cut from your Twitch show (you on camera reacting to these clips — same idea as the avatar comp). Leave blank only if this MP4 is already that live cut:',
+    job.driveUrl || ''
+  );
+  if (driveUrl === null) return;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/release-post-live-publish', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Release failed');
+      job.postLivePublishReleased = true;
+      job.publishHold = null;
+      if (job.deliverySpec) job.deliverySpec.publishHold = null;
+      if (driveUrl && driveUrl.trim()) job.driveUrl = driveUrl.trim();
+      saveJobs();
+      renderQueue();
+      alert('Post-live publish released — you can APPROVE & PUBLISH when ready.');
+    } catch (e) {
+      alert('Release failed: ' + e.message);
+    }
+  };
+  xhr.onerror = function() { alert('Server unreachable — is server.js running?'); };
+  xhr.send(JSON.stringify({ driveUrl: (driveUrl && driveUrl.trim()) ? driveUrl.trim() : undefined }));
 }
 
 function renderQueue() {
@@ -3782,6 +4507,15 @@ function renderQueue() {
     var jobStage = job.stage || '';
     var pubPayload = resolvePublishPayload(job);
     var hasSeo = !!(pubPayload && pubPayload.title);
+    var postLiveHeld = isPostLivePublishHeld(job);
+    if (postLiveHeld) {
+      var holdReason = (job.deliverySpec && job.deliverySpec.publishHoldReason)
+        || 'News/sports source clips get copyright flags on YT/TikTok/IG. Streamer comps are fine to publish as-is.';
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(155,89,182,0.1);border:1px solid rgba(155,89,182,0.4);border-radius:6px;font-size:11px;color:#d7bde2;">'
+        + '⏸ POST-LIVE PUBLISH HOLD — ' + escHtml(holdReason)
+        + '<div style="margin-top:6px;color:rgba(255,255,255,0.5);">Use this comp in OBS tonight (same clips). After live, cut the portrait segment from your Twitch recording — you reacting on camera — upload to Drive, then 🔓 RELEASE POST-LIVE PUBLISH → 🚀 APPROVE &amp; PUBLISH.</div>'
+        + '</div>';
+    }
     if ((jobStage === 'failed' || job.assemblyError) && !job.driveUrl && !(job.finalUrl && job.finalUrl.indexOf('http') === 0)) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:11px;color:#e74c3c;">'
         + '❌ ASSEMBLY FAILED — ' + escHtml(job.assemblyError || 'clip download failed') + '. Dismiss and re-run CLIPS COMP.'
@@ -3814,6 +4548,22 @@ function renderQueue() {
         + 'YT desc '+(pubPayload.description||'').length+' chars · '+tagCount+' tags · '+hashCount+' # · '
         + 'TT '+(pubPayload.tiktokCaption||'').length+' chars · IG '+(pubPayload.igCaption||'').length+' chars'
         + '</div>';
+      if (job.publishSeoAudit && job.publishSeoAudit.snapshots && job.publishSeoAudit.snapshots.length > 1) {
+        metaStrip += '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:6px;font-family:monospace;white-space:pre-wrap;">'
+          + '<span style="color:rgba(199,175,79,0.75);font-weight:700;letter-spacing:1px;">SEO AUDIT</span>\n'
+          + escHtml(formatSeoAuditSummary(job.publishSeoAudit))
+          + '</div>';
+      }
+      if (job.gate5Result && job.gate5Result.platforms && job.gate5Result.platforms.youtube && job.gate5Result.platforms.youtube.playlist) {
+        var pl = job.gate5Result.platforms.youtube.playlist;
+        if (pl.ok) {
+          metaStrip += '<div style="font-size:10px;color:#2ecc71;margin-top:4px;">✓ YouTube playlist: Streamer Related Clips</div>';
+        } else if (pl.skipped && pl.reason === 'youtube_not_connected') {
+          metaStrip += '<div style="font-size:10px;color:#e67e22;margin-top:4px;">⚠ YouTube OAuth missing — visit /connect/youtube (upload + playlist both use Data API)</div>';
+        } else if (pl.skipped && pl.reason === 'playlist_not_found') {
+          metaStrip += '<div style="font-size:10px;color:#e67e22;margin-top:4px;">⚠ Create playlist "Streamer Related Clips" on channel (or set YOUTUBE_STREAMER_CLIPS_PLAYLIST_ID)</div>';
+        }
+      }
       if (job.clipHookTitles && job.clipHookTitles.length) {
         var hookPreview = job.clipHookTitles.filter(function(h){ return h && String(h).trim(); }).slice(0, 4)
           .map(function(h){ return escHtml(String(h).slice(0, 42)); }).join(' · ');
@@ -3842,10 +4592,8 @@ function renderQueue() {
       actions += '<a href="'+dlUrl+'" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none;">📥 MP4</a>';
       actions += '<button onclick="triggerDriveCanva(\'' + job.id + '\',\'' + (job.filename||'') + '\',\'' + (job.title||'') + '\')" class="btn btn-gold btn-sm">☁️ DRIVE→CANVA</button>';
     } else if (job.driveUrl || (job.finalUrl && job.finalUrl.indexOf('http') === 0)) {
-      var cloudUrl = job.driveUrl || job.finalUrl;
-      var previewUrl = cloudUrl + (cloudUrl.indexOf('?') > -1 ? '&' : '?') + 'v=' + (job.assembledAt ? Date.parse(job.assembledAt) : Date.now());
-      actions += '<a href="'+previewUrl+'" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none;font-weight:700;">▶ PREVIEW VIDEO</a>';
-      actions += '<a href="'+previewUrl+'" download class="btn btn-outline btn-sm" style="text-decoration:none;">📥 MP4</a>';
+      actions += '<button onclick="previewJobVideo(\'' + job.id + '\')" class="btn btn-green btn-sm" style="font-weight:700;">▶ PREVIEW VIDEO</button>';
+      actions += '<button onclick="previewJobVideo(\'' + job.id + '\', true)" class="btn btn-outline btn-sm">📥 MP4</button>';
     }
     if (doneSegs.length&&!job.canvaUrl) {
       var firstIdx = segments.indexOf(doneSegs[0]);
@@ -3860,8 +4608,11 @@ function renderQueue() {
     if (jobStage === 'metadata_review') {
       actions += '<button onclick="regeneratePublishCopy(\'' + job.id + '\')" class="btn btn-gold btn-sm" title="Regenerate YT/TT/IG metadata until SEO QA passes">🔄 FIX SEO</button>';
     }
-    if ((jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'metadata_review' || jobStage === 'gate5_failed' || jobStage === 'publish_scheduled') && (job.driveUrl || job.finalUrl) && jobStage !== 'metadata_review') {
+    if ((jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'metadata_review' || jobStage === 'gate5_failed' || jobStage === 'publish_scheduled') && (job.driveUrl || job.finalUrl) && jobStage !== 'metadata_review' && !postLiveHeld) {
       actions += '<button onclick="approveAndPublishJob(\'' + job.id + '\')" class="btn btn-green btn-sm" style="font-weight:700;" title="Upload to all platforms using assembly-generated SEO (Gate 5)">🚀 APPROVE &amp; PUBLISH</button>';
+    }
+    if (postLiveHeld && (job.driveUrl || job.finalUrl)) {
+      actions += '<button onclick="releasePostLivePublish(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Clear copyright hold after live — optional Twitch-cut Drive URL">🔓 RELEASE POST-LIVE PUBLISH</button>';
     }
     // Short-form only: portrait thumbnail + CapCut draft buttons
     var isShortJob = (job.type||'').indexOf('short') > -1 || job.format === 'portrait';
@@ -4996,6 +5747,36 @@ function setGeneratingState(statusElId, labelText) {
   if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:rgba(52,152,219,0.8);">⏳ Calling Gemini + Claude — this takes 15-30 seconds...</span>';
 }
 
+function setCompStatus(statusElId, labelText, state) {
+  if (g('script-type-label')) g('script-type-label').textContent = labelText;
+  var statusEl = g(statusElId);
+  if (!statusEl) return;
+  var tagClass = 'tag tag-processing';
+  var tagText = labelText;
+  if (state === 'failed') {
+    tagClass = 'tag tag-failed';
+    tagText = 'COMP FAILED';
+  } else if (state === 'success') {
+    tagClass = 'tag tag-done';
+    tagText = 'COMP READY — REVIEW';
+  } else if (state === 'assembling') {
+    tagText = 'ASSEMBLING COMP…';
+  } else if (state === 'started') {
+    tagText = 'COMP STARTED';
+  }
+  statusEl.className = tagClass;
+  statusEl.innerHTML = '<span class="tag-dot"></span> ' + tagText;
+  if (g('script-stats')) {
+    if (state === 'failed') {
+      g('script-stats').innerHTML = '<span style="color:#e74c3c;">❌ ' + escHtml(labelText) + '</span>';
+    } else if (state === 'success') {
+      g('script-stats').innerHTML = '<span style="color:#2ecc71;">✓ ' + escHtml(labelText) + ' — check Queue</span>';
+    } else if (state === 'started' || state === 'assembling') {
+      g('script-stats').innerHTML = '<span style="color:rgba(52,152,219,0.8);">⏳ ' + escHtml(labelText) + '</span>';
+    }
+  }
+}
+
 function statusTagIdForType(type) {
   if (type === 'twitch' || type === 'twitch-short') return 'twitch-gen-status';
   if (type === 'nba' || type === 'nba-short' || type === 'sports-short') return 'nba-status';
@@ -5372,6 +6153,13 @@ function resolveClipUrls(clips, callback) {
   var pending = clips.length;
   clips.forEach(function(clip) {
     if (!clip.url && !clip.pageUrl) { pending--; if (!pending) callback(clips); return; }
+    if (clip.postLiveVod || (clip.trimStart != null && /youtube\.com|youtu\.be/.test(String(clip.pageUrl || clip.url || '')))) {
+      clip.mp4Url = clip.pageUrl || clip.url;
+      clip.clipQuality = 'post-live-youtube-vod';
+      pending--;
+      if (!pending) callback(clips);
+      return;
+    }
     if (clip.mp4Url) { pending--; if (!pending) callback(clips); return; }
     if (clip.cdnUrl && !clip.mp4Url) {
       clip.mp4Url = clip.cdnUrl;
@@ -5403,11 +6191,14 @@ function resolveClipUrls(clips, callback) {
 }
 function resolveTwitchClipUrls(clips, callback) { resolveClipUrls(clips, callback); }
 
-function buildStreamerClipsQuery(streamers, clipsPer, platforms) {
+function buildStreamerClipsQuery(streamers, clipsPer, platforms, maxClipsPer) {
   var twFilters = getPickerFilters('twitch');
+  var requested = maxClipsPer != null
+    ? Math.min(Math.max(parseInt(maxClipsPer, 10) || 1, 1), 10)
+    : Math.min(Math.max(parseInt(clipsPer, 10) || 2, 1), 10);
   var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
     + '&platforms=' + encodeURIComponent((platforms || getSelectedStreamerPlatforms()).join(','))
-    + '&clipsPer=' + Math.max(clipsPer * 5, 20);
+    + '&clipsPer=' + requested;
   if (twFilters.durMin != null) qs += '&durMin=' + twFilters.durMin;
   if (twFilters.durMax != null) qs += '&durMax=' + twFilters.durMax;
   if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;
@@ -5426,7 +6217,7 @@ function streamerFetchResultsToItems(fetchResults, streamers, clipsPerStreamer, 
       }
       return;
     }
-    var pool = s.clips.slice();
+    var pool = s.clips.slice().sort(function(a, b) { return (b.views || 0) - (a.views || 0); });
     var unused = pool.filter(function(c) { return !isClipUsed(c.url); });
     if (unused.length >= clipsPerStreamer) pool = unused;
     var validClips = pool.slice(0, clipsPerStreamer);
@@ -5537,6 +6328,14 @@ function generateTwitch() {
       var d = JSON.parse(xhr.responseText || '{}');
       if (!d.ok) throw new Error(d.error || 'fetch failed');
       var built = streamerFetchResultsToItems(d.streamers || [], streamers, clipsPerStreamer, streamerNotes);
+      var rateLimited = (d.streamers || []).filter(function(s) {
+        return s.dropReason && /rate limit/i.test(s.dropReason);
+      }).length;
+      if (rateLimited === streamers.length) {
+        setGeneratingState('twitch-gen-status', 'Twitch rate limited — wait 30s, then retry');
+        unlockGenerateButtons();
+        return;
+      }
       if (built.droppedStreamers.length) {
         var dropMsg = 'Dropped ' + built.droppedStreamers.length + ': ' +
           built.droppedStreamers.map(function(x){ return x.name + ' (' + x.reason + ')'; }).join(', ');
@@ -7946,6 +8745,114 @@ function pickerDurColor(dur) {
 var _nbaPickerGames = [];   // [{gameId, away, home, awayAbbr, homeAbbr, awayScore, homeScore, clipUrl, clipDuration, thumbnail, localPath, selected}]
 var _newsPickerStories = []; // [{title, link, videoUrl, hlsUrl, thumbnailUrl, orientation, pillarboxFilter, pubDate, selected}]
 var _twitchPickerStreamers = []; // [{name, displayName, selected, clips:[{title,url,views,game,thumbnailUrl,mp4Url,isBackup}], dropReason}]
+var _compLineup = []; // comp order: [{ si, ci, name, displayName, clip }]
+
+function compLineupKey(p) {
+  return String(p.si) + ':' + String(p.ci);
+}
+
+function collectCompPickedClips() {
+  var picked = [];
+  (_twitchPickerStreamers || []).forEach(function(entry, si) {
+    if (entry.dropReason || !entry.selected) return;
+    entry.clips.forEach(function(c, ci) {
+      if (c.selected) picked.push({ si: si, ci: ci, name: entry.name, displayName: entry.displayName, clip: c });
+    });
+  });
+  return picked;
+}
+
+function reconcileCompLineup(picked) {
+  var map = {};
+  picked.forEach(function(p) { map[compLineupKey(p)] = p; });
+  var kept = [];
+  (_compLineup || []).forEach(function(slot) {
+    var k = compLineupKey(slot);
+    if (map[k]) {
+      kept.push(map[k]);
+      delete map[k];
+    }
+  });
+  Object.keys(map).forEach(function(k) { kept.push(map[k]); });
+  _compLineup = kept;
+}
+
+function renderCompLineupPanel() {
+  var el = g('twitch-comp-lineup');
+  if (!el) return;
+  var picked = collectCompPickedClips();
+  if (!picked.length) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    _compLineup = [];
+    return;
+  }
+  reconcileCompLineup(picked);
+  var COMP_CLIP_COUNT = 4;
+  var show = _compLineup.slice(0, COMP_CLIP_COUNT);
+  var extra = picked.length - show.length;
+  var head = 'COMP LINEUP (1–' + COMP_CLIP_COUNT + ') — Comp uses this order for hooks + title';
+  if (picked.length > COMP_CLIP_COUNT) {
+    head += ' · first ' + COMP_CLIP_COUNT + ' of ' + picked.length + ' selected';
+  } else if (extra > 0) {
+    head += ' · add ' + (COMP_CLIP_COUNT - show.length) + ' more for full comp';
+  }
+  var html = '<div class="gen-comp-lineup-head">' + head + '</div><div class="gen-comp-lineup-grid">';
+  show.forEach(function(slot, idx) {
+    var c = slot.clip || {};
+    var thumb = c.thumbnailUrl
+      ? c.thumbnailUrl.replace('{width}', '96').replace('{height}', '54')
+      : '';
+    html += '<div class="gen-comp-slot">'
+      + '<span class="gen-comp-slot-num">' + (idx + 1) + '</span>';
+    if (thumb) {
+      html += '<img src="' + thumb + '" class="gen-comp-slot-thumb" onerror="this.style.display=\'none\'">';
+    } else {
+      html += '<div class="gen-comp-slot-thumb"></div>';
+    }
+    html += '<div class="gen-comp-slot-meta">'
+      + '<div class="gen-comp-slot-name">' + escapeHtml(slot.displayName || slot.name || '?') + '</div>'
+      + '<div class="gen-comp-slot-title">' + escapeHtml((c.title || '').slice(0, 72)) + '</div>'
+      + '</div>'
+      + '<div class="gen-comp-slot-actions">'
+      + (idx > 0 ? '<button type="button" class="btn btn-outline btn-sm" onclick="moveCompLineupSlot(' + idx + ',-1)" title="Move up">↑</button>' : '')
+      + (idx < show.length - 1 ? '<button type="button" class="btn btn-outline btn-sm" onclick="moveCompLineupSlot(' + idx + ',1)" title="Move down">↓</button>' : '')
+      + (idx > 0 ? '<button type="button" class="btn btn-outline btn-sm" onclick="setCompLineupLead(' + idx + ')" title="Lead comp with this clip" style="color:#9146ff;border-color:rgba(145,70,255,0.45);">Lead</button>' : '')
+      + '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+  el.style.display = '';
+}
+
+function refreshCompLineupUI() {
+  renderCompLineupPanel();
+}
+
+function moveCompLineupSlot(idx, delta) {
+  var j = idx + delta;
+  if (j < 0 || j >= _compLineup.length) return;
+  var tmp = _compLineup[idx];
+  _compLineup[idx] = _compLineup[j];
+  _compLineup[j] = tmp;
+  renderCompLineupPanel();
+}
+
+function setCompLineupLead(idx) {
+  if (idx <= 0 || idx >= _compLineup.length) return;
+  var item = _compLineup.splice(idx, 1)[0];
+  _compLineup.unshift(item);
+  renderCompLineupPanel();
+}
+
+function getCompLineupForDispatch(maxCount) {
+  refreshCompLineupUI();
+  var lineup = (_compLineup || []).slice();
+  if (lineup.length >= maxCount) return lineup.slice(0, maxCount);
+  var picked = collectCompPickedClips();
+  reconcileCompLineup(picked);
+  return (_compLineup || []).slice(0, maxCount);
+}
 
 var SPORTS_SOURCE_STYLE = {
   nba: { label: 'NBA', color: '#c7af4f' },
@@ -8833,7 +9740,7 @@ function _newsStoryToDispatch(s) {
   };
 }
 
-function startClipCompReviewPoll(jobId) {
+function startClipCompReviewPoll(jobId, statusElId) {
   var attempts = 0;
   var maxAttempts = 80; // ~20 min at 15s
   function tick() {
@@ -8843,6 +9750,7 @@ function startClipCompReviewPoll(jobId) {
         var job = JOBS.find(function(j) { return j.id === jobId; });
         if (job) {
           mergeServerJobIntoLocal(jobId, serverJob);
+          if (!statusElId) statusElId = statusTagIdForType(job.type);
         } else {
           restoreJobsFromServer(false);
         }
@@ -8857,9 +9765,17 @@ function startClipCompReviewPoll(jobId) {
             saveJobs();
             renderQueue();
           }
+          var errMsg = serverJob.assemblyError || 'Clip download failed — try different clips or refresh Twitch URLs';
+          if (statusElId) setCompStatus(statusElId, errMsg, 'failed');
           return;
         }
-        if (st === 'awaiting_review' || st === 'metadata_review' || st === 'published' || st === 'gate5_failed' || st === 'publish_scheduled') return;
+        if (st === 'awaiting_review' || st === 'metadata_review' || st === 'published' || st === 'gate5_failed' || st === 'publish_scheduled') {
+          if (statusElId) setCompStatus(statusElId, 'Comp assembled — job ' + jobId, 'success');
+          return;
+        }
+        if (statusElId && (st === 'assembling' || st === 'heygen_done')) {
+          setCompStatus(statusElId, 'Stitching clips — job ' + jobId, 'assembling');
+        }
       }
       if (attempts < maxAttempts) setTimeout(tick, 15000);
     });
@@ -8867,7 +9783,8 @@ function startClipCompReviewPoll(jobId) {
   setTimeout(tick, 5000);
 }
 
-function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, statusEl, scheduledAt) {
+function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, statusEl, scheduledAt, postLiveOpts) {
+  postLiveOpts = postLiveOpts || {};
   var xhr = new XMLHttpRequest();
   xhr.open('POST', (CFG.ffmpegUrl || 'http://localhost:3000') + '/generate-clip-comp', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
@@ -8906,21 +9823,29 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
           saveJobs();
           renderQueue();
         }
-        startClipCompReviewPoll(d.jobId);
+        if (statusId) setCompStatus(statusId, msg, 'started');
+        startClipCompReviewPoll(d.jobId, statusId);
       } else {
         msg = 'CLIPS COMP failed: ' + (d.error || ('HTTP ' + xhr.status));
+        if (statusId) setCompStatus(statusId, msg, 'failed');
       }
-    } catch (e) { msg = 'CLIPS COMP failed: ' + e.message; }
+    } catch (e) {
+      msg = 'CLIPS COMP failed: ' + e.message;
+      if (statusId) setCompStatus(statusId, msg, 'failed');
+    }
     if (statusEl) statusEl.textContent = msg;
-    if (statusId) setGeneratingState(statusId, msg);
     unlockGenerateButtons();
   };
   xhr.onerror = function() {
-    if (statusEl) statusEl.textContent = 'CLIPS COMP failed: network error';
+    var netMsg = 'CLIPS COMP failed: network error';
+    if (statusEl) statusEl.textContent = netMsg;
+    if (statusId) setCompStatus(statusId, netMsg, 'failed');
     unlockGenerateButtons();
   };
   var body = { clips: clips, platforms: platforms, contentType: contentType };
   if (scheduledAt) body.scheduledAt = scheduledAt;
+  if (postLiveOpts.postLiveVodSessionId) body.postLiveVodSessionId = postLiveOpts.postLiveVodSessionId;
+  if (postLiveOpts.postLiveMuteRanges) body.postLiveMuteRanges = postLiveOpts.postLiveMuteRanges;
   xhr.send(JSON.stringify(body));
 }
 
@@ -9112,17 +10037,11 @@ function _dispatchClipShort(clip, contentType, title, platforms, statusId, sched
 }
 
 function triggerClipComp() {
-  // CPD-935: clips-only compilation — all selected picker clips stitch into ONE
-  // full-frame portrait short. No avatar, no script gen, no HeyGen.
-  var picked = [];
-  (_twitchPickerStreamers || []).forEach(function(entry) {
-    if (entry.dropReason || !entry.selected) return;
-    entry.clips.forEach(function(c) {
-      if (c.selected) picked.push({ name: entry.name, displayName: entry.displayName, clip: c });
-    });
-  });
-
-  var COMP_CLIP_COUNT = 4; // Rob 2026-06-11: carousel comps are 4 clips
+  // CPD-935: clips-only compilation — comp lineup order (or picker order) stitches into ONE short.
+  var COMP_CLIP_COUNT = 4;
+  var picked = getCompLineupForDispatch(COMP_CLIP_COUNT);
+  var isPostLivePicker = picked.length > 0 && picked.every(function(p) { return p.clip && p.clip.postLiveVod; });
+  var minCompClips = isPostLivePicker ? 1 : COMP_CLIP_COUNT;
   if (!picked.length) {
     var picker = g('twitch-inline-picker');
     if (!picker || picker.style.display === 'none' || !(_twitchPickerStreamers || []).length) {
@@ -9132,31 +10051,51 @@ function triggerClipComp() {
     if (statusEl) statusEl.textContent = 'Pick ' + COMP_CLIP_COUNT + ' clips above, then click CLIPS COMP — they stitch into one short.';
     return;
   }
-  if (picked.length < COMP_CLIP_COUNT) {
-    alert('CLIPS COMP needs ' + COMP_CLIP_COUNT + ' clips — only ' + picked.length + ' selected. Pick ' + (COMP_CLIP_COUNT - picked.length) + ' more.');
+  if (picked.length < minCompClips) {
+    alert('CLIPS COMP needs at least ' + minCompClips + ' clip' + (minCompClips !== 1 ? 's' : '') + ' — only ' + picked.length + ' selected.');
     return;
   }
   if (picked.length > COMP_CLIP_COUNT) {
-    if (!confirm(picked.length + ' clips selected — comp uses the first ' + COMP_CLIP_COUNT + ' in picker order. Continue?')) return;
+    if (!confirm(picked.length + ' clips in lineup — comp uses the first ' + COMP_CLIP_COUNT + '. Continue?')) return;
     picked = picked.slice(0, COMP_CLIP_COUNT);
   }
 
   showPlatformModal(function(sel) {
     var pub = parsePlatformModalSelection(sel);
     lockGenerateButton('btn-gen-twitch-comp');
+    switchGeneratePillar('twitch');
     var statusEl2 = g('twitch-fetch-status');
     if (statusEl2) statusEl2.textContent = 'CLIPS COMP — resolving ' + picked.length + ' clip URL(s)...';
-    if (g('script-type-label')) g('script-type-label').textContent = 'CLIPS COMP — ' + picked.length + ' clip(s), no avatar';
+    setCompStatus('twitch-gen-status', 'CLIPS COMP — resolving ' + picked.length + ' clip URL(s)...', 'assembling');
 
     var allClips = picked.map(function(p) {
       return { streamer: p.name, displayName: p.displayName, title: p.clip.title || '', url: p.clip.url || '', views: p.clip.views || 0, game: p.clip.game || '' };
     });
     resolveTwitchClipUrls(allClips, function() {
       var clips = allClips.map(function(c) {
-        return { url: c.mp4Url || c.url, pageUrl: c.url, title: c.title, streamer: c.streamer, displayName: c.displayName, orientation: 'landscape' };
+        return {
+          url: c.mp4Url || c.url,
+          pageUrl: c.pageUrl || c.url,
+          title: c.title,
+          streamer: c.streamer,
+          displayName: c.displayName,
+          orientation: 'landscape',
+          trimStart: c.trimStart,
+          trimEnd: c.trimEnd,
+          postLiveVod: c.postLiveVod || false
+        };
       });
+      var postLiveSessionId = null;
+      var postLiveMuteRanges = null;
+      if (clips.length && clips.every(function(c) { return c.postLiveVod; })) {
+        postLiveSessionId = window._postLiveActiveSession && window._postLiveActiveSession.videoId;
+        postLiveMuteRanges = window._postLiveActiveSession && window._postLiveActiveSession.muteRanges;
+      }
       markClipsUsed(allClips.map(function(c){ return c.url; }).filter(Boolean));
-      _dispatchClipCompFromPicker(clips, 'twitch-short', pub.platforms, 'twitch-status', statusEl2, pub.scheduledAt);
+      _dispatchClipCompFromPicker(clips, 'twitch-short', pub.platforms, 'twitch-gen-status', statusEl2, pub.scheduledAt, {
+        postLiveVodSessionId: postLiveSessionId,
+        postLiveMuteRanges: postLiveMuteRanges
+      });
     });
   });
 }
@@ -9366,6 +10305,7 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
 
   picker.innerHTML = html;
   setPickerPanelVisible('twitch', true);
+  refreshCompLineupUI();
 }
 
 function _toggleTwitchClip(si, ci) {
@@ -9750,6 +10690,20 @@ function pickYoutubeFromPublishCopy(pc) {
   return deepHash >= topHash ? deep : top;
 }
 
+function formatSeoAuditSummary(audit) {
+  if (!audit || !audit.snapshots || !audit.snapshots.length) return '';
+  var lines = audit.snapshots.map(function(s) {
+    var yt = s.youtube || {};
+    var base = (s.stage || '?') + ': YT "' + String(yt.title || '').slice(0, 48) + '" · '
+      + (yt.descriptionWords || 0) + 'w · ' + (yt.tagCount || 0) + ' tags · '
+      + (yt.descriptionHashtags || 0) + ' # · TT ' + ((s.tiktok && s.tiktok.captionChars) || 0) + 'c · '
+      + ((s.tiktok && s.tiktok.captionHashtags) || 0) + ' TT#';
+    if (s.changes && s.changes.length) base += ' · Δ ' + s.changes.join('; ');
+    return base;
+  });
+  return lines.join('\n');
+}
+
 function resolvePublishPayload(job) {
   var pc = resolvePublishCopy(job);
   // publishCopy from assembly/server is source of truth — publishPrep is a display cache only
@@ -9821,6 +10775,42 @@ function fetchJobCard(jobId, cb) {
   xhr.send();
 }
 
+function previewJobVideo(jobId, downloadOnly) {
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/jobs?restore=1', true);
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      var serverJob = (resp.jobs || []).find(function(j) { return (j.jobId || j.id) === jobId; });
+      if (serverJob) mergeServerJobIntoLocal(jobId, serverJob);
+      job = JOBS.find(function(j) { return j.id === jobId; }) || job;
+    } catch (_e) { /* use local card */ }
+    var cloudUrl = (job && (job.driveUrl || job.finalUrl)) || '';
+    if (!cloudUrl || cloudUrl.indexOf('http') !== 0) {
+      alert('No cloud video URL yet — wait for assembly upload to finish, then click ↩ RESTORE JOBS.');
+      return;
+    }
+    var previewUrl = cloudUrl + (cloudUrl.indexOf('?') > -1 ? '&' : '?') + 'v=' + (job.assembledAt ? Date.parse(job.assembledAt) : Date.now());
+    if (downloadOnly) {
+      var a = document.createElement('a');
+      a.href = previewUrl;
+      a.download = '';
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      window.open(previewUrl, '_blank');
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    alert('Server unreachable — is pm2 running? Try: pm2 restart auraflux');
+  };
+  xhr.send();
+}
+
 function mergeServerJobIntoLocal(jobId, serverJob) {
   var job = JOBS.find(function(j) { return j.id === jobId; });
   if (!job || !serverJob) return job;
@@ -9833,9 +10823,13 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
     job.publishCopy = serverJob.publishCopy;
   }
   if (serverJob.driveUrl) {
-    job.driveUrl = serverJob.driveUrl;
-    delete job.assemblyError;
-    job.status = 'completed';
+    var serverAsm = serverJob.assembledAt ? Date.parse(serverJob.assembledAt) : 0;
+    var localAsm = job.assembledAt ? Date.parse(job.assembledAt) : 0;
+    if (!job.driveUrl || !localAsm || serverAsm >= localAsm) {
+      job.driveUrl = serverJob.driveUrl;
+      delete job.assemblyError;
+      job.status = 'completed';
+    }
   }
   if (serverJob.assembledAt) job.assembledAt = serverJob.assembledAt;
   if (serverJob.scheduledPublishAt) job.scheduledPublishAt = serverJob.scheduledPublishAt;
@@ -9847,6 +10841,10 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.clipCompTransformApplied === true || serverJob.clipCompTransformApplied === false) {
     job.clipCompTransformApplied = serverJob.clipCompTransformApplied;
   }
+  if (serverJob.publishHold) job.publishHold = serverJob.publishHold;
+  if (serverJob.deliverySpec) job.deliverySpec = serverJob.deliverySpec;
+  if (serverJob.postLivePublishReleased) job.postLivePublishReleased = serverJob.postLivePublishReleased;
+  if (serverJob.postLivePublishReleasedAt) job.postLivePublishReleasedAt = serverJob.postLivePublishReleasedAt;
   if (serverJob.stage === 'metadata_review' || serverJob.stage === 'awaiting_review') {
     job.status = 'completed';
   }
@@ -9858,6 +10856,10 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
 function approveAndPublishJob(jobId) {
   var job = JOBS.find(function(j) { return j.id === jobId; });
   if (!job) { alert('Job not found'); return; }
+  if (isPostLivePublishHeld(job)) {
+    alert('Publish held — news/sports raw comps get flagged. Go live with these clips, then publish the Twitch cut with you reacting (🔓 RELEASE POST-LIVE PUBLISH).');
+    return;
+  }
   if (!job.driveUrl && !job.finalUrl) {
     alert('No cloud video URL yet — wait for assembly upload to finish.');
     return;
@@ -9876,7 +10878,13 @@ function approveAndPublishJob(jobId) {
   xhr.onload = function() {
     try {
       var resp = JSON.parse(xhr.responseText);
-      if (!resp.ok) throw new Error(resp.error || 'Gate 5 failed to start');
+      if (!resp.ok) {
+        if (resp.code === 'publish_hold_post_live') {
+          alert('Publish held until after live show — use 🔓 RELEASE POST-LIVE PUBLISH first.');
+          return;
+        }
+        throw new Error(resp.error || 'Gate 5 failed to start');
+      }
       job.stage = 'gate5_forced';
       saveJobs();
       renderQueue();
@@ -10906,6 +11914,76 @@ function getStreamerBenchHandles() {
 }
 
 window._streamerLiveGridBench = window._streamerLiveGridBench || { logins: [], meta: null };
+window._streamerTopClipViews = window._streamerTopClipViews || {};
+window._streamerBenchViewsFetchedAt = window._streamerBenchViewsFetchedAt || 0;
+
+function sortHandlesByTopClipViews(handles) {
+  var views = window._streamerTopClipViews || {};
+  return handles.slice().sort(function(a, b) {
+    var va = views[String(a).toLowerCase()] || 0;
+    var vb = views[String(b).toLowerCase()] || 0;
+    if (vb !== va) return vb - va;
+    return String(a).localeCompare(String(b));
+  });
+}
+
+function formatBenchViewCount(n) {
+  n = Number(n) || 0;
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
+}
+
+/** Fetch top clip view_count per bench handle (excludes VOD template lineup) for bench sort. */
+function refreshStreamerBenchViewRanks(handles, cb) {
+  if (!handles || !handles.length) { if (cb) cb(); return; }
+  var templateSet = {};
+  getStreamerTemplateHandles().forEach(function(h) { templateSet[h] = true; });
+  var toFetch = handles.filter(function(h) { return !templateSet[h]; });
+  if (!toFetch.length) { if (cb) cb(); return; }
+
+  var now = Date.now();
+  var stale = (now - (window._streamerBenchViewsFetchedAt || 0)) > 10 * 60 * 1000;
+  var missing = toFetch.some(function(h) { return window._streamerTopClipViews[String(h).toLowerCase()] == null; });
+  if (!stale && !missing) { if (cb) cb(); return; }
+
+  var base = CFG.ffmpegUrl || 'http://localhost:3000';
+  var chunkSize = 6;
+  var chunks = [];
+  for (var i = 0; i < toFetch.length; i += chunkSize) chunks.push(toFetch.slice(i, i + chunkSize));
+  if (!chunks.length) { if (cb) cb(); return; }
+
+  var chunkIdx = 0;
+  function fetchNextChunk() {
+    if (chunkIdx >= chunks.length) {
+      window._streamerBenchViewsFetchedAt = Date.now();
+      if (cb) cb();
+      return;
+    }
+    var chunk = chunks[chunkIdx++];
+    var qs = buildStreamerClipsQuery(chunk, 1, null, 3);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', base + '/streamers/clips?' + qs, true);
+    xhr.timeout = 90000;
+    xhr.onload = xhr.onerror = xhr.ontimeout = function() {
+      try {
+        if (xhr.status === 200) {
+          var d = JSON.parse(xhr.responseText || '{}');
+          (d.streamers || []).forEach(function(s) {
+            var login = String(s.login || s.name || '').toLowerCase();
+            var top = (s.clips || [])[0];
+            if (login && top) window._streamerTopClipViews[login] = top.views || 0;
+          });
+        } else if (xhr.status === 429 || xhr.status === 500) {
+          console.warn('[bench-rank] clip fetch throttled — will retry on next render');
+        }
+      } catch (e) {}
+      setTimeout(fetchNextChunk, 500);
+    };
+    xhr.send();
+  }
+  fetchNextChunk();
+}
 
 /** Auto-pull Twitch follows bench from Live Grid (same pool as multiview). */
 function loadStreamerBenchFromLiveGrid(cb) {
@@ -10965,6 +12043,7 @@ function loadStreamerBenchFromLiveGrid(cb) {
     }
 
     renderStreamerChips();
+    refreshStreamerBenchViewRanks(getStreamerBenchHandles(), function() { renderStreamerChips(); });
     if (cb) cb(window._streamerLiveGridBench);
   });
 }
@@ -11011,6 +12090,11 @@ function classifyStreamerSections(roster) {
       if (!placed[h]) { buckets.kick.push(h); placed[h] = true; }
       return;
     }
+    // Follows/subscriptions win over Templates and Bench (CPD-1027 UX)
+    if (src.indexOf('twitch_follow') >= 0 || src.indexOf('youtube_subscription') >= 0) {
+      if (!placed[h]) { buckets.following.push(h); placed[h] = true; }
+      return;
+    }
     if (templates[h]) {
       if (!placed[h]) { buckets.templates.push(h); placed[h] = true; }
       return;
@@ -11018,9 +12102,6 @@ function classifyStreamerSections(roster) {
     if (benchSet[h] || src.indexOf('live_grid') >= 0) {
       if (!placed[h]) { buckets.bench.push(h); placed[h] = true; }
       return;
-    }
-    if (src.indexOf('twitch_follow') >= 0 || src.indexOf('youtube_subscription') >= 0) {
-      if (!placed[h]) { buckets.following.push(h); placed[h] = true; }
     }
   });
 
@@ -11039,7 +12120,7 @@ function classifyStreamerSections(roster) {
 
   buckets.templates.sort();
   buckets.following.sort();
-  buckets.bench.sort();
+  buckets.bench = sortHandlesByTopClipViews(buckets.bench);
   buckets.kick.sort();
   return buckets;
 }
@@ -11053,8 +12134,15 @@ function renderStreamerSectionGrid(elId, handles, selSet, emptyMsg) {
     return;
   }
   el.className = 'creator-chip-grid is-section';
+  var views = window._streamerTopClipViews || {};
+  var isBench = elId === 'streamer-section-bench';
   el.innerHTML = handles.map(function(h) {
-    return creatorChipHtml(h, !!selSet[h], { showHandle: true });
+    var opts = { showHandle: true };
+    if (isBench) {
+      var tv = views[String(h).toLowerCase()];
+      if (tv != null) opts.topViews = tv;
+    }
+    return creatorChipHtml(h, !!selSet[h], opts);
   }).join('');
 }
 
@@ -11136,7 +12224,9 @@ function creatorChipHtml(h, isSelected, opts) {
   return '<button type="button" class="' + cls + '" onclick="' + action + '" title="@' + escapeHtml(hk) + '">'
     + '<span class="creator-chip-plat" style="color:' + ps.color + ';background:' + ps.bg + ';">' + ps.badge + '</span>'
     + '<span class="creator-chip-name">' + escapeHtml(label) + '</span>'
-    + (!isSelected && opts.showHandle ? '<span class="creator-chip-handle">@' + escapeHtml(hk) + '</span>' : '')
+    + (opts.topViews != null && opts.topViews > 0
+      ? '<span class="creator-chip-handle" style="color:#c7af4f;">' + formatBenchViewCount(opts.topViews) + ' views</span>'
+      : (!isSelected && opts.showHandle ? '<span class="creator-chip-handle">@' + escapeHtml(hk) + '</span>' : ''))
     + xBtn
     + '</button>';
 }
@@ -11273,7 +12363,7 @@ function renderStreamerChips() {
     var buckets = classifyStreamerSections(roster);
     renderStreamerSectionGrid('streamer-section-templates', buckets.templates, selSet, 'Sync or add — VOD lineup from config.');
     renderStreamerSectionGrid('streamer-section-following', buckets.following, selSet, 'Sync Twitch/YouTube follows.');
-    renderStreamerSectionGrid('streamer-section-bench', buckets.bench, selSet, 'Pulling follows… or use + Bench.');
+    renderStreamerSectionGrid('streamer-section-bench', buckets.bench, selSet, 'Loading top clip views…');
     renderStreamerSectionGrid('streamer-section-kick', buckets.kick, selSet, 'Add Kick creators with + Kick URL.');
     updateStreamerSectionCount('streamer-count-selected', sel.length, sel.length);
     updateStreamerSectionCount('streamer-count-templates', buckets.templates.length, countSelectedIn(buckets.templates, selSet));
@@ -11281,6 +12371,11 @@ function renderStreamerChips() {
     updateStreamerSectionCount('streamer-count-bench', buckets.bench.length, countSelectedIn(buckets.bench, selSet));
     updateStreamerSectionCount('streamer-count-kick', buckets.kick.length, countSelectedIn(buckets.kick, selSet));
     applyStreamerSectionDefaults(buckets);
+    refreshStreamerBenchViewRanks(buckets.bench, function() {
+      var sortedBench = sortHandlesByTopClipViews(buckets.bench);
+      renderStreamerSectionGrid('streamer-section-bench', sortedBench, selSet,
+        sortedBench.length ? 'Sorted by top clip views (24h) — pick outside your 12 here.' : 'Pulling follows… or use + Bench.');
+    });
   }
 
   var cnt = g('streamer-chip-count');
@@ -11587,6 +12682,20 @@ function pubJobSelected() {
   var hlWrap = g('pub-headline-wrap');
   hlWrap.style.display = (!isNba && job.type !== 'nba') ? '' : 'none';
   loadPubChecklist(jobId);
+
+  var auditEl = g('pub-seo-audit');
+  if (auditEl) {
+    var audit = job.publishSeoAudit
+      || (job.state && job.state.savedOutputs && job.state.savedOutputs.publishSeoAudit)
+      || null;
+    if (audit && audit.snapshots && audit.snapshots.length) {
+      auditEl.style.display = '';
+      auditEl.textContent = 'SEO AUDIT TRAIL\n' + formatSeoAuditSummary(audit);
+    } else {
+      auditEl.style.display = 'none';
+      auditEl.textContent = '';
+    }
+  }
 
   // Auto-hydrate assembly publishCopy into Publish Prep tabs
   if (!hydratePublishPrepFromJob(job)) {
@@ -11972,7 +13081,7 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
     g('pub-tt-caption').textContent = tiktokCaption;
     g('pub-tt-preview').textContent = tiktokCaption;
     var ttLen = tiktokCaption.length;
-    if (g('pub-tt-chars')) g('pub-tt-chars').innerHTML = '<span style="color:'+(ttLen<=300?'#2ecc71':'#f39c12')+'">'+ttLen+' chars'+(ttLen>300?' (over visible limit)':'')+' </span>';
+    if (g('pub-tt-chars')) g('pub-tt-chars').innerHTML = '<span style="color:'+(ttLen<=300?'#2ecc71':'#f39c12')+'">'+ttLen+' chars'+(ttLen>300?' (long for visible preview — aim ≤300)':'')+' </span>';
   }
 
   // Instagram
@@ -11993,9 +13102,14 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
   g('pub-title-chars').innerHTML = '<span style="color:'+(tLen<=60?'#2ecc71':tLen<=100?'#f39c12':'#e74c3c')+'">'+tLen+' chars '+(tLen<=60?'(ideal)':tLen<=100?'(ok)':'(too long)')+'</span>';
 
   // SEO checklist — shorts use tighter rules than long-form compilations
+  var tagCharTotal = (function() {
+    var prepTags = (activeJobId && JOBS.find(function(j){ return j.id===activeJobId; })) || null;
+    var pl = prepTags ? resolvePublishPayload(prepTags) : { tags: [] };
+    return (pl.tags || []).map(function(t){ return String(t||'').replace(/^#+/,'').trim(); }).filter(Boolean).join('').length;
+  })();
   var tagCount = (function() {
     var prepTags = (activeJobId && JOBS.find(function(j){ return j.id===activeJobId; })) || null;
-    var pl = prepTags ? resolvePublishPayload(prepTags) : { tags: [], description: desc };
+    var pl = prepTags ? resolvePublishPayload(prepTags) : { tags: [] };
     return (pl.tags || []).length;
   })();
   var hashInDesc = (desc.match(/#\w+/g) || []).length;
@@ -12028,12 +13142,13 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
     {label:'Description word count', pass:wordCount>=125&&wordCount<=280, warn:wordCount>=100&&wordCount<125, msg:wordCount+' words — aim 125-250'},
     {label:'Description names streamers', pass:descHasStreamers, msg:streamerNames.length?(descHasStreamers?'Streamers named':'Name: '+streamerNames.slice(0,4).join(', ')):'n/a'},
     {label:'Hook in first 150 chars', pass:hookLen>=40, msg:desc.slice(0,80)+(desc.length>80?'…':'')},
-    {label:'YouTube tags', pass:tagCount>=5, msg:tagCount+' tags — aim for 8-15'},
+    {label:'YouTube tags', pass:tagCharTotal>=490&&tagCharTotal<=500, warn:tagCharTotal>=450&&tagCharTotal<490, msg:tagCharTotal+' chars ('+tagCount+' tags) — aim 490-500 total'},
     {label:'Hashtags in description', pass:hashInDesc>=3&&hashInDesc<=15, msg:hashInDesc+' hashtags in YT description'},
     {label:'Social profile links', pass:/tiktok\.com\/@clipzworldstreams/i.test(desc)&&/instagram\.com\/clipzworldnews/i.test(desc), msg:'TikTok + Instagram URLs in description'},
     {label:'Subscribe CTA', pass:/subscribe/i.test(desc), msg:'Subscribe call to action in description'},
     {label:'TikTok caption', pass:!!(tiktokCaption&&tiktokCaption.length>=40), msg:(tiktokCaption||'missing').slice(0,80)+(tiktokCaption&&tiktokCaption.length>80?'…':'')},
-    {label:'TikTok caption length', pass:!tiktokCaption||tiktokCaption.length<=300, warn:tiktokCaption&&tiktokCaption.length>220&&tiktokCaption.length<=300, msg:(tiktokCaption||'').length+' chars (visible ~150-300)'},
+    {label:'TikTok hashtags', pass:(function(){ var n=(tiktokCaption.match(/#\w+/g)||[]).length; return n>=3&&n<=5; })(), msg:(function(){ var n=(tiktokCaption.match(/#\w+/g)||[]).length; return n+' hashtags in TT caption — aim 3-5 (FYP best practice)'; })()},
+    {label:'TikTok caption length', pass:!tiktokCaption||tiktokCaption.length<=300, warn:tiktokCaption&&tiktokCaption.length>220&&tiktokCaption.length<=300, msg:(tiktokCaption||'').length+' chars visible before "see more" (aim ≤300; TikTok upload allows 2200)'},
     {label:'Instagram caption', pass:!!(igCaption&&igCaption.length>=40), msg:(igCaption||'missing').slice(0,80)+(igCaption&&igCaption.length>80?'…':'')},
     {label:'IG alt text', pass:!!(igAlt&&igAlt.length>10), msg:igAlt ? igAlt.slice(0,60)+'…' : 'missing — add for accessibility'}
   ] : [
@@ -12658,12 +13773,196 @@ function confirmPlatformModal() {
   _platformModalCallback = null;
 }
 </script>
+<script src="/broadcast-config.js"></script>
+<script src="/assets/broadcast_api.js"></script>
 <script>
 // ===========================================================================
 // LIVE GRID controls (CPD-952) — start/stop, click-to-listen, bench add
+// Fleet panel (CPD-1067) — solo_roster on Render sidecars A+B
 // ===========================================================================
-const LG_BASE = (typeof CFG !== 'undefined' && CFG.ffmpegUrl) || 'http://localhost:3000';
+const LG_LOCAL = ((typeof CFG !== 'undefined' && CFG.ffmpegUrl) || 'http://localhost:3000').replace(/\/$/, '');
+const LG_BASE = LG_LOCAL;
+const LG_RENDER_A = (typeof BroadcastApi !== 'undefined' ? BroadcastApi.sidecarUrl() : (window.__BROADCAST_SIDECAR_URL__ || 'https://auraflux-broadcast-staging.onrender.com')).replace(/\/$/, '');
+const LG_RENDER_B = (typeof BroadcastApi !== 'undefined' ? BroadcastApi.sidecarBUrl() : (window.__BROADCAST_SIDECAR_B_URL__ || 'https://auraflux-broadcast-staging-b.onrender.com')).replace(/\/$/, '');
 let _lgStatus = null;
+let _lgFleetA = null;
+let _lgStatusB = null;
+let _lgFleetHealthA = null;
+let _lgFleetHealthB = null;
+const LG_FLEET_HEALTH_POLL_MS = 45000;
+
+function lgHealthLevelColor(level) {
+  if (level === 'good') return '#6d6';
+  if (level === 'degraded') return '#ca8';
+  if (level === 'bad') return '#e88';
+  if (level === 'paused') return '#888';
+  return 'rgba(255,255,255,0.45)';
+}
+
+function lgRenderFleetHealthPanel() {
+  const sumEl = document.getElementById('lg-fleet-health-summary');
+  const slotsEl = document.getElementById('lg-fleet-health-slots');
+  if (!sumEl || !slotsEl) return;
+  const summaries = [];
+  const slotRows = [];
+  function addBlock(label, health) {
+    if (!health || !health.ok) {
+      summaries.push(label + ': unavailable');
+      return;
+    }
+    const tag = health.tag || 'idle';
+    const worst = health.worstLiveScore;
+    const worstTxt = worst != null ? worst + '/100' : '—';
+    summaries.push('<span style="color:' + lgHealthLevelColor(tag === 'BAD' ? 'bad' : tag === 'DEGRADED' ? 'degraded' : 'good') + ';">'
+      + label + ' · ' + tag + '</span> · worst ' + worstTxt + ' · ' + (health.liveCount || 0) + ' live');
+    (health.slots || []).forEach(function (s) {
+      const scoreTxt = s.score != null ? s.score + '/100' : s.level || '—';
+      const watch = s.watchUrl ? ' · <a href="' + s.watchUrl + '" target="_blank" style="color:#b794f6;">yt</a>' : '';
+      const pause = s.paused ? ' · <span style="color:#888;">PAUSED</span>' : '';
+      const reasons = (s.reasons || []).slice(0, 2).join('; ');
+      slotRows.push('<div style="margin:2px 0;">'
+        + '<span style="color:' + lgHealthLevelColor(s.level) + ';">' + scoreTxt + '</span>'
+        + ' · ' + s.label + ' · ' + s.phase
+        + ' · feeder <b>' + (s.feeder || '—') + '</b>'
+        + (s.ffmpeg ? ' · ffmpeg✓' : ' · ffmpeg✗')
+        + pause + watch
+        + (reasons ? '<span style="color:rgba(255,255,255,0.35);"> · ' + reasons + '</span>' : '')
+        + '</div>');
+    });
+  }
+  addBlock('Sidecar A', _lgFleetHealthA);
+  addBlock('Sidecar B', _lgFleetHealthB);
+  sumEl.innerHTML = summaries.join(' · ') || 'Loading…';
+  slotsEl.innerHTML = slotRows.join('') || '<div style="color:rgba(255,255,255,0.35);">no fleet data — check BROADCAST_OPERATOR_SECRET in .env</div>';
+}
+
+async function liveGridRefreshFleetHealth() {
+  try {
+    const r = await lgFetch(LG_RENDER_A + '/live-grid/fleet/health');
+    const j = await r.json();
+    _lgFleetHealthA = j.health || null;
+  } catch (e) { _lgFleetHealthA = null; }
+  try {
+    const r2 = await lgFetch(LG_RENDER_B + '/live-grid/fleet/health');
+    const j2 = await r2.json();
+    _lgFleetHealthB = j2.health || null;
+  } catch (e) { _lgFleetHealthB = null; }
+  lgRenderFleetHealthPanel();
+}
+
+function lgFetch(url, opts) {
+  opts = opts || {};
+  const h = Object.assign({}, opts.headers);
+  const sec = window.__BROADCAST_OPERATOR_SECRET__;
+  let target = url;
+  if (sec) {
+    h.Authorization = 'Bearer ' + sec;
+    if (!/[?&]operator=/.test(url)) {
+      target += (url.indexOf('?') >= 0 ? '&' : '?') + 'operator=' + encodeURIComponent(sec);
+    }
+  }
+  if (opts.body && !h['Content-Type']) h['Content-Type'] = 'application/json';
+  return fetch(target, Object.assign({}, opts, { headers: h }));
+}
+
+function lgFleetModeSelected() {
+  return (document.getElementById('bc-program-mode')?.value || 'solo_roster') !== 'grid';
+}
+
+function lgFleetPaused() {
+  const cfg = window.__FLEET_ROSTER_CONFIG__;
+  return !!(cfg && cfg.fleetPaused === true);
+}
+
+function lgFleetPausedReason() {
+  const cfg = window.__FLEET_ROSTER_CONFIG__;
+  return (cfg && cfg.fleetPausedReason) || 'All solo mirror slots held — clear fleetPaused in roster config before START FLEET.';
+}
+
+function liveGridUseLocalGrid() {
+  const el = document.getElementById('bc-program-mode');
+  if (el) el.value = 'grid';
+  liveGridRender();
+}
+
+function liveGridUseFleet() {
+  const el = document.getElementById('bc-program-mode');
+  if (el) el.value = 'solo_roster';
+  liveGridRender();
+}
+
+function lgFleetConfigSidecar(id) {
+  const cfg = window.__FLEET_ROSTER_CONFIG__;
+  if (!cfg || !cfg.sidecars) return null;
+  return cfg.sidecars.find(function (s) { return s.id === id; }) || null;
+}
+
+function lgRenderFleetStatic(elId, label, sidecarId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const sc = lgFleetConfigSidecar(sidecarId);
+  if (!sc || !sc.slots) {
+    el.innerHTML = '<div style="color:rgba(255,255,255,0.4);">' + label + ': roster config missing</div>';
+    return;
+  }
+  el.innerHTML = '<div style="margin-top:6px;font-weight:600;color:#c7af4f;">' + label + ' · roster (idle)</div>' +
+    sc.slots.map(function (s) {
+      const pause = lgFleetPaused() ? ' · <span style="color:#888;">PAUSED</span>' : '';
+      return '<div>⚪ slot ' + s.slot + ' <b>@' + s.login + '</b> · ' + (s.platform || '') + ' · idle' + pause + '</div>';
+    }).join('');
+}
+
+function lgFleetPhaseDot(phase) {
+  if (phase === 'live') return '🟢';
+  if (phase === 'starting') return '🟡';
+  return '⚪';
+}
+
+function lgRenderFleetSidecar(elId, label, status) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const fleet = status && status.fleetOrchestrator;
+  if (!fleet) {
+    el.innerHTML = '<div style="color:rgba(255,255,255,0.4);">' + label + ': ' + (status && status.running ? 'online (not fleet mode)' : 'offline') + '</div>';
+    return;
+  }
+  const slots = fleet.slots || [];
+  const liveN = slots.filter(function (s) { return s.phase === 'live'; }).length;
+  const fleetHold = lgFleetPaused();
+  el.innerHTML = '<div style="margin-top:6px;font-weight:600;color:#c7af4f;">' + label + ' · ' + liveN + ' live / ' + slots.length + ' slots · poll ' + (fleet.pollMs / 1000) + 's'
+    + (fleetHold ? ' · <span style="color:#888;">PAUSED</span>' : '') + '</div>' +
+    slots.map(function (s) {
+      var link = s.watchUrl ? ' · <a href="' + s.watchUrl + '" target="_blank" style="color:#b794f6;">watch</a>' : '';
+      var pause = (fleetHold || s.paused) ? ' · <span style="color:#888;">PAUSED</span>' : '';
+      return '<div>' + lgFleetPhaseDot(s.phase) + ' slot ' + s.slot + ' <b>@' + s.login + '</b> · ' + (s.platform || '') + ' · ' + s.phase + pause + link + '</div>';
+    }).join('');
+}
+
+async function liveGridStartFleet(sidecar) {
+  if (lgFleetPaused()) {
+    alert('Fleet is paused.\n\n' + lgFleetPausedReason());
+    return;
+  }
+  const base = sidecar === 'b' ? LG_RENDER_B : LG_RENDER_A;
+  const label = sidecar === 'b' ? 'Sidecar B (slots 6–10)' : 'Sidecar A (slots 1–5)';
+  const privacy = document.getElementById('lg-privacy')?.value || 'public';
+  if (!confirm('Start solo roster fleet on ' + label + '?')) return;
+  try {
+    const r = await lgFetch(base + '/live-grid/start', {
+      method: 'POST',
+      body: JSON.stringify({
+        privacyStatus: privacy,
+        programMode: 'solo_roster',
+        usePrepared: false,
+        autoPilot: false,
+        operatorMode: false,
+      }),
+    });
+    const d = await r.json();
+    if (!d.ok) alert('Fleet start failed: ' + (d.error || 'unknown'));
+  } catch (e) { alert('Fleet start failed: ' + e.message); }
+  liveGridRefresh();
+}
 
 /** Health pill colors: ok=green, warn=amber, bad=red, off=muted */
 function lgHealthTone(level) {
@@ -12747,14 +14046,103 @@ function liveGridRenderHealth(s) {
 
 async function liveGridRefresh() {
   try {
-    const r = await fetch(LG_BASE + '/live-grid/status');
+    const r = await lgFetch(LG_RENDER_A + '/live-grid/status');
+    _lgFleetA = await r.json();
+  } catch (e) { _lgFleetA = null; }
+  try {
+    const r2 = await lgFetch(LG_RENDER_B + '/live-grid/status');
+    _lgStatusB = await r2.json();
+  } catch (e) { _lgStatusB = null; }
+  const fleetRunning = !!(
+    (_lgFleetA && _lgFleetA.fleetOrchestrator) ||
+    (_lgStatusB && _lgStatusB.fleetOrchestrator)
+  );
+  if (fleetRunning) {
+    const sel = document.getElementById('bc-program-mode');
+    if (sel && sel.value !== 'solo_roster') sel.value = 'solo_roster';
+  }
+  try {
+    const r = await fetch(LG_LOCAL + '/live-grid/status');
     _lgStatus = await r.json();
   } catch (e) { _lgStatus = null; }
-  if (!(_lgStatus && _lgStatus.running)) await liveGridLoadListing();
+  if (!fleetRunning && !(_lgStatus && _lgStatus.running)) await liveGridLoadListing();
+  await liveGridRefreshFleetHealth();
   liveGridRender();
 }
 
 function liveGridRender() {
+  const fleetA = _lgFleetA;
+  const fleetB = _lgStatusB;
+  const fleetMode = !!(fleetA?.fleetOrchestrator || fleetB?.fleetOrchestrator);
+  const localGridLive = !!(_lgStatus && _lgStatus.running && !_lgStatus.fleetOrchestrator);
+  const fleetUi = localGridLive ? false : (fleetMode || lgFleetModeSelected());
+
+  if (fleetUi) {
+    const running = !!(fleetA?.running || fleetB?.running);
+    const fleetPaused = lgFleetPaused();
+    const gridPanel = document.getElementById('lg-grid-mode-panel');
+    const fleetPanel = document.getElementById('lg-fleet-mode-panel');
+    if (gridPanel) gridPanel.style.display = 'none';
+    if (fleetPanel) fleetPanel.style.display = '';
+    const pauseBanner = document.getElementById('lg-fleet-pause-banner');
+    const pauseReason = document.getElementById('lg-fleet-pause-reason');
+    if (pauseBanner) pauseBanner.style.display = fleetPaused ? '' : 'none';
+    if (pauseReason && fleetPaused) pauseReason.textContent = lgFleetPausedReason();
+    const cardTitle = document.getElementById('lg-card-title');
+    if (cardTitle) cardTitle.textContent = 'SOLO ROSTER FLEET';
+    const tag = document.getElementById('lg-status-tag');
+    if (fleetPaused) {
+      tag.innerHTML = '<span class="tag-dot" style="background:#888;"></span> FLEET PAUSED';
+      tag.style.color = '#ca8';
+    } else {
+      tag.innerHTML = running
+        ? '<span class="tag-dot" style="background:#e33;"></span> FLEET LIVE'
+        : '<span class="tag-dot"></span> OFFLINE';
+      tag.style.color = running ? '#e88' : '';
+    }
+    if (fleetA?.fleetOrchestrator || fleetA?.running) lgRenderFleetSidecar('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', fleetA);
+    else lgRenderFleetStatic('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', 'a');
+    if (fleetB?.fleetOrchestrator || fleetB?.running) lgRenderFleetSidecar('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', fleetB);
+    else lgRenderFleetStatic('lg-fleet-sidecar-b', 'Sidecar B (slots 6–10)', 'b');
+    document.getElementById('lg-start-btn').style.display = 'none';
+    document.getElementById('lg-fleet-start-a').style.display = (running || fleetPaused) ? 'none' : '';
+    document.getElementById('lg-fleet-start-b').style.display = (running || fleetPaused) ? 'none' : '';
+    document.getElementById('lg-fleet-refresh').style.display = '';
+    document.getElementById('lg-privacy').style.display = running ? 'none' : '';
+    document.getElementById('lg-seo-mode').style.display = 'none';
+    const seoWrap = document.getElementById('lg-seo-mode-wrap');
+    if (seoWrap) seoWrap.style.display = 'none';
+    const loWrap = document.getElementById('lg-local-only-wrap');
+    if (loWrap) loWrap.style.display = 'none';
+    const loLink = document.getElementById('lg-local-watch-link');
+    if (loLink) loLink.style.display = 'none';
+    const stopBtn = document.getElementById('lg-stop-btn');
+    stopBtn.style.display = running ? '' : 'none';
+    stopBtn.textContent = 'END FLEET';
+    document.getElementById('lg-panic-mute-btn').style.display = 'none';
+    document.getElementById('lg-unmute-btn').style.display = 'none';
+    const hp = document.getElementById('lg-health-panel');
+    if (hp) hp.style.display = 'none';
+    return;
+  }
+
+  const gridPanel = document.getElementById('lg-grid-mode-panel');
+  const fleetPanel = document.getElementById('lg-fleet-mode-panel');
+  if (gridPanel) gridPanel.style.display = '';
+  if (fleetPanel) fleetPanel.style.display = 'none';
+  const cardTitle = document.getElementById('lg-card-title');
+  if (cardTitle) cardTitle.textContent = 'LIVE GRID';
+  document.getElementById('lg-fleet-start-a').style.display = 'none';
+  document.getElementById('lg-fleet-start-b').style.display = 'none';
+  document.getElementById('lg-fleet-refresh').style.display = 'none';
+  document.getElementById('lg-seo-mode').style.display = '';
+  const seoWrap = document.getElementById('lg-seo-mode-wrap');
+  if (seoWrap) seoWrap.style.display = '';
+  const loWrap = document.getElementById('lg-local-only-wrap');
+  if (loWrap) loWrap.style.display = 'inline-flex';
+  const loLink = document.getElementById('lg-local-watch-link');
+  if (loLink) loLink.style.display = '';
+
   const s = _lgStatus;
   const running = !!(s && s.running);
   const tag = document.getElementById('lg-status-tag');
@@ -13037,15 +14425,35 @@ async function liveGridStart() {
 }
 
 async function liveGridStop() {
-  if (!confirm('End the live stream on YouTube and stop the encoder? The VOD stays on the channel.')) return;
+  const fleetUi = lgFleetModeSelected() || !!(_lgFleetA?.fleetOrchestrator || _lgStatusB?.fleetOrchestrator);
+  if (!confirm(fleetUi ? 'End fleet on both sidecars? Active YouTube slots will go offline.' : 'End the live stream on YouTube and stop the encoder? The VOD stays on the channel.')) return;
   try {
-    const r = await fetch(LG_BASE + '/live-grid/stop', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endBroadcast: true }),
-    });
-    const d = await r.json();
-    if (!d.ok) alert('Stop failed: ' + (d.error || 'unknown'));
+    if (fleetUi) {
+      if (_lgFleetA?.running) {
+        const r = await lgFetch(LG_RENDER_A + '/live-grid/stop', {
+          method: 'POST',
+          body: JSON.stringify({ endBroadcast: true }),
+        });
+        const d = await r.json();
+        if (!d.ok) alert('Sidecar A stop failed: ' + (d.error || 'unknown'));
+      }
+      if (_lgStatusB?.running) {
+        const r2 = await lgFetch(LG_RENDER_B + '/live-grid/stop', {
+          method: 'POST',
+          body: JSON.stringify({ endBroadcast: true }),
+        });
+        const d2 = await r2.json();
+        if (!d2.ok) alert('Sidecar B stop failed: ' + (d2.error || 'unknown'));
+      }
+    } else {
+      const r = await fetch(LG_LOCAL + '/live-grid/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endBroadcast: true }),
+      });
+      const d = await r.json();
+      if (!d.ok) alert('Stop failed: ' + (d.error || 'unknown'));
+    }
   } catch (e) { alert('Stop failed: ' + e.message); }
   liveGridRefresh();
 }
@@ -13319,6 +14727,11 @@ async function liveGridRefreshLiveSeo() {
 
 liveGridRefresh();
 setInterval(liveGridRefresh, 15000);
+setInterval(function () {
+  if (document.getElementById('page-broadcast')?.classList.contains('active')) {
+    liveGridRefreshFleetHealth();
+  }
+}, LG_FLEET_HEALTH_POLL_MS);
 
 // ===========================================================================
 // CLIPZWORLD TV controls (CPD-958) — start/stop + now-playing rotation
@@ -13394,5 +14807,11 @@ setInterval(liveTvRefresh, 15000);
 </script>
 <script src="/assets/calendar_dashboard.js"></script>
 <script src="/assets/broadcast_dashboard.js"></script>
+<script>
+(function () {
+  var p = window.location.pathname.replace(/\/$/, '');
+  if (p === '/broadcast') nav('broadcast');
+})();
+</script>
 </body>
 </html>

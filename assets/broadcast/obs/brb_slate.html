@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ClipzWorld — BRB</title>
+  <meta name="viewport" content="width=1920, height=1080" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #060a12;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 45%, #22304b 0%, #060a12 70%);
+    }
+    .card {
+      position: relative; text-align: center;
+      padding: 48px 80px;
+      border: 1px solid rgba(199,175,79,0.25);
+      border-radius: 8px;
+      background: rgba(13,20,36,0.6);
+    }
+    .title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 96px; letter-spacing: 8px; color: #fff;
+    }
+    .sub {
+      margin-top: 16px;
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 28px; letter-spacing: 6px;
+      color: rgba(199,175,79,0.8); text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="card">
+    <div class="title">BACK IN A MOMENT</div>
+    <div class="sub">ClipzWorld Live</div>
+  </div>
+</body>
+</html>

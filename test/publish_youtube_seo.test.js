@@ -31,9 +31,12 @@ describe('short social captions', () => {
       cc,
       contentType: 'twitch-short',
     });
-    expect(metadata.tiktok.caption).toMatch(/#FYP/);
+    expect(metadata.tiktok.caption).toMatch(/#TwitchClips/i);
     expect(metadata.tiktok.caption).toMatch(/#Marlon/i);
-    expect((metadata.tiktok.caption.match(/#\w+/g) || []).length).toBeGreaterThanOrEqual(8);
+    expect(metadata.tiktok.caption.length).toBeLessThanOrEqual(300);
+    expect((metadata.tiktok.caption.match(/#\w+/g) || []).length).toBeGreaterThanOrEqual(3);
+    expect((metadata.tiktok.caption.match(/#\w+/g) || []).length).toBeLessThanOrEqual(5);
+    expect(metadata.tiktok.caption).not.toMatch(/tiktok\.com/i);
     expect(metadata.instagram.caption).toMatch(/instagram\.com\/clipzworldnews/i);
     expect((metadata.instagram.caption.match(/#\w+/g) || []).length).toBeGreaterThanOrEqual(12);
     expect(metadata.tiktok.caption).not.toMatch(/Subscribe for more highlights.{80,}/);
@@ -64,6 +67,27 @@ describe('publish YouTube SEO finalize', () => {
     expect(yt.description).toMatch(/instagram\.com\/clipzworldnews/i);
     expect(yt.hashtagCount).toBeGreaterThanOrEqual(3);
     expect(yt.wordCount).toBeGreaterThan(20);
+  });
+
+  test('fillYoutubeTagsToBudget expands short GPT tag lists to 490-500 chars', () => {
+    const { fillYoutubeTagsToBudget } = require('../lib/publish');
+    const { youtubeTagsCombinedLength, YOUTUBE_TAGS_TARGET_MIN, YOUTUBE_TAGS_TARGET_MAX } = require('../lib/gates/metadata_qa');
+    const tags = fillYoutubeTagsToBudget(['twitch', 'clips', 'shorts'], {
+      streamers: ['Marlon', 'ExtraEmily'],
+      title: 'Marlon Unexpected Twitch Fails #Shorts',
+      contentType: 'twitch-short',
+    });
+    const total = youtubeTagsCombinedLength(tags);
+    expect(total).toBeGreaterThanOrEqual(YOUTUBE_TAGS_TARGET_MIN);
+    expect(total).toBeLessThanOrEqual(YOUTUBE_TAGS_TARGET_MAX);
+    expect(tags.some((t) => /marlon/i.test(t))).toBe(true);
+  });
+
+  test('fillYoutubeTagsToBudget trims tags above 500 chars', () => {
+    const { fillYoutubeTagsToBudget } = require('../lib/publish');
+    const { youtubeTagsCombinedLength, YOUTUBE_TAGS_TARGET_MAX } = require('../lib/gates/metadata_qa');
+    const tags = fillYoutubeTagsToBudget(Array.from({ length: 40 }, (_, i) => `verylongtagname${i}`));
+    expect(youtubeTagsCombinedLength(tags)).toBeLessThanOrEqual(YOUTUBE_TAGS_TARGET_MAX);
   });
 });
 

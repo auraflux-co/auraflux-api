@@ -40,8 +40,8 @@ describe('metadata_qa (CPD-1049)', () => {
         tiktok: {
           caption: [
             'Jason rage quits Minecraft — viral Twitch moment from ClipzWorld News',
-            '#FYP #ForYou #Twitch #TwitchClips #TwitchHighlights #StreamerFails #Gaming #LiveStream #Viral #Jason #Minecraft #ClipzWorldNews',
-            'https://www.tiktok.com/@clipzworldstreams',
+            'Follow for more Twitch clips',
+            '#Jason #TwitchClips #FYP #Viral #ClipzWorldNews',
           ].join('\n\n'),
         },
         instagram: {
@@ -86,6 +86,27 @@ describe('metadata_qa (CPD-1049)', () => {
     );
     expect(r.passed).toBe(false);
     expect(r.violations.some((v) => v.includes('TikTok'))).toBe(true);
+  });
+
+  test('blocks YouTube tags below 490 combined chars', () => {
+    const r = validatePublishMetadata(
+      { contentType: 'twitch-short', formType: 'short' },
+      { title: 'Test Title', tags: ['short', 'clip'] },
+    );
+    expect(r.passed).toBe(false);
+    expect(r.violations.some((v) => v.includes('490-500'))).toBe(true);
+  });
+
+  test('passes YouTube tags in 490-500 char budget', () => {
+    const tags = ['a'.repeat(495)];
+    const total = tags.join('').length;
+    expect(total).toBeGreaterThanOrEqual(490);
+    expect(total).toBeLessThanOrEqual(500);
+    const r = validatePublishMetadata(
+      { contentType: 'twitch-short', formType: 'short' },
+      { title: 'Test Title', tags },
+    );
+    expect(r.violations.some((v) => v.includes('490-500'))).toBe(false);
   });
 
   test('review hold on by default', () => {

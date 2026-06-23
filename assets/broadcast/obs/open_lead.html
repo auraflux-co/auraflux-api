@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ClipzWorld — Open Lead</title>
+  <meta name="viewport" content="width=1920, height=1080" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #060a12;
+      font-family: "Barlow Condensed", system-ui, sans-serif;
+    }
+    .vignette {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(34,48,75,0.35) 0%, #060a12 72%);
+    }
+    .pulse {
+      position: absolute; inset: 0;
+      background: rgba(199,175,79,0.04);
+      animation: breathe 3s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    .hint {
+      position: absolute; bottom: 72px; left: 0; right: 0;
+      text-align: center;
+      font-size: 22px; letter-spacing: 6px; text-transform: uppercase;
+      color: rgba(199,175,79,0.45);
+    }
+  </style>
+</head>
+<body>
+  <div class="vignette"></div>
+  <div class="pulse"></div>
+  <div class="hint">Starting soon</div>
+  <!-- Music only — pair with OBS Media Source on Music track. Advance to OPEN_STING when ready (no loop). -->
+</body>
+</html>

@@ -1,5 +1,5 @@
 // CPD-979: live grid music guard — debounce + audio pick logic
-const { MusicDetector, updateMusicState, pickAudioQuad } = require('../lib/live_grid/music_detector');
+const { updateMusicState, pickAudioQuad } = require('../lib/live_grid/music_detector');
 
 const fresh = () => ({ musicRuns: 0, clearRuns: 0, flagged: false });
 
@@ -55,6 +55,19 @@ describe('pickAudioQuad', () => {
 });
 
 describe('MusicDetector tick', () => {
+  let MusicDetector;
+  const origConfirm = process.env.LIVE_GRID_MUSIC_CONFIRM_WINDOWS;
+  beforeAll(() => {
+    process.env.LIVE_GRID_MUSIC_CONFIRM_WINDOWS = '1';
+    jest.resetModules();
+    ({ MusicDetector } = require('../lib/live_grid/music_detector'));
+  });
+  afterAll(() => {
+    if (origConfirm === undefined) delete process.env.LIVE_GRID_MUSIC_CONFIRM_WINDOWS;
+    else process.env.LIVE_GRID_MUSIC_CONFIRM_WINDOWS = origConfirm;
+    jest.resetModules();
+  });
+
   const mk = ({ assignments, results }) => {
     const flagEvents = [];
     const det = new MusicDetector({

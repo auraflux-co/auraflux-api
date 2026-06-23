@@ -291,7 +291,7 @@ Claude returns this complete JSON. Every field. Nothing optional that has a know
     "titles": ["5 A/B options"],
     "recommended": 0,
     "description": "string — full description with all required sections",
-    "tags": ["array", "no hash prefix", "combined ≤500 chars"],
+    "tags": ["array", "no hash prefix", "combined 490-500 chars target, hard max 500"],
     "hashtags": ["#in", "#description", "#footer"],
     "categoryId": "string — content-type specific (see table below)",
     "pinnedComment": "string — question + subscribe URL with {{CHANNEL_HANDLE}} resolved",

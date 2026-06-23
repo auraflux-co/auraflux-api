@@ -49,7 +49,7 @@ module.exports = {
         LIVE_GRID_LOCAL_HLS: 'on',
         LIVE_GRID_AUDIO_DIRECT: 'on',
         LIVE_GRID_AUDIO_COPY: 'off',
-        LIVE_GRID_ENCODER: 'libx264',
+        LIVE_GRID_ENCODER: 'videotoolbox',
       },
       env_production: {
         NODE_ENV: 'production',
@@ -61,7 +61,7 @@ module.exports = {
         LIVE_GRID_LOCAL_HLS: 'on',
         LIVE_GRID_AUDIO_DIRECT: 'on',
         LIVE_GRID_AUDIO_COPY: 'off',
-        LIVE_GRID_ENCODER: 'libx264',
+        LIVE_GRID_ENCODER: 'videotoolbox',
       },
     },
     {

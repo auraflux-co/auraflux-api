@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ClipzWorld — Show Open</title>
+  <meta name="viewport" content="width=1920, height=1080" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #060a12;
+    }
+    .bg {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(135deg, rgba(100,65,165,0.12) 0%, transparent 40%),
+        radial-gradient(ellipse 80% 70% at 50% 40%, #22304b 0%, #060a12 68%);
+    }
+    .desk-streaming { --accent: #6441A5; --accent-rgb: 100,65,165; }
+    .desk-news { --accent: #c7af4f; --accent-rgb: 199,175,79; }
+    .desk-sports { --accent: #17408B; --accent-rgb: 23,64,139; }
+    .desk-default { --accent: #c7af4f; --accent-rgb: 199,175,79; }
+
+    .line {
+      position: absolute; top: 50%; left: 50%;
+      width: 0; height: 3px; margin-top: -1px;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: wipe 0.9s ease-out 0.2s forwards;
+    }
+    @keyframes wipe { to { width: 720px; } }
+
+    .logo-wrap {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -58%) scale(0.6);
+      opacity: 0;
+      animation: logoIn 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) 0.5s forwards;
+    }
+    @keyframes logoIn {
+      to { opacity: 1; transform: translate(-50%, -58%) scale(1); }
+    }
+    .logo-mark {
+      width: 120px; height: 120px; margin: 0 auto 24px;
+      border: 3px solid var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 52px; color: var(--accent); letter-spacing: 4px;
+      box-shadow: 0 0 40px rgba(var(--accent-rgb), 0.35);
+    }
+    .network {
+      text-align: center;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 28px; letter-spacing: 12px; color: rgba(255,255,255,0.55);
+    }
+    .show {
+      text-align: center; margin-top: 28px;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 96px; line-height: 1;
+      color: #fff; letter-spacing: 6px;
+      text-shadow: 0 4px 32px rgba(0,0,0,0.6);
+      opacity: 0;
+      animation: showIn 0.6s ease-out 1.1s forwards;
+    }
+    @keyframes showIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .desk-label {
+      text-align: center; margin-top: 16px;
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 26px; font-weight: 600;
+      letter-spacing: 8px; text-transform: uppercase;
+      color: var(--accent);
+      opacity: 0;
+      animation: showIn 0.5s ease-out 1.4s forwards;
+    }
+    .live-pill {
+      position: absolute; bottom: 100px; left: 50%;
+      transform: translateX(-50%) scale(0.8);
+      opacity: 0;
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 28px;
+      border: 1px solid rgba(229,57,53,0.6);
+      border-radius: 999px;
+      background: rgba(229,57,53,0.12);
+      animation: liveIn 0.4s ease-out 2s forwards;
+    }
+    @keyframes liveIn {
+      to { opacity: 1; transform: translateX(-50%) scale(1); }
+    }
+    .dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #e53935;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.35; } }
+    .live-pill span {
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 22px; font-weight: 600; letter-spacing: 6px; color: #fff;
+    }
+    .fade-out {
+      position: absolute; inset: 0; background: #060a12;
+      opacity: 0; pointer-events: none;
+      animation: fadeOut 0.5s ease-in 9.5s forwards;
+    }
+    @keyframes fadeOut { to { opacity: 1; } }
+  </style>
+</head>
+<body class="desk-default" id="root">
+  <div class="bg"></div>
+  <div class="line"></div>
+  <div class="logo-wrap">
+    <div class="logo-mark">CW</div>
+    <div class="network">CLIPZ WORLD</div>
+    <div class="show" id="show-title">BECAUSE THE LIGHT WAS ON</div>
+    <div class="desk-label" id="desk-label">News desk</div>
+  </div>
+  <div class="live-pill"><div class="dot"></div><span>LIVE</span></div>
+  <div class="fade-out"></div>
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var desk = (q.get('desk') || 'news').toLowerCase();
+      var show = q.get('show') || '';
+      var presets = {
+        streaming: { show: 'TWITCH SOUP', label: 'Streaming desk', cls: 'desk-streaming' },
+        news: { show: 'BECAUSE THE LIGHT WAS ON', label: 'News desk', cls: 'desk-news' },
+        sports: { show: 'SPORTS DESK', label: 'Sports desk', cls: 'desk-sports' }
+      };
+      var p = presets[desk] || presets.streaming;
+      document.getElementById('root').className = p.cls;
+      document.getElementById('show-title').textContent = show || p.show;
+      document.getElementById('desk-label').textContent = p.label;
+    })();
+  </script>
+  <!-- ~10s sting — switch to HOST when fade starts or at ~8s. Keep open music playing across OPEN_LEAD → OPEN_STING → HOST (duck under voice). -->
+</body>
+</html>

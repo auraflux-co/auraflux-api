@@ -557,7 +557,17 @@
     const fixesEl = g('bc-stream-health-fixes');
     if (!panel) return;
     const sh = _bcOps?.streamHealth;
-    const gridLive = !!( _lgStatus?.running) || !!(_bcOps?.gridLive);
+    const fleetA = typeof _lgFleetA !== 'undefined' ? _lgFleetA : null;
+    const fleetB = typeof _lgStatusB !== 'undefined' ? _lgStatusB : null;
+    const fleetLive = !!(
+      (fleetA && fleetA.fleetOrchestrator && fleetA.running) ||
+      (fleetB && fleetB.fleetOrchestrator && fleetB.running)
+    );
+    const fleetHealthLive = !!(
+      (_lgFleetHealthA && (_lgFleetHealthA.liveCount || 0) > 0) ||
+      (_lgFleetHealthB && (_lgFleetHealthB.liveCount || 0) > 0)
+    );
+    const gridLive = !!(_lgStatus?.running) || !!(_bcOps?.gridLive) || fleetLive || fleetHealthLive;
     if (!gridLive && !sh?.summaryExists) {
       panel.style.display = 'none';
       return;
@@ -624,7 +634,13 @@
     const o = _bcOps;
     const s = _lgStatus;
     const tv = _tvStatus;
-    const gridLive = !!(s && s.running) || !!(o && o.gridLive);
+    const fleetA = typeof _lgFleetA !== 'undefined' ? _lgFleetA : null;
+    const fleetB = typeof _lgStatusB !== 'undefined' ? _lgStatusB : null;
+    const fleetLive = !!(
+      (fleetA && fleetA.fleetOrchestrator && fleetA.running) ||
+      (fleetB && fleetB.fleetOrchestrator && fleetB.running)
+    );
+    const gridLive = !!(s && s.running) || !!(o && o.gridLive) || fleetLive;
     const tvLive = !!(tv && tv.running) || !!(o && o.tvLive);
     const jobs = o ? o.activeJobs : '—';
     const safe = o ? o.safeToRestart : true;
@@ -636,9 +652,14 @@
       .map((t) => `<span class="bc-ops-chip ${t.ok ? '' : 'bc-ops-chip-warn'}" title="${t.detail || ''}">${t.label}: ${t.ok ? '✓' : '✗'}</span>`)
       .join('') : '';
 
+    const fleetPaused = !!(window.__FLEET_ROSTER_CONFIG__ && window.__FLEET_ROSTER_CONFIG__.fleetPaused);
+
     bar.innerHTML = `
       <div class="bc-ops-grid">
         <span class="bc-ops-chip ${gridLive ? 'bc-live-yt' : ''}">YT Grid: ${gridLive ? '● LIVE' : 'offline'}</span>
+        ${fleetPaused
+    ? '<span class="bc-ops-chip" style="border-color:#888;color:#ca8;">Fleet mirrors: PAUSED</span>'
+    : `<span class="bc-ops-chip ${fleetLive ? 'bc-live-yt' : ''}">Fleet: ${fleetLive ? '● LIVE' : 'idle'}</span>`}
         <span class="bc-ops-chip ${tvLive ? 'bc-live-tw' : ''}">Twitch TV: ${tvLive ? '● ON AIR' : 'offline'}</span>
         <span class="bc-ops-chip">Jobs: ${jobs}</span>
         <span class="bc-ops-chip">${o?.assemblyBusy ? '⚠ assembly' : 'Assembly: idle'}</span>
@@ -973,6 +994,7 @@
     const headline = (g('bc-headline')?.value || '').trim();
     const eventTitle = (g('bc-event-title')?.value || '').trim();
     const eventFile = g('bc-event-file')?.value || '';
+    const listingId = (g('lg-youtube-listing-id')?.value || '').trim();
     if (!confirm(`Start Live Grid (${programMode}, ${privacy.toUpperCase()})?`)) return;
     const btn = g('lg-start-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'STARTING…'; }
@@ -980,6 +1002,9 @@
     if (headline) body.headline = headline;
     if (eventTitle) body.eventTitle = eventTitle;
     if (eventFile) body.eventFile = eventFile;
+    if (g('lg-local-only')?.checked) body.localOnly = true;
+    else if (privacy === 'private') body.goPublicAt = '18:00';
+    if (listingId) { body.broadcastId = listingId; body.createListing = false; delete body.goPublicAt; }
     try {
       const r = await fetch(BC_BASE + '/live-grid/start', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -999,6 +1024,7 @@
   window.broadcastPageInit = function () {
     broadcastRefreshAll();
     tvRefreshCatalog();
+    if (typeof window.liveGridLoadListing === 'function') window.liveGridLoadListing();
     if (!_bcPoll) {
       _bcPoll = setInterval(function () {
         if (!g('page-broadcast')?.classList.contains('active')) return;
@@ -1020,6 +1046,7 @@
     renderVerticalLink();
     renderOpsBar();
     renderStreamHealthPanel();
+    if (typeof lgRenderFleetHealthPanel === 'function') lgRenderFleetHealthPanel();
   };
 
   const _origTvRender = window.liveTvRender;
@@ -1039,5 +1066,57 @@
   };
 
   window.tvRefreshCatalog = tvRefreshCatalog;
+
+  var _liveShowPackCache = null;
+
+  function liveShowPackRefresh() {
+    var base = (typeof LG_BASE !== 'undefined' && LG_BASE) || (typeof CFG !== 'undefined' && CFG.ffmpegUrl) || 'http://localhost:3000';
+    fetch(base + '/live-show/rundown')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        _liveShowPackCache = d;
+        var el = g('lsp-summary');
+        var tag = g('lsp-status-tag');
+        if (!el) return;
+        var r0 = d.rundown || {};
+        var lines = (r0.blocks || []).map(function (b) {
+          var label = b.desk === 'news' ? 'News' : b.desk === 'sports' ? 'Sports' : 'Streamers';
+          return b.ready ? ('✓ ' + label + ' — ' + b.clips.length + ' clips') : ('○ ' + label + ' — comp not generated');
+        });
+        el.innerHTML = lines.length ? lines.join('<br>') : 'No comps yet today.';
+        if (tag) {
+          var ready = r0.readyDesks || 0;
+          tag.innerHTML = '<span class="tag-dot"></span> ' + ready + '/3 DESKS';
+          tag.className = 'tag ' + (ready >= 3 ? 'tag-live' : 'tag-pending');
+        }
+      })
+      .catch(function (e) {
+        var el = g('lsp-summary');
+        if (el) el.textContent = 'Pack load failed: ' + e.message;
+      });
+  }
+
+  window.liveShowPackRefresh = liveShowPackRefresh;
+
+  window.liveShowPackDownload = function () {
+    if (!_liveShowPackCache || !_liveShowPackCache.pack) {
+      liveShowPackRefresh();
+      setTimeout(function () {
+        if (_liveShowPackCache && _liveShowPackCache.pack) liveShowPackDownload();
+      }, 800);
+      return;
+    }
+    var blob = new Blob([JSON.stringify(_liveShowPackCache.pack, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'live_show_pack_' + (_liveShowPackCache.pack.date || 'today') + '.json';
+    a.click();
+  };
+
+  var _origBroadcastPageInit = window.broadcastPageInit;
+  window.broadcastPageInit = function () {
+    if (typeof _origBroadcastPageInit === 'function') _origBroadcastPageInit();
+    liveShowPackRefresh();
+  };
 
 })();

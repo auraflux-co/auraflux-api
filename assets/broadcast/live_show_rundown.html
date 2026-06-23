@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ClipzWorld — Live Show Rundown</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --gold:#c7af4f; --navy:#0d1424; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#060a12; color:#eee; font-family:system-ui,sans-serif; padding:20px; }
+    h1 { font-size:18px; letter-spacing:3px; color:var(--gold); margin:0 0 4px; }
+    .meta { font-size:12px; color:rgba(255,255,255,0.45); margin-bottom:20px; }
+    .desk { border:1px solid rgba(199,175,79,0.25); border-radius:8px; margin-bottom:16px; overflow:hidden; }
+    .desk-head { padding:12px 16px; background:var(--navy); display:flex; justify-content:space-between; align-items:center; }
+    .desk-head h2 { margin:0; font-size:14px; letter-spacing:2px; }
+    .badge { font-size:10px; padding:3px 8px; border-radius:999px; border:1px solid rgba(199,175,79,0.4); color:var(--gold); }
+    .badge.missing { border-color:rgba(255,255,255,0.2); color:rgba(255,255,255,0.35); }
+    .clip { padding:10px 16px; border-top:1px solid rgba(255,255,255,0.06); font-size:13px; }
+    .clip strong { color:var(--gold); }
+    .clip a { color:#8ab4f8; word-break:break-all; font-size:11px; }
+    .flow { font-size:12px; line-height:1.7; color:rgba(255,255,255,0.55); margin-bottom:16px; padding:12px; background:rgba(13,21,36,0.8); border-radius:6px; }
+    button { background:var(--gold); color:#060a12; border:none; padding:8px 14px; font-weight:700; cursor:pointer; border-radius:4px; margin-right:8px; }
+  </style>
+</head>
+<body>
+  <h1>LIVE SHOW RUNDOWN</h1>
+  <div class="meta" id="meta">Loading…</div>
+  <div class="flow">
+    <b>Order:</b> News → Sports → Streamers · Same source clips as today&apos;s dashboard comps (portrait comps publish to YT/TikTok/IG; live plays landscape sources in OBS CLIP scene).
+  </div>
+  <button type="button" onclick="loadPack()">↻ REFRESH</button>
+  <button type="button" onclick="copyAllUrls()">COPY ALL MP4 URLS</button>
+  <div id="desks"></div>
+  <script>
+    var API = (location.origin && location.origin.startsWith('http')) ? location.origin : 'http://localhost:3000';
+
+    function deskLabel(desk) {
+      if (desk === 'news') return 'Because the Light Was On';
+      if (desk === 'sports') return 'Sports desk';
+      return 'Twitch Soup';
+    }
+
+    function renderRundown(data) {
+      var r = data.rundown || data;
+      document.getElementById('meta').textContent =
+        (r.date || 'today') + ' · ' + (r.readyDesks || 0) + '/3 desks · ' + (r.totalClips || 0) + ' clips';
+      var el = document.getElementById('desks');
+      var blocks = r.blocks || [];
+      if (!blocks.length) {
+        el.innerHTML = '<p style="color:rgba(255,255,255,0.4);">No comps yet — generate News / Sports / Streamers <b>Comp</b> from the dashboard (4 clips each, all 3 platforms).</p>';
+        return;
+      }
+      el.innerHTML = blocks.map(function(b) {
+        var head = '<div class="desk-head"><h2>' + deskLabel(b.desk) + '</h2>'
+          + '<span class="badge' + (b.ready ? '' : ' missing') + '">' + (b.ready ? b.clips.length + ' clips · ' + b.obsScene : 'NOT READY') + '</span></div>';
+        if (!b.ready) return '<div class="desk">' + head + '<div class="clip">Generate comp from Generate page → ' + b.desk + '</div></div>';
+        var clips = b.clips.map(function(c) {
+          return '<div class="clip"><strong>#' + c.index + '</strong> ' + (c.displayName || c.streamer || '') + ' — '
+            + (c.title || 'untitled') + '<br><a href="' + c.url + '" target="_blank" rel="noopener">' + c.url + '</a></div>';
+        }).join('');
+        return '<div class="desk">' + head + clips + '</div>';
+      }).join('');
+      window._lastRundown = r;
+    }
+
+    function loadPack() {
+      fetch(API + '/live-show/rundown').then(function(r) { return r.json(); }).then(renderRundown).catch(function(e) {
+        document.getElementById('meta').textContent = 'Failed: ' + e.message;
+      });
+    }
+
+    function copyAllUrls() {
+      var r = window._lastRundown;
+      if (!r || !r.blocks) return;
+      var lines = [];
+      r.blocks.forEach(function(b) {
+        if (!b.ready) return;
+        lines.push('=== ' + deskLabel(b.desk) + ' ===');
+        b.clips.forEach(function(c) { lines.push(c.url); });
+        lines.push('');
+      });
+      navigator.clipboard.writeText(lines.join('\n')).then(function() { alert('Copied MP4 URLs to clipboard'); });
+    }
+
+    loadPack();
+    setInterval(loadPack, 60000);
+  </script>
+</body>
+</html>

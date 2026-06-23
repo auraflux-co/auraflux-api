@@ -1,6 +1,6 @@
 # ClipzWorld Live — OBS & Set Checklist
 
-**Purpose:** Everything on **your side** (Rob) to go live on Twitch with host + clips — 3-hour magazine show (Streaming / News / Sports), then archive to YouTube and cut shorts.
+**Purpose:** Everything on **your side** (Rob) to go live on Twitch with host + clips — 3-hour magazine show (**News → Sports → Streamers**), then archive to YouTube and cut shorts.
 
 **Target window:** 3:00–6:00 PM ET (replaces ClipzWorld TV VOD loop while you are live).
 
@@ -48,8 +48,8 @@ Fonts (if adding text in OBS): **Bebas Neue** (headlines), **Barlow Condensed** 
 
 ### Computer
 
-- [ ] **Encoder:** Apple Silicon Mac or PC with NVENC — 1080p30 @ 6000 kbps video + 160 kbps audio.
-- [ ] **Ethernet** preferred over Wi‑Fi for 3-hour stability.
+- [ ] **Encoder:** Apple Silicon Mac or PC with NVENC — 1080p30 @ 6000 kbps video + 160 kbps audio (4500 kbps OK on Wi‑Fi if dropped frames).
+- [ ] **Network:** Wi‑Fi is fine — router nearby, 5 GHz preferred; **local OBS recording** is the YouTube master regardless of stream hiccups.
 - [ ] **Disk space:** ≥50 GB free for local recording (3 hr ≈ 8–15 GB depending on bitrate).
 
 ### Second screen (strongly recommended)
@@ -63,12 +63,12 @@ Fonts (if adding text in OBS): **Bebas Neue** (headlines), **Barlow Condensed** 
 
 Pick **one** path for v1:
 
-### Option A — Simple desk (fastest pilot)
+### Option A — Simple desk (fastest pilot) **← recommended, no green screen**
 
-- [ ] Plain or **navy/dark wall** behind you.
+- [ ] Plain or **navy/dark wall** behind you — or use **`host_backdrop.html`** in OBS (camera on top, no chroma key).
 - [ ] Desk at consistent distance from camera.
 - [ ] No visible clutter; mug/water ok.
-- [ ] Brand = **OBS overlays only** (lower third + logo), not physical set dressing.
+- [ ] Brand = **OBS browser backdrop + lower third** — see `OBS_TEMPLATE_NO_GREENSCREEN.md`.
 
 ### Option B — Branded corner
 
@@ -76,11 +76,13 @@ Pick **one** path for v1:
 - [ ] One practical light: key 45° off camera.
 - [ ] Optional: small ClipzWorld logo print or monitor with static brand slide (not program).
 
-### Option C — Green screen
+### Option C — Green screen **(skip for v1 — use Option A + host_backdrop.html instead)**
 
 - [ ] Even green, no wrinkles; separate from you (avoid green spill on skin).
 - [ ] OBS **Chroma Key** filter on camera source — test before first live.
 - [ ] Virtual background: solid navy `#22304b` or subtle gradient (not busy image).
+
+**Most operators should skip Option C.** Digital backdrop + real dark wall is faster and looks more consistent than cheap green fabric.
 
 **Set rule:** Frame **head + shoulders to mid-chest** — same crop every scene so switching Host ↔ Clip feels intentional.
 
@@ -129,23 +131,39 @@ Suggested live encode (Twitch):
 
 ## 4. Scene list (build in this order)
 
-Create scenes — **exact names help muscle memory:**
+Create scenes — **exact names help muscle memory.**
+
+**Show packaging (v1 — no looping “starting soon”):** music + branded open → **camera appears** (“lights on”) → show → optional montage → outro music. Browser stings live in `assets/broadcast/obs/` — see that folder’s README for URLs and wiring.
 
 | Scene | Purpose |
 |-------|---------|
-| `STARTING_SOON` | Slates + music; go live 5–10 min before content |
-| `HOST` | You on camera + overlays |
+| `OPEN_LEAD` | Optional 3–5s dark slate while **open music** starts — **not** a loop |
+| `OPEN_STING` | ~10s branded opener (Browser: `open_sting.html?desk=streaming`) + same music |
+| `HOST` | **Camera on** + overlays — mic hot; music ducked or stopped |
 | `CLIP` | Full-screen clip (video/browser) + optional small facecam |
 | `HOST_CLIP_PIP` | Optional: clip large + you corner (use if not full-screen clip) |
-| `DESK_STREAMING` | HOST + lower third “TWITCH SOUP” / purple accent |
-| `DESK_NEWS` | HOST + lower third “BECAUSE THE LIGHT WAS ON” |
-| `DESK_SPORTS` | HOST + lower third sports branding |
+| `DESK_NEWS` | HOST + lower third “BECAUSE THE LIGHT WAS ON” (**block 1**) |
+| `DESK_SPORTS` | HOST + lower third sports branding (**block 2**) |
+| `DESK_STREAMING` | HOST + lower third “TWITCH SOUP” / purple accent (**block 3**) |
+| `BUMPER_NEWS` / `BUMPER_SPORTS` / `BUMPER_STREAMING` | ~5s desk chapter (`desk_bumper.html?desk=…`) + short music hit |
 | `BUFFER_QA` | HOST + “ASK CHAT” graphic |
 | `BUFFER_GAME` | HOST + game/trivia slide |
-| `BRB` | Be right back — loop or static |
-| `ENDING` | Outro slate + thank you |
+| `BRB` | Be right back — static (no long loop on pilot) |
+| `MONTAGE_END` | End-of-show highlights — MP4 under browser overlay `montage_end.html` |
+| `OUTRO_STING` | ~13s thank-you card + **outro music** (Browser: `outro_sting.html`) |
+| `STARTING_SOON` | *Legacy* — only if you want a long pre-show wait; skip for magazine open |
 
-Minimum for **pilot:** `STARTING_SOON`, `HOST`, `CLIP`, `BRB`, `ENDING`.
+Minimum for **pilot:** `OPEN_STING`, `HOST`, `CLIP`, `BRB`, `OUTRO_STING`.
+
+### Open / close sequence (on air)
+
+1. **Start Recording** → **Go Live** on `OPEN_LEAD` or `OPEN_STING` (music only — you are off camera).  
+2. `OPEN_STING` runs ~8–10s → switch to **`HOST`** (camera + key light = “lights on, action”).  
+3. Run desk (`HOST` ↔ `CLIP`).  
+4. Optional **`MONTAGE_END`** (15–30s) — pre-cut `montage.mp4` or placeholder overlay until you have one.  
+5. **`OUTRO_STING`** + outro music → stop stream → stop recording.
+
+Music files: `~/ClipzWorld/obs/music/show_open.mp3`, `show_outro.mp3` (royalty-free / Epidemic Sound).
 
 ### HOST scene sources (bottom → top)
 
@@ -189,8 +207,10 @@ Store in e.g. `~/ClipzWorld/obs/`:
 - [ ] `lower_third_news.png` or text template  
 - [ ] `lower_third_streaming.png`  
 - [ ] `lower_third_sports.png`  
-- [ ] `starting_soon.png` / `ending.png`  
+- [ ] `music/show_open.mp3`, `music/show_outro.mp3`, optional `music/montage_bed.mp3`  
+- [ ] `montage.mp4` — end-of-show highlight reel (when ready)  
 - [ ] `brb.png`  
+- [ ] Browser stings (already in repo): `assets/broadcast/obs/open_sting.html`, `outro_sting.html`, `montage_end.html`  
 - [ ] Optional: desk chapter stingers (5 sec) between blocks  
 
 **Streamlabs / StreamElements:** Optional for alerts only — do not duplicate scene logic; keep **OBS as single program switcher**.
@@ -202,7 +222,7 @@ Store in e.g. `~/ClipzWorld/obs/`:
 **Before every show:**
 
 - [ ] Dashboard / cron: today’s **script + clip list** exported (news stories, sports packages, Twitch clips).  
-- [ ] **6–8 streaming clips**, **5–6 news**, **3–5 sports** picked (over-pick; cut on air).  
+- [ ] **5–6 news**, **3–5 sports**, **6–8 streaming** clips picked (over-pick; cut on air). Run desks **news → sports → streamers**.
 - [ ] Each clip: **local MP4 path or URL** tested in OBS Media Source once.  
 - [ ] **Rundown sheet** (Google Doc or print) with columns:
 
@@ -221,17 +241,21 @@ Store in e.g. `~/ClipzWorld/obs/`:
 
 ## 8. 3-hour show rundown template (180 min)
 
+**Desk order (locked):** News → Sports → Streamers (Twitch Soup).
+
 | Block | Min | OBS scenes |
 |-------|-----|------------|
-| Cold open | 10 | STARTING_SOON → HOST |
-| Streaming desk | 50 | DESK_STREAMING ↔ CLIP (rotate) |
+| Cold open | 10 | `OPEN_STING?desk=news` → HOST (intro teases **news first**) |
+| **News desk** | 50 | `DESK_NEWS` ↔ CLIP |
 | Buffer A | 10 | BUFFER_QA or BUFFER_GAME |
-| News desk | 50 | DESK_NEWS ↔ CLIP |
+| **Sports desk** | 40 | `BUMPER_SPORTS` → `DESK_SPORTS` ↔ CLIP |
 | Buffer B | 10 | BUFFER_QA / chat |
-| Sports desk | 40 | DESK_SPORTS ↔ CLIP |
-| Outro | 10 | HOST → ENDING |
+| **Streaming desk** | 50 | `BUMPER_STREAMING` → `DESK_STREAMING` ↔ CLIP |
+| Outro | 10 | MONTAGE_END (optional) → OUTRO_STING |
 
-**Pilot:** Do first 50 min only (one desk + open/close).
+**Pilot:** One block only — start with **News** (~45 min + open/outro).
+
+YouTube chapters (post-show): `0:00 Intro` · `News` · `Sports` · `Twitch Soup` · `Outro`.
 
 ---
 
@@ -253,13 +277,13 @@ Store in e.g. `~/ClipzWorld/obs/`:
 
 ### T−5
 
-- [ ] Scene: `STARTING_SOON`.  
-- [ ] **Go Live** on Twitch.  
-- [ ] Tweet/discord optional “live in 5”.
+- [ ] Scene: `OPEN_LEAD` or `OPEN_STING` (music armed, **camera not in scene yet**).  
+- [ ] **Go Live** on Twitch when ready — no long looping slate.  
+- [ ] Tweet/discord optional “live now”.
 
 ### T−0
 
-- [ ] Switch to HOST — start cold open.  
+- [ ] Run `OPEN_STING` (~10s) → switch to **`HOST`** — lights on, start cold open.  
 - [ ] Note **start time** in rundown (wall clock) for YouTube chapters.
 
 ---
@@ -278,8 +302,8 @@ Store in e.g. `~/ClipzWorld/obs/`:
 
 ## 11. End of show checklist
 
-- [ ] Outro scene → thank viewers → tease tomorrow.  
-- [ ] **Stop Stream** (Twitch).  
+- [ ] Optional `MONTAGE_END` → `OUTRO_STING` (music + thank you).  
+- [ ] **Stop Stream** (Twitch) after outro fade.  
 - [ ] **Stop Recording** — wait for file finalize (MKV remux if needed).  
 - [ ] Note **end timestamps** per desk on rundown.  
 - [ ] Optional: restart **ClipzWorld TV loop** for remainder of 3–6 PM window or hand off to VOD playlist.
@@ -289,7 +313,7 @@ Store in e.g. `~/ClipzWorld/obs/`:
 ## 12. Post-show — YouTube & shorts
 
 - [ ] **Upload master:** Local OBS file → YouTube (unlisted review first).  
-- [ ] **Chapters** in description (Streaming / News / Sports + buffer markers).  
+- [ ] **Chapters** in description (News / Sports / Twitch Soup + buffer markers).  
 - [ ] **Title/thumbnail:** Reuse publish copy from pipeline if same clips as VOD job, or write live-specific title.  
 - [ ] **Shorts (3–5):** Vertical crop 9:16 — best clip+reaction moments (~30–60 s each).  
   - Tools: CapCut, Descript, or ffmpeg; later: pipeline `generate-clip-comp` from timestamps.  
@@ -302,10 +326,13 @@ Store in e.g. `~/ClipzWorld/obs/`:
 
 | Action | Suggested key |
 |--------|----------------|
+| OPEN_STING | F0 |
 | Switch to HOST | F1 |
 | Switch to CLIP | F2 |
 | Switch to BRB | F3 |
-| Mute mic | F4 |
+| MONTAGE_END | F4 |
+| OUTRO_STING | F5 |
+| Mute mic | F6 |
 | Start/Stop Recording | F9 (careful) |
 
 Settings → Hotkeys → assign; avoid conflicts with games.
@@ -317,7 +344,7 @@ Settings → Hotkeys → assign; avoid conflicts with games.
 - [ ] **Internet drop:** OBS auto-reconnect (Twitch) — keep recording locally regardless.  
 - [ ] **OBS crash:** MKV segment may be recoverable; restart stream with “technical difficulties” slate.  
 - [ ] **Clip bad URL:** Local MP4 fallback folder per desk.  
-- [ ] **Second device:** Phone hotspot tested once; not for 3 hr primary.  
+- [ ] **Second device:** Phone hotspot — emergency backup only, not for a 3 hr primary show on Wi‑Fi.  
 - [ ] **Stream key leak:** Reset in Twitch dashboard immediately; update `.env` on server if loop uses same key.
 
 ---
@@ -331,6 +358,8 @@ Settings → Hotkeys → assign; avoid conflicts with games.
 ---
 
 ## 16. First pilot — minimal shopping list
+
+Full list with tiers: **`docs/broadcast/EQUIPMENT_SHOPPING_LIST.md`** · OBS build: **`docs/broadcast/OBS_TEMPLATE_NO_GREENSCREEN.md`**
 
 If buying nothing else:
 
@@ -355,4 +384,4 @@ Not required for pilot; track when ready:
 
 ---
 
-*Last updated: 2026-06-13 — aligns with `content_calendar.json` Twitch TV window 15:00–18:00 ET and 3-desk magazine format.*
+*Last updated: 2026-06-13 — open/outro/montage stings in `assets/broadcast/obs/`; aligns with `content_calendar.json` Twitch TV window 15:00–18:00 ET and 3-desk magazine format.*

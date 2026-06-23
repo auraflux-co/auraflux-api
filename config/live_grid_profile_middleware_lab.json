@@ -1,0 +1,37 @@
+{
+  "name": "c0-live-grid-middleware-lab",
+  "version": "2026-06-19",
+  "description": "Middleware + staged swap profile. FLAGS DEFAULT OFF on running sidecar until you ship after stream ends.",
+  "baselineProfile": "config/live_grid_profile_baseline.json",
+  "shipCommand": "bash scripts/live_grid_middleware_ship.sh",
+  "verifyCommand": "bash scripts/live_grid_middleware_ship.sh verify",
+  "restoreCommand": "bash scripts/live_grid_middleware_ship.sh restore",
+  "localWatchUrl": "http://127.0.0.1:3000/broadcast/local-watch",
+  "env": {
+    "LIVE_GRID_OUTPUT_MIDDLEWARE": "on",
+    "LIVE_GRID_STAGED_SWAP": "on",
+    "LIVE_GRID_RESTREAMER_HOLD": "on",
+    "LIVE_GRID_SWAP_DEBOUNCE_MS": "8000",
+    "LIVE_GRID_SWAP_STABLE_MS": "3000",
+    "LIVE_GRID_LOCAL_HLS": "on",
+    "LIVE_GRID_UDP_RELAY": "on",
+    "LIVE_GRID_RELAY_TRANSCODE": "off",
+    "LIVE_GRID_PROTECT_YT_RTMP": "on",
+    "LIVE_GRID_AUTOTUNE": "off"
+  },
+  "startPayload": {
+    "privacyStatus": "private",
+    "freshListing": true,
+    "operatorMode": true,
+    "programMode": "grid"
+  },
+  "shipChecklist": [
+    "Stream ended — grid stopped (curl POST /live-grid/stop)",
+    "bash scripts/live_grid_middleware_ship.sh apply",
+    "bash scripts/live_grid_middleware_ship.sh verify",
+    "Private lab: curl POST /live-grid/start with startPayload (or GO LIVE dashboard)",
+    "Confirm /live-grid/status middleware.restreamer.running + swap debounce in logs",
+    "Scripted logoff test on private listing",
+    "Next production go-live: same profile or restore baseline"
+  ]
+}

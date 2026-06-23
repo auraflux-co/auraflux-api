@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ClipzWorld — End Montage</title>
+  <meta name="viewport" content="width=1920, height=1080" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1920px; height: 1080px; overflow: hidden;
+      background: #060a12;
+    }
+    /* When you have a montage MP4: put Media Source BELOW this browser layer in OBS (full screen video). */
+    .overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(6,10,18,0.85) 0%, transparent 22%, transparent 78%, rgba(6,10,18,0.92) 100%);
+      pointer-events: none;
+    }
+    .title {
+      position: absolute; top: 64px; left: 0; right: 0;
+      text-align: center;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 64px; letter-spacing: 10px; color: #c7af4f;
+      text-shadow: 0 2px 24px rgba(0,0,0,0.8);
+    }
+    .grid {
+      position: absolute; inset: 120px 80px 120px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    }
+    .cell {
+      background: rgba(34,48,75,0.5);
+      border: 1px solid rgba(199,175,79,0.25);
+      border-radius: 4px;
+      animation: cellPulse 2.4s ease-in-out infinite;
+    }
+    .cell:nth-child(2) { animation-delay: 0.3s; }
+    .cell:nth-child(3) { animation-delay: 0.6s; }
+    .cell:nth-child(4) { animation-delay: 0.9s; }
+    .cell:nth-child(5) { animation-delay: 1.2s; }
+    .cell:nth-child(6) { animation-delay: 1.5s; }
+    @keyframes cellPulse {
+      0%, 100% { opacity: 0.35; transform: scale(0.98); }
+      50% { opacity: 0.7; transform: scale(1); }
+    }
+    .placeholder-note {
+      position: absolute; bottom: 80px; left: 0; right: 0;
+      text-align: center;
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 22px; letter-spacing: 4px;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+    }
+    .no-video .grid { opacity: 0.5; }
+  </style>
+</head>
+<body class="no-video">
+  <div class="overlay"></div>
+  <div class="title">TONIGHT'S MOMENTS</div>
+  <div class="grid">
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+  </div>
+  <div class="placeholder-note">Drop highlight montage MP4 under this layer in OBS · or cut from recording later</div>
+</body>
+</html>

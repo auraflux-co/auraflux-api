@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ClipzWorld — Lower Third</title>
+  <meta name="viewport" content="width=1920, height=1080" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+    .desk-streaming { --accent: #6441A5; }
+    .desk-news { --accent: #c7af4f; }
+    .desk-sports { --accent: #17408B; }
+
+    .lt {
+      position: absolute;
+      left: 64px; bottom: 48px;
+      max-width: 1100px;
+      display: flex; align-items: stretch;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
+    }
+    .lt-bar {
+      width: 6px;
+      background: var(--accent);
+      border-radius: 3px 0 0 3px;
+    }
+    .lt-body {
+      background: linear-gradient(90deg, rgba(34,48,75,0.95) 0%, rgba(34,48,75,0.75) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-left: none;
+      padding: 14px 28px 16px 20px;
+      border-radius: 0 6px 6px 0;
+    }
+    .lt-desk {
+      font-family: "Barlow Condensed", sans-serif;
+      font-size: 16px; font-weight: 600;
+      letter-spacing: 6px; text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .lt-title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 42px; line-height: 1.05;
+      color: #fff; letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body class="desk-news" id="root">
+  <div class="lt">
+    <div class="lt-bar"></div>
+    <div class="lt-body">
+      <div class="lt-desk" id="desk-label">News desk</div>
+      <div class="lt-title" id="seg-title">Top story</div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var desk = (q.get('desk') || 'news').toLowerCase();
+      var presets = {
+        streaming: { label: 'Twitch Soup', cls: 'desk-streaming' },
+        news: { label: 'Because the light was on', cls: 'desk-news' },
+        sports: { label: 'Sports desk', cls: 'desk-sports' }
+      };
+      var p = presets[desk] || presets.news;
+      document.getElementById('root').className = p.cls;
+      document.getElementById('desk-label').textContent = p.label;
+      document.getElementById('seg-title').textContent = q.get('title') || 'Segment';
+    })();
+  </script>
+  <!-- Transparent 1920×1080 browser — top layer in HOST scene. ?title=URL-encoded headline -->
+</body>
+</html>

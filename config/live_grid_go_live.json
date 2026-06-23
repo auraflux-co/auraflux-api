@@ -1,0 +1,25 @@
+{
+  "comment": "Nightly go-live — hardcoded SEO/thumbnail; operator locks before encoder starts. LIVE_GRID_DUAL_BROADCAST=off = single 1920x1080 RTMP (Studio dual-thumb is YouTube UI only).",
+  "programMode": "grid",
+  "operatorMode": true,
+  "operatorLocks": [
+    { "quadrant": 1, "type": "channel", "login": "stableronaldo" },
+    { "quadrant": 2, "type": "channel", "login": "yourragegaming" },
+    { "quadrant": 3, "type": "channel", "login": "cinna" },
+    { "quadrant": 4, "type": "channel", "login": "arky" }
+  ],
+  "seo": {
+    "title": "🔴 LIVE: Stableronaldo, Yourragegaming, Cinna, Arky",
+    "tags": [
+      "twitch live", "live stream", "watch party", "twitch multistream", "multiview twitch",
+      "streamer reactions", "live react", "irl stream", "gaming live", "just chatting",
+      "twitch streamers", "clipzworld", "clipzworld news",
+      "stableronaldo", "yourragegaming", "cinna", "arky",
+      "Stableronaldo", "Yourragegaming", "Cinna", "Arky",
+      "four streamers", "2x2 grid", "twitch grid", "multi stream"
+    ],
+    "thumbnailHeadline": "Twitch Multiview",
+    "thumbnailSubline": "Stableronaldo · Yourragegaming · Cinna · Arky"
+  },
+  "deadBroadcastIds": ["IReUWCNp9iU", "t_rFwo-OQlo", "Tod9T_qN11c", "qd4-M5cmooY", "hfEc9tn1G2s", "jeq82qehVt0", "t5onGIN9GH4"]
+}

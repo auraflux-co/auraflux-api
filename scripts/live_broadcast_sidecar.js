@@ -51,6 +51,16 @@ for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, () => shutdown().catch(() => process.exit(1)));
 }
 
+// ffmpeg pipe closes during encoder restart — must not kill the sidecar mid GO LIVE
+process.on('uncaughtException', (err) => {
+  if (err && err.code === 'EPIPE') {
+    console.warn('[broadcast-sidecar] ignored EPIPE (ffmpeg pipe closed during encode)');
+    return;
+  }
+  console.error('[broadcast-sidecar] uncaughtException:', err);
+  process.exit(1);
+});
+
 setInterval(() => {
   const tv = liveState.tv?.status?.();
   const grid = liveState.grid?.running;
