@@ -207,7 +207,8 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **feat(cpd-1072): live mirror disclaimers** — LIVE_MIRROR_DISCLAIMER + grid co-stream block in solo SEO. | seo.js, solo_seo.js, test/solo_seo_fleet.test.js, STATUS.md | — | 2026-06-23 ET |
+| Cursor | **feat(cpd-1073): brand frame overlay** — optional 720p PNG frame on solo ffmpeg before RTMP. | solo_brand_frame.js, solo_publishers.js, test/solo_brand_frame.test.js, STATUS.md | — | 2026-06-23 ET |
+| Cursor | **feat(cpd-1072): live mirror disclaimers** — LIVE_MIRROR_DISCLAIMER + grid co-stream block in solo SEO. | seo.js, solo_seo.js, test/solo_seo_fleet.test.js, STATUS.md | 0a349cb5 | 2026-06-23 ET |
 | Cursor | **fix(cpd-1067): staging deploy failures** — lazy OpenAI in publish.js (api-staging crash); app-staging build heap 4096MB. | lib/publish.js, render.yaml, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **fix(cpd-1067): restore cwn_production.html + clean fleet panel** — revert to pre-fleet baseline (3a7d0aa3); solo_roster is separate panel hiding grid hot-swap/solo Q1–Q5; fleet auth via lgFetch. | cwn_production.html, STATUS.md | — | 2026-06-21 ET |
 | Cursor | **fix(cpd-1067): broadcast dashboard fleet panel** — repair lgFetch URLs; roster visible in solo_roster; START FLEET A/B; static server on :8765. | cwn_production.html, broadcast_dashboard_static.js, broadcast_dashboard.js, STATUS.md | a40cf71a | 2026-06-21 ET |
