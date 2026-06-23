@@ -7,6 +7,9 @@ const {
   CHANNEL_SOCIAL,
   finalizeYoutubePublishMetadata,
   appendHashtagsToDescription,
+  appendFeaturedStreamersBlock,
+  normalizeDescriptionNewlines,
+  sanitizePublishText,
   buildPublishScriptFromCard,
   buildPublishItemsFromCard,
 } = require('../lib/publish');
@@ -67,6 +70,44 @@ describe('publish YouTube SEO finalize', () => {
     expect(yt.description).toMatch(/instagram\.com\/clipzworldnews/i);
     expect(yt.hashtagCount).toBeGreaterThanOrEqual(3);
     expect(yt.wordCount).toBeGreaterThan(20);
+  });
+
+  test('normalizeDescriptionNewlines unescapes literal backslash-n', () => {
+    const out = normalizeDescriptionNewlines('Line one\\n\\nLine two\\nLine three');
+    expect(out).toBe('Line one\n\nLine two\nLine three');
+  });
+
+  test('sanitizePublishText preserves paragraph breaks', () => {
+    const out = sanitizePublishText('Hook paragraph\n\nSecond paragraph with  extra spaces.');
+    expect(out).toContain('\n\n');
+    expect(out).not.toMatch(/paragraph  Second/);
+  });
+
+  test('appendFeaturedStreamersBlock adds twitch URLs per spec format', () => {
+    const out = appendFeaturedStreamersBlock('Hook line.\n\nSubscribe for more.', ['plaqueboymax', 'extraemily']);
+    expect(out).toMatch(/Featured Streamers/);
+    expect(out).toMatch(/twitch\.tv\/extraemily/i);
+    expect(out).toMatch(/plaqueboymax\nhttps:\/\/www\.twitch\.tv\/plaqueboymax/i);
+  });
+
+  test('finalizeYoutubePublishMetadata appends streamer twitch links for twitch-short', () => {
+    const yt = {
+      description: [
+        'ExtraEmily pad box chaos and more viral Twitch moments in this Short.',
+        'Subscribe to ClipzWorld News for daily streamer highlights and funny clips.',
+        'Comment with your favorite moment from this compilation.',
+      ].join('\n\n'),
+      hashtags: ['Shorts', 'TwitchClips', 'FYP'],
+    };
+    finalizeYoutubePublishMetadata(yt, buildChannelConfig().clips, {
+      isShort: true,
+      contentType: 'twitch-short',
+      streamers: ['extraemily', 'plaqueboymax'],
+    });
+    expect(yt.description).toMatch(/Featured Streamers/);
+    expect(yt.description).toMatch(/twitch\.tv\/extraemily/i);
+    expect(yt.description).toMatch(/twitch\.tv\/plaqueboymax/i);
+    expect(yt.description.split('\n\n').length).toBeGreaterThan(3);
   });
 
   test('fillYoutubeTagsToBudget expands short GPT tag lists to 490-500 chars', () => {

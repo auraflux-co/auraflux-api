@@ -34,9 +34,9 @@ describe('publish copy prompt — long-form structured description (CPD-962)', (
     });
     expect(out).toContain('125-250 words');
     expect(out).toContain('3-5 hashtags INLINE');
+    expect(out).toContain('Featured Streamers');
     expect(out).toContain('clipzworldstreams');
     expect(out).not.toContain('under 120 chars');
-    expect(out).not.toContain('Featured Streamers');
   });
 
   test('news-short content type resolves news context without long-form SEO block', () => {
@@ -57,7 +57,7 @@ describe('publish copy prompt — long-form structured description (CPD-962)', (
       isShort: true,
     });
     expect(out).toContain('SEPARATE rewritten headline');
-    expect(out).toContain('do NOT copy burned caption text');
+    expect(out).toContain('do NOT copy burned hook text');
     expect(out).not.toContain('Burned on-screen hooks use');
   });
 });
