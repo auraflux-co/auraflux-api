@@ -47,11 +47,17 @@ async function main() {
   }
 
   if (args.sources.length) {
+    let ok = 0;
     for (const id of args.sources) {
-      await ingestSource(id, { passes: args.passes });
+      try {
+        await ingestSource(id, { passes: args.passes });
+        ok++;
+      } catch (e) {
+        console.error(`[hook-master/ingest] ✗ ${id}: ${e.message}`);
+      }
     }
-    mergeAllPlaybook();
-    process.exit(0);
+    if (ok) mergeAllPlaybook();
+    process.exit(ok ? 0 : 1);
   }
 
   console.error('Specify --all, --articles-only, --merge-all, or --source <id>');
