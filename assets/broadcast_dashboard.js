@@ -556,9 +556,15 @@
       .map((t) => `<span class="bc-ops-chip ${t.ok ? '' : 'bc-ops-chip-warn'}" title="${t.detail || ''}">${t.label}: ${t.ok ? '✓' : '✗'}</span>`)
       .join('') : '';
 
+    const fleetPaused = !!(window.__FLEET_ROSTER_CONFIG__ && window.__FLEET_ROSTER_CONFIG__.fleetPaused);
+    const fleetMode = typeof window.lgFleetModeSelected === 'function' && window.lgFleetModeSelected();
+
     bar.innerHTML = `
       <div class="bc-ops-grid">
         <span class="bc-ops-chip ${gridLive ? 'bc-live-yt' : ''}">YT Grid: ${gridLive ? '● LIVE' : 'offline'}</span>
+        ${fleetPaused
+    ? '<span class="bc-ops-chip" style="border-color:#888;color:#ca8;">Fleet mirrors: PAUSED</span>'
+    : (fleetMode ? '<span class="bc-ops-chip">Fleet mirrors: idle</span>' : '')}
         <span class="bc-ops-chip ${tvLive ? 'bc-live-tw' : ''}">Twitch TV: ${tvLive ? '● ON AIR' : 'offline'}</span>
         <span class="bc-ops-chip">Jobs: ${jobs}</span>
         <span class="bc-ops-chip">${o?.assemblyBusy ? '⚠ assembly' : 'Assembly: idle'}</span>

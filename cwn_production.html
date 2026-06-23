@@ -551,6 +551,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
           <!-- 10-slot solo roster fleet — hidden when program mode is grid -->
           <div id="lg-fleet-mode-panel" style="display:none;margin-bottom:10px;font-size:10px;color:rgba(199,175,79,0.95);line-height:1.65;">
+            <div id="lg-fleet-pause-banner" style="display:none;margin-bottom:8px;padding:8px 10px;border:1px solid rgba(200,160,80,0.45);border-radius:4px;background:rgba(80,60,20,0.35);color:#eca;">
+              <b>FLEET PAUSED</b> — <span id="lg-fleet-pause-reason">All solo mirror slots held. Clear <code>fleetPaused</code> in roster config before START FLEET.</span>
+            </div>
             <div style="font-weight:700;margin-bottom:4px;">SOLO ROSTER FLEET · 10 slots (Sidecar A 1–5 · Sidecar B 6–10)</div>
             <div id="lg-fleet-sidecar-a"></div>
             <div id="lg-fleet-sidecar-b"></div>
@@ -9647,6 +9650,16 @@ function lgFleetModeSelected() {
   return (document.getElementById('bc-program-mode')?.value || 'grid') === 'solo_roster';
 }
 
+function lgFleetPaused() {
+  const cfg = window.__FLEET_ROSTER_CONFIG__;
+  return !!(cfg && cfg.fleetPaused === true);
+}
+
+function lgFleetPausedReason() {
+  const cfg = window.__FLEET_ROSTER_CONFIG__;
+  return (cfg && cfg.fleetPausedReason) || 'All solo mirror slots held — clear fleetPaused in roster config before START FLEET.';
+}
+
 function lgFleetConfigSidecar(id) {
   const cfg = window.__FLEET_ROSTER_CONFIG__;
   if (!cfg || !cfg.sidecars) return null;
@@ -9663,7 +9676,8 @@ function lgRenderFleetStatic(elId, label, sidecarId) {
   }
   el.innerHTML = '<div style="margin-top:6px;font-weight:600;color:#c7af4f;">' + label + ' · roster (idle)</div>' +
     sc.slots.map(function (s) {
-      return '<div>⚪ slot ' + s.slot + ' <b>@' + s.login + '</b> · ' + (s.platform || '') + ' · idle</div>';
+      const pause = lgFleetPaused() ? ' · <span style="color:#888;">PAUSED</span>' : '';
+      return '<div>⚪ slot ' + s.slot + ' <b>@' + s.login + '</b> · ' + (s.platform || '') + ' · idle' + pause + '</div>';
     }).join('');
 }
 
@@ -9696,10 +9710,13 @@ function lgRenderFleetHealthPanel() {
       summaries.push(label + ': unavailable');
       return;
     }
-    const tag = health.tag || 'idle';
+    if (health.fleetPaused) {
+      summaries.push('<span style="color:#888;">' + label + ' · PAUSED</span>');
+    }
+    const tag = health.fleetPaused ? 'PAUSED' : (health.tag || 'idle');
     const worst = health.worstLiveScore;
     const worstTxt = worst != null ? worst + '/100' : '—';
-    summaries.push('<span style="color:' + lgHealthLevelColor(tag === 'BAD' ? 'bad' : tag === 'DEGRADED' ? 'degraded' : 'good') + ';">'
+    summaries.push('<span style="color:' + lgHealthLevelColor(tag === 'BAD' ? 'bad' : tag === 'DEGRADED' ? 'degraded' : tag === 'PAUSED' ? 'paused' : 'good') + ';">'
       + label + ' · ' + tag + '</span> · worst ' + worstTxt + ' · ' + (health.liveCount || 0) + ' live');
     (health.slots || []).forEach(function (s) {
       const scoreTxt = s.score != null ? s.score + '/100' : s.level || '—';
@@ -9746,10 +9763,13 @@ function lgRenderFleetSidecar(elId, label, status) {
   }
   const slots = fleet.slots || [];
   const liveN = slots.filter(function (s) { return s.phase === 'live'; }).length;
-  el.innerHTML = '<div style="margin-top:6px;font-weight:600;color:#c7af4f;">' + label + ' · ' + liveN + ' live / ' + slots.length + ' slots · poll ' + (fleet.pollMs / 1000) + 's</div>' +
+  const fleetHold = lgFleetPaused();
+  el.innerHTML = '<div style="margin-top:6px;font-weight:600;color:#c7af4f;">' + label + ' · ' + liveN + ' live / ' + slots.length + ' slots · poll ' + (fleet.pollMs / 1000) + 's'
+    + (fleetHold ? ' · <span style="color:#888;">PAUSED</span>' : '') + '</div>' +
     slots.map(function (s) {
       var link = s.watchUrl ? ' · <a href="' + s.watchUrl + '" target="_blank" style="color:#b794f6;">watch</a>' : '';
-      return '<div>' + lgFleetPhaseDot(s.phase) + ' slot ' + s.slot + ' <b>@' + s.login + '</b> · ' + (s.platform || '') + ' · ' + s.phase + link + '</div>';
+      var pause = (fleetHold || s.paused) ? ' · <span style="color:#888;">PAUSED</span>' : '';
+      return '<div>' + lgFleetPhaseDot(s.phase) + ' slot ' + s.slot + ' <b>@' + s.login + '</b> · ' + (s.platform || '') + ' · ' + s.phase + pause + link + '</div>';
     }).join('');
 }
 
@@ -9777,6 +9797,9 @@ async function liveGridRefresh() {
   if (fleetRunning) {
     const sel = document.getElementById('bc-program-mode');
     if (sel && sel.value !== 'solo_roster') sel.value = 'solo_roster';
+  } else if (lgFleetPaused()) {
+    const sel = document.getElementById('bc-program-mode');
+    if (sel && sel.value !== 'solo_roster') sel.value = 'solo_roster';
   }
   if (!_lgStatus?.running && !lgFleetModeSelected()) await liveGridRefreshListing();
   if (fleetRunning || lgFleetModeSelected()) await liveGridRefreshFleetHealth();
@@ -9789,6 +9812,7 @@ function liveGridRender() {
   const fleetB = _lgStatusB && _lgStatusB.fleetOrchestrator;
   const fleetMode = !!(fleetA || fleetB);
   const fleetUi = fleetMode || lgFleetModeSelected();
+  const fleetPaused = lgFleetPaused();
   const running = fleetUi
     ? (!!(s && s.running) || !!(_lgStatusB && _lgStatusB.running))
     : !!(s && s.running);
@@ -9799,14 +9823,23 @@ function liveGridRender() {
   if (gridPanel) gridPanel.style.display = fleetUi ? 'none' : '';
   if (gridTail) gridTail.style.display = fleetUi ? 'none' : '';
   if (fleetPanel) fleetPanel.style.display = fleetUi ? '' : 'none';
+  const pauseBanner = document.getElementById('lg-fleet-pause-banner');
+  const pauseReason = document.getElementById('lg-fleet-pause-reason');
+  if (pauseBanner) pauseBanner.style.display = (fleetUi && fleetPaused) ? '' : 'none';
+  if (pauseReason && fleetPaused) pauseReason.textContent = lgFleetPausedReason();
   const cardTitle = document.getElementById('lg-card-title');
   if (cardTitle) cardTitle.textContent = fleetUi ? 'SOLO ROSTER FLEET' : 'LIVE GRID';
 
   const tag = document.getElementById('lg-status-tag');
-  tag.innerHTML = running
-    ? '<span class="tag-dot" style="background:#e33;"></span> ' + (fleetUi ? 'FLEET LIVE' : 'LIVE')
-    : '<span class="tag-dot"></span> OFFLINE';
-  tag.style.color = running ? '#e88' : '';
+  if (fleetUi && fleetPaused) {
+    tag.innerHTML = '<span class="tag-dot" style="background:#888;"></span> FLEET PAUSED';
+    tag.style.color = '#ca8';
+  } else {
+    tag.innerHTML = running
+      ? '<span class="tag-dot" style="background:#e33;"></span> ' + (fleetUi ? 'FLEET LIVE' : 'LIVE')
+      : '<span class="tag-dot"></span> OFFLINE';
+    tag.style.color = running ? '#e88' : '';
+  }
 
   if (fleetUi) {
     if (fleetA || (s && s.running)) lgRenderFleetSidecar('lg-fleet-sidecar-a', 'Sidecar A (slots 1–5)', s);
@@ -9817,8 +9850,8 @@ function liveGridRender() {
   }
 
   document.getElementById('lg-start-btn').style.display = (!fleetUi && !running) ? '' : 'none';
-  document.getElementById('lg-fleet-start-a').style.display = (fleetUi && !running) ? '' : 'none';
-  document.getElementById('lg-fleet-start-b').style.display = (fleetUi && !running) ? '' : 'none';
+  document.getElementById('lg-fleet-start-a').style.display = (fleetUi && !running && !fleetPaused) ? '' : 'none';
+  document.getElementById('lg-fleet-start-b').style.display = (fleetUi && !running && !fleetPaused) ? '' : 'none';
   document.getElementById('lg-fleet-refresh').style.display = fleetUi ? '' : 'none';
   document.getElementById('lg-privacy').style.display = running ? 'none' : '';
   const stopBtn = document.getElementById('lg-stop-btn');
@@ -10030,6 +10063,10 @@ function liveGridRender() {
 }
 
 async function liveGridStartFleet(sidecar) {
+  if (lgFleetPaused()) {
+    alert('Fleet is paused.\n\n' + lgFleetPausedReason());
+    return;
+  }
   const base = sidecar === 'b' ? LG_BASE_B : LG_BASE;
   const label = sidecar === 'b' ? 'Sidecar B (slots 6–10)' : 'Sidecar A (slots 1–5)';
   const privacy = document.getElementById('lg-privacy')?.value || 'public';

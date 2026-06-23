@@ -1,25 +1,27 @@
 {
-  "version": "2026-06-21",
-  "description": "10 permanent solo YouTube slots — 2 Render sidecars × 5 encoders each (Tier C per sidecar on pro_ultra).",
+  "version": "2026-06-23a",
+  "description": "10 permanent solo YouTube slots — 2 Render sidecars × 5 encoders each (Tier C / option C: 1080p @ 6800k per sidecar on pro_ultra). All Twitch — Kick removed 2026-06-22; B8 funnymike, B10 yonnajay.",
   "programMode": "solo_roster",
+  "fleetPaused": true,
+  "fleetPausedReason": "Operator hold — YouTube lifecycle desync investigation (2026-06-23). Clear fleetPaused before START FLEET.",
   "encodeTier": "C",
   "orchestration": {
     "channel": "ClipzWorld News",
-    "rule": "Slot-locked mirror — source platform live state drives YouTube slot live state.",
+    "rule": "Slot-locked mirror — Twitch live state drives YouTube slot live state on both sidecars.",
     "behaviors": [
-      "Each slot is permanently bound to one streamer (Twitch or Kick). Roster changes are rare (weekly at most).",
-      "When the locked streamer goes live on Twitch/Kick → start ingest + encode for that slot → create or reuse that slot's YouTube broadcast → prelive (RTMP/testing) → full SEO → public on ClipzWorld News.",
+      "Each slot is permanently bound to one Twitch streamer. Roster changes are rare (weekly at most).",
+      "When the locked streamer goes live on Twitch → start ingest + encode for that slot → create or reuse that slot's YouTube broadcast → prelive (RTMP/testing) → full SEO → public on ClipzWorld News.",
       "YouTube broadcasts are NOT pre-created at roster setup — only reusable RTMP stream keys. No Studio Upcoming until source is live.",
       "When the locked streamer goes offline → stop that slot's encode and end that slot's YouTube live on ClipzWorld News. Other slots are unaffected.",
       "When the same streamer goes live again → same slot, same YouTube listing — no rebinding.",
-      "No grid compositor in this mode — only per-slot solo pipelines."
+      "No grid compositor in this mode — only per-slot solo pipelines.",
+      "Sidecar A and Sidecar B use the same Twitch-only ingest path (streamlink → RTSP → solo RTMP) for stability and mirrored option-C quality."
     ],
-    "pollSources": ["twitch helix /streams", "kick API + streamlink probe"],
+    "pollSources": ["twitch helix /streams"],
     "mustNot": [
       "Leave a YouTube slot live after the source streamer ended",
-      "Start a slot without the locked streamer being live on source",
-      "Swap streamers between slots without an explicit roster update",
-      "Use a kickSlug that does not match the Kick channel slug (verify kick.com/{slug} exists before roster lock)"
+      "Start a slot without the locked streamer being live on Twitch",
+      "Swap streamers between slots without an explicit roster update"
     ]
   },
   "youtubeSeo": {
@@ -57,8 +59,8 @@
       "plan": "pro_ultra",
       "maxConcurrentEncodes": 5,
       "slots": [
-        { "slot": 1, "platform": "kick", "login": "deenthegreat", "kickSlug": "deenthegreat", "testLane": true, "notes": "CPD-1069 private Kick test lane — slot 2 paused until Q1 soak green" },
-        { "slot": 2, "platform": "kick", "login": "n3on", "kickSlug": "n3on", "paused": true, "pausedReason": "Kick ingest unreliable — pause until private test lane (2026-06-22)" },
+        { "slot": 1, "platform": "twitch", "login": "extraemily", "notes": "Replaced Kick A1 (deenthegreat) — Twitch-only fleet" },
+        { "slot": 2, "platform": "twitch", "login": "2xrakai", "notes": "Replaced Kick A2 (n3on) — Twitch-only fleet" },
         { "slot": 3, "platform": "twitch", "login": "plaqueboymax" },
         { "slot": 4, "platform": "twitch", "login": "stableronaldo" },
         { "slot": 5, "platform": "twitch", "login": "lacy" }
@@ -75,19 +77,21 @@
       "slots": [
         { "slot": 6, "platform": "twitch", "login": "jasontheween" },
         { "slot": 7, "platform": "twitch", "login": "yourragegaming" },
-        { "slot": 8, "platform": "twitch", "login": "maya", "notes": "YT search relevance #1 among top-12 remainder" },
+        { "slot": 8, "platform": "twitch", "login": "funnymike", "notes": "Replaced maya — runs own YT live; ClipzWorld mirror slot" },
         { "slot": 9, "platform": "twitch", "login": "marlon", "notes": "YT search relevance #2" },
-        { "slot": 10, "platform": "twitch", "login": "adapt", "notes": "YT search relevance #3; FaZe cluster with Ron/Lacy/Jason" }
+        { "slot": 10, "platform": "twitch", "login": "yonnajay", "notes": "Replaced adapt" }
       ]
     }
   ],
   "slotAlternates": {
-    "8": ["adapt", "cinna", "hasanabi"],
-    "9": ["extraemily", "marlon"],
-    "10": ["adapt", "jaycinco"]
+    "1": ["cinna", "hasanabi"],
+    "2": ["jaycinco", "adapt"],
+    "8": ["funnymike", "cinna", "hasanabi"],
+    "9": ["marlon", "cinna"],
+    "10": ["yonnajay", "jaycinco"]
   },
   "youtubeSearchRank": {
     "methodology": "scripts/streamer_yt_search_rank.js — order=relevance, sum pageInfo.totalResults across 4 query templates",
-    "top12Remainder": ["maya", "marlon", "adapt", "hasanabi", "cinna", "extraemily", "jaycinco"]
+    "top12Remainder": ["funnymike", "marlon", "yonnajay", "hasanabi", "cinna", "extraemily", "jaycinco", "2xrakai"]
   }
 }

@@ -4,18 +4,28 @@ const { localFleetSlots, loginSlotMapForBindings } = require('../lib/live_grid/s
 const { isSoloRosterMode, fleetPoolSize } = require('../lib/live_grid/fleet_pool');
 
 describe('solo_roster_fleet', () => {
-  test('sidecar A marks kick slot 2 paused; slot 1 is test lane', () => {
+  test('isFleetPaused reflects roster config', () => {
+    const { isFleetPaused, fleetPausedReason } = require('../lib/live_grid/solo_roster_fleet');
+    expect(isFleetPaused()).toBe(true);
+    expect(fleetPausedReason()).toMatch(/Operator hold/i);
+  });
+
+  test('sidecar A is all Twitch — slots 1–2 extraemily + 2xrakai', () => {
     const slots = localFleetSlots('a');
-    expect(slots[0].testLane).toBe(true);
+    expect(slots[0].platform).toBe('twitch');
+    expect(slots[0].login).toBe('extraemily');
+    expect(slots[0].testLane).toBeUndefined();
     expect(slots[0].paused).toBeUndefined();
-    expect(slots[1].paused).toBe(true);
+    expect(slots[1].platform).toBe('twitch');
+    expect(slots[1].login).toBe('2xrakai');
+    expect(slots[1].paused).toBeUndefined();
     expect(slots[2].paused).toBeUndefined();
   });
 
   test('sidecar A has 5 slots', () => {
     const slots = localFleetSlots('a');
     expect(slots).toHaveLength(5);
-    expect(slots[0].login).toBe('deenthegreat');
+    expect(slots[0].login).toBe('extraemily');
     expect(slots[4].login).toBe('lacy');
     expect(slots[0].localPool).toBe(1);
   });
@@ -24,13 +34,18 @@ describe('solo_roster_fleet', () => {
     const slots = localFleetSlots('b');
     expect(slots).toHaveLength(5);
     expect(slots[0].slot).toBe(6);
-    expect(slots[4].login).toBe('adapt');
+    expect(slots[2].login).toBe('funnymike');
+    expect(slots[4].login).toBe('yonnajay');
   });
 
   test('loginSlotMapForBindings maps logins to local pool', () => {
-    const map = loginSlotMapForBindings('b');
-    expect(map.maya).toBe(3);
-    expect(map.adapt).toBe(5);
+    const map = loginSlotMapForBindings('a');
+    expect(map.extraemily).toBe(1);
+    expect(map['2xrakai']).toBe(2);
+    const mapB = loginSlotMapForBindings('b');
+    expect(mapB.funnymike).toBe(3);
+    expect(mapB.marlon).toBe(4);
+    expect(mapB.yonnajay).toBe(5);
   });
 });
 
