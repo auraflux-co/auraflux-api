@@ -4309,13 +4309,22 @@ app.post('/generate-clip-comp', async (req, res) => {
   let clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
   if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
 
-  const { mergeCompCreative } = require('./lib/clip_comp_creative');
+  const { mergeCompCreative, validateCompLineupDuration, getCompLineupTarget } = require('./lib/clip_comp_creative');
   const streamersEarly = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
   const compCreative = mergeCompCreative({
     preset: req.body.compCreativePreset || req.body.compCreative?.preset,
     overrides: req.body.compCreative,
     streamerHint: streamersEarly[0] || null,
   });
+  const lineupTarget = getCompLineupTarget(compCreative.preset);
+  if (compCreative.delivery?.format === 'vod_comp' && clips.length < lineupTarget.minClips) {
+    return res.status(400).json({ error: `VOD comp needs at least ${lineupTarget.minClips} clips (got ${clips.length})` });
+  }
+  if (lineupTarget.minDurationSec) {
+    const durations = clips.map((c) => Number(c.duration || c.clipDuration || 0));
+    const durCheck = validateCompLineupDuration(compCreative, durations);
+    if (!durCheck.ok) return res.status(400).json({ error: durCheck.message });
+  }
   const maxClips = compCreative.delivery?.format === 'vod_comp' ? 12 : 10;
   if (clips.length > maxClips) return res.status(400).json({ error: `Too many clips (${clips.length} > ${maxClips} max)` });
 

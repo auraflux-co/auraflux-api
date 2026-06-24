@@ -863,6 +863,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                     <option value="classic_blur_pad">Classic ClipzWorld (blur-pad)</option>
                     <option value="full_bleed">Full bleed (imgoochy / core_fx)</option>
                     <option value="serpent_ranked">Ranked list Short (Stream Serpent)</option>
+                    <option value="serpent_ranked_vod">Ranked list VOD — Top 10 (Stream Serpent)</option>
                     <option value="dahbluh_clean">Clean comp (DahBluh Short)</option>
                     <option value="twitch_comp_vod">Comp VOD 8–20 min (edited comp)</option>
                     <option value="custom">Custom (advanced)</option>
@@ -870,7 +871,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   <div id="comp-creative-chips" class="gen-comp-creative-chips"></div>
                   <div id="comp-creative-adv" class="gen-comp-creative-adv">
                     <div id="comp-creative-serpent-hint" style="display:none;padding:8px 10px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(199,175,79,0.25);background:rgba(199,175,79,0.08);color:rgba(255,255,255,0.72);line-height:1.45;font-size:10px;">
-                      <strong style="color:rgba(199,175,79,0.95);">Ranked list:</strong> the on-screen countdown matches your lineup size (classic Top&nbsp;5 = pick <strong>5 clips</strong> in comp order). Clip #1 in the lineup opens at the highest rank still in play.
+                      <strong style="color:rgba(199,175,79,0.95);">Ranked list Short:</strong> on-screen countdown matches lineup size (classic Top&nbsp;5 = pick <strong>5 clips</strong> in comp order). Clip #1 opens at the highest rank still in play. Use <strong>Comp</strong> (not Comp VOD).
+                    </div>
+                    <div id="comp-creative-serpent-vod-hint" style="display:none;padding:8px 10px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(145,70,255,0.25);background:rgba(145,70,255,0.08);color:rgba(255,255,255,0.72);line-height:1.45;font-size:10px;">
+                      <strong style="color:rgba(145,70,255,0.95);">Ranked list VOD:</strong> pick <strong>8–10 clips</strong> (~8–20 min total footage). Countdown shows Top&nbsp;10 down to #1 with editorial intro/bridges. Use <strong>Comp VOD</strong> — lineup must sum to <strong>8+ min</strong> before dispatch.
                     </div>
                     <label>Ranked streamer <input type="text" id="comp-creative-streamer" placeholder="Lacy" oninput="refreshCompCreativeChips()"></label>
                     <label>Rank title word <span style="opacity:0.55;">(header only — not the per-clip hook)</span>
@@ -901,7 +905,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                     <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()">Short</button>
                   </div>
                   <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch 4 clips into one portrait short">Comp</button>
-                  <button id="btn-gen-twitch-comp-vod" class="btn btn-outline" onclick="triggerClipCompVod()" title="8–20 min edited comp VOD from lineup (up to 12 clips)">Comp VOD</button>
+                  <button id="btn-gen-twitch-comp-vod" class="btn btn-outline" onclick="triggerClipCompVod()" title="8–20 min edited comp VOD — classic or ranked Top 10">Comp VOD</button>
                 </div>
                 <span id="twitch-fetch-status" class="gen-status-line"></span>
               </aside>
@@ -9172,6 +9176,44 @@ function formatCompDurationTotal(totalSec) {
   return m + 'm' + (s ? ' ' + s + 's' : '');
 }
 
+/** Mirrors lib/clip_comp_creative.js COMP_LINEUP_TARGETS for UI + guards. */
+var COMP_LINEUP_TARGETS = {
+  classic_blur_pad: { lineupSlots: 4, minClips: 4, maxClips: 4, minDurationSec: 0, maxDurationSec: 180 },
+  full_bleed: { lineupSlots: 4, minClips: 4, maxClips: 4, minDurationSec: 0, maxDurationSec: 180 },
+  dahbluh_clean: { lineupSlots: 4, minClips: 4, maxClips: 4, minDurationSec: 0, maxDurationSec: 180 },
+  serpent_ranked: { lineupSlots: 5, minClips: 2, maxClips: 8, minDurationSec: 0, maxDurationSec: 180 },
+  serpent_ranked_vod: { lineupSlots: 10, minClips: 8, maxClips: 12, minDurationSec: 480, maxDurationSec: 1200 },
+  twitch_comp_vod: { lineupSlots: 8, minClips: 4, maxClips: 12, minDurationSec: 480, maxDurationSec: 1200 },
+  custom: { lineupSlots: 4, minClips: 4, maxClips: 10, minDurationSec: 0, maxDurationSec: 1200 }
+};
+
+function getCompLineupSpec() {
+  var stored = loadCompCreativePresetFromStorage();
+  var preset = stored.preset || 'classic_blur_pad';
+  return COMP_LINEUP_TARGETS[preset] || COMP_LINEUP_TARGETS.classic_blur_pad;
+}
+
+function compLineupDurationCheck(picked) {
+  var spec = getCompLineupSpec();
+  if (!spec.minDurationSec) return { ok: true, totalSec: 0 };
+  var totalSec = 0;
+  var known = 0;
+  (picked || []).forEach(function(p) {
+    var d = compClipDurationSec(p.clip);
+    if (d > 0) { totalSec += d; known++; }
+  });
+  if (!known) {
+    return { ok: false, totalSec: 0, need: spec.minDurationSec, message: 'Need clip durations to verify 8+ min target' };
+  }
+  if (totalSec < spec.minDurationSec) {
+    return { ok: false, totalSec: totalSec, need: spec.minDurationSec - totalSec, message: 'too short' };
+  }
+  if (spec.maxDurationSec && totalSec > spec.maxDurationSec) {
+    return { ok: false, tooLong: true, totalSec: totalSec, message: 'too long' };
+  }
+  return { ok: true, totalSec: totalSec };
+}
+
 // State for main-page pickers
 var _nbaPickerGames = [];   // [{gameId, away, home, awayAbbr, homeAbbr, awayScore, homeScore, clipUrl, clipDuration, thumbnail, localPath, selected}]
 var _newsPickerStories = []; // [{title, link, videoUrl, hlsUrl, thumbnailUrl, orientation, pillarboxFilter, pubDate, selected}]
@@ -9219,7 +9261,9 @@ function renderCompLineupPanel() {
     return;
   }
   reconcileCompLineup(picked);
-  var COMP_CLIP_COUNT = getCompLineupClipCount();
+  var spec = getCompLineupSpec();
+  var stored = loadCompCreativePresetFromStorage();
+  var COMP_CLIP_COUNT = spec.lineupSlots;
   var show = _compLineup.slice(0, COMP_CLIP_COUNT);
   var extra = picked.length - show.length;
   var totalSec = 0;
@@ -9228,15 +9272,25 @@ function renderCompLineupPanel() {
     var d = compClipDurationSec(slot.clip);
     if (d > 0) { totalSec += d; durKnown++; }
   });
-  var head = 'COMP LINEUP (1–' + COMP_CLIP_COUNT + ') — Comp uses this order for hooks + title';
+  var head = stored.preset === 'serpent_ranked_vod'
+    ? 'RANKED VOD LINEUP (Top ' + COMP_CLIP_COUNT + ') — countdown + editorial'
+    : 'COMP LINEUP (1–' + COMP_CLIP_COUNT + ') — Comp uses this order for hooks + title';
+  if (stored.preset === 'serpent_ranked_vod' && spec.minDurationSec) {
+    head += ' · target 8+ min clip footage';
+  }
   if (picked.length > COMP_CLIP_COUNT) {
     head += ' · first ' + COMP_CLIP_COUNT + ' of ' + picked.length + ' selected';
+  } else if (show.length < spec.minClips && spec.minClips > 1) {
+    head += ' · add ' + (spec.minClips - show.length) + '+ more for VOD';
   } else if (extra > 0) {
     head += ' · add ' + (COMP_CLIP_COUNT - show.length) + ' more for full comp';
   }
   var totalLabel = durKnown
     ? ('~' + formatCompDurationTotal(totalSec) + (durKnown < show.length ? ' (' + durKnown + '/' + show.length + ' clips)' : ''))
     : '';
+  if (spec.minDurationSec && durKnown && totalSec < spec.minDurationSec) {
+    totalLabel += ' · need +' + formatCompDurationTotal(spec.minDurationSec - totalSec);
+  }
   var html = '<div class="gen-comp-lineup-head"><span>' + head + '</span>'
     + (totalLabel ? '<span class="gen-comp-lineup-total" title="Sum of clip lengths in lineup (hooks/cards add more)">TOTAL ' + totalLabel + '</span>' : '')
     + '</div><div class="gen-comp-lineup-grid">';
@@ -10239,6 +10293,7 @@ function compCreativeChipList(creative) {
     classic_blur_pad: 'Classic',
     full_bleed: 'Full bleed',
     serpent_ranked: 'Serpent ranked',
+    serpent_ranked_vod: 'Serpent ranked VOD',
     dahbluh_clean: 'DahBluh clean',
     twitch_comp_vod: 'Comp VOD',
     custom: 'Custom'
@@ -10263,10 +10318,9 @@ function loadCompCreativePresetFromStorage() {
   return { preset: 'classic_blur_pad', streamer: '', theme: 'MOMENTS', hookMode: 'hook_only' };
 }
 
-/** Comp lineup + dispatch slot count — 5 for ranked list Short, 4 for classic comp. */
+/** Comp lineup slot count — preset-driven (5 Short ranked, 10 VOD ranked, 4 classic). */
 function getCompLineupClipCount() {
-  var stored = loadCompCreativePresetFromStorage();
-  return stored.preset === 'serpent_ranked' ? 5 : 4;
+  return getCompLineupSpec().lineupSlots;
 }
 
 function saveCompCreativePresetToStorage() {
@@ -10285,15 +10339,16 @@ function saveCompCreativePresetToStorage() {
 function buildCompCreativeRequestPayload(streamerHint) {
   var stored = saveCompCreativePresetToStorage();
   var preset = stored.preset || 'classic_blur_pad';
+  var isRanked = preset === 'serpent_ranked' || preset === 'serpent_ranked_vod';
   var overrides = null;
-  if (preset === 'custom' || preset === 'serpent_ranked' || stored.relatedVideoParentId) {
+  if (preset === 'custom' || isRanked || stored.relatedVideoParentId) {
     overrides = overrides || {};
-    if (preset === 'custom' || preset === 'serpent_ranked') {
+    if (preset === 'custom' || isRanked) {
       overrides.hooks = overrides.hooks || {};
-      var hookMode = stored.hookMode || (preset === 'serpent_ranked' ? 'hook_only' : 'both');
+      var hookMode = stored.hookMode || (isRanked ? 'hook_only' : 'both');
       overrides.hooks.mode = hookMode;
       overrides.hooks.rankedList = {
-        enabled: preset === 'serpent_ranked',
+        enabled: isRanked,
         streamer: stored.streamer || streamerHint || '',
         theme: stored.theme || 'MOMENTS'
       };
@@ -10305,13 +10360,19 @@ function buildCompCreativeRequestPayload(streamerHint) {
       overrides.delivery.relatedVideoParentId = stored.relatedVideoParentId;
     }
   }
-  if (preset === 'serpent_ranked' && overrides) {
+  if (isRanked && overrides) {
     overrides.hooks.rankedList.enabled = true;
   }
   if (preset === 'twitch_comp_vod') {
     overrides = overrides || {};
     overrides.delivery = { format: 'vod_comp', relatedVideoParentId: stored.relatedVideoParentId || null };
     overrides.editorial = { enabled: true, introCard: true, ttsBridges: true };
+  }
+  if (preset === 'serpent_ranked_vod') {
+    overrides = overrides || {};
+    overrides.delivery = { format: 'vod_comp', relatedVideoParentId: stored.relatedVideoParentId || null };
+    overrides.editorial = { enabled: true, introCard: true, ttsBridges: true };
+    if (overrides.hooks && overrides.hooks.rankedList) overrides.hooks.rankedList.enabled = true;
   }
   return {
     compCreativePreset: preset,
@@ -10322,27 +10383,32 @@ function buildCompCreativeRequestPayload(streamerHint) {
 function refreshCompCreativeChips() {
   var stored = saveCompCreativePresetToStorage();
   var adv = g('comp-creative-adv');
-  if (adv) adv.classList.toggle('open', stored.preset === 'custom' || stored.preset === 'serpent_ranked');
+  var isRankedPreset = stored.preset === 'serpent_ranked' || stored.preset === 'serpent_ranked_vod';
+  if (adv) adv.classList.toggle('open', stored.preset === 'custom' || isRankedPreset);
   var serpentHint = g('comp-creative-serpent-hint');
   if (serpentHint) serpentHint.style.display = stored.preset === 'serpent_ranked' ? 'block' : 'none';
-  if (stored.preset === 'serpent_ranked') {
+  var serpentVodHint = g('comp-creative-serpent-vod-hint');
+  if (serpentVodHint) serpentVodHint.style.display = stored.preset === 'serpent_ranked_vod' ? 'block' : 'none';
+  if (isRankedPreset) {
     var hm = g('comp-creative-hook-mode');
     if (hm && hm.value === 'both' && !hm.dataset.userPicked) hm.value = 'hook_only';
   }
   var payload = buildCompCreativeRequestPayload('');
   var pseudo = { preset: stored.preset };
-  if (stored.preset === 'full_bleed' || stored.preset === 'serpent_ranked' || stored.preset === 'dahbluh_clean' || stored.preset === 'twitch_comp_vod') {
+  if (stored.preset === 'full_bleed' || isRankedPreset || stored.preset === 'dahbluh_clean' || stored.preset === 'twitch_comp_vod') {
     pseudo.layout = { mode: 'full_bleed_crop' };
   } else {
     pseudo.layout = { mode: 'blur_pad' };
   }
-  if (stored.preset === 'serpent_ranked') {
+  if (isRankedPreset) {
     pseudo.hooks = { mode: stored.hookMode || 'hook_only', rankedList: { enabled: true, streamer: stored.streamer, theme: stored.theme } };
     pseudo.captions = { whisper: (stored.hookMode || 'hook_only') !== 'hook_only' };
     pseudo.audio = { musicBed: 'low_trap', cutSfx: 'serpent_pack' };
   }
-  if (stored.preset === 'twitch_comp_vod') {
+  if (stored.preset === 'twitch_comp_vod' || stored.preset === 'serpent_ranked_vod') {
     pseudo.delivery = { format: 'vod_comp' };
+  }
+  if (stored.preset === 'twitch_comp_vod') {
     pseudo.audio = { musicBed: 'low_trap', cutSfx: 'whoosh' };
   }
   var el = g('comp-creative-chips');
@@ -10355,7 +10421,7 @@ function refreshCompCreativeChips() {
 function onCompCreativePresetChange() {
   var hm = g('comp-creative-hook-mode');
   var sel = g('comp-creative-preset');
-  if (hm && sel && sel.value === 'serpent_ranked' && hm.value === 'both') hm.value = 'hook_only';
+  if (hm && sel && (sel.value === 'serpent_ranked' || sel.value === 'serpent_ranked_vod') && hm.value === 'both') hm.value = 'hook_only';
   refreshCompCreativeChips();
   refreshCompLineupUI();
 }
@@ -10367,7 +10433,8 @@ function initCompCreativePanel() {
   if (g('comp-creative-streamer') && stored.streamer) g('comp-creative-streamer').value = stored.streamer;
   if (g('comp-creative-theme') && stored.theme) g('comp-creative-theme').value = stored.theme;
   if (g('comp-creative-hook-mode')) {
-    g('comp-creative-hook-mode').value = stored.hookMode || (stored.preset === 'serpent_ranked' ? 'hook_only' : 'both');
+    var rankedDefault = stored.preset === 'serpent_ranked' || stored.preset === 'serpent_ranked_vod';
+    g('comp-creative-hook-mode').value = stored.hookMode || (rankedDefault ? 'hook_only' : 'both');
     g('comp-creative-hook-mode').onchange = function() { this.dataset.userPicked = '1'; refreshCompCreativeChips(); };
   }
   if (g('comp-creative-related-vod') && stored.relatedVideoParentId) g('comp-creative-related-vod').value = stored.relatedVideoParentId;
@@ -10376,19 +10443,38 @@ function initCompCreativePanel() {
 
 function triggerClipCompVod() {
   var sel = g('comp-creative-preset');
-  if (sel) sel.value = 'twitch_comp_vod';
-  refreshCompCreativeChips();
-  var VOD_CLIP_COUNT = 8;
+  var stored = loadCompCreativePresetFromStorage();
+  if (sel && stored.preset !== 'serpent_ranked_vod' && stored.preset !== 'twitch_comp_vod') {
+    sel.value = 'twitch_comp_vod';
+    refreshCompCreativeChips();
+  }
+  var spec = getCompLineupSpec();
+  var isRankedVod = loadCompCreativePresetFromStorage().preset === 'serpent_ranked_vod';
+  var VOD_CLIP_COUNT = spec.maxClips;
   var picked = getCompLineupForDispatch(VOD_CLIP_COUNT);
   if (!picked.length) {
     previewTwitchClips();
-    alert('Pick clips in the lineup first, then Comp VOD (uses up to ' + VOD_CLIP_COUNT + ' clips).');
+    var hint = isRankedVod
+      ? 'Pick 8–10 clips in comp order (~8–20 min), preset Ranked list VOD, then Comp VOD.'
+      : 'Pick clips in the lineup first, then Comp VOD (uses up to ' + spec.lineupSlots + ' clips).';
+    alert(hint);
     return;
   }
-  if (picked.length < 4) {
-    alert('Comp VOD needs at least 4 clips — only ' + picked.length + ' in lineup.');
+  if (picked.length < spec.minClips) {
+    alert((isRankedVod ? 'Ranked list VOD' : 'Comp VOD') + ' needs at least ' + spec.minClips + ' clips — only ' + picked.length + ' in lineup.');
     return;
   }
+  var durCheck = compLineupDurationCheck(picked);
+  if (!durCheck.ok) {
+    if (durCheck.tooLong) {
+      alert('Lineup is ~' + formatCompDurationTotal(durCheck.totalSec) + ' — trim clips to stay under ~20 min of footage.');
+      return;
+    }
+    var needMsg = durCheck.need ? (' — add ~' + formatCompDurationTotal(durCheck.need) + ' more clip time') : '';
+    alert('VOD comp targets 8+ min of clip footage. Lineup is ~' + formatCompDurationTotal(durCheck.totalSec || 0) + needMsg + '.');
+    return;
+  }
+  if (isRankedVod && picked.length !== 10 && !confirm('Ranked VOD is designed for Top 10 (10 clips). You have ' + picked.length + ' — countdown shows ' + picked.length + ' down to #1. Continue?')) return;
   if (picked.length > VOD_CLIP_COUNT) picked = picked.slice(0, VOD_CLIP_COUNT);
   showPlatformModal(function(selPlatforms) {
     var pub = parsePlatformModalSelection(selPlatforms);
@@ -10396,7 +10482,15 @@ function triggerClipCompVod() {
     switchGeneratePillar('twitch');
     setCompStatus('twitch-gen-status', 'COMP VOD — resolving ' + picked.length + ' clip(s)...', 'assembling');
     var allClips = picked.map(function(p) {
-      return { streamer: p.name, displayName: p.displayName, title: p.clip.title || '', url: p.clip.url || '', views: p.clip.views || 0, game: p.clip.game || '' };
+      return {
+        streamer: p.name,
+        displayName: p.displayName,
+        title: p.clip.title || '',
+        url: p.clip.url || '',
+        views: p.clip.views || 0,
+        game: p.clip.game || '',
+        duration: compClipDurationSec(p.clip)
+      };
     });
     resolveTwitchClipUrls(allClips, function() {
       var clips = allClips.map(function(c, i) {
@@ -10407,7 +10501,8 @@ function triggerClipCompVod() {
           streamer: c.streamer,
           displayName: c.displayName,
           orientation: 'landscape',
-          label: 'CLIP_' + (i + 1)
+          label: 'CLIP_' + (i + 1),
+          duration: c.duration || compClipDurationSec(picked[i] && picked[i].clip)
         };
       });
       _dispatchClipCompFromPicker(clips, 'twitch-vod-comp', pub.platforms, 'twitch-gen-status', g('twitch-fetch-status'), pub.scheduledAt, {});
@@ -10679,8 +10774,14 @@ function _dispatchClipShort(clip, contentType, title, platforms, statusId, sched
 
 function triggerClipComp() {
   // CPD-935: clips-only compilation — comp lineup order (or picker order) stitches into ONE short.
-  var COMP_CLIP_COUNT = getCompLineupClipCount();
-  var isSerpentRanked = COMP_CLIP_COUNT === 5;
+  var stored = loadCompCreativePresetFromStorage();
+  if (stored.preset === 'serpent_ranked_vod') {
+    alert('Ranked list VOD uses Comp VOD — select preset Ranked list VOD, pick 8–10 clips (~8+ min), then click Comp VOD.');
+    return;
+  }
+  var spec = getCompLineupSpec();
+  var COMP_CLIP_COUNT = spec.lineupSlots;
+  var isSerpentRanked = stored.preset === 'serpent_ranked';
   var picked = getCompLineupForDispatch(COMP_CLIP_COUNT);
   var isPostLivePicker = picked.length > 0 && picked.every(function(p) { return p.clip && p.clip.postLiveVod; });
   var minCompClips = isPostLivePicker ? 1 : COMP_CLIP_COUNT;

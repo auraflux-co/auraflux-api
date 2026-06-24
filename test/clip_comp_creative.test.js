@@ -28,6 +28,35 @@ test('mergeCompCreative applies serpent_ranked preset', () => {
   assert.equal(c.audio.musicBedVolume, 0.10);
 });
 
+test('mergeCompCreative applies serpent_ranked_vod preset', () => {
+  const c = mergeCompCreative({ preset: 'serpent_ranked_vod', streamerHint: 'Cinna' });
+  assert.equal(c.preset, 'serpent_ranked_vod');
+  assert.equal(c.delivery.format, 'vod_comp');
+  assert.equal(c.hooks.rankedList.enabled, true);
+  assert.equal(c.hooks.rankedList.slotCount, 10);
+  assert.equal(c.editorial.enabled, true);
+  assert.equal(c.editorial.ttsBridges, true);
+});
+
+test('syncRankedListToClipCount caps VOD ranked at 12', () => {
+  const c = mergeCompCreative({ preset: 'serpent_ranked_vod' });
+  const synced = require('../lib/clip_comp_creative').syncRankedListToClipCount(c, 10);
+  assert.equal(synced.hooks.rankedList.slotCount, 10);
+  const capped = require('../lib/clip_comp_creative').syncRankedListToClipCount(c, 14);
+  assert.equal(capped.hooks.rankedList.slotCount, 12);
+});
+
+test('validateCompLineupDuration enforces 8+ min for ranked VOD', () => {
+  const { validateCompLineupDuration, getCompLineupTarget } = require('../lib/clip_comp_creative');
+  const target = getCompLineupTarget('serpent_ranked_vod');
+  assert.equal(target.lineupSlots, 10);
+  assert.equal(target.minDurationSec, 480);
+  const short = validateCompLineupDuration({ preset: 'serpent_ranked_vod' }, [60, 60, 60, 60]);
+  assert.equal(short.ok, false);
+  const ok = validateCompLineupDuration({ preset: 'serpent_ranked_vod' }, [120, 120, 120, 120, 120]);
+  assert.equal(ok.ok, true);
+});
+
 test('syncRankedListToClipCount matches lineup size', () => {
   const c = mergeCompCreative({ preset: 'serpent_ranked' });
   const synced = require('../lib/clip_comp_creative').syncRankedListToClipCount(c, 4);

@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   buildRankedOverlayDrawtext,
   burnRankedListOverlay,
+  rankedOverlayMetrics,
 } = require('../lib/clip_comp_ranked_overlay');
 const { fillTitleTemplate, resolveActiveRankSlot } = require('../lib/clip_comp_titles');
 const { PRESET_DEFAULTS } = require('../lib/clip_comp_creative');
@@ -14,10 +15,12 @@ test('fillTitleTemplate WAIT_FOR_NO_1', () => {
   assert.ok(t.includes('WAIT FOR NO. 1'));
 });
 
-test('buildRankedOverlayDrawtext includes header and slots', () => {
-  const vf = buildRankedOverlayDrawtext(PRESET_DEFAULTS.serpent_ranked, { activeSlot: 3 });
-  assert.ok(vf.includes('RANKING'));
+test('buildRankedOverlayDrawtext compact layout for Top 10 VOD', () => {
+  const vf = buildRankedOverlayDrawtext(PRESET_DEFAULTS.serpent_ranked_vod, { activeSlot: 10 });
   assert.ok(vf.includes('drawtext='));
+  assert.ok(vf.includes('fontsize=52'));
+  const metrics = rankedOverlayMetrics(10);
+  assert.equal(metrics.rowGap, 52);
 });
 
 test('resolveActiveRankSlot countdown from first clip', () => {
