@@ -66,6 +66,12 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .gen-action-bar .gen-action-primary { display:flex; flex-direction:column; gap:8px; }
 .gen-action-bar .gen-action-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .gen-action-bar .btn { width:100%; text-align:center; padding:10px 12px; font-size:13px; }
+.gen-action-bar .btn:disabled { opacity:0.32; cursor:not-allowed; pointer-events:none; }
+.gen-action-bar .btn.btn-recommended { border-color:rgba(199,175,79,0.85); background:rgba(199,175,79,0.14); color:#c7af4f; font-weight:700; box-shadow:0 0 0 1px rgba(199,175,79,0.25); }
+.gen-action-section { display:flex; flex-direction:column; gap:8px; }
+.gen-action-section-label { font-size:9px; font-weight:700; letter-spacing:1.2px; color:rgba(255,255,255,0.38); line-height:1.45; margin:0; }
+.gen-action-section-label span { display:block; font-weight:400; letter-spacing:0.3px; color:rgba(255,255,255,0.28); margin-top:2px; }
+.gen-action-hint { font-size:10px; color:rgba(199,175,79,0.75); line-height:1.45; font-family:monospace; padding:6px 8px; border-radius:4px; background:rgba(0,0,0,0.25); border:1px solid rgba(199,175,79,0.15); min-height:2.2em; }
 .gen-advanced { border:1px solid rgba(255,255,255,0.06); border-radius:6px; background:rgba(0,0,0,0.2); }
 .gen-advanced > summary { cursor:pointer; font-size:10px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.4); padding:8px 10px; list-style:none; user-select:none; }
 .gen-advanced > summary::-webkit-details-marker { display:none; }
@@ -858,8 +864,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <div id="twitch-clip-schedule" class="gen-schedule-hint" style="font-size:10px;color:rgba(255,255,255,0.42);font-family:monospace;line-height:1.55;margin:6px 0 10px;padding:8px 10px;border:1px solid rgba(199,175,79,0.15);border-radius:6px;background:rgba(0,0,0,0.2);"></div>
                 <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
                 <div id="twitch-comp-creative" class="gen-comp-creative">
-                  <div class="gen-comp-creative-head">CREATIVE MODE · Short / Comp</div>
-                  <select id="comp-creative-preset" onchange="onCompCreativePresetChange()" title="Applies to Short and Comp — stored for this browser">
+                  <div class="gen-comp-creative-head">CREATIVE MODE · Clip comps (Short / Comp / Comp VOD)</div>
+                  <select id="comp-creative-preset" onchange="onCompCreativePresetChange()" title="Controls clip-comp styling — Avatar VOD / Avatar Top 10 ignore this">
                     <option value="classic_blur_pad">Classic ClipzWorld (blur-pad)</option>
                     <option value="full_bleed">Full bleed (imgoochy / core_fx)</option>
                     <option value="serpent_ranked">Ranked list Short (Stream Serpent)</option>
@@ -899,20 +905,27 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 </div>
                 <div class="gen-action-bar">
                   <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">Pick clips</button>
-                  <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitchWithPicker()">Generate VOD</button>
-                  <div class="gen-action-row">
-                    <button id="btn-gen-twitch-top10" class="btn btn-outline" onclick="generateTwitchTop10()" title="One clip per streamer, ranked by views">Top 10</button>
-                    <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()">Short</button>
+                  <div class="gen-action-section">
+                    <p class="gen-action-section-label">AVATAR SHOWS<span>Script + HeyGen · ignores Creative Mode below</span></p>
+                    <button id="btn-gen-twitch" class="btn btn-outline" onclick="generateTwitchWithPicker()" title="Long-form show: Gemini script + Bobby G avatar from your picked clips">Avatar VOD</button>
+                    <button id="btn-gen-twitch-top10" class="btn btn-outline" onclick="generateTwitchTop10()" title="Multi-streamer countdown: one clip per streamer (3+), sorted by views → #1 is most viewed. Script + avatar — not clip comp.">Avatar Top 10</button>
                   </div>
-                  <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch 4 clips into one portrait short">Comp</button>
-                  <button id="btn-gen-twitch-comp-vod" class="btn btn-outline" onclick="triggerClipCompVod()" title="8–20 min edited comp VOD — classic or ranked Top 10">Comp VOD</button>
+                  <div class="gen-action-section">
+                    <p class="gen-action-section-label">CLIP COMPS<span>Uses Creative Mode preset · checked clips + lineup order</span></p>
+                    <div class="gen-action-row">
+                      <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()" title="One portrait Short per selected clip (no avatar)">Short</button>
+                      <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch lineup into one Short">Comp</button>
+                    </div>
+                    <button id="btn-gen-twitch-comp-vod" class="btn btn-outline" onclick="triggerClipCompVod()" title="8–20 min edited comp from lineup">Comp VOD</button>
+                    <div id="twitch-action-hint" class="gen-action-hint">Pick a Creative Mode preset — buttons lock to the matching output.</div>
+                  </div>
                 </div>
                 <span id="twitch-fetch-status" class="gen-status-line"></span>
               </aside>
               <main class="gen-main">
                 <div class="gen-main-head">
                   <h3 class="gen-main-title" id="twitch-main-title">CLIP PICKER</h3>
-                  <span class="gen-main-hint">Checked clips feed VOD, Short, and Comp — reorder comp lineup below picker</span>
+                  <span class="gen-main-hint" id="twitch-main-hint">Checked clips feed lineup order · Creative Mode locks Short / Comp / Comp VOD</span>
                 </div>
                 <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, then <strong>Pick clips</strong>.</div>
                 <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
@@ -6302,6 +6315,10 @@ function saveScaffoldSettings() {
 }
 
 function setGenerateModeActive(type, form) {
+  if (type === 'twitch') {
+    refreshTwitchActionBar();
+    return;
+  }
   var longBtn = g('btn-gen-' + type);
   var shortBtn = g('btn-gen-' + type + '-short');
   if (!longBtn || !shortBtn) return;
@@ -9327,6 +9344,7 @@ function renderCompLineupPanel() {
 
 function refreshCompLineupUI() {
   renderCompLineupPanel();
+  refreshTwitchActionBar();
 }
 
 function moveCompLineupSlot(idx, delta) {
@@ -10323,6 +10341,64 @@ function getCompLineupClipCount() {
   return getCompLineupSpec().lineupSlots;
 }
 
+/** Which clip-comp buttons are valid for the current Creative Mode preset. */
+function getTwitchClipActionState() {
+  var stored = loadCompCreativePresetFromStorage();
+  var preset = stored.preset || 'classic_blur_pad';
+  var spec = getCompLineupSpec();
+  var state = {
+    preset: preset,
+    hint: '',
+    short: { enabled: true, recommended: false, title: 'One portrait Short per checked clip (uses Creative Mode, no avatar)' },
+    comp: { enabled: true, recommended: false, title: 'Stitch comp lineup into one Short (uses Creative Mode)' },
+    compVod: { enabled: true, recommended: false, title: '8–20 min edited comp from lineup (uses Creative Mode)' }
+  };
+  if (preset === 'serpent_ranked') {
+    state.comp.recommended = true;
+    state.comp.title = 'Ranked Short — stitch Top ' + spec.lineupSlots + ' from lineup (countdown overlay)';
+    state.compVod.enabled = false;
+    state.compVod.title = 'Not for ranked Short preset — switch to Ranked list VOD or Comp VOD preset';
+    state.hint = '→ Pick ' + spec.lineupSlots + ' clips in lineup order, then Comp';
+  } else if (preset === 'serpent_ranked_vod') {
+    state.comp.enabled = false;
+    state.comp.title = 'Not for ranked VOD — use Comp VOD (Top 10 countdown + editorial)';
+    state.compVod.recommended = true;
+    state.compVod.title = 'Ranked VOD — 8–10 clips, 8+ min footage, Top 10 countdown + editorial';
+    state.short.enabled = true;
+    state.short.title = 'Optional: single-clip teaser Shorts (same Creative Mode styling)';
+    state.hint = '→ Pick 8–10 clips (~8+ min total), then Comp VOD';
+  } else if (preset === 'twitch_comp_vod') {
+    state.comp.enabled = false;
+    state.comp.title = 'Not for Comp VOD preset — use Comp VOD button for 8–20 min edit';
+    state.compVod.recommended = true;
+    state.compVod.title = 'Edited comp VOD — intro, bridges, ' + spec.minClips + '–' + spec.maxClips + ' clips';
+    state.hint = '→ Pick 4–8 clips in lineup, then Comp VOD';
+  } else {
+    state.comp.title = 'Stitch ' + spec.lineupSlots + ' lineup clips into one Short';
+    state.hint = 'Short = 1 clip each · Comp = ' + spec.lineupSlots + '-clip Short · Comp VOD = switch preset first';
+  }
+  return state;
+}
+
+function applyTwitchClipActionButton(btnId, cfg, label) {
+  var btn = g(btnId);
+  if (!btn) return;
+  btn.disabled = cfg.enabled === false;
+  btn.textContent = label;
+  btn.title = cfg.title || '';
+  btn.classList.toggle('btn-recommended', !!cfg.recommended && cfg.enabled !== false);
+}
+
+function refreshTwitchActionBar() {
+  var state = getTwitchClipActionState();
+  var spec = getCompLineupSpec();
+  applyTwitchClipActionButton('btn-gen-twitch-short', state.short, 'Short');
+  applyTwitchClipActionButton('btn-gen-twitch-comp', state.comp, state.preset === 'serpent_ranked' ? ('Comp · Top ' + spec.lineupSlots) : ('Comp · ' + spec.lineupSlots));
+  applyTwitchClipActionButton('btn-gen-twitch-comp-vod', state.compVod, state.preset === 'serpent_ranked_vod' ? 'Comp VOD · Top 10' : 'Comp VOD');
+  var hintEl = g('twitch-action-hint');
+  if (hintEl) hintEl.textContent = state.hint;
+}
+
 function saveCompCreativePresetToStorage() {
   var sel = g('comp-creative-preset');
   var data = {
@@ -10424,6 +10500,7 @@ function onCompCreativePresetChange() {
   if (hm && sel && (sel.value === 'serpent_ranked' || sel.value === 'serpent_ranked_vod') && hm.value === 'both') hm.value = 'hook_only';
   refreshCompCreativeChips();
   refreshCompLineupUI();
+  refreshTwitchActionBar();
 }
 
 function initCompCreativePanel() {
@@ -10439,14 +10516,21 @@ function initCompCreativePanel() {
   }
   if (g('comp-creative-related-vod') && stored.relatedVideoParentId) g('comp-creative-related-vod').value = stored.relatedVideoParentId;
   refreshCompCreativeChips();
+  refreshTwitchActionBar();
 }
 
 function triggerClipCompVod() {
+  var actionState = getTwitchClipActionState();
+  if (!actionState.compVod.enabled) {
+    alert(actionState.compVod.title);
+    return;
+  }
   var sel = g('comp-creative-preset');
   var stored = loadCompCreativePresetFromStorage();
-  if (sel && stored.preset !== 'serpent_ranked_vod' && stored.preset !== 'twitch_comp_vod') {
-    sel.value = 'twitch_comp_vod';
+  if (stored.preset !== 'serpent_ranked_vod' && stored.preset !== 'twitch_comp_vod') {
+    if (sel) sel.value = 'twitch_comp_vod';
     refreshCompCreativeChips();
+    refreshTwitchActionBar();
   }
   var spec = getCompLineupSpec();
   var isRankedVod = loadCompCreativePresetFromStorage().preset === 'serpent_ranked_vod';
@@ -10773,10 +10857,14 @@ function _dispatchClipShort(clip, contentType, title, platforms, statusId, sched
 }
 
 function triggerClipComp() {
-  // CPD-935: clips-only compilation — comp lineup order (or picker order) stitches into ONE short.
   var stored = loadCompCreativePresetFromStorage();
+  var actionState = getTwitchClipActionState();
+  if (!actionState.comp.enabled) {
+    alert(actionState.comp.title);
+    return;
+  }
   if (stored.preset === 'serpent_ranked_vod') {
-    alert('Ranked list VOD uses Comp VOD — select preset Ranked list VOD, pick 8–10 clips (~8+ min), then click Comp VOD.');
+    alert('Ranked list VOD uses Comp VOD — pick 8–10 clips (~8+ min), then click Comp VOD.');
     return;
   }
   var spec = getCompLineupSpec();
@@ -11094,7 +11182,7 @@ function generateTwitchWithPicker() {
   var activeStreamers = _twitchPickerStreamers.filter(function(e){ return e.selected && !e.dropReason && e.clips.some(function(c){ return c.selected; }); });
   if (!activeStreamers.length) {
     if (_twitchPickerStreamers.length > 0) {
-      alert('Select clip(s) in PICK CLIPS, then click VOD.');
+      alert('Select clip(s) in the picker, then Avatar VOD.');
       return;
     }
     previewTwitchClips();
@@ -11169,7 +11257,7 @@ function generateTwitchTop10() {
   var activeStreamers = _twitchPickerStreamers.filter(function(e){ return e.selected && !e.dropReason && e.clips.some(function(c){ return c.selected; }); });
   if (activeStreamers.length < 3) {
     var statusEl = g('twitch-fetch-status');
-    if (statusEl) statusEl.textContent = 'TOP 10 needs at least 3 selected streamers (one clip each) — use PICK CLIPS first.';
+    if (statusEl) statusEl.textContent = 'Avatar Top 10 needs at least 3 streamers with one clip each — use Pick clips first.';
     if (!(_twitchPickerStreamers || []).length) previewTwitchClips();
     return;
   }
