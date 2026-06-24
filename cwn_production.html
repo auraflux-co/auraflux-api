@@ -9219,7 +9219,7 @@ function renderCompLineupPanel() {
     return;
   }
   reconcileCompLineup(picked);
-  var COMP_CLIP_COUNT = 4;
+  var COMP_CLIP_COUNT = getCompLineupClipCount();
   var show = _compLineup.slice(0, COMP_CLIP_COUNT);
   var extra = picked.length - show.length;
   var totalSec = 0;
@@ -10263,6 +10263,12 @@ function loadCompCreativePresetFromStorage() {
   return { preset: 'classic_blur_pad', streamer: '', theme: 'MOMENTS', hookMode: 'hook_only' };
 }
 
+/** Comp lineup + dispatch slot count — 5 for ranked list Short, 4 for classic comp. */
+function getCompLineupClipCount() {
+  var stored = loadCompCreativePresetFromStorage();
+  return stored.preset === 'serpent_ranked' ? 5 : 4;
+}
+
 function saveCompCreativePresetToStorage() {
   var sel = g('comp-creative-preset');
   var data = {
@@ -10351,6 +10357,7 @@ function onCompCreativePresetChange() {
   var sel = g('comp-creative-preset');
   if (hm && sel && sel.value === 'serpent_ranked' && hm.value === 'both') hm.value = 'hook_only';
   refreshCompCreativeChips();
+  refreshCompLineupUI();
 }
 
 function initCompCreativePanel() {
@@ -10672,9 +10679,8 @@ function _dispatchClipShort(clip, contentType, title, platforms, statusId, sched
 
 function triggerClipComp() {
   // CPD-935: clips-only compilation — comp lineup order (or picker order) stitches into ONE short.
-  var creativeStored = loadCompCreativePresetFromStorage();
-  var isSerpentRanked = creativeStored.preset === 'serpent_ranked';
-  var COMP_CLIP_COUNT = isSerpentRanked ? 5 : 4;
+  var COMP_CLIP_COUNT = getCompLineupClipCount();
+  var isSerpentRanked = COMP_CLIP_COUNT === 5;
   var picked = getCompLineupForDispatch(COMP_CLIP_COUNT);
   var isPostLivePicker = picked.length > 0 && picked.every(function(p) { return p.clip && p.clip.postLiveVod; });
   var minCompClips = isPostLivePicker ? 1 : COMP_CLIP_COUNT;
