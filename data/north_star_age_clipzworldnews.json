@@ -1,0 +1,68 @@
+{
+  "ok": true,
+  "fetchedAt": "2026-06-24T16:36:08.720Z",
+  "startDate": "2026-06-09",
+  "endDate": "2026-06-22",
+  "focusDate": "2026-06-22",
+  "rowCount": 188,
+  "queryMode": "per_day_video",
+  "includeRevenue": true,
+  "hasRevenue": false,
+  "periodMatrix": {
+    "shorts": {
+      "day1": 5777,
+      "day2": 236,
+      "day3": 31,
+      "day4plus": 272
+    },
+    "videos": {
+      "day1": 2,
+      "day2": 6,
+      "day3": 19,
+      "day4plus": 71
+    },
+    "streams": {
+      "day1": 961,
+      "day2": 92,
+      "day3": 101,
+      "day4plus": 345
+    }
+  },
+  "focusMatrix": {
+    "shorts": {
+      "day1": 0,
+      "day2": 0,
+      "day3": 0,
+      "day4plus": 0
+    },
+    "videos": {
+      "day1": 0,
+      "day2": 0,
+      "day3": 0,
+      "day4plus": 0
+    },
+    "streams": {
+      "day1": 0,
+      "day2": 0,
+      "day3": 0,
+      "day4plus": 0
+    }
+  },
+  "shortsDecay": {
+    "d1": 5777,
+    "d2": 236,
+    "d3": 31,
+    "d4": 29,
+    "d5": 39,
+    "d6": 0,
+    "d7": 2
+  },
+  "backCatalogRatio": 0.087,
+  "totalViews": 7913,
+  "catalogViews": 688,
+  "formatRpm": {
+    "shorts": null,
+    "videos": null,
+    "streams": null
+  }
+}

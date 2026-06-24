@@ -83,13 +83,28 @@ For `c0` manual jobs, use this sequence:
 
 1. Run job as normal (script + HeyGen request).
 2. Wait for stage `awaiting_manual_segments`.
-3. Open `tmp/manual_segments/<jobId>/read_me/README.txt` and `manifest.json`.
-4. Upload only the required avatar files to `tmp/manual_segments/<jobId>/` using the exact `expectedFilename` values (for example `01_avatar_intro.mp4`, etc., as listed for that job).
+3. Open `tmp/manual_segments/<jobId>/read_me/README.txt`, `scenes.txt` (avatar spokenText per scene), and `manifest.json`.
+4. Upload only the required avatar files to `tmp/manual_segments/<jobId>/` using the exact `expectedFilename` values (for example `01_avatar_intro.mp4`, etc., as listed for that job). Paste spokenText from `scenes.txt` into HeyGen web — one scene per export.
 5. Keep the folder name exactly as the canonical job id (for example `script_nba_...`), not just a numeric timestamp.
 6. Source clips are auto-prefetched into the same manual folder (best effort). Do not manually add source clips unless README/manifest indicates a missing source clip.
 7. Start assembly once all required avatar files are present and filenames match exactly.
 
-Quick operator rule: `manifest.json` is source-of-truth for filenames/order; `README.txt` is the human checklist.
+Quick operator rule: `manifest.json` is source-of-truth for filenames/order; `README.txt` is the human checklist; `scenes.txt` is HeyGen web copy-paste for avatar spokenText.
+
+### Daily clip pull schedule (26 clips/day — avoid Twitch 429)
+
+| Time (ET) | Action | Clips |
+|---|---|---|
+| 8:00 AM | VOD #1 — Pick clips → Generate VOD (manual HeyGen hold) | 5 |
+| 10:30 AM | VOD #2 — Pick clips → Generate VOD | 5 |
+| 12:30 PM | Comp #1 | 4 |
+| 3:00 PM | Comp #2 | 4 |
+| 5:30 PM | Comp #3 | 4 |
+| 8:00 PM | Comp #4 | 4 |
+
+**Dedup:** After VOD/Short/Comp generate, clip URLs are stored in browser `localStorage` (`cwn_used_clips`, 7-day TTL). Auto-fetch prefers unused clips; picker shows **USED** badge and confirms if you re-select. Same clip used in a VOD will not auto-pick for the next job on this browser within 7 days.
+
+**Post-live path (429 relief):** When ready, use **Post-Live VODs** tab — record off-air lives → Gemini highlight picks → send to picker or CLIPS COMP (no Helix clip API for those segments).
 
 ## Development Environment Setup
 

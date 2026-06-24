@@ -1,0 +1,847 @@
+{
+  "generatedAt": "2026-06-24T16:51:39.885Z",
+  "limit": 30,
+  "reports": [
+    {
+      "handle": "iamgoochy",
+      "channel": "iamgoochy",
+      "subscriberCount": null,
+      "sampleSize": 0,
+      "totals": {
+        "views": 0
+      },
+      "bySurface": {
+        "shorts": {
+          "count": 0,
+          "avgViews": 0,
+          "avgTitleLen": 0
+        },
+        "videos": {
+          "count": 0,
+          "avgViews": 0,
+          "avgTitleLen": 0,
+          "avgDurationMin": 0
+        },
+        "streams": {
+          "count": 0,
+          "avgViews": 0
+        }
+      },
+      "seo": {
+        "avgDescriptionLen": 0,
+        "avgTagCount": 0,
+        "emojiTitlePct": 0,
+        "topHashtags": [],
+        "titlePatterns": {}
+      },
+      "topShorts": [],
+      "topVods": []
+    },
+    {
+      "handle": "rickclipit",
+      "channel": "RickClipit",
+      "subscriberCount": 3380,
+      "sampleSize": 60,
+      "totals": {
+        "views": 3454285
+      },
+      "bySurface": {
+        "shorts": {
+          "count": 30,
+          "avgViews": 110395,
+          "avgTitleLen": 34
+        },
+        "videos": {
+          "count": 30,
+          "avgViews": 4748,
+          "avgTitleLen": 46,
+          "avgDurationMin": 15
+        },
+        "streams": {
+          "count": 0,
+          "avgViews": 0
+        }
+      },
+      "seo": {
+        "avgDescriptionLen": 63,
+        "avgTagCount": 0,
+        "emojiTitlePct": 25,
+        "topHashtags": [
+          [
+            "#cinna",
+            1
+          ],
+          [
+            "#twitch",
+            1
+          ],
+          [
+            "#dukedennis",
+            1
+          ],
+          [
+            "#streameruniversity",
+            1
+          ],
+          [
+            "#viral",
+            1
+          ],
+          [
+            "#funny",
+            1
+          ]
+        ],
+        "titlePatterns": {
+          "descriptive": 33,
+          "short_punchy": 27
+        }
+      },
+      "topShorts": [
+        {
+          "title": "Cinna & Bonnie Fought In 4k!",
+          "views": 949649,
+          "hashtags": [],
+          "pattern": "short_punchy"
+        },
+        {
+          "title": "Rosii's True Feelings Toward Cinna 💔",
+          "views": 455099,
+          "hashtags": [],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "Cinna Ends Friendship With Yugi💔",
+          "views": 395929,
+          "hashtags": [],
+          "pattern": "short_punchy"
+        },
+        {
+          "title": "Cinna & Agent Real Name Exposed!",
+          "views": 214515,
+          "hashtags": [],
+          "pattern": "short_punchy"
+        },
+        {
+          "title": "Cinna's Impressive British Accent!",
+          "views": 165219,
+          "hashtags": [],
+          "pattern": "short_punchy"
+        }
+      ],
+      "topVods": [
+        {
+          "title": "Cinna SHOCKINGLY Watched Cuddy DEMOLISH Streamer U Applicants!",
+          "views": 14619,
+          "durationMin": 10,
+          "hashtags": []
+        },
+        {
+          "title": "Cinna & BenDaDonnn Were Confused When DDG Called | \"Make Sure My Jet Got Fuel In It!\"",
+          "views": 12384,
+          "durationMin": 15,
+          "hashtags": []
+        },
+        {
+          "title": "Cinna & Bonnie's Streamer University Interview | Rosii Under Pressure!",
+          "views": 11717,
+          "durationMin": 10,
+          "hashtags": []
+        },
+        {
+          "title": "Cinna Started Flirting With StabeRonaldo!",
+          "views": 10096,
+          "durationMin": 10,
+          "hashtags": []
+        },
+        {
+          "title": "Cinna Trolled Rosii After He Asked Her & Friends To Buy Him a Game On Steam! *He Got Cooked*",
+          "views": 8467,
+          "durationMin": 21,
+          "hashtags": []
+        }
+      ]
+    },
+    {
+      "handle": "stream.serpent",
+      "channel": "Stream Serpent",
+      "subscriberCount": 43100,
+      "sampleSize": 30,
+      "totals": {
+        "views": 676409
+      },
+      "bySurface": {
+        "shorts": {
+          "count": 30,
+          "avgViews": 22547,
+          "avgTitleLen": 22
+        },
+        "videos": {
+          "count": 0,
+          "avgViews": 0,
+          "avgTitleLen": 0,
+          "avgDurationMin": 0
+        },
+        "streams": {
+          "count": 0,
+          "avgViews": 0
+        }
+      },
+      "seo": {
+        "avgDescriptionLen": 4,
+        "avgTagCount": 0,
+        "emojiTitlePct": 97,
+        "topHashtags": [
+          [
+            "#usa",
+            30
+          ]
+        ],
+        "titlePatterns": {
+          "short_punchy": 26,
+          "this_the_hook": 4
+        }
+      },
+      "topShorts": [
+        {
+          "title": "WAIT TILL THE END 🤣🤣",
+          "views": 78974,
+          "hashtags": [
+            "#usa"
+          ],
+          "pattern": "short_punchy"
+        },
+        {
+          "title": "LACY IS TOO FUNNY 🤣🤣",
+          "views": 33476,
+          "hashtags": [
+            "#usa"
+          ],
+          "pattern": "short_punchy"
+        },
+        {
+          "title": "WAIT TILL THE END 🤣🤣",
+          "views": 31484,
+          "hashtags": [
+            "#usa"
+          ],
+          "pattern": "short_punchy"
+        },
+        {
+          "title": "WAIT FOR NO. 1 🤣🤣",
+          "views": 30670,
+          "hashtags": [
+            "#usa"
+          ],
+          "pattern": "short_punchy"
+        },
+        {
+          "title": "BALRIGHT CORE 💝💝",
+          "views": 29903,
+          "hashtags": [
+            "#usa"
+          ],
+          "pattern": "short_punchy"
+        }
+      ],
+      "topVods": []
+    },
+    {
+      "handle": "core_fx",
+      "channel": "core_fx",
+      "subscriberCount": 52500,
+      "sampleSize": 30,
+      "totals": {
+        "views": 28278344
+      },
+      "bySurface": {
+        "shorts": {
+          "count": 30,
+          "avgViews": 942611,
+          "avgTitleLen": 37
+        },
+        "videos": {
+          "count": 0,
+          "avgViews": 0,
+          "avgTitleLen": 0,
+          "avgDurationMin": 0
+        },
+        "streams": {
+          "count": 0,
+          "avgViews": 0
+        }
+      },
+      "seo": {
+        "avgDescriptionLen": 26,
+        "avgTagCount": 0,
+        "emojiTitlePct": 100,
+        "topHashtags": [
+          [
+            "#core",
+            30
+          ],
+          [
+            "#lacy",
+            11
+          ],
+          [
+            "#marlon",
+            8
+          ],
+          [
+            "#kaicenat",
+            7
+          ],
+          [
+            "#streameruniversity",
+            7
+          ],
+          [
+            "#jasontheween",
+            6
+          ],
+          [
+            "#stableronaldo",
+            5
+          ],
+          [
+            "#jason",
+            5
+          ],
+          [
+            "#ron",
+            3
+          ],
+          [
+            "#worldcup",
+            2
+          ],
+          [
+            "#ishowspeed",
+            1
+          ],
+          [
+            "#adapt",
+            1
+          ],
+          [
+            "#jynxzi",
+            1
+          ],
+          [
+            "#lospollostv",
+            1
+          ],
+          [
+            "#football",
+            1
+          ]
+        ],
+        "titlePatterns": {
+          "short_punchy": 13,
+          "descriptive": 16,
+          "this_the_hook": 1
+        }
+      },
+      "topShorts": [
+        {
+          "title": "Ron Just Wanted A TV 😭📺",
+          "views": 4486245,
+          "hashtags": [
+            "#stableronaldo",
+            "#core"
+          ],
+          "pattern": "short_punchy"
+        },
+        {
+          "title": "Jason Recreated This Viral BBQ Video 😭🍖",
+          "views": 4036309,
+          "hashtags": [
+            "#jasontheween",
+            "#core"
+          ],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "Kai Cenat’s Bodyguard Caught Ron Off Guard 😭💀",
+          "views": 3951963,
+          "hashtags": [
+            "#ron",
+            "#core",
+            "#kaicenat"
+          ],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "Los Ordered Ron & Jynxzi $400 Of Food 😭🦀",
+          "views": 3542996,
+          "hashtags": [
+            "#stableronaldo",
+            "#core",
+            "#jynxzi",
+            "#lospollostv"
+          ],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "Ron Had Just Seen Oliver Tree 💔",
+          "views": 2761888,
+          "hashtags": [
+            "#ron",
+            "#core"
+          ],
+          "pattern": "short_punchy"
+        }
+      ],
+      "topVods": []
+    },
+    {
+      "handle": "DahBluh",
+      "channel": "DahBluh",
+      "subscriberCount": 4230,
+      "sampleSize": 53,
+      "totals": {
+        "views": 6298814
+      },
+      "bySurface": {
+        "shorts": {
+          "count": 30,
+          "avgViews": 79919,
+          "avgTitleLen": 95
+        },
+        "videos": {
+          "count": 23,
+          "avgViews": 169619,
+          "avgTitleLen": 41,
+          "avgDurationMin": 11
+        },
+        "streams": {
+          "count": 0,
+          "avgViews": 0
+        }
+      },
+      "seo": {
+        "avgDescriptionLen": 480,
+        "avgTagCount": 14,
+        "emojiTitlePct": 17,
+        "topHashtags": [
+          [
+            "#twitchclips",
+            44
+          ],
+          [
+            "#twitch",
+            39
+          ],
+          [
+            "#clips",
+            33
+          ],
+          [
+            "#faze",
+            28
+          ],
+          [
+            "#streaming",
+            27
+          ],
+          [
+            "#funny",
+            27
+          ],
+          [
+            "#lacy",
+            26
+          ],
+          [
+            "#fazeadapt",
+            25
+          ],
+          [
+            "#fazeclan",
+            24
+          ],
+          [
+            "#stableronaldo",
+            23
+          ],
+          [
+            "#streamers",
+            22
+          ],
+          [
+            "#streamer",
+            20
+          ],
+          [
+            "#jasontheween",
+            20
+          ],
+          [
+            "#yourrage",
+            20
+          ],
+          [
+            "#adapt",
+            20
+          ]
+        ],
+        "titlePatterns": {
+          "descriptive": 37,
+          "hype_word": 2,
+          "when_question": 2,
+          "short_punchy": 10,
+          "this_the_hook": 2
+        }
+      },
+      "topShorts": [
+        {
+          "title": "Where did Adapt's hotdog go? 😭 #funny #funnystreammoments #twitchclips #streamer #twitchstreamer",
+          "views": 1854324,
+          "hashtags": [
+            "#funny",
+            "#funnystreammoments",
+            "#twitchclips",
+            "#streamer",
+            "#twitchstreamer"
+          ],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "FaZe Adapt's gamer lingo is too funny #fazeadapt #twitchclips #streamer  #streaming #twitch #clips",
+          "views": 75275,
+          "hashtags": [
+            "#fazeadapt",
+            "#twitchclips",
+            "#streamer",
+            "#streaming",
+            "#twitch"
+          ],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "Clix swears in front of Nick Eh 30 at the fortnite FNCS PROAM #fortnite #fortniteclips #proam #clips",
+          "views": 48514,
+          "hashtags": [
+            "#fortnite",
+            "#fortniteclips",
+            "#proam",
+            "#clips"
+          ],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "Lacy drinks the Zesty Potion  #funny #funnystreammoments #twitchclips #streamer #twitchstreamer",
+          "views": 34099,
+          "hashtags": [
+            "#funny",
+            "#funnystreammoments",
+            "#twitchclips",
+            "#streamer",
+            "#twitchstreamer"
+          ],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "WHAT DID LACY'S DAD DO?? #twitch #twitchclips #streamer #lacy #twitchstreamer #clips #streaming",
+          "views": 33993,
+          "hashtags": [
+            "#twitch",
+            "#twitchclips",
+            "#streamer",
+            "#lacy",
+            "#twitchstreamer"
+          ],
+          "pattern": "descriptive"
+        }
+      ],
+      "topVods": [
+        {
+          "title": "FaZe Clan Clipfarming",
+          "views": 544867,
+          "durationMin": 12,
+          "hashtags": [
+            "#faze",
+            "#fazeadapt",
+            "#adapt",
+            "#stableronaldo",
+            "#silky"
+          ]
+        },
+        {
+          "title": "FaZe Switchin Up Around The Huzz",
+          "views": 507724,
+          "durationMin": 9,
+          "hashtags": [
+            "#faze",
+            "#fazeadapt",
+            "#adapt",
+            "#stableronaldo",
+            "#silky"
+          ]
+        },
+        {
+          "title": "FaZe Adapt being in his 2nd Prime for 8 minutes and 13 seconds...",
+          "views": 462598,
+          "durationMin": 8,
+          "hashtags": [
+            "#faze",
+            "#fazeadapt",
+            "#adapt",
+            "#stableronaldo",
+            "#silky"
+          ]
+        },
+        {
+          "title": "Funniest Moments from the FaZe Boys First House",
+          "views": 396624,
+          "durationMin": 20,
+          "hashtags": [
+            "#faze",
+            "#fazeadapt",
+            "#adapt",
+            "#stableronaldo",
+            "#silky"
+          ]
+        },
+        {
+          "title": "FaZe Funniest Moments of June",
+          "views": 377648,
+          "durationMin": 12,
+          "hashtags": [
+            "#faze",
+            "#fazeadapt",
+            "#adapt",
+            "#stableronaldo",
+            "#silky"
+          ]
+        }
+      ]
+    },
+    {
+      "handle": "clipzworldnews",
+      "channel": "ClipzWorld News",
+      "subscriberCount": 146,
+      "sampleSize": 72,
+      "totals": {
+        "views": 38052
+      },
+      "bySurface": {
+        "shorts": {
+          "count": 34,
+          "avgViews": 507,
+          "avgTitleLen": 54
+        },
+        "videos": {
+          "count": 38,
+          "avgViews": 547,
+          "avgTitleLen": 63,
+          "avgDurationMin": 237
+        },
+        "streams": {
+          "count": 30,
+          "avgViews": 635
+        }
+      },
+      "seo": {
+        "avgDescriptionLen": 819,
+        "avgTagCount": 17,
+        "emojiTitlePct": 8,
+        "topHashtags": [
+          [
+            "#twitch",
+            47
+          ],
+          [
+            "#shorts",
+            29
+          ],
+          [
+            "#twitchclips",
+            29
+          ],
+          [
+            "#clipzworldnews",
+            27
+          ],
+          [
+            "#livestream",
+            23
+          ],
+          [
+            "#clipzworld",
+            21
+          ],
+          [
+            "#jasontheween",
+            17
+          ],
+          [
+            "#extraemily",
+            16
+          ],
+          [
+            "#streamerreactions",
+            15
+          ],
+          [
+            "#justchatting",
+            15
+          ],
+          [
+            "#lacy",
+            14
+          ],
+          [
+            "#marlon",
+            14
+          ],
+          [
+            "#irlstream",
+            14
+          ],
+          [
+            "#stableronaldo",
+            13
+          ],
+          [
+            "#twitchhighlights",
+            13
+          ]
+        ],
+        "titlePatterns": {
+          "hype_word": 3,
+          "descriptive": 52,
+          "this_the_hook": 2,
+          "short_punchy": 2,
+          "question": 2,
+          "date_pipe_hashtag": 11
+        }
+      },
+      "topShorts": [
+        {
+          "title": "#Cinna Was Not Happy #twitch",
+          "views": 2375,
+          "hashtags": [
+            "#cinna",
+            "#twitch",
+            "#ocsc",
+            "#arky",
+            "#yugi"
+          ],
+          "pattern": "short_punchy"
+        },
+        {
+          "title": "Epic Twitch Fail: Wrong Shirt Gift! 😂 #Shorts",
+          "views": 1496,
+          "hashtags": [
+            "#shorts",
+            "#belgium",
+            "#belgiumstream",
+            "#marlon",
+            "#twitch2026"
+          ],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "This Streamer Just Faked Being Sick… Here’s Why! #Shorts",
+          "views": 1249,
+          "hashtags": [
+            "#shorts",
+            "#twitchdrama",
+            "#fakesick",
+            "#streamersecrets",
+            "#twitchmoments"
+          ],
+          "pattern": "this_the_hook"
+        },
+        {
+          "title": "#extraemily  Said What About Her Pad #Shorts",
+          "views": 1126,
+          "hashtags": [
+            "#extraemily",
+            "#shorts",
+            "#twitch",
+            "#viralclips",
+            "#hasanabiinterview"
+          ],
+          "pattern": "descriptive"
+        },
+        {
+          "title": "#ExtraEmily's Epic Eating Face Reaction and more...",
+          "views": 1091,
+          "hashtags": [
+            "#extraemily",
+            "#twitchclips",
+            "#shorts",
+            "#viralmoments",
+            "#twitchstreamers"
+          ],
+          "pattern": "descriptive"
+        }
+      ],
+      "topVods": [
+        {
+          "title": "06.22.26 | #jasontheween #twitch",
+          "views": 5073,
+          "durationMin": 408,
+          "hashtags": [
+            "#jasontheween",
+            "#twitch",
+            "#livestream",
+            "#clipzworldnews",
+            "#livestreams"
+          ]
+        },
+        {
+          "title": "06.21.26 | #plaqueboymax #twitch",
+          "views": 5052,
+          "durationMin": 302,
+          "hashtags": [
+            "#plaqueboymax",
+            "#twitch",
+            "#livestream",
+            "#clipzworldnews",
+            "#livestreams"
+          ]
+        },
+        {
+          "title": "06.21.26 | #streamers compilation",
+          "views": 3362,
+          "durationMin": 714,
+          "hashtags": [
+            "#streamers",
+            "#livestream",
+            "#twitch",
+            "#deenthegreat",
+            "#clipzworldnews"
+          ]
+        },
+        {
+          "title": "06.22.26 | #lacy #twitch",
+          "views": 1690,
+          "durationMin": 210,
+          "hashtags": [
+            "#lacy",
+            "#twitch",
+            "#livestream",
+            "#clipzworldnews",
+            "#livestreams"
+          ]
+        },
+        {
+          "title": "Dyson Daniels and Kuminga go after Goga Bitadze. Goga gets ejected.",
+          "views": 1383,
+          "durationMin": 2,
+          "hashtags": [
+            "#atlantahawks",
+            "#orlandomagic",
+            "#nba",
+            "#jonathankuminga",
+            "#jonathankumingahighlights"
+          ]
+        }
+      ]
+    }
+  ]
+}

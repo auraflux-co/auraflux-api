@@ -1,0 +1,255 @@
+{"ts":"2026-06-14T04:06:00.000Z","provider":"runpod","event":"pod_start_failed","error":"There are not enough free GPUs on the host machine to start this pod.","podId":"x3184gon2q32ci"}
+{"ts":"2026-06-14T04:07:00.000Z","provider":"runpod","event":"pod_create","podId":"v3jkpbo82bbvgx","gpuType":"NVIDIA GeForce RTX 5090","dataCenter":"EU-RO-1"}
+{"ts":"2026-06-14T04:08:00.000Z","provider":"runpod","event":"pod_wake_ok","podId":"v3jkpbo82bbvgx","durationMs":240000,"hadStartFailure":true,"gpuType":"NVIDIA GeForce RTX 5090"}
+{"ts":"2026-06-14T04:08:33.000Z","provider":"runpod","event":"render_fail","error":"infer_flash.py exit 1","phase":"infer","gpuType":"NVIDIA GeForce RTX 5090","steps":25}
+{"ts":"2026-06-14T05:08:19.000Z","provider":"runpod","event":"pod_create","podId":"r7r1dkuo2n2hoe","gpuType":"NVIDIA GeForce RTX 4090","dataCenter":"EU-RO-1"}
+{"ts":"2026-06-14T05:08:19.000Z","provider":"runpod","event":"render_ok","durationMs":109400,"renderSeconds":109.4,"steps":25,"videoLength":49,"gpuType":"NVIDIA GeForce RTX 4090"}
+{"ts":"2026-06-14T01:15:13.000Z","provider":"runpod","event":"render_ok","durationMs":126300,"renderSeconds":126.3,"steps":20,"videoLength":49,"gpuType":"NVIDIA GeForce RTX 4090"}
+{"ts":"2026-06-14T01:17:20.000Z","provider":"runpod","event":"render_ok","durationMs":126600,"renderSeconds":126.6,"steps":20,"videoLength":49,"gpuType":"NVIDIA GeForce RTX 4090"}
+{"ts":"2026-06-14T05:20:41.931Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:20:43.703Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1772,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:20:43.704Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:20:44.749Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1044,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:20:45.772Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","steps":25,"videoLength":69,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T05:21:17.881Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":32109,"error":"infer_flash.py exit 1","phase":"infer","event":"render_fail"}
+{"ts":"2026-06-14T05:21:17.882Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":32110,"error":"infer_flash.py exit 1","phase":"poll","event":"render_fail"}
+{"ts":"2026-06-14T05:21:39.468Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:21:41.154Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1687,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:21:41.161Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:21:42.701Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1540,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:21:43.876Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","steps":20,"videoLength":77,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T05:23:17.407Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":93531,"renderSeconds":90.2,"steps":20,"videoLength":77,"event":"render_ok"}
+{"ts":"2026-06-14T05:23:21.635Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:23:24.425Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":2791,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:23:24.432Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:23:25.598Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1166,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:23:26.724Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","steps":25,"videoLength":65,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T05:24:13.849Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":47125,"error":"infer_flash.py exit 1","phase":"infer","event":"render_fail"}
+{"ts":"2026-06-14T05:24:13.851Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":47127,"error":"infer_flash.py exit 1","phase":"poll","event":"render_fail"}
+{"ts":"2026-06-14T05:24:17.134Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:24:18.669Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1535,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:24:18.681Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:24:19.988Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1307,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:24:21.292Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","steps":20,"videoLength":73,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T05:24:22.093Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":801,"error":"HTTPError: 404 Client Error: Not Found for url: https://df04bc264530390035c77664f1b403d9.r2.cloudflarestorage.com/auraflux-video-output/spike/cpd881/inputs/bobbyg_.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=09d7e6f668ce713e3ad0f99a053238fd%2F20260614%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260614T052421Z&X-Amz-Expires=86400&X-Amz-Signature=fa7141e29b1f3cea87ffbe2df30cbdbf092459b056759b631f13dba6f0bf756f&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","phase":"infer","event":"render_fail"}
+{"ts":"2026-06-14T05:24:22.093Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":801,"error":"HTTPError: 404 Client Error: Not Found for url: https://df04bc264530390035c77664f1b403d9.r2.cloudflarestorage.com/auraflux-video-output/spike/cpd881/inputs/bobbyg_.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=09d7e6f668ce713e3ad0f99a053238fd%2F20260614%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260614T052421Z&X-Amz-Expires=86400&X-Amz-Signature=fa7141e29b1f3cea87ffbe2df30cbdbf092459b056759b631f13dba6f0bf756f&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","phase":"poll","event":"render_fail"}
+{"ts":"2026-06-14T05:24:22.197Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:24:23.760Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1563,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:24:23.767Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:24:24.826Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1059,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:24:25.969Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","steps":25,"videoLength":69,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T05:24:26.568Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":599,"error":"HTTPError: 404 Client Error: Not Found for url: https://df04bc264530390035c77664f1b403d9.r2.cloudflarestorage.com/auraflux-video-output/spike/cpd881/inputs/bobbyg_.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=09d7e6f668ce713e3ad0f99a053238fd%2F20260614%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260614T052425Z&X-Amz-Expires=86400&X-Amz-Signature=3ee6d801903ce2f48c3c9311b98cc24bcc102895bbaf9c3e6f8016e2a38cf61d&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","phase":"infer","event":"render_fail"}
+{"ts":"2026-06-14T05:24:26.568Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":599,"error":"HTTPError: 404 Client Error: Not Found for url: https://df04bc264530390035c77664f1b403d9.r2.cloudflarestorage.com/auraflux-video-output/spike/cpd881/inputs/bobbyg_.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=09d7e6f668ce713e3ad0f99a053238fd%2F20260614%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260614T052425Z&X-Amz-Expires=86400&X-Amz-Signature=3ee6d801903ce2f48c3c9311b98cc24bcc102895bbaf9c3e6f8016e2a38cf61d&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject","phase":"poll","event":"render_fail"}
+{"ts":"2026-06-14T05:24:30.145Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:24:31.529Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1383,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:24:31.535Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:24:32.573Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1038,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:24:33.642Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","steps":25,"videoLength":69,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T05:26:54.267Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":140625,"error":"infer_flash.py exit 1","phase":"infer","event":"render_fail"}
+{"ts":"2026-06-14T05:26:54.268Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":140626,"error":"infer_flash.py exit 1","phase":"poll","event":"render_fail"}
+{"ts":"2026-06-14T05:27:01.510Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:27:03.104Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1594,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:27:03.108Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:27:04.306Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1198,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:27:05.338Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","steps":20,"videoLength":65,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T05:29:25.404Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":140066,"error":"infer_flash.py exit 1","phase":"infer","event":"render_fail"}
+{"ts":"2026-06-14T05:29:25.405Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":140067,"error":"infer_flash.py exit 1","phase":"poll","event":"render_fail"}
+{"ts":"2026-06-14T05:29:32.616Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_stop"}
+{"ts":"2026-06-14T05:29:37.618Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:30:00.583Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":22965,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:30:00.589Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:30:01.867Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":1278,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:30:03.078Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","steps":20,"videoLength":65,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T05:32:24.103Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":141025,"renderSeconds":124.7,"steps":20,"videoLength":65,"event":"render_ok"}
+{"ts":"2026-06-14T05:46:27.801Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:46:29.155Z","provider":"runpod","podId":"1khpzc4i4ot1x4","gpuType":"NVIDIA GeForce RTX 4090","dataCenter":"EU-RO-1","event":"pod_create"}
+{"ts":"2026-06-14T05:46:51.141Z","provider":"runpod","podId":"1khpzc4i4ot1x4","durationMs":23341,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:46:51.142Z","provider":"runpod","podId":"1khpzc4i4ot1x4","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:46:52.654Z","provider":"runpod","podId":"1khpzc4i4ot1x4","durationMs":1512,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:48:34.694Z","provider":"runpod","podId":"1khpzc4i4ot1x4","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:48:36.111Z","provider":"runpod","podId":"9eg07si29xtqvp","gpuType":"NVIDIA GeForce RTX 4090","dataCenter":"EU-RO-1","event":"pod_create"}
+{"ts":"2026-06-14T05:48:57.578Z","provider":"runpod","podId":"9eg07si29xtqvp","durationMs":22884,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:48:57.578Z","provider":"runpod","podId":"9eg07si29xtqvp","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:48:58.667Z","provider":"runpod","podId":"9eg07si29xtqvp","durationMs":1089,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T05:53:12.763Z","provider":"runpod","podId":"9eg07si29xtqvp","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:53:13.544Z","provider":"runpod","podId":"9eg07si29xtqvp","durationMs":781,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:53:14.612Z","provider":"runpod","podId":"9eg07si29xtqvp","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:53:15.476Z","provider":"runpod","podId":"9eg07si29xtqvp","durationMs":864,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:53:16.446Z","provider":"runpod","podId":"9eg07si29xtqvp","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:53:17.226Z","provider":"runpod","podId":"9eg07si29xtqvp","durationMs":780,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:53:18.421Z","provider":"runpod","podId":"9eg07si29xtqvp","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:53:19.278Z","provider":"runpod","podId":"9eg07si29xtqvp","durationMs":857,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:53:20.169Z","provider":"runpod","podId":"9eg07si29xtqvp","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:53:20.967Z","provider":"runpod","podId":"9eg07si29xtqvp","durationMs":798,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:53:21.738Z","provider":"runpod","podId":"9eg07si29xtqvp","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:53:22.561Z","provider":"runpod","podId":"9eg07si29xtqvp","durationMs":823,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:53:23.774Z","provider":"runpod","podId":"9eg07si29xtqvp","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:53:24.590Z","provider":"runpod","podId":"9eg07si29xtqvp","durationMs":816,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:54:03.942Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:54:04.794Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":852,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:54:04.795Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:54:05.620Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":825,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:54:26.313Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:54:27.210Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":897,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:54:27.210Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:54:27.985Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":775,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:54:48.711Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:54:49.527Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":816,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:54:49.528Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:54:50.347Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":820,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:55:11.053Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:55:11.843Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":790,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:55:11.844Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:55:12.691Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":847,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:55:33.383Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:55:34.169Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":786,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:55:34.170Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:55:34.939Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":769,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:55:55.597Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:55:56.364Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":767,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:55:56.365Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:55:57.165Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":800,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:56:17.879Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:56:18.644Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":765,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:56:18.644Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:56:19.519Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":875,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T05:56:29.211Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T05:56:30.184Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":974,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T15:56:26.853Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T15:56:27.564Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":711,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T15:58:19.459Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T15:58:20.403Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":944,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T15:58:25.490Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-14T15:58:26.322Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","durationMs":832,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T16:00:41.822Z","provider":"runpod","podId":"azttpsr5cgbbjn","event":"pod_wake_start"}
+{"ts":"2026-06-14T16:00:43.103Z","provider":"runpod","podId":"azttpsr5cgbbjn","error":"start pod: There are not enough free GPUs on the host machine to start this pod.","event":"pod_start_failed"}
+{"ts":"2026-06-14T16:00:45.071Z","provider":"runpod","podId":"azttpsr5cgbbjn","durationMs":3249,"error":"Request failed with status code 500","hadStartFailure":true,"event":"pod_wake_fail"}
+{"ts":"2026-06-14T16:12:25.203Z","provider":"runpod","podId":"iojvrj926n1z46","event":"pod_wake_start"}
+{"ts":"2026-06-14T16:12:26.713Z","provider":"runpod","podId":"iojvrj926n1z46","durationMs":1510,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T16:12:26.719Z","provider":"runpod","podId":"iojvrj926n1z46","event":"pod_wake_start"}
+{"ts":"2026-06-14T16:12:27.819Z","provider":"runpod","podId":"iojvrj926n1z46","durationMs":1100,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T16:12:28.769Z","provider":"runpod","podId":"iojvrj926n1z46","steps":8,"videoLength":29,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T16:14:34.048Z","provider":"runpod","podId":"iojvrj926n1z46","durationMs":125278,"renderSeconds":118.2,"steps":8,"videoLength":29,"event":"render_ok"}
+{"ts":"2026-06-14T17:27:18.185Z","provider":"runpod","podId":"iojvrj926n1z46","event":"pod_stop"}
+{"ts":"2026-06-14T17:34:04.782Z","provider":"runpod","podId":"iojvrj926n1z46","event":"pod_stop"}
+{"ts":"2026-06-14T17:34:17.524Z","provider":"runpod","podId":null,"event":"pod_wake_start"}
+{"ts":"2026-06-14T17:34:18.713Z","provider":"runpod","podId":"x2di7e0cmzilzd","gpuType":"NVIDIA GeForce RTX 4090","dataCenter":"EU-RO-1","event":"pod_create"}
+{"ts":"2026-06-14T17:38:16.887Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":239362,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T18:27:28.838Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T18:27:30.498Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1660,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T18:53:31.811Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T18:53:33.954Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":2143,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T18:53:33.956Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T18:53:35.265Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1309,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T18:53:37.009Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":65,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T18:55:58.097Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":141088,"renderSeconds":124.3,"steps":8,"videoLength":65,"event":"render_ok"}
+{"ts":"2026-06-14T18:55:59.939Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":65,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T18:58:05.582Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125643,"renderSeconds":122.7,"steps":8,"videoLength":65,"event":"render_ok"}
+{"ts":"2026-06-14T18:58:07.187Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":49,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:00:01.321Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":114134,"renderSeconds":105.9,"steps":8,"videoLength":49,"event":"render_ok"}
+{"ts":"2026-06-14T19:00:03.074Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":53,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:02:08.364Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125290,"renderSeconds":110.6,"steps":8,"videoLength":53,"event":"render_ok"}
+{"ts":"2026-06-14T19:02:10.045Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":61,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:04:15.168Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125123,"renderSeconds":117.5,"steps":8,"videoLength":61,"event":"render_ok"}
+{"ts":"2026-06-14T19:04:17.166Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":65,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:06:22.316Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125150,"renderSeconds":120.8,"steps":8,"videoLength":65,"event":"render_ok"}
+{"ts":"2026-06-14T19:06:23.909Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":45,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:08:13.614Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":109705,"renderSeconds":104.6,"steps":8,"videoLength":45,"event":"render_ok"}
+{"ts":"2026-06-14T19:08:14.785Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":33,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:10:04.451Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":109665,"renderSeconds":93.4,"steps":8,"videoLength":33,"event":"render_ok"}
+{"ts":"2026-06-14T19:10:05.640Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":25,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:11:39.970Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":94330,"renderSeconds":91.1,"steps":8,"videoLength":25,"event":"render_ok"}
+{"ts":"2026-06-14T19:11:41.754Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":29,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:13:15.896Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":94142,"renderSeconds":91.5,"steps":8,"videoLength":29,"event":"render_ok"}
+{"ts":"2026-06-14T19:13:36.667Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T19:13:38.404Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1738,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T19:13:38.407Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T19:13:39.430Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1023,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T19:13:41.123Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":73,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:16:02.156Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":141033,"renderSeconds":131.1,"steps":8,"videoLength":73,"event":"render_ok"}
+{"ts":"2026-06-14T19:16:04.096Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":69,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:18:25.101Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":141005,"renderSeconds":126.5,"steps":8,"videoLength":69,"event":"render_ok"}
+{"ts":"2026-06-14T19:18:26.844Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":49,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:20:16.762Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":109918,"renderSeconds":105.1,"steps":8,"videoLength":49,"event":"render_ok"}
+{"ts":"2026-06-14T19:20:18.476Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":53,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:22:24.154Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125677,"renderSeconds":109.8,"steps":8,"videoLength":53,"event":"render_ok"}
+{"ts":"2026-06-14T19:22:25.951Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":61,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:24:31.408Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125457,"renderSeconds":117.4,"steps":8,"videoLength":61,"event":"render_ok"}
+{"ts":"2026-06-14T19:25:00.122Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T19:25:02.004Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1882,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T19:25:02.012Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T19:25:03.466Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1454,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T19:25:04.972Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":57,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:27:10.339Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125367,"renderSeconds":109.1,"steps":8,"videoLength":57,"event":"render_ok"}
+{"ts":"2026-06-14T19:27:12.170Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":65,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:29:17.667Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125497,"renderSeconds":114.7,"steps":8,"videoLength":65,"event":"render_ok"}
+{"ts":"2026-06-14T19:29:19.390Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":45,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:31:09.379Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":109988,"renderSeconds":97.6,"steps":8,"videoLength":45,"event":"render_ok"}
+{"ts":"2026-06-14T19:31:11.115Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":57,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:33:16.516Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125401,"renderSeconds":117.4,"steps":8,"videoLength":57,"event":"render_ok"}
+{"ts":"2026-06-14T19:33:18.319Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":53,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:35:23.769Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125450,"renderSeconds":108.7,"steps":8,"videoLength":53,"event":"render_ok"}
+{"ts":"2026-06-14T19:35:25.524Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":53,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:37:15.303Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":109779,"renderSeconds":106,"steps":8,"videoLength":53,"event":"render_ok"}
+{"ts":"2026-06-14T19:37:16.772Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":57,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:39:22.218Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125446,"renderSeconds":113.2,"steps":8,"videoLength":57,"event":"render_ok"}
+{"ts":"2026-06-14T19:39:23.437Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":25,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:41:13.130Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":109693,"renderSeconds":94,"steps":8,"videoLength":25,"event":"render_ok"}
+{"ts":"2026-06-14T19:41:14.520Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":25,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:42:48.945Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":94426,"renderSeconds":89.9,"steps":8,"videoLength":25,"event":"render_ok"}
+{"ts":"2026-06-14T19:42:50.175Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":29,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T19:44:24.470Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":94295,"renderSeconds":88,"steps":8,"videoLength":29,"event":"render_ok"}
+{"ts":"2026-06-14T19:59:27.794Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T19:59:29.461Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1667,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T19:59:29.462Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T19:59:30.496Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1034,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T19:59:31.714Z","provider":"runpod","podId":"x2di7e0cmzilzd","steps":8,"videoLength":65,"gpuType":null,"event":"render_start"}
+{"ts":"2026-06-14T20:01:37.006Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":125292,"renderSeconds":122.5,"steps":8,"videoLength":65,"event":"render_ok"}
+{"ts":"2026-06-14T20:01:54.578Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T20:01:56.292Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1714,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T20:04:02.999Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T20:04:04.493Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1494,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T20:06:10.935Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T20:06:12.255Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1320,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T20:18:47.230Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_stop"}
+{"ts":"2026-06-14T20:19:31.631Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T20:19:33.073Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1443,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T20:22:17.509Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T20:22:19.039Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1530,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T20:24:51.232Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T20:24:52.843Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1611,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-14T22:08:23.373Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-14T22:08:25.108Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":1736,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T03:06:01.567Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-15T03:06:03.807Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":2240,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T04:20:54.900Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_stop"}
+{"ts":"2026-06-15T04:21:09.903Z","provider":"runpod","podId":"x2di7e0cmzilzd","event":"pod_wake_start"}
+{"ts":"2026-06-15T04:21:11.091Z","provider":"runpod","podId":"x2di7e0cmzilzd","error":"start pod: There are not enough free GPUs on the host machine to start this pod.","event":"pod_start_failed"}
+{"ts":"2026-06-15T04:21:15.368Z","provider":"runpod","podId":"x2di7e0cmzilzd","durationMs":5466,"error":"Request failed with status code 500","hadStartFailure":true,"event":"pod_wake_fail"}
+{"ts":"2026-06-15T04:25:35.552Z","provider":"runpod","podId":null,"event":"pod_wake_start"}
+{"ts":"2026-06-15T04:25:40.637Z","provider":"runpod","podId":null,"durationMs":5085,"error":"Request failed with status code 500","hadStartFailure":false,"event":"pod_wake_fail"}
+{"ts":"2026-06-15T15:45:29.376Z","provider":"runpod","podId":"r7r1dkuo2n2hoe","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:45:31.119Z","provider":"runpod","podId":"1yb0ueh6aviyuk","gpuType":"NVIDIA GeForce RTX 4090","dataCenter":"EU-RO-1","event":"pod_create"}
+{"ts":"2026-06-15T15:46:41.871Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:47:09.291Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:48:01.381Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:48:23.062Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":21682,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T15:48:23.066Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:48:23.162Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":73871,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T15:48:23.164Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:48:24.309Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":1243,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T15:48:24.417Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":102547,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T15:48:24.418Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:48:24.421Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":1257,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T15:48:24.833Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":175458,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T15:48:24.834Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:48:25.623Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":1205,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T15:48:25.975Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":1141,"hadStartFailure":false,"gpuType":null,"event":"pod_wake_ok"}
+{"ts":"2026-06-15T15:48:28.597Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_stop"}
+{"ts":"2026-06-15T15:48:28.864Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_stop"}
+{"ts":"2026-06-15T15:49:06.591Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:49:07.775Z","provider":"runpod","podId":"1yb0ueh6aviyuk","error":"start pod: There are not enough free GPUs on the host machine to start this pod.","event":"pod_start_failed"}
+{"ts":"2026-06-15T15:49:18.626Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":12035,"error":"Request failed with status code 500","hadStartFailure":true,"event":"pod_wake_fail"}
+{"ts":"2026-06-15T15:50:01.070Z","provider":"runpod","podId":"1yb0ueh6aviyuk","event":"pod_wake_start"}
+{"ts":"2026-06-15T15:50:02.538Z","provider":"runpod","podId":"1yb0ueh6aviyuk","error":"start pod: There are not enough free GPUs on the host machine to start this pod.","event":"pod_start_failed"}
+{"ts":"2026-06-15T15:50:13.002Z","provider":"runpod","podId":"1yb0ueh6aviyuk","durationMs":11933,"error":"Request failed with status code 500","hadStartFailure":true,"event":"pod_wake_fail"}

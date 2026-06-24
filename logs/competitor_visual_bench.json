@@ -1,0 +1,3092 @@
+{
+  "generatedAt": "2026-06-24T17:49:34.381Z",
+  "model": "gemini-2.5-flash",
+  "samples_per_channel": {
+    "shorts": 5,
+    "vods": 2
+  },
+  "cwn_baseline": "ClipzWorld News / AuraFlux C0 creative stack (replication baseline):\n- clip-comp Shorts: up to 4 Twitch clips stitched portrait 9:16, blur-pad letterbox, burned text hooks (Hook Machine + playbook), optional intro/outro cards, CWN logo in top blur fold\n- twitch-short: split-screen (Bobby G avatar top / source clip bottom) or full-frame clip variants\n- VOD today: mostly raw multi-hour YouTube live DVR replays + occasional long news chrome\n- Publish: Upload-Post / YouTube direct; SEO metadata heavy on ClipzWorld, lighter on competitors\n- Missing today: ranked-list overlay templates (RANKING X MOMENTS 1-5), Related Video Short→VOD funnel wiring, themed series branding",
+  "channels": [
+    {
+      "handle": "core_fx",
+      "channel_name": "core_fx",
+      "sampled": {
+        "shorts": 5,
+        "vods": 0
+      },
+      "subscriber_count": 52500,
+      "videos": [
+        {
+          "title": "Ron Just Wanted A TV 😭📺",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16 video, with a static Twitch chat overlay at the top of the frame",
+            "on_screen_text": [
+              "burned captions (yellow text, black outline) for dialogue",
+              "Twitch chat overlay (static) at the top",
+              "price tag graphic ($99,999.99)",
+              "\"$100,000\" text with red background",
+              "\"HUH?\" text bubble",
+              "\"FIRE\" text with blue background"
+            ],
+            "branding": "No explicit channel logo, but consistent caption style and Twitch chat overlay mimic a branded short-form content style. The Best Buy employee uniform is a key visual element.",
+            "pacing_cuts": "Very fast pacing with frequent cuts, jump cuts to emphasize reactions and dialogue, and quick zooms. No dead air.",
+            "thumbnail_style_note": "The opening frame features the main character looking directly at the camera, with the Twitch chat overlay visible, suggesting an engaging and direct-to-audience thumbnail."
+          },
+          "audio": {
+            "source": "Dialogue from the skit participants, sound effects (whoosh, 'huh' sound, 'fire' sound effect), no background music.",
+            "mix": "Primarily dialogue, with sound effects strategically layered to enhance comedic timing and reactions.",
+            "hook_audio": "Dialogue from the main character: \"I need a big TV to watch like football games\" followed by a quick cut and response from the Best Buy employee."
+          },
+          "content_theme": "Comedy skit, consumer electronics, price shock, relatable desire for a large TV.",
+          "features_used": [
+            "single moment (short skit)",
+            "burned-in captions",
+            "Twitch chat overlay (static)",
+            "sound effects for comedic emphasis",
+            "visual effects (red tint for price shock)"
+          ],
+          "seo_packaging": "The title \"Ron Just Wanted A TV 😭📺\" perfectly sets up the comedic premise of the video, using emojis to convey the emotional journey of wanting something simple and then being shocked by its cost. It's highly relevant to the on-screen content.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts format (portrait 9:16)",
+              "burned text hooks (captions)",
+              "Twitch chat overlay (though used differently here as a static element)",
+              "Publish: Upload-Post / YouTube direct",
+              "SEO metadata heavy on ClipzWorld (though this is a skit, the packaging is similar)"
+            ],
+            "missing_in_cwn_stack": [
+              "skit creation/acting (CWN focuses on reaction to existing clips)",
+              "specific visual effects (red tint, 'HUH?' text bubble, 'FIRE' text)",
+              "dynamic sound effects for comedic timing (beyond basic clip audio)"
+            ],
+            "effort_estimate": "Significant effort in skit writing, filming, and acting. Editing for this style would require custom After Effects templates for the specific visual and text effects, likely 4-6 hours for template creation and 1-2 hours per video for editing."
+          },
+          "video_id": "o93MiWA0_KY",
+          "views": 4494079,
+          "duration_sec": 16,
+          "trim": {
+            "analyzedSec": 15.754,
+            "totalSec": 15.754,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Jason Recreated This Viral BBQ Video 😭🍖",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed, portrait 9:16",
+            "on_screen_text": [
+              "WOW",
+              "BIG",
+              "IS IT",
+              "EVER",
+              "WHAT DO",
+              "AMAZING",
+              "I",
+              "IT",
+              "BITE",
+              "FIRST EVER",
+              "BARBECUE",
+              "AMAZING",
+              "I"
+            ],
+            "branding": "No explicit channel branding or logo visible. Consistent yellow/green text with black outline for burned-in captions.",
+            "pacing_cuts": "Fast-paced, with multiple cuts within each of the two main clips to emphasize reactions and eating. Two distinct clips stitched together.",
+            "thumbnail_style_note": "The opening frame features a person reacting to a very large, saucy BBQ rib, creating a strong visual hook for a food/reaction short."
+          },
+          "audio": {
+            "source": "Dialogue and ambient sound from the original clips.",
+            "mix": "Clip audio only, primarily dialogue. No music bed or additional sound effects.",
+            "hook_audio": "Excited vocalizations and questions about the size of the food: \"WOW! How big is it?\""
+          },
+          "content_theme": "Food reaction/mukbang, specifically trying Texas BBQ, with a focus on the size and taste of the food. The title suggests a 'recreation' or comparison aspect.",
+          "features_used": [
+            "single moment",
+            "reaction content",
+            "comparison/replication (implied by title)"
+          ],
+          "seo_packaging": "The title directly describes the content, highlighting the 'recreation' of a 'viral BBQ video' and using relevant emojis. On-screen text reinforces key reactions ('WOW', 'AMAZING') and descriptive words ('BIG', 'FIRST EVER').",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts (for stitching multiple clips, though this is only two)",
+              "burned text hooks (Hook Machine + playbook)"
+            ],
+            "missing_in_cwn_stack": [
+              "blur-pad letterbox (this is full bleed)",
+              "CWN logo in top blur fold",
+              "optional intro/outro cards"
+            ],
+            "effort_estimate": "Config flag for text overlay, simple video edit for stitching clips."
+          },
+          "video_id": "yjAEPE3Ci4M",
+          "views": 4142615,
+          "duration_sec": 16,
+          "trim": {
+            "analyzedSec": 15.514,
+            "totalSec": 15.514,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Kai Cenat’s Bodyguard Caught Ron Off Guard 😭💀",
+          "surface": "short",
+          "visual": {
+            "layout": "split-screen (reactor top / source clip bottom)",
+            "on_screen_text": [
+              "NOT",
+              "YOU",
+              "IN",
+              "*MAD*",
+              "*MANDARIN*",
+              "*FIGHTING*",
+              "THIS",
+              "N**GA",
+              "A*S",
+              "PROBABLY NOT",
+              "FOR REAL",
+              "F*CK OUT",
+              "OH SH*T",
+              "*CUDI*",
+              "GOD"
+            ],
+            "branding": "no visible channel logo, consistent split-screen template throughout",
+            "pacing_cuts": "moderate cuts, primarily for text overlays and a brief red filter effect, otherwise continuous playback of the source clip with reactor overlay",
+            "thumbnail_style_note": "opening frame is a clear split-screen of the reactor and the key moment from the source clip, serving as an effective thumbnail"
+          },
+          "audio": {
+            "source": "stream audio from the source clip, reactor's voice",
+            "mix": "source clip audio and reactor's voice are layered, with the reactor's voice often prominent during his reactions",
+            "hook_audio": "dialogue from the source clip and the reactor's initial laughter/reaction"
+          },
+          "content_theme": "streamer skit/drama, reaction to a specific moment involving Kai Cenat and his bodyguard",
+          "features_used": [
+            "single moment",
+            "avatar reaction",
+            "burned captions"
+          ],
+          "seo_packaging": "title directly describes the core event of the clip and includes relevant names, aligning perfectly with the on-screen content",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "twitch-short: split-screen (Bobby G avatar top / source clip bottom)",
+              "burned text hooks (Hook Machine + playbook)"
+            ],
+            "missing_in_cwn_stack": [],
+            "effort_estimate": "config flag for split-screen layout, Hook Machine for text overlays"
+          },
+          "video_id": "iSWV4bBTL4A",
+          "views": 3952893,
+          "duration_sec": 16,
+          "trim": {
+            "analyzedSec": 15.534,
+            "totalSec": 15.534,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Los Ordered Ron & Jynxzi $400 Of Food 😭🦀",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, no letterbox or split screen",
+            "on_screen_text": [
+              "burned yellow captions with black outline (all caps)",
+              "red overlay with red text \"-$400\" for price reveal"
+            ],
+            "branding": "no visible channel logo, no consistent template beyond captions, one-off red overlay effect",
+            "pacing_cuts": "very fast cuts (every 1-3 seconds) between different streamers, frequent jump cuts, no dead air",
+            "thumbnail_style_note": "opening frame is a talking head, but the content (food reveal, price shock) suggests a more dynamic thumbnail from later in the clip"
+          },
+          "audio": {
+            "source": "stream audio (dialogue)",
+            "mix": "clip audio only, dialogue is clear and dominant",
+            "hook_audio": "dialogue setting up the surprise food order: \"Los, did you order me food? I'm ordering you food right now. It's gonna be surprise but I'm getting you both the same.\""
+          },
+          "content_theme": "streamer interaction, prank/surprise, food reveal, reaction to excessive/expensive food",
+          "features_used": [
+            "single moment",
+            "multi-streamer reaction (cut between POVs)",
+            "burned-in dialogue captions",
+            "price reveal with visual effect"
+          ],
+          "seo_packaging": "title is highly descriptive of the content, including key names, the core event ($400 of food), and relevant emojis (crying, crab for seafood)",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "producing short-form content from stream clips (as 'full-frame clip variants')",
+              "adding burned-in text (dialogue captions)",
+              "strong SEO packaging"
+            ],
+            "missing_in_cwn_stack": [
+              "full-bleed portrait layout (CWN's 'clip-comp Shorts' specify blur-pad letterbox)",
+              "dynamic visual effects for key moments (e.g., red overlay for price reveal)",
+              "no CWN logo or intro/outro cards (which are part of the 'clip-comp Shorts' stack)"
+            ],
+            "effort_estimate": "editor workflow adjustment for full-bleed layout and simple effect template for price reveal (e.g., 1-2 hours for initial setup, then minimal per clip)"
+          },
+          "video_id": "lxKBO17xwaM",
+          "views": 3552295,
+          "duration_sec": 17,
+          "trim": {
+            "analyzedSec": 16.714,
+            "totalSec": 16.714,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Ron Had Just Seen Oliver Tree 💔",
+          "surface": "short",
+          "visual": {
+            "layout": "Starts full-bleed portrait of the reactor, transitions to a vertical split-screen (reactor top, event clip bottom), then back to full-bleed reactor. No blur-pad letterbox.",
+            "on_screen_text": [
+              "burned captions of reactor's speech (white text, black outline)",
+              "fake Twitter post overlay (image of Oliver Tree, text 'American singer and producer Oliver Tree has died in a helicopter crash in Rio de Janeiro today')"
+            ],
+            "branding": "Small 'MANA' logo in the top right corner throughout the video.",
+            "pacing_cuts": "Very fast cuts, especially when the reactor is speaking, creating a jump-cut effect to remove pauses and keep the pace high. Cuts also occur for overlay transitions and split-screen introduction.",
+            "thumbnail_style_note": "The opening frame is a close-up of the reactor with a concerned/surprised expression, looking down, with a caption 'HAS'. This is a strong emotional hook for a thumbnail."
+          },
+          "audio": {
+            "source": "Primarily the reactor's voice. Some ambient room noise.",
+            "mix": "Reactor's voice is the sole focus. No background music or SFX beyond the natural audio of the clip.",
+            "hook_audio": "Reactor's voice saying 'crash' and 'de-' (from 'died in a helicopter crash'), setting up the initial shock."
+          },
+          "content_theme": "Reaction to a shocking (and ultimately fake) news report about a celebrity's death, followed by the reactor's personal connection and realization of the misinformation. Focuses on celebrity news/drama and personal reaction.",
+          "features_used": [
+            "single moment reaction",
+            "fake news overlay (tweet)",
+            "split-screen for contextual clip",
+            "burned captions"
+          ],
+          "seo_packaging": "The title 'Ron Had Just Seen Oliver Tree 💔' is highly descriptive of the video's core premise and emotional hook, directly referencing the celebrity and the reactor's personal experience, making it very clickable.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "split-screen (Bobby G avatar top / source clip bottom)",
+              "full-frame clip variants",
+              "burned text hooks (Hook Machine + playbook)"
+            ],
+            "missing_in_cwn_stack": [
+              "specific fake tweet overlay template",
+              "full-bleed portrait aspect ratio (CWN uses blur-pad letterbox)",
+              "MANA branding (specific logo/placement)"
+            ],
+            "effort_estimate": "2h template in After Effects for fake tweet overlay and aspect ratio adjustment"
+          },
+          "video_id": "saqSHuCaQFY",
+          "views": 2763578,
+          "duration_sec": 13,
+          "trim": {
+            "analyzedSec": 12.854,
+            "totalSec": 12.854,
+            "trimmed": false
+          }
+        }
+      ],
+      "rollup": {
+        "handle": "core_fx",
+        "channel_name": "core_fx",
+        "signature_patterns": [
+          "Dominant use of full-bleed portrait 9:16 aspect ratio for Shorts, often without blur-pad letterboxing.",
+          "Extremely fast pacing with frequent cuts, jump cuts, and no dead air to maintain high engagement.",
+          "Heavy reliance on burned-in captions (yellow/white text with black outline) for dialogue and on-screen text for emphasis (e.g., 'HUH?', 'FIRE', 'WOW').",
+          "Strategic use of dynamic visual effects (red tints, text bubbles, fake overlays like tweets, price tags) to highlight key moments and reactions.",
+          "Audio mix primarily focuses on dialogue and source clip audio, with sound effects strategically layered for comedic timing rather than background music.",
+          "Content centers around single, impactful moments, often comedic skits, streamer reactions/interactions, or dramatic reveals (e.g., price shock, fake news)."
+        ],
+        "themes": [
+          "Comedy skits and relatable situations (e.g., consumer electronics, price shock)",
+          "Streamer interactions, pranks, and drama",
+          "Reaction content (to food, news, events, or other streamers)",
+          "Viral video recreations/comparisons",
+          "Celebrity news/drama (even if fabricated)"
+        ],
+        "features_catalog": [
+          {
+            "feature": "single moment (short skit/clip)",
+            "frequency": "always",
+            "description": "Each video focuses on a concise, impactful moment or short skit."
+          },
+          {
+            "feature": "burned-in captions (dialogue/text hooks)",
+            "frequency": "always",
+            "description": "Consistent use of burned-in captions for dialogue and key textual hooks."
+          },
+          {
+            "feature": "fast cuts & jump cuts",
+            "frequency": "always",
+            "description": "Aggressive editing with frequent cuts to maintain high pace and emphasize reactions."
+          },
+          {
+            "feature": "full-bleed portrait 9:16 layout",
+            "frequency": "often",
+            "description": "Many shorts utilize the entire 9:16 frame without letterboxing."
+          },
+          {
+            "feature": "split-screen (reactor top / source clip bottom)",
+            "frequency": "often",
+            "description": "Used for reaction content, placing the reactor prominently above the source clip."
+          },
+          {
+            "feature": "dynamic visual effects (red tint, text bubbles, overlays)",
+            "frequency": "often",
+            "description": "Custom visual effects to enhance comedic timing, shock, or highlight specific information."
+          },
+          {
+            "feature": "sound effects for comedic emphasis",
+            "frequency": "sometimes",
+            "description": "Strategic use of sound effects beyond natural clip audio to punctuate jokes or reactions."
+          },
+          {
+            "feature": "Twitch chat overlay (static)",
+            "frequency": "sometimes",
+            "description": "A static Twitch chat overlay is used as a visual element, often at the top of the frame."
+          },
+          {
+            "feature": "multi-streamer reaction (cut between POVs)",
+            "frequency": "sometimes",
+            "description": "Editing between different streamers' perspectives reacting to the same event."
+          },
+          {
+            "feature": "fake news/social media overlay",
+            "frequency": "sometimes",
+            "description": "Incorporation of fabricated social media posts (e.g., tweets) as part of the narrative."
+          }
+        ],
+        "shorts_vs_vods": {
+          "shorts_role": "discovery / standalone moment / skit / reaction content",
+          "vods_role": "not sampled"
+        },
+        "why_views_work": "Core_fx's high view counts stem from relentless pacing, ensuring no dead air and constant visual stimulation through rapid cuts and dynamic on-screen text. Their content taps into highly engaging themes like comedy, streamer drama, and relatable shock moments, amplified by custom visual effects and sound design that punch up key reactions. Highly descriptive, emoji-rich titles are optimized for discoverability, while burned-in captions ensure accessibility and engagement even without sound, maximizing retention on short-form platforms.",
+        "replication_roadmap": {
+          "easy_wins": [
+            "Full-bleed portrait layout for Shorts (adjusting from CWN's blur-pad letterbox)",
+            "Enhanced burned-in text styles for dialogue and hooks (beyond basic captions)",
+            "Config flag for split-screen layout (already in CWN stack, but ensuring consistent application)",
+            "Editor workflow adjustment for stitching multiple clips with fast cuts"
+          ],
+          "medium_builds": [
+            "Dynamic visual effects templates for price reveals, text bubbles, and red tints (e.g., After Effects templates)",
+            "Specific overlay templates (e.g., fake tweet, custom price tag graphics)",
+            "Integration of strategic sound effects for comedic timing (beyond basic clip audio)"
+          ],
+          "hard_gaps": [
+            "Skit creation, writing, and acting (requires significant creative and operational investment beyond clip curation)"
+          ],
+          "priority_for_clipzworld": [
+            "1. Implement full-bleed portrait layout as a primary Shorts option.",
+            "2. Develop a library of dynamic visual effects templates (e.g., price reveals, reaction text bubbles).",
+            "3. Create specific overlay templates (e.g., fake social media posts, custom graphics).",
+            "4. Integrate enhanced sound effects for comedic and dramatic emphasis.",
+            "5. Explore multi-streamer POV editing for reaction content."
+          ]
+        },
+        "clipzworld_delta": "ClipzWorld News currently relies on blur-pad letterboxing for its clip-comp Shorts and has a more standardized approach to burned text. Core_fx differentiates itself by embracing full-bleed portrait layouts, integrating highly dynamic and custom visual effects (like red tints, text bubbles, and fake overlays) for comedic and dramatic impact, and utilizing more deliberate sound design. While CWN has a split-screen format, Core_fx's overall visual presentation is more bespoke and less template-driven, often involving original skit creation—a significant creative and operational gap for CWN."
+      }
+    },
+    {
+      "handle": "DahBluh",
+      "channel_name": "DahBluh",
+      "sampled": {
+        "shorts": 5,
+        "vods": 2
+      },
+      "subscriber_count": 4230,
+      "videos": [
+        {
+          "title": "Where did Adapt's hotdog go? 😭 #funny #funnystreammoments #twitchclips #streamer #twitchstreamer",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16",
+            "on_screen_text": [
+              "When did he takes Adapt's hotdog 😂 (top hook)",
+              "burned captions for dialogue (e.g., \"WHO WOULD LOVE A GIFTED TO SUB\", \"A STUPID NO GOOD THUG\", \"OH MY GOD HAHAHA\", \"NO THE FUCK YOU DIDN'T\", \"WHERE DID IT GO\")",
+              "Twitch chat overlay on the left side"
+            ],
+            "branding": "no explicit channel logo or consistent template branding visible",
+            "pacing_cuts": "moderate cut frequency, follows dialogue and reactions, no jump cuts or dead air",
+            "thumbnail_style_note": "opening frame clearly shows the main subjects and the hotdog, setting up the premise for the short"
+          },
+          "audio": {
+            "source": "stream audio (dialogue, laughter)",
+            "mix": "clip audio only",
+            "hook_audio": "dialogue about 'gifted sub' followed by a 'stupid no good thug' insult and laughter"
+          },
+          "content_theme": "streamer interaction / lighthearted prank / funny moment",
+          "features_used": [
+            "single moment",
+            "burned captions",
+            "Twitch chat overlay"
+          ],
+          "seo_packaging": "title directly relates to the on-screen action and mystery of the missing hotdog, using relevant hashtags",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "twitch-short: full-frame clip variants",
+              "burned text hooks (Hook Machine + playbook)",
+              "SEO metadata heavy on ClipzWorld"
+            ],
+            "missing_in_cwn_stack": [
+              "blur-pad letterbox (this video is full bleed)",
+              "CWN logo in top blur fold (no logo visible)",
+              "split-screen (Bobby G avatar top / source clip bottom) reaction variant"
+            ],
+            "effort_estimate": "config flag for full-frame variant + text overlay"
+          },
+          "video_id": "Vbv-R3QTrCw",
+          "views": 1854324,
+          "duration_sec": 24,
+          "trim": {
+            "analyzedSec": 24.174,
+            "totalSec": 24.174,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "FaZe Adapt's gamer lingo is too funny #fazeadapt #twitchclips #streamer  #streaming #twitch #clips",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, no letterbox or blur pads",
+            "on_screen_text": [
+              "\"Why his sensitivity mad high\" 😂 (white speech bubble with black text and emoji)",
+              "ON",
+              "CAUSE",
+              "SEEKING",
+              "FLOOR",
+              "SHIT",
+              "WAIT",
+              "SENSITIVITY",
+              "HIGH"
+            ],
+            "branding": "No explicit channel branding (logo, colors, or consistent template) visible in the video itself.",
+            "pacing_cuts": "Frequent cuts (approx. every 1-3 seconds) between different angles and close-ups of the same scene, maintaining a dynamic pace. No dead air.",
+            "thumbnail_style_note": "Opening frame features the main subject (FaZe Adapt) on the ground in fake snow with the prominent text overlay, suggesting a clear, action-oriented thumbnail with a text hook."
+          },
+          "audio": {
+            "source": "Original scene audio (dialogue, laughter, ambient sounds), no added music or SFX.",
+            "mix": "Clip audio only, primarily dialogue and reactions from the people in the scene.",
+            "hook_audio": "Laughter and dialogue from the participants, specifically someone exclaiming 'Ah!' and then the first line of dialogue 'Why's he on the floor?'"
+          },
+          "content_theme": "Streamer/influencer physical comedy, leveraging gamer lingo for a punchline.",
+          "features_used": [
+            "single moment",
+            "multiple camera angles of a single event",
+            "burned-in text overlay (speech bubble)",
+            "burned-in captions for key dialogue"
+          ],
+          "seo_packaging": "The title directly references the core joke and punchline of the video ('gamer lingo is too funny', 'FaZe Adapt'), making it highly relevant to the on-screen content and audio.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "full-frame clip variants (from twitch-short)",
+              "burned text hooks (from clip-comp Shorts)"
+            ],
+            "missing_in_cwn_stack": [
+              "full-bleed portrait layout (CWN uses blur-pad letterbox for clip-comp Shorts)",
+              "specific speech bubble text overlay style (CWN uses playbook text hooks, but not this exact visual style)",
+              "burned-in captions for dialogue (CWN focuses on text hooks, not full dialogue captions)"
+            ],
+            "effort_estimate": "Config flag for full-bleed layout, minor template adjustment for speech bubble text overlay and burned-in captions (approx. 1h in After Effects or similar tool)."
+          },
+          "video_id": "WonXUDbP6XM",
+          "views": 75275,
+          "duration_sec": 18,
+          "trim": {
+            "analyzedSec": 18.054,
+            "totalSec": 18.054,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Stableronaldo & Lacy go from fighting to ayo in seconds #stableronaldo #lacy #twitch #streamer #clip",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, no letterbox or blur pad",
+            "on_screen_text": [
+              "burned captions (e.g., \"They went from fighting to ayo so fast\", \"DIDN'T\", \"HERE\", \"ME\", \"OH\", \"BRO\", \"FUCK\", \"YEAH\", \"AYOOO\")",
+              "emojis (fighting, sad, rainbow flag)",
+              "small Twitch chat overlay in top left"
+            ],
+            "branding": "no explicit channel logo; inconsistent text styling (yellow/red outline, blue outline, red outline); no consistent template",
+            "pacing_cuts": "very fast cuts, frequent jump cuts, no dead air, dynamic camera movement",
+            "thumbnail_style_note": "opening frame shows two individuals in confrontational stance with a prominent text hook, suggesting a dynamic, text-heavy thumbnail"
+          },
+          "audio": {
+            "source": "stream audio (dialogue, shouting, sounds of impact/falling), sound effects",
+            "mix": "clip audio only, layered with specific sound effects (e.g., whoosh/impact sound at 0:11-0:12), no music bed or voiceover",
+            "hook_audio": "confrontational dialogue and shouting, escalating tension"
+          },
+          "content_theme": "streamer drama, physical confrontation, unexpected turn of events",
+          "features_used": [
+            "single moment",
+            "burned captions",
+            "on-screen emojis",
+            "sound effects"
+          ],
+          "seo_packaging": "title directly reflects the on-screen action and text hook, uses streamer names and relevant hashtags, strong alignment with visual content",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "twitch-short (full-frame clip variant)",
+              "burned text hooks (Hook Machine + playbook)",
+              "SEO metadata heavy"
+            ],
+            "missing_in_cwn_stack": [
+              "blur-pad letterbox (this clip is full bleed)",
+              "CWN logo in top blur fold (no blur fold here)",
+              "optional intro/outro cards (not present here)",
+              "specific text styling (yellow/red outline, blue outline)",
+              "integrated sound effects library/workflow"
+            ],
+            "effort_estimate": "config flag for full-frame variant + 15m for text/emoji overlay and SFX placement"
+          },
+          "video_id": "j2sFmFWVU9E",
+          "views": 55426,
+          "duration_sec": 18,
+          "trim": {
+            "analyzedSec": 18.054,
+            "totalSec": 18.054,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Clix swears in front of Nick Eh 30 at the fortnite FNCS PROAM #fortnite #fortniteclips #proam #clips",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, no letterbox or blur pad, with burned-in text overlays",
+            "on_screen_text": [
+              "YOU",
+              "WATCH YOUR F***ING BACK NICK 😮",
+              "FUCK'S",
+              "IS",
+              "GUYS I'M",
+              "WHAT",
+              "GUYS THIS",
+              "FRIENDLY",
+              "MAN",
+              "COME",
+              "FUCK",
+              "I'M",
+              "YOU",
+              "I'M",
+              "PRO",
+              "NICK",
+              "OH"
+            ],
+            "branding": "No visible channel logo. Consistent bold, capitalized, colored, outlined text style for dynamic word-by-word captions and a persistent bottom hook.",
+            "pacing_cuts": "Very frequent jump cuts, often timed with the appearance of new on-screen text, creating a fast-paced, punchy rhythm.",
+            "thumbnail_style_note": "The opening frame features Clix prominently with a large 'YOU' and the main hook caption, suggesting a direct, attention-grabbing thumbnail."
+          },
+          "audio": {
+            "source": "Stream audio (live event dialogue)",
+            "mix": "Clip audio only, dialogue is clear and central.",
+            "hook_audio": "Clix's initial 'You' followed by the escalating dialogue leading to the swear word."
+          },
+          "content_theme": "Streamer interaction, drama, and a 'gotcha' moment between popular Fortnite personalities (Clix and Nick Eh 30) at a live event.",
+          "features_used": [
+            "single moment",
+            "burned-in dynamic word-by-word captions",
+            "persistent text hook"
+          ],
+          "seo_packaging": "The title directly and accurately describes the core event of the clip, using relevant keywords and hashtags that align with the content.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts (single clip variant)",
+              "twitch-short (full-frame clip variant)",
+              "burned text hooks (Hook Machine + playbook)"
+            ],
+            "missing_in_cwn_stack": [
+              "Dynamic word-by-word text animation (beyond static hooks)",
+              "No CWN logo placement"
+            ],
+            "effort_estimate": "1h After Effects template for dynamic text animation; config flag for basic full-frame clip and static text hooks."
+          },
+          "video_id": "6CKq9FLyZNo",
+          "views": 48514,
+          "duration_sec": 21,
+          "trim": {
+            "analyzedSec": 20.974,
+            "totalSec": 20.974,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Lacy drinks the Zesty Potion  #funny #funnystreammoments #twitchclips #streamer #twitchstreamer",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait video, no letterboxing or split screen",
+            "on_screen_text": [
+              "large static header in a white rounded rectangle at the top: 'Lacy drinks the zesty potion and hits a crazy pose'",
+              "dynamic, word-by-word captions with yellow background and blue/red text for spoken dialogue"
+            ],
+            "branding": "no visible channel logo or consistent branding beyond the text style",
+            "pacing_cuts": "frequent cuts between two individuals speaking and reacting, quick pacing, no dead air",
+            "thumbnail_style_note": "opening frame with the main text hook and one of the streamers is a strong candidate for a feed thumbnail"
+          },
+          "audio": {
+            "source": "stream audio (dialogue)",
+            "mix": "clip audio only, no layered music or additional sfx/voiceover",
+            "hook_audio": "dialogue about 'what the fuck is going on with my voice' and 'zesty potion'"
+          },
+          "content_theme": "streamer interaction, a 'bit' or 'challenge' involving a 'zesty potion' and a reaction",
+          "features_used": [
+            "single moment",
+            "dynamic captions"
+          ],
+          "seo_packaging": "title directly describes the core event of the video; hashtags are generic but relevant to the content",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "full-bleed portrait format (as part of clip-comp Shorts and twitch-short variants)",
+              "burned text hooks (the top header is similar to Hook Machine output)",
+              "SEO metadata heavy on ClipzWorld, lighter on competitors (title structure is good)"
+            ],
+            "missing_in_cwn_stack": [
+              "dynamic, word-by-word captions with highlighting (CWN uses static text hooks)",
+              "no blur-pad letterbox (this video is full-bleed, CWN often uses blur-pad)",
+              "no CWN logo",
+              "no split-screen or avatar reaction overlay"
+            ],
+            "effort_estimate": "new After Effects template or tool integration for dynamic, highlighted captions (approx. 2-4 hours for initial setup and integration)"
+          },
+          "video_id": "j1ot9lh1SMc",
+          "views": 34099,
+          "duration_sec": 22,
+          "trim": {
+            "analyzedSec": 21.874,
+            "totalSec": 21.874,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "FaZe Clan Clipfarming",
+          "surface": "vod",
+          "visual": {
+            "layout": "The video features a mix of full-bleed POV shots, full-bleed group shots, and one instance of a split-screen layout with gameplay on the main screen and a streamer's facecam in a smaller inset box. There is an initial title card and Twitch chat overlay visible in most clips.",
+            "on_screen_text": [
+              "Twitch chat overlay (top left/right)",
+              "Subscriber/goal counter (top right)",
+              "Title card: \"FaZe Clipfarming\" (red text on blue background)",
+              "Title card: \"brought to you by DahBluh\"",
+              "Title card: \"SUBSCRIBE FOR MORE CLIPS & COMPILATIONS\""
+            ],
+            "branding": "Minimal branding beyond the initial title card which explicitly states \"brought to you by DahBluh.\" No consistent visual templates or color schemes are applied across the various clips, which appear to be raw or lightly edited Twitch/YouTube clips stitched together. The FaZe logo is not explicitly shown but implied by the content.",
+            "pacing_cuts": "The pacing is rapid, characterized by frequent, abrupt cuts between distinct clips. Each clip is short, focusing on a single moment or interaction, leading to a high cut frequency. There is no significant dead air within the clips themselves, but transitions are sudden.",
+            "thumbnail_style_note": "The opening frame suggests a 'rizz' or social interaction type of content, featuring two male streamers observing a group of women on a sidewalk. This could be used for a thumbnail to imply social commentary or a 'prank' style video."
+          },
+          "audio": {
+            "source": "Primarily raw stream audio from each individual clip, including dialogue, ambient sounds, and in-game audio (for the Fortnite clip). There is a brief, dramatic music bed during the title card transition.",
+            "mix": "The audio mix is predominantly clip audio only, with no consistent layered music or voiceover across the compilation. The title card features a short, dramatic musical sting.",
+            "hook_audio": "The first 3 seconds feature street sounds and casual conversation, followed by a sudden, loud exclamation of \"Come here!\" from one of the streamers, creating an immediate, attention-grabbing moment."
+          },
+          "content_theme": "The content revolves around FaZe Clan members and associated streamers, featuring a compilation of short, often humorous or dramatic moments from their streams. Themes include social interactions, pranks, gaming reactions, and general streamer lifestyle, framed under the meta-narrative of \"clipfarming.\"",
+          "features_used": [
+            "POV shot",
+            "Group interaction/prank",
+            "Split-screen gameplay + reaction",
+            "Raw stream footage compilation",
+            "Title card intro/outro",
+            "Twitch chat overlay"
+          ],
+          "seo_packaging": "The title \"FaZe Clan Clipfarming\" directly relates to the content by naming a prominent esports organization (FaZe Clan) and using a term (Clipfarming) that describes the nature of the video itself – a compilation of short, shareable moments designed to generate views and engagement. This is highly effective for targeting audiences interested in FaZe members and meta-commentary on content creation.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts (individual clips)",
+              "twitch-short (split-screen variant)",
+              "SEO metadata heavy on ClipzWorld, lighter on competitors (can adapt for FaZe)"
+            ],
+            "missing_in_cwn_stack": [
+              "Long-form compilation VOD format (beyond raw DVR replays)",
+              "Specific intro/outro card style (beyond CWN logo)",
+              "Themed series branding (e.g., 'Clipfarming' as a recurring segment)"
+            ],
+            "effort_estimate": "2-4 hours for sourcing, basic editing, and title card creation for a similar compilation length. Primarily involves clip selection and simple cuts."
+          },
+          "video_id": "dOVh9yiEuLk",
+          "views": 544867,
+          "duration_sec": 731,
+          "trim": {
+            "analyzedSec": 90,
+            "totalSec": 730.914,
+            "trimmed": true
+          }
+        },
+        {
+          "title": "FaZe Switchin Up Around The Huzz",
+          "surface": "vod",
+          "visual": {
+            "layout": "Primarily full-bleed Twitch VOD clips, with a single full-screen intro card. Twitch chat overlay is visible on the left side of the screen during clips.",
+            "on_screen_text": [
+              "Twitch chat overlay (left side)",
+              "Subscriber goal (top right, occasional)",
+              "Burned text on intro card: 'FaZe Clan Acting different around the huzz', 'brought to you by DahBluh', 'SUBSCRIBE FOR MORE CLIPS & COMPILATIONS'"
+            ],
+            "branding": "Minimal branding, limited to a simple intro card with the channel name 'DahBluh'. No consistent logo placement or color scheme applied to the clips themselves.",
+            "pacing_cuts": "Cuts occur between distinct clips, creating a compilation. Within individual clips, the pacing is continuous from the original stream, with occasional cuts to different camera angles (e.g., during the boat scene). No rapid jump cuts or noticeable dead air.",
+            "thumbnail_style_note": "The opening frame, featuring a large group of streamers reacting with high energy, suggests a dynamic 'group reaction' or 'drama' style thumbnail."
+          },
+          "audio": {
+            "source": "Raw stream audio from the original Twitch VODs. No background music bed or additional sound effects during the clips.",
+            "mix": "Clip audio only, featuring dialogue, laughter, and reactions. No layered music or voiceover is present during the main content.",
+            "hook_audio": "The first 3 seconds feature direct dialogue from the clip: a male voice stating 'And I'm a feminist. We all hate period cramps.' followed by a female voice asking 'Why is chat saying cap?' and a male voice confirming 'Yeah, I hate it.'"
+          },
+          "content_theme": "Streamer interactions, group reactions, light drama, and comedic moments, specifically involving FaZe Clan members and their associates.",
+          "features_used": [
+            "multi-clip compilation",
+            "single moment (within each clip)",
+            "group reaction"
+          ],
+          "seo_packaging": "The title 'FaZe Switchin Up Around The Huzz' directly relates to the content, which showcases FaZe members in various social interactions, often reacting to or engaging with women, aligning with the implied 'acting different' hook.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 2,
+            "already_in_cwn_stack": [
+              "Ability to source Twitch VOD content",
+              "Optional intro/outro cards (though style differs)",
+              "Upload-Post / YouTube direct; SEO metadata heavy"
+            ],
+            "missing_in_cwn_stack": [
+              "VOD content strategy for curated clip compilations (CWN's VOD stack is 'mostly raw multi-hour YouTube live DVR replays')",
+              "No blur-pad letterbox (clips are full-bleed)",
+              "No burned text hooks within clips",
+              "No CWN logo in top blur fold",
+              "No ranked-list overlay templates",
+              "No Related Video Short→VOD funnel wiring, themed series branding"
+            ],
+            "effort_estimate": "Minimal editing effort, primarily cutting and stitching full-bleed clips from VODs, and adding a simple, unbranded intro card. This is more a workflow configuration than complex template creation (e.g., 15-30 minutes per video)."
+          },
+          "video_id": "148iNs7KlIU",
+          "views": 507741,
+          "duration_sec": 563,
+          "trim": {
+            "analyzedSec": 90,
+            "totalSec": 562.774,
+            "trimmed": true
+          }
+        }
+      ],
+      "rollup": {
+        "handle": "DahBluh",
+        "channel_name": "DahBluh",
+        "signature_patterns": [
+          "Full-bleed portrait 9:16 layout for Shorts, maximizing screen real estate without blur-pad letterboxing.",
+          "Frequent, rapid cuts and jump cuts, especially in Shorts, creating a dynamic and fast-paced viewing experience.",
+          "Extensive use of burned-in text overlays: static hooks, burned captions for dialogue, and dynamic word-by-word captions.",
+          "Integration of Twitch chat overlays and occasional on-screen emojis for added context and engagement.",
+          "Content focused on single, high-impact streamer moments for Shorts, and curated multi-clip compilations for VODs.",
+          "Minimal explicit channel branding within the video content itself, relying on content and text hooks."
+        ],
+        "themes": [
+          "Streamer interactions and reactions",
+          "Lighthearted pranks and physical comedy",
+          "Drama and confrontation between streamers",
+          "Leveraging gamer lingo for humor",
+          "Highlighting 'gotcha' or unexpected moments",
+          "Compilations centered around popular streamers/groups (e.g., FaZe Clan)"
+        ],
+        "features_catalog": [
+          {
+            "feature": "full bleed portrait 9:16 layout",
+            "frequency": "always",
+            "description": "Maximizes screen usage for Shorts, no letterboxing."
+          },
+          {
+            "feature": "burned captions for dialogue",
+            "frequency": "often",
+            "description": "Static or dynamic text displaying spoken words, enhancing accessibility and engagement."
+          },
+          {
+            "feature": "dynamic word-by-word captions",
+            "frequency": "sometimes",
+            "description": "Captions that animate word by word, often with highlighting, for emphasis and pacing."
+          },
+          {
+            "feature": "Twitch chat overlay",
+            "frequency": "often",
+            "description": "Displays live Twitch chat on screen, adding context and community interaction."
+          },
+          {
+            "feature": "single moment clips",
+            "frequency": "always",
+            "description": "Shorts focus on a singular, impactful event or interaction."
+          },
+          {
+            "feature": "multiple camera angles of a single event",
+            "frequency": "sometimes",
+            "description": "Cuts between different perspectives of the same scene for dynamic storytelling."
+          },
+          {
+            "feature": "speech bubble text overlay",
+            "frequency": "sometimes",
+            "description": "Text hooks presented in a speech bubble graphic style."
+          },
+          {
+            "feature": "on-screen emojis",
+            "frequency": "sometimes",
+            "description": "Visual emojis integrated into the text overlays or directly on screen."
+          },
+          {
+            "feature": "sound effects (SFX)",
+            "frequency": "sometimes",
+            "description": "Added sound effects to emphasize actions or punchlines."
+          },
+          {
+            "feature": "persistent text hook",
+            "frequency": "often",
+            "description": "A static text overlay that remains on screen for a significant portion of the clip, often at the top or bottom."
+          },
+          {
+            "feature": "multi-clip compilation (VODs)",
+            "frequency": "always",
+            "description": "Longer videos composed of several distinct short clips stitched together."
+          },
+          {
+            "feature": "intro/outro title cards",
+            "frequency": "always",
+            "description": "Branded or thematic cards at the beginning/end of VODs, often with channel name and call to action."
+          },
+          {
+            "feature": "split-screen (gameplay + facecam)",
+            "frequency": "sometimes",
+            "description": "A layout within clips showing gameplay alongside a streamer's reaction facecam."
+          }
+        ],
+        "shorts_vs_vods": {
+          "shorts_role": "Shorts serve as highly digestible, viral, standalone moments designed for rapid discovery and engagement, often featuring a single, high-impact clip with dynamic text.",
+          "vods_role": "VODs are curated compilations of multiple related clips, often themed around specific streamers or events, providing longer-form entertainment and deeper dives into content trends, moving beyond raw DVR replays."
+        },
+        "why_views_work": "DahBluh's content thrives on rapid pacing, frequent cuts, and dynamic on-screen text, which collectively maximize viewer retention by keeping the visual experience constantly engaging. Discoverability is driven by strong SEO packaging, leveraging popular streamer names and relevant hashtags, combined with the full-bleed format that commands attention on mobile feeds. The focus on relatable streamer drama, comedy, and 'gotcha' moments ensures broad appeal and shareability.",
+        "replication_roadmap": {
+          "easy_wins": [
+            "Implement full-frame/full-bleed variant for Shorts (config flag).",
+            "Utilize existing burned text hooks (Hook Machine + playbook) for static overlays.",
+            "Leverage existing SEO metadata practices for titles and descriptions.",
+            "Source Twitch VOD content for compilation material.",
+            "Adapt existing intro/outro card capabilities for simple VOD intros."
+          ],
+          "medium_builds": [
+            "Develop new After Effects templates or tool integrations for dynamic word-by-word captions with highlighting.",
+            "Create specific template adjustments for speech bubble text overlay styles.",
+            "Integrate a sound effects library and workflow for strategic SFX placement.",
+            "Establish a VOD content strategy for curated clip compilations, moving beyond raw DVR replays.",
+            "Develop themed series branding (e.g., 'Clipfarming' style segments) for VODs."
+          ],
+          "hard_gaps": [],
+          "priority_for_clipzworld": [
+            "1. Implement full-bleed portrait layout as a default or option for Shorts.",
+            "2. Develop a robust template and workflow for dynamic word-by-word captions.",
+            "3. Integrate a sound effects library and workflow for enhancing clip impact.",
+            "4. Define and implement a VOD content strategy for curated clip compilations with themed branding.",
+            "5. Refine intro/outro card styles to be more engaging and branded for compilations."
+          ]
+        },
+        "clipzworld_delta": "ClipzWorld News currently relies on blur-pad letterboxing for Shorts and primarily raw multi-hour YouTube live DVR replays for VODs. DahBluh, in contrast, utilizes a full-bleed portrait layout for Shorts, employs dynamic word-by-word captions, integrates sound effects, and produces curated multi-clip VOD compilations with specific intro cards and themed branding. CWN is missing these key visual and content structuring elements, as well as a strategic approach to VOD compilations and integrated SFX, which are crucial for DahBluh's high engagement and retention."
+      }
+    },
+    {
+      "handle": "clipzworldnews",
+      "channel_name": "ClipzWorld News",
+      "sampled": {
+        "shorts": 5,
+        "vods": 2
+      },
+      "subscriber_count": 146,
+      "videos": [
+        {
+          "title": "#lacy on #Twitch | Yummy Salad in Miami | Salt no Peppa",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, single subject close-up",
+            "on_screen_text": [],
+            "branding": "none (raw clip)",
+            "pacing_cuts": "one continuous shot (no cuts)",
+            "thumbnail_style_note": "close-up of a person eating a salad, showing facial expressions"
+          },
+          "audio": {
+            "source": "stream audio (eating sounds, background chatter, occasional speech)",
+            "mix": "clip audio only",
+            "hook_audio": "eating sounds, 'Mmm-hmm' vocalization"
+          },
+          "content_theme": "ASMR/mukbang style eating clip, focus on food enjoyment",
+          "features_used": [
+            "single moment"
+          ],
+          "seo_packaging": "Title directly reflects the visual content (eating a salad) and identifies the streamer/platform, with an additional cryptic phrase.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 1,
+            "already_in_cwn_stack": [
+              "twitch-short: full-frame clip variants",
+              "Upload-Post / YouTube direct"
+            ],
+            "missing_in_cwn_stack": [
+              "CWN logo in top blur fold",
+              "burned text hooks",
+              "split-screen (Bobby G avatar top / source clip bottom)",
+              "intro/outro cards"
+            ],
+            "effort_estimate": "direct upload, no editing required beyond trimming"
+          },
+          "video_id": "Aq8CzGuv6hY",
+          "views": 1936,
+          "duration_sec": 30,
+          "trim": {
+            "analyzedSec": 30.014,
+            "totalSec": 30.014,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Epic Twitch Fail: Wrong Shirt Gift! 😂 #Shorts",
+          "surface": "short",
+          "visual": {
+            "layout": "Split-screen, vertical 9:16. Top half features a talking head (host) with a static background, bottom half displays the source clip. The host's segment is full-frame at the very beginning and end, transitioning to split-screen for the main clip.",
+            "on_screen_text": [
+              "GIFT DENIED 🔲",
+              "This is Marlon. He is on a football pitch. ⚾",
+              "Hey Marlon!",
+              "Man, hey give me a break",
+              "They kicked him on his face and now they want to break his ankle.",
+              "Sorry, it was foul against you.",
+              "No it wasn't!",
+              "The shirt was red and black. It was not the right color for the situation.",
+              "Twitch chat overlay (small, top right of clip)"
+            ],
+            "branding": "Host's background features purple neon lighting. A consistent purple banner with white text is used for key phrases like 'GIFT DENIED'. No explicit channel logo is visible within the video frame.",
+            "pacing_cuts": "The video features frequent, deliberate cuts. It alternates between the host's full-frame narration and the split-screen format showing the clip. Cuts are timed to introduce new information or emphasize a reaction, keeping the pace brisk for a short-form video.",
+            "thumbnail_style_note": "The opening frame, featuring the host with an expressive face and the prominent 'GIFT DENIED' banner, is clearly designed to serve as an engaging and click-worthy thumbnail."
+          },
+          "audio": {
+            "source": "Host voiceover, original clip audio (dialogue, crowd noise, ambient sounds), subtle background music.",
+            "mix": "The host's voiceover is primary, clear, and layered over the original clip audio. The clip audio is present but often lowered in volume when the host is speaking. A very low-volume, generic background music track is present throughout.",
+            "hook_audio": "The hook consists of the host's clear, direct narration introducing the subject ('This is Marlon. He is on a football pitch.') immediately followed by the original clip's audio of crowd noise and shouting."
+          },
+          "content_theme": "Sports (football/soccer) drama, social interaction/rejection, fan engagement, real-world 'fail' moments, presented with a streamer-like reaction/narration.",
+          "features_used": [
+            "avatar reaction (host as narrator)",
+            "single moment clip",
+            "burned-in captions/narration",
+            "split-screen format"
+          ],
+          "seo_packaging": "The title \"Epic Twitch Fail: Wrong Shirt Gift! 😂 #Shorts\" is highly descriptive, uses relevant keywords ('Twitch Fail', 'Shirt Gift'), and an emoji to enhance visibility and click-through. It accurately reflects the core event shown in the video.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "twitch-short: split-screen (Bobby G avatar top / source clip bottom) variant (with different host)",
+              "burned text hooks (Hook Machine + playbook)"
+            ],
+            "missing_in_cwn_stack": [
+              "CWN logo in top blur fold (not applicable to this split-screen layout)",
+              "ranked-list overlay templates",
+              "specific intro/outro cards (optional for CWN, not present here)"
+            ],
+            "effort_estimate": "Standard editing time for split-screen, voiceover, and captioning. Approximately 1-2 hours per short, assuming existing templates for split-screen and captioning are in place."
+          },
+          "video_id": "2W8wV_Icyvw",
+          "views": 1496,
+          "duration_sec": 33,
+          "trim": {
+            "analyzedSec": 33.014,
+            "totalSec": 33.014,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "#jasontheween on #Twitch | Creed Wins! Jason Another L",
+          "surface": "short",
+          "visual": {
+            "layout": "Full bleed portrait 9:16, no overlays or letterboxing.",
+            "on_screen_text": [],
+            "branding": "None visible (no channel logo, watermarks, or custom graphics).",
+            "pacing_cuts": "Moderate cuts to follow action and reframe, not rapid-fire jump cuts. Pacing is natural to the interaction.",
+            "thumbnail_style_note": "Opening frame is a clear, engaging shot of the man and dog mid-interaction, suitable for a dynamic thumbnail."
+          },
+          "audio": {
+            "source": "Raw stream audio (dialogue, dog sounds, human exclamations).",
+            "mix": "Clip audio only, no layered music, SFX, or voiceover.",
+            "hook_audio": "Man struggling with dog over an object, dog growling/panting, human dialogue (\"grip the inside\", \"alright alright\")."
+          },
+          "content_theme": "Streamer (Jason) interacting with a pet (Creed), lighthearted challenge/struggle, pet content.",
+          "features_used": [
+            "single moment",
+            "raw clip"
+          ],
+          "seo_packaging": "Title directly reflects the on-screen content and participants, using relevant hashtags for discoverability.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 2,
+            "already_in_cwn_stack": [
+              "Single clip format",
+              "Portrait 9:16 aspect ratio",
+              "Full-frame clip variant (from twitch-short stack)",
+              "Raw stream audio",
+              "Direct YouTube Shorts upload",
+              "SEO metadata practices"
+            ],
+            "missing_in_cwn_stack": [
+              "Ranked-list overlay templates",
+              "Related Video Short→VOD funnel wiring",
+              "Themed series branding"
+            ],
+            "effort_estimate": "Minimal (config flag for unbranded upload, or 5-10 min for adding standard CWN branding/text hooks)."
+          },
+          "video_id": "KriwIw1j9Vw",
+          "views": 1474,
+          "duration_sec": 30,
+          "trim": {
+            "analyzedSec": 30.014,
+            "totalSec": 30.014,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "#jasontheween on #Twitch | The Dog Knows about Jason",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed, portrait 9:16, no letterbox or blur pad",
+            "on_screen_text": [],
+            "branding": "none visible",
+            "pacing_cuts": "multiple cuts between different camera angles within the same scene, maintaining a continuous narrative flow; no dead air",
+            "thumbnail_style_note": "opening frame is a full-bleed shot of the streamer and dog, suggesting a direct clip thumbnail"
+          },
+          "audio": {
+            "source": "stream audio (dialogue, dog barking)",
+            "mix": "clip audio only",
+            "hook_audio": "loud dog barking, human reactions"
+          },
+          "content_theme": "streamer interaction with pet, lighthearted drama/comedy",
+          "features_used": [
+            "single moment"
+          ],
+          "seo_packaging": "title directly describes the on-screen content (streamer Jason, dog interaction, Twitch context)",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 1,
+            "already_in_cwn_stack": [
+              "raw multi-hour YouTube live DVR replays (this is a short cut from such content)"
+            ],
+            "missing_in_cwn_stack": [
+              "clip-comp Shorts (blur-pad letterbox, burned text hooks, intro/outro cards, CWN logo)",
+              "twitch-short (split-screen with avatar or full-frame clip variants with branding)",
+              "ranked-list overlay templates",
+              "Related Video Short→VOD funnel wiring",
+              "themed series branding"
+            ],
+            "effort_estimate": "minimal effort, primarily clipping and direct upload"
+          },
+          "video_id": "tk3RsvXeeQ0",
+          "views": 1466,
+          "duration_sec": 30,
+          "trim": {
+            "analyzedSec": 30.014,
+            "totalSec": 30.014,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "#Lacy and #Silky on Twitch| Saw the Whoo | Salt & Pepper",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed, vertical 9:16",
+            "on_screen_text": [],
+            "branding": "none visible",
+            "pacing_cuts": "single continuous shot, no cuts, natural dialogue pacing",
+            "thumbnail_style_note": "two individuals in a modern room, one speaking animatedly, the other reacting, suggesting a personal story or interaction"
+          },
+          "audio": {
+            "source": "live dialogue from the two individuals",
+            "mix": "clip audio only",
+            "hook_audio": "dialogue: 'What's going on, Drew? So I was doing like a little tour of the place and I saw your python.'"
+          },
+          "content_theme": "personal anecdote, suggestive humor, streamer interaction",
+          "features_used": [
+            "single moment",
+            "dialogue-driven"
+          ],
+          "seo_packaging": "title directly references the key suggestive phrase ('Saw the Whoo') and names the presumed streamers/personalities ('Lacy and Silky'). 'Salt & Pepper' is likely a generic descriptor or duo nickname.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 1,
+            "already_in_cwn_stack": [
+              "upload-post / YouTube direct",
+              "raw multi-hour YouTube live DVR replays (this is a raw clip)"
+            ],
+            "missing_in_cwn_stack": [
+              "blur-pad letterbox",
+              "burned text hooks",
+              "intro/outro cards",
+              "CWN logo in top blur fold",
+              "split-screen (Bobby G avatar top / source clip bottom)",
+              "ranked-list overlay templates",
+              "related video short→VOD funnel wiring",
+              "themed series branding"
+            ],
+            "effort_estimate": "minimal (upload raw clip)"
+          },
+          "video_id": "ZmtJ2f879TQ",
+          "views": 1401,
+          "duration_sec": 30,
+          "trim": {
+            "analyzedSec": 30.014,
+            "totalSec": 30.014,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Dyson Daniels and Kuminga go after Goga Bitadze. Goga gets ejected.",
+          "surface": "vod",
+          "visual": {
+            "layout": "full bleed game footage with persistent bottom ticker overlay",
+            "on_screen_text": [
+              "CLIPZWORLD NEWS | LIVE (bottom left)",
+              "Dynamic NBA game scores (bottom right)"
+            ],
+            "branding": "ClipzWorld News logo/text in bottom left ticker, consistent blue/red/white color scheme for ticker overlay.",
+            "pacing_cuts": "Frequent cuts between multiple camera angles, including slow-motion replays of key moments. Pacing is deliberate to emphasize the drama of the incident and player reactions. No visual dead air.",
+            "thumbnail_style_note": "The opening frame is a wide shot of the basketball court with players in action, which is a common sports highlight thumbnail. The dramatic moments of player confrontation and injury also offer strong thumbnail potential."
+          },
+          "audio": {
+            "source": "Dramatic orchestral music bed layered over faint game audio (crowd, squeaking shoes).",
+            "mix": "Layered dramatic music as primary audio, with game audio at a very low volume. No voiceover.",
+            "hook_audio": "Dramatic orchestral music begins immediately at 0:00."
+          },
+          "content_theme": "Sports drama, player confrontation, injury, ejection, specific NBA incident.",
+          "features_used": [
+            "single moment (extended)",
+            "multi-angle replays",
+            "slow-motion"
+          ],
+          "seo_packaging": "The title directly and accurately describes the core event and key players involved in the video, making it highly relevant for search.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "Full-frame clip variant (similar to twitch-short, but longer)",
+              "CWN logo placement (in bottom ticker)"
+            ],
+            "missing_in_cwn_stack": [
+              "Specific dramatic orchestral music bed style",
+              "Multi-angle replay and slow-motion editing for a single, extended incident (current stack focuses on stitched clips or raw DVR)",
+              "No blur-pad letterbox or burned text hooks as seen in clip-comp Shorts"
+            ],
+            "effort_estimate": "1-2 hours for a skilled editor to source multiple angles, cut, apply slow-motion, and add music in a video editing software (e.g., Adobe Premiere Pro)."
+          },
+          "video_id": "MVFHadYhLP0",
+          "views": 1383,
+          "duration_sec": 117,
+          "trim": {
+            "analyzedSec": 90,
+            "totalSec": 116.934,
+            "trimmed": true
+          }
+        },
+        {
+          "title": "You Won't Believe These Twitch Moments!",
+          "surface": "vod",
+          "visual": {
+            "layout": "The video opens with a full-bleed shot of a host (Bobby G) sitting at a desk, framed by a neon world map and studio lighting. This transitions to a multi-panel grid layout for the Twitch clip, showing six different streamers in their individual webcams (one panel is empty). A persistent bottom bar with the 'CLIPZWORLD NEWS' logo and scrolling text is present throughout. A right-side panel lists 'ON STREAM' names. The host returns to the full-bleed layout after the clip.",
+            "on_screen_text": [
+              "EPISODE 3 | TWITCH SOUP",
+              "LIVE | JUNE 11, 2020",
+              "ON STREAM (with names: Jason, Adapt, Marian, ExtraEmily, Ron)",
+              "CLIPZWORLD NEWS (logo)",
+              "Scrolling news ticker in the bottom bar (e.g., 'I'm back, Let's talk', 'The International 2020 Open Qualifiers starting soon')",
+              "Twitch chat overlay on the left side during the clip",
+              "19130/22000 (top right during clip, likely a goal tracker)",
+              "\"A participant in the call you joined has clipping enabled, your voice may be recorded\" (brief banner during clip)",
+              "Post-clip multiple-choice options (A, B, C) presented by the host"
+            ],
+            "branding": "Consistent purple, black, and white color scheme. Prominent 'CLIPZWORLD NEWS' logo in the bottom bar. 'Twitch Soup' segment branding with a distinct font and layout. The host's background features a neon world map, reinforcing a 'global news' aesthetic.",
+            "pacing_cuts": "The pacing is moderate. It starts with a ~22-second host introduction, followed by a quick cut to the Twitch clip. The clip itself runs continuously without internal cuts for about 90 seconds. A quick cut then returns to the host for post-clip commentary.",
+            "thumbnail_style_note": "The opening frame with the host in a professional, news-desk-like setting, combined with the 'Twitch Soup' title and neon world map, suggests a thumbnail featuring the host prominently, possibly with a graphic overlay hinting at the 'Twitch moments' or 'news' aspect."
+          },
+          "audio": {
+            "source": "The primary audio sources are the host's clear, professionally recorded voice and the raw audio from the Twitch video call clip (multiple speakers, guitar playing, singing, laughter, reactions).",
+            "mix": "The host's voice is clean and dominant during his segments. During the clip, the audio is entirely from the clip, featuring multiple voices and background elements (like the guitar). There is no discernible music bed or SFX layered over the clip audio.",
+            "hook_audio": "The first 3 seconds feature the host's voice clearly stating, \"Welcome to Twitch Soup. I'm your host Bobby G...\" setting a professional and informative tone."
+          },
+          "content_theme": "The content revolves around analyzing and reacting to specific, often dramatic or humorous, live interactions and moments from Twitch streamers, presented in a news-style format. The specific clip features a streamer's musical apology during a video call, highlighting unexpected turns in live content.",
+          "features_used": [
+            "Host commentary/introduction",
+            "Multi-panel grid clip display",
+            "Live Twitch chat overlay",
+            "Scrolling news ticker",
+            "Post-clip analysis/quiz with multiple-choice options"
+          ],
+          "seo_packaging": "The title \"You Won't Believe These Twitch Moments!\" is a broad, curiosity-driven hook that aligns well with the channel's overall theme of showcasing viral or unexpected Twitch clips. The host's introduction and commentary further contextualize the clips as 'moments' worth watching and reacting to, reinforcing the title's promise.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "VOD today: mostly raw multi-hour YouTube live DVR replays + occasional long news chrome (the host segment is a form of 'news chrome')",
+              "CWN logo in top blur fold (logo is present, though in bottom bar)",
+              "twitch-short: split-screen (Bobby G avatar top / source clip bottom) or full-frame clip variants (the multi-panel clip is a variant of showing source clips)"
+            ],
+            "missing_in_cwn_stack": [
+              "Dedicated host segment template with studio-like background and specific branding ('Twitch Soup')",
+              "Multi-panel grid layout for displaying multiple streamers simultaneously in a clip",
+              "Persistent Twitch chat overlay integrated into the clip display",
+              "Interactive post-clip analysis with on-screen multiple-choice options",
+              "Scrolling news ticker in the bottom bar"
+            ],
+            "effort_estimate": "Developing a dedicated host segment template (studio background, lower thirds, name tags) would require 8-12 hours in After Effects/Premiere Pro. Creating a reusable multi-panel grid template with dynamic Twitch chat and info overlays would be another 4-6 hours. Implementing interactive elements like the post-clip quiz would require custom graphic animation and potentially a more complex editing workflow than simple cuts."
+          },
+          "video_id": "_L4jYO_Y1bA",
+          "views": 95,
+          "duration_sec": 1440,
+          "trim": {
+            "analyzedSec": 90,
+            "totalSec": 1439.934,
+            "trimmed": true
+          }
+        }
+      ],
+      "rollup": {
+        "handle": "@clipzworldnews",
+        "channel_name": "ClipzWorld News",
+        "signature_patterns": [
+          "Shorts: Predominantly raw, full-bleed portrait Twitch clips (ASMR, pet interactions, dialogue). Some advanced Shorts feature split-screen with a host, burned-in text, and brisk cuts.",
+          "VODs: Range from raw game footage with a simple CWN ticker to highly produced news-style segments with a host, multi-panel clip displays, scrolling tickers, and interactive elements. One VOD is a sports highlight with dramatic music and multi-angle replays.",
+          "Branding: Inconsistent on Shorts (mostly none), but present on VODs (CWN logo, host branding).",
+          "Audio: Mix of raw clip audio, host voiceover, and dramatic music beds.",
+          "Content: Focus on viral/engaging Twitch moments (fails, drama, humor, unique interactions) and sports highlights."
+        ],
+        "themes": [
+          "Streamer fails/drama",
+          "Pet interactions/comedy",
+          "ASMR/mukbang",
+          "Sports highlights/confrontations",
+          "Personal anecdotes/dialogue",
+          "\"News\" style commentary on live streaming events"
+        ],
+        "features_catalog": [
+          {
+            "feature": "single moment",
+            "frequency": "often",
+            "description": "Focus on a singular, impactful event or interaction."
+          },
+          {
+            "feature": "raw clip",
+            "frequency": "often",
+            "description": "Unedited or minimally edited footage directly from a stream."
+          },
+          {
+            "feature": "full bleed portrait 9:16",
+            "frequency": "often",
+            "description": "Vertical video filling the entire screen, common for Shorts."
+          },
+          {
+            "feature": "split-screen format",
+            "frequency": "sometimes",
+            "description": "Screen divided, often showing a host/reactor alongside the source clip."
+          },
+          {
+            "feature": "avatar reaction (host as narrator)",
+            "frequency": "sometimes",
+            "description": "A host providing commentary or reaction to the clip."
+          },
+          {
+            "feature": "burned-in captions/narration",
+            "frequency": "sometimes",
+            "description": "Text overlays directly on the video for context or hooks."
+          },
+          {
+            "feature": "dialogue-driven",
+            "frequency": "often",
+            "description": "Content primarily focused on spoken interactions."
+          },
+          {
+            "feature": "multi-angle replays",
+            "frequency": "sometimes",
+            "description": "Showing an event from several camera perspectives."
+          },
+          {
+            "feature": "slow-motion",
+            "frequency": "sometimes",
+            "description": "Key moments replayed in slow motion for emphasis."
+          },
+          {
+            "feature": "Host commentary/introduction",
+            "frequency": "sometimes",
+            "description": "A dedicated segment with a host introducing or discussing content."
+          },
+          {
+            "feature": "Multi-panel grid clip display",
+            "frequency": "sometimes",
+            "description": "Displaying multiple streamers or perspectives simultaneously in a grid."
+          },
+          {
+            "feature": "Live Twitch chat overlay",
+            "frequency": "sometimes",
+            "description": "Integrating live chat from Twitch into the video display."
+          },
+          {
+            "feature": "Scrolling news ticker",
+            "frequency": "sometimes",
+            "description": "A persistent, scrolling text bar at the bottom for news or updates."
+          },
+          {
+            "feature": "Post-clip analysis/quiz with multiple-choice options",
+            "frequency": "sometimes",
+            "description": "Interactive elements after a clip for viewer engagement."
+          },
+          {
+            "feature": "Dramatic orchestral music bed",
+            "frequency": "sometimes",
+            "description": "Background music used to heighten tension or emotion."
+          },
+          {
+            "feature": "Persistent bottom ticker overlay",
+            "frequency": "sometimes",
+            "description": "A consistent graphic bar at the bottom, often with branding or scores."
+          }
+        ],
+        "shorts_vs_vods": {
+          "shorts_role": "Primarily for quick, digestible, often raw, single-moment clips designed for discovery and viral sharing. Some act as mini-commentary pieces.",
+          "vods_role": "Longer-form content, either extended highlights with production (music, replays) or structured news-style shows with host commentary, multiple clips, and interactive elements. Also raw DVR replays."
+        },
+        "why_views_work": "Discoverability is driven by highly descriptive and keyword-rich titles, relevant hashtags, and curiosity-driven hooks that leverage trending streamer content and dramatic sports moments. Retention is achieved through fast-paced editing in some Shorts, host engagement and commentary in VODs, dramatic music and multi-angle replays in highlights, and interactive elements like quizzes in news-style VODs, appealing to diverse viewer preferences.",
+        "replication_roadmap": {
+          "easy_wins": [
+            "Direct upload of raw, full-bleed portrait Twitch clips (as seen in competitor's unbranded shorts).",
+            "Applying SEO metadata heavily on ClipzWorld, lighter on competitors (already in CWN stack).",
+            "Trimming and uploading single-moment clips from longer streams."
+          ],
+          "medium_builds": [
+            "Consistent application of CWN logo in top blur fold for all Shorts (currently optional/missing for CWN).",
+            "Implementing burned text hooks (Hook Machine + playbook) for all Shorts (currently optional/missing for CWN).",
+            "Developing specific intro/outro cards for Shorts (currently optional/missing for CWN).",
+            "Refining/consistently applying the 'twitch-short: split-screen (Bobby G avatar top / source clip bottom)' variant.",
+            "Creating templates for multi-angle replay and slow-motion editing for VOD highlights (as seen in sports VOD).",
+            "Developing a consistent dramatic orchestral music bed style for VOD highlights.",
+            "Implementing a persistent bottom ticker overlay for VODs (as seen in sports VOD and news VOD)."
+          ],
+          "hard_gaps": [
+            "Developing ranked-list overlay templates (RANKING X MOMENTS 1-5) (explicitly missing for CWN).",
+            "Wiring Related Video Short→VOD funnel (explicitly missing for CWN).",
+            "Developing themed series branding (explicitly missing for CWN).",
+            "Developing a dedicated host segment template with studio-like background and specific branding (as seen in news VOD).",
+            "Creating a reusable multi-panel grid layout for displaying multiple streamers simultaneously in a clip (as seen in news VOD).",
+            "Integrating persistent Twitch chat overlay into clip displays (as seen in news VOD).",
+            "Implementing interactive post-clip analysis with on-screen multiple-choice options (as seen in news VOD)."
+          ],
+          "priority_for_clipzworld": [
+            "Consistent application of CWN logo in top blur fold for all Shorts.",
+            "Implementing burned text hooks (Hook Machine + playbook) for all Shorts.",
+            "Developing specific intro/outro cards for Shorts.",
+            "Developing ranked-list overlay templates (RANKING X MOMENTS 1-5).",
+            "Wiring Related Video Short→VOD funnel.",
+            "Developing themed series branding.",
+            "Implementing a persistent bottom ticker overlay for VODs.",
+            "Creating templates for multi-angle replay and slow-motion editing for VOD highlights.",
+            "Developing a dedicated host segment template for VODs."
+          ]
+        },
+        "clipzworld_delta": "ClipzWorld News's current creative stack, while including basic clip-comp Shorts and raw VODs, lacks the polish and diversity seen in this competitor. Specifically, ClipzWorld is missing consistent branding (like a logo in the top blur fold) and burned text hooks across all Shorts. More significantly, the competitor showcases advanced VOD formats such as dedicated host segments with studio-like backgrounds, multi-panel clip grids, scrolling news tickers, and interactive post-clip analysis. Furthermore, ClipzWorld is missing ranked-list overlay templates, strategic Short-to-VOD funnel wiring, and comprehensive themed series branding, all of which are present or implied by the competitor's more sophisticated content offerings."
+      }
+    },
+    {
+      "handle": "imgoochy",
+      "channel_name": "ImGoochy",
+      "sampled": {
+        "shorts": 5,
+        "vods": 2
+      },
+      "subscriber_count": 359000,
+      "videos": [
+        {
+          "title": "Jason & Yugi Met Speed at the USA World Cup Game 😭⚽",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, handheld camera perspective",
+            "on_screen_text": [
+              "burned captions (yellow text with black outline) identifying speakers or key phrases: SPEED, DARREN, JASON, YESSIR, RIGHT, NOW, STREAM, EVEN, YES I, CHRISTIAN PULISIC, BRO, ACTUALLY, A NERD"
+            ],
+            "branding": "no visible channel logo, no consistent color scheme or template beyond the captions",
+            "pacing_cuts": "one continuous shot, no cuts or jump cuts, dynamic camera movement following the interaction, no dead air",
+            "thumbnail_style_note": "dynamic, in-the-moment shot of a fan or streamer (Speed) interacting with the crowd, with text identifying a key figure"
+          },
+          "audio": {
+            "source": "original stream audio (live event audio) with crowd noise, cheering, and direct dialogue",
+            "mix": "clip audio only, no layered music, no SFX, no voiceover",
+            "hook_audio": "loud crowd cheering, person shouting 'SPEED!' and 'DARREN!'"
+          },
+          "content_theme": "streamer (Speed) interaction with fans at a live sports event (World Cup), focusing on celebrity presence and fan reactions",
+          "features_used": [
+            "single moment",
+            "live interaction",
+            "burned-in captions for identification"
+          ],
+          "seo_packaging": "title accurately describes the content (Speed meeting people at a World Cup game), on-screen captions reinforce names mentioned in the title",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 5,
+            "already_in_cwn_stack": [
+              "twitch-short full-frame clip variant (layout)",
+              "burned text capability (though style/purpose differs from 'Hook Machine')",
+              "publishing process (Upload-Post / YouTube direct; SEO metadata)",
+              "using raw stream audio"
+            ],
+            "missing_in_cwn_stack": [
+              "CWN logo placement",
+              "blur-pad letterbox (this is full bleed)",
+              "optional intro/outro cards",
+              "multi-clip stitching (this is a single clip)",
+              "split-screen (Bobby G avatar)",
+              "ranked-list overlay templates",
+              "Related Video Short→VOD funnel wiring",
+              "themed series branding",
+              "specific 'Hook Machine + playbook' style of text hooks (this video uses descriptive captions)"
+            ],
+            "effort_estimate": "minimal; adding simple burned-in captions to raw footage is a basic editing task, could be a config flag for 'raw clip + descriptive captions'"
+          },
+          "video_id": "VXUThkk1DtE",
+          "views": 5020406,
+          "duration_sec": 25,
+          "trim": {
+            "analyzedSec": 24.754,
+            "totalSec": 24.754,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Jason & Yugi Got Pressed for Standing at Their Seats at the World Cup 😳😭",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed vertical video, with a persistent score overlay (POR vs COD) and a small football field graphic in the bottom right corner. The main content is a selfie-style shot of two individuals reacting to the event and crowd around them.",
+            "on_screen_text": [
+              "burned captions for dialogue (e.g., \"AW\", \"DOWN\", \"NAH\", \"WE PAID\", \"SITTING\", \"SIT DOWN\", \"C*BRONES\", \"SORRY\", \"NICE\", \"GOOD\", \"N**GA\", \"CHEERING\", \"CLAPPING\", \"OLD MAN FLIPPED US OFF\"),",
+              "asterisked contextual notes (e.g., \"*TELLING THEM TO SIT*\", \"*CHEERING*\"),",
+              "score overlay (POR 0-0 COD, then POR 1-0 COD),",
+              "timer (e.g., 03:17, 05:00, 09:19, 11:29, 22:23, 23:59)"
+            ],
+            "branding": "No explicit channel branding or logo. The score overlay and football field graphic serve as event-specific branding elements.",
+            "pacing_cuts": "Frequent jump cuts, indicated by the rapidly changing timer in the overlay, to highlight specific moments of dialogue and reaction. The camera is handheld and dynamic, following the subjects' movements and expressions.",
+            "thumbnail_style_note": "The opening frame features a close-up of the two main subjects with face paint, looking directly at the camera with expressive, slightly annoyed/surprised faces. This is highly effective for a reaction-style thumbnail, leveraging facial expressions and the unique face paint."
+          },
+          "audio": {
+            "source": "Primarily stream audio from the two individuals speaking, mixed with loud crowd noise and stadium ambiance. There are moments of cheering and clapping from the crowd.",
+            "mix": "Clip audio only, with the two subjects' dialogue and reactions layered over the ambient crowd noise. No music bed or separate voiceover.",
+            "hook_audio": "The first 3 seconds feature clear dialogue from the subjects (\"AW\", \"DOWN\") mixed with the loud, excited crowd noise, immediately establishing the setting and a sense of conflict/reaction."
+          },
+          "content_theme": "Fan reaction / sports drama / social interaction at a live event. The core conflict is being 'pressed' to sit down at a World Cup game, leading to a defiant and expressive reaction from the subjects.",
+          "features_used": [
+            "single moment",
+            "in-situ reaction (subjects are part of the event being filmed)",
+            "selfie-style POV",
+            "burned captions for dialogue",
+            "contextual text overlays"
+          ],
+          "seo_packaging": "The title directly describes the central conflict and subjects of the video, using relevant keywords ('Jason & Yugi', 'World Cup', 'Standing at Their Seats') and engaging emojis (😳😭) to attract clicks. It accurately reflects the on-screen content.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "vertical 9:16 format",
+              "burned text captions (though style differs)",
+              "SEO metadata heavy on topic"
+            ],
+            "missing_in_cwn_stack": [
+              "in-situ reaction template (where the 'reactors' are the primary content, not a separate avatar reacting to a clip)",
+              "specific event-style score/graphic overlays (CWN has generic overlays, but not this specific football field/score design)",
+              "full-bleed video without blur-pad letterbox (CWN baseline uses blur-pad)",
+              "no channel logo integration in this specific style"
+            ],
+            "effort_estimate": "New template development in After Effects for the 'in-situ' reaction style and custom event-specific overlays (e.g., score, football field graphic). This would be more than a config flag, likely a 4-8 hour design/template build."
+          },
+          "video_id": "RxLoQ3qUuE8",
+          "views": 3189877,
+          "duration_sec": 55,
+          "trim": {
+            "analyzedSec": 54.614,
+            "totalSec": 54.614,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Jason Recreated the Viral Japan World Cup Clip 😭🇯🇵⚽",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait video, two distinct clips stitched sequentially",
+            "on_screen_text": [
+              "burned captions (yellow text with black outline) highlighting key phrases like 'ENGLISH', 'EXCITED', 'CANNOT SPEAK', 'I LOVE IT', 'YEAH'",
+              "news lower third in the second clip: '2026 FIFA WORLD CUP', 'ARLINGTON ENTERTAINMENT DISTRICT'"
+            ],
+            "branding": "no explicit channel logo or overlay; branding is implied through consistent burned caption style and full-bleed presentation",
+            "pacing_cuts": "one hard cut between the two main clips; each clip is a continuous shot of an interview",
+            "thumbnail_style_note": "the opening frame features a close-up of an expressive person, suggesting a 'reaction' or 'emotional moment' style thumbnail"
+          },
+          "audio": {
+            "source": "original stream/interview audio from both clips",
+            "mix": "clip audio only, no layered music or separate voiceover",
+            "hook_audio": "the phrase 'I know English but I am excited!' from the first clip, delivered with high energy"
+          },
+          "content_theme": "viral moment recreation/comparison, sports fan enthusiasm, cultural humor",
+          "features_used": [
+            "single moment comparison",
+            "direct recreation/homage",
+            "interview clip"
+          ],
+          "seo_packaging": "the title directly and accurately describes the content of the video, using keywords like 'Jason Recreated', 'Viral Japan World Cup Clip', and relevant emojis to enhance searchability and appeal",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts (stitching clips portrait 9:16)",
+              "burned text hooks (Hook Machine + playbook)"
+            ],
+            "missing_in_cwn_stack": [
+              "specific template for 'recreation' or 'comparison' of two similar clips back-to-back, though easily achievable with existing tools",
+              "no explicit CWN logo placement in this specific style"
+            ],
+            "effort_estimate": "low effort, primarily simple video editing and text overlay; likely a config flag or quick edit in a standard editor"
+          },
+          "video_id": "xodta4d4WJc",
+          "views": 2776494,
+          "duration_sec": 14,
+          "trim": {
+            "analyzedSec": 14.074,
+            "totalSec": 14.074,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Jason Was Shocked by How Haskell Pronounced “Vietnamese” 😭",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16",
+            "on_screen_text": [
+              "burned captions (white text, black outline, yellow highlight on key words)",
+              "Twitch chat overlay (top left, small, semi-transparent)"
+            ],
+            "branding": "none visible from @imgoochy; no intro/outro cards or channel logo",
+            "pacing_cuts": "frequent cuts, jump cuts to focus on speakers, fast-paced dialogue, no dead air",
+            "thumbnail_style_note": "opening frame features one person holding a Spiderman plush, looking directly at the camera, with a burned text hook 'WAIT', suggesting a direct and engaging hook thumbnail."
+          },
+          "audio": {
+            "source": "stream audio (dialogue)",
+            "mix": "dialogue only, clear and prominent",
+            "hook_audio": "dialogue: 'Wait, didn't you make dep guy?'"
+          },
+          "content_theme": "streamer interaction, language humor, cultural reference (Vietnamese song/pronunciation)",
+          "features_used": [
+            "single moment",
+            "avatar reaction (implied by two-person interaction)",
+            "burned captions"
+          ],
+          "seo_packaging": "title directly reflects the humorous core of the clip (mispronunciation of 'Vietnamese') and uses an emoji for emotional hook, aligning well with the on-screen content.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "Single full-frame clip variant (from twitch-short)",
+              "Portrait 9:16 aspect ratio",
+              "Burned text hooks (white text, black outline, yellow highlight style)",
+              "Upload-Post / YouTube direct; SEO metadata"
+            ],
+            "missing_in_cwn_stack": [
+              "Standardized integration of Twitch chat overlay (if not part of raw source ingest workflow)"
+            ],
+            "effort_estimate": "config flag for full-bleed single clip with burned captions"
+          },
+          "video_id": "0Y-UyWEEjY8",
+          "views": 1679712,
+          "duration_sec": 19,
+          "trim": {
+            "analyzedSec": 18.554,
+            "totalSec": 18.554,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Jason Disguised Himself as Haskell’s Cameraman After Getting Denied 😭",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, no letterboxing or split screen. Dynamic camera movement within the single frame.",
+            "on_screen_text": [
+              "burned captions (neon green/blue, bold, capitalized, sometimes with outline/shadow, dynamic placement)",
+              "Twitch chat overlay (top left, small, semi-transparent, showing usernames and messages)",
+              "score counter (top center, '19653/20000')"
+            ],
+            "branding": "No explicit channel logo. Twitch chat overlay provides context/branding. No consistent template beyond the caption style.",
+            "pacing_cuts": "Frequent cuts, jump cuts, dynamic camera work (zooms, close-ups, wide shots). Fast pacing, no dead air.",
+            "thumbnail_style_note": "Opening frame is a clear, engaging shot of the main subject (Kai Cenat) with a prominent burned caption, suggesting a direct and impactful thumbnail."
+          },
+          "audio": {
+            "source": "Stream audio (dialogue, reactions, ambient room sound). No music bed or SFX.",
+            "mix": "Clip audio only, dialogue is clear and central.",
+            "hook_audio": "Immediate dialogue and interaction between the two main subjects, establishing the premise of the prank/conversation."
+          },
+          "content_theme": "Streamer interaction, prank/comedy, social experiment, 'IRL' content, focusing on Kai Cenat and Jason.",
+          "features_used": [
+            "single moment",
+            "burned captions",
+            "Twitch chat overlay"
+          ],
+          "seo_packaging": "Title directly reflects the main event/prank in the video, using streamer names and an emoji to convey emotion and engagement.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "single clip focus (though typically Twitch source)",
+              "burned text hooks (conceptually similar to captions)",
+              "SEO metadata practices"
+            ],
+            "missing_in_cwn_stack": [
+              "full bleed portrait 9:16 layout (CWN uses blur-pad or split-screen)",
+              "specific dynamic caption style (neon, bold, varied placement)",
+              "Twitch chat overlay integration (CWN has avatar reaction, not this specific chat)",
+              "dynamic camera movement/editing within a single source clip"
+            ],
+            "effort_estimate": "1-2 hours for a skilled editor to replicate the specific caption style and chat overlay for a single clip, assuming source footage is already edited for pacing. Requires a new template for full-bleed portrait with dynamic captions and chat overlay in After Effects or similar."
+          },
+          "video_id": "5BhMpuca59A",
+          "views": 1442924,
+          "duration_sec": 68,
+          "trim": {
+            "analyzedSec": 67.994,
+            "totalSec": 67.994,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "The true finale...",
+          "surface": "vod",
+          "visual": {
+            "layout": "Starts with full-screen text intro, transitions to full-bleed streamer, then uses a split-screen layout with the streamer on the right and desktop content (browser, notepad) on the left. Standard Twitch chat overlay is visible on the right side.",
+            "on_screen_text": [
+              "2023 年 2 月 19 日",
+              "Episode 7: The true finale...",
+              "burned captions (subtitles) for streamer dialogue",
+              "Twitch chat messages (username, message)",
+              "Notepad text (e.g., 'goodbye gift for people')",
+              "Browser UI (Amazon, Google, Tiffany & Co., Dior product pages)"
+            ],
+            "branding": "Minimal. Features a simple text-based intro card with date and episode title. Uses standard Twitch chat overlay. No custom channel logo or consistent visual template beyond the basic stream layout.",
+            "pacing_cuts": "Moderate. Cuts between the full-bleed streamer view and the split-screen view (streamer + desktop). Quick cuts are used when browsing different product pages. No obvious jump cuts within a single shot of the streamer.",
+            "thumbnail_style_note": "The opening frame with the date and episode title on a black background serves as a clean intro but is not a strong feed thumbnail. More effective thumbnails would likely feature the streamer's expressive reactions (e.g., when talking on the phone or reacting to gift prices)."
+          },
+          "audio": {
+            "source": "Streamer's voice, background music (melancholic instrumental during intro, then more upbeat during gift browsing), subtle ambient sounds from streamer's interaction (e.g., phone).",
+            "mix": "Streamer's voice is primary and clear. Background music is layered underneath, sometimes fading in or out to emphasize dialogue or mood.",
+            "hook_audio": "Melancholic instrumental music, followed by the streamer's voice announcing 'this Thursday is the last stream with Yujin'."
+          },
+          "content_theme": "Personal announcement (final stream with another person), gift shopping, lighthearted banter, and reactions to expensive items.",
+          "features_used": [
+            "single moment (streamer talking)",
+            "avatar reaction (streamer's face reacting)",
+            "screen share (desktop browsing)"
+          ],
+          "seo_packaging": "The video title 'The true finale...' directly aligns with the streamer's announcement of a 'last stream' and 'goodbye gift,' creating intrigue and a sense of conclusion for the audience.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "twitch-short (full-frame clip variants)",
+              "VOD today (raw multi-hour YouTube live DVR replays)"
+            ],
+            "missing_in_cwn_stack": [
+              "Custom intro card template (date/episode title)",
+              "Specific split-screen layout (streamer on right, desktop on left) for VODs, as CWN's is avatar top/source bottom",
+              "Consistent burned captions for long-form VOD content (CWN mentions for Shorts)",
+              "Background music selection and mixing for emotional effect"
+            ],
+            "effort_estimate": "Basic split-screen functionality is a config flag, but a custom intro card and the specific split-screen layout (streamer on right, desktop on left) would require a '2h template in After Effects'. Continuous burned captions and background music mixing are manual editing tasks."
+          },
+          "video_id": "Hhs--C5p0DI",
+          "views": 824259,
+          "duration_sec": 2280,
+          "trim": {
+            "analyzedSec": 90,
+            "totalSec": 2280.054,
+            "trimmed": true
+          }
+        },
+        {
+          "title": "A beautiful love story...",
+          "surface": "vod",
+          "visual": {
+            "layout": "Starts with full-bleed text overlays (dates) on a black background, transitions to a split-screen layout with the streamer's facecam on the right and a Discord call interface on the left. The Discord call then expands to a two-person split-screen, showing the streamer and the person they are talking to. Twitch chat is visible on the right side of the streamer's frame.",
+            "on_screen_text": [
+              "Dates (e.g., \"2023 年 1 月 10 日\")",
+              "Twitch chat messages (e.g., \"SO FUCKING DISGUSTING CHANGE UR WALLPAPER\", \"#TEAMYUJIN\")",
+              "Discord chat messages (minimal, mostly just 'hey pookie')",
+              "Burned caption: \"damn\"",
+              "Donation alert: \"jay donated $1\" with a custom avatar"
+            ],
+            "branding": "Minimal channel branding. Relies on native Twitch/Discord UI elements. No custom channel logos or consistent visual templates beyond the basic split-screen setup.",
+            "pacing_cuts": "Initial cuts are slow, transitioning between dates. Once the Discord call starts, the pacing is real-time, with some jump cuts as the streamer adjusts camera or the other person joins/leaves the call. The overall pace is driven by the live interaction.",
+            "thumbnail_style_note": "The opening frame with date text is not suitable for a thumbnail. A strong thumbnail would feature the streamer's expressive reaction alongside the person they are interacting with on the Discord call, highlighting the 'love story' or 'rizz' aspect."
+          },
+          "audio": {
+            "source": "Streamer's voice, Discord call audio (female voice), background music, Twitch donation alert sound.",
+            "mix": "Streamer's voice and Discord call audio are prominent, layered over a consistent, low-volume, emotional instrumental music bed. Twitch donation alert briefly cuts through the mix.",
+            "hook_audio": "Soft, emotional instrumental music bed with a melancholic tone, followed by the streamer's voice speaking over it."
+          },
+          "content_theme": "Streamer interacting with a female on a Discord video call, focusing on a 'rizz' or dating/flirting dynamic, with live audience reactions (Twitch chat) to the interaction.",
+          "features_used": [
+            "single moment",
+            "avatar reaction",
+            "split-screen",
+            "live chat interaction"
+          ],
+          "seo_packaging": "The title \"A beautiful love story...\" is highly thematic and clickbait-y, directly aligning with the dating/flirting content and the emotional background music, creating intrigue around the interaction.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "twitch-short (split-screen reaction)",
+              "VOD today (raw multi-hour YouTube live DVR replays)"
+            ],
+            "missing_in_cwn_stack": [
+              "Consistent emotional background music integration (beyond simple music beds)",
+              "Specific focus on 'rizz' or dating content as a themed series",
+              "Date overlays (though simple to implement)"
+            ],
+            "effort_estimate": "Minimal editing for the split-screen and chat display. The main effort would be in curating compelling 'rizz' moments from longer streams and selecting appropriate emotional background music to enhance the narrative, potentially 1-2 hours per clip for selection and light editing."
+          },
+          "video_id": "ntKXb4RTWro",
+          "views": 564815,
+          "duration_sec": 793,
+          "trim": {
+            "analyzedSec": 90,
+            "totalSec": 792.774,
+            "trimmed": true
+          }
+        }
+      ],
+      "rollup": {
+        "handle": "imgoochy",
+        "channel_name": "ImGoochy",
+        "signature_patterns": [
+          "Full-bleed portrait 9:16 aspect ratio for Shorts, often without blur-pad letterboxing.",
+          "Ubiquitous use of burned captions for dialogue, speaker identification, and contextual notes, with varied styles (yellow/black outline, white/black outline/yellow highlight, neon bold).",
+          "Frequent integration of small, semi-transparent Twitch chat overlays, typically in the top-left corner.",
+          "Dynamic camera movement, frequent jump cuts, and fast pacing in Shorts to maintain high engagement.",
+          "Raw stream audio as the primary sound source, focusing on clear dialogue and ambient sounds (e.g., crowd noise).",
+          "Split-screen layouts for VODs, featuring streamer facecam alongside desktop content or other video calls.",
+          "Minimal explicit channel branding or logos, prioritizing the authenticity of the raw content."
+        ],
+        "themes": [
+          "Streamer interactions and reactions (often humorous or dramatic)",
+          "Live event experiences and fan reactions (e.g., World Cup)",
+          "Pranks, social experiments, and 'IRL' content",
+          "Language and cultural humor",
+          "Personal storytelling, announcements, and relationship dynamics ('rizz')",
+          "Comparison/recreation of viral moments"
+        ],
+        "features_catalog": [
+          {
+            "feature": "single moment focus",
+            "frequency": "often",
+            "description": "Concentrating on a concise, impactful event or interaction, especially in Shorts."
+          },
+          {
+            "feature": "burned captions",
+            "frequency": "always",
+            "description": "Text overlays for dialogue, speaker identification, and context, with diverse visual styles."
+          },
+          {
+            "feature": "full-bleed portrait 9:16",
+            "frequency": "often",
+            "description": "Video fills the entire vertical frame without letterboxing or padding."
+          },
+          {
+            "feature": "Twitch chat overlay",
+            "frequency": "often",
+            "description": "Small, semi-transparent overlay displaying live chat messages, providing social context."
+          },
+          {
+            "feature": "split-screen layouts",
+            "frequency": "often",
+            "description": "Dividing the screen between streamer facecam and other content (desktop, Discord call)."
+          },
+          {
+            "feature": "dynamic camera/pacing",
+            "frequency": "often",
+            "description": "Frequent cuts, jump cuts, and camera movement to maintain high energy and focus."
+          },
+          {
+            "feature": "raw stream audio",
+            "frequency": "always",
+            "description": "Utilizing original audio from the source stream, prioritizing dialogue and ambient sounds."
+          },
+          {
+            "feature": "background music",
+            "frequency": "sometimes",
+            "description": "Layered instrumental music in VODs to enhance mood or emotional storytelling."
+          },
+          {
+            "feature": "intro/outro cards",
+            "frequency": "sometimes",
+            "description": "Simple text-based cards for VODs, indicating dates or episode titles."
+          },
+          {
+            "feature": "event-specific overlays",
+            "frequency": "sometimes",
+            "description": "Custom graphics like scoreboards or small informational elements for live events."
+          },
+          {
+            "feature": "in-situ reaction",
+            "frequency": "sometimes",
+            "description": "The subjects of the video are themselves reacting within the filmed event, rather than a separate avatar."
+          }
+        ],
+        "shorts_vs_vods": {
+          "shorts_role": "Shorts serve as high-impact, viral-potential clips, focusing on single, often humorous or dramatic moments from popular streamers or live events. They are optimized for quick discovery and immediate engagement.",
+          "vods_role": "VODs provide longer-form content, often lightly edited raw stream replays, used for personal announcements, deeper interactions, screen-sharing, and more narrative-driven storytelling. They foster a deeper connection with a dedicated audience."
+        },
+        "why_views_work": "ImGoochy's content excels by leveraging authenticity and immediate engagement. Their focus on popular streamers and relatable human reactions (humor, shock, drama) in fast-paced, full-bleed Shorts effectively captures viral moments. Consistent, varied burned captions ensure accessibility and reinforce key dialogue, while Twitch chat overlays provide social proof and context. Strong, emoji-rich SEO titles further enhance discoverability, and VODs build deeper audience connection through personal storytelling and extended interactions.",
+        "replication_roadmap": {
+          "easy_wins": [
+            "Replicating twitch-short full-frame clip variants (layout)",
+            "Adapting burned text capabilities for descriptive captions and speaker identification",
+            "Utilizing raw stream audio for authenticity",
+            "Implementing vertical 9:16 format for Shorts",
+            "Applying SEO metadata practices heavy on topic keywords",
+            "Basic split-screen functionality for VODs"
+          ],
+          "medium_builds": [
+            "Developing a 'full-bleed portrait 9:16' template to remove blur-pad letterboxing for Shorts",
+            "Creating new templates for specific dynamic caption styles (e.g., neon, yellow highlight, varied placement)",
+            "Standardizing Twitch chat overlay integration for both Shorts and VODs",
+            "Developing an 'in-situ reaction' template where the subjects are the primary content, not a separate avatar",
+            "Designing custom event-specific graphic overlays (e.g., scoreboards, football field graphics)",
+            "Building custom intro card templates for VODs (e.g., date/episode title)",
+            "Developing specific split-screen layouts for VODs (e.g., streamer on right, desktop on left)",
+            "Implementing consistent emotional background music integration for VODs"
+          ],
+          "hard_gaps": [],
+          "priority_for_clipzworld": [
+            "Implement full-bleed portrait 9:16 for Shorts (remove blur-pad letterbox)",
+            "Expand burned caption capabilities to include descriptive dialogue, speaker identification, and varied visual styles",
+            "Standardize Twitch chat overlay integration for relevant clips",
+            "Develop an 'in-situ' reaction template for Shorts",
+            "Create specific split-screen layouts for VODs (e.g., streamer + desktop, streamer + Discord call)",
+            "Integrate consistent emotional background music for VODs"
+          ]
+        },
+        "clipzworld_delta": "ClipzWorld News currently employs a more structured, branded creative stack with blur-pad letterboxing, consistent CWN logos, and specific 'Hook Machine' text hooks. ImGoochy, conversely, prioritizes a raw, full-bleed, authentic feel, often foregoing explicit channel branding for a more organic, in-the-moment presentation. CWN's current stack lacks the flexibility for dynamic, varied burned caption styles, integrated Twitch chat overlays, and specific 'in-situ' reaction templates where the subjects are the primary content. Furthermore, CWN's VODs are largely raw DVR replays, missing the light editing, custom intro cards, and emotional music layering seen in ImGoochy's longer-form content, which contributes to a more narrative and engaging viewer experience."
+      }
+    },
+    {
+      "handle": "rickclipit",
+      "channel_name": "RickClipit",
+      "sampled": {
+        "shorts": 5,
+        "vods": 2
+      },
+      "subscriber_count": 3380,
+      "videos": [
+        {
+          "title": "Cinna & Bonnie Fought In 4k!",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed, portrait 9:16, no letterbox or split screen",
+            "on_screen_text": [
+              "burned captions (yellow text, black outline)",
+              "Twitch chat overlay (top right, partially visible)"
+            ],
+            "branding": "minimal; no explicit channel logo or consistent template colors, relies on Twitch UI elements (chat)",
+            "pacing_cuts": "fast cuts, frequent jump cuts, quick edits to maintain high energy and focus on dialogue/action",
+            "thumbnail_style_note": "close-up of a person speaking with burned captions, suggesting a dramatic or engaging dialogue moment"
+          },
+          "audio": {
+            "source": "stream audio (dialogue, ambient sounds)",
+            "mix": "clip audio only, no layered music or voiceover",
+            "hook_audio": "dialogue establishing conflict: \"On everything I love if you throw me in, I'm dead ass drowning you in the pool.\""
+          },
+          "content_theme": "streamer drama, playful physical altercation, conflict and resolution",
+          "features_used": [
+            "single moment",
+            "burned captions"
+          ],
+          "seo_packaging": "title directly describes the on-screen action and participants, using keywords for drama/conflict and '4k' to imply high quality/intensity",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts: portrait 9:16",
+              "burned text hooks (Hook Machine + playbook)"
+            ],
+            "missing_in_cwn_stack": [
+              "blur-pad letterbox (this is full bleed)",
+              "CWN logo in top blur fold",
+              "optional intro/outro cards",
+              "split-screen (Bobby G avatar top / source clip bottom) variant not used"
+            ],
+            "effort_estimate": "minimal editing, primarily clip selection, trimming, and adding captions; could be a simple config flag or template in a basic editor"
+          },
+          "video_id": "98ntnPO2tAE",
+          "views": 953977,
+          "duration_sec": 26,
+          "trim": {
+            "analyzedSec": 26.094,
+            "totalSec": 26.094,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Rosii's True Feelings Toward Cinna 💔",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, with Twitch UI elements in the top left corner",
+            "on_screen_text": [
+              "HER",
+              "DROP",
+              "WIPE",
+              "RESPECT",
+              "HEY",
+              "ANYTHING",
+              "GOOD",
+              "SORRY",
+              "DAMN",
+              "FROM",
+              "Subs: 6169/6500",
+              "500"
+            ],
+            "branding": "Minimal branding, primarily Twitch UI elements (subs goal) and burned captions. No explicit channel logo or consistent template beyond the caption style.",
+            "pacing_cuts": "Frequent, rapid cuts (every 1-2 seconds) to different angles and reactions, maintaining high energy and quick progression.",
+            "thumbnail_style_note": "The opening frame is a close-up of a person's face with an intense expression, suggesting a reaction-focused or dramatic thumbnail."
+          },
+          "audio": {
+            "source": "Stream audio (dialogue, shouting, ambient room noise)",
+            "mix": "Clip audio only, featuring prominent dialogue and reactions. No music bed or distinct sound effects added.",
+            "hook_audio": "Loud, excited dialogue and shouting ('Pay to red!') from the stream, immediately establishing a high-energy, chaotic scene."
+          },
+          "content_theme": "Streamer interaction, lighthearted drama/prank, relationship dynamics (implied by title)",
+          "features_used": [
+            "single moment",
+            "burned captions",
+            "Twitch UI overlay"
+          ],
+          "seo_packaging": "The title uses names ('Rosii', 'Cinna') and a dramatic emoji ('💔') to create a narrative hook, suggesting relationship drama. This aligns with the chaotic and reactive nature of the clip, even if it's a prank, drawing viewers in with an emotional angle.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts (single clip variant)",
+              "burned text hooks (conceptually, though style may differ)",
+              "Upload-Post / YouTube direct publishing"
+            ],
+            "missing_in_cwn_stack": [
+              "Specific burned caption style (yellow/teal/pink outline, specific font, animation)",
+              "Full bleed portrait format (CWN uses blur-pad letterbox for multi-clip Shorts)",
+              "Twitch UI overlay (subs goal) as a standard element"
+            ],
+            "effort_estimate": "Minimal editing, primarily selecting a compelling clip and applying a burned caption template. Could be a config flag for caption style and full-bleed output."
+          },
+          "video_id": "Wa7IC_qKGWQ",
+          "views": 456008,
+          "duration_sec": 16,
+          "trim": {
+            "analyzedSec": 15.634,
+            "totalSec": 15.634,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Cinna Ends Friendship With Yugi💔",
+          "surface": "short",
+          "visual": {
+            "layout": "Full bleed clip, transitioning from one full-frame clip to another. The second clip features a Twitch chat overlay on the right side.",
+            "on_screen_text": [
+              "Yellow burned captions for dialogue (e.g., \"YO\", \"YUGI'S\", \"CRY\")",
+              "Pink burned captions with asterisks for actions/emotions (e.g., \"*CRYING*\", \"*MORE TEARS*\")",
+              "Twitch chat overlay on the right side of the screen during the second clip"
+            ],
+            "branding": "No explicit channel logo or consistent template beyond the caption style. Twitch chat is a platform UI element.",
+            "pacing_cuts": "Two main cuts: one from the first streamer to the second. Within each segment, the footage is continuous, with pacing driven by dialogue and emotional delivery.",
+            "thumbnail_style_note": "The opening frame is a candid, in-person shot of a person's back, then quickly cuts to their face, suggesting a direct, unpolished, and engaging personal interaction."
+          },
+          "audio": {
+            "source": "Stream audio (dialogue, laughter), with a melancholic music bed layered during the emotional segment.",
+            "mix": "Clip audio with layered background music during the emotional part of the second clip.",
+            "hook_audio": "Dialogue (\"Yo Cinna!\") and laughter from the first clip."
+          },
+          "content_theme": "Streamer interpersonal drama, emotional reaction, and conflict.",
+          "features_used": [
+            "single moment",
+            "emotional reaction",
+            "burned captions",
+            "Twitch chat overlay"
+          ],
+          "seo_packaging": "The title directly reflects the on-screen content, highlighting the names of the involved streamers (Cinna, Yugi) and the core emotional conflict (\"Ends Friendship\", \"💔\").",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "twitch-short: full-frame clip variants",
+              "burned text hooks",
+              "Publish: Upload-Post / YouTube direct; SEO metadata heavy"
+            ],
+            "missing_in_cwn_stack": [
+              "Specific yellow/pink caption style with action descriptors",
+              "Melancholic music bed for emotional emphasis",
+              "Twitch chat overlay on full-frame clip (CWN's split-screen is avatar/clip, not chat overlay)",
+              "Multi-clip stitching without blur-pad letterbox or CWN logo (CWN's clip-comp shorts mention blur-pad and logo, this video doesn't use them)"
+            ],
+            "effort_estimate": "Config flag for full-frame clip variant, plus minor editing for specific caption style, music bed, and Twitch chat overlay integration (approx. 30-60 minutes for template adaptation/creation)."
+          },
+          "video_id": "0yTdd5QSqE8",
+          "views": 399579,
+          "duration_sec": 28,
+          "trim": {
+            "analyzedSec": 28.314,
+            "totalSec": 28.314,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Cinna & Agent Real Name Exposed!",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, no letterbox or split screen",
+            "on_screen_text": [
+              "burned captions (white text, black outline, some words highlighted yellow or pink, e.g., \"AGENT!\", \"HEY\", \"TALKING\", \"*SHOCKED*\")",
+              "Twitch chat overlay (top right, semi-transparent)",
+              "donation/bits counter (top left, e.g., \"6169/6500\")"
+            ],
+            "branding": "no explicit channel logo, consistent burned text style throughout",
+            "pacing_cuts": "very fast cuts, frequent jump cuts to different angles/speakers, no dead air",
+            "thumbnail_style_note": "opening frame features two smiling women with a large, bold text overlay \"AGENT!\", suggesting a direct and engaging hook"
+          },
+          "audio": {
+            "source": "stream audio (dialogue, laughter, reactions)",
+            "mix": "clip audio only, no layered music or voiceover",
+            "hook_audio": "dialogue and laughter, specifically \"Hey agent!\" and \"Hey Brittany, we're talking to you.\""
+          },
+          "content_theme": "streamer interaction, lighthearted misunderstanding/drama, 'real name' reveal clickbait",
+          "features_used": [
+            "single moment",
+            "avatar reaction (one person reacting to the conversation)"
+          ],
+          "seo_packaging": "title is a strong clickbait hook ('real name exposed') that teases drama, but the clip itself is a misunderstanding about who is being addressed, not an actual name reveal. This creates a curiosity gap.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "twitch-short: full-frame clip variants",
+              "burned text hooks (Hook Machine + playbook)"
+            ],
+            "missing_in_cwn_stack": [
+              "CWN logo in top blur fold (this video has no channel logo)",
+              "blur-pad letterbox (this video is full bleed)"
+            ],
+            "effort_estimate": "config flag (for text style/placement) or very quick edit"
+          },
+          "video_id": "VSajFm39NfI",
+          "views": 215086,
+          "duration_sec": 12,
+          "trim": {
+            "analyzedSec": 11.894,
+            "totalSec": 11.894,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Cinna's Impressive British Accent!",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, single camera angle",
+            "on_screen_text": [
+              "burned captions (yellow text, black outline) for key dialogue"
+            ],
+            "branding": "no explicit channel logo or consistent template beyond caption style",
+            "pacing_cuts": "frequent, quick cuts between two speakers to maintain engagement; no dead air",
+            "thumbnail_style_note": "two streamers, one with face paint, both in USA jerseys, engaged in conversation, suggesting a lighthearted, interactive moment"
+          },
+          "audio": {
+            "source": "live stream dialogue",
+            "mix": "clip audio only, clear dialogue",
+            "hook_audio": "dialogue about 'software' and 'Australia wins', leading into the accent imitation"
+          },
+          "content_theme": "streamer interaction, accent imitation, lighthearted banter, football/soccer topic",
+          "features_used": [
+            "single moment",
+            "two-person interaction",
+            "accent challenge/imitation"
+          ],
+          "seo_packaging": "title directly relates to the core content of the clip (Cinna's accent imitation)",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "twitch-short: full-frame clip variants",
+              "burned text hooks (Hook Machine + playbook)"
+            ],
+            "missing_in_cwn_stack": [
+              "none (CWN stack can replicate all features present in this video)"
+            ],
+            "effort_estimate": "config flag (for full-frame clip and burned captions)"
+          },
+          "video_id": "Sv5fvqHqwtk",
+          "views": 165619,
+          "duration_sec": 27,
+          "trim": {
+            "analyzedSec": 27.314,
+            "totalSec": 27.314,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "Cinna SHOCKINGLY Watched Cuddy DEMOLISH Streamer U Applicants!",
+          "surface": "vod",
+          "visual": {
+            "layout": "Main content is a full-bleed produced video (skit) with a smaller picture-in-picture (PIP) reaction cam of the streamer in the top-left corner. Twitch chat is overlaid on the right side, and subscriber goals/counters are on the left/right.",
+            "on_screen_text": [
+              "Burned-in captions for dialogue from the main clip (white text, green highlight for current speaker).",
+              "Twitch chat overlay on the right side.",
+              "Subscriber count 'Subs: 6037/6000' in bottom left.",
+              "A '2595/2600' counter in top right."
+            ],
+            "branding": "No explicit channel logo visible on screen. The PIP shows the streamer's home setup. The main clip has its own distinct production value (set design, costumes) suggesting an external source.",
+            "pacing_cuts": "The main clip itself features dynamic cuts, typical of a produced video or skit. The overall video transitions between different segments of the main clip, sometimes showing a full screen of the streamer's desktop (e.g., showing a tweet) before returning to the reaction format. The reaction cam is continuous.",
+            "thumbnail_style_note": "The opening frame is a highly dramatic, action-packed scene from the main clip, combined with the streamer's surprised reaction in the PIP. This is very effective for a clickbait thumbnail."
+          },
+          "audio": {
+            "source": "Primary audio is from the main clip (dialogue, sound effects from physical interaction). Secondary audio is the streamer's voice from the PIP. No music bed is present.",
+            "mix": "The streamer's voice (PIP) is layered over the main clip's audio. When the main clip is full screen (e.g., showing a tweet), the streamer's voice is dominant. When the reaction cam is active, both are present, with the main clip's audio being slightly more prominent during intense moments.",
+            "hook_audio": "Shouting, physical struggle sounds, and dialogue from the main clip, along with the streamer's reaction (laughing/gasping)."
+          },
+          "content_theme": "Streamer drama/skit reaction, focusing on a 'Streamer University' narrative, involving physical comedy and conflict.",
+          "features_used": [
+            "avatar reaction",
+            "single moment (reacting to a specific produced skit)",
+            "burned captions",
+            "Twitch chat overlay"
+          ],
+          "seo_packaging": "The title 'Cinna SHOCKINGLY Watched Cuddy DEMOLISH Streamer U Applicants!' is highly descriptive and uses strong keywords ('SHOCKINGLY', 'DEMOLISH', 'Streamer U Applicants') that directly relate to the content and target audience interested in streamer drama and specific personalities (Cinna, Cuddy).",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "twitch-short: split-screen (Bobby G avatar top / source clip bottom) or full-frame clip variants (for the PIP reaction format)",
+              "burned text hooks (Hook Machine + playbook) (for captions)",
+              "VOD today: mostly raw multi-hour YouTube live DVR replays (for the VOD surface)"
+            ],
+            "missing_in_cwn_stack": [
+              "CWN's current stack focuses on raw Twitch clips as source material. This video uses a high-production YouTube skit as its primary content, which is a different type of source material.",
+              "The 'Streamer U' narrative implies a series or ongoing storyline, which is different from isolated, uncontextualized clips."
+            ],
+            "effort_estimate": "Significant effort to source/produce high-quality narrative skits as reaction content, or to adapt existing clip-sourcing pipelines to include produced YouTube content. Minimal effort to adapt existing PIP/caption templates."
+          },
+          "video_id": "xLhC0pt2Fl4",
+          "views": 14619,
+          "duration_sec": 592,
+          "trim": {
+            "analyzedSec": 90,
+            "totalSec": 591.754,
+            "trimmed": true
+          }
+        },
+        {
+          "title": "Cinna & BenDaDonnn Were Confused When DDG Called | \"Make Sure My Jet Got Fuel In It!\"",
+          "surface": "vod",
+          "visual": {
+            "layout": "full bleed, single camera shot from the back of a car, showing two individuals in the back seats",
+            "on_screen_text": [],
+            "branding": "minimal; man wears a Nike headband and a jacket with a 'BASSGANG' logo. No channel-specific branding or overlays.",
+            "pacing_cuts": "no cuts, continuous shot for the entire 90-second sample",
+            "thumbnail_style_note": "suggests a candid, in-car conversation with two personalities, one looking directly at the camera, the other engaged with their phone."
+          },
+          "audio": {
+            "source": "stream audio (dialogue), background road noise",
+            "mix": "clip audio only (dialogue), no layered music or voiceover",
+            "hook_audio": "dialogue between the two individuals in the car, with ambient road noise"
+          },
+          "content_theme": "streamer personal life/interactions, discussion about other streamers (DDG), and streaming experiences",
+          "features_used": [
+            "single moment",
+            "casual conversation"
+          ],
+          "seo_packaging": "title accurately reflects the main subjects (Cinna & BenDaDonnn) and a key topic of their conversation (DDG calling), indicating a direct connection to the content.",
+          "replication": {
+            "difficulty": "easy",
+            "score_1_to_5": 1,
+            "already_in_cwn_stack": [
+              "VOD today: mostly raw multi-hour YouTube live DVR replays"
+            ],
+            "missing_in_cwn_stack": [],
+            "effort_estimate": "minimal, direct upload of raw VOD segment"
+          },
+          "video_id": "4zXtgcQwSsw",
+          "views": 12384,
+          "duration_sec": 910,
+          "trim": {
+            "analyzedSec": 90,
+            "totalSec": 910.014,
+            "trimmed": true
+          }
+        }
+      ],
+      "rollup": {
+        "handle": "rickclipit",
+        "channel_name": "RickClipit",
+        "signature_patterns": [
+          "Dominant use of full-bleed portrait 9:16 format for Shorts, maximizing screen real estate without letterboxing.",
+          "Extensive use of burned captions (often yellow, pink, or white text with black outline), sometimes animated or including action descriptors like '*CRYING*'.",
+          "Frequent integration of Twitch UI elements (chat overlay, subscriber goals, bits counters) directly into the video frame.",
+          "Fast cuts, frequent jump cuts, and quick edits in Shorts to maintain high energy and focus on dialogue/reactions.",
+          "Content heavily focused on streamer interpersonal drama, emotional reactions, and lighthearted banter, often leveraging specific streamer names.",
+          "VODs vary from raw, candid conversations to reaction content featuring a picture-in-picture (PIP) of the streamer reacting to external, often produced, video content."
+        ],
+        "themes": [
+          "Streamer drama and conflict",
+          "Interpersonal relationships and emotional reactions",
+          "Lighthearted banter, pranks, and accent imitations",
+          "Clickbait 'reveal' or 'exposed' narratives",
+          "Reaction content to other produced streamer skits/narratives"
+        ],
+        "features_catalog": [
+          {
+            "feature": "single moment",
+            "frequency": "always",
+            "description": "Shorts are focused on single, impactful moments; VODs are segments of longer moments."
+          },
+          {
+            "feature": "burned captions",
+            "frequency": "always",
+            "description": "A core visual element, with varied styles (colors, outlines, action descriptors, animations)."
+          },
+          {
+            "feature": "Twitch UI overlay",
+            "frequency": "often",
+            "description": "Twitch chat, subscriber goals, and bits counters are frequently visible on screen."
+          },
+          {
+            "feature": "full bleed portrait 9:16",
+            "frequency": "always",
+            "description": "The standard layout for all Shorts, maximizing visual impact on mobile."
+          },
+          {
+            "feature": "fast cuts/jump cuts",
+            "frequency": "often",
+            "description": "Used in Shorts to maintain high energy and rapid pacing."
+          },
+          {
+            "feature": "layered music (melancholic)",
+            "frequency": "sometimes",
+            "description": "Used sparingly in emotional clips or VOD segments to enhance mood."
+          },
+          {
+            "feature": "avatar reaction (PIP)",
+            "frequency": "sometimes",
+            "description": "Featured in VODs, where the streamer reacts in a small window to a larger main video."
+          },
+          {
+            "feature": "clickbait titles",
+            "frequency": "often",
+            "description": "Titles are crafted to create curiosity and imply drama or significant events."
+          }
+        ],
+        "shorts_vs_vods": {
+          "shorts_role": "Shorts serve as highly edited, fast-paced, standalone dramatic or humorous moments, optimized for quick consumption and discovery through strong hooks and full-bleed visuals.",
+          "vods_role": "VODs provide longer-form content, either as raw, candid conversations from personal life streams or as reaction videos where the channel host provides commentary on other produced content, offering more context and sustained engagement."
+        },
+        "why_views_work": "RickClipit's content thrives on high-energy, emotionally charged streamer drama, which is inherently shareable and engaging. The full-bleed portrait format, combined with fast cuts and prominent burned captions, ensures maximum retention on mobile. Strong clickbait titles leveraging popular streamer names and dramatic events drive discoverability, while the direct integration of Twitch UI elements adds authenticity and context for the target audience.",
+        "replication_roadmap": {
+          "easy_wins": [
+            "Implement full-bleed portrait 9:16 as a standard Shorts output option.",
+            "Expand burned caption styles to include RickClipit's variants (yellow/pink/white text, black outline, action descriptors).",
+            "Integrate Twitch UI overlays (chat, subs goal, bits counter) as optional elements in Shorts templates.",
+            "Direct upload of raw VOD segments (already in stack, but reinforce for candid content)."
+          ],
+          "medium_builds": [
+            "Develop a PIP reaction format for VODs, allowing ClipzWorld News to react to external produced content (beyond raw Twitch clips).",
+            "Introduce layered melancholic music as an option for emotional clips/VOD segments.",
+            "Adapt multi-clip stitching to allow for full-bleed, non-letterboxed variants without CWN logo, if desired for specific content types."
+          ],
+          "hard_gaps": [
+            "Sourcing or producing high-quality narrative skits as primary reaction content (like the 'Streamer U' VOD) requires a significant content strategy shift and production investment.",
+            "Developing themed series branding and funnel wiring for ongoing narratives (e.g., 'Streamer U' implies a series) is a major creative and operational undertaking."
+          ],
+          "priority_for_clipzworld": [
+            "1. Implement full-bleed portrait 9:16 Shorts as an option.",
+            "2. Expand burned caption styles to include RickClipit's variants (colors, action descriptors).",
+            "3. Integrate Twitch UI overlays (chat, subs goal) into Shorts templates.",
+            "4. Explore PIP reaction format for VODs, especially for reacting to produced YouTube content."
+          ]
+        },
+        "clipzworld_delta": "ClipzWorld News currently relies on blur-pad letterbox and CWN logo for Shorts, whereas RickClipit uses full-bleed with minimal branding. CWN's split-screen is avatar/clip, while RickClipit uses full-frame with chat overlay or a PIP reaction format for VODs. RickClipit's burned captions are more varied in style and animation, and they directly leverage Twitch UI elements as part of the visual presentation. Crucially, RickClipit's VOD strategy includes reacting to high-production external content, a departure from CWN's current focus on raw multi-hour YouTube live DVR replays or isolated Twitch clips. CWN is also missing ranked-list overlays and funnel wiring, which RickClipit doesn't explicitly feature but whose content implies a potential for narrative or series-based engagement."
+      }
+    },
+    {
+      "handle": "stream.serpent",
+      "channel_name": "Stream Serpent",
+      "sampled": {
+        "shorts": 5,
+        "vods": 0
+      },
+      "subscriber_count": 43100,
+      "videos": [
+        {
+          "title": "WAIT TILL THE END 🤣🤣",
+          "surface": "short",
+          "visual": {
+            "layout": "Full-frame portrait (9:16) with a persistent overlay for a numbered ranking list on the top and left side. No blur-pad letterbox. Features rapid cuts between original clips, live reactions from the subjects, and occasional meme reaction inserts.",
+            "on_screen_text": [
+              "RANKING LACY FUNNIEST MOMENTS",
+              "Numbered list 1-5 (dynamic, updates with each moment)",
+              "Specific phrases for each moment (e.g., \"Do you like boys?\", \"Wingman\", \"Lob of the century\", \"Age is just a number..\", \"Muscle memory\", \"Caught\", \"Google\", \"Nig-\", \"AYOO\")",
+              "Emojis (crying face, praying hands, peace sign, broken heart, rose, thinking face)"
+            ],
+            "branding": "No explicit channel logo. Consistent white and red font/color scheme for the ranking title and list items. Template-driven overlay for the ranking.",
+            "pacing_cuts": "Very high cut frequency, with cuts occurring every 1-3 seconds. Uses jump cuts to transition between different clips, reaction shots, and meme inserts. No noticeable dead air.",
+            "thumbnail_style_note": "The opening frame is a strong, engaging thumbnail candidate, featuring the main subjects, a clear title, and the start of the numbered list."
+          },
+          "audio": {
+            "source": "Primarily original clip dialogue, layered with reaction sounds (laughter, gasps, exclamations) and a consistent, slightly melancholic background music track. Occasional sound effects (e.g., 'whoosh' for transitions).",
+            "mix": "Clip audio is dominant, reaction audio is layered on top, and background music is present throughout but mixed lower to support the main audio elements.",
+            "hook_audio": "Dialogue from the first clip: \"You like boys? No, I do not like boys.\""
+          },
+          "content_theme": "Ranking funny/awkward/memorable moments of a specific person (Lacy) and her interactions, often involving a male counterpart. Humor derived from the situations and the subjects' reactions.",
+          "features_used": [
+            "Numbered list countdown (5 to 1)",
+            "Multi-clip compilation",
+            "Live reaction shots (from original subjects)",
+            "Meme reaction inserts",
+            "Burned-in text for context and hooks"
+          ],
+          "seo_packaging": "The video title \"WAIT TILL THE END 🤣🤣\" is a generic clickbait hook, aiming for broad curiosity. The on-screen text \"RANKING LACY FUNNIEST MOMENTS\" is more specific and descriptive of the actual content, providing better context for search.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "Multi-clip stitching (up to 4 clips)",
+              "Portrait 9:16 aspect ratio",
+              "Burned text hooks (though the style here is a dynamic ranking overlay)",
+              "Full-frame clip variants (with reaction inserts)"
+            ],
+            "missing_in_cwn_stack": [
+              "Ranked-list overlay templates (explicitly noted as missing in baseline)",
+              "Dynamic text updates for ranking numbers and descriptions",
+              "Seamless integration of meme reactions alongside live reactions",
+              "Specific font and color branding for this type of list overlay",
+              "No blur-pad letterbox (this video is full-frame)"
+            ],
+            "effort_estimate": "2h template in After Effects (for the dynamic ranking overlay, specific fonts, and consistent visual style across multiple clips and reaction types)"
+          },
+          "video_id": "unoEEmhcnEI",
+          "views": 79171,
+          "duration_sec": 53,
+          "trim": {
+            "analyzedSec": 52.694,
+            "totalSec": 52.694,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "LACY TOO FUNNY 🤣🤣",
+          "surface": "short",
+          "visual": {
+            "layout": "Full bleed portrait 9:16 video with a persistent ranking overlay on the left side. Twitch chat overlay is visible on the top right. Clips vary between full-frame and split-screen (streamer reaction top / source clip bottom).",
+            "on_screen_text": [
+              "RANKING LACY FUNNIEST MOMENTS (with 'FUNNIEST' in red)",
+              "Numbered list 1-5",
+              "Clip-specific text: \"Don't keep fighting..\", \"Plotting\", \"Bro's plotting\", \"That was an open goal!\", \"Rocket league\", \"Trolling\", \"Barking Spider..\"",
+              "Emojis: 💀, ✌️, 🌹, 😭, 😡",
+              "Twitch chat (top right)",
+              "Sports score overlay (bottom left, during one clip)"
+            ],
+            "branding": "Consistent ranking overlay template (white text, red highlight for 'FUNNIEST'). No explicit channel logo, but the template itself provides strong visual branding.",
+            "pacing_cuts": "Very fast-paced with rapid cuts between different clips/moments (2-10 seconds per segment). Transitions are quick fades or hard cuts. Some clips feature jump cuts within the segment.",
+            "thumbnail_style_note": "The opening frame, featuring the streamer with the prominent ranking overlay, is clearly designed to serve as an engaging feed thumbnail, immediately communicating a 'top moments' list."
+          },
+          "audio": {
+            "source": "Primarily stream audio from the featured clips. A consistent background music bed (trap/hip-hop style) plays throughout. SFX are used for transitions between clips.",
+            "mix": "Layered mix. Stream audio (dialogue, reactions) is primary and clear. Background music is present but mixed lower to avoid overpowering the main audio. SFX punctuate transitions.",
+            "hook_audio": "The first 3 seconds feature the streamer's voice, part of the #5 clip, saying: \"Lacy, I just got diagnosed with cancer in my brain. My doctor said I might not make it.\""
+          },
+          "content_theme": "Streamer (Lacy) reaction/compilation, focusing on 'funny moments' or dramatic/surprising events from their streams.",
+          "features_used": [
+            "numbered list",
+            "multi-clip countdown",
+            "single moment",
+            "avatar reaction",
+            "split-screen reaction",
+            "burned captions",
+            "emojis",
+            "background music",
+            "transition sound effects"
+          ],
+          "seo_packaging": "The video title \"LACY TOO FUNNY 🤣🤣\" is a catchy, emoji-rich hook. The on-screen text \"RANKING LACY FUNNIEST MOMENTS\" provides more specific, keyword-rich context, complementing the title for discoverability.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts (multi-clip stitched portrait 9:16)",
+              "burned text hooks (Hook Machine + playbook)",
+              "twitch-short (full-frame clip variants)",
+              "twitch-short (split-screen variants)"
+            ],
+            "missing_in_cwn_stack": [
+              "ranked-list overlay templates (RANKING X MOMENTS 1-5)",
+              "dynamic clip-specific burned text/emojis integrated within the ranking overlay",
+              "consistent background music bed for transitions/entire short",
+              "SFX for transitions"
+            ],
+            "effort_estimate": "4h template in After Effects (to create the dynamic ranking overlay with editable text fields, consistent branding, and integrated SFX/music cues)."
+          },
+          "video_id": "11aqupLNLQQ",
+          "views": 79029,
+          "duration_sec": 51,
+          "trim": {
+            "analyzedSec": 51.354,
+            "totalSec": 51.354,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "WAIT TO THE END 🤣🤣",
+          "surface": "short",
+          "visual": {
+            "layout": "Full-bleed vertical video with a persistent text overlay header and a numbered list on the left side. The main content area alternates between a split-screen showing a reactor and the source clip, or a full-frame source clip.",
+            "on_screen_text": [
+              "RANKING FUNNIEST BRAEDEN MOMENTS (header)",
+              "Numbered list (1-5) with dynamic descriptions for each moment (e.g., \"Bro Was Thinking About The Other Movies\", \"Labubu\", \"Airball\", \"Embarrassing\", \"Mfs Do Anything To Impress The Huzz\")",
+              "Emojis: 😭💔🥀😂",
+              "Small text: \"Daily GTB\" (bottom right, on some clips)"
+            ],
+            "branding": "No explicit channel logo. Branding is established through the consistent font, color scheme (red/white/black for header), and template style of the ranking overlay.",
+            "pacing_cuts": "Very fast-paced with frequent, sharp cuts between different clips and between the reactor and the clip content. No noticeable dead air.",
+            "thumbnail_style_note": "The opening frame with the clear 'RANKING FUNNIEST BRAEDEN MOMENTS' header and the numbered list is designed to be a strong, informative thumbnail."
+          },
+          "audio": {
+            "source": "Primarily dialogue and ambient sound from the original clips. Some background music is present, often fading in and out to emphasize moments.",
+            "mix": "Clip audio is dominant and clear. Background music is secondary, used for mood or transitions, but does not overpower dialogue. No separate voiceover from the channel.",
+            "hook_audio": "The first 3 seconds feature dialogue from the initial clip, setting up a comedic interaction about a 'DTF agent' role."
+          },
+          "content_theme": "Compilation of funny moments featuring a specific personality/streamer (Braeden), presented in a ranked list format.",
+          "features_used": [
+            "numbered list",
+            "multi-clip compilation",
+            "reaction (integrated split-screen style)"
+          ],
+          "seo_packaging": "The video title \"WAIT TO THE END 🤣🤣\" is a generic clickbait hook. The on-screen text \"RANKING FUNNIEST BRAEDEN MOMENTS\" provides the actual, specific, and SEO-friendly description of the content, creating a disconnect between the title and the explicit content description.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 3,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts (for stitching multiple clips)",
+              "twitch-short (for showing clip content, adaptable for non-Twitch sources)",
+              "burned text hooks (for general on-screen text)"
+            ],
+            "missing_in_cwn_stack": [
+              "ranked-list overlay templates (specifically for 'RANKING X MOMENTS 1-5' format)",
+              "themed series branding (for consistent visual identity across specific content types like 'funniest moments')"
+            ],
+            "effort_estimate": "Initial template creation for the dynamic ranking overlay in After Effects/Premiere (4-6 hours), then 1-2 hours per video for clip selection, editing, and populating the list."
+          },
+          "video_id": "0LnUWVSBR3c",
+          "views": 69782,
+          "duration_sec": 83,
+          "trim": {
+            "analyzedSec": 83.294,
+            "totalSec": 83.294,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "WAIT TILL THE END 🤯🤯",
+          "surface": "short",
+          "visual": {
+            "layout": "Full bleed portrait video with semi-transparent dark overlays at the top for title/branding and on the left for a numbered list. No blur-pad letterbox.",
+            "on_screen_text": [
+              "DUKE DENNIS SLAMBALL (white, black outline)",
+              "AURA MOMENTS (red, black outline)",
+              "Numbered list 1-5 (white, black outline, highlighted item is orange)",
+              "Dynamic descriptions for each list item (e.g., \"Aura.\", \"Block and dunk\", \"Poster\", \"Too big\", \"Windmill\")",
+              "Aura. (appears next to the player)",
+              "TEAM (red) and score numbers (white, dynamic)"
+            ],
+            "branding": "No explicit channel logo. The 'AURA MOMENTS' and 'Aura.' text serves as content branding. Consistent font and color scheme for overlay text.",
+            "pacing_cuts": "Very frequent cuts (every 2-3 seconds) showing different angles or replays of basketball dunks. All clips are in slow-motion. No dead air.",
+            "thumbnail_style_note": "The opening frame, featuring a clear title and a numbered list overlay, is designed to function as a strong, informative thumbnail, signaling a 'best moments' or 'top plays' compilation."
+          },
+          "audio": {
+            "source": "Heavy trap/hip-hop music bed throughout. No discernible stream audio, commentary, or game sound effects.",
+            "mix": "Music bed only, no voiceover or layered clip audio.",
+            "hook_audio": "Immediate start with a strong, bass-heavy trap beat and a male vocal sample (mumbled, sounds like 'I know where you going')."
+          },
+          "content_theme": "Basketball highlights, specifically 'slamball' (trampoline basketball) featuring a specific player ('Duke Dennis' and 'Aura') in a 'best moments' or 'top plays' format.",
+          "features_used": [
+            "Numbered list overlay (countdown/ranking)",
+            "Multi-clip compilation (multiple dunks/moments)",
+            "Slow-motion replays",
+            "Burned text hooks (title, list items, player name, score)"
+          ],
+          "seo_packaging": "The video title 'WAIT TILL THE END 🤯🤯' is a generic clickbait hook with emojis, common for Shorts. It does not directly reflect the descriptive on-screen title 'DUKE DENNIS SLAMBALL AURA MOMENTS', which provides more specific content information.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "Clip-comp Shorts (multiple clips stitched)",
+              "Burned text hooks (general concept)"
+            ],
+            "missing_in_cwn_stack": [
+              "Ranked-list overlay templates (explicitly mentioned as missing in baseline)",
+              "Dynamic text updates for list items and scores",
+              "Full-bleed portrait format (CWN uses blur-pad letterbox)",
+              "No split-screen or avatar reaction (this video doesn't use it, but it's a CWN variant)"
+            ],
+            "effort_estimate": "4-6 hours for a new After Effects template with dynamic text fields for the list, descriptions, and scores, allowing for easy per-clip updates."
+          },
+          "video_id": "bVewMahgQqM",
+          "views": 44087,
+          "duration_sec": 34,
+          "trim": {
+            "analyzedSec": 33.454,
+            "totalSec": 33.454,
+            "trimmed": false
+          }
+        },
+        {
+          "title": "WAIT FOR NO. 1 🔥🔥",
+          "surface": "short",
+          "visual": {
+            "layout": "full bleed portrait 9:16, with a persistent top-left overlay for ranking and a dynamic bottom-left overlay for game scores/stats in some clips. Twitch chat overlay appears briefly in the top right.",
+            "on_screen_text": [
+              "RANKING LACY AURA MOMENTS",
+              "1.",
+              "2.",
+              "3.",
+              "4.",
+              "5.",
+              "aura.",
+              "Soccer",
+              "Casino",
+              "Catch",
+              "Cooking 🔥",
+              "Lacy was in the Zone 😭🥊",
+              "WE'RE UPPPP 😈💰",
+              "LACY 40% 2/5 FG",
+              "LACY 50% 3/6 FG",
+              "Ludwig's Basketball Jam",
+              "TEAM SILKY",
+              "TEAM JEREMIAH",
+              "FIRST TO 15",
+              "GIVES YOU WIIINGS. (Red Bull logo)",
+              "Twitch chat messages"
+            ],
+            "branding": "Consistent custom text overlay for ranking (white with red highlight), no explicit channel logo visible in the main frame. Some clips contain external event branding (Ludwig's Basketball Jam, Red Bull).",
+            "pacing_cuts": "Very fast cuts, frequent jump cuts between different moments and camera angles. Some slow-motion effects for dramatic emphasis. No dead air.",
+            "thumbnail_style_note": "The opening frame with the prominent 'RANKING LACY AURA MOMENTS' text and the first action clip serves as a strong, engaging thumbnail, clearly indicating a listicle format."
+          },
+          "audio": {
+            "source": "Stream audio (dialogue, crowd noise, basketball sounds), upbeat trap/hip-hop music bed, sound effects (whooshes, impacts, 'bang' sound for basketball shots).",
+            "mix": "Layered mix with a prominent, energetic music bed playing continuously under the clip audio. Clip audio (dialogue, reactions, game sounds) is mixed on top, often with volume swells for key moments.",
+            "hook_audio": "Upbeat, high-energy trap/hip-hop music starts immediately, accompanied by excited commentary and sound effects from the first clip."
+          },
+          "content_theme": "Streamer/influencer (Lacy) highlight reel, sports (basketball), lifestyle (casino). Focus on 'aura' moments, implying impressive or impactful actions.",
+          "features_used": [
+            "numbered list",
+            "multi-clip countdown",
+            "single moment highlights",
+            "dynamic on-screen text updates",
+            "anime reaction (briefly at the end for a basketball shot)",
+            "score overlays",
+            "Twitch chat overlay"
+          ],
+          "seo_packaging": "The video title 'WAIT FOR NO. 1 🔥🔥' directly creates anticipation for the top-ranked moment, aligning perfectly with the on-screen 'RANKING LACY AURA MOMENTS' listicle format. The fire emojis reinforce the 'aura' and 'cooking' (performing well) themes within the video.",
+          "replication": {
+            "difficulty": "medium",
+            "score_1_to_5": 4,
+            "already_in_cwn_stack": [
+              "clip-comp Shorts (multi-clip stitching)",
+              "burned text hooks (though the style is different)",
+              "Twitch chat overlay capability"
+            ],
+            "missing_in_cwn_stack": [
+              "ranked-list overlay templates (specific custom design)",
+              "dynamic text updates for rankings/scores",
+              "anime reaction integration",
+              "themed series branding (e.g., 'Aura Moments')"
+            ],
+            "effort_estimate": "2h template in After Effects for the custom ranking overlay, dynamic text, and transitions. Requires specific asset creation and animation."
+          },
+          "video_id": "TsjVhWCtz_8",
+          "views": 42498,
+          "duration_sec": 54,
+          "trim": {
+            "analyzedSec": 54.434,
+            "totalSec": 54.434,
+            "trimmed": false
+          }
+        }
+      ],
+      "rollup": {
+        "handle": "@stream.serpent",
+        "channel_name": "Stream Serpent",
+        "signature_patterns": [
+          "Full-bleed portrait (9:16) video format, consistently eschewing blur-pad letterboxing.",
+          "Prominent, persistent, template-driven ranking overlays (e.g., 'RANKING X MOMENTS 1-5') on the top/left, featuring dynamic text and numbering.",
+          "Very high cut frequency (1-5 seconds per segment), utilizing jump cuts, rapid transitions, and occasional slow-motion for dramatic effect.",
+          "Consistent energetic background music (often trap/hip-hop) layered beneath dominant clip audio, often with SFX for transitions.",
+          "Content focused on compiling 'funny moments' or 'aura moments' of specific streamers/personalities, presented as a countdown list."
+        ],
+        "themes": [
+          "Streamer/influencer highlight reels (e.g., Lacy, Braeden, Duke Dennis)",
+          "Funny moments compilations",
+          "Aura moments (impressive/impactful plays or actions)",
+          "Sports highlights (basketball/slamball)",
+          "Gaming/streaming interactions"
+        ],
+        "features_catalog": [
+          {
+            "feature": "Numbered list countdown/ranking overlay",
+            "frequency": "always",
+            "description": "Persistent on-screen overlay displaying a numbered list (e.g., 1-5) with dynamic descriptions for each moment."
+          },
+          {
+            "feature": "Multi-clip compilation",
+            "frequency": "always",
+            "description": "Stitching together multiple short clips to form a longer highlight reel."
+          },
+          {
+            "feature": "Dynamic burned-in text",
+            "frequency": "always",
+            "description": "On-screen text that updates with each clip, providing context, descriptions, scores, or hooks, often integrated into the ranking overlay."
+          },
+          {
+            "feature": "Consistent background music",
+            "frequency": "always",
+            "description": "An energetic music bed (often trap/hip-hop) playing throughout the video, mixed under primary clip audio."
+          },
+          {
+            "feature": "Rapid cuts & pacing",
+            "frequency": "always",
+            "description": "Very high cut frequency (1-5 seconds per segment) with jump cuts and quick transitions to maintain engagement."
+          },
+          {
+            "feature": "Live reaction shots (from subjects/streamer)",
+            "frequency": "often",
+            "description": "Incorporating reactions from the original subjects or a dedicated reactor, sometimes in split-screen."
+          },
+          {
+            "feature": "Transition sound effects",
+            "frequency": "often",
+            "description": "SFX like 'whooshes' or impacts used to punctuate transitions between clips or moments."
+          },
+          {
+            "feature": "Split-screen layout (reactor/clip)",
+            "frequency": "often",
+            "description": "Displaying a streamer's reaction alongside the source clip."
+          },
+          {
+            "feature": "Meme reaction inserts",
+            "frequency": "sometimes",
+            "description": "Brief insertions of popular memes or animated reactions for comedic effect."
+          },
+          {
+            "feature": "Slow-motion effects",
+            "frequency": "sometimes",
+            "description": "Using slow-motion for dramatic emphasis on key moments, especially in sports clips."
+          },
+          {
+            "feature": "Twitch chat overlay",
+            "frequency": "sometimes",
+            "description": "Displaying relevant Twitch chat messages on screen."
+          },
+          {
+            "feature": "Score/stats overlays",
+            "frequency": "sometimes",
+            "description": "Dynamic on-screen display of game scores or player statistics."
+          }
+        ],
+        "shorts_vs_vods": {
+          "shorts_role": "The primary content format, serving as highly engaging, fast-paced listicles or highlight reels designed for viral discovery and standalone entertainment.",
+          "vods_role": "none (no VODs were sampled in the provided data for this analysis)"
+        },
+        "why_views_work": "Stream Serpent's Shorts excel due to their relentless pacing, dynamic on-screen ranking overlays that build anticipation, and a consistent, energetic audio backdrop. They leverage generic clickbait titles for broad initial reach, while the specific, keyword-rich on-screen text within the video itself (e.g., 'RANKING LACY FUNNIEST MOMENTS') enhances discoverability and clearly communicates content. The use of meme reactions, split-screen commentary, and strong opening frames as thumbnails further boosts engagement and retention, keeping viewers hooked through rapid-fire content.",
+        "replication_roadmap": {
+          "easy_wins": [
+            "Multi-clip stitching for Shorts",
+            "Portrait 9:16 aspect ratio",
+            "General burned text hooks (though style needs updating)",
+            "Full-frame and split-screen clip variants",
+            "Twitch chat overlay capability"
+          ],
+          "medium_builds": [
+            "Ranked-list overlay templates (e.g., 'RANKING X MOMENTS 1-5') with custom branding",
+            "Dynamic text updates for ranking numbers, descriptions, and scores",
+            "Seamless integration of meme and live reactions",
+            "Consistent background music beds and SFX for transitions",
+            "Full-bleed portrait format (removing blur-pad letterbox)",
+            "Themed series branding (e.g., 'Aura Moments')"
+          ],
+          "hard_gaps": [],
+          "priority_for_clipzworld": [
+            "Develop ranked-list overlay templates with dynamic text fields",
+            "Implement consistent background music and transition SFX",
+            "Adopt full-bleed portrait format (remove blur-pad)",
+            "Integrate meme/anime reaction inserts",
+            "Establish themed series branding for specific content types"
+          ]
+        },
+        "clipzworld_delta": "ClipzWorld News currently lacks the sophisticated, template-driven ranking overlays and dynamic on-screen text that are central to Stream Serpent's engagement strategy. While CWN uses burned text and multi-clip stitching, it relies on blur-pad letterboxing and misses the full-bleed, fast-paced, music-driven listicle format. CWN also lacks consistent background music, dedicated transition sound effects, and the seamless integration of meme or anime reactions, which are key to Stream Serpent's high retention and viral potential."
+      }
+    }
+  ],
+  "cross_channel": {
+    "top_patterns_across_competitors": [
+      "Dominant use of full-bleed portrait 9:16 aspect ratio for Shorts, maximizing screen real estate without blur-pad letterboxing.",
+      "Extensive and varied use of burned-in captions for dialogue, hooks, speaker identification, and contextual notes.",
+      "Extremely fast pacing with frequent cuts, jump cuts, and no dead air to maintain high engagement in Shorts.",
+      "Content focused on single, high-impact streamer moments (drama, comedy, reactions) for Shorts.",
+      "Strategic use of Twitch chat overlays for added context and community interaction.",
+      "Leveraging strong SEO titles and descriptions, often with popular streamer names and curiosity-driven hooks, for discoverability."
+    ],
+    "unique_to_stream_serpent": [
+      "Prominent, persistent, template-driven ranking overlays (e.g., 'RANKING X MOMENTS 1-5') with dynamic text and numbering.",
+      "Consistent energetic background music (often trap/hip-hop) layered beneath dominant clip audio, often with SFX for transitions.",
+      "Seamless integration of meme reaction inserts for comedic effect."
+    ],
+    "unique_to_core_fx_imgoochy": [
+      "Dynamic visual effects templates (e.g., red tints, text bubbles, fake social media overlays, price tags) for comedic or dramatic emphasis (Core_fx).",
+      "Highly varied and dynamic burned caption styles, including neon bold, yellow highlight, and word-by-word animation (ImGoochy, DahBluh).",
+      "Focus on 'in-situ reaction' where the subjects of the video are themselves reacting within the filmed event, rather than a separate avatar (ImGoochy).",
+      "Skit creation, writing, and acting as a core content type (Core_fx)."
+    ],
+    "unique_to_dahbluh": [
+      "Robust template and workflow for dynamic word-by-word captions with highlighting.",
+      "Curated multi-clip compilations for VODs, moving beyond raw DVR replays, often with themed series branding.",
+      "Specific intro/outro title cards for VODs that are branded or thematic."
+    ],
+    "clipzworld_priority_adds": [
+      "1. Implement full-bleed portrait layout as a primary Shorts option (removing blur-pad letterbox).",
+      "2. Develop a robust template and workflow for dynamic burned-in captions (dialogue, speaker ID, varied styles, word-by-word).",
+      "3. Integrate a sound effects library and workflow for enhancing clip impact (comedic, dramatic, transitions).",
+      "4. Develop ranked-list overlay templates (e.g., 'RANKING X MOMENTS 1-5').",
+      "5. Wire Related Video Short→VOD funnel for improved content discoverability and viewer journey.",
+      "6. Define and implement a VOD content strategy for curated clip compilations with themed branding, moving beyond raw DVR replays.",
+      "7. Standardize Twitch chat overlay integration for relevant clips in both Shorts and VODs.",
+      "8. Develop a library of dynamic visual effects templates (e.g., price reveals, reaction text bubbles, fake social media posts).",
+      "9. Explore Picture-in-Picture (PIP) reaction format for VODs, especially for reacting to produced YouTube content.",
+      "10. Ensure consistent application of CWN logo in top blur fold for all Shorts.",
+      "11. Develop specific, engaging intro/outro cards for Shorts."
+    ],
+    "replication_matrix": [
+      {
+        "feature": "Full-bleed portrait 9:16 layout for Shorts",
+        "channels_using_it": [
+          "core_fx",
+          "DahBluh",
+          "imgoochy",
+          "rickclipit",
+          "stream.serpent"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Burned-in captions (dialogue, hooks, varied styles)",
+        "channels_using_it": [
+          "core_fx",
+          "DahBluh",
+          "imgoochy",
+          "rickclipit",
+          "stream.serpent"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Fast cuts & jump cuts / rapid pacing",
+        "channels_using_it": [
+          "core_fx",
+          "DahBluh",
+          "imgoochy",
+          "rickclipit",
+          "stream.serpent",
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Single moment focus (Shorts)",
+        "channels_using_it": [
+          "core_fx",
+          "DahBluh",
+          "imgoochy",
+          "rickclipit",
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Split-screen layout (reactor/source clip)",
+        "channels_using_it": [
+          "core_fx",
+          "DahBluh",
+          "imgoochy",
+          "stream.serpent",
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Dynamic visual effects (red tint, text bubbles, fake overlays)",
+        "channels_using_it": [
+          "core_fx"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Sound effects for comedic/dramatic emphasis or transitions",
+        "channels_using_it": [
+          "core_fx",
+          "DahBluh",
+          "stream.serpent",
+          "rickclipit"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Twitch chat overlay",
+        "channels_using_it": [
+          "core_fx",
+          "DahBluh",
+          "imgoochy",
+          "rickclipit",
+          "stream.serpent",
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Multi-streamer reaction (cut between POVs)",
+        "channels_using_it": [
+          "core_fx",
+          "DahBluh"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Fake news/social media overlay",
+        "channels_using_it": [
+          "core_fx"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Dynamic word-by-word captions",
+        "channels_using_it": [
+          "DahBluh"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Multi-clip compilation (VODs)",
+        "channels_using_it": [
+          "DahBluh",
+          "stream.serpent"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Intro/outro title cards (VODs)",
+        "channels_using_it": [
+          "DahBluh",
+          "imgoochy",
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Persistent text hook",
+        "channels_using_it": [
+          "DahBluh"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Speech bubble text overlay",
+        "channels_using_it": [
+          "DahBluh"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "On-screen emojis",
+        "channels_using_it": [
+          "DahBluh"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Multiple camera angles of a single event",
+        "channels_using_it": [
+          "DahBluh",
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Raw clip (minimal editing)",
+        "channels_using_it": [
+          "imgoochy",
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Avatar reaction (host as narrator)",
+        "channels_using_it": [
+          "clipzworldnews",
+          "rickclipit"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Dialogue-driven content",
+        "channels_using_it": [
+          "imgoochy",
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Slow-motion effects",
+        "channels_using_it": [
+          "clipzworldnews",
+          "stream.serpent"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Host commentary/introduction (VODs)",
+        "channels_using_it": [
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Multi-panel grid clip display (VODs)",
+        "channels_using_it": [
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Scrolling news ticker (VODs)",
+        "channels_using_it": [
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Post-clip analysis/quiz with multiple-choice options (VODs)",
+        "channels_using_it": [
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "hard"
+      },
+      {
+        "feature": "Dramatic orchestral music bed",
+        "channels_using_it": [
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Persistent bottom ticker overlay",
+        "channels_using_it": [
+          "clipzworldnews"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Event-specific overlays (scoreboards, info graphics)",
+        "channels_using_it": [
+          "imgoochy",
+          "stream.serpent"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "In-situ reaction (subjects reacting within event)",
+        "channels_using_it": [
+          "imgoochy"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Layered melancholic background music",
+        "channels_using_it": [
+          "rickclipit"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Clickbait titles",
+        "channels_using_it": [
+          "rickclipit",
+          "stream.serpent"
+        ],
+        "cwn_has_it": true,
+        "difficulty": "easy"
+      },
+      {
+        "feature": "Numbered list countdown/ranking overlay",
+        "channels_using_it": [
+          "stream.serpent"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      },
+      {
+        "feature": "Meme reaction inserts",
+        "channels_using_it": [
+          "stream.serpent"
+        ],
+        "cwn_has_it": false,
+        "difficulty": "medium"
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "overrides": [],
+  "liveOverrides": [
+    {
+      "date": "2026-06-15",
+      "livePaused": true,
+      "twitchTv": { "window": "off" },
+      "youtubeGrid": { "window": "off" },
+      "reason": "No auto livestreams today — operator pause",
+      "at": "2026-06-15T12:00:00.000Z",
+      "by": "owner"
+    }
+  ]
+}

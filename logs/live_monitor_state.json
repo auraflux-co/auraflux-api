@@ -1,0 +1,105 @@
+{
+  "ts": "2026-06-20T00:19:23.119Z",
+  "level": "critical",
+  "isStable": false,
+  "stableStreak": 0,
+  "stableTicksRequired": 10,
+  "grid": {
+    "onAirQuad": 2,
+    "onAirLogin": "yourragegaming",
+    "audioMode": "auto",
+    "audioMuted": false,
+    "roster": "Q1:hasanabi|Q2:yourragegaming|Q3:maya|Q4:arky",
+    "quadrants": [
+      {
+        "quadrant": 1,
+        "login": "hasanabi"
+      },
+      {
+        "quadrant": 2,
+        "login": "yourragegaming"
+      },
+      {
+        "quadrant": 3,
+        "login": "maya"
+      },
+      {
+        "quadrant": 4,
+        "login": "arky"
+      }
+    ]
+  },
+  "gridChanges": [
+    {
+      "type": "grid_swap",
+      "quad": 1,
+      "from": "stableronaldo",
+      "to": "hasanabi"
+    },
+    {
+      "type": "grid_swap",
+      "quad": 3,
+      "from": "cinna",
+      "to": "maya"
+    }
+  ],
+  "blockers": [
+    "relay_churn:2",
+    "rtsp_probe_fail:4"
+  ],
+  "baselineHealth": [
+    "heavy_sources"
+  ],
+  "actionableHealth": [
+    "relay_churn_tick:2",
+    "rtsp_probe_fail:4",
+    "relay_churn"
+  ],
+  "av": {
+    "videoLevel": "good",
+    "audioLevel": "good",
+    "videoScore": 100,
+    "audioScore": 100,
+    "videoIssues": [],
+    "audioIssues": []
+  },
+  "pipeline": {
+    "masterRestarts": 0,
+    "relayChurnSum": 2,
+    "relayRestarts": [
+      1,
+      0,
+      1,
+      0
+    ],
+    "masterCpu": null,
+    "encodeFps": 30,
+    "gridRunning": true
+  },
+  "watchUrl": "https://youtube.com/live/07nAcIokb6Y",
+  "lastGrid": {
+    "onAirQuad": 2,
+    "onAirLogin": "yourragegaming",
+    "audioMode": "auto",
+    "audioMuted": false,
+    "roster": "Q1:hasanabi|Q2:yourragegaming|Q3:maya|Q4:arky",
+    "quadrants": [
+      {
+        "quadrant": 1,
+        "login": "hasanabi"
+      },
+      {
+        "quadrant": 2,
+        "login": "yourragegaming"
+      },
+      {
+        "quadrant": 3,
+        "login": "maya"
+      },
+      {
+        "quadrant": 4,
+        "login": "arky"
+      }
+    ]
+  }
+}

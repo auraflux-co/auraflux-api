@@ -1,0 +1,28 @@
+{
+  "fired": {
+    "2026-06-15": {
+      "news_long": {
+        "status": "dispatched",
+        "kind": "longform",
+        "jobId": "script_news_1781538534270",
+        "at": "2026-06-15T15:50:46.054Z"
+      },
+      "twitch_short": {
+        "status": "skipped",
+        "reason": "already covered",
+        "at": "2026-06-15T19:30:44.952Z"
+      },
+      "news_short": {
+        "status": "dispatched",
+        "kind": "short",
+        "jobId": "script_news-short_1781555456680",
+        "at": "2026-06-15T20:30:56.694Z"
+      },
+      "bonus_short": {
+        "status": "skipped",
+        "reason": "already covered",
+        "at": "2026-06-15T21:30:45.086Z"
+      }
+    }
+  }
+}
