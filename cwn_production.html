@@ -864,7 +864,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                     <option value="full_bleed">Full bleed (imgoochy / core_fx)</option>
                     <option value="serpent_ranked">Ranked list Short (Stream Serpent)</option>
                     <option value="dahbluh_clean">Clean comp (DahBluh Short)</option>
-                    <option value="twitch_comp_vod">Comp VOD 8–20 min (Phase 4 — schema only)</option>
+                    <option value="twitch_comp_vod">Comp VOD 8–20 min (edited comp)</option>
                     <option value="custom">Custom (advanced)</option>
                   </select>
                   <div id="comp-creative-chips" class="gen-comp-creative-chips"></div>
@@ -878,8 +878,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                         <option value="FAN_MAIL">FAN MAIL</option>
                       </select>
                     </label>
+                    <label>Related VOD (Short funnel) <input type="text" id="comp-creative-related-vod" placeholder="YouTube video ID or URL" oninput="refreshCompCreativeChips()"></label>
                   </div>
-                  <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.4;">Phase 1 stores profile on job — FFmpeg wiring lands in CPD-1089–1091.</div>
+                  <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.4;">Preset drives layout, ranked overlay, audio bed, VOD comp, and captions.</div>
                 </div>
                 <div class="gen-action-bar">
                   <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">Pick clips</button>
@@ -889,6 +890,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                     <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()">Short</button>
                   </div>
                   <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch 4 clips into one portrait short">Comp</button>
+                  <button id="btn-gen-twitch-comp-vod" class="btn btn-outline" onclick="triggerClipCompVod()" title="8–20 min edited comp VOD from lineup (up to 12 clips)">Comp VOD</button>
                 </div>
                 <span id="twitch-fetch-status" class="gen-status-line"></span>
               </aside>
@@ -10255,7 +10257,8 @@ function saveCompCreativePresetToStorage() {
   var data = {
     preset: sel ? sel.value : 'classic_blur_pad',
     streamer: (g('comp-creative-streamer') && g('comp-creative-streamer').value) || '',
-    theme: (g('comp-creative-theme') && g('comp-creative-theme').value) || 'FUNNIEST'
+    theme: (g('comp-creative-theme') && g('comp-creative-theme').value) || 'FUNNIEST',
+    relatedVideoParentId: (g('comp-creative-related-vod') && g('comp-creative-related-vod').value) || ''
   };
   try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   return data;
@@ -10265,19 +10268,28 @@ function buildCompCreativeRequestPayload(streamerHint) {
   var stored = saveCompCreativePresetToStorage();
   var preset = stored.preset || 'classic_blur_pad';
   var overrides = null;
-  if (preset === 'custom' || preset === 'serpent_ranked') {
-    overrides = {
-      hooks: {
-        rankedList: {
-          enabled: preset === 'serpent_ranked',
-          streamer: stored.streamer || streamerHint || '',
-          theme: stored.theme || 'FUNNIEST'
-        }
-      }
-    };
+  if (preset === 'custom' || preset === 'serpent_ranked' || stored.relatedVideoParentId) {
+    overrides = overrides || {};
+    if (preset === 'custom' || preset === 'serpent_ranked') {
+      overrides.hooks = overrides.hooks || {};
+      overrides.hooks.rankedList = {
+        enabled: preset === 'serpent_ranked',
+        streamer: stored.streamer || streamerHint || '',
+        theme: stored.theme || 'FUNNIEST'
+      };
+    }
+    if (stored.relatedVideoParentId) {
+      overrides.delivery = overrides.delivery || {};
+      overrides.delivery.relatedVideoParentId = stored.relatedVideoParentId;
+    }
   }
   if (preset === 'serpent_ranked' && overrides) {
     overrides.hooks.rankedList.enabled = true;
+  }
+  if (preset === 'twitch_comp_vod') {
+    overrides = overrides || {};
+    overrides.delivery = { format: 'vod_comp', relatedVideoParentId: stored.relatedVideoParentId || null };
+    overrides.editorial = { enabled: true, introCard: true, ttsBridges: true };
   }
   return {
     compCreativePreset: preset,
@@ -10321,7 +10333,49 @@ function initCompCreativePanel() {
   if (sel && stored.preset) sel.value = stored.preset;
   if (g('comp-creative-streamer') && stored.streamer) g('comp-creative-streamer').value = stored.streamer;
   if (g('comp-creative-theme') && stored.theme) g('comp-creative-theme').value = stored.theme;
+  if (g('comp-creative-related-vod') && stored.relatedVideoParentId) g('comp-creative-related-vod').value = stored.relatedVideoParentId;
   refreshCompCreativeChips();
+}
+
+function triggerClipCompVod() {
+  var sel = g('comp-creative-preset');
+  if (sel) sel.value = 'twitch_comp_vod';
+  refreshCompCreativeChips();
+  var VOD_CLIP_COUNT = 8;
+  var picked = getCompLineupForDispatch(VOD_CLIP_COUNT);
+  if (!picked.length) {
+    previewTwitchClips();
+    alert('Pick clips in the lineup first, then Comp VOD (uses up to ' + VOD_CLIP_COUNT + ' clips).');
+    return;
+  }
+  if (picked.length < 4) {
+    alert('Comp VOD needs at least 4 clips — only ' + picked.length + ' in lineup.');
+    return;
+  }
+  if (picked.length > VOD_CLIP_COUNT) picked = picked.slice(0, VOD_CLIP_COUNT);
+  showPlatformModal(function(selPlatforms) {
+    var pub = parsePlatformModalSelection(selPlatforms);
+    lockGenerateButton('btn-gen-twitch-comp-vod');
+    switchGeneratePillar('twitch');
+    setCompStatus('twitch-gen-status', 'COMP VOD — resolving ' + picked.length + ' clip(s)...', 'assembling');
+    var allClips = picked.map(function(p) {
+      return { streamer: p.name, displayName: p.displayName, title: p.clip.title || '', url: p.clip.url || '', views: p.clip.views || 0, game: p.clip.game || '' };
+    });
+    resolveTwitchClipUrls(allClips, function() {
+      var clips = allClips.map(function(c, i) {
+        return {
+          url: c.mp4Url || c.url,
+          pageUrl: c.pageUrl || c.url,
+          title: c.title,
+          streamer: c.streamer,
+          displayName: c.displayName,
+          orientation: 'landscape',
+          label: 'CLIP_' + (i + 1)
+        };
+      });
+      _dispatchClipCompFromPicker(clips, 'twitch-vod-comp', pub.platforms, 'twitch-gen-status', g('twitch-fetch-status'), pub.scheduledAt, {});
+    });
+  });
 }
 
 function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, statusEl, scheduledAt, postLiveOpts) {

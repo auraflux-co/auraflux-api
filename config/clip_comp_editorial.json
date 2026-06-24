@@ -13,6 +13,12 @@
       "outroTts": "That's today's rundown. Follow ClipzWorld News.",
       "categoryLabel": "WORLD NEWS",
       "accentColor": "#c7af4f"
+    },
+    "twitch": {
+      "introTts": "ClipzWorld. {streamer} highlights for {dateLong}. {topic}.",
+      "outroTts": "That's the comp. Watch the full VOD on the channel.",
+      "categoryLabel": "ON STREAM",
+      "accentColor": "#c7af4f"
     }
   },
   "stingProfiles": {

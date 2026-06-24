@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-13 (CPD-1089–1092) — Clip comp creative Phases 2–5: full-bleed layout, music bed + cut SFX, Stream Serpent ranked overlay, Comp VOD editorial + funnel metadata, word-karaoke captions; assembly wired via clip_comp_assembly.js.
 **Last Updated:** 2026-06-13 (CPD-1088) — Clip comp creative modes Phase 1: `compCreative` schema + presets (`lib/clip_comp_creative.js`), Generate UI CREATIVE MODE panel, job card storage on `/generate-clip-comp`; assembly flags schema-only until Phases 2–4.
 **Last Updated:** 2026-06-24 (CPD-1086) — Hook Master training corpus: playbook JSON + ingest script (Gemini 5× video extract), playbook wired into Hook Machine + Claude QA prompts.
 **Last Updated:** 2026-06-24 (CPD-1086) — Hook pipeline hardening: Gemini JSON repair + Hook Machine retry, observation completeness + merge token bump, vague-hook local/Claude QA fail, lead-title JSON retry, clip-comp publish-copy timeout 120s; FIX SEO renderQueue fix.

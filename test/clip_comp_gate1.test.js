@@ -1,5 +1,7 @@
 'use strict';
 
+const { describe, test } = require('node:test');
+const assert = require('node:assert/strict');
 const { runClipCompGate1 } = require('../lib/gates/clip_comp_gate1');
 
 describe('clip_comp_gate1 (CPD-1051)', () => {
@@ -17,9 +19,9 @@ describe('clip_comp_gate1 (CPD-1051)', () => {
         ],
       }
     );
-    expect(r.passed).toBe(true);
-    expect(r.outcome).toBe('pass');
-    expect(r.clipCompVariant).toBe(true);
+    assert.equal(r.passed, true);
+    assert.equal(r.outcome, 'pass');
+    assert.equal(r.clipCompVariant, true);
   });
 
   test('hard fails when clip title missing', () => {
@@ -27,9 +29,9 @@ describe('clip_comp_gate1 (CPD-1051)', () => {
       { designSpec: { expectedClipCount: 1, chrome: { layout: 'clip-comp' } } },
       { title: 'Clips Comp', clips: [{ title: '', displayName: 'X' }] }
     );
-    expect(r.passed).toBe(false);
-    expect(r.outcome).toBe('hard_fail');
-    expect(r.violations.some((v) => v.includes('missing title'))).toBe(true);
+    assert.equal(r.passed, false);
+    assert.equal(r.outcome, 'hard_fail');
+    assert.ok(r.violations.some((v) => v.includes('missing title')));
   });
 
   test('does not require platform captions at intake (Gate 5 owns SEO)', () => {
@@ -40,8 +42,8 @@ describe('clip_comp_gate1 (CPD-1051)', () => {
         clips: [{ title: 'Marlon rage moment', displayName: 'Marlon' }],
       }
     );
-    expect(r.passed).toBe(true);
-    expect(r.violations.some((v) => v.includes('TikTok caption'))).toBe(false);
+    assert.equal(r.passed, true);
+    assert.equal(r.violations.some((v) => v.includes('TikTok caption')), false);
   });
 
   test('blocks AI marketing title', () => {
@@ -52,8 +54,8 @@ describe('clip_comp_gate1 (CPD-1051)', () => {
         clips: [{ title: 'Big play', displayName: 'Ninja' }],
       }
     );
-    expect(r.passed).toBe(false);
-    expect(r.outcome).toBe('hard_fail');
-    expect(r.violations.some((v) => v.includes('AI'))).toBe(true);
+    assert.equal(r.passed, false);
+    assert.equal(r.outcome, 'hard_fail');
+    assert.ok(r.violations.some((v) => v.includes('AI')));
   });
 });

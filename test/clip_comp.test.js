@@ -55,7 +55,7 @@ test('buildClipCompDesignSpec attaches compCreative from preset', () => {
   assert.equal(spec.compCreative.preset, 'serpent_ranked');
   assert.equal(spec.compCreative.hooks.rankedList.streamer, 'KaiCenat');
   assert.equal(spec.compCreativeFlags.rankedListEnabled, true);
-  assert.equal(spec.compCreativeFlags.phase1SchemaOnly, true);
+  assert.equal(spec.compCreativeFlags.phase1SchemaOnly, false);
 });
 
 test('appendClipCompTitleSuffix adds " and more..." for multi-clip comps', () => {

@@ -4308,10 +4308,23 @@ app.post('/generate-clip-comp', async (req, res) => {
   const { buildClipCompDesignSpec, resolveClipCompPublishContentType, buildClipCompDeliverySpec, buildClipCompPublishOrder } = require('./lib/clip_comp');
   let clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
   if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
-  if (clips.length > 10) return res.status(400).json({ error: `Too many clips (${clips.length} > 10 max)` });
 
-  const contentType = ['twitch-short', 'news-short', 'sports-short'].includes(req.body.contentType)
+  const { mergeCompCreative } = require('./lib/clip_comp_creative');
+  const streamersEarly = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
+  const compCreative = mergeCompCreative({
+    preset: req.body.compCreativePreset || req.body.compCreative?.preset,
+    overrides: req.body.compCreative,
+    streamerHint: streamersEarly[0] || null,
+  });
+  const maxClips = compCreative.delivery?.format === 'vod_comp' ? 12 : 10;
+  if (clips.length > maxClips) return res.status(400).json({ error: `Too many clips (${clips.length} > ${maxClips} max)` });
+
+  let contentType = ['twitch-short', 'news-short', 'sports-short', 'twitch-vod-comp', 'news-vod-comp', 'sports-vod-comp'].includes(req.body.contentType)
     ? req.body.contentType : 'twitch-short';
+  if (compCreative.delivery?.format === 'vod_comp' && !contentType.includes('vod-comp')) {
+    const { resolveVodCompContentType } = require('./lib/clip_comp_publish');
+    contentType = resolveVodCompContentType(contentType);
+  }
 
   const postLiveVodSessionId = req.body.postLiveVodSessionId || null;
   let postLiveMuteRanges = Array.isArray(req.body.postLiveMuteRanges) ? req.body.postLiveMuteRanges : [];
@@ -4393,12 +4406,6 @@ app.post('/generate-clip-comp', async (req, res) => {
     if (!isNaN(due.getTime()) && due.getTime() > Date.now()) scheduledAt = due.toISOString();
   }
   const streamers = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
-  const { mergeCompCreative } = require('./lib/clip_comp_creative');
-  const compCreative = mergeCompCreative({
-    preset: req.body.compCreativePreset || req.body.compCreative?.preset,
-    overrides: req.body.compCreative,
-    streamerHint: streamers[0] || null,
-  });
   // Single-clip shorts slug to clip_short_* — the ClipzWorld TV playlist filter
   // excludes that prefix (no avatar = no transformative layer = never on the loop)
   const title     = req.body.title ||
@@ -4432,7 +4439,7 @@ app.post('/generate-clip-comp', async (req, res) => {
       compCreative,
       streamerHint: streamers[0] || null,
     });
-    const deliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType });
+    const deliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType, compCreative });
     jobSpec = updateJobSpec(jobSpec.jobId, {
       clipsOnly: true,
       deliverySpec,
@@ -4486,7 +4493,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     postLiveVod: !!c.postLiveVod,
   }));
 
-  const compDeliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType });
+  const compDeliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType, compCreative });
 
   const card = {
     id:          jobId,

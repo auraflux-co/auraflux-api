@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const {
   editorialEnabled,
   isEditorialContentType,
+  shouldUseClipCompEditorial,
   fillTemplate,
   formatEditorialDate,
   buildSpokenScripts,
@@ -19,6 +20,11 @@ describe('clip_comp_editorial', () => {
     assert.equal(isEditorialContentType('news-short'), true);
     assert.equal(isEditorialContentType('twitch-short'), false);
     assert.equal(timelineEligible('twitch-short'), false);
+  });
+
+  test('shouldUseClipCompEditorial — twitch vod_comp', () => {
+    assert.equal(shouldUseClipCompEditorial('twitch-short', { delivery: { format: 'vod_comp' } }), true);
+    assert.equal(shouldUseClipCompEditorial('twitch-short', null), false);
   });
 
   test('fillTemplate substitutes vars', () => {

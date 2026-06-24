@@ -48,7 +48,7 @@ test('compCreativeAssemblyFlags marks phase1 schema only', () => {
   const flags = compCreativeAssemblyFlags(PRESET_DEFAULTS.serpent_ranked);
   assert.equal(flags.layoutMode, 'full_bleed_crop');
   assert.equal(flags.rankedListEnabled, true);
-  assert.equal(flags.phase1SchemaOnly, true);
+  assert.equal(flags.phase1SchemaOnly, false);
 });
 
 test('VALID_PRESETS includes custom', () => {
