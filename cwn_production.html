@@ -88,7 +88,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .gen-picker-card .picker-when { font-size:8px; color:rgba(255,200,80,0.65); font-family:monospace; margin-bottom:4px; }
 .gen-picker-card .picker-dur { font-size:9px; font-family:monospace; font-weight:700; }
 .gen-comp-lineup { border:1px solid rgba(145,70,255,0.35); border-radius:8px; padding:10px 12px; background:rgba(145,70,255,0.06); flex-shrink:0; }
-.gen-comp-lineup-head { font-size:10px; letter-spacing:1px; color:rgba(145,70,255,0.85); font-family:monospace; margin-bottom:8px; }
+.gen-comp-lineup-head { font-size:10px; letter-spacing:1px; color:rgba(145,70,255,0.85); font-family:monospace; margin-bottom:8px; display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap; }
+.gen-comp-lineup-total { font-size:10px; font-family:monospace; font-weight:700; color:#c7af4f; letter-spacing:0.5px; white-space:nowrap; }
+.gen-comp-creative { border:1px solid rgba(199,175,79,0.35); border-radius:8px; padding:10px 12px; background:rgba(199,175,79,0.06); margin-bottom:10px; flex-shrink:0; }
+.gen-comp-creative-head { font-size:10px; letter-spacing:1px; color:rgba(199,175,79,0.85); font-family:monospace; margin-bottom:8px; }
+.gen-comp-creative select { width:100%; background:#0d1524; color:#fff; border:1px solid rgba(199,175,79,0.35); padding:6px 8px; font-size:11px; border-radius:4px; }
+.gen-comp-creative-chips { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+.gen-comp-creative-chip { font-size:9px; font-family:monospace; letter-spacing:0.5px; padding:2px 6px; border-radius:3px; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.55); border:1px solid rgba(255,255,255,0.1); }
+.gen-comp-creative-adv { margin-top:8px; display:none; font-size:10px; color:rgba(255,255,255,0.45); }
+.gen-comp-creative-adv.open { display:block; }
+.gen-comp-creative-adv label { display:block; margin-top:6px; }
+.gen-comp-creative-adv input, .gen-comp-creative-adv select { width:100%; margin-top:2px; background:#0d1524; color:#fff; border:1px solid rgba(255,255,255,0.15); padding:4px 6px; font-size:10px; border-radius:3px; }
 .gen-comp-lineup-grid { display:flex; flex-direction:column; gap:6px; }
 /* Clip groups — saved 4-creator picker shortcuts (CPD-1086) */
 .clip-groups-list { display:flex; flex-direction:column; gap:8px; padding:0 4px 8px; max-height:280px; overflow-y:auto; }
@@ -845,7 +855,32 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   </div>
                 </details>
                 <div id="streamer-selected-summary" class="streamer-selected-bar">Select creators in the sections above, then Pick clips.</div>
+                <div id="twitch-clip-schedule" class="gen-schedule-hint" style="font-size:10px;color:rgba(255,255,255,0.42);font-family:monospace;line-height:1.55;margin:6px 0 10px;padding:8px 10px;border:1px solid rgba(199,175,79,0.15);border-radius:6px;background:rgba(0,0,0,0.2);"></div>
                 <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
+                <div id="twitch-comp-creative" class="gen-comp-creative">
+                  <div class="gen-comp-creative-head">CREATIVE MODE · Short / Comp</div>
+                  <select id="comp-creative-preset" onchange="onCompCreativePresetChange()" title="Applies to Short and Comp — stored for this browser">
+                    <option value="classic_blur_pad">Classic ClipzWorld (blur-pad)</option>
+                    <option value="full_bleed">Full bleed (imgoochy / core_fx)</option>
+                    <option value="serpent_ranked">Ranked list Short (Stream Serpent)</option>
+                    <option value="dahbluh_clean">Clean comp (DahBluh Short)</option>
+                    <option value="twitch_comp_vod">Comp VOD 8–20 min (Phase 4 — schema only)</option>
+                    <option value="custom">Custom (advanced)</option>
+                  </select>
+                  <div id="comp-creative-chips" class="gen-comp-creative-chips"></div>
+                  <div id="comp-creative-adv" class="gen-comp-creative-adv">
+                    <label>Ranked streamer <input type="text" id="comp-creative-streamer" placeholder="Lacy" oninput="refreshCompCreativeChips()"></label>
+                    <label>List theme
+                      <select id="comp-creative-theme" onchange="refreshCompCreativeChips()">
+                        <option value="FUNNIEST">FUNNIEST</option>
+                        <option value="AURA">AURA</option>
+                        <option value="CORE">CORE</option>
+                        <option value="FAN_MAIL">FAN MAIL</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.4;">Phase 1 stores profile on job — FFmpeg wiring lands in CPD-1089–1091.</div>
+                </div>
                 <div class="gen-action-bar">
                   <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchClips()">Pick clips</button>
                   <button id="btn-gen-twitch" class="btn btn-gold" onclick="generateTwitchWithPicker()">Generate VOD</button>
@@ -3552,22 +3587,67 @@ function initHeader() {
   var now = new Date();
   g('hdr-date').textContent = now.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'}).toUpperCase();
   g('gen-date-badge').textContent = 'TODAY ' + now.toLocaleDateString([],{month:'short',day:'numeric'}).toUpperCase();
+  renderClipPullScheduleHint();
+}
+
+// Stagger Twitch API fetches — 26 clips/day (10 VOD + 16 comp) without hammering Helix
+var CLIP_PULL_SCHEDULE = [
+  { time: '8:00 AM',  label: 'VOD #1 Pick clips', clips: 5 },
+  { time: '10:30 AM', label: 'VOD #2 Pick clips', clips: 5 },
+  { time: '12:30 PM', label: 'Comp #1', clips: 4 },
+  { time: '3:00 PM',  label: 'Comp #2', clips: 4 },
+  { time: '5:30 PM',  label: 'Comp #3', clips: 4 },
+  { time: '8:00 PM',  label: 'Comp #4', clips: 4 }
+];
+
+function renderClipPullScheduleHint() {
+  var el = g('twitch-clip-schedule');
+  if (!el) return;
+  var lines = CLIP_PULL_SCHEDULE.map(function(s) { return s.time + ' ' + s.label + ' (' + s.clips + ')'; });
+  el.innerHTML = '<strong style="color:rgba(199,175,79,0.85);">Daily clip budget: 26</strong> (10 VOD + 16 comp) · '
+    + 'Used clips hidden for 7 days (this browser) · Pull at set times to avoid Twitch 429:<br>'
+    + lines.join(' · ');
 }
 
 function loadCredits() {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET','https://api.heygen.com/v2/user/remaining_quota',true);
-  xhr.setRequestHeader('X-Api-Key', CFG.hgKey);
-  xhr.timeout=8000;
-  xhr.onload=function(){
-    try {
-      var d=JSON.parse(xhr.responseText);
-      var q=d.data&&d.data.remaining_quota||0;
-      g('hdr-credits').textContent = q + ' HEYGEN CREDITS';
-      g('hdr-credits').style.color = q < 50 ? '#e74c3c' : q < 100 ? '#f39c12' : '#c7af4f';
-    }catch(e){}
-  };
-  xhr.send();
+  var el = g('hdr-credits');
+  if (!el || !CFG.hgKey) return;
+  el.title = 'HeyGen API balance (HEYGEN_API_KEY). Web Creator/Pro credits are separate at heygen.com → Usage.';
+  hgGet('v3/users/me', function(err, data) {
+    var label = formatHeyGenApiBalance(data);
+    if (label) {
+      el.textContent = label;
+      var low = label.indexOf('$') === 0 && parseFloat(label.replace(/[^0-9.]/g, '')) < 25;
+      el.style.color = low ? '#e74c3c' : '#c7af4f';
+      return;
+    }
+    hgGet('v2/user/remaining_quota', function(_err2, legacy) {
+      try {
+        var q = legacy && legacy.data && legacy.data.remaining_quota || 0;
+        el.textContent = q + ' API quota (legacy)';
+        el.style.color = q < 50 ? '#e74c3c' : q < 100 ? '#f39c12' : '#c7af4f';
+      } catch (e) {}
+    });
+  });
+}
+
+function formatHeyGenApiBalance(data) {
+  if (!data || !data.data) return null;
+  var d = data.data;
+  var bt = d.billing_type || '';
+  if (bt === 'wallet' && d.wallet && d.wallet.remaining_balance != null) {
+    return '$' + Number(d.wallet.remaining_balance).toFixed(2) + ' API';
+  }
+  if (bt === 'subscription' && d.subscription && d.subscription.credits) {
+    var prem = d.subscription.credits.premium_credits && d.subscription.credits.premium_credits.remaining;
+    if (prem != null) return prem + ' API pool';
+    var addOn = d.subscription.credits.add_on_credits && d.subscription.credits.add_on_credits.remaining;
+    if (addOn != null) return addOn + ' API add-on';
+  }
+  if (bt === 'usage_based' && d.usage_based && d.usage_based.remaining_credits != null) {
+    return d.usage_based.remaining_credits + ' API credits';
+  }
+  return null;
 }
 
 // ── HEYGEN API ────────────────────────────────────────────────────
@@ -4802,6 +4882,15 @@ function renderQueue() {
     pipe += pipeStep('PUBLISHED', !!(job.stage==='published'||!!(job.publishRecord&&job.publishRecord.gate4==='pass')), isGate5Running, '#27ae60');
     pipe += '</div>';
 
+    var creativeBar = '';
+    if (job.clipsOnly && (job.compCreativePreset || job.compCreative || (job.designSpec && job.designSpec.compCreative))) {
+      var cr = job.compCreative || (job.designSpec && job.designSpec.compCreative) || { preset: job.compCreativePreset || 'classic_blur_pad' };
+      if (job.compCreativePreset && !cr.preset) cr.preset = job.compCreativePreset;
+      creativeBar = '<div class="gen-comp-creative-chips" style="margin:6px 0 8px;">'
+        + compCreativeChipList(cr).map(function(c){ return '<span class="gen-comp-creative-chip">'+escHtml(c)+'</span>'; }).join('')
+        + '</div>';
+    }
+
     // PLATFORM STATUS
     var platforms = job.platforms || {youtube:'pending',tiktok:'pending',instagram:'pending'};
     var platBar = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">';
@@ -5025,7 +5114,7 @@ function renderQueue() {
       +'</div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+pipe+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+platBar+actions+segToggle+segHtml
+      +pctBar+pipe+creativeBar+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -7884,10 +7973,11 @@ function saveSettings() {
 
 function testHeyGen() {
   g('settings-status').innerHTML = '<div class="alert alert-info">Testing HeyGen connection...</div>';
-  hgGet('v2/user/remaining_quota', function(err, data) {
+  hgGet('v3/users/me', function(err, data) {
     if (err) { g('settings-status').innerHTML = '<div class="alert alert-warn">Connection failed: '+err.message+'</div>'; return; }
-    var q = data.data && data.data.remaining_quota || 0;
-    g('settings-status').innerHTML = '<div class="alert alert-success">Connected! '+q+' credits remaining.</div>';
+    var label = formatHeyGenApiBalance(data) || 'connected';
+    var note = ' Web Creator/Pro credits (heygen.com → Usage) are separate from API wallet.';
+    g('settings-status').innerHTML = '<div class="alert alert-success">Connected! API: '+label+'.'+note+'</div>';
     loadCredits();
   });
 }
@@ -9054,6 +9144,21 @@ function pickerDurColor(dur) {
   return dur >= 45 ? '#2ecc71' : dur >= 20 ? '#c7af4f' : 'rgba(255,255,255,0.35)';
 }
 
+function compClipDurationSec(clip) {
+  var c = clip || {};
+  var d = c.duration != null ? c.duration : (c.clipDuration != null ? c.clipDuration : 0);
+  var n = Math.round(Number(d) || 0);
+  return n > 0 ? n : 0;
+}
+
+function formatCompDurationTotal(totalSec) {
+  if (!totalSec || totalSec <= 0) return '—';
+  if (totalSec < 60) return totalSec + 's';
+  var m = Math.floor(totalSec / 60);
+  var s = totalSec % 60;
+  return m + 'm' + (s ? ' ' + s + 's' : '');
+}
+
 // State for main-page pickers
 var _nbaPickerGames = [];   // [{gameId, away, home, awayAbbr, homeAbbr, awayScore, homeScore, clipUrl, clipDuration, thumbnail, localPath, selected}]
 var _newsPickerStories = []; // [{title, link, videoUrl, hlsUrl, thumbnailUrl, orientation, pillarboxFilter, pubDate, selected}]
@@ -9104,15 +9209,28 @@ function renderCompLineupPanel() {
   var COMP_CLIP_COUNT = 4;
   var show = _compLineup.slice(0, COMP_CLIP_COUNT);
   var extra = picked.length - show.length;
+  var totalSec = 0;
+  var durKnown = 0;
+  show.forEach(function(slot) {
+    var d = compClipDurationSec(slot.clip);
+    if (d > 0) { totalSec += d; durKnown++; }
+  });
   var head = 'COMP LINEUP (1–' + COMP_CLIP_COUNT + ') — Comp uses this order for hooks + title';
   if (picked.length > COMP_CLIP_COUNT) {
     head += ' · first ' + COMP_CLIP_COUNT + ' of ' + picked.length + ' selected';
   } else if (extra > 0) {
     head += ' · add ' + (COMP_CLIP_COUNT - show.length) + ' more for full comp';
   }
-  var html = '<div class="gen-comp-lineup-head">' + head + '</div><div class="gen-comp-lineup-grid">';
+  var totalLabel = durKnown
+    ? ('~' + formatCompDurationTotal(totalSec) + (durKnown < show.length ? ' (' + durKnown + '/' + show.length + ' clips)' : ''))
+    : '';
+  var html = '<div class="gen-comp-lineup-head"><span>' + head + '</span>'
+    + (totalLabel ? '<span class="gen-comp-lineup-total" title="Sum of clip lengths in lineup (hooks/cards add more)">TOTAL ' + totalLabel + '</span>' : '')
+    + '</div><div class="gen-comp-lineup-grid">';
   show.forEach(function(slot, idx) {
     var c = slot.clip || {};
+    var clipDur = compClipDurationSec(c);
+    var durClr = pickerDurColor(clipDur);
     var thumb = c.thumbnailUrl
       ? c.thumbnailUrl.replace('{width}', '96').replace('{height}', '54')
       : '';
@@ -9124,7 +9242,9 @@ function renderCompLineupPanel() {
       html += '<div class="gen-comp-slot-thumb"></div>';
     }
     html += '<div class="gen-comp-slot-meta">'
-      + '<div class="gen-comp-slot-name">' + escapeHtml(slot.displayName || slot.name || '?') + '</div>'
+      + '<div class="gen-comp-slot-name">' + escapeHtml(slot.displayName || slot.name || '?')
+      + (clipDur ? ' <span style="font-size:9px;font-family:monospace;font-weight:700;color:' + durClr + ';">' + clipDur + 's</span>' : '')
+      + '</div>'
       + '<div class="gen-comp-slot-title">' + escapeHtml((c.title || '').slice(0, 72)) + '</div>'
       + '</div>'
       + '<div class="gen-comp-slot-actions">'
@@ -10096,6 +10216,114 @@ function startClipCompReviewPoll(jobId, statusElId) {
   setTimeout(tick, 5000);
 }
 
+var COMP_CREATIVE_STORAGE_KEY = 'cwn.compCreative.v1';
+
+function compCreativeChipList(creative) {
+  creative = creative || {};
+  var chips = [];
+  var preset = creative.preset || 'classic_blur_pad';
+  var labels = {
+    classic_blur_pad: 'Classic',
+    full_bleed: 'Full bleed',
+    serpent_ranked: 'Serpent ranked',
+    dahbluh_clean: 'DahBluh clean',
+    twitch_comp_vod: 'Comp VOD',
+    custom: 'Custom'
+  };
+  chips.push(labels[preset] || preset);
+  var layout = (creative.layout && creative.layout.mode) || 'blur_pad';
+  chips.push(layout === 'full_bleed_crop' ? 'full bleed' : 'blur-pad');
+  if (creative.hooks && creative.hooks.rankedList && creative.hooks.rankedList.enabled) chips.push('ranked list');
+  if (!creative.hooks || creative.hooks.mode !== 'whisper_only') chips.push('hooks');
+  if (creative.captions && creative.captions.whisper !== false) chips.push('whisper');
+  if (creative.audio && creative.audio.musicBed && creative.audio.musicBed !== 'off') chips.push('bed');
+  if (creative.audio && creative.audio.cutSfx && creative.audio.cutSfx !== 'off') chips.push('SFX');
+  chips.push((creative.delivery && creative.delivery.format === 'vod_comp') ? 'VOD comp' : 'short');
+  return chips;
+}
+
+function loadCompCreativePresetFromStorage() {
+  try {
+    var raw = localStorage.getItem(COMP_CREATIVE_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* ignore */ }
+  return { preset: 'classic_blur_pad', streamer: '', theme: 'FUNNIEST' };
+}
+
+function saveCompCreativePresetToStorage() {
+  var sel = g('comp-creative-preset');
+  var data = {
+    preset: sel ? sel.value : 'classic_blur_pad',
+    streamer: (g('comp-creative-streamer') && g('comp-creative-streamer').value) || '',
+    theme: (g('comp-creative-theme') && g('comp-creative-theme').value) || 'FUNNIEST'
+  };
+  try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
+  return data;
+}
+
+function buildCompCreativeRequestPayload(streamerHint) {
+  var stored = saveCompCreativePresetToStorage();
+  var preset = stored.preset || 'classic_blur_pad';
+  var overrides = null;
+  if (preset === 'custom' || preset === 'serpent_ranked') {
+    overrides = {
+      hooks: {
+        rankedList: {
+          enabled: preset === 'serpent_ranked',
+          streamer: stored.streamer || streamerHint || '',
+          theme: stored.theme || 'FUNNIEST'
+        }
+      }
+    };
+  }
+  if (preset === 'serpent_ranked' && overrides) {
+    overrides.hooks.rankedList.enabled = true;
+  }
+  return {
+    compCreativePreset: preset,
+    compCreative: overrides
+  };
+}
+
+function refreshCompCreativeChips() {
+  var stored = saveCompCreativePresetToStorage();
+  var adv = g('comp-creative-adv');
+  if (adv) adv.classList.toggle('open', stored.preset === 'custom' || stored.preset === 'serpent_ranked');
+  var payload = buildCompCreativeRequestPayload('');
+  var pseudo = { preset: stored.preset };
+  if (stored.preset === 'full_bleed' || stored.preset === 'serpent_ranked' || stored.preset === 'dahbluh_clean' || stored.preset === 'twitch_comp_vod') {
+    pseudo.layout = { mode: 'full_bleed_crop' };
+  } else {
+    pseudo.layout = { mode: 'blur_pad' };
+  }
+  if (stored.preset === 'serpent_ranked') {
+    pseudo.hooks = { mode: 'both', rankedList: { enabled: true, streamer: stored.streamer, theme: stored.theme } };
+    pseudo.audio = { musicBed: 'low_trap', cutSfx: 'serpent_pack' };
+  }
+  if (stored.preset === 'twitch_comp_vod') {
+    pseudo.delivery = { format: 'vod_comp' };
+    pseudo.audio = { musicBed: 'low_trap', cutSfx: 'whoosh' };
+  }
+  var el = g('comp-creative-chips');
+  if (!el) return;
+  el.innerHTML = compCreativeChipList(pseudo).map(function(c) {
+    return '<span class="gen-comp-creative-chip">' + escHtml(c) + '</span>';
+  }).join('');
+}
+
+function onCompCreativePresetChange() {
+  refreshCompCreativeChips();
+}
+
+function initCompCreativePanel() {
+  var stored = loadCompCreativePresetFromStorage();
+  var sel = g('comp-creative-preset');
+  if (sel && stored.preset) sel.value = stored.preset;
+  if (g('comp-creative-streamer') && stored.streamer) g('comp-creative-streamer').value = stored.streamer;
+  if (g('comp-creative-theme') && stored.theme) g('comp-creative-theme').value = stored.theme;
+  refreshCompCreativeChips();
+}
+
 function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, statusEl, scheduledAt, postLiveOpts) {
   postLiveOpts = postLiveOpts || {};
   var xhr = new XMLHttpRequest();
@@ -10109,6 +10337,7 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
         msg = 'CLIPS COMP started — ' + d.clipCount + ' clip(s), job ' + d.jobId;
         if (scheduledAt) applyJobPublishSchedule(d.jobId, platforms, scheduledAt);
         var streamerNames = clips.map(function(c) { return c.displayName || c.streamer || ''; }).filter(Boolean);
+        var creativePayload = buildCompCreativeRequestPayload(streamerNames[0] || '');
         var localJob = {
           id: d.jobId,
           type: contentType,
@@ -10117,6 +10346,8 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
           status: 'processing',
           stage: 'heygen_done',
           clipsOnly: true,
+          compCreativePreset: creativePayload.compCreativePreset,
+          compCreative: d.compCreative || null,
           created: new Date().toISOString(),
           segments: clips.map(function(c, i) {
             return {
@@ -10156,6 +10387,9 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
     unlockGenerateButtons();
   };
   var body = { clips: clips, platforms: platforms, contentType: contentType };
+  var creativePayload = buildCompCreativeRequestPayload((clips[0] && (clips[0].displayName || clips[0].streamer)) || '');
+  body.compCreativePreset = creativePayload.compCreativePreset;
+  if (creativePayload.compCreative) body.compCreative = creativePayload.compCreative;
   if (scheduledAt) body.scheduledAt = scheduledAt;
   if (postLiveOpts.postLiveVodSessionId) body.postLiveVodSessionId = postLiveOpts.postLiveVodSessionId;
   if (postLiveOpts.postLiveMuteRanges) body.postLiveMuteRanges = postLiveOpts.postLiveMuteRanges;
@@ -10345,6 +10579,9 @@ function _dispatchClipShort(clip, contentType, title, platforms, statusId, sched
   };
   xhr.onerror = function() { setGeneratingState(statusId, 'SHORT failed: network error'); unlockGenerateButtons(); };
   var body = { clips: [clip], platforms: platforms, contentType: contentType, title: title };
+  var creativePayload = buildCompCreativeRequestPayload(clip.displayName || clip.streamer || '');
+  body.compCreativePreset = creativePayload.compCreativePreset;
+  if (creativePayload.compCreative) body.compCreative = creativePayload.compCreative;
   if (scheduledAt) body.scheduledAt = scheduledAt;
   xhr.send(JSON.stringify(body));
 }
@@ -10487,10 +10724,11 @@ function previewTwitchClips() {
             game: c.game || '', thumbnailUrl: c.thumbnailUrl || '',
             duration: c.duration || 0, isUsed: isClipUsed(c.url),
             createdAt: c.createdAt || null,
-            selected: ci < clipsPerStreamer,
+            selected: false,
             platform: c.platform || s.platform
           };
         });
+        autoSelectTwitchClips(clips, clipsPerStreamer);
         return {
           name: s.login,
           displayName: s.displayName || s.login,
@@ -10632,6 +10870,7 @@ function _toggleTwitchClip(si, ci) {
   if (clip.selected) {
     clip.selected = false;
   } else {
+    if (clip.isUsed && !confirm('This clip was used in the last 7 days on this browser. Use it anyway?')) return;
     // Enforce CLIPS PER STREAMER cap: selecting past the limit swaps out the
     // earliest-selected clip so the count never exceeds the dropdown value.
     var selectedIdxs = [];
@@ -11154,6 +11393,9 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.clipCompTransformApplied === true || serverJob.clipCompTransformApplied === false) {
     job.clipCompTransformApplied = serverJob.clipCompTransformApplied;
   }
+  if (serverJob.compCreative) job.compCreative = serverJob.compCreative;
+  if (serverJob.compCreativePreset) job.compCreativePreset = serverJob.compCreativePreset;
+  if (serverJob.designSpec && serverJob.designSpec.compCreative) job.compCreative = serverJob.designSpec.compCreative;
   if (serverJob.publishHold) job.publishHold = serverJob.publishHold;
   if (serverJob.deliverySpec) job.deliverySpec = serverJob.deliverySpec;
   if (serverJob.postLivePublishReleased) job.postLivePublishReleased = serverJob.postLivePublishReleased;
@@ -12959,6 +13201,23 @@ function isClipUsed(clipUrl) {
   return !!(id && used[id]);
 }
 
+function autoSelectTwitchClips(clips, clipsPerStreamer) {
+  if (!clips || !clips.length) return;
+  clips.forEach(function(c) { c.selected = false; });
+  var sorted = clips.slice().sort(function(a, b) {
+    var au = a.isUsed ? 1 : 0, bu = b.isUsed ? 1 : 0;
+    if (au !== bu) return au - bu;
+    return (b.views || 0) - (a.views || 0);
+  });
+  var n = Math.min(clipsPerStreamer, sorted.length);
+  for (var i = 0; i < n; i++) {
+    var url = sorted[i].url;
+    for (var j = 0; j < clips.length; j++) {
+      if (clips[j].url === url) { clips[j].selected = true; break; }
+    }
+  }
+}
+
 function loadStreamerList() {
   var saved = localStorage.getItem('CWN_STREAMERS');
   if (saved) {
@@ -14130,6 +14389,7 @@ loadDashboardConfig().then(function() {
   }, 4000);
 });
 loadJobs();
+initCompCreativePanel();
 initHeader();
 loadReferenceLibrary();
 loadPronunciations();

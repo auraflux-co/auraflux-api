@@ -4393,6 +4393,12 @@ app.post('/generate-clip-comp', async (req, res) => {
     if (!isNaN(due.getTime()) && due.getTime() > Date.now()) scheduledAt = due.toISOString();
   }
   const streamers = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
+  const { mergeCompCreative } = require('./lib/clip_comp_creative');
+  const compCreative = mergeCompCreative({
+    preset: req.body.compCreativePreset || req.body.compCreative?.preset,
+    overrides: req.body.compCreative,
+    streamerHint: streamers[0] || null,
+  });
   // Single-clip shorts slug to clip_short_* — the ClipzWorld TV playlist filter
   // excludes that prefix (no avatar = no transformative layer = never on the loop)
   const title     = req.body.title ||
@@ -4423,6 +4429,8 @@ app.post('/generate-clip-comp', async (req, res) => {
       customerId: 'c0',
       clipCount: clips.length,
       sourceContentType: contentType,
+      compCreative,
+      streamerHint: streamers[0] || null,
     });
     const deliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType });
     jobSpec = updateJobSpec(jobSpec.jobId, {
@@ -4508,7 +4516,13 @@ app.post('/generate-clip-comp', async (req, res) => {
     },
     orderedClipUrls,
     heygen: { videoJobs: [] },
-    designSpec: jobSpec?.designSpec || buildClipCompDesignSpec({ clipCount: clips.length, sourceContentType: contentType }),
+    designSpec: jobSpec?.designSpec || buildClipCompDesignSpec({
+      clipCount: clips.length,
+      sourceContentType: contentType,
+      compCreative,
+      streamerHint: streamers[0] || null,
+    }),
+    compCreative,
     clipCompProfile: 'streamer',
     postLiveVodSessionId: postLiveVodSessionId || null,
     postLiveMuteRanges: postLiveMuteRanges.length ? postLiveMuteRanges : null,
@@ -4560,6 +4574,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     postLiveMuteRanges: postLiveMuteRanges.length ? postLiveMuteRanges : null,
     expectedClips: segmentData.length,
     designSpec:    card.designSpec,
+    compCreative:  card.compCreative || compCreative,
     captionText:   null, // CPD-935: no hook caption — whisper captions only
     items:         clips.map(c => ({ title: c.title || '', headline: c.title || '', source: c.source || c.channel || '' })),
     // Synthetic script from clip titles so publish-copy generation has material
@@ -4572,7 +4587,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     assemblyId,
     clipCount: segmentData.length,
     platforms,
-    message: `Clips comp started — ${segmentData.length} clip(s) assembling full-frame portrait. Watch the dashboard for Gate 3 result.`
+    compCreative,
+    message: `Clips comp started — ${segmentData.length} clip(s), preset ${compCreative.preset}. Watch the dashboard for Gate 3 result.`
   });
 
   setImmediate(async () => {

@@ -45,6 +45,19 @@ test('publish content type passes through job card type', () => {
   assert.equal(resolveClipCompPublishContentType('twitch-short'), 'twitch-short');
 });
 
+test('buildClipCompDesignSpec attaches compCreative from preset', () => {
+  const spec = buildClipCompDesignSpec({
+    clipCount: 3,
+    sourceContentType: 'twitch-short',
+    compCreativePreset: 'serpent_ranked',
+    streamerHint: 'KaiCenat',
+  });
+  assert.equal(spec.compCreative.preset, 'serpent_ranked');
+  assert.equal(spec.compCreative.hooks.rankedList.streamer, 'KaiCenat');
+  assert.equal(spec.compCreativeFlags.rankedListEnabled, true);
+  assert.equal(spec.compCreativeFlags.phase1SchemaOnly, true);
+});
+
 test('appendClipCompTitleSuffix adds " and more..." for multi-clip comps', () => {
   const { appendClipCompTitleSuffix } = require('../lib/clip_comp');
   assert.equal(
