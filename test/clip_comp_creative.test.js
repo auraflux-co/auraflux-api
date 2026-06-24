@@ -25,7 +25,18 @@ test('mergeCompCreative applies serpent_ranked preset', () => {
   assert.equal(c.hooks.mode, 'hook_only');
   assert.equal(c.captions.whisper, false);
   assert.equal(c.audio.musicBed, 'low_trap');
-  assert.equal(c.audio.musicBedVolume, 0.10);
+  assert.equal(c.audio.musicBedVolume, 0.04);
+});
+
+test('resolveCompCreativeFromContext ignores stale card musicBedVolume', () => {
+  const { resolveCompCreativeFromContext } = require('../lib/clip_comp_creative');
+  const c = resolveCompCreativeFromContext({
+    jobCard: {
+      compCreativePreset: 'serpent_ranked',
+      compCreative: { preset: 'serpent_ranked', audio: { musicBedVolume: 0.1 } },
+    },
+  });
+  assert.equal(c.audio.musicBedVolume, 0.04);
 });
 
 test('mergeCompCreative applies serpent_ranked_vod preset', () => {
@@ -87,6 +98,28 @@ test('compCreativeAssemblyFlags marks phase1 schema only', () => {
   assert.equal(flags.layoutMode, 'full_bleed_crop');
   assert.equal(flags.rankedListEnabled, true);
   assert.equal(flags.phase1SchemaOnly, false);
+});
+
+test('compCreativeGate3Expectations serpent_ranked expects overlay not broadcast chrome', () => {
+  const { compCreativeGate3Expectations } = require('../lib/clip_comp_creative');
+  const exp = compCreativeGate3Expectations(PRESET_DEFAULTS.serpent_ranked);
+  assert.equal(exp.hasLogo, false);
+  assert.equal(exp.rankedOverlay.enabled, true);
+  assert.equal(exp.hasSidebar, false);
+  assert.equal(exp.clipCompLayoutMode, 'full_bleed_crop');
+});
+
+test('buildClipCompDesignSpec wires gate3 chrome from preset', () => {
+  const { buildClipCompDesignSpec } = require('../lib/clip_comp');
+  const spec = buildClipCompDesignSpec({
+    clipCount: 5,
+    compCreativePreset: 'serpent_ranked',
+    streamerHint: 'Cinna',
+  });
+  assert.equal(spec.chrome.layout, 'clip-comp');
+  assert.equal(spec.chrome.hasLogo, false);
+  assert.equal(spec.chrome.rankedOverlay.enabled, true);
+  assert.equal(spec.chrome.rankedOverlay.streamer, 'Cinna');
 });
 
 test('VALID_PRESETS includes custom', () => {

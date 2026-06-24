@@ -105,6 +105,23 @@ test('isDesktopOrIrlStream detects Just Chatting and empty category', () => {
   assert.equal(isDesktopOrIrlStream({ game: 'Fortnite' }), false);
 });
 
+test('buildClipCompSeoInput includes ranked list framing when compCreative set', () => {
+  const { buildClipCompSeoInput } = require('../lib/clip_comp_hooks');
+  const { mergeCompCreative } = require('../lib/clip_comp_creative');
+  const creative = mergeCompCreative({ preset: 'serpent_ranked', streamerHint: 'Cinna' });
+  creative.hooks.rankedList.theme = 'FUNNIEST';
+  const text = buildClipCompSeoInput({
+    leadStreamer: 'Cinna',
+    leadTitleDraft: 'Top 5 Funniest Cinna Moments — Wait for #1',
+    clipCount: 5,
+    isComp: true,
+    clips: [{ index: 0, displayName: 'Cinna', observation: 'Mirror gag.', hook: 'Mirror Trick' }],
+  }, creative);
+  assert.match(text, /Top 5/);
+  assert.match(text, /RANKING CINNA FUNNIEST MOMENTS/);
+  assert.match(text, /ranked countdown/i);
+});
+
 test('buildClipCompSeoInput includes lead title and observations', () => {
   const { buildClipCompSeoInput } = require('../lib/clip_comp_hooks');
   const text = buildClipCompSeoInput({

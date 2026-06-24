@@ -519,6 +519,9 @@ function mergeJsonAssemblyOutputs(intoJobs, jsonJobs) {
         intoJobs[id].status = 'completed';
       }
     }
+    if (intoJobs[id].status === 'assembling' && intoJobs[id].localPreviewUrl) {
+      intoJobs[id].status = 'gate3_failed';
+    }
     try { db.saveJob(id, intoJobs[id]); } catch (_) { /* saveJobCard also writes SQLite */ }
     merged++;
   }
@@ -1619,86 +1622,8 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
     saveJobCard(jobId, cardNow);
 
     // ── Poll assembly completion → persist final state ────────────────────
-    const ASM_POLL_INTERVAL = 15000;
-    const ASM_POLL_MAX = 120; // 30 min
-    let asmPollCount = 0;
-    const pollAssemblyCompletion = () => {
-      asmPollCount++;
-      const asmJob = assemblyJobs[assemblyId];
-      if (!asmJob) {
-        if (asmPollCount < ASM_POLL_MAX) setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
-        return;
-      }
-      const isDone = asmJob.status === 'done' || asmJob.status === 'manual_review' || asmJob.status === 'failed';
-      if (!isDone && asmPollCount < ASM_POLL_MAX) { setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL); return; }
-
-      const finalCard = persistedJobs[jobId] || cardNow;
-      if (asmJob.status === 'done' || asmJob.status === 'manual_review') {
-        finalCard.assembledAt = new Date().toISOString();
-        const _holdStages = new Set(['awaiting_review', 'metadata_review', 'music_review']);
-        if (!_holdStages.has(finalCard.stage)) {
-          finalCard.stage = 'assembled';
-        }
-        if (asmJob.outputPath) finalCard.outputPath = asmJob.outputPath;
-        const _resolvedUrl = asmJob.driveUrl || asmJob.localUrl || null;
-        if (_resolvedUrl) {
-          finalCard.finalUrl = _resolvedUrl;
-          finalCard.driveUrl = asmJob.driveUrl || finalCard.driveUrl || null;
-        }
-        if (asmJob.publishCopy) {
-          finalCard.publishCopy = asmJob.publishCopy;
-          finalCard.state = finalCard.state || {};
-          finalCard.state.savedOutputs = {
-            ...(finalCard.state.savedOutputs || {}),
-            publishCopy: asmJob.publishCopy,
-            driveUrl: asmJob.driveUrl || finalCard.state.savedOutputs?.driveUrl || null,
-          };
-        }
-        // Gate 3 = assembly QA (Gemini watches the assembled video)
-        if (asmJob.qaScore !== undefined) {
-          finalCard.gate3 = {
-            score:   asmJob.qaScore,
-            outcome: asmJob.qaOutcome || 'manual_review',
-            report:  asmJob.qaReport  || '',
-            checkedAt: new Date().toISOString()
-          };
-          if (asmJob.qaOutcome === 'pass' || asmJob.qaOutcome === 'manual_review') {
-            finalCard.stage = 'assembled';
-          }
-        }
-        if (asmJob.publishResult) {
-          finalCard.publishRecord = { publishedAt: new Date().toISOString(), ...asmJob.publishResult };
-          finalCard.stage = 'published';
-          tvAutoEnqueue(jobId); // CPD-958: published in-assembly → join the TV rotation
-        }
-        saveJobCard(jobId, finalCard);
-        logger.info({ jobId, stage: finalCard.stage, gate3Score: asmJob.qaScore || null, driveUrl: asmJob.driveUrl || null }, 'Assembly completion persisted');
-        const _cid = finalCard.customerId || 'c0';
-        const _durMs = asmJob.duration != null ? Math.round(Number(asmJob.duration) * 1000) : null;
-        nrAssemblyComplete(jobId, _cid, contentType, assemblyId, _durMs, asmJob.sizeMB ?? null, asmJob.qaScore ?? null);
-        nrEvent('PipelineRunTerminal', {
-          jobId,
-          assemblyId,
-          contentType,
-          customerId: _cid,
-          stage: finalCard.stage,
-          gate3Score: asmJob.qaScore ?? null,
-          gate3Outcome: asmJob.qaOutcome || null,
-          hasDriveUrl: !!(asmJob.driveUrl || finalCard.finalUrl)
-        });
-        pipelineBus.emit('gate3:complete', { jobId, score: asmJob.qaScore, outcome: asmJob.qaOutcome });
-      } else {
-        logger.warn({ jobId, asmStatus: asmJob.status }, 'Assembly ended without done/manual_review — card not updated');
-        nrEvent('AssemblyPersistSkipped', {
-          jobId,
-          assemblyId,
-          contentType,
-          asmStatus: asmJob.status || 'unknown',
-          error: (asmJob.error || '').slice(0, 500)
-        });
-      }
-    };
-    setTimeout(pollAssemblyCompletion, ASM_POLL_INTERVAL);
+    const { startAssemblyCompletionPoll } = require('./lib/assembly_card_persist');
+    startAssemblyCompletionPoll(jobId, assemblyId, contentType, { onPublished: tvAutoEnqueue });
 
   } catch(assembleErr) {
     logger.error({ jobId, err: assembleErr.message }, 'Auto-assembly POST failed — manual ASSEMBLE required');
@@ -2110,6 +2035,7 @@ app.get('/jobs', (req, res) => {
   const actionableJobs = Object.values(persistedJobs).filter(job => {
     const status = job.status || '';
     if (status === 'dismissed') return false;
+    if (status === 'gate3_failed') return true;
     const stage = job.stage || inferJobStage(job);
     if (stage === 'published') return false;
     if (stage === 'failed') return !!job.clipsOnly;
@@ -2118,7 +2044,28 @@ app.get('/jobs', (req, res) => {
 
   const { getJobBySpec } = require('./lib/db');
   const { buildGateStatusSnapshot } = require('./lib/job_spec_contracts');
+  const { reconcileStuckAssemblingJob } = require('./lib/assembly_card_persist');
   const jobsWithGateStatus = actionableJobs.map((job) => {
+    const jobKey = job.id || job.jobId;
+    const beforeStatus = job.status;
+    const reconciled = reconcileStuckAssemblingJob({ ...job });
+    if (
+      jobKey &&
+      reconciled.compCreative?.preset &&
+      (job.designSpec?.compCreative?.preset !== reconciled.compCreative.preset
+        || job.designSpec?.chrome?.compCreativePreset !== reconciled.compCreative.preset)
+    ) {
+      saveJobCard(jobKey, reconciled);
+    } else if (reconciled.status === 'gate3_failed' && beforeStatus === 'assembling' && jobKey) {
+      saveJobCard(jobKey, reconciled);
+    } else if (
+      jobKey &&
+      reconciled.status === 'completed' &&
+      reconciled.gate3?.outcome === 'pass' &&
+      (beforeStatus === 'assembling' || beforeStatus === 'gate3_failed')
+    ) {
+      saveJobCard(jobKey, reconciled);
+    }
     const candidates = [job.jobSpecId, job.scriptJobId, job.id].filter(Boolean);
     let spec = null;
     for (const id of candidates) {
@@ -2127,7 +2074,7 @@ app.get('/jobs', (req, res) => {
         if (spec) break;
       } catch (_e) {}
     }
-    return { ...job, jobId: job.jobId || job.id, id: job.id || job.jobId, gateStatus: spec ? buildGateStatusSnapshot(spec) : null };
+    return { ...reconciled, jobId: reconciled.jobId || reconciled.id, id: reconciled.id || reconciled.jobId, gateStatus: spec ? buildGateStatusSnapshot(spec) : null };
   });
 
   res.json({ ok: true, count: jobsWithGateStatus.length, jobs: jobsWithGateStatus });
@@ -2136,8 +2083,15 @@ app.get('/jobs', (req, res) => {
 // GET /job/:id — full card for Publish Prep hydration (publishCopy + driveUrl)
 app.get('/job/:id', (req, res) => {
   const jobId = req.params.id;
-  const card = persistedJobs[jobId];
+  let card = persistedJobs[jobId];
   if (!card) return res.status(404).json({ ok: false, error: 'Job not found: ' + jobId });
+
+  const { reconcileStuckAssemblingJob } = require('./lib/assembly_card_persist');
+  const reconciled = reconcileStuckAssemblingJob({ ...card });
+  if (reconciled !== card) {
+    saveJobCard(jobId, reconciled);
+    card = reconciled;
+  }
 
   const savedOutputs = card.state?.savedOutputs || {};
   const _pcUsable = (pc) => pc && (pc.title || pc.youtube || pc.platforms?.youtube);
@@ -3579,6 +3533,8 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
         streamers,
         items,
         platforms,
+        clipCompBrief: card.clipCompBrief || null,
+        compCreative: card.compCreative || null,
       },
     };
     const fakeRes = {
@@ -3597,7 +3553,7 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
       || (card.segments || []).filter((s) => s.type === 'source_clip').length
       || items.length
       || 0;
-    ensurePublishMetadataComplete(publishCopy, { streamers, cc, isShort, clipCount: regenClipCount });
+    ensurePublishMetadataComplete(publishCopy, { streamers, cc, isShort, clipCount: regenClipCount, compCreative: card.compCreative || null });
     publishCopy = normalizePublishCopyShape(publishCopy);
 
     const jobSpec = { ...card, contentType, formType: isShort ? 'short' : 'compilation', streamers, items };
@@ -4202,10 +4158,16 @@ app.post('/job/:id/reassemble', async (req, res) => {
   let reassembleClipHookTitles = null;
   let reassembleClipCompBrief = card.clipCompBrief || null;
   if (card.clipsOnly) {
+    const reassembleCompCreative = card.compCreative || card.designSpec?.compCreative || null;
+    const streamerHint = (card.streamers && card.streamers[0]) || reassembleCompCreative?.hooks?.rankedList?.streamer || null;
     reassembleDesignSpec = buildClipCompDesignSpec({
       clipCount: orderedClips.length || segmentData.length,
       sourceContentType: card.contentType || 'twitch-short',
+      compCreative: reassembleCompCreative,
+      compCreativePreset: reassembleCompCreative?.preset || card.compCreativePreset || null,
+      streamerHint,
     });
+    if (reassembleCompCreative) card.compCreative = reassembleDesignSpec.compCreative || reassembleCompCreative;
     card.designSpec = reassembleDesignSpec;
     card.clipCompProfile = card.clipCompProfile || 'streamer';
     card.deliverySpec = {
@@ -4213,6 +4175,8 @@ app.post('/job/:id/reassemble', async (req, res) => {
       ...buildClipCompDeliverySpec({
         platforms: card.platforms || card.deliverySpec?.platforms || ['youtube'],
         scheduledAt: card.scheduledPublishAt || card.deliverySpec?.scheduledAt || null,
+        contentType: card.contentType || 'twitch-short',
+        compCreative: card.compCreative,
       }),
     };
     card.order = { ...(card.order || {}), publish: { ...(card.order?.publish || {}), ...buildClipCompPublishOrder() } };
@@ -4225,14 +4189,25 @@ app.post('/job/:id/reassemble', async (req, res) => {
       game: c.game || '',
       viewCount: c.views || c.viewCount || null,
     }));
-    console.log(`[reassemble] ${jobId}: regenerating Gemini creative brief for ${orderedClips.length} clips...`);
-    reassembleClipCompBrief = await generateClipCompCreativeBrief(orderedClips, hookItems, {
-      log: (m) => console.log(`[reassemble] ${jobId}${m}`),
-    });
-    reassembleClipHookTitles = reassembleClipCompBrief.clips.map((c) => c.hook);
-    card.clipHookTitles = reassembleClipHookTitles;
-    card.clipCompBrief = reassembleClipCompBrief;
-    reassembleFullScript = buildClipCompSeoInput(reassembleClipCompBrief);
+    // Re-assemble from files is a stitch retry — don't block HTTP on Gemini (~30s+).
+    // Reuse existing brief unless operator explicitly asks to regenerate hooks.
+    if (card.clipCompBrief && !req.body?.regenerateBrief) {
+      reassembleClipCompBrief = card.clipCompBrief;
+      reassembleClipHookTitles = card.clipHookTitles
+        || (reassembleClipCompBrief.clips || []).map((c) => c.hook);
+      reassembleFullScript = buildClipCompSeoInput(reassembleClipCompBrief, card.compCreative || null);
+      console.log(`[reassemble] ${jobId}: reusing clipCompBrief (${(reassembleClipCompBrief.clips || []).length} clips)`);
+    } else {
+      console.log(`[reassemble] ${jobId}: regenerating Gemini creative brief for ${orderedClips.length} clips...`);
+      reassembleClipCompBrief = await generateClipCompCreativeBrief(orderedClips, hookItems, {
+        log: (m) => console.log(`[reassemble] ${jobId}${m}`),
+        compCreative: card.compCreative || null,
+      });
+      reassembleClipHookTitles = reassembleClipCompBrief.clips.map((c) => c.hook);
+      card.clipHookTitles = reassembleClipHookTitles;
+      card.clipCompBrief = reassembleClipCompBrief;
+      reassembleFullScript = buildClipCompSeoInput(reassembleClipCompBrief, card.compCreative || null);
+    }
   }
   saveJobCard(jobId, card);
 
@@ -4272,6 +4247,8 @@ app.post('/job/:id/reassemble', async (req, res) => {
     clipsOnly:   !!card.clipsOnly,
     expectedClips: orderedClips.length || segmentData.filter(s => s.type === 'source_clip').length,
     designSpec:   reassembleDesignSpec,
+    compCreative: card.compCreative || reassembleDesignSpec?.compCreative || null,
+    compCreativePreset: (card.compCreative || reassembleDesignSpec?.compCreative)?.preset || card.compCreativePreset || null,
     nbaItems:     card.nbaItems    || [],
     captionText:  card.captionText || null,
     captionStyle: card.captionStyle || null
@@ -4292,6 +4269,8 @@ app.post('/job/:id/reassemble', async (req, res) => {
     try {
       await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
       console.log(`[reassemble] ${jobId} r${retryNum}: /assemble fired (${segmentData.length} segs, ${clipIdx} clips)`);
+      const { startAssemblyCompletionPoll } = require('./lib/assembly_card_persist');
+      startAssemblyCompletionPoll(jobId, assemblyId, card.contentType || 'twitch-short', { onPublished: tvAutoEnqueue });
     } catch (err) {
       console.error(`[reassemble] ${jobId} r${retryNum}: /assemble failed — ${err.message}`);
     }
@@ -4623,13 +4602,14 @@ app.post('/generate-clip-comp', async (req, res) => {
       console.log(`[clip-comp] ${jobId}: generating Gemini creative brief for ${orderedClipUrls.length} clips...`);
       const clipCompBrief = await generateClipCompCreativeBrief(orderedClipUrls, hookItems, {
         log: (m) => console.log(`[clip-comp] ${jobId}${m}`),
+        compCreative: card.compCreative || null,
       });
       const clipHookTitles = clipCompBrief.clips.map((c) => c.hook);
       card.clipHookTitles = clipHookTitles;
       card.clipCompBrief = clipCompBrief;
       payload.clipHookTitles = clipHookTitles;
       payload.clipCompBrief = clipCompBrief;
-      payload.fullScript = buildClipCompSeoInput(clipCompBrief);
+      payload.fullScript = buildClipCompSeoInput(clipCompBrief, card.compCreative || null);
       payload.regenerateClipHooks = false;
       saveJobCard(jobId, card);
       await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
@@ -5292,7 +5272,15 @@ app.get('/assemble-progress/:id', (req, res) => {
     segmentDurations: job.segmentDurations || null,
     gate2Score:       job.gate2Score || null,
     gate2Outcome:     job.gate2Outcome || null,
+    qaScore:          job.qaScore ?? job.gate3aScore ?? null,
+    qaOutcome:        job.qaOutcome || null,
+    qaReport:         job.qaReport || job.gate3aResult?.ffmpegAlarm?.issue || null,
+    gate3aScore:      job.gate3aScore ?? null,
+    gate3aOutcome:    job.gate3aOutcome || null,
+    gate3Concerns:    job.gate3aResult?.concerns || null,
+    gate3Deductions:  (job.gate3aResult?.deductions || []).map((d) => d.reason).filter(Boolean),
     downloadUrl:      job.filename ? `/download/${job.filename}` : null,
+    localPreviewUrl:  job.localUrl || (job.filename ? `http://localhost:${process.env.PORT || 3000}/download/${job.filename}` : null),
     thumbFilename:    job.thumbFilename || null
   });
 });
@@ -5304,10 +5292,16 @@ app.get('/download/:file', (req, res) => {
   if (!fs.existsSync(filePath)) {
     // Also check tmp dir for thumbnail frames
     const tmpPath = path.join(TMP_DIR, path.basename(req.params.file));
-    if (fs.existsSync(tmpPath)) return res.download(tmpPath);
+    if (fs.existsSync(tmpPath)) {
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Content-Type', 'video/mp4');
+      return res.sendFile(tmpPath);
+    }
     return res.status(404).json({ error: 'File not found' });
   }
-  res.download(filePath);
+  res.setHeader('Accept-Ranges', 'bytes');
+  res.setHeader('Content-Type', 'video/mp4');
+  res.sendFile(filePath);
 });
 
 // GET /thumbnail/:assemblyId — get extracted thumbnail frame for a job

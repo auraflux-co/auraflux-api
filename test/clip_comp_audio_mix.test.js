@@ -22,3 +22,24 @@ test('shouldMixCompAudio true when bed or sfx enabled', () => {
 test('serpent_pack resolves whoosh sfx', () => {
   assert.ok(resolveCutSfxPath('serpent_pack'));
 });
+
+test('sidechainBedParams keeps partial dry mix for speech-heavy clip 1', () => {
+  const { sidechainBedParams, buildCompAudioFilterParts } = require('../lib/clip_comp_audio_mix');
+  const sc = sidechainBedParams({ duckSpeech: true });
+  assert.ok(sc);
+  assert.ok(sc.mix < 1);
+  assert.ok(sc.ratio <= 8);
+  const { filterParts } = buildCompAudioFilterParts({
+    totalDur: 60,
+    bedVol: 0.055,
+    bedInputIdx: 1,
+    duckParams: sc,
+    boundaries: [12, 24],
+    sfxInputStartIdx: 2,
+    sfxPaths: ['whoosh.mp3', 'impact.mp3'],
+  });
+  const graph = filterParts.join(';');
+  assert.match(graph, /sidechaincompress=.*mix=0\.18/);
+  assert.match(graph, /\[bedfloor\]/);
+  assert.match(graph, /\[1:a\].*atrim=0:60/);
+});

@@ -4129,6 +4129,8 @@ function pollAssemblyProgress(batchJobId, assemblyId) {
         if (pct >= 100 || resp.status === 'done') {
           // ✅ Assembly complete
           asmComplete(batchJobId, resp);
+        } else if (resp.status === 'failed' && resp.downloadUrl) {
+          asmGate3Failed(batchJobId, resp);
         } else if (resp.status === 'failed') {
           asmFailed(batchJobId, resp.error || 'FFmpeg error');
         } else if (attempts < 150) {
@@ -4275,6 +4277,46 @@ function triggerGate5(job) {
     jobTitle: job.title,
     contentType: job.type || 'twitch'
   }));
+}
+
+function asmGate3Failed(batchJobId, resp) {
+  var badge = document.getElementById('asm-badge-' + batchJobId);
+  if (badge) {
+    badge.style.background = 'rgba(231,76,60,0.15)';
+    badge.style.borderColor = 'rgba(231,76,60,0.5)';
+    badge.style.color = '#e74c3c';
+    badge.innerHTML = '❌ GATE 3 QA FAILED' + (resp.qaScore != null ? (' — ' + resp.qaScore + '/100') : '');
+  }
+  var logEl = document.getElementById('asm-log-' + batchJobId);
+  if (logEl) {
+    logEl.textContent += '\n❌ Gate 3 hard fail' + (resp.qaScore != null ? (' (' + resp.qaScore + '/100)') : '') + '\n';
+    if (resp.qaReport) logEl.textContent += resp.qaReport + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  var job = JOBS.find(function(j) { return j.id === batchJobId; });
+  if (job) {
+    var rawUrl = resp.localPreviewUrl || resp.downloadUrl || (resp.filename ? ('/download/' + resp.filename) : '');
+    var previewUrl = rawUrl ? (rawUrl.indexOf('http') === 0 ? rawUrl : (CFG.ffmpegUrl + rawUrl)) : '';
+    if (previewUrl) {
+      job.localPreviewUrl = previewUrl;
+      job.finalUrl = previewUrl;
+    }
+    if (resp.filename) job.filename = resp.filename;
+    job.status = 'gate3_failed';
+    job.qaOutcome = resp.qaOutcome || 'fail';
+    job.gate3 = {
+      score: resp.qaScore != null ? resp.qaScore : (resp.gate3aScore != null ? resp.gate3aScore : null),
+      outcome: 'fail',
+      gate3aScore: resp.gate3aScore != null ? resp.gate3aScore : null,
+      gate3aOutcome: resp.gate3aOutcome || null,
+      report: [resp.qaReport].concat(resp.gate3Concerns || []).concat(resp.gate3Deductions || []).filter(Boolean).join('\n'),
+      concerns: resp.gate3Concerns || [],
+      checkedAt: new Date().toISOString()
+    };
+    saveJobs();
+    renderQueue();
+    toggleJobMediaPanel(batchJobId);
+  }
 }
 
 function asmFailed(batchJobId, errMsg) {
@@ -4684,7 +4726,9 @@ function restoreJobsFromServer(showAlert, _retryCount) {
 
         var isAssembled = isAwaitingOperator || !!(serverJob.assembledAt);
         var isAssembling = serverJob.status === 'assembling';
-        var restoredStatus = (isFailed && serverJob.clipsOnly) ? 'failed'
+        var isGate3Failed = serverJob.status === 'gate3_failed' || (qaOutcome === 'fail' && serverJob.clipsOnly);
+        var restoredStatus = isGate3Failed ? 'gate3_failed'
+          : (isFailed && serverJob.clipsOnly) ? 'failed'
           : isAssembling ? 'assembling'
           : isAssembled ? 'completed'
           : (serverJob.clipsOnly ? 'processing' : 'all_sent');
@@ -4717,7 +4761,7 @@ function restoreJobsFromServer(showAlert, _retryCount) {
         var cardTitle = serverJob.title || (contentType.toUpperCase() + ' ' + dateLabel);
         var savedOut = serverJob.state && serverJob.state.savedOutputs ? serverJob.state.savedOutputs : {};
         var restoredPublishCopy = serverPublishCopy(serverJob);
-        var restoredDriveUrl = serverJob.driveUrl || savedOut.driveUrl || serverJob.finalUrl || null;
+        var restoredDriveUrl = serverJob.driveUrl || savedOut.driveUrl || serverJob.finalUrl || serverJob.localPreviewUrl || null;
 
         var restoredJob = {
           id:          serverJobId,
@@ -4744,8 +4788,17 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           assembledAt: serverJob.assembledAt || null,
           assemblyId: serverJob.assemblyId || null,
           assemblyError: serverJob.assemblyError || null,
+          gate3: serverJob.gate3 || null,
+          qaOutcome: serverJob.qaOutcome || null,
+          localPreviewUrl: serverJob.localPreviewUrl || null,
+          filename: serverJob.filename || null,
+          outputPath: serverJob.outputPath || null,
+          compCreative: serverJob.compCreative || (serverJob.designSpec && serverJob.designSpec.compCreative) || null,
+          compCreativePreset: serverJob.compCreativePreset || serverJob.compCreative?.preset || null,
+          designSpec: serverJob.designSpec || null,
           clipHookTitles: serverJob.clipHookTitles || null,
           captionsApplied: serverJob.captionsApplied,
+          whisperCaptionsExpected: serverJob.whisperCaptionsExpected,
           clipCompTransformApplied: serverJob.clipCompTransformApplied,
           publishCopy: restoredPublishCopy,
           metadataQaViolations: serverJob.metadataQaViolations || null,
@@ -4879,6 +4932,60 @@ function releasePostLivePublish(jobId) {
   xhr.send(JSON.stringify({ driveUrl: (driveUrl && driveUrl.trim()) ? driveUrl.trim() : undefined }));
 }
 
+function resolveJobPreviewUrl(job) {
+  if (!job) return '';
+  var base = '';
+  if (job.driveUrl && String(job.driveUrl).indexOf('http') === 0) base = job.driveUrl;
+  else if (job.localPreviewUrl) {
+    base = job.localPreviewUrl.indexOf('http') === 0
+      ? job.localPreviewUrl
+      : (CFG.ffmpegUrl + job.localPreviewUrl);
+  } else if (job.finalUrl && String(job.finalUrl).indexOf('/download/') > -1) {
+    base = job.finalUrl.indexOf('http') === 0 ? job.finalUrl : (CFG.ffmpegUrl + job.finalUrl);
+  } else if (job.filename) base = CFG.ffmpegUrl + '/download/' + job.filename;
+  if (!base) return '';
+  var bust = job.assembledAt ? Date.parse(job.assembledAt) : (job.assemblyId || job.id || Date.now());
+  return base + (base.indexOf('?') > -1 ? '&' : '?') + 'v=' + bust;
+}
+
+function jobGate3Failed(job) {
+  return job.status === 'gate3_failed'
+    || job.qaOutcome === 'fail'
+    || (job.gate3 && job.gate3.outcome === 'fail');
+}
+
+function jobActivelyAssembling(job) {
+  return job.status === 'assembling' && !jobGate3Failed(job);
+}
+
+function formatGate3ReportText(job) {
+  var g3 = job.gate3 || {};
+  var lines = [];
+  if (g3.score != null) lines.push('Score: ' + g3.score + '/100');
+  if (g3.gate3aOutcome) lines.push('Gate 3a outcome: ' + g3.gate3aOutcome);
+  if (g3.ffmpegAlarm && g3.ffmpegAlarm.issue) lines.push(g3.ffmpegAlarm.issue);
+  if (g3.report) lines.push(g3.report);
+  if (g3.concerns && g3.concerns.length) lines.push('Concerns: ' + g3.concerns.join(' · '));
+  return lines.join('\n');
+}
+
+function jobWhisperCaptionsExpected(job) {
+  var cr = job.compCreative || (job.designSpec && job.designSpec.compCreative) || null;
+  if (job.compCreativePreset && (!cr || !cr.preset)) {
+    cr = { preset: job.compCreativePreset, captions: {}, hooks: {} };
+  }
+  if (job.whisperCaptionsExpected === false) return false;
+  if (!cr) return true;
+  if (cr.captions && cr.captions.whisper === false) return false;
+  if (cr.hooks && cr.hooks.mode === 'hook_only') return false;
+  return true;
+}
+
+function toggleJobMediaPanel(jobId) {
+  var el = document.getElementById('job-media-' + jobId);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
 function renderQueue() {
   try {
   g('queue-count').textContent = JOBS.length + ' JOBS';
@@ -4905,7 +5012,12 @@ function renderQueue() {
       var hgDone = doneSegs.length===totalSegs&&totalSegs>0;
       pipe += pipeStep('HEYGEN '+doneSegs.length+'/'+totalSegs, hgDone, anyRendering, '#e74c3c');
     }
-    pipe += pipeStep('FFMPEG', !!(job.assembledAt || job.driveUrl), !!(status==='processing'||status==='all_sent')&&!job.assembledAt&&!job.driveUrl, '#e67e22');
+    pipe += pipeStep('FFMPEG', !!(job.assembledAt || job.driveUrl || resolveJobPreviewUrl(job)), !!(status==='processing'||status==='all_sent'||jobActivelyAssembling(job))&&!job.assembledAt&&!job.driveUrl&&!resolveJobPreviewUrl(job), '#e67e22');
+    if (job.clipsOnly) {
+      var g3Pass = !!(job.gate3 && job.gate3.outcome !== 'fail' && job.gate3.score >= 60);
+      var g3Fail = jobGate3Failed(job);
+      pipe += pipeStep('GATE 3 QA', g3Pass || (!!job.driveUrl && !g3Fail), jobActivelyAssembling(job) || (g3Fail && !g3Pass), g3Fail ? '#e74c3c' : '#9b59b6');
+    }
     pipe += pipeStep('GATE 5 QA', !!(job.gate5&&job.gate5.score>=85), !!(job.assembledAt&&!job.gate5), '#3498db');
     var isGate5Running = !!(job.stage === 'gate5_forced' || job.stage === 'gate5_running');
     pipe += pipeStep('UPLOAD-POST', isGate5Running, !!(job.gate5&&!isGate5Running&&job.stage!=='published'), '#c7af4f');
@@ -4952,11 +5064,20 @@ function renderQueue() {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:11px;color:#e74c3c;">'
         + '❌ ASSEMBLY FAILED — ' + escHtml(job.assemblyError || 'clip download failed') + '. Dismiss and re-run CLIPS COMP.'
         + '</div>';
-    } else if (status === 'assembling') {
+    } else if (jobGate3Failed(job) && resolveJobPreviewUrl(job)) {
+      var g3Score = (job.gate3 && job.gate3.score != null) ? job.gate3.score + '/100' : 'FAIL';
+      var g3Snippet = escHtml(formatGate3ReportText(job).slice(0, 420));
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:11px;color:#e74c3c;">'
+        + '❌ <strong>GATE 3 QA FAILED</strong> (' + escHtml(String(g3Score)) + ') — MP4 is ready locally. '
+        + 'Click <strong>▶ PREVIEW MP4</strong> / <strong>📋 GATE 3 QA</strong>, then <strong>📁 RE-ASSEMBLE FROM FILES</strong> after fixing QA spec.'
+        + '<div style="margin-top:8px;padding:8px;background:rgba(0,0,0,0.25);border-radius:4px;color:rgba(255,255,255,0.72);font-family:monospace;font-size:10px;white-space:pre-wrap;max-height:120px;overflow:auto;">'
+        + g3Snippet
+        + '</div></div>';
+    } else if (jobActivelyAssembling(job)) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.12);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:11px;color:#3498db;">'
         + '⏳ <strong>Re-assembling now</strong> — old preview/SEO stays visible until FFmpeg finishes. Watch for <strong>✅ ASSEMBLY COMPLETE</strong> on the card (or ↩ RESTORE JOBS after ~5–10 min).'
         + '</div>';
-    } else if (job.clipsOnly && !job.driveUrl && jobStage !== 'failed' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
+    } else if (job.clipsOnly && !job.driveUrl && !resolveJobPreviewUrl(job) && jobStage !== 'failed' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:11px;color:#3498db;">'
         + '⏳ Assembling clip comp — preview + SEO will appear when FFmpeg finishes.'
         + '</div>';
@@ -5006,9 +5127,19 @@ function renderQueue() {
         }
       }
       if (job.clipsOnly) {
-        metaStrip += '<div style="font-size:10px;margin-top:4px;color:'+(job.captionsApplied ? '#2ecc71' : '#e67e22')+';">'
-          + (job.captionsApplied ? '✓ Whisper captions burned in video' : '⚠ Whisper captions missing — RE-ASSEMBLE FROM FILES')
-          + '</div>';
+        if (!jobWhisperCaptionsExpected(job)) {
+          metaStrip += '<div style="font-size:10px;margin-top:4px;color:rgba(255,255,255,0.45);">'
+            + '✓ Whisper off — creative preset uses burned hooks only (no auto-captions)'
+            + '</div>';
+        } else if (job.captionsApplied) {
+          metaStrip += '<div style="font-size:10px;margin-top:4px;color:#2ecc71;">'
+            + '✓ Whisper captions burned in video'
+            + '</div>';
+        } else {
+          metaStrip += '<div style="font-size:10px;margin-top:4px;color:#e67e22;">'
+            + '⚠ Whisper captions missing — RE-ASSEMBLE FROM FILES'
+            + '</div>';
+        }
       }
       metaStrip += '</div>';
     }
@@ -5019,7 +5150,14 @@ function renderQueue() {
       var asmLabel = job.assembledAt ? '↻ RE-ASSEMBLE' : '⚙ ASSEMBLE';
       actions += '<button onclick="toggleAssembly(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm">'+asmLabel+'</button>';
     }
-    if (job.assembledAt && job.finalUrl && job.finalUrl.indexOf('/download/') > -1 && job.finalUrl.slice(-1) !== '/') {
+    var previewUrl = resolveJobPreviewUrl(job);
+    if (previewUrl) {
+      actions += '<button onclick="toggleJobMediaPanel(\'' + job.id + '\')" class="btn btn-green btn-sm" style="font-weight:700;">▶ PREVIEW MP4</button>';
+      if (job.gate3 || jobGate3Failed(job)) {
+        actions += '<button onclick="toggleJobMediaPanel(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Show Gate 3 QA report + video">📋 GATE 3 QA</button>';
+      }
+      actions += '<a href="' + previewUrl + '" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;">📥 MP4</a>';
+    } else if (job.assembledAt && job.finalUrl && job.finalUrl.indexOf('/download/') > -1 && job.finalUrl.slice(-1) !== '/') {
       var dlUrl = job.finalUrl.startsWith('http') ? job.finalUrl : CFG.ffmpegUrl + job.finalUrl;
       actions += '<a href="'+dlUrl+'" target="_blank" class="btn btn-green btn-sm" style="text-decoration:none;">📥 MP4</a>';
       actions += '<button onclick="triggerDriveCanva(\'' + job.id + '\',\'' + (job.filename||'') + '\',\'' + (job.title||'') + '\')" class="btn btn-gold btn-sm">☁️ DRIVE→CANVA</button>';
@@ -5072,13 +5210,13 @@ function renderQueue() {
     }
     // RE-ASSEMBLE FROM FILES — uses manual_segments folder overrides, skips Gate 2 (chrome burning).
     // Show for clip comps / post-HeyGen jobs including awaiting_review (operator re-burn after code fixes).
-    var pastHeygenStage = ['all_sent','awaiting_manual_segments','heygen_done','assembled','assembling',
+    var pastHeygenStage = ['all_sent','awaiting_manual_segments','heygen_done','assembled','assembling','gate3_failed',
       'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1
       || ['awaiting_review','metadata_review','publish_scheduled','assembled'].indexOf(jobStage) > -1
-      || !!(job.assembledAt || job.driveUrl);
-    if (pastHeygenStage && jobStage !== 'published' && status !== 'assembling') {
+      || !!(job.assembledAt || job.driveUrl || resolveJobPreviewUrl(job));
+    if (pastHeygenStage && jobStage !== 'published' && !jobActivelyAssembling(job)) {
       actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Skip Gate 2 — build segments from card data and fire assembly. Files in manual_segments folder are used automatically.">📁 RE-ASSEMBLE FROM FILES</button>';
-    } else if (status === 'assembling') {
+    } else if (jobActivelyAssembling(job)) {
       actions += '<span style="font-size:10px;color:#3498db;font-family:monospace;align-self:center;">⏳ assembling…</span>';
     }
     actions += '</div>';
@@ -5125,11 +5263,23 @@ function renderQueue() {
       +'</div>'
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
-    var tagCls = status==='completed'||status==='all_sent'?'tag-done':status==='failed'?'tag-failed':'tag-processing';
-    var tagLbl = (jobStage === 'failed') ? 'FAILED' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (job.clipsOnly && !job.driveUrl ? 'ASSEMBLING' : status.toUpperCase().replace('_',' '));
+    var tagCls = status==='completed'||status==='all_sent'?'tag-done':(status==='failed'||status==='gate3_failed')?'tag-failed':'tag-processing';
+    var tagLbl = (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl)) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
     var pctBar = (status==='processing'||anyRendering)?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
 
-    return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':status==='failed'?'failed':'')+'" id="job-'+job.id+'">'
+    var mediaPanel = '';
+    if (previewUrl || job.gate3) {
+      var g3PanelText = escHtml(formatGate3ReportText(job));
+      mediaPanel = '<div id="job-media-' + job.id + '" style="display:none;margin:10px 0;padding:10px;background:rgba(0,0,0,0.35);border:1px solid rgba(199,175,79,0.25);border-radius:8px;">'
+        + (previewUrl ? '<video controls playsinline preload="metadata" src="' + previewUrl + '" onerror="this.outerHTML=\'<div style=&quot;color:#e74c3c;font-size:11px;padding:8px;&quot;>Preview unavailable — click ↩ RESTORE JOBS or wait for reassemble to finish.</div>\'" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:10px;"></video>' : '')
+        + (job.gate3 ? '<div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.75);letter-spacing:2px;margin-bottom:6px;">GATE 3 QA (GEMINI)</div>'
+          + '<div style="font-size:10px;color:rgba(255,255,255,0.75);font-family:monospace;white-space:pre-wrap;max-height:220px;overflow:auto;">'
+          + g3PanelText
+          + '</div>' : '')
+        + '</div>';
+    }
+
+    return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':(status==='failed'||status==='gate3_failed')?'failed':'')+'" id="job-'+job.id+'">'
       +'<div class="job-row-top"><div class="job-info" style="flex:1;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
       +'<div><div class="job-title">'+job.title+'</div>'
@@ -5144,7 +5294,7 @@ function renderQueue() {
       +'</div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+pipe+creativeBar+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+platBar+actions+segToggle+segHtml
+      +pctBar+pipe+creativeBar+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+mediaPanel+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -5784,7 +5934,7 @@ function _doReassembleConfirmed(jobId, job) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/reassemble', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 20000;
+  xhr.timeout = 120000;
   xhr.onload = function() {
     try {
       var resp = JSON.parse(xhr.responseText);
@@ -5812,9 +5962,13 @@ function _doReassembleConfirmed(jobId, job) {
       alert('❌ Reassemble failed: ' + e.message);
     }
   };
-  xhr.onerror = xhr.ontimeout = function() {
+  xhr.onerror = function() {
     cwn_log('[reassemble] Server unreachable', true);
-    alert('❌ Server unreachable — is server.js running?');
+    alert('❌ Server unreachable — is server.js running on ' + CFG.ffmpegUrl + '?');
+  };
+  xhr.ontimeout = function() {
+    cwn_log('[reassemble] Request timed out (server may still be assembling — check queue)', true);
+    alert('⏳ Reassemble is taking longer than expected.\n\nThe server may still be working — watch the job queue and pm2 logs before retrying.');
   };
   xhr.send(JSON.stringify({}));
 }
@@ -11625,9 +11779,9 @@ function previewJobVideo(jobId, downloadOnly) {
       if (serverJob) mergeServerJobIntoLocal(jobId, serverJob);
       job = JOBS.find(function(j) { return j.id === jobId; }) || job;
     } catch (_e) { /* use local card */ }
-    var cloudUrl = (job && (job.driveUrl || job.finalUrl)) || '';
+    var cloudUrl = resolveJobPreviewUrl(job) || (job && (job.driveUrl || job.finalUrl)) || '';
     if (!cloudUrl || cloudUrl.indexOf('http') !== 0) {
-      alert('No cloud video URL yet — wait for assembly upload to finish, then click ↩ RESTORE JOBS.');
+      alert('No video URL yet — wait for assembly to finish, or click ↩ RESTORE JOBS if Gate 3 failed with a local MP4.');
       return;
     }
     var previewUrl = cloudUrl + (cloudUrl.indexOf('?') > -1 ? '&' : '?') + 'v=' + (job.assembledAt ? Date.parse(job.assembledAt) : Date.now());
@@ -11673,14 +11827,24 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.scheduledPublishAt) job.scheduledPublishAt = serverJob.scheduledPublishAt;
   if (serverJob.stage) job.stage = serverJob.stage;
   if (serverJob.finalUrl) job.finalUrl = serverJob.finalUrl;
+  if (serverJob.localPreviewUrl) job.localPreviewUrl = serverJob.localPreviewUrl;
+  if (serverJob.filename) job.filename = serverJob.filename;
+  if (serverJob.outputPath) job.outputPath = serverJob.outputPath;
+  if (serverJob.gate3) job.gate3 = serverJob.gate3;
+  if (serverJob.qaOutcome) job.qaOutcome = serverJob.qaOutcome;
+  if (serverJob.status === 'gate3_failed') job.status = 'gate3_failed';
   if (serverJob.metadataQaViolations) job.metadataQaViolations = serverJob.metadataQaViolations;
   if (serverJob.clipHookTitles && serverJob.clipHookTitles.length) job.clipHookTitles = serverJob.clipHookTitles;
   if (serverJob.captionsApplied === true || serverJob.captionsApplied === false) job.captionsApplied = serverJob.captionsApplied;
+  if (serverJob.whisperCaptionsExpected === true || serverJob.whisperCaptionsExpected === false) {
+    job.whisperCaptionsExpected = serverJob.whisperCaptionsExpected;
+  }
   if (serverJob.clipCompTransformApplied === true || serverJob.clipCompTransformApplied === false) {
     job.clipCompTransformApplied = serverJob.clipCompTransformApplied;
   }
   if (serverJob.compCreative) job.compCreative = serverJob.compCreative;
   if (serverJob.compCreativePreset) job.compCreativePreset = serverJob.compCreativePreset;
+  if (serverJob.designSpec) job.designSpec = serverJob.designSpec;
   if (serverJob.designSpec && serverJob.designSpec.compCreative) job.compCreative = serverJob.designSpec.compCreative;
   if (serverJob.publishHold) job.publishHold = serverJob.publishHold;
   if (serverJob.deliverySpec) job.deliverySpec = serverJob.deliverySpec;
