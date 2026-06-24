@@ -869,13 +869,24 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   </select>
                   <div id="comp-creative-chips" class="gen-comp-creative-chips"></div>
                   <div id="comp-creative-adv" class="gen-comp-creative-adv">
+                    <div id="comp-creative-serpent-hint" style="display:none;padding:8px 10px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(199,175,79,0.25);background:rgba(199,175,79,0.08);color:rgba(255,255,255,0.72);line-height:1.45;font-size:10px;">
+                      <strong style="color:rgba(199,175,79,0.95);">Ranked list:</strong> the on-screen countdown matches your lineup size (classic Top&nbsp;5 = pick <strong>5 clips</strong> in comp order). Clip #1 in the lineup opens at the highest rank still in play.
+                    </div>
                     <label>Ranked streamer <input type="text" id="comp-creative-streamer" placeholder="Lacy" oninput="refreshCompCreativeChips()"></label>
-                    <label>List theme
+                    <label>Rank title word <span style="opacity:0.55;">(header only — not the per-clip hook)</span>
                       <select id="comp-creative-theme" onchange="refreshCompCreativeChips()">
+                        <option value="MOMENTS">MOMENTS (neutral)</option>
                         <option value="FUNNIEST">FUNNIEST</option>
                         <option value="AURA">AURA</option>
                         <option value="CORE">CORE</option>
                         <option value="FAN_MAIL">FAN MAIL</option>
+                      </select>
+                    </label>
+                    <label>On-screen text
+                      <select id="comp-creative-hook-mode" onchange="refreshCompCreativeChips()">
+                        <option value="hook_only">Burned hooks only (recommended for ranked)</option>
+                        <option value="both">Hooks + whisper captions</option>
+                        <option value="whisper_only">Whisper captions only (no burned hooks)</option>
                       </select>
                     </label>
                     <label>Related VOD (Short funnel) <input type="text" id="comp-creative-related-vod" placeholder="YouTube video ID or URL" oninput="refreshCompCreativeChips()"></label>
@@ -10249,7 +10260,7 @@ function loadCompCreativePresetFromStorage() {
     var raw = localStorage.getItem(COMP_CREATIVE_STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) { /* ignore */ }
-  return { preset: 'classic_blur_pad', streamer: '', theme: 'FUNNIEST' };
+  return { preset: 'classic_blur_pad', streamer: '', theme: 'MOMENTS', hookMode: 'hook_only' };
 }
 
 function saveCompCreativePresetToStorage() {
@@ -10257,7 +10268,8 @@ function saveCompCreativePresetToStorage() {
   var data = {
     preset: sel ? sel.value : 'classic_blur_pad',
     streamer: (g('comp-creative-streamer') && g('comp-creative-streamer').value) || '',
-    theme: (g('comp-creative-theme') && g('comp-creative-theme').value) || 'FUNNIEST',
+    theme: (g('comp-creative-theme') && g('comp-creative-theme').value) || 'MOMENTS',
+    hookMode: (g('comp-creative-hook-mode') && g('comp-creative-hook-mode').value) || 'both',
     relatedVideoParentId: (g('comp-creative-related-vod') && g('comp-creative-related-vod').value) || ''
   };
   try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
@@ -10272,11 +10284,15 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides = overrides || {};
     if (preset === 'custom' || preset === 'serpent_ranked') {
       overrides.hooks = overrides.hooks || {};
+      var hookMode = stored.hookMode || (preset === 'serpent_ranked' ? 'hook_only' : 'both');
+      overrides.hooks.mode = hookMode;
       overrides.hooks.rankedList = {
         enabled: preset === 'serpent_ranked',
         streamer: stored.streamer || streamerHint || '',
-        theme: stored.theme || 'FUNNIEST'
+        theme: stored.theme || 'MOMENTS'
       };
+      overrides.captions = overrides.captions || {};
+      overrides.captions.whisper = hookMode !== 'hook_only';
     }
     if (stored.relatedVideoParentId) {
       overrides.delivery = overrides.delivery || {};
@@ -10301,6 +10317,12 @@ function refreshCompCreativeChips() {
   var stored = saveCompCreativePresetToStorage();
   var adv = g('comp-creative-adv');
   if (adv) adv.classList.toggle('open', stored.preset === 'custom' || stored.preset === 'serpent_ranked');
+  var serpentHint = g('comp-creative-serpent-hint');
+  if (serpentHint) serpentHint.style.display = stored.preset === 'serpent_ranked' ? 'block' : 'none';
+  if (stored.preset === 'serpent_ranked') {
+    var hm = g('comp-creative-hook-mode');
+    if (hm && hm.value === 'both' && !hm.dataset.userPicked) hm.value = 'hook_only';
+  }
   var payload = buildCompCreativeRequestPayload('');
   var pseudo = { preset: stored.preset };
   if (stored.preset === 'full_bleed' || stored.preset === 'serpent_ranked' || stored.preset === 'dahbluh_clean' || stored.preset === 'twitch_comp_vod') {
@@ -10309,7 +10331,8 @@ function refreshCompCreativeChips() {
     pseudo.layout = { mode: 'blur_pad' };
   }
   if (stored.preset === 'serpent_ranked') {
-    pseudo.hooks = { mode: 'both', rankedList: { enabled: true, streamer: stored.streamer, theme: stored.theme } };
+    pseudo.hooks = { mode: stored.hookMode || 'hook_only', rankedList: { enabled: true, streamer: stored.streamer, theme: stored.theme } };
+    pseudo.captions = { whisper: (stored.hookMode || 'hook_only') !== 'hook_only' };
     pseudo.audio = { musicBed: 'low_trap', cutSfx: 'serpent_pack' };
   }
   if (stored.preset === 'twitch_comp_vod') {
@@ -10324,6 +10347,9 @@ function refreshCompCreativeChips() {
 }
 
 function onCompCreativePresetChange() {
+  var hm = g('comp-creative-hook-mode');
+  var sel = g('comp-creative-preset');
+  if (hm && sel && sel.value === 'serpent_ranked' && hm.value === 'both') hm.value = 'hook_only';
   refreshCompCreativeChips();
 }
 
@@ -10333,6 +10359,10 @@ function initCompCreativePanel() {
   if (sel && stored.preset) sel.value = stored.preset;
   if (g('comp-creative-streamer') && stored.streamer) g('comp-creative-streamer').value = stored.streamer;
   if (g('comp-creative-theme') && stored.theme) g('comp-creative-theme').value = stored.theme;
+  if (g('comp-creative-hook-mode')) {
+    g('comp-creative-hook-mode').value = stored.hookMode || (stored.preset === 'serpent_ranked' ? 'hook_only' : 'both');
+    g('comp-creative-hook-mode').onchange = function() { this.dataset.userPicked = '1'; refreshCompCreativeChips(); };
+  }
   if (g('comp-creative-related-vod') && stored.relatedVideoParentId) g('comp-creative-related-vod').value = stored.relatedVideoParentId;
   refreshCompCreativeChips();
 }
@@ -10642,7 +10672,9 @@ function _dispatchClipShort(clip, contentType, title, platforms, statusId, sched
 
 function triggerClipComp() {
   // CPD-935: clips-only compilation — comp lineup order (or picker order) stitches into ONE short.
-  var COMP_CLIP_COUNT = 4;
+  var creativeStored = loadCompCreativePresetFromStorage();
+  var isSerpentRanked = creativeStored.preset === 'serpent_ranked';
+  var COMP_CLIP_COUNT = isSerpentRanked ? 5 : 4;
   var picked = getCompLineupForDispatch(COMP_CLIP_COUNT);
   var isPostLivePicker = picked.length > 0 && picked.every(function(p) { return p.clip && p.clip.postLiveVod; });
   var minCompClips = isPostLivePicker ? 1 : COMP_CLIP_COUNT;
@@ -10652,8 +10684,13 @@ function triggerClipComp() {
       previewTwitchClips();
     }
     var statusEl = g('twitch-fetch-status');
-    if (statusEl) statusEl.textContent = 'Pick ' + COMP_CLIP_COUNT + ' clips above, then click CLIPS COMP — they stitch into one short.';
+    if (statusEl) statusEl.textContent = (isSerpentRanked
+      ? 'Ranked list Short — pick 5 clips in comp order (lineup size sets the countdown), then CLIPS COMP.'
+      : 'Pick ' + COMP_CLIP_COUNT + ' clips above, then click CLIPS COMP — they stitch into one short.');
     return;
+  }
+  if (isSerpentRanked && picked.length !== 5) {
+    if (!confirm('Ranked list Short is designed for a Top 5 (5 clips). You have ' + picked.length + ' — the countdown will show ' + picked.length + ' down to #1. Continue anyway?')) return;
   }
   if (picked.length < minCompClips) {
     alert('CLIPS COMP needs at least ' + minCompClips + ' clip' + (minCompClips !== 1 ? 's' : '') + ' — only ' + picked.length + ' selected.');

@@ -25,6 +25,21 @@ test('resolveActiveRankSlot countdown from first clip', () => {
   assert.equal(resolveActiveRankSlot(PRESET_DEFAULTS.serpent_ranked, 3, 4), 2);
 });
 
+test('resolveActiveRankSlot follows synced slotCount', () => {
+  const c = { hooks: { rankedList: { enabled: true, slotCount: 4 } } };
+  assert.equal(resolveActiveRankSlot(c, 0, 4), 4);
+  assert.equal(resolveActiveRankSlot(c, 3, 4), 1);
+});
+
+test('buildRankedListHeader neutral MOMENTS theme', () => {
+  const { buildRankedListHeader } = require('../lib/clip_comp_titles');
+  const header = buildRankedListHeader({
+    hooks: { rankedList: { streamer: 'Cinna', theme: 'MOMENTS' } },
+  });
+  assert.equal(header, 'RANKING CINNA MOMENTS');
+  assert.ok(!header.includes('MOMENTS MOMENTS'));
+});
+
 test('burnRankedListOverlay no-op when disabled', async () => {
   const fs = require('fs');
   const os = require('os');

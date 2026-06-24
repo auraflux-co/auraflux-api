@@ -22,7 +22,16 @@ test('mergeCompCreative applies serpent_ranked preset', () => {
   assert.equal(c.layout.mode, 'full_bleed_crop');
   assert.equal(c.hooks.rankedList.enabled, true);
   assert.equal(c.hooks.rankedList.streamer, 'xQc');
+  assert.equal(c.hooks.mode, 'hook_only');
+  assert.equal(c.captions.whisper, false);
   assert.equal(c.audio.musicBed, 'low_trap');
+  assert.equal(c.audio.musicBedVolume, 0.10);
+});
+
+test('syncRankedListToClipCount matches lineup size', () => {
+  const c = mergeCompCreative({ preset: 'serpent_ranked' });
+  const synced = require('../lib/clip_comp_creative').syncRankedListToClipCount(c, 4);
+  assert.equal(synced.hooks.rankedList.slotCount, 4);
 });
 
 test('mergeCompCreative deep-merges overrides without dropping preset fields', () => {
