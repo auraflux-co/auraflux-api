@@ -41,5 +41,6 @@ test('sidechainBedParams keeps partial dry mix for speech-heavy clip 1', () => {
   const graph = filterParts.join(';');
   assert.match(graph, /sidechaincompress=.*mix=0\.18/);
   assert.match(graph, /\[bedfloor\]/);
+  assert.match(graph, /\[bedfloorin\]volume=0\.0192/);
   assert.match(graph, /\[1:a\].*atrim=0:60/);
 });
