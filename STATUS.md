@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-26 (CPD-1097) — Twitch streamer picker default cap 30→100 clips per creator (Helix max); `TWITCH_PICKER_CLIP_CAP` env still overrides. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1096) — Creative catalog C1–C7 (labeled dropdown + summary panel); Gemini brief 90s timeout/fallback; preset/button guards (C3 Comp-only, clip-count locks); Gate 1 FK fix; C5 logo on (karaoke Whisper only diff vs C2). Deployed C0 via `deploy_c0.sh`.
 **Last Updated:** 2026-06-26 (CPD-1095) — Full bleed clip comp: pre-hook CPD-937 probe (Whisper no longer skipped on our hook box); hook upper-mid (y≈620); logo top-right; Gate 3a/4 prompts aligned. Deployed C0 via `deploy_c0.sh`.
 **Last Updated:** 2026-06-13 (CPD-1089–1092) — Clip comp creative Phases 2–5: full-bleed layout, music bed + cut SFX, Stream Serpent ranked overlay, Comp VOD editorial + funnel metadata, word-karaoke captions; assembly wired via clip_comp_assembly.js.
