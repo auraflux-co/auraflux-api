@@ -25,7 +25,9 @@ test('mergeCompCreative applies serpent_ranked preset', () => {
   assert.equal(c.hooks.mode, 'hook_only');
   assert.equal(c.captions.whisper, false);
   assert.equal(c.audio.musicBed, 'low_trap');
-  assert.equal(c.audio.musicBedVolume, 0.04);
+  assert.equal(c.audio.musicBedVolume, 0.012);
+  assert.equal(c.audio.bedMixWeight, 0.12);
+  assert.equal(c.audio.duckSpeech, false);
 });
 
 test('resolveCompCreativeFromContext ignores stale card musicBedVolume', () => {
@@ -36,7 +38,9 @@ test('resolveCompCreativeFromContext ignores stale card musicBedVolume', () => {
       compCreative: { preset: 'serpent_ranked', audio: { musicBedVolume: 0.1 } },
     },
   });
-  assert.equal(c.audio.musicBedVolume, 0.04);
+  assert.equal(c.audio.musicBedVolume, 0.012);
+  assert.equal(c.audio.bedMixWeight, 0.12);
+  assert.equal(c.audio.duckSpeech, false);
 });
 
 test('mergeCompCreative applies serpent_ranked_vod preset', () => {

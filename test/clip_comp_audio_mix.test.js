@@ -5,6 +5,8 @@ const {
   resolveBedPath,
   resolveCutSfxPath,
   shouldMixCompAudio,
+  sidechainBedParams,
+  buildCompAudioFilterParts,
 } = require('../lib/clip_comp_audio_mix');
 const { PRESET_DEFAULTS } = require('../lib/clip_comp_creative');
 
@@ -23,15 +25,12 @@ test('serpent_pack resolves whoosh sfx', () => {
   assert.ok(resolveCutSfxPath('serpent_pack'));
 });
 
-test('sidechainBedParams keeps partial dry mix for speech-heavy clip 1', () => {
-  const { sidechainBedParams, buildCompAudioFilterParts } = require('../lib/clip_comp_audio_mix');
-  const sc = sidechainBedParams({ duckSpeech: true });
-  assert.ok(sc);
-  assert.ok(sc.mix < 1);
-  assert.ok(sc.ratio <= 8);
+test('serpent_ranked uses constant quiet bed without sidechain duck', () => {
+  const sc = sidechainBedParams(PRESET_DEFAULTS.serpent_ranked.audio);
+  assert.equal(sc, null);
   const { filterParts } = buildCompAudioFilterParts({
     totalDur: 60,
-    bedVol: 0.055,
+    bedVol: 0.018,
     bedInputIdx: 1,
     duckParams: sc,
     boundaries: [12, 24],
@@ -39,8 +38,24 @@ test('sidechainBedParams keeps partial dry mix for speech-heavy clip 1', () => {
     sfxPaths: ['whoosh.mp3', 'impact.mp3'],
   });
   const graph = filterParts.join(';');
-  assert.match(graph, /sidechaincompress=.*mix=0\.18/);
-  assert.match(graph, /\[bedfloor\]/);
-  assert.match(graph, /\[bedfloorin\]volume=0\.0192/);
-  assert.match(graph, /\[1:a\].*atrim=0:60/);
+  assert.match(graph, /volume=0\.0180.*\[bedraw\]/);
+  assert.doesNotMatch(graph, /sidechaincompress/);
+  assert.doesNotMatch(graph, /bedfloor/);
+  assert.match(graph, /amix=inputs=4:weights=1 0\.22 0\.38 0\.38:normalize=0/);
+});
+
+test('optional duck path still available for other presets', () => {
+  const sc = sidechainBedParams({ duckSpeech: true });
+  assert.ok(sc);
+  const { filterParts } = buildCompAudioFilterParts({
+    totalDur: 60,
+    bedVol: 0.05,
+    bedInputIdx: 1,
+    duckParams: sc,
+    boundaries: [],
+    sfxInputStartIdx: 2,
+    sfxPaths: [],
+  });
+  const graph = filterParts.join(';');
+  assert.match(graph, /sidechaincompress=.*mix=0\.1/);
 });
