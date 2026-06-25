@@ -4805,6 +4805,7 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           compCreativePreset: serverJob.compCreativePreset || serverJob.compCreative?.preset || null,
           designSpec: serverJob.designSpec || null,
           clipHookTitles: serverJob.clipHookTitles || null,
+          clipHookCandidates: serverJob.clipHookCandidates || null,
           captionsApplied: serverJob.captionsApplied,
           whisperCaptionsExpected: serverJob.whisperCaptionsExpected,
           clipCompTransformApplied: serverJob.clipCompTransformApplied,
@@ -5133,6 +5134,34 @@ function renderQueue() {
             + '<span style="color:rgba(199,175,79,0.75);font-weight:700;letter-spacing:1px;">CLIP HOOKS</span> · '
             + hookPreview + '</div>';
         }
+      }
+      if (job.clipHookCandidates && job.clipHookCandidates.length) {
+        job.clipHookCandidates.forEach(function(pool, clipIdx) {
+          if (!pool || !pool.length) return;
+          var activeHook = (job.clipHookTitles && job.clipHookTitles[clipIdx]) ? String(job.clipHookTitles[clipIdx]).trim() : '';
+          metaStrip += '<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,0.25);border:1px solid rgba(199,175,79,0.15);border-radius:6px;">'
+            + '<div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.6);letter-spacing:1.5px;margin-bottom:6px;">'
+            + 'HOOK PICKER · CLIP ' + (clipIdx + 1) + (pool.length > 1 ? ' (' + pool.length + ' candidates)' : '')
+            + '</div>';
+          pool.slice(0, 5).forEach(function(cand, candIdx) {
+            var hookText = String(cand.text || '').trim();
+            if (!hookText) return;
+            var isActive = activeHook && hookText.toLowerCase() === activeHook.toLowerCase();
+            var qaTag = cand.qaPassed ? (' ✓' + (cand.qaScore != null ? ' ' + cand.qaScore : '')) : (cand.qaScore != null ? ' · QA ' + cand.qaScore : '');
+            var formulaTag = cand.formula ? (' · ' + escHtml(String(cand.formula).slice(0, 22))) : '';
+            metaStrip += '<button type="button" onclick="selectClipHook(\'' + job.id + '\',' + clipIdx + ',' + candIdx + ')" '
+              + 'style="display:block;width:100%;text-align:left;margin:0 0 4px;padding:6px 8px;font-size:10px;line-height:1.35;cursor:pointer;border-radius:4px;'
+              + (isActive
+                ? 'background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.45);color:#2ecc71;'
+                : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);')
+              + '">'
+              + (isActive ? '● ' : '○ ') + escHtml(hookText.slice(0, 56))
+              + '<span style="opacity:0.55;">' + formulaTag + qaTag + '</span>'
+              + '</button>';
+          });
+          metaStrip += '<div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:4px;">Pick a hook, then ↩ RE-ASSEMBLE FROM FILES to burn it.</div>';
+          metaStrip += '</div>';
+        });
       }
       if (job.clipsOnly) {
         if (!jobWhisperCaptionsExpected(job)) {
@@ -5814,6 +5843,32 @@ function _doResumeConfirmed(jobId, job) {
     alert('❌ Server unreachable');
   };
   xhr.send(JSON.stringify({}));
+}
+
+function selectClipHook(jobId, clipIndex, candidateIndex) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  if (!job) return;
+  cwn_log('[hook] ' + jobId + ' — selecting clip ' + (clipIndex + 1) + ' candidate #' + (candidateIndex + 1), false);
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/select-hook', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    var resp = null;
+    try { resp = JSON.parse(xhr.responseText); } catch(e) { resp = { ok: false, error: e.message }; }
+    if (!resp.ok) {
+      cwn_log('[hook] select failed: ' + (resp.error || xhr.status), true);
+      alert('Hook select failed: ' + (resp.error || xhr.status));
+      return;
+    }
+    job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
+    job.clipHookCandidates = resp.clipHookCandidates || job.clipHookCandidates;
+    cwn_log('[hook] selected: "' + resp.hook + '" — RE-ASSEMBLE to burn', false);
+    renderJobs();
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    alert('Hook select request failed — is the server running?');
+  };
+  xhr.send(JSON.stringify({ clipIndex: clipIndex, candidateIndex: candidateIndex }));
 }
 
 // POST /job/:id/reassemble — skip Gate 2, go straight to assembly using
@@ -11973,6 +12028,7 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.status === 'gate3_failed') job.status = 'gate3_failed';
   if (serverJob.metadataQaViolations) job.metadataQaViolations = serverJob.metadataQaViolations;
   if (serverJob.clipHookTitles && serverJob.clipHookTitles.length) job.clipHookTitles = serverJob.clipHookTitles;
+  if (serverJob.clipHookCandidates && serverJob.clipHookCandidates.length) job.clipHookCandidates = serverJob.clipHookCandidates;
   if (serverJob.captionsApplied === true || serverJob.captionsApplied === false) job.captionsApplied = serverJob.captionsApplied;
   if (serverJob.whisperCaptionsExpected === true || serverJob.whisperCaptionsExpected === false) {
     job.whisperCaptionsExpected = serverJob.whisperCaptionsExpected;

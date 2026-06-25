@@ -28,6 +28,7 @@ test('buildHookMachinePrompt includes few-shot examples and curiosity gap rules'
   assert.match(p, /Curiosity gap/i);
   assert.match(p, /3-SECOND RULE/i);
   assert.match(p, /Wrong Shirt Gift/);
+  assert.match(p, /CLIPZWORLD CHANNEL BLOCK/i);
   assert.match(p, /Visual: shirt rip/);
 });
 

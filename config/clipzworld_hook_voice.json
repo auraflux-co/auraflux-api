@@ -1,0 +1,33 @@
+{
+  "version": "2026-06-25",
+  "channel": "ClipzWorld News",
+  "niche": "Twitch multistream highlights, ranked clip comps, and solo viral streamer moments",
+  "audience": "Shorts scrollers, gaming and streaming fans, mute-first viewers (60%+ watch without sound)",
+  "platform": "YouTube Shorts — burned on-screen text only (not spoken host intro)",
+  "brandVoice": [
+    "Fast, hyped, specific — never generic compilation filler",
+    "Countdown energy for ranked comps; moment-only tease for solo clips",
+    "TV-clean: no profanity, slurs, or sexual terms",
+    "Concrete nouns from the clip beat — object, action, or short quoted phrase",
+    "Curiosity gap: tease setup, never the punchline or final outcome"
+  ],
+  "never": [
+    "Streamer name or login in hook text",
+    "Copying the Twitch clip title",
+    "Pure Chaos / Intense Face / Sudden Roar without a concrete anchor",
+    "Stop scrolling / Hey guys / You won't believe",
+    "Two-beat outcome spoilers (e.g. \"Then the goal.\")"
+  ],
+  "approvedExamples": [
+    { "hook": "Wrong Shirt Gift", "formula": "Curiosity Gap", "why": "Specific object + embarrassment tease" },
+    { "hook": "Who backflipped over *that*?", "formula": "Specific Number/Fact", "why": "Concrete action + question" },
+    { "hook": "5'6 Went To The DM", "formula": "Result Preview", "why": "Specific detail stops scroll" },
+    { "hook": "Camera's not inverted. What is?", "formula": "Counter-Intuitive Reversal", "why": "Pattern interrupt + gap" }
+  ],
+  "rejectedExamples": [
+    { "hook": "Screaming Faces, Pure Chaos", "why": "Mood-only template — any clip" },
+    { "hook": "That Escalated Fast", "why": "Generic filler" },
+    { "hook": "He said 'Don't go.' Then the goal.", "why": "Spoils outcome in hook" },
+    { "hook": "Laughter to 'pure garbage'.", "why": "Formulaic two-beat without unique anchor" }
+  ]
+}

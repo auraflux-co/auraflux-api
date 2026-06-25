@@ -4654,9 +4654,12 @@ app.post('/generate-clip-comp', async (req, res) => {
         console.warn(`[clip-comp] ${jobId}: using fallback brief (Gemini timeout or error)`);
       }
       const clipHookTitles = clipCompBrief.clips.map((c) => c.hook);
+      const clipHookCandidates = clipCompBrief.clips.map((c) => c.hookCandidates || []);
       card.clipHookTitles = clipHookTitles;
+      card.clipHookCandidates = clipHookCandidates;
       card.clipCompBrief = clipCompBrief;
       payload.clipHookTitles = clipHookTitles;
+      payload.clipHookCandidates = clipHookCandidates;
       payload.clipCompBrief = clipCompBrief;
       payload.fullScript = buildClipCompSeoInput(clipCompBrief, card.compCreative || null);
       payload.regenerateClipHooks = false;
@@ -4689,6 +4692,50 @@ app.get('/live-show/rundown', (req, res) => {
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message || String(e) });
   }
+});
+
+// POST /job/:id/select-hook — operator picks alternate Hook Machine candidate for a clip
+app.post('/job/:id/select-hook', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const clipIndex = Math.max(0, parseInt(req.body.clipIndex, 10) || 0);
+  const candidateIndex = Math.max(0, parseInt(req.body.candidateIndex, 10) || 0);
+  const pools = card.clipHookCandidates;
+  if (!Array.isArray(pools) || !Array.isArray(pools[clipIndex]) || !pools[clipIndex][candidateIndex]) {
+    return res.status(400).json({ ok: false, error: 'Hook candidates not available for this clip — regenerate brief first.' });
+  }
+
+  const selected = pools[clipIndex][candidateIndex];
+  const hookText = String(selected.text || '').trim();
+  if (!hookText) return res.status(400).json({ ok: false, error: 'Selected candidate has no hook text.' });
+
+  card.clipHookTitles = Array.isArray(card.clipHookTitles) ? card.clipHookTitles.slice() : [];
+  while (card.clipHookTitles.length <= clipIndex) card.clipHookTitles.push('');
+  card.clipHookTitles[clipIndex] = hookText;
+
+  card.clipHookCandidates = pools.map((pool, pi) => (pool || []).map((c, ci) => ({
+    ...c,
+    selected: pi === clipIndex && ci === candidateIndex,
+  })));
+
+  if (card.clipCompBrief?.clips?.[clipIndex]) {
+    card.clipCompBrief.clips[clipIndex].hook = hookText;
+    card.clipCompBrief.clips[clipIndex].hookCandidates = card.clipHookCandidates[clipIndex];
+  }
+
+  saveJobCard(jobId, card);
+  res.json({
+    ok: true,
+    jobId,
+    clipIndex,
+    candidateIndex,
+    hook: hookText,
+    clipHookTitles: card.clipHookTitles,
+    clipHookCandidates: card.clipHookCandidates,
+    message: 'Hook selected — use RE-ASSEMBLE FROM FILES to burn the new line.',
+  });
 });
 
 // POST /job/:id/release-post-live-publish — clear copyright hold on news/sports clip comps
