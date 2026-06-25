@@ -4,8 +4,10 @@ const assert = require('node:assert/strict');
 const {
   resolveLayoutMode,
   resolveLogoMode,
+  resolveLogoCorner,
   resolveHookSharpBottom,
   layoutFilterDescription,
+  buildClipCompLogoFilter,
   FULL_BLEED_FILTER,
 } = require('../lib/clip_comp_layout');
 const { PRESET_DEFAULTS } = require('../lib/clip_comp_creative');
@@ -25,6 +27,9 @@ test('hook sharp bottom differs by layout', () => {
   assert.ok(resolveHookSharpBottom(PRESET_DEFAULTS.classic_blur_pad) < 1920);
 });
 
-test('serpent ranked preset hides logo', () => {
-  assert.equal(resolveLogoMode(PRESET_DEFAULTS.serpent_ranked), 'off');
+test('serpent ranked preset uses corner logo bottom-right', () => {
+  assert.equal(resolveLogoMode(PRESET_DEFAULTS.serpent_ranked), 'corner');
+  assert.equal(resolveLogoCorner(PRESET_DEFAULTS.serpent_ranked), 'bottom_right');
+  const fc = buildClipCompLogoFilter(PRESET_DEFAULTS.serpent_ranked, '/tmp/logo.png');
+  assert.ok(fc.includes('y=H-h-20'));
 });

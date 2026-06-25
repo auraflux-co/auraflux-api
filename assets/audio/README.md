@@ -9,3 +9,5 @@ The live grid resolves beds from, in order:
 3. `../cwn-production/assets/audio/` (sibling repo)
 
 Used when music guard mutes copyrighted Twitch audio.
+
+**Clip comps:** Creative Mode music bed picker reads this folder (`GET /clip-comp/audio-beds`). Drop any `ES_*.mp3` here — it appears in the dashboard select on next load. Built-in keys: `low_trap`, `neutral_lofi`.

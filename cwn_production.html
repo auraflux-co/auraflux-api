@@ -899,6 +899,18 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                         <option value="whisper_only">Whisper captions only (no burned hooks)</option>
                       </select>
                     </label>
+                    <label>Music bed <span style="opacity:0.55;">(drop ES_*.mp3 in assets/audio/)</span>
+                      <select id="comp-creative-music-bed" onchange="refreshCompCreativeChips()">
+                        <option value="low_trap">Low trap (default)</option>
+                        <option value="off">No music</option>
+                      </select>
+                    </label>
+                    <label>Logo corner
+                      <select id="comp-creative-logo-corner" onchange="refreshCompCreativeChips()">
+                        <option value="bottom_right">Bottom right</option>
+                        <option value="top_right">Top right</option>
+                      </select>
+                    </label>
                     <label>Related VOD (Short funnel) <input type="text" id="comp-creative-related-vod" placeholder="YouTube video ID or URL" oninput="refreshCompCreativeChips()"></label>
                   </div>
                   <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.4;">Preset drives layout, ranked overlay, audio bed, VOD comp, and captions.</div>
@@ -10560,6 +10572,8 @@ function saveCompCreativePresetToStorage() {
     streamer: (g('comp-creative-streamer') && g('comp-creative-streamer').value) || '',
     theme: (g('comp-creative-theme') && g('comp-creative-theme').value) || 'MOMENTS',
     hookMode: (g('comp-creative-hook-mode') && g('comp-creative-hook-mode').value) || 'both',
+    musicBed: (g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'low_trap',
+    logoCorner: (g('comp-creative-logo-corner') && g('comp-creative-logo-corner').value) || 'bottom_right',
     relatedVideoParentId: (g('comp-creative-related-vod') && g('comp-creative-related-vod').value) || ''
   };
   try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
@@ -10584,6 +10598,10 @@ function buildCompCreativeRequestPayload(streamerHint) {
       };
       overrides.captions = overrides.captions || {};
       overrides.captions.whisper = hookMode !== 'hook_only';
+      overrides.layout = overrides.layout || {};
+      overrides.layout.logoCorner = stored.logoCorner || 'bottom_right';
+      overrides.audio = overrides.audio || {};
+      overrides.audio.musicBed = stored.musicBed || 'low_trap';
     }
     if (stored.relatedVideoParentId) {
       overrides.delivery = overrides.delivery || {};
@@ -10597,6 +10615,10 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides = overrides || {};
     overrides.delivery = { format: 'vod_comp', relatedVideoParentId: stored.relatedVideoParentId || null };
     overrides.editorial = { enabled: true, introCard: true, ttsBridges: true };
+    overrides.audio = overrides.audio || {};
+    overrides.audio.musicBed = stored.musicBed || 'low_trap';
+    overrides.layout = overrides.layout || {};
+    overrides.layout.logoCorner = stored.logoCorner || 'bottom_right';
   }
   if (preset === 'serpent_ranked_vod') {
     overrides = overrides || {};
@@ -10614,7 +10636,7 @@ function refreshCompCreativeChips() {
   var stored = saveCompCreativePresetToStorage();
   var adv = g('comp-creative-adv');
   var isRankedPreset = stored.preset === 'serpent_ranked' || stored.preset === 'serpent_ranked_vod';
-  if (adv) adv.classList.toggle('open', stored.preset === 'custom' || isRankedPreset);
+  if (adv) adv.classList.toggle('open', stored.preset === 'custom' || isRankedPreset || stored.preset === 'twitch_comp_vod');
   var serpentHint = g('comp-creative-serpent-hint');
   if (serpentHint) serpentHint.style.display = stored.preset === 'serpent_ranked' ? 'block' : 'none';
   var serpentVodHint = g('comp-creative-serpent-vod-hint');
@@ -10633,7 +10655,10 @@ function refreshCompCreativeChips() {
   if (isRankedPreset) {
     pseudo.hooks = { mode: stored.hookMode || 'hook_only', rankedList: { enabled: true, streamer: stored.streamer, theme: stored.theme } };
     pseudo.captions = { whisper: (stored.hookMode || 'hook_only') !== 'hook_only' };
-    pseudo.audio = { musicBed: 'low_trap', cutSfx: 'serpent_pack' };
+    pseudo.layout = pseudo.layout || {};
+    pseudo.layout.logo = 'corner';
+    pseudo.layout.logoCorner = stored.logoCorner || 'bottom_right';
+    pseudo.audio = { musicBed: stored.musicBed || 'low_trap', cutSfx: 'serpent_pack' };
   }
   if (stored.preset === 'twitch_comp_vod' || stored.preset === 'serpent_ranked_vod') {
     pseudo.delivery = { format: 'vod_comp' };
@@ -10657,6 +10682,22 @@ function onCompCreativePresetChange() {
   refreshTwitchActionBar();
 }
 
+function loadCompCreativeMusicBeds(preferredId) {
+  var sel = g('comp-creative-music-bed');
+  if (!sel) return;
+  fetch('/clip-comp/audio-beds')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || !data.ok || !Array.isArray(data.beds)) return;
+      sel.innerHTML = data.beds.map(function(b) {
+        return '<option value="' + escHtml(b.id) + '">' + escHtml(b.label) + '</option>';
+      }).join('');
+      if (preferredId) sel.value = preferredId;
+      else if (sel.querySelector('option[value="low_trap"]')) sel.value = 'low_trap';
+    })
+    .catch(function() { /* keep static options */ });
+}
+
 function initCompCreativePanel() {
   var stored = loadCompCreativePresetFromStorage();
   var sel = g('comp-creative-preset');
@@ -10669,6 +10710,9 @@ function initCompCreativePanel() {
     g('comp-creative-hook-mode').onchange = function() { this.dataset.userPicked = '1'; refreshCompCreativeChips(); };
   }
   if (g('comp-creative-related-vod') && stored.relatedVideoParentId) g('comp-creative-related-vod').value = stored.relatedVideoParentId;
+  if (g('comp-creative-logo-corner') && stored.logoCorner) g('comp-creative-logo-corner').value = stored.logoCorner;
+  if (g('comp-creative-music-bed') && stored.musicBed) g('comp-creative-music-bed').value = stored.musicBed;
+  loadCompCreativeMusicBeds(stored.musicBed);
   refreshCompCreativeChips();
   refreshTwitchActionBar();
 }

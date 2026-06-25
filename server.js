@@ -4277,6 +4277,16 @@ app.post('/job/:id/reassemble', async (req, res) => {
   });
 });
 
+// ── GET /clip-comp/audio-beds — list music bed options for Creative Mode picker ─
+app.get('/clip-comp/audio-beds', (_req, res) => {
+  try {
+    const { listMusicBedOptions } = require('./lib/clip_comp_audio_catalog');
+    res.json({ ok: true, beds: listMusicBedOptions() });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ── POST /generate-clip-comp — CPD-935: clips-only compilation short ─────────
 // No script gen, no HeyGen. Picked clips (already mp4-resolved by the dashboard)
 // go straight to assembly: blur-pad portrait per clip + concat. Whisper captions

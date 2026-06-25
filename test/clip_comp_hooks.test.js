@@ -112,7 +112,7 @@ test('buildClipCompSeoInput includes ranked list framing when compCreative set',
   creative.hooks.rankedList.theme = 'FUNNIEST';
   const text = buildClipCompSeoInput({
     leadStreamer: 'Cinna',
-    leadTitleDraft: 'Top 5 Funniest Cinna Moments — Wait for #1',
+    leadTitleDraft: 'Top 5 Recent Funniest Cinna Moments — We Saved the Best for Last #Shorts',
     clipCount: 5,
     isComp: true,
     clips: [{ index: 0, displayName: 'Cinna', observation: 'Mirror gag.', hook: 'Mirror Trick' }],

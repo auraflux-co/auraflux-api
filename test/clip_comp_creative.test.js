@@ -27,7 +27,11 @@ test('mergeCompCreative applies serpent_ranked preset', () => {
   assert.equal(c.audio.musicBed, 'low_trap');
   assert.equal(c.audio.musicBedVolume, 0.012);
   assert.equal(c.audio.bedMixWeight, 0.12);
+  assert.equal(c.audio.bedPerSegment, true);
   assert.equal(c.audio.duckSpeech, false);
+  assert.equal(c.layout.logo, 'corner');
+  assert.equal(c.layout.logoCorner, 'bottom_right');
+  assert.equal(c.hooks.rankedList.titlePattern, 'SAVED_BEST_FOR_LAST');
 });
 
 test('resolveCompCreativeFromContext ignores stale card musicBedVolume', () => {
@@ -107,7 +111,8 @@ test('compCreativeAssemblyFlags marks phase1 schema only', () => {
 test('compCreativeGate3Expectations serpent_ranked expects overlay not broadcast chrome', () => {
   const { compCreativeGate3Expectations } = require('../lib/clip_comp_creative');
   const exp = compCreativeGate3Expectations(PRESET_DEFAULTS.serpent_ranked);
-  assert.equal(exp.hasLogo, false);
+  assert.equal(exp.hasLogo, true);
+  assert.equal(exp.logoPosition, 'bottom-right');
   assert.equal(exp.rankedOverlay.enabled, true);
   assert.equal(exp.hasSidebar, false);
   assert.equal(exp.clipCompLayoutMode, 'full_bleed_crop');
@@ -121,7 +126,7 @@ test('buildClipCompDesignSpec wires gate3 chrome from preset', () => {
     streamerHint: 'Cinna',
   });
   assert.equal(spec.chrome.layout, 'clip-comp');
-  assert.equal(spec.chrome.hasLogo, false);
+  assert.equal(spec.chrome.hasLogo, true);
   assert.equal(spec.chrome.rankedOverlay.enabled, true);
   assert.equal(spec.chrome.rankedOverlay.streamer, 'Cinna');
 });

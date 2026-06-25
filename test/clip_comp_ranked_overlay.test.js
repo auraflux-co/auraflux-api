@@ -9,6 +9,16 @@ const {
 const { fillTitleTemplate, resolveActiveRankSlot } = require('../lib/clip_comp_titles');
 const { PRESET_DEFAULTS } = require('../lib/clip_comp_creative');
 
+test('fillTitleTemplate SAVED_BEST_FOR_LAST', () => {
+  const t = fillTitleTemplate('SAVED_BEST_FOR_LAST', {
+    streamer: 'Cinna',
+    theme: 'Funniest',
+    slotCount: '5',
+  });
+  assert.ok(t.includes('Top 5 Recent Funniest Cinna Moments'));
+  assert.ok(t.includes('Saved the Best for Last'));
+});
+
 test('fillTitleTemplate WAIT_FOR_NO_1', () => {
   const t = fillTitleTemplate('WAIT_FOR_NO_1', { streamer: 'Lacy', theme: 'FUNNIEST' });
   assert.ok(t.includes('Lacy'));
@@ -36,7 +46,8 @@ test('buildRankedListTitleDraft for serpent ranked short', () => {
   const title = buildRankedListTitleDraft({
     hooks: { rankedList: { enabled: true, streamer: 'Cinna', theme: 'FUNNIEST', slotCount: 5 } },
   });
-  assert.equal(title, 'Top 5 Funniest Cinna Moments — Wait for #1');
+  assert.ok(title.includes('Top 5 Recent Funniest Cinna Moments'));
+  assert.ok(title.includes('Saved the Best for Last'));
 });
 
 test('resolveActiveRankSlot countdown from first clip', () => {
