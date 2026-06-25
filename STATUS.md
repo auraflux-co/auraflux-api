@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-26 (CPD-1096) — Creative catalog C1–C7 (labeled dropdown + summary panel); Gemini brief 90s timeout/fallback; preset/button guards (C3 Comp-only, clip-count locks); Gate 1 FK fix; C5 logo on (karaoke Whisper only diff vs C2). Deployed C0 via `deploy_c0.sh`.
 **Last Updated:** 2026-06-26 (CPD-1095) — Full bleed clip comp: pre-hook CPD-937 probe (Whisper no longer skipped on our hook box); hook upper-mid (y≈620); logo top-right; Gate 3a/4 prompts aligned. Deployed C0 via `deploy_c0.sh`.
 **Last Updated:** 2026-06-13 (CPD-1089–1092) — Clip comp creative Phases 2–5: full-bleed layout, music bed + cut SFX, Stream Serpent ranked overlay, Comp VOD editorial + funnel metadata, word-karaoke captions; assembly wired via clip_comp_assembly.js.
 **Last Updated:** 2026-06-13 (CPD-1088) — Clip comp creative modes Phase 1: `compCreative` schema + presets (`lib/clip_comp_creative.js`), Generate UI CREATIVE MODE panel, job card storage on `/generate-clip-comp`; assembly flags schema-only until Phases 2–4.

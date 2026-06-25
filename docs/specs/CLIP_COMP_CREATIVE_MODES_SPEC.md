@@ -132,7 +132,7 @@ compCreative: {
 | `classic_blur_pad` (today) | blur_pad + logo fold | off | phrase_bottom_blur + hooks | off | off | off | short |
 | `full_bleed` | full_bleed_crop, logo corner | off | phrase_full_bleed + hooks | off | off | off | short |
 | `serpent_ranked` | full_bleed | on (5 slots) | phrase + hooks | low_trap | serpent_pack | off | short |
-| `dahbluh_clean` | full_bleed | off | phrase_full_bleed | off | off | off | short |
+| `dahbluh_clean` | full_bleed, logo corner | off | word_karaoke + hooks | off | off | off | short |
 | `twitch_comp_vod` | blur_pad or full_bleed | optional | phrase + hooks | low_trap | whoosh | intro+bridges | vod_comp 8–20m |
 | `classic_vod` (today Top10/VOD) | avatar longform | script only | avatar segments | show bed | stings in script | HeyGen path | avatar VOD |
 

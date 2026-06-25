@@ -4152,7 +4152,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
   // ── Fire /assemble (internal axios call so all middleware runs normally) ───
   const port = process.env.PORT || 3000;
   const { buildClipCompDesignSpec, resolveClipCompPublishContentType, buildClipCompDeliverySpec, buildClipCompPublishOrder } = require('./lib/clip_comp');
-  const { generateClipCompCreativeBrief, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
+  const { buildClipCompSeoInput, buildFallbackClipCompBrief, generateClipCompCreativeBriefWithTimeout } = require('./lib/clip_comp_hooks');
   let reassembleDesignSpec = card.designSpec || null;
   let reassembleFullScript = card.script?.raw || card.script || null;
   let reassembleClipHookTitles = null;
@@ -4197,12 +4197,24 @@ app.post('/job/:id/reassemble', async (req, res) => {
         || (reassembleClipCompBrief.clips || []).map((c) => c.hook);
       reassembleFullScript = buildClipCompSeoInput(reassembleClipCompBrief, card.compCreative || null);
       console.log(`[reassemble] ${jobId}: reusing clipCompBrief (${(reassembleClipCompBrief.clips || []).length} clips)`);
+    } else if (!card.clipCompBrief && !req.body?.regenerateBrief) {
+      console.log(`[reassemble] ${jobId}: no saved brief — using title fallback hooks (skip Gemini)`);
+      reassembleClipCompBrief = await buildFallbackClipCompBrief(orderedClips, hookItems, {
+        compCreative: card.compCreative || null,
+      });
+      reassembleClipHookTitles = reassembleClipCompBrief.clips.map((c) => c.hook);
+      card.clipHookTitles = reassembleClipHookTitles;
+      card.clipCompBrief = reassembleClipCompBrief;
+      reassembleFullScript = buildClipCompSeoInput(reassembleClipCompBrief, card.compCreative || null);
     } else {
       console.log(`[reassemble] ${jobId}: regenerating Gemini creative brief for ${orderedClips.length} clips...`);
-      reassembleClipCompBrief = await generateClipCompCreativeBrief(orderedClips, hookItems, {
+      reassembleClipCompBrief = await generateClipCompCreativeBriefWithTimeout(orderedClips, hookItems, {
         log: (m) => console.log(`[reassemble] ${jobId}${m}`),
         compCreative: card.compCreative || null,
       });
+      if (reassembleClipCompBrief.fallbackBrief) {
+        console.warn(`[reassemble] ${jobId}: using fallback brief (Gemini timeout or error)`);
+      }
       reassembleClipHookTitles = reassembleClipCompBrief.clips.map((c) => c.hook);
       card.clipHookTitles = reassembleClipHookTitles;
       card.clipCompBrief = reassembleClipCompBrief;
@@ -4277,6 +4289,12 @@ app.post('/job/:id/reassemble', async (req, res) => {
   });
 });
 
+// ── GET /clip-comp/creative-catalog — labeled preset matrix for dashboard ─────
+app.get('/clip-comp/creative-catalog', (_req, res) => {
+  const { getCompCreativeCatalogList } = require('./lib/clip_comp_creative');
+  res.json({ ok: true, creatives: getCompCreativeCatalogList() });
+});
+
 // ── GET /clip-comp/audio-beds — list music bed options for Creative Mode picker ─
 app.get('/clip-comp/audio-beds', (_req, res) => {
   try {
@@ -4306,6 +4324,21 @@ app.post('/generate-clip-comp', async (req, res) => {
     streamerHint: streamersEarly[0] || null,
   });
   const lineupTarget = getCompLineupTarget(compCreative.preset);
+  if (compCreative.hooks?.rankedList?.enabled && clips.length < 2) {
+    return res.status(400).json({
+      error: 'Ranked list preset needs at least 2 clips in one comp — use Short only with non-ranked presets (e.g. Full bleed)',
+    });
+  }
+  if (
+    lineupTarget.minClips === lineupTarget.maxClips
+    && clips.length > 1
+    && clips.length < lineupTarget.minClips
+    && compCreative.delivery?.format !== 'vod_comp'
+  ) {
+    return res.status(400).json({
+      error: `${compCreative.preset} comp needs exactly ${lineupTarget.minClips} clips (got ${clips.length}). Use Short for single clips.`,
+    });
+  }
   if (compCreative.delivery?.format === 'vod_comp' && clips.length < lineupTarget.minClips) {
     return res.status(400).json({ error: `VOD comp needs at least ${lineupTarget.minClips} clips (got ${clips.length})` });
   }
@@ -4458,12 +4491,6 @@ app.post('/generate-clip-comp', async (req, res) => {
   let gate1Result = null;
   if (jobSpec) {
     gate1Result = runClipCompGate1(jobSpec, { clips, title });
-    try {
-      const { saveGateResult } = require('./lib/job_spec');
-      saveGateResult(jobSpec.jobId, 'gate1', gate1Result);
-    } catch (g1Err) {
-      console.warn('[/generate-clip-comp] Gate 1 save failed (non-fatal):', g1Err.message);
-    }
     if (!gate1Result.passed) {
       return res.status(422).json({
         error: 'Clip comp Gate 1 failed',
@@ -4535,6 +4562,15 @@ app.post('/generate-clip-comp', async (req, res) => {
   };
   saveJobCard(jobId, card);
 
+  if (gate1Result) {
+    try {
+      const { saveGateResult } = require('./lib/job_spec');
+      saveGateResult(jobId, 'gate1', gate1Result);
+    } catch (g1Err) {
+      console.warn('[/generate-clip-comp] Gate 1 save failed (non-fatal):', g1Err.message);
+    }
+  }
+
   try {
     const { recordCompClipsForLiveShow } = require('./lib/live_show/pack');
     recordCompClipsForLiveShow({ contentType, clips, jobId, title });
@@ -4598,7 +4634,7 @@ app.post('/generate-clip-comp', async (req, res) => {
 
   setImmediate(async () => {
     try {
-      const { generateClipCompCreativeBrief, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
+      const { generateClipCompCreativeBriefWithTimeout, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
       const hookItems = clips.map(c => ({
         title: c.title || '',
         headline: c.title || '',
@@ -4610,10 +4646,13 @@ app.post('/generate-clip-comp', async (req, res) => {
         viewCount: c.views || c.viewCount || null,
       }));
       console.log(`[clip-comp] ${jobId}: generating Gemini creative brief for ${orderedClipUrls.length} clips...`);
-      const clipCompBrief = await generateClipCompCreativeBrief(orderedClipUrls, hookItems, {
+      const clipCompBrief = await generateClipCompCreativeBriefWithTimeout(orderedClipUrls, hookItems, {
         log: (m) => console.log(`[clip-comp] ${jobId}${m}`),
         compCreative: card.compCreative || null,
       });
+      if (clipCompBrief.fallbackBrief) {
+        console.warn(`[clip-comp] ${jobId}: using fallback brief (Gemini timeout or error)`);
+      }
       const clipHookTitles = clipCompBrief.clips.map((c) => c.hook);
       card.clipHookTitles = clipHookTitles;
       card.clipCompBrief = clipCompBrief;

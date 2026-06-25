@@ -866,14 +866,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <div id="twitch-comp-creative" class="gen-comp-creative">
                   <div class="gen-comp-creative-head">CREATIVE MODE · Clip comps (Short / Comp / Comp VOD)</div>
                   <select id="comp-creative-preset" onchange="onCompCreativePresetChange()" title="Controls clip-comp styling — Avatar VOD / Avatar Top 10 ignore this">
-                    <option value="classic_blur_pad">Classic ClipzWorld (blur-pad)</option>
-                    <option value="full_bleed">Full bleed (imgoochy / core_fx)</option>
-                    <option value="serpent_ranked">Ranked list Short (Stream Serpent)</option>
-                    <option value="serpent_ranked_vod">Ranked list VOD — Top 10 (Stream Serpent)</option>
-                    <option value="dahbluh_clean">Clean comp (DahBluh Short)</option>
-                    <option value="twitch_comp_vod">Comp VOD 8–20 min (edited comp)</option>
-                    <option value="custom">Custom (advanced)</option>
+                    <option value="classic_blur_pad">Loading creatives…</option>
                   </select>
+                  <div id="comp-creative-label" class="gen-comp-creative-label" style="margin:8px 0;padding:10px 12px;border-radius:6px;border:1px solid rgba(199,175,79,0.28);background:rgba(199,175,79,0.06);font-size:10px;line-height:1.55;color:rgba(255,255,255,0.78);white-space:pre-wrap;font-family:monospace;"></div>
                   <div id="comp-creative-chips" class="gen-comp-creative-chips"></div>
                   <div id="comp-creative-adv" class="gen-comp-creative-adv">
                     <div id="comp-creative-serpent-hint" style="display:none;padding:8px 10px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(199,175,79,0.25);background:rgba(199,175,79,0.08);color:rgba(255,255,255,0.72);line-height:1.45;font-size:10px;">
@@ -4714,7 +4709,6 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           return;
         }
 
-        // Skip dismissed jobs — operator explicitly closed these
         if (serverJob.status === 'dismissed') {
           cwn_log('[restore] Skipping dismissed job ' + serverJob.jobId, false);
           return;
@@ -5297,7 +5291,7 @@ function renderQueue() {
       +'<div class="job-row-top"><div class="job-info" style="flex:1;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
       +'<div><div class="job-title">'+job.title+'</div>'
-      +'<div class="job-meta">'+(job.type||'video').toUpperCase().replace('-',' ')+' | '+new Date(job.created).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div>'
+      +'<div class="job-meta">'+(job.type||'video').toUpperCase().replace('-',' ')+' | '+new Date(job.created).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+(job.clipsOnly && (job.compCreativePreset || (job.compCreative && job.compCreative.preset)) ? (' | <span style="color:rgba(199,175,79,0.85);">' + escHtml(compCreativeDisplayName(job.compCreativePreset || (job.compCreative && job.compCreative.preset))) + '</span>') : '')+'</div>'
       +'<div class="job-id-line" style="font-size:10px;font-family:monospace;color:rgba(255,255,255,0.35);margin-top:4px;word-break:break-all;" title="Use this id for /tmp/manual_segments and resume API">ID: '+job.id+'</div>'
       +(job.manualSegments && job.manualSegments.manualDir
         ? '<div style="font-size:10px;font-family:monospace;color:rgba(199,175,79,0.55);margin-top:3px;word-break:break-all;">Manual drop: '+job.manualSegments.manualDir+'</div>'
@@ -10470,21 +10464,86 @@ function startClipCompReviewPoll(jobId, statusElId) {
 }
 
 var COMP_CREATIVE_STORAGE_KEY = 'cwn.compCreative.v1';
+var _compCreativeCatalog = [];
+var _compCreativeCatalogById = {};
+
+function compCreativeCatalogEntry(preset) {
+  return _compCreativeCatalogById[preset] || _compCreativeCatalogById.classic_blur_pad || null;
+}
+
+function loadCompCreativeCatalog(cb) {
+  fetch('/clip-comp/creative-catalog')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || !data.ok || !Array.isArray(data.creatives)) return;
+      _compCreativeCatalog = data.creatives;
+      _compCreativeCatalogById = {};
+      data.creatives.forEach(function(e) { _compCreativeCatalogById[e.id] = e; });
+      populateCompCreativeSelect();
+      refreshCompCreativeLabel();
+      if (cb) cb();
+    })
+    .catch(function() {
+      if (cb) cb();
+    });
+}
+
+function populateCompCreativeSelect() {
+  var sel = g('comp-creative-preset');
+  if (!sel || !_compCreativeCatalog.length) return;
+  var stored = loadCompCreativePresetFromStorage().preset || 'classic_blur_pad';
+  sel.innerHTML = _compCreativeCatalog.map(function(e) {
+    return '<option value="' + escHtml(e.id) + '">' + escHtml(e.selectLabel || (e.code + ' · ' + e.name)) + '</option>';
+  }).join('');
+  if (_compCreativeCatalogById[stored]) sel.value = stored;
+}
+
+function refreshCompCreativeLabel() {
+  var el = g('comp-creative-label');
+  if (!el) return;
+  var stored = loadCompCreativePresetFromStorage();
+  var e = compCreativeCatalogEntry(stored.preset || 'classic_blur_pad');
+  if (!e) {
+    el.textContent = 'Select a creative preset — each code (C1–C7) defines clip count + which button to use.';
+    return;
+  }
+  var whisperNote = e.whisper === true ? 'Whisper ON' : (e.whisper === false ? 'Whisper OFF' : String(e.whisper));
+  el.innerHTML = '<strong style="color:rgba(199,175,79,0.95);font-size:11px;letter-spacing:0.06em;">'
+    + escHtml(e.code) + ' · ' + escHtml(e.name.toUpperCase()) + '</strong>'
+    + '<div style="margin-top:4px;color:rgba(255,255,255,0.55);">' + escHtml(e.tagline) + '</div>'
+    + '<div style="margin-top:6px;"><span style="color:rgba(199,175,79,0.75);">Buttons</span> '
+    + escHtml(e.buttons.join(' · ')) + '</div>'
+    + '<div><span style="color:rgba(199,175,79,0.75);">Short</span> ' + escHtml(e.shortClips) + '</div>'
+    + '<div><span style="color:rgba(199,175,79,0.75);">Comp</span> ' + escHtml(e.compClips || '—') + '</div>'
+    + (e.compVodClips ? ('<div><span style="color:rgba(199,175,79,0.75);">Comp VOD</span> ' + escHtml(e.compVodClips) + '</div>') : '')
+    + '<div><span style="color:rgba(199,175,79,0.75);">Features</span> '
+    + escHtml(e.layout + ' · ' + e.hooks + ' · ' + whisperNote + ' · ' + e.audio) + '</div>'
+    + '<div style="margin-top:4px;"><span style="color:rgba(199,175,79,0.75);">Outcome</span> ' + escHtml(e.outcome) + '</div>';
+}
+
+function compCreativeDisplayName(preset) {
+  var e = compCreativeCatalogEntry(preset);
+  return e ? (e.code + ' · ' + e.name) : (preset || 'Creative');
+}
 
 function compCreativeChipList(creative) {
   creative = creative || {};
-  var chips = [];
   var preset = creative.preset || 'classic_blur_pad';
-  var labels = {
-    classic_blur_pad: 'Classic',
-    full_bleed: 'Full bleed',
-    serpent_ranked: 'Serpent ranked',
-    serpent_ranked_vod: 'Serpent ranked VOD',
-    dahbluh_clean: 'DahBluh clean',
-    twitch_comp_vod: 'Comp VOD',
-    custom: 'Custom'
-  };
-  chips.push(labels[preset] || preset);
+  var chips = [];
+  var cat = compCreativeCatalogEntry(preset);
+  if (cat) chips.push(cat.code + ' ' + cat.name);
+  else {
+    var labels = {
+      classic_blur_pad: 'C1 Classic',
+      full_bleed: 'C2 Full bleed',
+      serpent_ranked: 'C3 Serpent ranked',
+      serpent_ranked_vod: 'C4 Serpent VOD',
+      dahbluh_clean: 'C5 DahBluh',
+      twitch_comp_vod: 'C6 Comp VOD',
+      custom: 'C7 Custom'
+    };
+    chips.push(labels[preset] || preset);
+  }
   var layout = (creative.layout && creative.layout.mode) || 'blur_pad';
   chips.push(layout === 'full_bleed_crop' ? 'full bleed' : 'blur-pad');
   if (creative.hooks && creative.hooks.rankedList && creative.hooks.rankedList.enabled) chips.push('ranked list');
@@ -10514,6 +10573,7 @@ function getTwitchClipActionState() {
   var stored = loadCompCreativePresetFromStorage();
   var preset = stored.preset || 'classic_blur_pad';
   var spec = getCompLineupSpec();
+  var pickedCount = collectCompPickedClips().length;
   var state = {
     preset: preset,
     hint: '',
@@ -10522,11 +10582,19 @@ function getTwitchClipActionState() {
     compVod: { enabled: true, recommended: false, title: '8–20 min edited comp from lineup (uses Creative Mode)' }
   };
   if (preset === 'serpent_ranked') {
+    state.short.enabled = false;
+    state.short.title = 'Ranked list Short needs multiple clips in one comp — use Comp (Top 5), not Short';
     state.comp.recommended = true;
     state.comp.title = 'Ranked Short — stitch Top ' + spec.lineupSlots + ' from lineup (countdown overlay)';
     state.compVod.enabled = false;
     state.compVod.title = 'Not for ranked Short preset — switch to Ranked list VOD or Comp VOD preset';
-    state.hint = '→ Pick ' + spec.lineupSlots + ' clips in lineup order, then Comp';
+    if (pickedCount > 0 && pickedCount < spec.minClips) {
+      state.comp.enabled = false;
+      state.comp.title = 'Ranked Short needs at least ' + spec.minClips + ' clips — only ' + pickedCount + ' selected';
+    }
+    state.hint = pickedCount >= spec.minClips
+      ? ('→ ' + pickedCount + ' clip(s) — Comp stitches Top ' + Math.min(pickedCount, spec.lineupSlots) + ' countdown')
+      : ('→ Pick ' + spec.lineupSlots + ' clips in lineup order, then Comp (min ' + spec.minClips + ')');
   } else if (preset === 'serpent_ranked_vod') {
     state.comp.enabled = false;
     state.comp.title = 'Not for ranked VOD — use Comp VOD (Top 10 countdown + editorial)';
@@ -10543,7 +10611,19 @@ function getTwitchClipActionState() {
     state.hint = '→ Pick 4–8 clips in lineup, then Comp VOD';
   } else {
     state.comp.title = 'Stitch ' + spec.lineupSlots + ' lineup clips into one Short';
-    state.hint = 'Short = 1 clip each · Comp = ' + spec.lineupSlots + '-clip Short · Comp VOD = switch preset first';
+    if (pickedCount > 0 && pickedCount < spec.minClips) {
+      state.comp.enabled = false;
+      state.comp.title = 'Comp needs ' + spec.lineupSlots + ' clips — only ' + pickedCount + ' selected (use Short for 1 clip each)';
+      state.short.recommended = pickedCount === 1;
+      state.hint = pickedCount + ' clip selected — use Short (1 job per clip), not Comp';
+    } else if (pickedCount === spec.lineupSlots) {
+      state.comp.recommended = true;
+      state.hint = '→ ' + spec.lineupSlots + ' clips ready — Comp stitches one Short';
+    } else if (pickedCount > spec.lineupSlots) {
+      state.hint = '→ First ' + spec.lineupSlots + ' in lineup used for Comp · Short = 1 job per checked clip';
+    } else {
+      state.hint = 'Short = 1 clip each · Comp = ' + spec.lineupSlots + '-clip Short · Comp VOD = switch preset first';
+    }
   }
   return state;
 }
@@ -10669,10 +10749,12 @@ function refreshCompCreativeChips() {
     pseudo.audio = { musicBed: 'low_trap', cutSfx: 'whoosh' };
   }
   var el = g('comp-creative-chips');
-  if (!el) return;
-  el.innerHTML = compCreativeChipList(pseudo).map(function(c) {
-    return '<span class="gen-comp-creative-chip">' + escHtml(c) + '</span>';
-  }).join('');
+  if (el) {
+    el.innerHTML = compCreativeChipList(pseudo).map(function(c) {
+      return '<span class="gen-comp-creative-chip">' + escHtml(c) + '</span>';
+    }).join('');
+  }
+  refreshCompCreativeLabel();
 }
 
 function onCompCreativePresetChange() {
@@ -10680,6 +10762,7 @@ function onCompCreativePresetChange() {
   var sel = g('comp-creative-preset');
   if (hm && sel && (sel.value === 'serpent_ranked' || sel.value === 'serpent_ranked_vod') && hm.value === 'both') hm.value = 'hook_only';
   refreshCompCreativeChips();
+  refreshCompCreativeLabel();
   refreshCompLineupUI();
   refreshTwitchActionBar();
 }
@@ -10701,22 +10784,25 @@ function loadCompCreativeMusicBeds(preferredId) {
 }
 
 function initCompCreativePanel() {
-  var stored = loadCompCreativePresetFromStorage();
-  var sel = g('comp-creative-preset');
-  if (sel && stored.preset) sel.value = stored.preset;
-  if (g('comp-creative-streamer') && stored.streamer) g('comp-creative-streamer').value = stored.streamer;
-  if (g('comp-creative-theme') && stored.theme) g('comp-creative-theme').value = stored.theme;
-  if (g('comp-creative-hook-mode')) {
-    var rankedDefault = stored.preset === 'serpent_ranked' || stored.preset === 'serpent_ranked_vod';
-    g('comp-creative-hook-mode').value = stored.hookMode || (rankedDefault ? 'hook_only' : 'both');
-    g('comp-creative-hook-mode').onchange = function() { this.dataset.userPicked = '1'; refreshCompCreativeChips(); };
-  }
-  if (g('comp-creative-related-vod') && stored.relatedVideoParentId) g('comp-creative-related-vod').value = stored.relatedVideoParentId;
-  if (g('comp-creative-logo-corner') && stored.logoCorner) g('comp-creative-logo-corner').value = stored.logoCorner;
-  if (g('comp-creative-music-bed') && stored.musicBed) g('comp-creative-music-bed').value = stored.musicBed;
-  loadCompCreativeMusicBeds(stored.musicBed);
-  refreshCompCreativeChips();
-  refreshTwitchActionBar();
+  loadCompCreativeCatalog(function() {
+    var stored = loadCompCreativePresetFromStorage();
+    var sel = g('comp-creative-preset');
+    if (sel && stored.preset) sel.value = stored.preset;
+    if (g('comp-creative-streamer') && stored.streamer) g('comp-creative-streamer').value = stored.streamer;
+    if (g('comp-creative-theme') && stored.theme) g('comp-creative-theme').value = stored.theme;
+    if (g('comp-creative-hook-mode')) {
+      var rankedDefault = stored.preset === 'serpent_ranked' || stored.preset === 'serpent_ranked_vod';
+      g('comp-creative-hook-mode').value = stored.hookMode || (rankedDefault ? 'hook_only' : 'both');
+      g('comp-creative-hook-mode').onchange = function() { this.dataset.userPicked = '1'; refreshCompCreativeChips(); };
+    }
+    if (g('comp-creative-related-vod') && stored.relatedVideoParentId) g('comp-creative-related-vod').value = stored.relatedVideoParentId;
+    if (g('comp-creative-logo-corner') && stored.logoCorner) g('comp-creative-logo-corner').value = stored.logoCorner;
+    if (g('comp-creative-music-bed') && stored.musicBed) g('comp-creative-music-bed').value = stored.musicBed;
+    loadCompCreativeMusicBeds(stored.musicBed);
+    refreshCompCreativeChips();
+    refreshCompCreativeLabel();
+    refreshTwitchActionBar();
+  });
 }
 
 function triggerClipCompVod() {
@@ -10837,6 +10923,7 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
           saveJobs();
           renderQueue();
         }
+        nav('queue');
         if (statusId) setCompStatus(statusId, msg, 'started');
         startClipCompReviewPoll(d.jobId, statusId);
       } else {
@@ -10978,6 +11065,11 @@ function triggerNewsShort() {
 }
 
 function triggerTwitchShort() {
+  var actionState = getTwitchClipActionState();
+  if (!actionState.short.enabled) {
+    alert(actionState.short.title);
+    return;
+  }
   // CPD-931: one picker — SHORT consumes the same inline PICK CLIPS selections
   // as LONG FORM. One short job per selected clip.
   var picked = [];
