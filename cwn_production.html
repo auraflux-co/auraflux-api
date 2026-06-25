@@ -3369,8 +3369,11 @@ function renderChannelStats(d) {
   if (banner) {
     if (d.stale) {
       banner.className = 'stats-banner stats-banner-warn';
-      banner.innerHTML = '<strong>Showing cached data</strong> — live refresh failed' +
-        (d.staleError ? ': ' + d.staleError : '') + '. Click Refresh to retry.';
+      var staleHint = d.catalogRefreshOk
+        ? 'Live catalog refreshed; private analytics unavailable'
+        : 'live refresh failed';
+      banner.innerHTML = '<strong>Showing cached data</strong> — ' + staleHint +
+        (d.staleError ? ': ' + escHtml(String(d.staleError).slice(0, 280)) : '') + '. Click Refresh to retry.';
     } else if (d.analytics && d.analytics.ok) {
       var cs = d.analytics.channelSummary && d.analytics.channelSummary.totals;
       banner.className = 'stats-banner stats-banner-ok';
@@ -4727,12 +4730,11 @@ function restoreJobsFromServer(showAlert, _retryCount) {
         // gate5_forced / gate5_running — Gate 5 is actively uploading; restore and poll.
         var isGate5InFlight = (serverStage === 'gate5_forced' || serverStage === 'gate5_running');
 
-        // On AUTO-restore (page load), skip jobs waiting for operator review/publish.
-        // On MANUAL restore (↩ RESTORE JOBS), bring back assembled + awaiting_review cards.
+        // Review-ready jobs always restore (auto + manual) so new clip comps appear in Queue.
         var isAwaitingOperator = serverStage === 'awaiting_review' || serverStage === 'metadata_review' || serverStage === 'assembled' || serverStage === 'publish_scheduled';
         var isAssembledDone = !isGate5InFlight && isAwaitingOperator;
-        if (isAssembledDone && !showAlert) {
-          cwn_log('[restore] Skipping review-ready job ' + serverJob.jobId + ' on auto-restore — use ↩ RESTORE JOBS to bring it back', false);
+        if (isAssembledDone && !showAlert && serverStage === 'assembled' && !serverJob.driveUrl) {
+          cwn_log('[restore] Skipping legacy assembled job ' + serverJob.jobId + ' on auto-restore — use ↩ RESTORE JOBS', false);
           return;
         }
 
