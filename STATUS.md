@@ -18,7 +18,7 @@
 
 ---
 
-**Last Updated:** 2026-06-25 (CPD-1094) — Dashboard Stats refresh: catalog fetch via login-shell child (`scripts/fetch_channel_catalog.js`) to bypass pm2 DNS failure; Queue auto-restore now includes `awaiting_review` clip comps on page load.
+**Last Updated:** 2026-06-26 (CPD-1095) — Full bleed clip comp: pre-hook CPD-937 probe (Whisper no longer skipped on our hook box); hook upper-mid (y≈620); logo top-right; Gate 3a/4 prompts aligned. Deployed C0 via `deploy_c0.sh`.
 **Last Updated:** 2026-06-13 (CPD-1089–1092) — Clip comp creative Phases 2–5: full-bleed layout, music bed + cut SFX, Stream Serpent ranked overlay, Comp VOD editorial + funnel metadata, word-karaoke captions; assembly wired via clip_comp_assembly.js.
 **Last Updated:** 2026-06-13 (CPD-1088) — Clip comp creative modes Phase 1: `compCreative` schema + presets (`lib/clip_comp_creative.js`), Generate UI CREATIVE MODE panel, job card storage on `/generate-clip-comp`; assembly flags schema-only until Phases 2–4.
 **Last Updated:** 2026-06-24 (CPD-1086) — Hook Master training corpus: playbook JSON + ingest script (Gemini 5× video extract), playbook wired into Hook Machine + Claude QA prompts.

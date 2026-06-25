@@ -23,6 +23,19 @@ test('_wrapHookLines keeps short titles on one line', () => {
   assert.deepEqual(lines, ['her pad box']);
 });
 
+test('_buildHookDrawtextFilters places full_bleed_mid hook at hookMidY', () => {
+  const style = buildClipCompHookStyle(
+    buildClipCompDesignSpec({ clipCount: 1, sourceContentType: 'twitch-short' }),
+    'twitch-short',
+  );
+  const vf = _buildHookDrawtextFilters(['That box made them dance.'], style, 1264, {
+    hookPlacement: 'full_bleed_mid',
+    hookMidY: 620,
+  });
+  assert.match(vf, /y=620/);
+  assert.doesNotMatch(vf, /y=1[78]\d\d/);
+});
+
 test('_buildHookDrawtextFilters uses two drawtext filters for two lines', () => {
   const style = buildClipCompHookStyle(
     buildClipCompDesignSpec({ clipCount: 2, sourceContentType: 'twitch-short' }),

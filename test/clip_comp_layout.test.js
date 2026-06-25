@@ -22,9 +22,18 @@ test('full bleed filter string is stable', () => {
   assert.equal(FULL_BLEED_FILTER.includes('crop=1080:1920'), true);
 });
 
-test('hook sharp bottom differs by layout', () => {
-  assert.equal(resolveHookSharpBottom(PRESET_DEFAULTS.full_bleed), 1920);
+test('hook sharp bottom uses blur-pad band for all layouts', () => {
+  assert.ok(resolveHookSharpBottom(PRESET_DEFAULTS.full_bleed) < 1920);
   assert.ok(resolveHookSharpBottom(PRESET_DEFAULTS.classic_blur_pad) < 1920);
+});
+
+test('full bleed uses upper-mid hook and top-right logo', () => {
+  const { resolveHookPlacement } = require('../lib/clip_comp_layout');
+  assert.equal(resolveHookPlacement(PRESET_DEFAULTS.full_bleed), 'full_bleed_mid');
+  assert.equal(resolveLogoCorner(PRESET_DEFAULTS.full_bleed), 'top_right');
+  const fc = buildClipCompLogoFilter(PRESET_DEFAULTS.full_bleed, '/tmp/logo.png');
+  assert.ok(fc.includes('y=20'));
+  assert.ok(!fc.includes('y=H-h-20'));
 });
 
 test('serpent ranked preset uses corner logo bottom-right', () => {
