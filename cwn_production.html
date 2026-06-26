@@ -550,6 +550,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
     <div class="sidebar-section">
       <div class="sidebar-lbl">DAILY PRODUCTION</div>
       <button class="sidebar-btn active" onclick="nav('generate')"><span class="icon">+</span> Generate Videos</button>
+      <button class="sidebar-btn" onclick="nav('library')"><span class="icon">L</span> Clip Library</button>
       <button class="sidebar-btn" onclick="nav('queue')"><span class="icon">Q</span> Job Queue</button>
       <button class="sidebar-btn" onclick="nav('calendar')"><span class="icon">C</span> Content Calendar</button>
     </div>
@@ -855,7 +856,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                         <input id="twitch-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact"></div>
                       <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Clip age</div>
                         <select id="twitch-picker-pub-window" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact">
-                          <option value="any">Any time</option><option value="6h">Last 6 hours</option><option value="24h" selected>Last 24 hours</option><option value="3d">Last 3 days</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option>
+                          <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="any">Top ALL</option>
                         </select></div>
                     </div>
                   </div>
@@ -1432,6 +1433,22 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         </table>
       </div>
       <div id="stats-sources" style="margin-top:12px;font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6;"></div>
+    </div>
+
+    <!-- CLIP LIBRARY PAGE (CPD-1098) -->
+    <div class="page" id="page-library">
+      <div class="sec-title">CLIP LIBRARY <span class="badge" id="library-count">0 CLIPS</span></div>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">Rolling 7-day cache from daily ingest (12pm ET). Unused clips purge Sunday 11pm ET. Use <strong>Live picker</strong> on Generate for older content.</p>
+      <div class="btn-row" style="margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <select id="library-window" class="field-input-compact" onchange="refreshLibraryPage()">
+          <option value="24h">Top 24H</option><option value="7d" selected>Top 7D</option><option value="30d">Top 30D</option><option value="all">Top ALL</option>
+        </select>
+        <input id="library-streamers" placeholder="streamers (comma, empty=all roster)" class="field-input-compact" style="min-width:220px;" onchange="refreshLibraryPage()">
+        <button class="btn btn-outline btn-sm" onclick="refreshLibraryPage()">REFRESH</button>
+        <button class="btn btn-outline btn-sm" onclick="sendLibrarySelectionToGenerate()">SEND TO GENERATE</button>
+        <button class="btn btn-outline btn-sm" onclick="runLibraryIngest()">INGEST NOW</button>
+      </div>
+      <div id="library-grid" class="gen-picker-grid" style="max-height:calc(100vh - 220px);overflow-y:auto;"></div>
     </div>
 
     <!-- JOB QUEUE PAGE -->
@@ -2637,6 +2654,75 @@ function nav(page) {
   if (page === 'abtest') thumbPopulateDropdown();
   if (page === 'stats') statsPageInit();
   if (page === 'postlive') postLivePageInit();
+  if (page === 'library') refreshLibraryPage();
+}
+
+var _libraryClips = [];
+var _librarySelected = {};
+
+function refreshLibraryPage() {
+  var grid = g('library-grid');
+  var badge = g('library-count');
+  if (!grid) return;
+  grid.innerHTML = '<div style="padding:20px;color:rgba(255,255,255,0.4);">Loading library…</div>';
+  var win = (g('library-window') && g('library-window').value) || '7d';
+  var streamers = (g('library-streamers') && g('library-streamers').value || '').split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  var qs = 'window=' + encodeURIComponent(win) + '&sort=views&limit=300';
+  if (streamers.length) qs += '&streamers=' + encodeURIComponent(streamers.join(','));
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/clips?' + qs)
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'fetch failed');
+      _libraryClips = d.clips || [];
+      if (badge) badge.textContent = _libraryClips.length + ' CLIPS';
+      if (!_libraryClips.length) {
+        grid.innerHTML = '<div style="padding:20px;color:rgba(255,255,255,0.4);">No cached clips — run INGEST NOW or wait for 12pm ET cron.</div>';
+        return;
+      }
+      var html = '';
+      _libraryClips.forEach(function(c, i) {
+        var sel = !!_librarySelected[c.url];
+        var thumb = c.thumbnailUrl ? c.thumbnailUrl.replace('{width}','160').replace('{height}','90') : '';
+        var usedBadge = c.used ? '<span style="font-size:8px;color:rgba(255,165,0,0.9);">USED</span>' : '';
+        html += '<div class="' + pickerCardClasses(sel, true) + '" onclick="toggleLibraryClip(' + i + ')">';
+        if (thumb) html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;" onerror="this.style.display=\'none\'">';
+        html += '<div class="picker-title">' + (c.title || '').slice(0, 55) + '</div>';
+        html += '<div style="font-size:9px;color:rgba(255,255,255,0.35);">' + c.streamer + ' · ' + (c.views || 0) + ' views · ' + (c.duration || 0) + 's ' + usedBadge + '</div></div>';
+      });
+      grid.innerHTML = html;
+    })
+    .catch(function(e) {
+      grid.innerHTML = '<div style="padding:20px;color:rgba(255,80,80,0.8);">' + e.message + '</div>';
+    });
+}
+
+function toggleLibraryClip(i) {
+  var c = _libraryClips[i];
+  if (!c || !c.url) return;
+  if (_librarySelected[c.url]) delete _librarySelected[c.url];
+  else _librarySelected[c.url] = c;
+  refreshLibraryPage();
+}
+
+function sendLibrarySelectionToGenerate() {
+  var picks = Object.values(_librarySelected);
+  if (!picks.length) { alert('Select clips in the library grid first.'); return; }
+  try { sessionStorage.setItem('cwn_library_handoff', JSON.stringify({ clips: picks, source: 'library' })); } catch(e) {}
+  nav('generate');
+  switchGenPillar('streamers');
+  alert('Sent ' + picks.length + ' clip(s) to Generate — open Pick clips or use Short/Comp.');
+}
+
+function runLibraryIngest() {
+  if (!confirm('Run daily ingest for yesterday\'s clips now?')) return;
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/ingest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'ingest failed');
+      alert('Ingest done: ' + (d.summary && d.summary.clipsAdded) + ' clips');
+      refreshLibraryPage();
+    })
+    .catch(function(e) { alert('Ingest failed: ' + e.message); });
 }
 
 function switchTab(name) {
