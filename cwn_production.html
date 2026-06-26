@@ -55,6 +55,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-body { display:grid; grid-template-columns:minmax(140px,200px) 1fr; gap:16px; align-items:start; }
 @media (max-width:900px) { .composer-body { grid-template-columns:1fr; } }
 .composer-preview-frame { position:relative; width:100%; max-width:200px; aspect-ratio:9/16; margin:0 auto; border-radius:8px; overflow:hidden; background:#000; border:1px solid rgba(255,255,255,0.12); }
+.composer-preview-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:5; display:none; }
+.composer-preview-loading { position:absolute; inset:0; z-index:6; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.65); font-size:9px; color:#c7af4f; letter-spacing:1px; }
+.composer-preview-mock { position:absolute; inset:0; z-index:1; }
+.composer-vod-timeline { margin-bottom:10px; padding:10px; background:rgba(145,70,255,0.08); border:1px solid rgba(145,70,255,0.25); border-radius:6px; display:none; }
+.composer-vod-timeline.is-active { display:block; }
 .composer-preview-bg { position:absolute; inset:0; background-size:cover; background-position:center; filter:blur(18px) brightness(0.45); transform:scale(1.15); }
 .composer-preview-main { position:absolute; left:5%; right:5%; top:18%; bottom:28%; background-size:contain; background-position:center; background-repeat:no-repeat; z-index:1; }
 .composer-preview-hook { position:absolute; left:8%; right:8%; top:42%; z-index:3; text-align:center; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:11px; color:#fff; text-shadow:0 2px 8px #000; line-height:1.2; }
@@ -978,6 +983,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                       <option value="short">Short (1 clip)</option>
                       <option value="comp">Comp (multi-clip Short)</option>
                       <option value="vod_comp">Comp VOD (long-form)</option>
+                      <option value="vod_segment">VOD segment (highlight)</option>
                     </select>
                     <select id="composer-template-select" onchange="applyCompositionTemplate(this.value)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;max-width:160px;">
                       <option value="">Templates…</option>
@@ -987,16 +993,21 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   <div class="composer-body">
                     <div>
                       <div id="composer-preview-frame" class="composer-preview-frame">
-                        <div id="composer-preview-bg" class="composer-preview-bg"></div>
-                        <div id="composer-preview-main" class="composer-preview-main"></div>
-                        <div id="composer-preview-ranked" class="composer-preview-ranked" style="display:none;">TOP 5 → #1</div>
-                        <div id="composer-preview-hook" class="composer-preview-hook">Hook preview</div>
-                        <div id="composer-preview-captions" class="composer-preview-captions">Whisper captions zone</div>
-                        <div id="composer-preview-logo" class="composer-preview-logo pos-fold">LOGO</div>
+                        <img id="composer-preview-img" class="composer-preview-img" alt="FFmpeg preview">
+                        <div id="composer-preview-loading" class="composer-preview-loading">FFmpeg…</div>
+                        <div id="composer-preview-mock" class="composer-preview-mock">
+                          <div id="composer-preview-bg" class="composer-preview-bg"></div>
+                          <div id="composer-preview-main" class="composer-preview-main"></div>
+                          <div id="composer-preview-ranked" class="composer-preview-ranked" style="display:none;">TOP 5 → #1</div>
+                          <div id="composer-preview-hook" class="composer-preview-hook">Hook preview</div>
+                          <div id="composer-preview-captions" class="composer-preview-captions">Whisper captions zone</div>
+                          <div id="composer-preview-logo" class="composer-preview-logo pos-fold">LOGO</div>
+                        </div>
                       </div>
                       <div id="composer-features" class="composer-features"></div>
                     </div>
                     <div>
+                      <div id="composer-vod-timeline" class="composer-vod-timeline"></div>
                       <div id="composer-lineup-trim"></div>
                       <div id="composer-validation" class="composer-validation"></div>
                       <div class="composer-exec-row">
@@ -9928,6 +9939,118 @@ function ensureComposerTrimDefaults(clip) {
 }
 
 var _composerDeliveryFormat = 'short';
+var _composerVodSegment = null;
+var _composerPreviewSeq = 0;
+
+function clearComposerVodSegment() {
+  _composerVodSegment = null;
+  var tl = g('composer-vod-timeline');
+  if (tl) { tl.classList.remove('is-active'); tl.innerHTML = ''; }
+}
+
+function sendVodSegmentToComposer(si, vi, segIdx) {
+  var entry = _twitchPickerVods[si];
+  var vod = entry && entry.vods && entry.vods[vi];
+  if (!vod || !vod.segments || !vod.segments.length) {
+    alert('Analyze VOD first to get highlight segments.');
+    return;
+  }
+  var seg = vod.segments[segIdx != null ? segIdx : 0];
+  if (!seg) return;
+  _composerVodSegment = {
+    vodUrl: vod.url,
+    vodId: vod.vodId,
+    sessionId: vod.sessionId,
+    title: seg.title || vod.title || 'VOD highlight',
+    streamer: vod.streamer || entry.name,
+    duration_sec: vod.duration || seg.end_sec,
+    start_sec: seg.start_sec,
+    end_sec: seg.end_sec,
+    summary: seg.summary || ''
+  };
+  var delSel = g('composer-delivery');
+  if (delSel) { delSel.value = 'vod_segment'; delSel.dataset.userSet = '1'; }
+  switchTwitchSubMode('clips');
+  refreshGenerateComposer(true);
+  var panel = g('generate-composer');
+  if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderComposerVodTimeline() {
+  var wrap = g('composer-vod-timeline');
+  if (!wrap) return;
+  if (!_composerVodSegment) {
+    wrap.classList.remove('is-active');
+    wrap.innerHTML = '';
+    return;
+  }
+  var v = _composerVodSegment;
+  var dur = Math.max(60, Math.round(Number(v.duration_sec) || v.end_sec || 3600));
+  var start = Math.max(0, Math.round(Number(v.start_sec) || 0));
+  var end = Math.max(start + 1, Math.round(Number(v.end_sec) || start + 420));
+  wrap.classList.add('is-active');
+  wrap.innerHTML = '<div style="font-size:10px;color:#9146ff;font-weight:700;margin-bottom:6px;">VOD TIMELINE · ' + escapeHtml(v.streamer || '') + '</div>'
+    + '<div style="font-size:9px;color:rgba(255,255,255,0.55);margin-bottom:6px;">' + escapeHtml((v.title || '').slice(0, 80)) + '</div>'
+    + '<div class="composer-trim-row"><span>In ' + fmtSecToMin(start) + '</span>'
+    + '<input type="range" min="0" max="' + Math.max(1, dur - 60) + '" value="' + start + '" oninput="setComposerVodTrim(\'start\',this.value)">'
+    + '<span>Out ' + fmtSecToMin(end) + '</span>'
+    + '<input type="range" min="60" max="' + dur + '" value="' + end + '" oninput="setComposerVodTrim(\'end\',this.value)"></div>'
+    + '<div style="font-size:9px;color:rgba(46,204,113,0.85);">Segment ' + Math.round(end - start) + 's · ' + escapeHtml((v.summary || '').slice(0, 100)) + '</div>'
+    + '<button type="button" class="btn btn-outline btn-sm" style="margin-top:6px;font-size:9px;" onclick="clearComposerVodSegment();refreshGenerateComposer(true);">Clear VOD segment</button>';
+}
+
+function fmtSecToMin(sec) {
+  var s = Math.max(0, parseInt(sec, 10) || 0);
+  return Math.floor(s / 60) + 'm' + (s % 60) + 's';
+}
+
+function setComposerVodTrim(which, val) {
+  if (!_composerVodSegment) return;
+  var dur = Math.max(60, Math.round(Number(_composerVodSegment.duration_sec) || 3600));
+  var n = Math.max(0, Math.min(parseInt(val, 10) || 0, dur));
+  if (which === 'start') {
+    _composerVodSegment.start_sec = n;
+    if (_composerVodSegment.end_sec <= n) _composerVodSegment.end_sec = Math.min(dur, n + 60);
+  } else {
+    _composerVodSegment.end_sec = Math.max(n, (_composerVodSegment.start_sec || 0) + 30);
+  }
+  renderComposerVodTimeline();
+  refreshGenerateComposer(false);
+}
+
+function fetchFfmpegComposerPreview(body) {
+  var seq = ++_composerPreviewSeq;
+  var loading = g('composer-preview-loading');
+  var img = g('composer-preview-img');
+  var mock = g('composer-preview-mock');
+  if (loading) loading.style.display = 'flex';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/preview', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (seq !== _composerPreviewSeq) return;
+      if (loading) loading.style.display = 'none';
+      if (!d.ok || !d.base64) {
+        if (mock) mock.style.display = '';
+        if (img) img.style.display = 'none';
+        return;
+      }
+      if (img) {
+        img.src = 'data:image/jpeg;base64,' + d.base64;
+        img.style.display = 'block';
+      }
+      if (mock) mock.style.display = 'none';
+    })
+    .catch(function() {
+      if (seq !== _composerPreviewSeq) return;
+      if (loading) loading.style.display = 'none';
+      if (mock) mock.style.display = '';
+      if (img) img.style.display = 'none';
+    });
+}
 
 function onComposerDeliveryChange() {
   var sel = g('composer-delivery');
@@ -9947,6 +10070,17 @@ function inferComposerDeliveryFromPreset() {
 
 function buildCompositionSpecFromUI() {
   var delivery = (g('composer-delivery') && g('composer-delivery').value) || _composerDeliveryFormat || inferComposerDeliveryFromPreset();
+  if (delivery === 'vod_segment' && _composerVodSegment) {
+    var creativePayload = buildCompCreativeRequestPayload(_composerVodSegment.streamer || '');
+    return {
+      deliveryFormat: 'vod_segment',
+      compCreativePreset: creativePayload.compCreativePreset,
+      compCreative: creativePayload.compCreative,
+      clips: [],
+      vodSegment: _composerVodSegment,
+      platforms: ['youtube', 'tiktok', 'instagram']
+    };
+  }
   var spec = getCompLineupSpec();
   var maxCount = delivery === 'short' ? 1 : (delivery === 'vod_comp' ? spec.maxClips : spec.lineupSlots);
   var lineup = getCompLineupForDispatch(maxCount);
@@ -10088,17 +10222,24 @@ function setComposerTrim(lineupIdx, which, val) {
 function refreshGenerateComposer(callValidate) {
   var panel = g('generate-composer');
   var picked = collectCompPickedClips();
+  var vodActive = !!_composerVodSegment;
   if (!panel) return;
-  if (!picked.length) {
+  if (!picked.length && !vodActive) {
     panel.classList.remove('is-open');
     return;
   }
   panel.classList.add('is-open');
   var delSel = g('composer-delivery');
-  if (delSel && !delSel.dataset.userSet) delSel.value = inferComposerDeliveryFromPreset();
-  renderComposerTrimControls();
+  if (delSel && !delSel.dataset.userSet && !vodActive) delSel.value = inferComposerDeliveryFromPreset();
+  renderComposerVodTimeline();
+  if (!vodActive) renderComposerTrimControls();
+  else {
+    var trimWrap = g('composer-lineup-trim');
+    if (trimWrap) trimWrap.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.4);">VOD segment mode — adjust timeline above.</div>';
+  }
   var body = buildCompositionSpecFromUI();
   renderComposerPreviewMock(body, null);
+  fetchFfmpegComposerPreview(body);
   if (callValidate !== false) {
     fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
       method: 'POST',
@@ -10201,7 +10342,7 @@ function executeFromComposer() {
         throw new Error((d.validation && d.validation.errors && d.validation.errors[0]) || d.error || 'Invalid composition');
       }
       var delivery = body.deliveryFormat;
-      if (delivery === 'short') return executeComposerShorts(d.spec);
+      if (delivery === 'short' || delivery === 'vod_segment') return executeComposerShorts(d.spec);
       if (delivery === 'vod_comp') return executeComposerVodComp(d.spec);
       return executeComposerComp(d.spec);
     })
@@ -12251,6 +12392,7 @@ function renderTwitchVodPicker() {
         if (vod.segments && vod.segments.length) {
           var seg = vod.segments[0];
           html += '<div style="font-size:9px;color:rgba(46,204,113,0.85);margin:4px 0;">Highlight ' + Math.floor(seg.start_sec/60) + '–' + Math.floor(seg.end_sec/60) + 'm · ' + (seg.title || '') + '</div>';
+          html += '<button type="button" class="btn btn-gold" style="font-size:9px;padding:4px 8px;margin-top:4px;" onclick="sendVodSegmentToComposer(' + si + ',' + vi + ',0)">Open in Composer</button>';
         }
         html += '<button type="button" class="btn btn-outline" style="font-size:9px;padding:4px 8px;margin-top:4px;" '
           + (vod.analyzing ? 'disabled' : '') + ' onclick="analyzeTwitchVod(' + si + ',' + vi + ')">'

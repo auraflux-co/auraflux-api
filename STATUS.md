@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-26 (CPD-1117) — Generate Composer Phase 2: FFmpeg still-frame preview (blur-pad + logo via `/composition/preview`); VOD segment timeline + Videos→Composer handoff; `vod_segment` delivery. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1112) — Generate Composer Phase 1: post-pick COMPOSER panel (9:16 preview mockup, trim sliders, templates, EXECUTE → assembly). Short/Comp/Comp VOD open composer first. HOW Confluence CPD-1112.
 **Last Updated:** 2026-06-26 (CPD-1111) — Server-side used-clip dedup: GET /content-library/used-clip-ids replaces localStorage; picker refreshes before fetch. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1110) — VOD Gemini multimodal: yt-dlp stream + ffmpeg frame samples → gemini-2.5-flash. Deployed C0.

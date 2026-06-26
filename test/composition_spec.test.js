@@ -51,4 +51,25 @@ describe('composition_spec', () => {
     assert.equal(body.clips[0].trimEnd, 60);
     assert.equal(body.compositionSpec.version, 1);
   });
+
+  it('builds vod segment spec from vodSegment body', () => {
+    const { spec, validation } = buildCompositionSpec({
+      deliveryFormat: 'vod_segment',
+      compCreativePreset: 'classic_blur_pad',
+      vodSegment: {
+        vodUrl: 'https://www.twitch.tv/videos/123',
+        streamer: 'hasanabi',
+        title: 'Highlight',
+        duration_sec: 7200,
+        start_sec: 1200,
+        end_sec: 1620,
+      },
+    });
+    assert.equal(spec.clips.length, 1);
+    assert.equal(spec.clips[0].trimStart, 1200);
+    assert.equal(spec.clips[0].trimEnd, 1620);
+    assert.equal(validation.ok, true);
+    const body = toGenerateClipCompBody(spec);
+    assert.equal(body.clips[0].url, 'https://www.twitch.tv/videos/123');
+  });
 });

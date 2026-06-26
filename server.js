@@ -4314,7 +4314,7 @@ try {
   const { registerContentLibraryRoutes } = require('./lib/content_library/routes');
   registerContentLibraryRoutes(app);
   const { registerCompositionRoutes } = require('./lib/routes/composition');
-  registerCompositionRoutes(app);
+  registerCompositionRoutes(app, { twitchClient });
 } catch (e) {
   console.warn('[server] Content library routes failed to load:', e.message);
 }
