@@ -63,3 +63,18 @@ cd ~/cwn-c0 && bash scripts/deploy_c0.sh
 ```
 
 Confluence: [HOW — Streamer Content Library (CPD-1098)](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/38928386)
+
+---
+
+## Generate Composer (CPD-1112) — Phase 1 shipped
+
+| Commit | Ticket | What changed |
+|--------|--------|--------------|
+| `392e61b4` | CPD-1114–1116 | **COMPOSER** panel: 9:16 preview mockup, trim sliders, templates, EXECUTE → assembly |
+| `e6a76aff` | CPD-1113 | `compositionSpec` + `POST /composition/validate` + `/composition/templates` |
+
+**Operator flow:** Pick clips → COMPOSER opens → review preview + trim → EXECUTE. Short/Comp/Comp VOD buttons open composer first.
+
+**Phase 2 open:** [CPD-1117](https://aurafluxco.atlassian.net/browse/CPD-1117) — FFmpeg real preview + VOD segment timeline.
+
+Confluence: [HOW — Generate Composer (CPD-1112)](https://aurafluxco.atlassian.net/wiki/spaces/CP/pages/39419905)
