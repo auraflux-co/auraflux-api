@@ -18,6 +18,10 @@
 
 ---
 
+**Last Updated:** 2026-06-26 (CPD-1111) — Server-side used-clip dedup: GET /content-library/used-clip-ids replaces localStorage; picker refreshes before fetch. Deployed C0.
+**Last Updated:** 2026-06-26 (CPD-1110) — VOD Gemini multimodal: yt-dlp stream + ffmpeg frame samples → gemini-2.5-flash. Deployed C0.
+**Last Updated:** 2026-06-26 (CPD-1109) — Library Send to Generate populates picker with pre-selected clips (full handoff). Deployed C0.
+**Last Updated:** 2026-06-26 (CPD-1108) — Generate Streamers Clips | Videos sub-tab; VOD fetch + Analyze UI. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1107) — Operator custom hook/title pickers on Queue; re-assemble preserves hooks/SEO; saveJobCard sync SQLite crash fix (pm2 mid-assembly); regen-hooks hardening. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1106) — Shorts Hook Master framework: ClipzWorld voice JSON + channel block in prompts; Hook Machine structured candidates (formula/visualCue/payoffTease); Claude QA pass 92+; outcome-spoiler + generic-fallback guards; QA all 5 candidates; brief timeout 180s; skip assembly hook regen when QA passed; Queue hook picker + POST /job/:id/select-hook. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1098) — Streamer Content Library epic: rolling 7-day SQLite cache, daily 12pm ET ingest, Sunday purge, Library UI + live picker Top windows, VOD Gemini highlights. HOW Confluence 38928386.
