@@ -11872,14 +11872,6 @@ function refreshCompCreativeChips() {
   refreshCompCreativeLabel();
   if (typeof refreshGenerateComposer === 'function') refreshGenerateComposer(true);
 }
-  var hm = g('comp-creative-hook-mode');
-  var sel = g('comp-creative-preset');
-  if (hm && sel && (sel.value === 'serpent_ranked' || sel.value === 'serpent_ranked_vod') && hm.value === 'both') hm.value = 'hook_only';
-  refreshCompCreativeChips();
-  refreshCompCreativeLabel();
-  refreshCompLineupUI();
-  refreshTwitchActionBar();
-}
 
 function loadCompCreativeMusicBeds(preferredId) {
   var sel = g('comp-creative-music-bed');
