@@ -1,4 +1,4 @@
-# Stream A/V probe — 2026-06-24T18:46:15.512Z
+# Stream A/V probe — 2026-06-25T01:10:15.908Z
 
 **Read-only sampling** — RTSP frame grab + audio level check. No fixes applied.
 **Scores reflect on-air quad only** — off-air tiles may be silent by design.

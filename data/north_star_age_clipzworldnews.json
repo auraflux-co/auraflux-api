@@ -1,31 +1,31 @@
 {
   "ok": true,
-  "fetchedAt": "2026-06-24T16:36:08.720Z",
-  "startDate": "2026-06-09",
-  "endDate": "2026-06-22",
-  "focusDate": "2026-06-22",
-  "rowCount": 188,
+  "fetchedAt": "2026-06-26T03:30:05.476Z",
+  "startDate": "2026-06-12",
+  "endDate": "2026-06-25",
+  "focusDate": "2026-06-25",
+  "rowCount": 232,
   "queryMode": "per_day_video",
   "includeRevenue": true,
   "hasRevenue": false,
   "periodMatrix": {
     "shorts": {
-      "day1": 5777,
-      "day2": 236,
-      "day3": 31,
-      "day4plus": 272
+      "day1": 8115,
+      "day2": 257,
+      "day3": 49,
+      "day4plus": 259
     },
     "videos": {
-      "day1": 2,
+      "day1": 0,
       "day2": 6,
       "day3": 19,
-      "day4plus": 71
+      "day4plus": 86
     },
     "streams": {
-      "day1": 961,
-      "day2": 92,
-      "day3": 101,
-      "day4plus": 345
+      "day1": 6467,
+      "day2": 412,
+      "day3": 148,
+      "day4plus": 410
     }
   },
   "focusMatrix": {
@@ -49,17 +49,17 @@
     }
   },
   "shortsDecay": {
-    "d1": 5777,
-    "d2": 236,
-    "d3": 31,
-    "d4": 29,
-    "d5": 39,
+    "d1": 8115,
+    "d2": 257,
+    "d3": 49,
+    "d4": 36,
+    "d5": 42,
     "d6": 0,
     "d7": 2
   },
-  "backCatalogRatio": 0.087,
-  "totalViews": 7913,
-  "catalogViews": 688,
+  "backCatalogRatio": 0.047,
+  "totalViews": 16228,
+  "catalogViews": 755,
   "formatRpm": {
     "shorts": null,
     "videos": null,
