@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-26 (CPD-1118) — Library-first UX: streamer roster + live/cache/VOD picker on Clip Library; Generate · Composer desk only (Creative Mode + COMPOSER). COMPOSE → handoff.
 **Last Updated:** 2026-06-26 (CPD-1117 hotfix) — Dashboard JS parse error: removed orphaned block after `refreshCompCreativeChips()` that broke all onclick handlers. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1117) — Generate Composer Phase 2: FFmpeg still-frame preview (blur-pad + logo via `/composition/preview`); VOD segment timeline + Videos→Composer handoff; `vod_segment` delivery. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1112) — Generate Composer Phase 1: post-pick COMPOSER panel (9:16 preview mockup, trim sliders, templates, EXECUTE → assembly). Short/Comp/Comp VOD open composer first. HOW Confluence CPD-1112.

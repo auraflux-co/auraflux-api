@@ -59,7 +59,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-preview-loading { position:absolute; inset:0; z-index:6; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.65); font-size:9px; color:#c7af4f; letter-spacing:1px; }
 .composer-preview-mock { position:absolute; inset:0; z-index:1; }
 .composer-vod-timeline { margin-bottom:10px; padding:10px; background:rgba(145,70,255,0.08); border:1px solid rgba(145,70,255,0.25); border-radius:6px; display:none; }
-.composer-vod-timeline.is-active { display:block; }
+.composer-handoff-summary { margin-bottom:12px; padding:10px 14px; border:1px solid rgba(199,175,79,0.22); border-radius:8px; background:rgba(0,0,0,0.28); }
+.library-workspace { min-height:calc(100vh - 200px); }
+.gen-compose-workspace .gen-sidebar { min-width:260px; max-width:320px; }
 .composer-preview-bg { position:absolute; inset:0; background-size:cover; background-position:center; filter:blur(18px) brightness(0.45); transform:scale(1.15); }
 .composer-preview-main { position:absolute; left:5%; right:5%; top:18%; bottom:28%; background-size:contain; background-position:center; background-repeat:no-repeat; z-index:1; }
 .composer-preview-hook { position:absolute; left:8%; right:8%; top:42%; z-index:3; text-align:center; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:11px; color:#fff; text-shadow:0 2px 8px #000; line-height:1.2; }
@@ -582,8 +584,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
   <div class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-lbl">DAILY PRODUCTION</div>
-      <button class="sidebar-btn active" onclick="nav('generate')"><span class="icon">+</span> Generate Videos</button>
-      <button class="sidebar-btn" onclick="nav('library')"><span class="icon">L</span> Clip Library</button>
+      <button class="sidebar-btn active" onclick="nav('library')"><span class="icon">L</span> Clip Library</button>
+      <button class="sidebar-btn" onclick="nav('generate')"><span class="icon">+</span> Generate · Composer</button>
       <button class="sidebar-btn" onclick="nav('queue')"><span class="icon">Q</span> Job Queue</button>
       <button class="sidebar-btn" onclick="nav('calendar')"><span class="icon">C</span> Content Calendar</button>
     </div>
@@ -606,7 +608,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
   <div class="main">
 
     <!-- GENERATE PAGE -->
-    <div class="page active gen-page" id="page-generate">
+    <div class="page gen-page" id="page-generate">
       <div class="gen-page-head">
         <div class="gen-page-title-row">
           <h2 class="gen-page-title">Daily Video Generator</h2>
@@ -615,15 +617,15 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         <div class="gen-pillar-tabs" role="tablist">
           <button type="button" role="tab" id="pillar-tab-sports" class="gen-pillar-tab active" onclick="switchGeneratePillar('sports')">Sports</button>
           <button type="button" role="tab" id="pillar-tab-news" class="gen-pillar-tab" onclick="switchGeneratePillar('news')">World News</button>
-          <button type="button" role="tab" id="pillar-tab-twitch" class="gen-pillar-tab" onclick="switchGeneratePillar('twitch')">Streamers</button>
+          <button type="button" role="tab" id="pillar-tab-twitch" class="gen-pillar-tab" onclick="switchGeneratePillar('twitch')">Composer</button>
           <span id="nba-status" class="tag tag-pending" style="margin-left:auto;"><span class="tag-dot"></span> READY</span>
           <span id="news-status" class="tag tag-pending" style="display:none;"><span class="tag-dot"></span> READY</span>
           <span id="twitch-gen-status" class="tag tag-pending" style="display:none;"><span class="tag-dot"></span> READY</span>
         </div>
         <div class="gen-workflow">
-          <span class="gen-workflow-step"><span class="gen-workflow-num">1</span> Configure sources</span>
-          <span class="gen-workflow-step"><span class="gen-workflow-num">2</span> Pick clips or stories</span>
-          <span class="gen-workflow-step"><span class="gen-workflow-num">3</span> Generate VOD / Short / Comp</span>
+          <span class="gen-workflow-step"><span class="gen-workflow-num">1</span> Pick in Clip Library</span>
+          <span class="gen-workflow-step"><span class="gen-workflow-num">2</span> Creative Mode + preview</span>
+          <span class="gen-workflow-step"><span class="gen-workflow-num">3</span> EXECUTE → assembly</span>
         </div>
       </div>
       <details class="dash-details" style="margin-bottom:16px;"><summary>Production schedule <span class="dash-readonly-note">reference</span></summary>
@@ -774,129 +776,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
         <div class="card gen-pillar-card card-streamers" data-pillar="twitch" style="display:none;">
           <div class="card-body gen-pillar-body">
-            <input type="hidden" id="twitch-streamers" value="jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming">
-            <div class="gen-workspace streamers-workspace">
-              <aside class="gen-sidebar streamers-controls">
-                <div id="streamer-connect-bar" class="streamer-connect-compact"></div>
-                <div id="streamer-sidebar-select" class="streamer-sidebar-select">
-                  <div class="creator-toolbar">
-                    <input type="search" id="streamer-search" placeholder="Search @handle…" oninput="onStreamerSearchInput()" class="field-input-compact creator-search">
-                    <select id="streamer-filter-platform" onchange="onStreamerSearchInput()" class="field-input-compact creator-filter">
-                      <option value="all">All</option>
-                      <option value="twitch">Twitch</option>
-                      <option value="kick">Kick</option>
-                      <option value="youtube">YouTube</option>
-                    </select>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" style="color:#9146ff;border-color:rgba(145,70,255,0.5);">Sync</button>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()">+ Add</button>
-                  </div>
-                  <div class="streamer-sections-bar">
-                    <button type="button" class="btn btn-outline btn-sm" onclick="setStreamerSectionsExpanded(true)">Expand all</button>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="setStreamerSectionsExpanded(false)">Collapse all</button>
-                  </div>
-                  <details open class="streamer-roster-section streamer-roster-section-selected" id="streamer-section-selected-wrap">
-                    <summary><span>Selected for today</span><span class="streamer-section-count" id="streamer-count-selected">0</span></summary>
-                    <div id="streamer-selected-chips" class="creator-chip-grid is-compact"></div>
-                  </details>
-                  <details open class="streamer-roster-section" id="streamer-section-templates-wrap">
-                    <summary><span>Templates · VOD lineup</span><span class="streamer-section-count" id="streamer-count-templates">0</span></summary>
-                    <div id="streamer-section-templates" class="creator-chip-grid is-section"></div>
-                    <div class="streamer-section-actions">
-                      <button type="button" class="btn btn-outline btn-sm" onclick="applyStreamerTemplateSelection()">Select all templates</button>
-                    </div>
-                  </details>
-                  <details class="streamer-roster-section" id="streamer-section-following-wrap">
-                    <summary><span>Following · Twitch &amp; YouTube</span><span class="streamer-section-count" id="streamer-count-following">0</span></summary>
-                    <div id="streamer-section-following" class="creator-chip-grid is-section"></div>
-                  </details>
-                  <details class="streamer-roster-section" id="streamer-section-bench-wrap">
-                    <summary><span>Bench · backup</span><span class="streamer-section-count" id="streamer-count-bench">0</span></summary>
-                    <div id="streamer-section-bench" class="creator-chip-grid is-section"></div>
-                    <div id="streamer-bench-auto-hint" class="gen-status-line" style="padding:0 8px 2px;font-size:9px;min-height:14px;"></div>
-                    <div class="streamer-section-actions">
-                      <button type="button" class="btn btn-outline btn-sm" onclick="loadStreamerBenchFromLiveGrid()">↻ Pull follows</button>
-                      <button type="button" class="btn btn-outline btn-sm" onclick="promptAddStreamerBench()">+ Bench</button>
-                    </div>
-                  </details>
-                  <details class="streamer-roster-section" id="streamer-section-kick-wrap">
-                    <summary><span>Kick · manual</span><span class="streamer-section-count" id="streamer-count-kick">0</span></summary>
-                    <div id="streamer-section-kick" class="creator-chip-grid is-section"></div>
-                    <div class="streamer-section-actions">
-                      <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()" style="color:#53fc18;border-color:rgba(83,252,24,0.4);">+ Kick URL</button>
-                    </div>
-                  </details>
-                  <details open class="streamer-roster-section" id="streamer-section-clip-groups-wrap">
-                    <summary><span>Clip groups · saved 4-packs</span><span class="streamer-section-count" id="streamer-count-clip-groups">0</span></summary>
-                    <div class="clip-group-editor-hint" style="padding:0 8px 6px;">Quick picker targets only — does not change Templates, Following, or Bench listings.</div>
-                    <div id="clip-group-editor" class="clip-group-editor" style="display:none;">
-                      <input type="hidden" id="clip-group-editor-id" value="">
-                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Group name</div>
-                        <input id="clip-group-editor-name" type="text" maxlength="48" placeholder="e.g. Kick test A" class="field-input-compact"></div>
-                      <div id="clip-group-editor-slots" class="clip-group-editor-slots"></div>
-                      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
-                        <button type="button" class="btn btn-gold btn-sm" onclick="saveClipGroupEditor()">Save group</button>
-                        <button type="button" class="btn btn-outline btn-sm" onclick="fillClipGroupEditorFromSelection()">Use current selection</button>
-                        <button type="button" class="btn btn-outline btn-sm" onclick="cancelClipGroupEditor()">Cancel</button>
-                      </div>
-                    </div>
-                    <div id="streamer-clip-groups-list" class="clip-groups-list"></div>
-                    <div class="streamer-section-actions">
-                      <button type="button" class="btn btn-outline btn-sm" onclick="openClipGroupEditor(null)">+ New group</button>
-                    </div>
-                  </details>
-                  <div id="streamer-add-section" class="creator-add-section" style="display:none;">
-                    <div class="creator-section-label">SEARCH RESULTS</div>
-                    <div id="streamer-search-results" class="creator-chip-grid is-section"></div>
-                  </div>
-                  <div id="streamer-browse-section" class="creator-browse-section" style="display:none;">
-                    <div class="creator-browse-bar">
-                      <span id="streamer-browse-label">Browse roster</span>
-                      <span>
-                        <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowseSelectPage(true)">Select page</button>
-                        <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowseSelectPage(false)">Deselect</button>
-                        <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowsePage(-1)">←</button>
-                        <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowsePage(1)">→</button>
-                        <button type="button" class="btn btn-outline btn-sm" onclick="closeStreamerBrowse()">Close</button>
-                      </span>
-                    </div>
-                    <div id="streamer-browse-chips" class="creator-chip-grid is-section"></div>
-                  </div>
-                  <div id="streamer-panel-footer" class="creator-browse-bar">
-                    <span id="streamer-roster-hint"></span>
-                    <span>
-                      <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(false)">Clear</button>
-                      <button type="button" class="btn btn-outline btn-sm" onclick="toggleStreamerBrowse()" id="btn-streamer-browse">Browse</button>
-                    </span>
-                  </div>
-                </div>
-                <div class="field gen-field-compact">
-                  <label>Clips per streamer</label>
-                  <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" class="field-input-compact">
-                    <option value="1">1 clip</option>
-                    <option value="2" selected>2 clips</option>
-                    <option value="3">3 clips</option>
-                    <option value="4">4 clips</option>
-                    <option value="5">5 clips</option>
-                  </select>
-                </div>
-                <details class="gen-advanced">
-                  <summary>Clip filters</summary>
-                  <div class="gen-advanced-body">
-                    <div style="display:flex;flex-direction:column;gap:8px;">
-                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Min duration (s)</div>
-                        <input id="twitch-picker-dur-min" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact"></div>
-                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Max duration (s)</div>
-                        <input id="twitch-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact"></div>
-                      <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Clip age</div>
-                        <select id="twitch-picker-pub-window" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact">
-                          <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="any">Top ALL</option>
-                        </select></div>
-                    </div>
-                  </div>
-                </details>
-                <div id="streamer-selected-summary" class="streamer-selected-bar">Select creators in the sections above, then Pick clips.</div>
-                <div id="twitch-clip-schedule" class="gen-schedule-hint" style="font-size:10px;color:rgba(255,255,255,0.42);font-family:monospace;line-height:1.55;margin:6px 0 10px;padding:8px 10px;border:1px solid rgba(199,175,79,0.15);border-radius:6px;background:rgba(0,0,0,0.2);"></div>
-                <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
+            <div class="gen-workspace gen-compose-workspace">
+              <aside class="gen-sidebar streamers-compose-controls">
                 <div id="twitch-comp-creative" class="gen-comp-creative">
                   <div class="gen-comp-creative-head">CREATIVE MODE · Clip comps (Short / Comp / Comp VOD)</div>
                   <select id="comp-creative-preset" onchange="onCompCreativePresetChange()" title="Controls clip-comp styling — Avatar VOD / Avatar Top 10 ignore this">
@@ -945,35 +826,29 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.4;">Preset drives layout, ranked overlay, audio bed, VOD comp, and captions.</div>
                 </div>
                 <div class="gen-action-bar">
-                  <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchMedia()">Pick clips</button>
                   <div class="gen-action-section">
-                    <p class="gen-action-section-label">AVATAR SHOWS<span>Script + HeyGen · ignores Creative Mode below</span></p>
-                    <button id="btn-gen-twitch" class="btn btn-outline" onclick="generateTwitchWithPicker()" title="Long-form show: Gemini script + Bobby G avatar from your picked clips">Avatar VOD</button>
-                    <button id="btn-gen-twitch-top10" class="btn btn-outline" onclick="generateTwitchTop10()" title="Multi-streamer countdown: one clip per streamer (3+), sorted by views → #1 is most viewed. Script + avatar — not clip comp.">Avatar Top 10</button>
+                    <p class="gen-action-section-label">AVATAR SHOWS<span>Script + HeyGen · ignores Creative Mode</span></p>
+                    <button id="btn-gen-twitch" class="btn btn-outline" onclick="generateTwitchWithPicker()" title="Long-form show: Gemini script + Bobby G avatar from library lineup">Avatar VOD</button>
+                    <button id="btn-gen-twitch-top10" class="btn btn-outline" onclick="generateTwitchTop10()" title="Multi-streamer countdown from library lineup">Avatar Top 10</button>
                   </div>
                   <div class="gen-action-section">
-                    <p class="gen-action-section-label">CLIP COMPS<span>Uses Creative Mode preset · checked clips + lineup order</span></p>
+                    <p class="gen-action-section-label">CLIP COMPS<span>Opens composer with preset delivery</span></p>
                     <div class="gen-action-row">
-                      <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()" title="One portrait Short per selected clip (no avatar)">Short</button>
+                      <button id="btn-gen-twitch-short" class="btn btn-outline" onclick="triggerTwitchShort()" title="One portrait Short per selected clip">Short</button>
                       <button id="btn-gen-twitch-comp" class="btn btn-outline" onclick="triggerClipComp()" title="Stitch lineup into one Short">Comp</button>
                     </div>
                     <button id="btn-gen-twitch-comp-vod" class="btn btn-outline" onclick="triggerClipCompVod()" title="8–20 min edited comp from lineup">Comp VOD</button>
-                    <div id="twitch-action-hint" class="gen-action-hint">Pick a Creative Mode preset — buttons lock to the matching output.</div>
+                    <div id="twitch-action-hint" class="gen-action-hint">Lineup comes from Clip Library · preset locks delivery type.</div>
                   </div>
                 </div>
-                <span id="twitch-fetch-status" class="gen-status-line"></span>
+                <button type="button" class="btn btn-outline btn-sm" onclick="nav('library')" style="margin-top:8px;">← Back to Library</button>
               </aside>
-              <main class="gen-main">
+              <main class="gen-main gen-compose-main">
                 <div class="gen-main-head">
-                  <h3 class="gen-main-title" id="twitch-main-title">CLIP PICKER</h3>
-                  <div class="twitch-sub-tabs" id="twitch-sub-tabs">
-                    <button type="button" class="twitch-sub-tab active" id="twitch-sub-clips" onclick="switchTwitchSubMode('clips')">Clips</button>
-                    <button type="button" class="twitch-sub-tab" id="twitch-sub-videos" onclick="switchTwitchSubMode('videos')">Videos</button>
-                  </div>
-                  <span class="gen-main-hint" id="twitch-main-hint">Checked clips feed lineup order · Creative Mode locks Short / Comp / Comp VOD</span>
+                  <h3 class="gen-main-title">COMPOSER</h3>
+                  <span class="gen-main-hint">Edit trim, preview layout, then EXECUTE — clips sent from Library</span>
                 </div>
-                <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, then <strong>Pick clips</strong>.</div>
-                <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
+                <div id="composer-handoff-summary" class="composer-handoff-summary"></div>
                 <div id="twitch-comp-lineup" class="gen-comp-lineup" style="display:none;"></div>
                 <div id="generate-composer" class="generate-composer">
                   <div class="generate-composer-head">
@@ -1514,20 +1389,168 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div id="stats-sources" style="margin-top:12px;font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6;"></div>
     </div>
 
-    <!-- CLIP LIBRARY PAGE (CPD-1098) -->
-    <div class="page" id="page-library">
-      <div class="sec-title">CLIP LIBRARY <span class="badge" id="library-count">0 CLIPS</span></div>
-      <p style="font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">Rolling 7-day cache from daily ingest (12pm ET). Unused clips purge Sunday 11pm ET. Use <strong>Live picker</strong> on Generate for older content.</p>
-      <div class="btn-row" style="margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-        <select id="library-window" class="field-input-compact" onchange="refreshLibraryPage()">
-          <option value="24h">Top 24H</option><option value="7d" selected>Top 7D</option><option value="30d">Top 30D</option><option value="all">Top ALL</option>
-        </select>
-        <input id="library-streamers" placeholder="streamers (comma, empty=all roster)" class="field-input-compact" style="min-width:220px;" onchange="refreshLibraryPage()">
-        <button class="btn btn-outline btn-sm" onclick="refreshLibraryPage()">REFRESH</button>
-        <button class="btn btn-outline btn-sm" onclick="sendLibrarySelectionToGenerate()">SEND TO GENERATE</button>
-        <button class="btn btn-outline btn-sm" onclick="runLibraryIngest()">INGEST NOW</button>
+    <!-- CLIP LIBRARY PAGE (CPD-1098 / CPD-1118) — pick streamers + clips, send to Composer -->
+    <div class="page active" id="page-library">
+      <div class="sec-title">CLIP LIBRARY <span class="badge" id="library-count">PICK</span></div>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">Select creators → pick clips or analyze VOD → <strong>COMPOSE →</strong> opens Generate to preview, trim, and execute. Cached ingest runs daily 12pm ET (7-day retention).</p>
+      <div class="card" style="margin:0;border:1px solid rgba(199,175,79,0.15);">
+        <div class="card-body gen-pillar-body" style="padding:0;">
+          <input type="hidden" id="twitch-streamers" value="jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming">
+          <div class="gen-workspace streamers-workspace library-workspace">
+            <aside class="gen-sidebar streamers-controls">
+              <div id="streamer-connect-bar" class="streamer-connect-compact"></div>
+              <div id="streamer-sidebar-select" class="streamer-sidebar-select">
+                <div class="creator-toolbar">
+                  <input type="search" id="streamer-search" placeholder="Search @handle…" oninput="onStreamerSearchInput()" class="field-input-compact creator-search">
+                  <select id="streamer-filter-platform" onchange="onStreamerSearchInput()" class="field-input-compact creator-filter">
+                    <option value="all">All</option>
+                    <option value="twitch">Twitch</option>
+                    <option value="kick">Kick</option>
+                    <option value="youtube">YouTube</option>
+                  </select>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" style="color:#9146ff;border-color:rgba(145,70,255,0.5);">Sync</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()">+ Add</button>
+                </div>
+                <div class="streamer-sections-bar">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="setStreamerSectionsExpanded(true)">Expand all</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="setStreamerSectionsExpanded(false)">Collapse all</button>
+                </div>
+                <details open class="streamer-roster-section streamer-roster-section-selected" id="streamer-section-selected-wrap">
+                  <summary><span>Selected for today</span><span class="streamer-section-count" id="streamer-count-selected">0</span></summary>
+                  <div id="streamer-selected-chips" class="creator-chip-grid is-compact"></div>
+                </details>
+                <details open class="streamer-roster-section" id="streamer-section-templates-wrap">
+                  <summary><span>Templates · VOD lineup</span><span class="streamer-section-count" id="streamer-count-templates">0</span></summary>
+                  <div id="streamer-section-templates" class="creator-chip-grid is-section"></div>
+                  <div class="streamer-section-actions">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="applyStreamerTemplateSelection()">Select all templates</button>
+                  </div>
+                </details>
+                <details class="streamer-roster-section" id="streamer-section-following-wrap">
+                  <summary><span>Following · Twitch &amp; YouTube</span><span class="streamer-section-count" id="streamer-count-following">0</span></summary>
+                  <div id="streamer-section-following" class="creator-chip-grid is-section"></div>
+                </details>
+                <details class="streamer-roster-section" id="streamer-section-bench-wrap">
+                  <summary><span>Bench · backup</span><span class="streamer-section-count" id="streamer-count-bench">0</span></summary>
+                  <div id="streamer-section-bench" class="creator-chip-grid is-section"></div>
+                  <div id="streamer-bench-auto-hint" class="gen-status-line" style="padding:0 8px 2px;font-size:9px;min-height:14px;"></div>
+                  <div class="streamer-section-actions">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="loadStreamerBenchFromLiveGrid()">↻ Pull follows</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="promptAddStreamerBench()">+ Bench</button>
+                  </div>
+                </details>
+                <details class="streamer-roster-section" id="streamer-section-kick-wrap">
+                  <summary><span>Kick · manual</span><span class="streamer-section-count" id="streamer-count-kick">0</span></summary>
+                  <div id="streamer-section-kick" class="creator-chip-grid is-section"></div>
+                  <div class="streamer-section-actions">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()" style="color:#53fc18;border-color:rgba(83,252,24,0.4);">+ Kick URL</button>
+                  </div>
+                </details>
+                <details open class="streamer-roster-section" id="streamer-section-clip-groups-wrap">
+                  <summary><span>Clip groups · saved 4-packs</span><span class="streamer-section-count" id="streamer-count-clip-groups">0</span></summary>
+                  <div class="clip-group-editor-hint" style="padding:0 8px 6px;">Quick picker targets only — does not change Templates, Following, or Bench listings.</div>
+                  <div id="clip-group-editor" class="clip-group-editor" style="display:none;">
+                    <input type="hidden" id="clip-group-editor-id" value="">
+                    <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Group name</div>
+                      <input id="clip-group-editor-name" type="text" maxlength="48" placeholder="e.g. Kick test A" class="field-input-compact"></div>
+                    <div id="clip-group-editor-slots" class="clip-group-editor-slots"></div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+                      <button type="button" class="btn btn-gold btn-sm" onclick="saveClipGroupEditor()">Save group</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="fillClipGroupEditorFromSelection()">Use current selection</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="cancelClipGroupEditor()">Cancel</button>
+                    </div>
+                  </div>
+                  <div id="streamer-clip-groups-list" class="clip-groups-list"></div>
+                  <div class="streamer-section-actions">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="openClipGroupEditor(null)">+ New group</button>
+                  </div>
+                </details>
+                <div id="streamer-add-section" class="creator-add-section" style="display:none;">
+                  <div class="creator-section-label">SEARCH RESULTS</div>
+                  <div id="streamer-search-results" class="creator-chip-grid is-section"></div>
+                </div>
+                <div id="streamer-browse-section" class="creator-browse-section" style="display:none;">
+                  <div class="creator-browse-bar">
+                    <span id="streamer-browse-label">Browse roster</span>
+                    <span>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowseSelectPage(true)">Select page</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowseSelectPage(false)">Deselect</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowsePage(-1)">←</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="streamerBrowsePage(1)">→</button>
+                      <button type="button" class="btn btn-outline btn-sm" onclick="closeStreamerBrowse()">Close</button>
+                    </span>
+                  </div>
+                  <div id="streamer-browse-chips" class="creator-chip-grid is-section"></div>
+                </div>
+                <div id="streamer-panel-footer" class="creator-browse-bar">
+                  <span id="streamer-roster-hint"></span>
+                  <span>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="setAllStreamerChips(false)">Clear</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="toggleStreamerBrowse()" id="btn-streamer-browse">Browse</button>
+                  </span>
+                </div>
+              </div>
+              <div class="field gen-field-compact">
+                <label>Clips per streamer <span style="opacity:0.5;font-size:9px;">(Creative Mode may override lineup size)</span></label>
+                <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" class="field-input-compact">
+                  <option value="1">1 clip</option>
+                  <option value="2" selected>2 clips</option>
+                  <option value="3">3 clips</option>
+                  <option value="4">4 clips</option>
+                  <option value="5">5 clips</option>
+                </select>
+              </div>
+              <details class="gen-advanced">
+                <summary>Clip filters</summary>
+                <div class="gen-advanced-body">
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Min duration (s)</div>
+                      <input id="twitch-picker-dur-min" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact"></div>
+                    <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Max duration (s)</div>
+                      <input id="twitch-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact"></div>
+                    <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Clip age (live pick)</div>
+                      <select id="twitch-picker-pub-window" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact">
+                        <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="any">Top ALL</option>
+                      </select></div>
+                  </div>
+                </div>
+              </details>
+              <div id="streamer-selected-summary" class="streamer-selected-bar">Select creators, pick clips, then COMPOSE →.</div>
+              <div id="twitch-clip-schedule" class="gen-schedule-hint" style="font-size:10px;color:rgba(255,255,255,0.42);font-family:monospace;line-height:1.55;margin:6px 0 10px;padding:8px 10px;border:1px solid rgba(199,175,79,0.15);border-radius:6px;background:rgba(0,0,0,0.2);"></div>
+              <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
+              <div class="gen-action-bar">
+                <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchMedia()">Pick clips</button>
+                <button type="button" class="btn btn-gold" onclick="sendPickerToComposer()">COMPOSE →</button>
+              </div>
+              <div class="btn-row" style="gap:6px;flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="runLibraryIngest()">INGEST NOW</button>
+              </div>
+              <span id="twitch-fetch-status" class="gen-status-line"></span>
+            </aside>
+            <main class="gen-main library-main">
+              <div class="gen-main-head">
+                <h3 class="gen-main-title" id="twitch-main-title">CLIP PICKER</h3>
+                <div class="twitch-sub-tabs" id="twitch-sub-tabs">
+                  <button type="button" class="twitch-sub-tab active" id="twitch-sub-clips" onclick="switchTwitchSubMode('clips')">Live clips</button>
+                  <button type="button" class="twitch-sub-tab" id="twitch-sub-videos" onclick="switchTwitchSubMode('videos')">Videos</button>
+                  <button type="button" class="twitch-sub-tab" id="twitch-sub-cache" onclick="switchTwitchSubMode('cache')">Cached</button>
+                </div>
+                <span class="gen-main-hint" id="twitch-main-hint">Checked clips → COMPOSE → edit in Generate</span>
+              </div>
+              <div id="library-cache-toolbar" style="display:none;margin-bottom:10px;flex-wrap:wrap;gap:8px;" class="btn-row">
+                <select id="library-window" class="field-input-compact" onchange="refreshLibraryPage()">
+                  <option value="24h">Top 24H</option><option value="7d" selected>Top 7D</option><option value="30d">Top 30D</option><option value="all">Top ALL</option>
+                </select>
+                <input id="library-streamers" placeholder="filter streamers (empty = selected roster)" class="field-input-compact" style="min-width:200px;" onchange="refreshLibraryPage()">
+                <button class="btn btn-outline btn-sm" onclick="refreshLibraryPage()">REFRESH CACHE</button>
+              </div>
+              <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, then <strong>Pick clips</strong> or open <strong>Cached</strong>.</div>
+              <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
+              <div id="library-grid" class="gen-picker-grid" style="display:none;max-height:calc(100vh - 280px);overflow-y:auto;"></div>
+            </main>
+          </div>
+        </div>
       </div>
-      <div id="library-grid" class="gen-picker-grid" style="max-height:calc(100vh - 220px);overflow-y:auto;"></div>
     </div>
 
     <!-- JOB QUEUE PAGE -->
@@ -2733,8 +2756,127 @@ function nav(page) {
   if (page === 'abtest') thumbPopulateDropdown();
   if (page === 'stats') statsPageInit();
   if (page === 'postlive') postLivePageInit();
-  if (page === 'library') refreshLibraryPage();
-  if (page === 'generate') applyLibraryHandoff();
+  if (page === 'library') libraryPageInit();
+  if (page === 'generate') {
+    if (!applyComposerHandoff()) {
+      applyLibraryHandoff();
+      renderComposerHandoffSummary();
+    }
+    switchGeneratePillar('twitch');
+  }
+}
+
+function libraryPageInit() {
+  renderClipPullScheduleHint();
+  refreshUsedClipsFromServer(function() {
+    if (typeof loadStreamerList === 'function') loadStreamerList();
+  });
+  if (typeof switchTwitchSubMode === 'function') switchTwitchSubMode(_twitchSubMode || 'clips');
+}
+
+function mergeCacheClipsIntoPicker(cacheClips) {
+  if (!cacheClips || !cacheClips.length) return;
+  var byStreamer = {};
+  (_twitchPickerStreamers || []).forEach(function(s) { byStreamer[s.name] = s; });
+  cacheClips.forEach(function(c) {
+    var name = (c.streamer || 'unknown').toLowerCase();
+    if (!byStreamer[name]) {
+      byStreamer[name] = {
+        name: name,
+        displayName: TWITCH_PICKER_DISPLAY_NAMES[name] || c.streamer || name,
+        platform: c.platform || 'twitch',
+        selected: true,
+        clips: [],
+        clipsRaw: []
+      };
+      _twitchPickerStreamers = _twitchPickerStreamers || [];
+      _twitchPickerStreamers.push(byStreamer[name]);
+    }
+    var entry = byStreamer[name];
+    var clipObj = {
+      title: c.title, url: c.url, views: c.views || 0,
+      game: c.game || '', thumbnailUrl: c.thumbnailUrl || '',
+      duration: c.duration || 0, isUsed: isClipUsed(c.url),
+      createdAt: c.createdAt || null, selected: true,
+      platform: c.platform || 'twitch'
+    };
+    var exists = entry.clips.some(function(x) { return x.url === clipObj.url; });
+    if (!exists) {
+      entry.clips.push(clipObj);
+      entry.clipsRaw.push(Object.assign({}, clipObj));
+    } else {
+      entry.clips.forEach(function(x) { if (x.url === clipObj.url) x.selected = true; });
+    }
+    entry.selected = true;
+  });
+}
+
+function sendPickerToComposer() {
+  var picked = collectCompPickedClips();
+  var cachePicks = Object.values(_librarySelected || {});
+  if (!picked.length && cachePicks.length) mergeCacheClipsIntoPicker(cachePicks);
+  picked = collectCompPickedClips();
+  if (!picked.length && !_composerVodSegment) {
+    alert('Select creators and pick clips (live, cached, or VOD), then COMPOSE →.');
+    return;
+  }
+  try {
+    sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
+      streamers: _twitchPickerStreamers || [],
+      vodSegment: _composerVodSegment || null,
+      source: 'library'
+    }));
+  } catch (e) {}
+  nav('generate');
+}
+
+function sendLibrarySelectionToGenerate() { sendPickerToComposer(); }
+
+function applyComposerHandoff() {
+  var raw;
+  try { raw = sessionStorage.getItem('cwn_composer_handoff'); } catch (e) { return false; }
+  if (!raw) return false;
+  try { sessionStorage.removeItem('cwn_composer_handoff'); } catch (e) {}
+  var handoff;
+  try { handoff = JSON.parse(raw); } catch (e) { return false; }
+  if (handoff.streamers && handoff.streamers.length) {
+    _twitchPickerStreamers = handoff.streamers;
+  }
+  _composerVodSegment = handoff.vodSegment || null;
+  switchGeneratePillar('twitch');
+  renderComposerHandoffSummary();
+  if (typeof refreshCompLineupUI === 'function') refreshCompLineupUI();
+  refreshGenerateComposer(true);
+  var panel = g('generate-composer');
+  if (panel) {
+    panel.classList.add('is-open');
+    setTimeout(function() { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 120);
+  }
+  return true;
+}
+
+function renderComposerHandoffSummary() {
+  var el = g('composer-handoff-summary');
+  if (!el) return;
+  var picked = collectCompPickedClips();
+  if (!picked.length && !_composerVodSegment) {
+    el.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.45);">No lineup yet — pick streamers and clips in <button type="button" class="btn btn-outline btn-sm" onclick="nav(\'library\')">Clip Library</button>, then <strong>COMPOSE →</strong>.</div>';
+    return;
+  }
+  var html = '<div style="font-size:10px;color:rgba(199,175,79,0.9);letter-spacing:1px;margin-bottom:8px;">FROM LIBRARY · ' + picked.length + ' clip(s)</div>';
+  picked.forEach(function(p, i) {
+    var c = p.clip || {};
+    html += '<div style="font-size:11px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);">'
+      + (i + 1) + '. <strong>' + escapeHtml(p.displayName || p.name || '?') + '</strong> — '
+      + escapeHtml((c.title || '').slice(0, 55)) + '</div>';
+  });
+  if (_composerVodSegment) {
+    html += '<div style="font-size:10px;color:#9146ff;margin-top:8px;">VOD segment · '
+      + escapeHtml(_composerVodSegment.streamer || '') + ' · '
+      + Math.floor(_composerVodSegment.start_sec / 60) + '–' + Math.floor(_composerVodSegment.end_sec / 60) + 'm</div>';
+  }
+  html += '<button type="button" class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="nav(\'library\')">← Edit in Library</button>';
+  el.innerHTML = html;
 }
 
 var _libraryClips = [];
@@ -2754,7 +2896,8 @@ function refreshLibraryPage() {
     .then(function(d) {
       if (!d.ok) throw new Error(d.error || 'fetch failed');
       _libraryClips = d.clips || [];
-      if (badge) badge.textContent = _libraryClips.length + ' CLIPS';
+      var selCount = Object.keys(_librarySelected).length;
+      if (badge) badge.textContent = _libraryClips.length + ' CLIPS' + (selCount ? (' · ' + selCount + ' sel') : '');
       if (!_libraryClips.length) {
         grid.innerHTML = '<div style="padding:20px;color:rgba(255,255,255,0.4);">No cached clips — run INGEST NOW or wait for 12pm ET cron.</div>';
         return;
@@ -2782,13 +2925,6 @@ function toggleLibraryClip(i) {
   if (_librarySelected[c.url]) delete _librarySelected[c.url];
   else _librarySelected[c.url] = c;
   refreshLibraryPage();
-}
-
-function sendLibrarySelectionToGenerate() {
-  var picks = Object.values(_librarySelected);
-  if (!picks.length) { alert('Select clips in the library grid first.'); return; }
-  try { sessionStorage.setItem('cwn_library_handoff', JSON.stringify({ clips: picks, source: 'library' })); } catch(e) {}
-  nav('generate');
 }
 
 function applyLibraryHandoff() {
@@ -2827,11 +2963,10 @@ function applyLibraryHandoff() {
     };
   });
   var clipsPer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10);
-  renderTwitchPicker(g('btn-preview-twitch'), clipsPer);
-  var btn = g('btn-preview-twitch');
-  if (btn) { btn.textContent = 'HIDE PICKER'; btn.disabled = false; }
+  renderComposerHandoffSummary();
+  refreshGenerateComposer(true);
   var statusEl = g('twitch-fetch-status');
-  if (statusEl) statusEl.textContent = 'Library handoff: ' + clips.length + ' clip(s) pre-selected';
+  if (statusEl) statusEl.textContent = 'Library handoff: ' + clips.length + ' clip(s) — edit in Composer';
 }
 
 function runLibraryIngest() {
@@ -9970,10 +10105,7 @@ function sendVodSegmentToComposer(si, vi, segIdx) {
   };
   var delSel = g('composer-delivery');
   if (delSel) { delSel.value = 'vod_segment'; delSel.dataset.userSet = '1'; }
-  switchTwitchSubMode('clips');
-  refreshGenerateComposer(true);
-  var panel = g('generate-composer');
-  if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  sendPickerToComposer();
 }
 
 function renderComposerVodTimeline() {
@@ -12276,29 +12408,50 @@ var _twitchSubMode = 'clips';
 var _twitchPickerVods = [];
 
 function switchTwitchSubMode(mode) {
-  _twitchSubMode = mode === 'videos' ? 'videos' : 'clips';
+  _twitchSubMode = (mode === 'videos' || mode === 'cache') ? mode : 'clips';
   var clipsTab = g('twitch-sub-clips');
   var videosTab = g('twitch-sub-videos');
+  var cacheTab = g('twitch-sub-cache');
   if (clipsTab) clipsTab.className = 'twitch-sub-tab' + (_twitchSubMode === 'clips' ? ' active' : '');
   if (videosTab) videosTab.className = 'twitch-sub-tab' + (_twitchSubMode === 'videos' ? ' active' : '');
+  if (cacheTab) cacheTab.className = 'twitch-sub-tab' + (_twitchSubMode === 'cache' ? ' active' : '');
   var title = g('twitch-main-title');
   var hint = g('twitch-main-hint');
   var btn = g('btn-preview-twitch');
+  var cacheToolbar = g('library-cache-toolbar');
+  var libGrid = g('library-grid');
+  var picker = g('twitch-inline-picker');
+  var empty = g('gen-twitch-empty');
   if (_twitchSubMode === 'videos') {
     if (title) title.textContent = 'VOD PICKER';
-    if (hint) hint.textContent = 'Recent broadcasts · Analyze picks a ~7min Gemini highlight window';
+    if (hint) hint.textContent = 'Recent broadcasts · Analyze → COMPOSE →';
     if (btn && btn.textContent.indexOf('HIDE') < 0) btn.textContent = 'FETCH VODS';
+    if (cacheToolbar) cacheToolbar.style.display = 'none';
+    if (libGrid) libGrid.style.display = 'none';
+  } else if (_twitchSubMode === 'cache') {
+    if (title) title.textContent = 'CACHED CLIPS';
+    if (hint) hint.textContent = 'SQLite ingest · click clips to select · COMPOSE →';
+    if (btn) btn.style.display = 'none';
+    if (cacheToolbar) cacheToolbar.style.display = 'flex';
+    if (libGrid) libGrid.style.display = '';
+    if (picker) picker.style.display = 'none';
+    if (empty) empty.style.display = 'none';
+    refreshLibraryPage();
+    return;
   } else {
     if (title) title.textContent = 'CLIP PICKER';
-    if (hint) hint.textContent = 'Checked clips feed lineup order · Creative Mode locks Short / Comp / Comp VOD';
-    if (btn && btn.textContent.indexOf('HIDE') < 0) btn.textContent = 'PICK CLIPS';
+    if (hint) hint.textContent = 'Live Helix · checked clips → COMPOSE →';
+    if (btn) { btn.style.display = ''; if (btn.textContent.indexOf('HIDE') < 0) btn.textContent = 'PICK CLIPS'; }
+    if (cacheToolbar) cacheToolbar.style.display = 'none';
+    if (libGrid) libGrid.style.display = 'none';
   }
-  var picker = g('twitch-inline-picker');
   if (picker && picker.style.display !== 'none') {
     if (_twitchSubMode === 'videos' && _twitchPickerVods.length) renderTwitchVodPicker();
     else if (_twitchSubMode === 'clips' && _twitchPickerStreamers.length) {
       renderTwitchPicker(g('btn-preview-twitch'), parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10));
     }
+  } else if (_twitchSubMode === 'clips' && empty) {
+    empty.style.display = (_twitchPickerStreamers && _twitchPickerStreamers.length) ? 'none' : '';
   }
 }
 
@@ -16139,6 +16292,8 @@ loadStreamerList();
 loadClipsPerStreamer();
 loadCompositionTemplates();
 refreshUsedClipsFromServer();
+libraryPageInit();
+renderComposerHandoffSummary();
 setTimeout(loadStyleGuides, 1000);
 setTimeout(renderPronunciationList, 500); // check for stored guides after server connects
 setTimeout(function(){ restoreJobsFromServer(false); }, 1500); // auto-restore persisted jobs from server on page load
