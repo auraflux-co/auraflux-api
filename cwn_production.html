@@ -48,6 +48,13 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .twitch-sub-tab { font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1.5px; padding:6px 14px; border:1px solid rgba(199,175,79,0.25); border-radius:5px; cursor:pointer; background:transparent; color:rgba(255,255,255,0.45); }
 .twitch-sub-tab:hover { color:rgba(255,255,255,0.75); }
 .twitch-sub-tab.active { background:rgba(199,175,79,0.15); color:#c7af4f; border-color:rgba(199,175,79,0.5); }
+.library-main-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-bottom:12px; }
+.library-window-pills { display:flex; gap:4px; flex-wrap:wrap; align-items:center; }
+.library-window-pill { font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1.5px; padding:6px 14px; border:1px solid rgba(199,175,79,0.25); border-radius:5px; cursor:pointer; background:transparent; color:rgba(255,255,255,0.45); }
+.library-window-pill:hover { color:rgba(255,255,255,0.75); }
+.library-window-pill.active { background:rgba(199,175,79,0.15); color:#c7af4f; border-color:rgba(199,175,79,0.5); }
+.picker-preview-video { width:100%; height:72px; object-fit:cover; border-radius:4px; margin-bottom:5px; background:#000; display:block; }
+.picker-staging-badge { font-size:8px; color:#c7af4f; letter-spacing:0.5px; margin-bottom:4px; }
 .generate-composer { display:none; margin-top:12px; border:1px solid rgba(199,175,79,0.25); border-radius:10px; background:#080c14; padding:14px; }
 .generate-composer.is-open { display:block; }
 .generate-composer-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
@@ -1391,8 +1398,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
     <!-- CLIP LIBRARY PAGE (CPD-1098 / CPD-1118) — pick streamers + clips, send to Composer -->
     <div class="page active" id="page-library">
-      <div class="sec-title">CLIP LIBRARY <span class="badge" id="library-count">PICK</span></div>
-      <p style="font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">Select creators → pick clips or analyze VOD → <strong>COMPOSE →</strong> opens Generate to preview, trim, and execute. Cached ingest runs daily 12pm ET (7-day retention).</p>
+      <div class="sec-title">CLIP LIBRARY <span class="badge" id="library-count">LIBRARY</span></div>
+      <p style="font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">Select creators → <strong>Load library</strong> → check clips (each downloads to R2 for hover preview) → <strong>COMPOSE →</strong> edit full clips in Generate. Unused R2 staging clears Sunday EOW.</p>
       <div class="card" style="margin:0;border:1px solid rgba(199,175,79,0.15);">
         <div class="card-body gen-pillar-body" style="padding:0;">
           <input type="hidden" id="twitch-streamers" value="jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming">
@@ -1490,63 +1497,59 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   </span>
                 </div>
               </div>
-              <div class="field gen-field-compact">
-                <label>Clips per streamer <span style="opacity:0.5;font-size:9px;">(Creative Mode may override lineup size)</span></label>
-                <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" class="field-input-compact">
-                  <option value="1">1 clip</option>
-                  <option value="2" selected>2 clips</option>
-                  <option value="3">3 clips</option>
-                  <option value="4">4 clips</option>
-                  <option value="5">5 clips</option>
-                </select>
-              </div>
+              <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" class="field-input-compact" style="display:none" aria-hidden="true">
+                <option value="1">1 clip</option>
+                <option value="2" selected>2 clips</option>
+                <option value="3">3 clips</option>
+                <option value="4">4 clips</option>
+                <option value="5">5 clips</option>
+              </select>
+              <select id="twitch-picker-pub-window" style="display:none" aria-hidden="true">
+                <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="any">Top ALL</option>
+              </select>
               <details class="gen-advanced">
-                <summary>Clip filters</summary>
+                <summary>Duration filters</summary>
                 <div class="gen-advanced-body">
                   <div style="display:flex;flex-direction:column;gap:8px;">
                     <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Min duration (s)</div>
                       <input id="twitch-picker-dur-min" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact"></div>
                     <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Max duration (s)</div>
                       <input id="twitch-picker-dur-max" type="number" min="0" step="1" placeholder="any" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact"></div>
-                    <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Clip age (live pick)</div>
-                      <select id="twitch-picker-pub-window" onchange="savePickerFilters('twitch');refreshPickerIfOpen('twitch')" class="field-input-compact">
-                        <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="any">Top ALL</option>
-                      </select></div>
                   </div>
                 </div>
               </details>
-              <div id="streamer-selected-summary" class="streamer-selected-bar">Select creators, pick clips, then COMPOSE →.</div>
-              <div id="twitch-clip-schedule" class="gen-schedule-hint" style="font-size:10px;color:rgba(255,255,255,0.42);font-family:monospace;line-height:1.55;margin:6px 0 10px;padding:8px 10px;border:1px solid rgba(199,175,79,0.15);border-radius:6px;background:rgba(0,0,0,0.2);"></div>
+              <div id="streamer-selected-summary" class="streamer-selected-bar">Select creators, then Load library.</div>
+              <div id="twitch-clip-schedule" class="gen-schedule-hint" style="display:none;" aria-hidden="true"></div>
               <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
               <div class="gen-action-bar">
-                <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchMedia()">Pick clips</button>
+                <button id="btn-preview-twitch" class="btn btn-outline" onclick="loadLibraryClips()">Load library</button>
                 <button type="button" class="btn btn-gold" onclick="sendPickerToComposer()">COMPOSE →</button>
               </div>
-              <div class="btn-row" style="gap:6px;flex-wrap:wrap;">
-                <button class="btn btn-outline btn-sm" onclick="runLibraryIngest()">INGEST NOW</button>
-              </div>
+              <details class="gen-advanced" style="margin-top:6px;">
+                <summary>Operator</summary>
+                <div class="gen-advanced-body">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="runLibraryIngest()">Ingest now</button>
+                  <span style="display:block;font-size:9px;color:rgba(255,255,255,0.35);margin-top:6px;">Background SQLite cache · daily 12pm ET</span>
+                </div>
+              </details>
               <span id="twitch-fetch-status" class="gen-status-line"></span>
             </aside>
             <main class="gen-main library-main">
-              <div class="gen-main-head">
-                <h3 class="gen-main-title" id="twitch-main-title">CLIP PICKER</h3>
-                <div class="twitch-sub-tabs" id="twitch-sub-tabs">
-                  <button type="button" class="twitch-sub-tab active" id="twitch-sub-clips" onclick="switchTwitchSubMode('clips')">Live clips</button>
-                  <button type="button" class="twitch-sub-tab" id="twitch-sub-videos" onclick="switchTwitchSubMode('videos')">Videos</button>
-                  <button type="button" class="twitch-sub-tab" id="twitch-sub-cache" onclick="switchTwitchSubMode('cache')">Cached</button>
+              <div class="library-main-head">
+                <h3 class="gen-main-title" id="twitch-main-title">LIBRARY</h3>
+                <div class="library-window-pills" id="library-window-pills">
+                  <button type="button" class="library-window-pill active" data-win="24h" onclick="setLibraryWindow('24h')">Top 24H</button>
+                  <button type="button" class="library-window-pill" data-win="7d" onclick="setLibraryWindow('7d')">Top 7D</button>
+                  <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">Top 30D</button>
+                  <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">Top ALL</button>
                 </div>
-                <span class="gen-main-hint" id="twitch-main-hint">Checked clips → COMPOSE → edit in Generate</span>
+                <span class="gen-main-hint" id="twitch-main-hint">Check clips → COMPOSE → edit in Generate</span>
               </div>
-              <div id="library-cache-toolbar" style="display:none;margin-bottom:10px;flex-wrap:wrap;gap:8px;" class="btn-row">
-                <select id="library-window" class="field-input-compact" onchange="refreshLibraryPage()">
-                  <option value="24h">Top 24H</option><option value="7d" selected>Top 7D</option><option value="30d">Top 30D</option><option value="all">Top ALL</option>
-                </select>
-                <input id="library-streamers" placeholder="filter streamers (empty = selected roster)" class="field-input-compact" style="min-width:200px;" onchange="refreshLibraryPage()">
-                <button class="btn btn-outline btn-sm" onclick="refreshLibraryPage()">REFRESH CACHE</button>
-              </div>
-              <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, then <strong>Pick clips</strong> or open <strong>Cached</strong>.</div>
+              <select id="library-window" style="display:none" aria-hidden="true">
+                <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="all">Top ALL</option>
+              </select>
+              <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, choose a time window above, then click <strong>Load library</strong>.</div>
               <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
-              <div id="library-grid" class="gen-picker-grid" style="display:none;max-height:calc(100vh - 280px);overflow-y:auto;"></div>
             </main>
           </div>
         </div>
@@ -2767,11 +2770,154 @@ function nav(page) {
 }
 
 function libraryPageInit() {
-  renderClipPullScheduleHint();
   refreshUsedClipsFromServer(function() {
     if (typeof loadStreamerList === 'function') loadStreamerList();
   });
-  if (typeof switchTwitchSubMode === 'function') switchTwitchSubMode(_twitchSubMode || 'clips');
+  syncLibraryWindowToPicker();
+}
+
+function libraryWindowToPubKey(win) {
+  return win === 'all' ? 'any' : (win || '24h');
+}
+
+function syncLibraryWindowToPicker() {
+  var winEl = g('library-window');
+  var win = winEl ? winEl.value : '24h';
+  var pub = g('twitch-picker-pub-window');
+  if (pub) pub.value = libraryWindowToPubKey(win);
+  document.querySelectorAll('.library-window-pill').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-win') === win);
+  });
+}
+
+function setLibraryWindow(win) {
+  var el = g('library-window');
+  if (el) el.value = win;
+  syncLibraryWindowToPicker();
+  var picker = g('twitch-inline-picker');
+  if (picker && picker.style.display !== 'none' && _twitchPickerStreamers.length) {
+    loadLibraryClips(true);
+  }
+}
+
+function loadLibraryClips(forceReload) {
+  syncLibraryWindowToPicker();
+  previewTwitchClips(forceReload);
+}
+
+function updateLibraryCountBadge() {
+  var badge = g('library-count');
+  if (!badge) return;
+  var total = 0;
+  var sel = 0;
+  var staged = 0;
+  (_twitchPickerStreamers || []).forEach(function(e) {
+    (e.clips || []).forEach(function(c) {
+      total++;
+      if (c.selected) sel++;
+      if (c.stagedUrl) staged++;
+    });
+  });
+  if (!total) {
+    badge.textContent = 'LIBRARY';
+    return;
+  }
+  badge.textContent = total + ' CLIPS' + (sel ? (' · ' + sel + ' sel') : '') + (staged ? (' · ' + staged + ' ready') : '');
+}
+
+function applyStagedClipFields(clip, staged) {
+  if (!clip || !staged) return;
+  var play = staged.playbackUrl || staged.r2Url;
+  if (!play) return;
+  clip.playbackUrl = play;
+  clip.stagedUrl = play;
+  clip.r2Url = staged.r2Url || play;
+  clip.mp4Url = play;
+  clip.staging = false;
+  clip.stageError = null;
+}
+
+function stageClipForLibrary(clip, entry, onDone) {
+  if (!clip || !clip.url) { if (onDone) onDone('no url'); return; }
+  if (clip.stagedUrl) { if (onDone) onDone(null, clip); return; }
+  clip.staging = true;
+  clip.stageError = null;
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      url: clip.url,
+      platform: clip.platform || entry.platform || 'twitch',
+      streamer: entry.name || clip.streamer || '',
+      title: clip.title || '',
+      duration: clip.duration || 0,
+      thumbnailUrl: clip.thumbnailUrl || ''
+    })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !(d.clip && (d.clip.playbackUrl || d.clip.r2Url))) throw new Error(d.error || (d.clip && d.clip.error) || 'stage failed');
+      applyStagedClipFields(clip, d.clip);
+      if (onDone) onDone(null, clip);
+    })
+    .catch(function(e) {
+      clip.staging = false;
+      clip.stageError = e.message;
+      if (onDone) onDone(e.message, clip);
+    });
+}
+
+function ensureSelectedClipsStaged(callback) {
+  var picked = collectCompPickedClips();
+  var need = [];
+  picked.forEach(function(p) {
+    if (p.clip && p.clip.url && !p.clip.stagedUrl) need.push(p);
+  });
+  if (!need.length) { callback(null); return; }
+  var statusEl = g('twitch-fetch-status');
+  var composeBtn = document.querySelector('#page-library .gen-action-bar .btn-gold');
+  if (statusEl) statusEl.textContent = 'Downloading ' + need.length + ' clip(s) to R2 for editing…';
+  if (composeBtn) composeBtn.disabled = true;
+  need.forEach(function(p) { p.clip.staging = true; });
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      clips: need.map(function(p) {
+        return {
+          url: p.clip.url,
+          platform: p.clip.platform || p.name && 'twitch',
+          streamer: p.name,
+          title: p.clip.title || '',
+          duration: p.clip.duration || 0,
+          thumbnailUrl: p.clip.thumbnailUrl || ''
+        };
+      })
+    })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var failed = [];
+      (d.results || []).forEach(function(r) {
+        var pick = need.find(function(p) { return p.clip.url === r.url; });
+        if (!pick) return;
+        if (r.ok && (r.playbackUrl || r.r2Url)) applyStagedClipFields(pick.clip, r);
+        else {
+          pick.clip.staging = false;
+          pick.clip.stageError = r.error || 'stage failed';
+          failed.push(pick.clip.title || r.url);
+        }
+      });
+      if (failed.length) throw new Error('Failed to download: ' + failed.slice(0, 2).join(', '));
+      callback(null);
+    })
+    .catch(function(e) { callback(e.message || String(e)); })
+    .finally(function() {
+      if (composeBtn) composeBtn.disabled = false;
+      if (statusEl && !statusEl.textContent.startsWith('Stage failed')) {
+        statusEl.textContent = picked.length + ' clip(s) staged — opening Composer';
+      }
+    });
 }
 
 function mergeCacheClipsIntoPicker(cacheClips) {
@@ -2817,17 +2963,26 @@ function sendPickerToComposer() {
   if (!picked.length && cachePicks.length) mergeCacheClipsIntoPicker(cachePicks);
   picked = collectCompPickedClips();
   if (!picked.length && !_composerVodSegment) {
-    alert('Select creators and pick clips (live, cached, or VOD), then COMPOSE →.');
+    alert('Select creators, load library, check clips, then COMPOSE →.');
     return;
   }
-  try {
-    sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
-      streamers: _twitchPickerStreamers || [],
-      vodSegment: _composerVodSegment || null,
-      source: 'library'
-    }));
-  } catch (e) {}
-  nav('generate');
+  ensureSelectedClipsStaged(function(err) {
+    if (err) {
+      alert('Could not download clips for editing: ' + err);
+      var st = g('twitch-fetch-status');
+      if (st) st.textContent = 'Stage failed: ' + err;
+      renderTwitchPicker(g('btn-preview-twitch'), parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10));
+      return;
+    }
+    try {
+      sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
+        streamers: _twitchPickerStreamers || [],
+        vodSegment: _composerVodSegment || null,
+        source: 'library'
+      }));
+    } catch (e) {}
+    nav('generate');
+  });
 }
 
 function sendLibrarySelectionToGenerate() { sendPickerToComposer(); }
@@ -2883,40 +3038,7 @@ var _libraryClips = [];
 var _librarySelected = {};
 
 function refreshLibraryPage() {
-  var grid = g('library-grid');
-  var badge = g('library-count');
-  if (!grid) return;
-  grid.innerHTML = '<div style="padding:20px;color:rgba(255,255,255,0.4);">Loading library…</div>';
-  var win = (g('library-window') && g('library-window').value) || '7d';
-  var streamers = (g('library-streamers') && g('library-streamers').value || '').split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
-  var qs = 'window=' + encodeURIComponent(win) + '&sort=views&limit=300';
-  if (streamers.length) qs += '&streamers=' + encodeURIComponent(streamers.join(','));
-  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/clips?' + qs)
-    .then(function(r){ return r.json(); })
-    .then(function(d) {
-      if (!d.ok) throw new Error(d.error || 'fetch failed');
-      _libraryClips = d.clips || [];
-      var selCount = Object.keys(_librarySelected).length;
-      if (badge) badge.textContent = _libraryClips.length + ' CLIPS' + (selCount ? (' · ' + selCount + ' sel') : '');
-      if (!_libraryClips.length) {
-        grid.innerHTML = '<div style="padding:20px;color:rgba(255,255,255,0.4);">No cached clips — run INGEST NOW or wait for 12pm ET cron.</div>';
-        return;
-      }
-      var html = '';
-      _libraryClips.forEach(function(c, i) {
-        var sel = !!_librarySelected[c.url];
-        var thumb = c.thumbnailUrl ? c.thumbnailUrl.replace('{width}','160').replace('{height}','90') : '';
-        var usedBadge = c.used ? '<span style="font-size:8px;color:rgba(255,165,0,0.9);">USED</span>' : '';
-        html += '<div class="' + pickerCardClasses(sel, true) + '" onclick="toggleLibraryClip(' + i + ')">';
-        if (thumb) html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;" onerror="this.style.display=\'none\'">';
-        html += '<div class="picker-title">' + (c.title || '').slice(0, 55) + '</div>';
-        html += '<div style="font-size:9px;color:rgba(255,255,255,0.35);">' + c.streamer + ' · ' + (c.views || 0) + ' views · ' + (c.duration || 0) + 's ' + usedBadge + '</div></div>';
-      });
-      grid.innerHTML = html;
-    })
-    .catch(function(e) {
-      grid.innerHTML = '<div style="padding:20px;color:rgba(255,80,80,0.8);">' + e.message + '</div>';
-    });
+  updateLibraryCountBadge();
 }
 
 function toggleLibraryClip(i) {
@@ -2924,7 +3046,7 @@ function toggleLibraryClip(i) {
   if (!c || !c.url) return;
   if (_librarySelected[c.url]) delete _librarySelected[c.url];
   else _librarySelected[c.url] = c;
-  refreshLibraryPage();
+  updateLibraryCountBadge();
 }
 
 function applyLibraryHandoff() {
@@ -2938,7 +3060,6 @@ function applyLibraryHandoff() {
   if (!clips.length) return;
 
   switchGeneratePillar('twitch');
-  switchTwitchSubMode('clips');
   var byStreamer = {};
   clips.forEach(function(c) {
     var name = (c.streamer || 'unknown').toLowerCase();
@@ -2976,7 +3097,7 @@ function runLibraryIngest() {
     .then(function(d) {
       if (!d.ok) throw new Error(d.error || 'ingest failed');
       alert('Ingest done: ' + (d.summary && d.summary.clipsAdded) + ' clips');
-      refreshLibraryPage();
+      loadLibraryClips(true);
     })
     .catch(function(e) { alert('Ingest failed: ' + e.message); });
 }
@@ -7474,7 +7595,13 @@ function resolveClipUrls(clips, callback) {
       if (!pending) callback(clips);
       return;
     }
-    if (clip.mp4Url) { pending--; if (!pending) callback(clips); return; }
+    if (clip.mp4Url || clip.stagedUrl || clip.r2Url) {
+      clip.mp4Url = clip.mp4Url || clip.stagedUrl || clip.r2Url;
+      clip.clipQuality = clip.clipQuality || 'r2-staged';
+      pending--;
+      if (!pending) callback(clips);
+      return;
+    }
     if (clip.cdnUrl && !clip.mp4Url) {
       clip.mp4Url = clip.cdnUrl;
       clip.clipQuality = 'kick-cdn-inline';
@@ -10223,6 +10350,8 @@ function buildCompositionSpecFromUI() {
     return {
       url: c.url || '',
       pageUrl: c.pageUrl || c.url || '',
+      mp4Url: c.stagedUrl || c.r2Url || c.mp4Url || '',
+      stagedUrl: c.stagedUrl || c.r2Url || '',
       title: c.title || '',
       streamer: slot.name || c.streamer || '',
       displayName: slot.displayName || c.displayName || '',
@@ -10241,7 +10370,8 @@ function buildCompositionSpecFromUI() {
       var c = p.clip || {};
       ensureComposerTrimDefaults(c);
       return {
-        url: c.url, pageUrl: c.url, title: c.title || '', streamer: p.name, displayName: p.displayName,
+        url: c.url, pageUrl: c.url, mp4Url: c.stagedUrl || c.r2Url || c.mp4Url || '',
+        stagedUrl: c.stagedUrl || c.r2Url || '', title: c.title || '', streamer: p.name, displayName: p.displayName,
         duration: c.duration || 60, trimStart: c.composerTrimStart, trimEnd: c.composerTrimEnd,
         thumbnailUrl: c.thumbnailUrl || '', order: idx, orientation: 'landscape', game: c.game || '', views: c.views || 0
       };
@@ -12408,56 +12538,11 @@ var _twitchSubMode = 'clips';
 var _twitchPickerVods = [];
 
 function switchTwitchSubMode(mode) {
-  _twitchSubMode = (mode === 'videos' || mode === 'cache') ? mode : 'clips';
-  var clipsTab = g('twitch-sub-clips');
-  var videosTab = g('twitch-sub-videos');
-  var cacheTab = g('twitch-sub-cache');
-  if (clipsTab) clipsTab.className = 'twitch-sub-tab' + (_twitchSubMode === 'clips' ? ' active' : '');
-  if (videosTab) videosTab.className = 'twitch-sub-tab' + (_twitchSubMode === 'videos' ? ' active' : '');
-  if (cacheTab) cacheTab.className = 'twitch-sub-tab' + (_twitchSubMode === 'cache' ? ' active' : '');
-  var title = g('twitch-main-title');
-  var hint = g('twitch-main-hint');
-  var btn = g('btn-preview-twitch');
-  var cacheToolbar = g('library-cache-toolbar');
-  var libGrid = g('library-grid');
-  var picker = g('twitch-inline-picker');
-  var empty = g('gen-twitch-empty');
-  if (_twitchSubMode === 'videos') {
-    if (title) title.textContent = 'VOD PICKER';
-    if (hint) hint.textContent = 'Recent broadcasts · Analyze → COMPOSE →';
-    if (btn && btn.textContent.indexOf('HIDE') < 0) btn.textContent = 'FETCH VODS';
-    if (cacheToolbar) cacheToolbar.style.display = 'none';
-    if (libGrid) libGrid.style.display = 'none';
-  } else if (_twitchSubMode === 'cache') {
-    if (title) title.textContent = 'CACHED CLIPS';
-    if (hint) hint.textContent = 'SQLite ingest · click clips to select · COMPOSE →';
-    if (btn) btn.style.display = 'none';
-    if (cacheToolbar) cacheToolbar.style.display = 'flex';
-    if (libGrid) libGrid.style.display = '';
-    if (picker) picker.style.display = 'none';
-    if (empty) empty.style.display = 'none';
-    refreshLibraryPage();
-    return;
-  } else {
-    if (title) title.textContent = 'CLIP PICKER';
-    if (hint) hint.textContent = 'Live Helix · checked clips → COMPOSE →';
-    if (btn) { btn.style.display = ''; if (btn.textContent.indexOf('HIDE') < 0) btn.textContent = 'PICK CLIPS'; }
-    if (cacheToolbar) cacheToolbar.style.display = 'none';
-    if (libGrid) libGrid.style.display = 'none';
-  }
-  if (picker && picker.style.display !== 'none') {
-    if (_twitchSubMode === 'videos' && _twitchPickerVods.length) renderTwitchVodPicker();
-    else if (_twitchSubMode === 'clips' && _twitchPickerStreamers.length) {
-      renderTwitchPicker(g('btn-preview-twitch'), parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10));
-    }
-  } else if (_twitchSubMode === 'clips' && empty) {
-    empty.style.display = (_twitchPickerStreamers && _twitchPickerStreamers.length) ? 'none' : '';
-  }
+  _twitchSubMode = 'clips';
 }
 
 function previewTwitchMedia() {
-  if (_twitchSubMode === 'videos') previewTwitchVods();
-  else previewTwitchClips();
+  loadLibraryClips();
 }
 
 function previewTwitchVods() {
@@ -12589,19 +12674,25 @@ function analyzeTwitchVod(si, vi) {
     });
 }
 
-function previewTwitchClips() {
+function previewTwitchClips(forceReload) {
   var btn = g('btn-preview-twitch');
   var picker = g('twitch-inline-picker');
-  // Toggle: if already open with data, hide it
-  if (picker.style.display !== 'none' && _twitchPickerStreamers.length > 0) {
+  if (!forceReload && picker.style.display !== 'none' && _twitchPickerStreamers.length > 0) {
     setPickerPanelVisible('twitch', false);
-    btn.textContent = 'PICK CLIPS';
+    btn.textContent = 'Load library';
+    g('gen-twitch-empty').style.display = '';
+    updateLibraryCountBadge();
     return;
   }
-  btn.textContent = 'FETCHING...'; btn.disabled = true;
+  btn.textContent = 'Loading…'; btn.disabled = true;
   _twitchPickerStreamers = [];
   refreshUsedClipsFromServer(function() {
   var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  if (!streamers.length) {
+    btn.textContent = 'Load library'; btn.disabled = false;
+    alert('Select at least one creator on the left first.');
+    return;
+  }
   var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2');
   var twFilters = getPickerFilters('twitch');
   var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
@@ -12649,7 +12740,7 @@ function previewTwitchClips() {
     renderTwitchPicker(btn, clipsPerStreamer);
   };
   xhr.onerror = xhr.ontimeout = function() {
-    btn.textContent = 'PICK CLIPS'; btn.disabled = false;
+    btn.textContent = 'Load library'; btn.disabled = false;
     var st = g('twitch-fetch-status');
     if (st) st.textContent = 'Fetch failed — check server';
   };
@@ -12667,7 +12758,7 @@ function renderTwitchPickerWhenDone(btn, clipsPerStreamer, total) {
 }
 
 function renderTwitchPicker(btn, clipsPerStreamer) {
-  btn.textContent = 'HIDE PICKER'; btn.disabled = false;
+  btn.textContent = 'Hide library'; btn.disabled = false;
   var filters = getPickerFilters('twitch');
   _twitchPickerStreamers.forEach(function(entry) {
     if (entry.clipsRaw && entry.clipsRaw.length) {
@@ -12737,11 +12828,19 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
         var clipWhen = _clipRelTime(clip.createdAt);
 
         html += '<div class="' + pickerCardClasses(isSelected, true) + '" onclick="_toggleTwitchClip(' + si + ',' + ci + ')">';
-        if (thumb) {
+        if (clip.stagedUrl || clip.playbackUrl) {
+          var vsrc = escapeHtml(clip.playbackUrl || clip.stagedUrl);
+          html += '<video class="picker-preview-video" src="' + vsrc + '" muted loop playsinline preload="metadata"'
+            + ' onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;" onclick="event.stopPropagation();"></video>';
+        } else if (clip.staging) {
+          html += '<div class="picker-thumb-placeholder" style="height:55px;">DOWNLOADING…</div>';
+        } else if (thumb) {
           html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;" onerror="this.style.display=\'none\'">';
         } else {
           html += '<div class="picker-thumb-placeholder" style="height:55px;">NO THUMB</div>';
         }
+        if (clip.stageError) html += '<div class="picker-staging-badge">STAGE FAILED — retry check</div>';
+        else if (clip.stagedUrl) html += '<div class="picker-staging-badge">HOVER TO PREVIEW · FULL CLIP IN COMPOSER</div>';
         html += '<div class="picker-title">' + (clip.title || '').slice(0, 60) + '</div>';
         if (clipWhen) html += '<div class="picker-when">' + clipWhen + '</div>';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">'
@@ -12758,6 +12857,8 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
 
   picker.innerHTML = html;
   setPickerPanelVisible('twitch', true);
+  g('gen-twitch-empty').style.display = 'none';
+  updateLibraryCountBadge();
   refreshCompLineupUI();
 }
 
@@ -12784,13 +12885,22 @@ function _toggleTwitchClip(si, ci) {
     }
     clip.selected = true;
   }
-  // Sync streamer-level selected to true if any clip is selected
   entry.selected = entry.clips.some(function(c){ return c.selected; });
-  // Re-render picker in place (this resets the status line, so set swap notice after)
+  if (clip.selected && !clip.stagedUrl && !clip.staging) {
+    clip.staging = true;
+  }
   renderTwitchPicker(g('btn-preview-twitch'), clipsPerStreamer);
   if (swapMsg) {
     var statusEl = g('twitch-fetch-status');
     if (statusEl) statusEl.textContent = swapMsg;
+  }
+  if (clip.selected && clip.staging && !clip.stagedUrl) {
+    stageClipForLibrary(clip, entry, function(err) {
+      renderTwitchPicker(g('btn-preview-twitch'), clipsPerStreamer);
+      var st = g('twitch-fetch-status');
+      if (err && st) st.textContent = 'Download failed — ' + err;
+      else if (clip.stagedUrl && st) st.textContent = 'Clip ready — hover card to preview';
+    });
   }
 }
 
@@ -14350,7 +14460,7 @@ function renderStreamerSelectedSummary(sel) {
     bar.innerHTML = '<span style="color:rgba(255,255,255,0.35);">No creators selected — use a <strong>Clip group</strong>, Templates, Following, Bench, or Kick.</span>';
     return;
   }
-  bar.innerHTML = '<strong style="color:#9146ff;">' + sel.length + ' selected</strong> — Pick clips when ready.';
+  bar.innerHTML = '<strong style="color:#9146ff;">' + sel.length + ' selected</strong> — Load library when ready.';
 }
 
 var STREAMER_VOD_TEMPLATE_DEFAULTS = 'jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming';
