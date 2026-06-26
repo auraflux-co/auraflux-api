@@ -48,6 +48,30 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .twitch-sub-tab { font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1.5px; padding:6px 14px; border:1px solid rgba(199,175,79,0.25); border-radius:5px; cursor:pointer; background:transparent; color:rgba(255,255,255,0.45); }
 .twitch-sub-tab:hover { color:rgba(255,255,255,0.75); }
 .twitch-sub-tab.active { background:rgba(199,175,79,0.15); color:#c7af4f; border-color:rgba(199,175,79,0.5); }
+.generate-composer { display:none; margin-top:12px; border:1px solid rgba(199,175,79,0.25); border-radius:10px; background:#080c14; padding:14px; }
+.generate-composer.is-open { display:block; }
+.generate-composer-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
+.generate-composer-head h4 { margin:0; font-family:'Bebas Neue',sans-serif; letter-spacing:2px; color:#c7af4f; font-size:16px; }
+.composer-body { display:grid; grid-template-columns:minmax(140px,200px) 1fr; gap:16px; align-items:start; }
+@media (max-width:900px) { .composer-body { grid-template-columns:1fr; } }
+.composer-preview-frame { position:relative; width:100%; max-width:200px; aspect-ratio:9/16; margin:0 auto; border-radius:8px; overflow:hidden; background:#000; border:1px solid rgba(255,255,255,0.12); }
+.composer-preview-bg { position:absolute; inset:0; background-size:cover; background-position:center; filter:blur(18px) brightness(0.45); transform:scale(1.15); }
+.composer-preview-main { position:absolute; left:5%; right:5%; top:18%; bottom:28%; background-size:contain; background-position:center; background-repeat:no-repeat; z-index:1; }
+.composer-preview-hook { position:absolute; left:8%; right:8%; top:42%; z-index:3; text-align:center; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:11px; color:#fff; text-shadow:0 2px 8px #000; line-height:1.2; }
+.composer-preview-captions { position:absolute; left:6%; right:6%; bottom:12%; z-index:3; text-align:center; font-size:8px; color:rgba(255,255,255,0.85); background:rgba(0,0,0,0.35); padding:4px 6px; border-radius:4px; }
+.composer-preview-logo { position:absolute; width:28%; aspect-ratio:2.5; background:rgba(199,175,79,0.25); border:1px dashed rgba(199,175,79,0.5); z-index:4; font-size:7px; color:#c7af4f; display:flex; align-items:center; justify-content:center; text-align:center; }
+.composer-preview-logo.pos-tr { top:4%; right:4%; }
+.composer-preview-logo.pos-br { bottom:4%; right:4%; }
+.composer-preview-logo.pos-fold { top:2%; left:50%; transform:translateX(-50%); width:40%; }
+.composer-preview-ranked { position:absolute; top:6%; left:6%; z-index:3; font-size:8px; font-weight:800; color:#9146ff; background:rgba(0,0,0,0.55); padding:3px 6px; border-radius:4px; }
+.composer-features { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0; }
+.composer-feature-chip { font-size:9px; padding:2px 8px; border-radius:10px; background:rgba(199,175,79,0.12); color:rgba(255,255,255,0.75); border:1px solid rgba(199,175,79,0.25); }
+.composer-trim-row { display:flex; align-items:center; gap:8px; margin-top:4px; font-size:9px; color:rgba(255,255,255,0.45); }
+.composer-trim-row input[type=range] { flex:1; min-width:60px; }
+.composer-exec-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center; }
+.composer-validation { font-size:10px; font-family:monospace; margin-top:8px; line-height:1.5; }
+.composer-validation.err { color:rgba(255,80,80,0.85); }
+.composer-validation.ok { color:rgba(46,204,113,0.85); }
 .gen-workflow { display:flex; gap:0; font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:0.5px; }
 .gen-workflow-step { display:flex; align-items:center; gap:8px; padding:6px 0; }
 .gen-workflow-step:not(:last-child)::after { content:'→'; margin:0 14px; opacity:0.25; }
@@ -946,6 +970,42 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, then <strong>Pick clips</strong>.</div>
                 <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
                 <div id="twitch-comp-lineup" class="gen-comp-lineup" style="display:none;"></div>
+                <div id="generate-composer" class="generate-composer">
+                  <div class="generate-composer-head">
+                    <h4>COMPOSER</h4>
+                    <span style="font-size:10px;color:rgba(255,255,255,0.45);">Preview layout + trim before assembly</span>
+                    <select id="composer-delivery" onchange="onComposerDeliveryChange()" style="margin-left:auto;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;">
+                      <option value="short">Short (1 clip)</option>
+                      <option value="comp">Comp (multi-clip Short)</option>
+                      <option value="vod_comp">Comp VOD (long-form)</option>
+                    </select>
+                    <select id="composer-template-select" onchange="applyCompositionTemplate(this.value)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:11px;max-width:160px;">
+                      <option value="">Templates…</option>
+                    </select>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="saveCompositionTemplate()">Save template</button>
+                  </div>
+                  <div class="composer-body">
+                    <div>
+                      <div id="composer-preview-frame" class="composer-preview-frame">
+                        <div id="composer-preview-bg" class="composer-preview-bg"></div>
+                        <div id="composer-preview-main" class="composer-preview-main"></div>
+                        <div id="composer-preview-ranked" class="composer-preview-ranked" style="display:none;">TOP 5 → #1</div>
+                        <div id="composer-preview-hook" class="composer-preview-hook">Hook preview</div>
+                        <div id="composer-preview-captions" class="composer-preview-captions">Whisper captions zone</div>
+                        <div id="composer-preview-logo" class="composer-preview-logo pos-fold">LOGO</div>
+                      </div>
+                      <div id="composer-features" class="composer-features"></div>
+                    </div>
+                    <div>
+                      <div id="composer-lineup-trim"></div>
+                      <div id="composer-validation" class="composer-validation"></div>
+                      <div class="composer-exec-row">
+                        <button type="button" id="btn-composer-execute" class="btn btn-gold" onclick="executeFromComposer()">EXECUTE → ASSEMBLY</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="refreshGenerateComposer(true)">↻ Refresh preview</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </main>
             </div>
           </div>
@@ -9852,9 +9912,412 @@ function pickerDurColor(dur) {
 
 function compClipDurationSec(clip) {
   var c = clip || {};
+  if (c.composerTrimStart != null && c.composerTrimEnd != null) {
+    return Math.max(0, Math.round(Number(c.composerTrimEnd) - Number(c.composerTrimStart)));
+  }
   var d = c.duration != null ? c.duration : (c.clipDuration != null ? c.clipDuration : 0);
   var n = Math.round(Number(d) || 0);
   return n > 0 ? n : 0;
+}
+
+function ensureComposerTrimDefaults(clip) {
+  if (!clip) return;
+  var dur = Math.round(Number(clip.duration || clip.clipDuration || 60) || 60);
+  if (clip.composerTrimStart == null) clip.composerTrimStart = 0;
+  if (clip.composerTrimEnd == null) clip.composerTrimEnd = dur;
+}
+
+var _composerDeliveryFormat = 'short';
+
+function onComposerDeliveryChange() {
+  var sel = g('composer-delivery');
+  _composerDeliveryFormat = sel ? sel.value : 'short';
+  refreshGenerateComposer(true);
+}
+
+function inferComposerDeliveryFromPreset() {
+  var stored = loadCompCreativePresetFromStorage();
+  var preset = stored.preset || 'classic_blur_pad';
+  if (preset === 'serpent_ranked_vod' || preset === 'twitch_comp_vod') return 'vod_comp';
+  if (preset === 'serpent_ranked') return 'comp';
+  var picked = collectCompPickedClips().length;
+  if (picked === 1) return 'short';
+  return 'comp';
+}
+
+function buildCompositionSpecFromUI() {
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || _composerDeliveryFormat || inferComposerDeliveryFromPreset();
+  var spec = getCompLineupSpec();
+  var maxCount = delivery === 'short' ? 1 : (delivery === 'vod_comp' ? spec.maxClips : spec.lineupSlots);
+  var lineup = getCompLineupForDispatch(maxCount);
+  var creativePayload = buildCompCreativeRequestPayload((lineup[0] && lineup[0].displayName) || '');
+  var clips = lineup.map(function(slot, idx) {
+    var c = slot.clip || {};
+    ensureComposerTrimDefaults(c);
+    return {
+      url: c.url || '',
+      pageUrl: c.pageUrl || c.url || '',
+      title: c.title || '',
+      streamer: slot.name || c.streamer || '',
+      displayName: slot.displayName || c.displayName || '',
+      duration: c.duration || c.clipDuration || 60,
+      trimStart: c.composerTrimStart,
+      trimEnd: c.composerTrimEnd,
+      thumbnailUrl: c.thumbnailUrl || '',
+      order: idx,
+      orientation: 'landscape',
+      game: c.game || '',
+      views: c.views || 0
+    };
+  });
+  if (delivery === 'short') {
+    clips = collectCompPickedClips().map(function(p, idx) {
+      var c = p.clip || {};
+      ensureComposerTrimDefaults(c);
+      return {
+        url: c.url, pageUrl: c.url, title: c.title || '', streamer: p.name, displayName: p.displayName,
+        duration: c.duration || 60, trimStart: c.composerTrimStart, trimEnd: c.composerTrimEnd,
+        thumbnailUrl: c.thumbnailUrl || '', order: idx, orientation: 'landscape', game: c.game || '', views: c.views || 0
+      };
+    });
+  }
+  return {
+    deliveryFormat: delivery,
+    compCreativePreset: creativePayload.compCreativePreset,
+    compCreative: creativePayload.compCreative,
+    clips: clips,
+    platforms: ['youtube', 'tiktok', 'instagram']
+  };
+}
+
+function renderComposerPreviewMock(specBody, serverSpec) {
+  var spec = serverSpec || null;
+  var stored = loadCompCreativePresetFromStorage();
+  var preset = stored.preset || 'classic_blur_pad';
+  var lead = (specBody.clips && specBody.clips[0]) || {};
+  var thumb = (lead.thumbnailUrl || '').replace('{width}', '360').replace('{height}', '640');
+  var bg = g('composer-preview-bg');
+  var main = g('composer-preview-main');
+  var hook = g('composer-preview-hook');
+  var caps = g('composer-preview-captions');
+  var logo = g('composer-preview-logo');
+  var ranked = g('composer-preview-ranked');
+  if (bg) bg.style.backgroundImage = thumb ? ('url(' + thumb + ')') : 'none';
+  if (main) {
+    main.style.backgroundImage = thumb ? ('url(' + thumb + ')') : 'none';
+    main.style.display = thumb ? '' : 'none';
+  }
+  var preview = spec && spec.preview ? spec.preview : null;
+  var layoutMode = preview ? preview.layoutMode : (preset.indexOf('full') >= 0 || preset.indexOf('serpent') >= 0 ? 'full_bleed_crop' : 'blur_pad');
+  if (bg) bg.style.display = layoutMode === 'blur_pad' ? '' : 'none';
+  if (main) {
+    if (layoutMode === 'full_bleed_crop') { main.style.inset = '0'; main.style.backgroundSize = 'cover'; }
+    else { main.style.inset = ''; main.style.top = '18%'; main.style.bottom = '28%'; main.style.backgroundSize = 'contain'; }
+  }
+  if (hook) {
+    hook.textContent = preview && preview.rankedList ? 'RANKED HOOK' : 'Moment Hook Preview';
+    hook.style.display = (preview && preview.hookMode === 'whisper_only') ? 'none' : '';
+  }
+  if (caps) {
+    caps.style.display = (preview && preview.captionZone === 'off') ? 'none' : '';
+    caps.textContent = layoutMode === 'blur_pad' ? 'Whisper · bottom blur fold' : 'Whisper · bottom safe zone';
+  }
+  if (ranked) ranked.style.display = (preview && preview.rankedList) ? '' : 'none';
+  if (logo) {
+    logo.className = 'composer-preview-logo';
+    var corner = preview ? preview.logoCorner : 'top_blur_fold';
+    if (corner === 'top_right') logo.classList.add('pos-tr');
+    else if (corner === 'bottom_right') logo.classList.add('pos-br');
+    else logo.classList.add('pos-fold');
+  }
+  var featWrap = g('composer-features');
+  if (featWrap) {
+    var chips = (spec && spec.features && spec.features.chips) || [];
+    featWrap.innerHTML = chips.map(function(ch) {
+      return '<span class="composer-feature-chip">' + escapeHtml(String(ch)) + '</span>';
+    }).join('');
+  }
+}
+
+function renderComposerTrimControls() {
+  var wrap = g('composer-lineup-trim');
+  if (!wrap) return;
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
+  var spec = getCompLineupSpec();
+  var maxCount = delivery === 'short' ? Math.max(1, collectCompPickedClips().length) : spec.lineupSlots;
+  var lineup = getCompLineupForDispatch(maxCount);
+  if (!lineup.length) { wrap.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.4);">Pick clips to compose.</div>'; return; }
+  var html = '<div style="font-size:10px;color:rgba(199,175,79,0.8);margin-bottom:6px;">TRIM · lineup order matches Comp</div>';
+  lineup.forEach(function(slot, idx) {
+    var c = slot.clip || {};
+    ensureComposerTrimDefaults(c);
+    var dur = Math.round(Number(c.duration || c.clipDuration || 60) || 60);
+    html += '<div style="margin-bottom:10px;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px;">'
+      + '<div style="font-size:11px;font-weight:700;color:#fff;">' + (idx + 1) + '. ' + escapeHtml(slot.displayName || slot.name || '?') + '</div>'
+      + '<div style="font-size:9px;color:rgba(255,255,255,0.4);margin:2px 0 4px;">' + escapeHtml((c.title || '').slice(0, 60)) + '</div>'
+      + '<div class="composer-trim-row"><span>In ' + c.composerTrimStart + 's</span>'
+      + '<input type="range" min="0" max="' + Math.max(1, dur - 1) + '" value="' + c.composerTrimStart + '" oninput="setComposerTrim(' + idx + ',\'start\',this.value)">'
+      + '<span>Out ' + c.composerTrimEnd + 's</span>'
+      + '<input type="range" min="1" max="' + dur + '" value="' + c.composerTrimEnd + '" oninput="setComposerTrim(' + idx + ',\'end\',this.value)"></div>'
+      + '<div style="font-size:9px;color:rgba(46,204,113,0.8);">Use ' + compClipDurationSec(c) + 's in output</div></div>';
+  });
+  wrap.innerHTML = html;
+}
+
+function setComposerTrim(lineupIdx, which, val) {
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
+  var spec = getCompLineupSpec();
+  var maxCount = delivery === 'short' ? 1 : spec.lineupSlots;
+  var lineup = getCompLineupForDispatch(maxCount);
+  var slot = lineup[lineupIdx];
+  if (!slot || !slot.clip) return;
+  var c = slot.clip;
+  ensureComposerTrimDefaults(c);
+  var dur = Math.round(Number(c.duration || 60) || 60);
+  var n = Math.max(0, Math.min(parseInt(val, 10) || 0, dur));
+  if (which === 'start') {
+    c.composerTrimStart = n;
+    if (c.composerTrimEnd <= n) c.composerTrimEnd = Math.min(dur, n + 1);
+  } else {
+    c.composerTrimEnd = Math.max(n, (c.composerTrimStart || 0) + 1);
+  }
+  renderComposerTrimControls();
+  refreshGenerateComposer(false);
+}
+
+function refreshGenerateComposer(callValidate) {
+  var panel = g('generate-composer');
+  var picked = collectCompPickedClips();
+  if (!panel) return;
+  if (!picked.length) {
+    panel.classList.remove('is-open');
+    return;
+  }
+  panel.classList.add('is-open');
+  var delSel = g('composer-delivery');
+  if (delSel && !delSel.dataset.userSet) delSel.value = inferComposerDeliveryFromPreset();
+  renderComposerTrimControls();
+  var body = buildCompositionSpecFromUI();
+  renderComposerPreviewMock(body, null);
+  if (callValidate !== false) {
+    fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var valEl = g('composer-validation');
+        if (!valEl) return;
+        if (!d.ok && d.error) {
+          valEl.className = 'composer-validation err';
+          valEl.textContent = d.error;
+          return;
+        }
+        var v = d.validation || {};
+        renderComposerPreviewMock(body, d.spec);
+        valEl.className = 'composer-validation ' + (v.ok ? 'ok' : 'err');
+        var parts = [];
+        if (v.errors && v.errors.length) parts.push('BLOCK: ' + v.errors.join(' · '));
+        if (v.warnings && v.warnings.length) parts.push('Note: ' + v.warnings.join(' · '));
+        if (v.ok && d.spec) parts.push('Ready — ' + d.spec.totalDurationSec + 's footage · ' + (d.spec.features && d.spec.features.presetLabel || ''));
+        valEl.textContent = parts.join('\n') || 'Validating…';
+        var execBtn = g('btn-composer-execute');
+        if (execBtn) execBtn.disabled = !v.ok;
+      })
+      .catch(function(e) {
+        var valEl = g('composer-validation');
+        if (valEl) { valEl.className = 'composer-validation err'; valEl.textContent = e.message; }
+      });
+  }
+}
+
+function loadCompositionTemplates() {
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/templates')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var sel = g('composer-template-select');
+      if (!sel || !d.ok) return;
+      var html = '<option value="">Templates…</option>';
+      (d.templates || []).forEach(function(t) {
+        html += '<option value="' + escapeHtml(t.id) + '">' + escapeHtml(t.name) + '</option>';
+      });
+      sel.innerHTML = html;
+      window._compositionTemplates = d.templates || [];
+    })
+    .catch(function() {});
+}
+
+function applyCompositionTemplate(id) {
+  if (!id || !window._compositionTemplates) return;
+  var tpl = window._compositionTemplates.find(function(t) { return t.id === id; });
+  if (!tpl) return;
+  if (tpl.compCreativePreset) {
+    var data = loadCompCreativePresetFromStorage();
+    data.preset = tpl.compCreativePreset;
+    try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+    refreshCompCreativeChips();
+  }
+  if (tpl.deliveryFormat && g('composer-delivery')) {
+    g('composer-delivery').value = tpl.deliveryFormat;
+    g('composer-delivery').dataset.userSet = '1';
+  }
+  refreshGenerateComposer(true);
+}
+
+function saveCompositionTemplate() {
+  var name = prompt('Template name (saves Creative Mode + delivery format, not clip URLs):');
+  if (!name) return;
+  var body = buildCompositionSpecFromUI();
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.spec) throw new Error(d.error || 'validate failed');
+      return fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, compositionSpec: d.spec, force: true })
+      });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'save failed');
+      loadCompositionTemplates();
+      alert('Template saved: ' + name);
+    })
+    .catch(function(e) { alert('Save failed: ' + e.message); });
+}
+
+function executeFromComposer() {
+  var body = buildCompositionSpecFromUI();
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !d.validation || !d.validation.ok) {
+        throw new Error((d.validation && d.validation.errors && d.validation.errors[0]) || d.error || 'Invalid composition');
+      }
+      var delivery = body.deliveryFormat;
+      if (delivery === 'short') return executeComposerShorts(d.spec);
+      if (delivery === 'vod_comp') return executeComposerVodComp(d.spec);
+      return executeComposerComp(d.spec);
+    })
+    .catch(function(e) { alert('Execute blocked: ' + e.message); });
+}
+
+function executeComposerShorts(spec) {
+  var clips = spec.clips || [];
+  if (!clips.length) { alert('No clips'); return; }
+  showPlatformModal(function(sel) {
+    var pub = parsePlatformModalSelection(sel);
+    lockGenerateButton('btn-composer-execute');
+    var idx = 0;
+    function next() {
+      if (idx >= clips.length) { unlockGenerateButtons(); return; }
+      var c = clips[idx++];
+      var allClips = [{ streamer: c.streamer, displayName: c.displayName, title: c.title, url: c.url, mp4Url: c.url }];
+      resolveTwitchClipUrls(allClips, function() {
+        var payload = {
+          url: allClips[0].mp4Url || allClips[0].url,
+          pageUrl: c.pageUrl || c.url,
+          title: c.title,
+          streamer: c.streamer,
+          displayName: c.displayName,
+          orientation: 'landscape',
+          trimStart: c.trimStart,
+          trimEnd: c.trimEnd
+        };
+        markClipsUsed([c.url]);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', (CFG.ffmpegUrl || 'http://localhost:3000') + '/generate-clip-comp', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function() {
+          try {
+            var resp = JSON.parse(xhr.responseText || '{}');
+            if (xhr.status === 200 && resp.ok) {
+              if (pub.scheduledAt) applyJobPublishSchedule(resp.jobId, pub.platforms, pub.scheduledAt);
+              startClipCompReviewPoll(resp.jobId, 'twitch-gen-status');
+            }
+          } catch(e) {}
+          next();
+        };
+        xhr.onerror = function() { next(); };
+        var reqBody = {
+          clips: [payload],
+          platforms: pub.platforms,
+          contentType: 'twitch-short',
+          compCreativePreset: spec.compCreativePreset,
+          compCreative: (spec.compCreative && spec.compCreative.preset !== spec.compCreativePreset) ? spec.compCreative : undefined
+        };
+        xhr.send(JSON.stringify(reqBody));
+      });
+    }
+    next();
+  });
+}
+
+function executeComposerComp(spec) {
+  showPlatformModal(function(sel) {
+    var pub = parsePlatformModalSelection(sel);
+    lockGenerateButton('btn-composer-execute');
+    var allClips = spec.clips.map(function(c) {
+      return { streamer: c.streamer, displayName: c.displayName, title: c.title, url: c.url, views: c.views || 0, game: c.game || '' };
+    });
+    resolveTwitchClipUrls(allClips, function() {
+      var clips = allClips.map(function(c, i) {
+        var src = spec.clips[i] || {};
+        return {
+          url: c.mp4Url || c.url,
+          pageUrl: src.pageUrl || c.url,
+          title: c.title,
+          streamer: c.streamer,
+          displayName: c.displayName,
+          orientation: 'landscape',
+          trimStart: src.trimStart,
+          trimEnd: src.trimEnd,
+          duration: src.durationHint
+        };
+      });
+      markClipsUsed(allClips.map(function(c){ return c.url; }).filter(Boolean));
+      _dispatchClipCompFromPicker(clips, spec.contentType || 'twitch-short', pub.platforms, 'twitch-gen-status', g('twitch-fetch-status'), pub.scheduledAt, {});
+    });
+  });
+}
+
+function executeComposerVodComp(spec) {
+  showPlatformModal(function(sel) {
+    var pub = parsePlatformModalSelection(sel);
+    lockGenerateButton('btn-composer-execute');
+    var allClips = spec.clips.map(function(c) {
+      return { streamer: c.streamer, displayName: c.displayName, title: c.title, url: c.url };
+    });
+    resolveTwitchClipUrls(allClips, function() {
+      var clips = allClips.map(function(c, i) {
+        var src = spec.clips[i] || {};
+        return {
+          url: c.mp4Url || c.url,
+          pageUrl: src.pageUrl || c.url,
+          title: c.title,
+          streamer: c.streamer,
+          displayName: c.displayName,
+          orientation: 'landscape',
+          trimStart: src.trimStart,
+          trimEnd: src.trimEnd,
+          duration: src.durationHint
+        };
+      });
+      markClipsUsed(allClips.map(function(c){ return c.url; }).filter(Boolean));
+      _dispatchClipCompFromPicker(clips, 'twitch-vod-comp', pub.platforms, 'twitch-gen-status', g('twitch-fetch-status'), pub.scheduledAt, {});
+    });
+  });
+}
+
+function scrollToComposer() {
+  var panel = g('generate-composer');
+  if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function formatCompDurationTotal(totalSec) {
@@ -10017,6 +10480,7 @@ function renderCompLineupPanel() {
 function refreshCompLineupUI() {
   renderCompLineupPanel();
   refreshTwitchActionBar();
+  refreshGenerateComposer(true);
 }
 
 function moveCompLineupSlot(idx, delta) {
@@ -11265,9 +11729,8 @@ function refreshCompCreativeChips() {
     }).join('');
   }
   refreshCompCreativeLabel();
+  if (typeof refreshGenerateComposer === 'function') refreshGenerateComposer(true);
 }
-
-function onCompCreativePresetChange() {
   var hm = g('comp-creative-hook-mode');
   var sel = g('comp-creative-preset');
   if (hm && sel && (sel.value === 'serpent_ranked' || sel.value === 'serpent_ranked_vod') && hm.value === 'both') hm.value = 'hook_only';
@@ -11355,39 +11818,11 @@ function triggerClipCompVod() {
     return;
   }
   if (isRankedVod && picked.length !== 10 && !confirm('Ranked VOD is designed for Top 10 (10 clips). You have ' + picked.length + ' — countdown shows ' + picked.length + ' down to #1. Continue?')) return;
-  if (picked.length > VOD_CLIP_COUNT) picked = picked.slice(0, VOD_CLIP_COUNT);
-  showPlatformModal(function(selPlatforms) {
-    var pub = parsePlatformModalSelection(selPlatforms);
-    lockGenerateButton('btn-gen-twitch-comp-vod');
-    switchGeneratePillar('twitch');
-    setCompStatus('twitch-gen-status', 'COMP VOD — resolving ' + picked.length + ' clip(s)...', 'assembling');
-    var allClips = picked.map(function(p) {
-      return {
-        streamer: p.name,
-        displayName: p.displayName,
-        title: p.clip.title || '',
-        url: p.clip.url || '',
-        views: p.clip.views || 0,
-        game: p.clip.game || '',
-        duration: compClipDurationSec(p.clip)
-      };
-    });
-    resolveTwitchClipUrls(allClips, function() {
-      var clips = allClips.map(function(c, i) {
-        return {
-          url: c.mp4Url || c.url,
-          pageUrl: c.pageUrl || c.url,
-          title: c.title,
-          streamer: c.streamer,
-          displayName: c.displayName,
-          orientation: 'landscape',
-          label: 'CLIP_' + (i + 1),
-          duration: c.duration || compClipDurationSec(picked[i] && picked[i].clip)
-        };
-      });
-      _dispatchClipCompFromPicker(clips, 'twitch-vod-comp', pub.platforms, 'twitch-gen-status', g('twitch-fetch-status'), pub.scheduledAt, {});
-    });
-  });
+  if (g('composer-delivery')) { g('composer-delivery').value = 'vod_comp'; g('composer-delivery').dataset.userSet = '1'; }
+  refreshGenerateComposer(true);
+  scrollToComposer();
+  var st = g('twitch-fetch-status');
+  if (st) st.textContent = 'Review COMPOSER (VOD comp) — trim + preview, then EXECUTE → ASSEMBLY.';
 }
 
 function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, statusEl, scheduledAt, postLiveOpts) {
@@ -11580,57 +12015,17 @@ function triggerTwitchShort() {
     alert(actionState.short.title);
     return;
   }
-  // CPD-931: one picker — SHORT consumes the same inline PICK CLIPS selections
-  // as LONG FORM. One short job per selected clip.
-  var picked = [];
-  (_twitchPickerStreamers || []).forEach(function(entry) {
-    if (entry.dropReason || !entry.selected) return;
-    entry.clips.forEach(function(c) {
-      if (c.selected) picked.push({ name: entry.name, displayName: entry.displayName, clip: c });
-    });
-  });
-
+  if (g('composer-delivery')) { g('composer-delivery').value = 'short'; g('composer-delivery').dataset.userSet = '1'; }
+  var picked = collectCompPickedClips();
   if (!picked.length) {
-    // No selections yet — open the inline picker (if closed) and prompt
     var picker = g('twitch-inline-picker');
-    if (!picker || picker.style.display === 'none' || !(_twitchPickerStreamers || []).length) {
-      previewTwitchClips();
-    }
+    if (!picker || picker.style.display === 'none' || !(_twitchPickerStreamers || []).length) previewTwitchClips();
     var statusEl = g('twitch-fetch-status');
-    if (statusEl) statusEl.textContent = 'Pick clip(s) above, then click SHORT — one short is generated per selected clip.';
+    if (statusEl) statusEl.textContent = 'Pick clip(s), review in COMPOSER, then EXECUTE → ASSEMBLY.';
     return;
   }
-
-  if (picked.length > 1 && !confirm(picked.length + ' clips selected — this will generate ' + picked.length + ' separate shorts (one per clip). Continue?')) return;
-
-  // CPD-981: shorts are avatar-free — each picked clip becomes a single-clip
-  // clips-only job (full-frame portrait, whisper captions, transcript copy).
-  // Bobby G / HeyGen is VOD-only now; no script gen, no credits spent.
-  showPlatformModal(function(sel) {
-    var pub = parsePlatformModalSelection(sel);
-    lockGenerateButton('btn-gen-twitch-short');
-    setGenerateModeActive('twitch', 'short');
-    CURRENT_TYPE = 'twitch-short';
-    var statusId = statusTagIdForType('twitch-short');
-
-    var allClips = picked.map(function(p) {
-      return { streamer: p.name, displayName: p.displayName, title: p.clip.title || '', url: p.clip.url || '', views: p.clip.views || 0, game: p.clip.game || '' };
-    });
-    setGeneratingState(statusId, 'TWITCH SHORT ×' + picked.length + ' — resolving clip URL(s)...');
-    resolveTwitchClipUrls(allClips, function() {
-      markClipsUsed(allClips.map(function(c){ return c.url; }).filter(Boolean));
-      allClips.forEach(function(c, idx) {
-        setTimeout(function() {
-          setGeneratingState(statusId, 'TWITCH SHORT ×' + allClips.length + ' — dispatched ' + (idx + 1) + '/' + allClips.length + ' (' + c.displayName + ', no avatar)');
-          g('script-type-label').textContent = 'TWITCH SHORT (no avatar) — ' + c.displayName + ': "' + (c.title || '').slice(0, 50) + '"';
-          _dispatchClipShort({
-            url: c.mp4Url || c.url, pageUrl: c.url, title: c.title,
-            streamer: c.streamer, displayName: c.displayName, orientation: 'landscape'
-          }, 'twitch-short', 'Clip Short — ' + c.displayName, pub.platforms, statusId, pub.scheduledAt);
-        }, idx * 1500);
-      });
-    });
-  });
+  refreshGenerateComposer(true);
+  scrollToComposer();
 }
 
 // CPD-981: dispatch one avatar-free short (single-clip clips-only job)
@@ -11659,6 +12054,9 @@ function _dispatchClipShort(clip, contentType, title, platforms, statusId, sched
 }
 
 function triggerClipComp() {
+  if (g('composer-delivery')) { g('composer-delivery').value = 'comp'; g('composer-delivery').dataset.userSet = '1'; }
+  refreshGenerateComposer(true);
+  scrollToComposer();
   var stored = loadCompCreativePresetFromStorage();
   var actionState = getTwitchClipActionState();
   if (!actionState.comp.enabled) {
@@ -11695,47 +12093,11 @@ function triggerClipComp() {
   }
   if (picked.length > COMP_CLIP_COUNT) {
     if (!confirm(picked.length + ' clips in lineup — comp uses the first ' + COMP_CLIP_COUNT + '. Continue?')) return;
-    picked = picked.slice(0, COMP_CLIP_COUNT);
   }
-
-  showPlatformModal(function(sel) {
-    var pub = parsePlatformModalSelection(sel);
-    lockGenerateButton('btn-gen-twitch-comp');
-    switchGeneratePillar('twitch');
-    var statusEl2 = g('twitch-fetch-status');
-    if (statusEl2) statusEl2.textContent = 'CLIPS COMP — resolving ' + picked.length + ' clip URL(s)...';
-    setCompStatus('twitch-gen-status', 'CLIPS COMP — resolving ' + picked.length + ' clip URL(s)...', 'assembling');
-
-    var allClips = picked.map(function(p) {
-      return { streamer: p.name, displayName: p.displayName, title: p.clip.title || '', url: p.clip.url || '', views: p.clip.views || 0, game: p.clip.game || '' };
-    });
-    resolveTwitchClipUrls(allClips, function() {
-      var clips = allClips.map(function(c) {
-        return {
-          url: c.mp4Url || c.url,
-          pageUrl: c.pageUrl || c.url,
-          title: c.title,
-          streamer: c.streamer,
-          displayName: c.displayName,
-          orientation: 'landscape',
-          trimStart: c.trimStart,
-          trimEnd: c.trimEnd,
-          postLiveVod: c.postLiveVod || false
-        };
-      });
-      var postLiveSessionId = null;
-      var postLiveMuteRanges = null;
-      if (clips.length && clips.every(function(c) { return c.postLiveVod; })) {
-        postLiveSessionId = window._postLiveActiveSession && window._postLiveActiveSession.videoId;
-        postLiveMuteRanges = window._postLiveActiveSession && window._postLiveActiveSession.muteRanges;
-      }
-      markClipsUsed(allClips.map(function(c){ return c.url; }).filter(Boolean));
-      _dispatchClipCompFromPicker(clips, 'twitch-short', pub.platforms, 'twitch-gen-status', statusEl2, pub.scheduledAt, {
-        postLiveVodSessionId: postLiveSessionId,
-        postLiveMuteRanges: postLiveMuteRanges
-      });
-    });
-  });
+  refreshGenerateComposer(true);
+  scrollToComposer();
+  var statusEl3 = g('twitch-fetch-status');
+  if (statusEl3) statusEl3.textContent = 'Review COMPOSER preview + trim, then EXECUTE → ASSEMBLY.';
 }
 
 // ── generateNews override — respects manual story picker if used ──────────────
@@ -15641,6 +16003,7 @@ loadReferenceLibrary();
 loadPronunciations();
 loadStreamerList();
 loadClipsPerStreamer();
+loadCompositionTemplates();
 refreshUsedClipsFromServer();
 setTimeout(loadStyleGuides, 1000);
 setTimeout(renderPronunciationList, 500); // check for stored guides after server connects
