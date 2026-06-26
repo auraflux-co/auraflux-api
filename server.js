@@ -4127,19 +4127,21 @@ app.post('/job/:id/reassemble', async (req, res) => {
   card._assemblyRetryCount = retryNum;
   card.status = 'assembling';
   card.assemblyId = assemblyId;
-  // Clear previous assembly artefacts but preserve heygen, script, designSpec, etc.
+  // Clear previous assembly artefacts but preserve operator hook/title choices.
   delete card.assembledAt;
   delete card.finalUrl;
   delete card.outputPath;
   delete card.driveUrl;
-  delete card.publishCopy;
   delete card.publishPrep;
-  delete card.clipHookTitles;
   delete card.gate5;
   delete card._gate5Done;
   delete card._gate5Running;
   delete card._gate3Approved;
   delete card._gate3Rejected;
+  delete card.gate3;
+  delete card.qaOutcome;
+  delete card.localPreviewUrl;
+  delete card.assemblyError;
   Object.keys(assemblyJobs).forEach(asmId => {
     if (assemblyJobs[asmId]?.sourceJobId === jobId) delete assemblyJobs[asmId];
   });
@@ -4195,6 +4197,13 @@ app.post('/job/:id/reassemble', async (req, res) => {
       reassembleClipCompBrief = card.clipCompBrief;
       reassembleClipHookTitles = card.clipHookTitles
         || (reassembleClipCompBrief.clips || []).map((c) => c.hook);
+      // Sync brief hooks from operator-selected clipHookTitles (custom hook wins)
+      if (card.clipHookTitles?.length && reassembleClipCompBrief?.clips?.length) {
+        card.clipHookTitles.forEach((h, i) => {
+          if (h && reassembleClipCompBrief.clips[i]) reassembleClipCompBrief.clips[i].hook = h;
+        });
+        reassembleClipHookTitles = card.clipHookTitles.slice();
+      }
       reassembleFullScript = buildClipCompSeoInput(reassembleClipCompBrief, card.compCreative || null);
       console.log(`[reassemble] ${jobId}: reusing clipCompBrief (${(reassembleClipCompBrief.clips || []).length} clips)`);
     } else if (!card.clipCompBrief && !req.body?.regenerateBrief) {
@@ -4203,7 +4212,9 @@ app.post('/job/:id/reassemble', async (req, res) => {
         compCreative: card.compCreative || null,
       });
       reassembleClipHookTitles = reassembleClipCompBrief.clips.map((c) => c.hook);
+      const reassembleClipHookCandidates = reassembleClipCompBrief.clips.map((c) => c.hookCandidates || []);
       card.clipHookTitles = reassembleClipHookTitles;
+      card.clipHookCandidates = reassembleClipHookCandidates;
       card.clipCompBrief = reassembleClipCompBrief;
       reassembleFullScript = buildClipCompSeoInput(reassembleClipCompBrief, card.compCreative || null);
     } else {
@@ -4216,7 +4227,9 @@ app.post('/job/:id/reassemble', async (req, res) => {
         console.warn(`[reassemble] ${jobId}: using fallback brief (Gemini timeout or error)`);
       }
       reassembleClipHookTitles = reassembleClipCompBrief.clips.map((c) => c.hook);
+      const reassembleClipHookCandidates = reassembleClipCompBrief.clips.map((c) => c.hookCandidates || []);
       card.clipHookTitles = reassembleClipHookTitles;
+      card.clipHookCandidates = reassembleClipHookCandidates;
       card.clipCompBrief = reassembleClipCompBrief;
       reassembleFullScript = buildClipCompSeoInput(reassembleClipCompBrief, card.compCreative || null);
     }
@@ -4254,6 +4267,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
     })) || [],
     orderedClipUrls: orderedClips,
     clipHookTitles: reassembleClipHookTitles || card.clipHookTitles || null,
+    clipHookCandidates: card.clipHookCandidates || null,
     clipCompBrief: reassembleClipCompBrief || card.clipCompBrief || null,
     regenerateClipHooks: false,
     clipsOnly:   !!card.clipsOnly,
@@ -4692,6 +4706,160 @@ app.get('/live-show/rundown', (req, res) => {
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message || String(e) });
   }
+});
+
+// POST /job/:id/regenerate-hooks — rerun Hook Machine + Claude QA; save candidates without assembly
+app.post('/job/:id/regenerate-hooks', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job is published — rollback first.' });
+  }
+  if (!card.clipsOnly) {
+    return res.status(400).json({ ok: false, error: 'Hook regen is for clip-comp / clip-short jobs only.' });
+  }
+
+  const orderedClips = card.orderedClipUrls || [];
+  if (!orderedClips.length) {
+    return res.status(400).json({ ok: false, error: 'No orderedClipUrls on card — cannot regenerate hooks.' });
+  }
+
+  const { generateClipCompCreativeBrief, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
+  const hookItems = (card.items || orderedClips).map((c) => ({
+    title: c.title || '',
+    displayName: c.displayName || c.streamer || '',
+    streamer: c.streamer || c.displayName || '',
+    thumbnailUrl: c.thumbnailUrl || '',
+    game: c.game || '',
+    viewCount: c.views || c.viewCount || null,
+  }));
+
+  console.log(`[regen-hooks] ${jobId}: running Hook Machine for ${orderedClips.length} clip(s)...`);
+  try {
+    // Operator-initiated — no brief timeout race (multi-pass + 5× Claude QA can exceed 180s)
+    const clipCompBrief = await generateClipCompCreativeBrief(orderedClips, hookItems, {
+      log: (m) => console.log(`[regen-hooks] ${jobId}${m}`),
+      compCreative: card.compCreative || null,
+    });
+
+    const clipHookTitles = clipCompBrief.clips.map((c) => c.hook);
+    const clipHookCandidates = clipCompBrief.clips.map((c) => c.hookCandidates || []);
+
+    card.clipHookTitles = clipHookTitles;
+    card.clipHookCandidates = clipHookCandidates;
+    card.clipCompBrief = clipCompBrief;
+    if (card.stage !== 'awaiting_review') card.stage = 'awaiting_review';
+    card.status = card.status === 'gate3_failed' ? 'completed' : (card.status || 'completed');
+    saveJobCard(jobId, card);
+
+    res.json({
+      ok: true,
+      jobId,
+      stage: card.stage,
+      clipHookTitles,
+      clipHookCandidates,
+      clips: clipCompBrief.clips.map((c, i) => ({
+        index: i,
+        hook: c.hook,
+        qaPassed: c.hookQa?.passed,
+        qaScore: c.hookQa?.score,
+        candidateCount: (c.hookCandidates || []).length,
+      })),
+      message: 'Hooks regenerated — pick from HOOK PICKER if needed, then RE-ASSEMBLE FROM FILES.',
+    });
+  } catch (err) {
+    console.error(`[regen-hooks] ${jobId}: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message || String(err) });
+  }
+});
+
+// POST /job/:id/custom-title — operator types YouTube title (bypasses SEO regen)
+app.post('/job/:id/custom-title', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job is published — rollback first.' });
+  }
+
+  const rawTitle = String(req.body.titleText || req.body.title || '').trim();
+  if (!rawTitle) return res.status(400).json({ ok: false, error: 'titleText is required.' });
+
+  const { applyOperatorCustomTitle } = require('./lib/operator_publish_titles');
+  const result = applyOperatorCustomTitle(card, rawTitle);
+  if (!result.ok) return res.status(400).json(result);
+
+  if (card.stage !== 'awaiting_review') card.stage = 'awaiting_review';
+  saveJobCard(jobId, card);
+  try {
+    const { saveOutput } = require('./lib/job_spec');
+    await saveOutput(jobId, 'publishCopy', card.publishCopy);
+  } catch (_) { /* non-fatal */ }
+
+  res.json({
+    ...result,
+    jobId,
+    stage: card.stage,
+    message: 'Custom title saved — used on APPROVE & PUBLISH (no re-assemble needed).',
+  });
+});
+
+// POST /job/:id/select-title — pick alternate SEO title candidate
+app.post('/job/:id/select-title', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job is published — rollback first.' });
+  }
+
+  const candidateIndex = Math.max(0, parseInt(req.body.candidateIndex, 10) || 0);
+  const { selectPublishTitle } = require('./lib/operator_publish_titles');
+  const result = selectPublishTitle(card, candidateIndex);
+  if (!result.ok) return res.status(400).json(result);
+
+  saveJobCard(jobId, card);
+  try {
+    const { saveOutput } = require('./lib/job_spec');
+    await saveOutput(jobId, 'publishCopy', card.publishCopy);
+  } catch (_) { /* non-fatal */ }
+
+  res.json({
+    ...result,
+    jobId,
+    stage: card.stage,
+    message: 'Title selected — used on APPROVE & PUBLISH.',
+  });
+});
+
+// POST /job/:id/custom-hook — operator types burned hook text (bypasses Hook Machine / QA)
+app.post('/job/:id/custom-hook', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job is published — rollback first.' });
+  }
+  if (!card.clipsOnly) {
+    return res.status(400).json({ ok: false, error: 'Custom hooks are for clip-comp / clip-short jobs only.' });
+  }
+
+  const clipIndex = Math.max(0, parseInt(req.body.clipIndex, 10) || 0);
+  const rawHook = String(req.body.hookText || req.body.hook || '').trim();
+  if (!rawHook) return res.status(400).json({ ok: false, error: 'hookText is required.' });
+
+  const { applyOperatorCustomHook } = require('./lib/clip_comp_hooks');
+  const result = applyOperatorCustomHook(card, clipIndex, rawHook);
+  if (!result.ok) return res.status(400).json(result);
+
+  if (card.stage !== 'awaiting_review') card.stage = 'awaiting_review';
+  saveJobCard(jobId, card);
+  res.json({
+    ...result,
+    jobId,
+    message: 'Custom hook saved — use RE-ASSEMBLE FROM FILES to burn it into the MP4.',
+  });
 });
 
 // POST /job/:id/select-hook — operator picks alternate Hook Machine candidate for a clip

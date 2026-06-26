@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-26 (CPD-1107) — Operator custom hook/title pickers on Queue; re-assemble preserves hooks/SEO; saveJobCard sync SQLite crash fix (pm2 mid-assembly); regen-hooks hardening. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1106) — Shorts Hook Master framework: ClipzWorld voice JSON + channel block in prompts; Hook Machine structured candidates (formula/visualCue/payoffTease); Claude QA pass 92+; outcome-spoiler + generic-fallback guards; QA all 5 candidates; brief timeout 180s; skip assembly hook regen when QA passed; Queue hook picker + POST /job/:id/select-hook. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1097) — Twitch streamer picker default cap 30→100 clips per creator (Helix max); `TWITCH_PICKER_CLIP_CAP` env still overrides. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1096) — Creative catalog C1–C7 (labeled dropdown + summary panel); Gemini brief 90s timeout/fallback; preset/button guards (C3 Comp-only, clip-count locks); Gate 1 FK fix; C5 logo on (karaoke Whisper only diff vs C2). Deployed C0 via `deploy_c0.sh`.
