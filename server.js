@@ -641,6 +641,12 @@ function saveJobCard(jobId, card) {
   } catch (e) {
     console.error('[db] Failed to save job to SQLite:', e.message);
   }
+  try {
+    const { markLibraryClipsUsedForJob } = require('./lib/content_library/mark_used');
+    markLibraryClipsUsedForJob(jobId, persistedJobs[jobId]);
+  } catch (e) {
+    console.warn('[content-library] mark used failed:', e.message);
+  }
 }
 
 // ── markJobStuck() — Mark a job as stuck and trigger auto-disable pattern check ──
@@ -4302,6 +4308,14 @@ app.post('/job/:id/reassemble', async (req, res) => {
     }
   });
 });
+
+// ── Content library (CPD-1098) ────────────────────────────────────────────────
+try {
+  const { registerContentLibraryRoutes } = require('./lib/content_library/routes');
+  registerContentLibraryRoutes(app);
+} catch (e) {
+  console.warn('[server] Content library routes failed to load:', e.message);
+}
 
 // ── GET /clip-comp/creative-catalog — labeled preset matrix for dashboard ─────
 app.get('/clip-comp/creative-catalog', (_req, res) => {
@@ -10954,6 +10968,13 @@ const server = app.listen(PORT, async () => {
     });
   } catch (e) {
     console.warn('⚠️  Production cron failed to start:', e.message);
+  }
+
+  try {
+    const { startContentLibraryCron } = require('./lib/content_library/cron');
+    startContentLibraryCron();
+  } catch (e) {
+    console.warn('⚠️  Content library cron failed to start:', e.message);
   }
 
   // CPD-996: end orphaned live broadcasts from a previous process (restart kills
