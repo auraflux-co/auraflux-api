@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "description": "Streamers ingested daily at 12pm ET (yesterday's clips). CPD-1098 / CPD-1100.",
+  "retentionDays": 7,
+  "streamers": [
+    { "login": "jasontheween", "displayName": "Jason", "platform": "twitch" },
+    { "login": "adapt", "displayName": "Adapt", "platform": "twitch" },
+    { "login": "marlon", "displayName": "Marlon", "platform": "twitch" },
+    { "login": "extraemily", "displayName": "ExtraEmily", "platform": "twitch" },
+    { "login": "stableronaldo", "displayName": "Ron", "platform": "twitch" },
+    { "login": "maya", "displayName": "Maya", "platform": "twitch" },
+    { "login": "cinna", "displayName": "Cinna", "platform": "twitch" },
+    { "login": "yonnajay", "displayName": "Yonna", "platform": "twitch" },
+    { "login": "jaycinco", "displayName": "Jay Cinco", "platform": "twitch" },
+    { "login": "lacy", "displayName": "Lacy", "platform": "twitch" },
+    { "login": "hasanabi", "displayName": "Hasan", "platform": "twitch" },
+    { "login": "yourragegaming", "displayName": "Rage", "platform": "twitch" },
+    { "login": "ludwig", "displayName": "Ludwig", "platform": "twitch" },
+    { "login": "nmplol", "displayName": "NMP", "platform": "twitch" },
+    { "login": "funnymike", "displayName": "FunnyMike", "platform": "twitch" },
+    { "login": "xqc", "displayName": "xQc", "platform": "kick" },
+    { "login": "trainwreckstv", "displayName": "Trainwrecks", "platform": "kick" },
+    { "login": "ishowspeed", "displayName": "IShowSpeed", "platform": "youtube", "handle": "@IShowSpeed" }
+  ]
+}
