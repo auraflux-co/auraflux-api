@@ -10038,7 +10038,9 @@ function loadRedditThreadComments(idx, onDone) {
   if ((t.topComments || []).length) { if (onDone) onDone(null, t); return; }
   t.commentsLoading = true;
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/reddit/thread/' + encodeURIComponent(t.postId) + '?commentLimit=30', true);
+  xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/reddit/thread/' + encodeURIComponent(t.postId)
+    + '?commentLimit=30'
+    + (t.redditPermalink || t.link ? '&permalink=' + encodeURIComponent(t.redditPermalink || t.link) : ''), true);
   xhr.timeout = 90000;
   xhr.onload = function() {
     t.commentsLoading = false;
@@ -10074,7 +10076,7 @@ function mapRedditPosts(posts) {
       topComments: p.topComments || [],
       videoUrl: p.videoUrl || p.url || '',
       link: p.permalink || p.url || '',
-      redditPermalink: p.permalink || '',
+      redditPermalink: p.permalink || p.link || '',
       redditSource: true,
       source: 'reddit',
       sourceType: 'reddit',
