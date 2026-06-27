@@ -88,6 +88,8 @@ env
 
 # Runtime state — never commit (public / contributor clones)
 data/jobs.json
+data/job_snapshots/**/*.mp4
+data/job_snapshots/**/bookends/
 data/cwn.db
 data/cwn.db-shm
 data/cwn.db-wal

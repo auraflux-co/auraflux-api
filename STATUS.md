@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-28 (CPD-1119) — Twitch Soup bookends: SEO-first credits outro (scroll YT description + Infected bed), cold open montage loop, MPEG-TS final stitch, job preserve scripts. Deployed C0. Operator: FIX SEO + RE-ASSEMBLE on script_twitch_1782513992551.
 **Last Updated:** 2026-06-26 (CPD-1118) — Library UX simplify (single LIBRARY + Top 24H/7D/30D/ALL) + R2 clip staging on check (hover preview, full MP4 in Composer). Unused R2 purge Sunday EOW; used staging purge 7d post-EXECUTE. Presigned playback when R2_ASSETS_DOMAIN unset. Deployed C0.
 **Last Updated:** 2026-06-26 (CPD-1118) — Library-first UX: streamer roster + live/cache/VOD picker on Clip Library; Generate · Composer desk only (Creative Mode + COMPOSER). COMPOSE → handoff.
 **Last Updated:** 2026-06-26 (CPD-1117 hotfix) — Dashboard JS parse error: removed orphaned block after `refreshCompCreativeChips()` that broke all onclick handlers. Deployed C0.

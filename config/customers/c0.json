@@ -66,7 +66,11 @@
             "itemGap": 12,
             "maxItems": 5,
             "borderWidth": 4,
-            "activeBorderWidth": 5
+            "activeBorderWidth": 5,
+            "thumbWidth": 120,
+            "thumbHeight": 68,
+            "thumbPadLeft": 14,
+            "thumbTextGap": 10
           },
 
           "logo": {
@@ -148,7 +152,7 @@
         "voice": {
           "lockedIntro": {
             "news": "I'm Bobby G, and this is Because the Light was on. I'm told this is the news. A recent study shows that people who watch news programs are 40% more likely to be aware that a news program is currently happening. ... [Pause] ... Here are some things that occurred while we weren't looking.",
-            "clips": "Welcome to Twitch Soup. I'm your host Bobby G, and for the next few minutes, I'll be your guide through the digital world that is livestreaming.",
+            "clips": "Welcome to Twitch Soup. I'm Bobby G, looking at the streams that make us laugh, cry, and wonder why the chat is screaming 'W'",
             "sports": "What's up, ClipzWorld! Grab your shades, because we're heading to the Other Side of the Pillow. I'm Bobby G, and we're breaking down the highlights that weren't just good—they were cold."
           },
           "lockedOutro": "That's all the time we have before the light bill is due. I'm Bobby G for ClipzWorld News. Keep your clips short and your takes shorter. Goodnight and good luck.",
@@ -166,13 +170,48 @@
         "audio": {
           "mixMode": "both",
           "avatarTrack": true,
-          "sourceTrack": true
+          "sourceTrack": true,
+          "studioLaugh": {
+            "enabled": true,
+            "maxDurationSec": 4.5,
+            "volume": 0.85,
+            "maxClipsPerVideo": 6,
+            "minClipsPerVideo": 2,
+            "referenceUrls": [
+              "https://www.youtube.com/watch?v=OzAQctMP53Q",
+              "https://www.youtube.com/watch?v=ZopeSp8fK-0",
+              "https://www.youtube.com/watch?v=XUl-BynnmCc",
+              "https://www.youtube.com/watch?v=yXIWkk-p9mo"
+            ]
+          },
+          "twitchBookends": {
+            "coldOpen": {
+              "enabled": true,
+              "durationSec": 15,
+              "logoSec": 2,
+              "montageClipSec": 1.5,
+              "musicVolume": 0.28,
+              "voVolume": 1.0,
+              "musicBedKey": "Oui",
+              "announcerVoiceId": "st7NwhTPEzqo2riw7qWC"
+            },
+            "outroCredits": {
+              "enabled": true,
+              "durationSec": 8,
+              "minDurationSec": 12,
+              "maxDurationSec": 55,
+              "scrollPxPerSec": 46,
+              "musicVolume": 0.32,
+              "scroll": true,
+              "musicBedKey": "Infected"
+            }
+          }
         },
         "resolution": {
           "width": 1920,
           "height": 1080
         },
-        "avatarId": "842f20b75ce242aea397f5030aa018aa",
+        "avatarId": "65d2350024274cbe8222ddf82e5ae07c",
         "voiceId": "2e598f1a6022448cb6710e5d44665325",
         "speakSpeed": 0.85
       },

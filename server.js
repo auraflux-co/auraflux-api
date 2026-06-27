@@ -833,6 +833,12 @@ async function startHeyGenPoller(jobId, card) {
     } else {
       for (const s of sortedAvatarSegs) segmentData.push({ url: s.video_url, label: s.sceneName, type: 'avatar' });
     }
+    try {
+      const { injectStudioLaughterSegments } = require('./lib/studio_laughter');
+      injectStudioLaughterSegments(segmentData, card.contentType || 'twitch', { customerId: card.customerId || 'c0' });
+    } catch (_laughErr) {
+      console.warn(`[heygen] Studio laugh inject skipped: ${_laughErr.message}`);
+    }
     const updatedCard = persistedJobs[jobId] || card;
     updatedCard.heygen = updatedCard.heygen || {};
     updatedCard.heygen.videoJobs = videoJobs;
@@ -1084,6 +1090,13 @@ async function startHeyGenPoller(jobId, card) {
         }
       }
 
+      try {
+        const { injectStudioLaughterSegments } = require('./lib/studio_laughter');
+        injectStudioLaughterSegments(segmentData, card.contentType || 'twitch', { customerId: card.customerId || 'c0' });
+      } catch (_laughErr) {
+        console.warn(`[heygen-poller:${jobId}] Studio laugh inject skipped: ${_laughErr.message}`);
+      }
+
       // Attach cardData to INTRO segments in segmentData (works for both script-driven and legacy paths)
       for (const avatarSeg of sortedAvatarSegs) {
         const seg = segmentData.find(s => s.label === avatarSeg.sceneName && s.type === 'avatar');
@@ -1123,13 +1136,17 @@ async function startHeyGenPoller(jobId, card) {
             (s.displayName||'').toLowerCase() === namePart ||
             (s.twitchUsername||'').toLowerCase() === namePart
           ) || (card.streamers||[])[0];
+          const clipForStreamer = (card.orderedClipUrls || []).find(c =>
+            String(c.displayName || c.streamer || '').toLowerCase() === namePart
+            || String(c.streamer || '').toLowerCase() === namePart
+          );
           if (streamer) {
             seg.cardData = {
               title:    streamer.displayName || namePart,
               category: 'ON STREAM',
               storyId:  `streamer_${namePart.replace(/\s+/g,'_')}`,
               fact:     [streamer.origin, streamer.fact].filter(Boolean).join(' · ').slice(0,60),
-              imageUrl: streamer.profileImage || null,
+              imageUrl: clipForStreamer?.thumbnailUrl || clipForStreamer?.imageUrl || streamer.profileImage || null,
               twitchUsername: streamer.twitchUsername || streamer.username || null
             };
           }
@@ -1483,13 +1500,17 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
                 (s.displayName || '').toLowerCase() === namePart ||
                 (s.twitchUsername || '').toLowerCase() === namePart
               ) || (segCard.streamers || [])[0];
+              const clipForStreamer = (segCard.orderedClipUrls || []).find(c =>
+                String(c.displayName || c.streamer || '').toLowerCase() === namePart
+                || String(c.streamer || '').toLowerCase() === namePart
+              );
               if (streamer) {
                 seg.cardData = {
                   title:    streamer.displayName || namePart,
                   category: 'ON STREAM',
                   storyId:  `streamer_${namePart.replace(/\s+/g,'_')}`,
                   fact:     [streamer.origin, streamer.fact].filter(Boolean).join(' · ').slice(0, 60),
-                  imageUrl: streamer.profileImage || null,
+                  imageUrl: clipForStreamer?.thumbnailUrl || clipForStreamer?.imageUrl || streamer.profileImage || null,
                   twitchUsername: streamer.twitchUsername || streamer.username || null
                 };
               }
@@ -2028,11 +2049,11 @@ app.get('/health', async (req, res) => {
 app.get('/jobs', (req, res) => {
   const IN_FLIGHT_STAGES = new Set([
     'script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling', 'heygen_done',
-    'awaiting_review', 'metadata_review', // ready for operator — must show without ↩ RESTORE
+    'hook_review', 'awaiting_review', 'metadata_review', // ready for operator — must show without ↩ RESTORE
   ]);
   const RESTORE_STAGES = new Set([
     ...IN_FLIGHT_STAGES,
-    'heygen_done', 'assembling', 'assembled', 'awaiting_review', 'metadata_review',
+    'heygen_done', 'assembling', 'assembled', 'hook_review', 'awaiting_review', 'metadata_review',
     'publish_scheduled',
     'gate5_forced', 'gate5_running', 'gate5_failed', 'music_review',
   ]);
@@ -2207,6 +2228,31 @@ app.post('/jobs/prune', (req, res) => {
   }
   console.log(`[jobs/prune] kept ${keep.length}, deleted ${deleted.length}`);
   res.json({ ok: true, kept: keep, deleted });
+});
+
+// GET/PUT /operator/draft-lineup — operator compose lineup survives refresh + pm2 restart
+app.get('/operator/draft-lineup', (req, res) => {
+  try {
+    const { getOperatorDraft } = require('./lib/operator_draft');
+    const out = getOperatorDraft(req.query.customerId || 'c0');
+    res.json(out);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.put('/operator/draft-lineup', (req, res) => {
+  try {
+    const { saveOperatorDraft } = require('./lib/operator_draft');
+    const draft = req.body && req.body.draft;
+    if (!draft || typeof draft !== 'object') {
+      return res.status(400).json({ ok: false, error: 'draft object required' });
+    }
+    const out = saveOperatorDraft(draft, req.body.customerId || 'c0');
+    res.json(out);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // POST /job/:id/reset-publish — clear publish artefacts, stay at awaiting_review (re-approve flow)
@@ -2519,7 +2565,11 @@ async function _runGate5ForCard(jobId) {
   // Short-form publish copy has no top-level title — titles nest under
   // platforms.youtube.* (gate5 resolves via publishCopy.platforms?.youtube).
   const _pcUsable = pc => pc && (pc.title || pc.platforms?.youtube || pc.youtube);
-  let publishCopy = savedOutputs.publishCopy || card.publishCopy || null;
+  const { resolveGate5PublishCopy, assertReadyToPublish } = require('./lib/operator_creative_guard');
+  const publishGuard = assertReadyToPublish(card);
+  if (!publishGuard.ok) throw new Error(publishGuard.error);
+
+  let publishCopy = resolveGate5PublishCopy(card);
   if (!_pcUsable(publishCopy)) {
     try {
       const { getJobSpec: _g5GetSpec } = require('./lib/job_spec');
@@ -3510,6 +3560,182 @@ app.get('/stream-scheduler/status', (req, res) => {
   res.json({ ok: true, enabled: true, streams: streamScheduler.status() });
 });
 
+// POST /studio-laugh/extract-from-teach — build laugh library from Soup TEACH reference URLs
+app.post('/studio-laugh/extract-from-teach', async (req, res) => {
+  try {
+    const { buildLaughLibraryFromReferences, getTeachReferenceUrls, ensureLaughLibrary } = require('./lib/studio_laughter');
+    const force = req.body?.force === true;
+    const urls = (Array.isArray(req.body?.urls) && req.body.urls.length)
+      ? req.body.urls.filter(u => u && String(u).startsWith('http'))
+      : getTeachReferenceUrls(req.body?.customerId || 'c0');
+
+    if (!urls.length) {
+      return res.status(400).json({ ok: false, error: 'No TEACH reference URLs — pass urls[] or configure studioLaugh.referenceUrls in c0.json' });
+    }
+
+    const result = force
+      ? await buildLaughLibraryFromReferences(urls, req.body?.opts || {})
+      : await ensureLaughLibrary(req.body?.customerId || 'c0', { forceRebuild: force, ...req.body?.opts });
+
+    res.json({ ok: true, urls, ...result });
+  } catch (err) {
+    console.error('[studio-laugh/extract-from-teach]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /job/:id/regen-script — send script back to Gemini for Talk Soup voice rewrite
+app.post('/job/:id/regen-script', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (!card.script?.raw) {
+    return res.status(400).json({ ok: false, error: 'No script on job card — load script first' });
+  }
+
+  try {
+    const { rewriteJobScriptFromCard } = require('./lib/script_gen');
+    const feedback = String(req.body?.feedback || '').trim();
+    const result = await rewriteJobScriptFromCard(card, feedback);
+    saveJobCard(jobId, result.card);
+    console.log(`[regen-script] ✅ ${jobId} — Gate 1 ${result.scriptQA.score}/100 (${result.scriptQA.outcome})`);
+    res.json(result);
+  } catch (err) {
+    console.error(`[regen-script] ${jobId} failed:`, err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ── Twitch Soup sidebar thumbnails (operator approval before assembly burn) ──
+app.get('/job/:id/sidebar-thumbs', (req, res) => {
+  const card = persistedJobs[req.params.id];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found' });
+  const { buildThumbnailManifest, allThumbnailsApproved } = require('./lib/sidebar_thumbnails');
+  const manifest = buildThumbnailManifest(card);
+  res.json({ ok: true, manifest, allApproved: allThumbnailsApproved(manifest) });
+});
+
+app.post('/job/:id/sidebar-thumbs/sync', async (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found' });
+  try {
+    const { syncThumbnailCache, buildThumbnailManifest, allThumbnailsApproved } = require('./lib/sidebar_thumbnails');
+    const synced = await syncThumbnailCache(jobId, card);
+    saveJobCard(jobId, synced.card);
+    const manifest = buildThumbnailManifest(synced.card);
+    res.json({
+      ok: true,
+      manifest,
+      results: synced.results,
+      allApproved: allThumbnailsApproved(manifest),
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/job/:id/sidebar-thumbs/approve', async (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found' });
+  const { key, approved, rejected, overrideUrl } = req.body || {};
+  if (!key) return res.status(400).json({ ok: false, error: 'key required' });
+  const {
+    applyThumbApproval,
+    buildThumbnailManifest,
+    allThumbnailsApproved,
+    syncThumbnailCache,
+  } = require('./lib/sidebar_thumbnails');
+  card = applyThumbApproval(card, { key, approved, rejected, overrideUrl });
+  if (approved === true) {
+    try {
+      const synced = await syncThumbnailCache(jobId, card);
+      card = synced.card;
+    } catch (e) {
+      return res.status(422).json({ ok: false, error: `Thumb download failed: ${e.message}` });
+    }
+  }
+  saveJobCard(jobId, card);
+  const manifest = buildThumbnailManifest(card);
+  res.json({ ok: true, manifest, allApproved: allThumbnailsApproved(manifest) });
+});
+
+// ── Twitch Soup cold open VO (ElevenLabs — operator approval before assembly) ─
+app.post('/job/:id/cold-open/generate', async (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found' });
+  try {
+    const {
+      generateColdOpenVo,
+      coldOpenApproved,
+    } = require('./lib/twitch_bookends');
+    if (coldOpenApproved(card) && !req.body?.force) {
+      return res.status(409).json({
+        ok: false,
+        error: 'Cold open VO already approved — use GENERATE VO (force) or revoke approval first',
+      });
+    }
+    const manualScript = req.body?.script != null ? String(req.body.script).trim() : '';
+    const vo = await generateColdOpenVo(card, {
+      script: manualScript,
+      jobId,
+      useGemini: !manualScript,
+    });
+    card = {
+      ...card,
+      coldOpen: {
+        ...(card.coldOpen || {}),
+        script: vo.script,
+        voPath: vo.voPath,
+        durationSec: vo.durationSec,
+        beats: vo.beats || [],
+        montageClipUrls: vo.montageClipUrls || [],
+        approved: false,
+        audioApproved: false,
+        generatedAt: new Date().toISOString(),
+      },
+    };
+    saveJobCard(jobId, card);
+    res.json({
+      ok: true,
+      script: vo.script,
+      durationSec: vo.durationSec,
+      previewUrl: `/job/${jobId}/cold-open/preview`,
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.post('/job/:id/cold-open/approve', (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found' });
+  const script = req.body?.script != null ? String(req.body.script).trim() : null;
+  card = {
+    ...card,
+    coldOpen: {
+      ...(card.coldOpen || {}),
+      ...(script ? { script } : {}),
+      approved: req.body?.approved !== false,
+      audioApproved: req.body?.audioApproved !== false,
+      approvedAt: new Date().toISOString(),
+    },
+  };
+  saveJobCard(jobId, card);
+  res.json({ ok: true, coldOpen: card.coldOpen });
+});
+
+app.get('/job/:id/cold-open/preview', (req, res) => {
+  const card = persistedJobs[req.params.id];
+  if (!card?.coldOpen?.voPath) return res.status(404).send('No cold open audio');
+  const p = card.coldOpen.voPath;
+  if (!fs.existsSync(p)) return res.status(404).send('Audio file missing');
+  res.sendFile(path.resolve(p));
+});
+
 // POST /job/:id/regenerate-publish-copy — rebuild SEO metadata and re-run metadata QA
 app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
   const jobId = req.params.id;
@@ -3583,6 +3809,32 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
       await saveOutput(jobId, 'publishCopy', publishCopy);
     } catch (_) { /* non-fatal */ }
 
+    // Long-form Twitch Soup: re-render credits scroll from fresh YT description.
+    const isTwitchLong = contentType === 'twitch' && !isShort && !card.clipsOnly;
+    if (isTwitchLong && card.outputPath && fs.existsSync(card.outputPath) && !card.creditsOutroAppended) {
+      try {
+        const { appendCreditsOutroToVideo, loadBookendsConfig } = require('./lib/twitch_bookends');
+        const bookCfg = loadBookendsConfig(card.customerId || 'c0');
+        if (bookCfg.outroCredits?.enabled) {
+          card.publishCopy = publishCopy;
+          const result = await appendCreditsOutroToVideo({
+            mainMp4Path: card.outputPath,
+            card,
+            asmId: card.assemblyId || `seo_${jobId}`,
+            customerId: card.customerId || 'c0',
+            log: (m) => console.log(`[regenerate-publish-copy:${jobId}] ${m}`),
+          });
+          if (result.appended) {
+            card.creditsOutroAppended = true;
+            card.creditsOutroDurationSec = result.durationSec;
+            console.log(`[regenerate-publish-copy] Credits outro appended (${result.durationSec}s)`);
+          }
+        }
+      } catch (credErr) {
+        console.warn(`[regenerate-publish-copy] Credits outro append failed (non-fatal): ${credErr.message}`);
+      }
+    }
+
     res.json({
       ok: true,
       passed: metaCheck.passed,
@@ -3631,6 +3883,12 @@ app.post('/job/:id/run-gate5', async (req, res) => {
   if (req.body.releasePostLivePublish) {
     releaseClipCompPostLiveHold(card);
     saveJobCard(jobId, card);
+  }
+
+  const { assertReadyToPublish } = require('./lib/operator_creative_guard');
+  const publishGuard = assertReadyToPublish(card);
+  if (!publishGuard.ok && !req.body.forcePublish) {
+    return res.status(409).json({ ok: false, code: publishGuard.code, error: publishGuard.error });
   }
 
   // Allow caller to inject driveUrl / assembledPath when Gate 3b blocked the normal save path
@@ -3835,6 +4093,158 @@ app.get('/job/:id/assembly-preflight', (req, res) => {
   report.issues = report.segments.filter(s => s.issue).map(s => `[${s.index}] ${s.label}: ${s.issue}`);
 
   res.json(report);
+});
+
+// POST /job/:id/heygen/resend-missing — server-side submit for segments with no video_id (skips completed)
+app.post('/job/:id/heygen/resend-missing', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card?.script?.raw) {
+    return res.status(404).json({ ok: false, error: `Job not found or has no script: ${jobId}` });
+  }
+  if (!process.env.HEYGEN_API_KEY) {
+    return res.status(400).json({ ok: false, error: 'HEYGEN_API_KEY not set' });
+  }
+
+  const { sendScriptToHeyGen } = require('./lib/script_gen');
+  const { parseHeyGenJobTitle } = require('./lib/heygen_script');
+  const { parseScriptIntoScenes } = require('./lib/qa');
+  const axios = require('axios');
+  const type = card.contentType || 'twitch';
+  const format = String(type).includes('-short') ? 'portrait' : 'landscape';
+  const scenes = parseScriptIntoScenes(card.script.raw, { contentType: type });
+  const avatarScenes = scenes.filter((s) => s.type !== 'source_clip');
+
+  // Seed existingVideoJobs from card, request body, and HeyGen library (title prefix match)
+  const byScene = new Map();
+  for (const vj of (card.heygen?.videoJobs || [])) {
+    if (vj.sceneName && vj.video_id && vj.status === 'completed') byScene.set(vj.sceneName, vj);
+  }
+  if (Array.isArray(req.body?.videoJobs)) {
+    for (const vj of req.body.videoJobs) {
+      if (vj.sceneName && vj.video_id && vj.status === 'completed') byScene.set(vj.sceneName, vj);
+    }
+  }
+  try {
+    const listResp = await axios.get('https://api.heygen.com/v3/videos?limit=100', {
+      headers: { 'X-Api-Key': process.env.HEYGEN_API_KEY },
+      timeout: 20000,
+    });
+    const videos = listResp.data?.data?.videos || listResp.data?.data || [];
+    for (const v of (Array.isArray(videos) ? videos : [])) {
+      if (!v.title || !String(v.title).startsWith(jobId + '_')) continue;
+      const parsed = parseHeyGenJobTitle(jobId, v.title);
+      if (!parsed) continue;
+      if (v.status !== 'completed') continue;
+      if (byScene.has(parsed.sceneName)) continue;
+      let video_url = v.video_url || null;
+      if (!video_url && v.video_id) {
+        try {
+          const st = await axios.get(`https://api.heygen.com/v3/videos/${v.video_id}`, {
+            headers: { 'X-Api-Key': process.env.HEYGEN_API_KEY },
+            timeout: 10000,
+          });
+          video_url = st.data?.data?.video_url || null;
+        } catch (_) { /* non-fatal */ }
+      }
+      byScene.set(parsed.sceneName, {
+        sceneName: parsed.sceneName,
+        sceneIndex: parsed.sceneIndex,
+        video_id: v.video_id,
+        status: 'completed',
+        video_url,
+        heygenTitle: v.title,
+      });
+    }
+  } catch (e) {
+    console.warn(`[heygen/resend-missing:${jobId}] HeyGen list prefetch failed (non-fatal): ${e.message}`);
+  }
+
+  const existingVideoJobs = [...byScene.values()];
+  const completedNames = new Set(existingVideoJobs.map((v) => v.sceneName));
+  const missing = avatarScenes.filter((s) => !completedNames.has(s.name));
+
+  res.json({
+    ok: true,
+    jobId,
+    avatarScenes: avatarScenes.length,
+    alreadyCompleted: existingVideoJobs.length,
+    toSubmit: missing.length,
+    missingScenes: missing.map((s) => s.name),
+    message: missing.length
+      ? `Submitting ${missing.length} missing scene(s) — ${existingVideoJobs.length} already in HeyGen`
+      : 'All avatar scenes already have HeyGen video_ids',
+  });
+
+  if (!missing.length) {
+    saveJobCard(jobId, {
+      ...card,
+      heygen: { ...(card.heygen || {}), videoJobs: existingVideoJobs },
+      stage: 'heygen_done',
+    });
+    return;
+  }
+
+  (async () => {
+    const checkpoint = (heygenPartial) => {
+      const snap = {
+        ...card,
+        ...persistedJobs[jobId],
+        stage: 'avatar_in_progress',
+        avatarEngine: 'heygen',
+        heygen: { ...(card.heygen || {}), ...heygenPartial, videoJobs: heygenPartial.videoJobs },
+      };
+      saveJobCard(jobId, snap);
+    };
+    console.log(`[heygen/resend-missing:${jobId}] starting — skip ${existingVideoJobs.length}, submit ${missing.length}`);
+    try {
+      const result = await sendScriptToHeyGen(card.script.raw, {
+        contentType: type,
+        format,
+        jobId,
+        existingVideoJobs,
+        onSceneComplete: ({ videoJobs }) => checkpoint({ videoJobs, engine: 'heygen' }),
+      });
+      if (result?.error) throw new Error(result.error);
+      saveJobCard(jobId, {
+        ...persistedJobs[jobId],
+        stage: 'heygen_done',
+        heygen: { ...(persistedJobs[jobId]?.heygen || {}), videoJobs: result.videoJobs || existingVideoJobs },
+      });
+      console.log(`[heygen/resend-missing:${jobId}] ✅ complete`);
+    } catch (err) {
+      console.error(`[heygen/resend-missing:${jobId}] failed: ${err.message}`);
+    }
+  })();
+});
+
+// POST /job/:id/heygen/sync-dashboard — persist browser queue segment IDs/URLs to server card
+app.post('/job/:id/heygen/sync-dashboard', (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found' });
+  const incoming = Array.isArray(req.body?.videoJobs) ? req.body.videoJobs : [];
+  const completed = incoming.filter((v) => v.status === 'completed' && v.video_id && v.video_url);
+  card = {
+    ...card,
+    heygen: {
+      ...(card.heygen || {}),
+      videoJobs: incoming,
+      syncedFromDashboardAt: new Date().toISOString(),
+    },
+  };
+  if (completed.length && completed.length === incoming.filter((v) => v.video_id).length) {
+    card.stage = card.stage === 'script_ready' ? 'heygen_done' : card.stage;
+  } else if (incoming.some((v) => v.video_id)) {
+    card.stage = 'avatar_in_progress';
+  }
+  saveJobCard(jobId, card);
+  res.json({
+    ok: true,
+    count: incoming.length,
+    completed: completed.length,
+    missing: incoming.filter((v) => !v.video_id || v.status !== 'completed').length,
+  });
 });
 
 // POST /job/:id/resubmit-avatar — re-run avatar adapter (EchoMimic/HeyGen) for an approved script
@@ -4244,6 +4654,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
 
   // ── Fire /assemble (continued) ───
   const payload = {
+    operatorReassemble: true,
     segments:     segmentData.map(s => s.url),
     segmentData,
     labels:       segmentData.map(s => s.label),
@@ -4513,6 +4924,9 @@ app.post('/generate-clip-comp', async (req, res) => {
       },
       designSpec: clipCompDesignSpec,
     });
+    if (compositionSpec) {
+      jobSpec = updateJobSpec(jobSpec.jobId, { compositionSpec, editorSignedOffAt });
+    }
   } catch (specErr) {
     console.warn('[/generate-clip-comp] Job Spec creation failed (non-fatal):', specErr.message);
   }
@@ -4549,6 +4963,10 @@ app.post('/generate-clip-comp', async (req, res) => {
   }));
 
   const compDeliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType, compCreative });
+  const compositionSpec = req.body.compositionSpec || null;
+  const editorSignedOffAt = req.body.editorSignedOff
+    ? (req.body.editorSignedOffAt || new Date().toISOString())
+    : null;
 
   const card = {
     id:          jobId,
@@ -4585,6 +5003,9 @@ app.post('/generate-clip-comp', async (req, res) => {
       streamerHint: streamers[0] || null,
     }),
     compCreative,
+    compCreativePreset: compCreative.preset || req.body.compCreativePreset || null,
+    compositionSpec,
+    editorSignedOffAt,
     clipCompProfile: 'streamer',
     postLiveVodSessionId: postLiveVodSessionId || null,
     postLiveMuteRanges: postLiveMuteRanges.length ? postLiveMuteRanges : null,
@@ -4659,12 +5080,13 @@ app.post('/generate-clip-comp', async (req, res) => {
     clipCount: segmentData.length,
     platforms,
     compCreative,
-    message: `Clips comp started — ${segmentData.length} clip(s), preset ${compCreative.preset}. Watch the dashboard for Gate 3 result.`
+    message: `Hooks generating — pick your hook on the queue card, then the video builds once.`,
   });
 
   setImmediate(async () => {
     try {
       const { generateClipCompCreativeBriefWithTimeout, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
+      const { fireClipCompAssembly } = require('./lib/clip_comp_dispatch_assembly');
       const hookItems = clips.map(c => ({
         title: c.title || '',
         headline: c.title || '',
@@ -4688,16 +5110,27 @@ app.post('/generate-clip-comp', async (req, res) => {
       card.clipHookTitles = clipHookTitles;
       card.clipHookCandidates = clipHookCandidates;
       card.clipCompBrief = clipCompBrief;
-      payload.clipHookTitles = clipHookTitles;
-      payload.clipHookCandidates = clipHookCandidates;
-      payload.clipCompBrief = clipCompBrief;
-      payload.fullScript = buildClipCompSeoInput(clipCompBrief, card.compCreative || null);
-      payload.regenerateClipHooks = false;
-      saveJobCard(jobId, card);
-      await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
-      console.log(`[clip-comp] ${jobId}: /assemble fired (${segmentData.length} clips, hooks: ${clipHookTitles.filter(Boolean).length})`);
+      card.hooksPendingReassemble = false;
+
+      if (req.body.autoConfirmHooks) {
+        card.hooksConfirmedAt = new Date().toISOString();
+        card.hooksOperatorLocked = true;
+        saveJobCard(jobId, card);
+        await fireClipCompAssembly(card, jobId, { saveJobCard });
+        console.log(`[clip-comp] ${jobId}: autoConfirmHooks — assembly started`);
+      } else {
+        card.stage = 'hook_review';
+        card.status = 'completed';
+        card.hookReviewReadyAt = new Date().toISOString();
+        saveJobCard(jobId, card);
+        console.log(`[clip-comp] ${jobId}: hook_review — ${clipHookCandidates[0]?.length || 0} candidates ready; waiting for operator hook pick`);
+      }
     } catch (err) {
-      console.error(`[clip-comp] ${jobId}: /assemble failed — ${err.message}`);
+      console.error(`[clip-comp] ${jobId}: hook brief failed — ${err.message}`);
+      card.stage = 'failed';
+      card.status = 'failed';
+      card.assemblyError = err.message || String(err);
+      saveJobCard(jobId, card);
     }
   });
 });
@@ -4835,6 +5268,9 @@ app.post('/job/:id/select-title', async (req, res) => {
   const result = selectPublishTitle(card, candidateIndex);
   if (!result.ok) return res.status(400).json(result);
 
+  const { markTitleSelection } = require('./lib/operator_creative_guard');
+  markTitleSelection(card);
+
   saveJobCard(jobId, card);
   try {
     const { saveOutput } = require('./lib/job_spec');
@@ -4866,15 +5302,118 @@ app.post('/job/:id/custom-hook', (req, res) => {
   if (!rawHook) return res.status(400).json({ ok: false, error: 'hookText is required.' });
 
   const { applyOperatorCustomHook } = require('./lib/clip_comp_hooks');
+  const { markHookSelection } = require('./lib/operator_creative_guard');
   const result = applyOperatorCustomHook(card, clipIndex, rawHook);
   if (!result.ok) return res.status(400).json(result);
+  markHookSelection(card, clipIndex, result.hook);
+
+  return finishHookPickResponse(req, res, jobId, card, {
+    hook: result.hook,
+    clipIndex,
+    clipHookTitles: card.clipHookTitles,
+    clipHookCandidates: card.clipHookCandidates,
+  });
+});
+
+function finishHookPickResponse(req, res, jobId, card, bodyExtra = {}) {
+  const { needsHookBeforeAssembly, clipCompClipCount, fireClipCompAssembly } = require('./lib/clip_comp_dispatch_assembly');
+  const clipCount = clipCompClipCount(card);
+  const firstBuild = needsHookBeforeAssembly(card);
+  const confirmBuild = req.body.confirmBuild === true;
+  const autoBuild = req.body.autoReassemble !== false && req.body.autoBuild !== false;
+
+  if (firstBuild && clipCount > 1 && !confirmBuild) {
+    if (card.stage !== 'hook_review') card.stage = 'hook_review';
+    card.status = 'completed';
+    saveJobCard(jobId, card);
+    return res.json({
+      ok: true,
+      jobId,
+      stage: card.stage,
+      assemblyStarted: false,
+      hooksPendingReassemble: false,
+      ...bodyExtra,
+      message: 'Hook saved — pick hooks for other clips if needed, then BUILD VIDEO.',
+    });
+  }
+
+  if (firstBuild && autoBuild) {
+    card.hooksConfirmedAt = new Date().toISOString();
+    card.hooksOperatorLocked = true;
+    card.hooksPendingReassemble = false;
+    saveJobCard(jobId, card);
+    res.json({
+      ok: true,
+      jobId,
+      stage: 'assembling',
+      assemblyStarted: true,
+      hooksPendingReassemble: false,
+      ...bodyExtra,
+      message: 'Building video with your hook.',
+    });
+    setImmediate(() => {
+      fireClipCompAssembly(card, jobId, { saveJobCard }).catch((e) => {
+        console.warn(`[hook→assembly] ${jobId}: first build failed — ${e.message}`);
+      });
+    });
+    return undefined;
+  }
 
   if (card.stage !== 'awaiting_review') card.stage = 'awaiting_review';
+  card.hooksPendingReassemble = true;
   saveJobCard(jobId, card);
   res.json({
-    ...result,
+    ok: true,
     jobId,
-    message: 'Custom hook saved — use RE-ASSEMBLE FROM FILES to burn it into the MP4.',
+    stage: card.stage,
+    assemblyStarted: false,
+    hooksPendingReassemble: true,
+    ...bodyExtra,
+    message: 'Hook updated — re-assembling to burn into the MP4.',
+  });
+  if (autoBuild) {
+    setImmediate(() => {
+      try {
+        const port = process.env.PORT || 3000;
+        axios.post(`http://localhost:${port}/job/${jobId}/reassemble`, { fromHookSelect: true }, { timeout: 15000 })
+          .catch((e) => console.warn(`[hook→reassemble] ${jobId}: ${e.message}`));
+      } catch (e) { /* non-fatal */ }
+    });
+  }
+  return undefined;
+}
+
+// POST /job/:id/confirm-hooks — multi-clip: build video with current hook lines
+app.post('/job/:id/confirm-hooks', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job is published — rollback first.' });
+  }
+  const { needsHookBeforeAssembly, fireClipCompAssembly } = require('./lib/clip_comp_dispatch_assembly');
+  if (!needsHookBeforeAssembly(card)) {
+    return res.status(400).json({ ok: false, error: 'Video already built — use hook picker + re-assemble to change burned hooks.' });
+  }
+  if (!(card.clipHookTitles || []).some((h) => String(h || '').trim())) {
+    return res.status(400).json({ ok: false, error: 'Pick at least one hook before building.' });
+  }
+  card.hooksConfirmedAt = new Date().toISOString();
+  card.hooksOperatorLocked = true;
+  card.hooksPendingReassemble = false;
+  saveJobCard(jobId, card);
+  res.json({
+    ok: true,
+    jobId,
+    stage: 'assembling',
+    assemblyStarted: true,
+    clipHookTitles: card.clipHookTitles,
+    message: 'Building video with your hooks.',
+  });
+  setImmediate(() => {
+    fireClipCompAssembly(card, jobId, { saveJobCard }).catch((e) => {
+      console.warn(`[confirm-hooks] ${jobId}: assembly failed — ${e.message}`);
+    });
   });
 });
 
@@ -4909,16 +5448,15 @@ app.post('/job/:id/select-hook', (req, res) => {
     card.clipCompBrief.clips[clipIndex].hookCandidates = card.clipHookCandidates[clipIndex];
   }
 
-  saveJobCard(jobId, card);
-  res.json({
-    ok: true,
-    jobId,
+  const { markHookSelection } = require('./lib/operator_creative_guard');
+  markHookSelection(card, clipIndex, hookText);
+
+  return finishHookPickResponse(req, res, jobId, card, {
     clipIndex,
     candidateIndex,
     hook: hookText,
     clipHookTitles: card.clipHookTitles,
     clipHookCandidates: card.clipHookCandidates,
-    message: 'Hook selected — use RE-ASSEMBLE FROM FILES to burn the new line.',
   });
 });
 
@@ -5176,15 +5714,24 @@ app.get('/broadcast-config.js', (req, res) => {
 // Serve assets folder for images (Bobby G, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-// Serve dashboard — no-cache so hard refresh always picks up latest on-disk version
-app.get('/', (req, res) => {
-  res.set('Cache-Control', 'no-store');
-  res.sendFile(path.join(__dirname, 'cwn_production.html'));
-});
-app.get('/broadcast', (req, res) => {
-  res.set('Cache-Control', 'no-store');
-  res.sendFile(path.join(__dirname, 'cwn_production.html'));
-});
+// Serve dashboard — inject file mtime as build stamp (verify hard-refresh loaded this file)
+function serveDashboardHtml(req, res) {
+  const fs = require('fs');
+  const p = path.join(__dirname, 'cwn_production.html');
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  try {
+    const stat = fs.statSync(p);
+    const build = stat.mtime.toISOString().slice(0, 19).replace('T', ' ');
+    let html = fs.readFileSync(p, 'utf8');
+    html = html.replace(/CWN_DASHBOARD_BUILD/g, build);
+    res.type('html').send(html);
+  } catch (e) {
+    res.status(500).send('Dashboard load failed: ' + e.message);
+  }
+}
+app.get('/', serveDashboardHtml);
+app.get('/broadcast', serveDashboardHtml);
 app.get('/cwn_production.html', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.redirect(302, '/');
@@ -7304,7 +7851,8 @@ app.get('/streamers/clips', async (req, res) => {
   const streamers = streamersParam.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   const platforms = (req.query.platforms || 'twitch,kick,youtube')
     .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-  const clipsPer = Math.max(1, Math.min(10, parseInt(req.query.clipsPer, 10) || 2));
+  const clipsPerCap = req.query.library === '1' ? 50 : 10;
+  const clipsPer = Math.max(1, Math.min(clipsPerCap, parseInt(req.query.clipsPer, 10) || (req.query.library === '1' ? 50 : 2)));
   const pubHours = parseFloat(req.query.pubHours);
   const durMin = parseNewsQueryInt(req.query.durMin);
   const durMax = parseNewsQueryInt(req.query.durMax);
@@ -7825,6 +8373,10 @@ app.get('/news/stories', async (req, res) => {
     return res.status(500).json({ error: err.message, videos: [], recentCount: 0 });
   }
 });
+
+// C0-only source routes (Reddit desk picker, style library, analyze-clip, etc.)
+// Mounted after inline /news/* and before duplicate POST paths so server.js wins on conflicts.
+app.use(require('./lib/routes/c0_sources'));
 
 // ── POST /twitch-clip-url ────────────────────────────────────────
 // Resolves a Twitch clip page URL or slug to a direct MP4 download URL.
@@ -8369,7 +8921,25 @@ app.post('/analyze-style-library', async (req, res) => {
         const multipleViewings = [];
 
         for (let viewNum = 1; viewNum <= 2; viewNum++) {
-          const stylePrompt = `You are analyzing a reference video to extract a STYLE FINGERPRINT for Bobby G, the host of ClipzWorld News (CWN), a "${contentType}" show.
+          const isSoupStyle = contentType === 'twitch' || contentType === 'twitch-short';
+          const stylePrompt = isSoupStyle
+            ? `You are analyzing a reference episode of Joel McHale hosting "The Soup" to extract a STYLE FINGERPRINT for "Twitch Soup" on ClipzWorld News — Bobby G hosts in this Joel McHale comedic mode.
+
+This show is MODELED ON THE SOUP. Extract everything that makes Soup work — do NOT filter out catchphrases or punchy verbal drops.
+
+This is VIEWING #${viewNum} of 2. ${viewNum === 1 ? 'Watch this video carefully for the first time.' : 'Focus on details you may have missed — recurring verbal drops, setup pivots, and reaction timing.'}
+
+Extract and document:
+1. SETUP STRUCTURE: How short? How does the host pivot from a normal premise to clip absurdity?
+2. VERBAL REACTIONS: One-word drops, punchy lines, Soup-era audio references ("Classy.", "Chicks, man.", "So... that happened.")
+3. VISUAL REACTION BEATS: Physical deadpan (stare, blink, temple rub) — note timing vs clip, even though our avatar is spoken-only
+4. TIMING & PACING: Pause after clip before speaking? How long?
+5. TRANSITIONS: How does it move between topics?
+6. SARCASM TECHNIQUE: Understatement vs judgment vs non-sequitur
+7. WHAT SOUP NEVER DOES: hype, exclamation energy, explaining the joke, audience callouts
+
+INCLUDE catchphrases, recurring verbal drops, and Joel McHale reaction patterns — these are the voice.`
+            : `You are analyzing a reference video to extract a STYLE FINGERPRINT for Bobby G, the host of ClipzWorld News (CWN), a "${contentType}" show.
 
 Bobby G's voice blend: Norm MacDonald (flat deadpan, never explains the joke) + Jon Stewart Daily Show (one alarming observation, controlled disbelief) + Stuart Scott ESPN (cultural authority, rhythm, cadence) + Space Ghost Coast to Coast (non-sequitur pivots are fine, chaos is fine).
 
@@ -8428,7 +8998,19 @@ Do NOT extract: energy level, catchphrases, audience engagement tactics, hype la
 
         // Synthesize all 2 viewings into a deep per-video analysis
         if (multipleViewings.length >= 1) { // Require at least 1 successful viewing
-          const deepSynthesisPrompt = `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations for Bobby G, host of ClipzWorld News.
+          const deepSynthesisPrompt = (contentType === 'twitch' || contentType === 'twitch-short')
+            ? `You watched Joel McHale "The Soup" reference video(s) ${multipleViewings.length} time(s) for Twitch Soup on ClipzWorld News.
+
+Here are your ${multipleViewings.length} viewing observations:
+${multipleViewings.join('\n\n')}
+
+Synthesize into ONE DEEP style analysis for Talk Soup-mode Twitch scripts:
+- Keep: setup pivots, verbal reaction drops, catchphrases, timing, sarcasm technique
+- Map to production format: SETUP (before clip) + VERBAL REACTION (one punchy line after clip)
+- Include example verbal reactions like "Classy.", "So... that happened.", "Chicks, man."
+- Note what Soup never does (hype, explain the joke, audience callouts)
+Max 600 words.`
+            : `You watched this "${contentType}" reference video ${multipleViewings.length} times and extracted style observations for Bobby G, host of ClipzWorld News.
 
 Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority. Flat. Never explains the joke. State the fact, one observation, done.
 
@@ -8490,7 +9072,29 @@ SHORT-FORM SPECIFIC RULES (this is a 45-60 second vertical video):
 - [beat] used once maximum per script
 - Must feel complete in under 60 seconds` : '';
 
-      const synthesisPrompt = `You analyzed ${videoAnalyses.length} reference videos for Bobby G, host of ClipzWorld News (CWN) "${contentType}" show.
+      const synthesisPrompt = (contentType === 'twitch' || contentType === 'twitch-short')
+        ? `You analyzed ${videoAnalyses.length} Joel McHale "The Soup" reference videos for Twitch Soup on ClipzWorld News ("${contentType}").
+
+Host: Bobby G delivering Joel McHale Soup mode — deadpan, sarcastic, judgmental.${shortConstraints}
+
+Here are the individual analyses:
+${videoAnalyses.join('\n\n')}
+
+Write a UNIFIED STYLE GUIDE for Twitch Soup scripts. This show is modeled on The Soup.
+
+INCLUDE:
+- SETUP: 1-2 sentences, pivot from normal premise to clip absurdity
+- VERBAL REACTION: one punchy line after clip — single word ok, ellipses ok, Soup drops ok
+- Example reactions: "Classy.", "Elegant.", "So... that happened.", "Chicks, man.", "Oh here go hell come."
+- Timing: [beat] before/after [CLIP PLAYS HERE]
+- Sarcasm technique and what Soup never does (hype, explain joke, audience callouts)
+
+DO NOT INCLUDE:
+- Instructions to write neutral narration ("X happened.", "The game continued.")
+- Coroner-report deadpan that recaps the clip without judgment
+
+Format as clear bullet points under clear headings. Max 400 words. Injected into every "${contentType}" script generation prompt.`
+        : `You analyzed ${videoAnalyses.length} reference videos for Bobby G, host of ClipzWorld News (CWN) "${contentType}" show.
 
 Bobby G's voice: Norm MacDonald deadpan + Jon Stewart controlled disbelief + Stuart Scott cultural authority + Space Ghost non-sequitur. Flat delivery. Never explains the joke. Never hypes. State the fact, one observation, done.${shortConstraints}
 
@@ -8737,6 +9341,59 @@ app.get('/heygen/latest-videos', async (req, res) => {
     console.error('[heygen/latest-videos] Error:', e.message);
     res.status(500).json({ error: e.message });
   }
+});
+
+// GET /heygen/segment-errors?jobId=script_twitch_xxx — v3 status + failure_message for a job title prefix
+app.get('/heygen/segment-errors', async (req, res) => {
+  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+  if (!HEYGEN_API_KEY) return res.status(400).json({ error: 'HEYGEN_API_KEY not set' });
+  const prefix = String(req.query.jobId || '').trim();
+  if (!prefix) return res.status(400).json({ error: 'jobId query param required' });
+
+  try {
+    const listResp = await axios.get('https://api.heygen.com/v3/videos?limit=100', {
+      headers: { 'X-Api-Key': HEYGEN_API_KEY },
+      timeout: 20000,
+    });
+    const videos = listResp.data?.data?.videos || listResp.data?.data || [];
+    const matched = (Array.isArray(videos) ? videos : []).filter((v) => (v.title || '').includes(prefix));
+
+    const detailed = await Promise.all(matched.map(async (v) => {
+      try {
+        const st = await axios.get(`https://api.heygen.com/v3/videos/${v.video_id}`, {
+          headers: { 'X-Api-Key': HEYGEN_API_KEY },
+          timeout: 10000,
+        });
+        const d = st.data?.data || {};
+        return {
+          video_id: v.video_id,
+          title: v.title || d.title,
+          status: d.status || v.status,
+          failure_message: d.failure_message || d.error || null,
+        };
+      } catch (e) {
+        return { video_id: v.video_id, title: v.title, status: v.status, error: e.message };
+      }
+    }));
+
+    res.json({
+      ok: true,
+      jobId: prefix,
+      count: detailed.length,
+      failed: detailed.filter((v) => v.status === 'failed'),
+      segments: detailed.sort((a, b) => (a.title || '').localeCompare(b.title || '')),
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /heygen/prepare-script — preview what we send (no credits)
+app.post('/heygen/prepare-script', (req, res) => {
+  const { prepareHeyGenScript, validateHeyGenScript } = require('./lib/heygen_script');
+  const raw = req.body?.text != null ? String(req.body.text) : '';
+  const prepared = prepareHeyGenScript(raw);
+  res.json({ ok: true, prepared, issues: validateHeyGenScript(prepared), length: prepared.length });
 });
 
 async function bulkDeleteHeyGenVideos({ apiKey, dryRun = false, maxPasses = 100, perPassLimit = 100 }) {
@@ -10930,6 +11587,8 @@ const server = app.listen(PORT, async () => {
   const gateTestMode = process.env.GATE_TEST_MODE === 'true';
   if (gateTestMode) {
     console.log(`   ⏸  GATE_TEST_MODE=true — HeyGen auto-send DISABLED ($0.33/segment protected)\n`);
+  } else if (String(process.env.AVATAR_ENGINE || 'heygen').toLowerCase() === 'echomimic') {
+    console.log(`   ⏸  AVATAR_ENGINE=echomimic — server auto-send OFF; dashboard SEND TO HEYGEN (HeyGen API)\n`);
   } else {
     console.log(`   🔴 GATE_TEST_MODE=false — HeyGen auto-send LIVE (each segment costs $0.33)\n`);
   }

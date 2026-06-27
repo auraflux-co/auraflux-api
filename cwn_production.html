@@ -54,6 +54,16 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .library-window-pill:hover { color:rgba(255,255,255,0.75); }
 .library-window-pill.active { background:rgba(199,175,79,0.15); color:#c7af4f; border-color:rgba(199,175,79,0.5); }
 .picker-preview-video { width:100%; height:72px; object-fit:cover; border-radius:4px; margin-bottom:5px; background:#000; display:block; }
+.reddit-picker-split { display:grid; grid-template-columns:minmax(220px,38%) 1fr; gap:12px; min-height:360px; align-items:stretch; }
+.reddit-thread-list { max-height:420px; overflow-y:auto; padding-right:6px; border-right:1px solid rgba(255,255,255,0.06); }
+.reddit-thread-row { display:flex; align-items:flex-start; gap:8px; padding:8px 6px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; border-radius:4px; }
+.reddit-thread-row.is-active { background:rgba(199,175,79,0.1); border:1px solid rgba(199,175,79,0.25); }
+.reddit-thread-detail { display:flex; flex-direction:column; gap:10px; min-height:320px; }
+.reddit-detail-video video { width:100%; max-height:240px; background:#000; border-radius:6px; display:block; }
+.reddit-detail-thread { flex:1; max-height:240px; overflow-y:auto; padding:10px 12px; border:1px solid rgba(255,255,255,0.08); border-radius:6px; background:rgba(0,0,0,0.25); font-size:11px; line-height:1.45; }
+.reddit-comment { margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05); }
+.reddit-comment-op { color:#c7af4f; font-weight:700; margin-bottom:4px; }
+.reddit-comment-meta { font-size:9px; font-family:monospace; color:rgba(255,255,255,0.35); margin-bottom:3px; }
 .picker-staging-badge { font-size:8px; color:#c7af4f; letter-spacing:0.5px; margin-bottom:4px; }
 .generate-composer { display:none; margin-top:12px; border:1px solid rgba(199,175,79,0.25); border-radius:10px; background:#080c14; padding:14px; }
 .generate-composer.is-open { display:block; }
@@ -712,7 +722,47 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="gen-workspace">
               <aside class="gen-sidebar">
                 <input type="hidden" id="news-source" value="all">
+                <input type="hidden" id="news-desk-mode" value="wire">
                 <input type="hidden" id="news-count" value="40">
+                <div class="field gen-field-compact">
+                  <label>Desk</label>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button type="button" id="btn-news-mode-wire" class="btn btn-gold btn-sm" style="font-size:10px;padding:4px 12px;" onclick="setNewsDeskMode('wire')">WIRE NEWS</button>
+                    <button type="button" id="btn-news-mode-reddit" class="btn btn-outline btn-sm" style="font-size:10px;padding:4px 12px;" onclick="setNewsDeskMode('reddit')">THE THREAD (Reddit)</button>
+                  </div>
+                </div>
+                <div id="reddit-desk-fields" class="field gen-field-compact" style="display:none;">
+                  <label>Subreddit</label>
+                  <select id="reddit-sub-select" class="field-input-compact" onchange="onRedditSubSelectChange()"></select>
+                  <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+                    <input type="text" id="reddit-sub-add-input" class="field-input-compact" placeholder="Add subreddit…" maxlength="48" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter'){event.preventDefault();addRedditSubFromInput();}">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="addRedditSubFromInput()">+ Add</button>
+                  </div>
+                  <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:9px;color:rgba(255,255,255,0.45);cursor:pointer;">
+                    <input type="checkbox" id="reddit-fetch-all-subs" style="width:14px;height:14px;" onchange="saveRedditSubPrefs()">
+                    Load all saved subs (slower)
+                  </label>
+                  <span class="gen-status-line">Saved subs persist in this browser — pick one for fast load.</span>
+                </div>
+                <div id="reddit-window-fields" class="field gen-field-compact" style="display:none;">
+                  <label>Time window</label>
+                  <div class="library-window-pills" id="reddit-window-pills">
+                    <button type="button" class="library-window-pill active" data-win="24h" onclick="setRedditWindow('24h')">Top 24H</button>
+                    <button type="button" class="library-window-pill" data-win="7d" onclick="setRedditWindow('7d')">Top 7D</button>
+                    <button type="button" class="library-window-pill" data-win="30d" onclick="setRedditWindow('30d')">Top 30D</button>
+                    <button type="button" class="library-window-pill" data-win="all" onclick="setRedditWindow('all')">All time</button>
+                  </div>
+                  <select id="reddit-window" style="display:none" aria-hidden="true">
+                    <option value="24h" selected>Top 24H</option>
+                    <option value="7d">Top 7D</option>
+                    <option value="30d">Top 30D</option>
+                    <option value="all">All time</option>
+                  </select>
+                </div>
+                <div id="reddit-sub-filter-fields" class="field gen-field-compact" style="display:none;">
+                  <label>Filter by sub</label>
+                  <div id="reddit-sub-filter-pills" class="library-window-pills"></div>
+                </div>
                 <div class="field gen-field-compact">
                   <label>News source</label>
                   <select id="news-source-select" onchange="setNewsSource(this.value)" class="field-input-compact">
@@ -771,6 +821,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 </div>
                 <div id="gen-news-empty" class="gen-main-empty">Configure source on the left, then <strong>Pick stories</strong>.</div>
                 <div id="news-inline-picker" class="gen-picker-panel" style="display:none;"></div>
+                <div id="reddit-inline-picker" class="gen-picker-panel" style="display:none;"></div>
                 <div id="news-short-clip-gallery" style="display:none;margin-top:10px;border:1px solid rgba(28,232,255,0.25);border-radius:8px;padding:12px;background:#060a12;flex-shrink:0;">
                   <div style="font-size:10px;color:rgba(28,232,255,0.7);letter-spacing:1px;margin-bottom:8px;">PICK ONE STORY FOR SHORT</div>
                   <div id="news-short-clip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
@@ -1399,11 +1450,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
     <!-- CLIP LIBRARY PAGE (CPD-1098 / CPD-1118) — pick streamers + clips, send to Composer -->
     <div class="page active" id="page-library">
       <div class="sec-title">CLIP LIBRARY <span class="badge" id="library-count">LIBRARY</span></div>
-      <p style="font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 12px;line-height:1.5;">Select creators → <strong>Load library</strong> → check clips (each downloads to R2 for hover preview) → <strong>COMPOSE →</strong> edit full clips in Generate. Unused R2 staging clears Sunday EOW.</p>
+      <p id="library-intro-copy" style="font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 10px;line-height:1.5;">Select creators → <strong>Load library</strong> → check clips (each downloads to R2 for hover preview) → <strong>COMPOSE →</strong> edit in Generate Composer. Unused R2 staging clears Sunday EOW.</p>
+      <div class="btn-row library-source-tabs" style="margin-bottom:12px;gap:6px;">
+        <input type="hidden" id="library-source-mode" value="streamers">
+        <button type="button" id="btn-library-src-streamers" class="btn btn-gold btn-sm" onclick="setLibrarySourceMode('streamers')">STREAMERS</button>
+        <button type="button" id="btn-library-src-reddit" class="btn btn-outline btn-sm" onclick="setLibrarySourceMode('reddit')">THE THREAD</button>
+        <button type="button" id="btn-library-src-wire" class="btn btn-outline btn-sm" onclick="setLibrarySourceMode('wire')">WIRE NEWS</button>
+      </div>
       <div class="card" style="margin:0;border:1px solid rgba(199,175,79,0.15);">
         <div class="card-body gen-pillar-body" style="padding:0;">
           <input type="hidden" id="twitch-streamers" value="jasontheween,adapt,marlon,extraemily,stableronaldo,maya,cinna,yonnajay,jaycinco,lacy,hasanabi,yourragegaming">
-          <div class="gen-workspace streamers-workspace library-workspace">
+          <div id="library-panel-streamers" class="gen-workspace streamers-workspace library-workspace">
             <aside class="gen-sidebar streamers-controls">
               <div id="streamer-connect-bar" class="streamer-connect-compact"></div>
               <div id="streamer-sidebar-select" class="streamer-sidebar-select">
@@ -1550,6 +1607,73 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               </select>
               <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, choose a time window above, then click <strong>Load library</strong>.</div>
               <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
+            </main>
+          </div>
+          <div id="library-panel-reddit" class="gen-workspace library-workspace" style="display:none;">
+            <aside class="gen-sidebar streamers-controls">
+              <div class="field" style="margin-bottom:8px;">
+                <label style="font-size:9px;color:rgba(255,255,255,0.45);letter-spacing:1px;">SUBREDDIT</label>
+                <select id="library-reddit-sub-select" class="field-input-compact" onchange="onRedditSubSelectChange('library')"></select>
+                <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+                  <input type="text" id="library-reddit-sub-add-input" class="field-input-compact" placeholder="Add subreddit…" maxlength="48" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter'){event.preventDefault();addRedditSubFromInput('library');}">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="addRedditSubFromInput('library')">+ Add</button>
+                </div>
+                <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:9px;color:rgba(255,255,255,0.45);cursor:pointer;">
+                  <input type="checkbox" id="library-reddit-fetch-all-subs" style="width:14px;height:14px;" onchange="saveRedditSubPrefs('library')">
+                  Load all saved subs (slower)
+                </label>
+              </div>
+              <div id="library-reddit-sub-filter-fields" style="margin-bottom:8px;display:none;">
+                <div id="library-reddit-sub-filter-pills" class="library-window-pills" style="flex-wrap:wrap;gap:4px;"></div>
+              </div>
+              <div id="library-reddit-selected-summary" class="streamer-selected-bar">Pick a subreddit, choose window above, then Load library.</div>
+              <div class="progress-wrap" id="library-reddit-progress-wrap" style="display:none"><div class="progress-bar" id="library-reddit-progress" style="width:0%"></div></div>
+              <div class="gen-action-bar">
+                <button id="btn-library-reddit-load" type="button" class="btn btn-outline" onclick="loadLibraryReddit()">Load library</button>
+                <button type="button" class="btn btn-gold" onclick="sendRedditToComposer()">COMPOSE →</button>
+              </div>
+              <span id="library-reddit-fetch-status" class="gen-status-line"></span>
+            </aside>
+            <main class="gen-main library-main">
+              <div class="library-main-head">
+                <h3 class="gen-main-title">THE THREAD</h3>
+                <div class="library-window-pills">
+                  <button type="button" class="library-window-pill active" data-win="24h" onclick="setLibraryWindow('24h')">Top 24H</button>
+                  <button type="button" class="library-window-pill" data-win="7d" onclick="setLibraryWindow('7d')">Top 7D</button>
+                  <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">Top 30D</button>
+                  <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">Top ALL</button>
+                </div>
+                <span class="gen-main-hint">Check threads → COMPOSE → edit in Generate Composer</span>
+              </div>
+              <div id="library-reddit-empty" class="gen-main-empty">Pick a subreddit on the left, choose a time window above, then click <strong>Load library</strong>.</div>
+              <div id="library-reddit-picker" class="gen-picker-panel" style="display:none;"></div>
+            </main>
+          </div>
+          <div id="library-panel-wire" class="gen-workspace library-workspace" style="display:none;">
+            <aside class="gen-sidebar streamers-controls">
+              <div class="field" style="margin-bottom:8px;">
+                <label style="font-size:9px;color:rgba(255,255,255,0.45);letter-spacing:1px;">NEWS SOURCE</label>
+                <select id="library-wire-source" class="field-input-compact">
+                  <option value="bbc">BBC</option>
+                  <option value="ap">AP</option>
+                  <option value="reuters">Reuters</option>
+                  <option value="all">All wired</option>
+                </select>
+              </div>
+              <div id="library-wire-selected-summary" class="streamer-selected-bar">Pick source, then Load library.</div>
+              <div class="gen-action-bar">
+                <button id="btn-library-wire-load" type="button" class="btn btn-outline" onclick="loadLibraryWire()">Load library</button>
+                <button type="button" class="btn btn-gold" onclick="sendWireToComposer()">COMPOSE →</button>
+              </div>
+              <span id="library-wire-fetch-status" class="gen-status-line"></span>
+            </aside>
+            <main class="gen-main library-main">
+              <div class="library-main-head">
+                <h3 class="gen-main-title">WIRE NEWS</h3>
+                <span class="gen-main-hint">Check stories → COMPOSE → edit in Generate Composer</span>
+              </div>
+              <div id="library-wire-empty" class="gen-main-empty">Choose a source on the left, then click <strong>Load library</strong>.</div>
+              <div id="library-wire-picker" class="gen-picker-panel" style="display:none;"></div>
             </main>
           </div>
         </div>
@@ -2774,6 +2898,101 @@ function libraryPageInit() {
     if (typeof loadStreamerList === 'function') loadStreamerList();
   });
   syncLibraryWindowToPicker();
+  renderRedditSubDropdowns();
+  var savedMode = 'streamers';
+  try { savedMode = sessionStorage.getItem('cwn_library_source_mode') || savedMode; } catch (_e) {}
+  setLibrarySourceMode(savedMode, true);
+}
+
+function setLibrarySourceMode(mode, skipPersist) {
+  mode = mode || 'streamers';
+  var modeEl = g('library-source-mode');
+  if (modeEl) modeEl.value = mode;
+  if (!skipPersist) {
+    try { sessionStorage.setItem('cwn_library_source_mode', mode); } catch (_e) {}
+  }
+  var panels = { streamers: g('library-panel-streamers'), reddit: g('library-panel-reddit'), wire: g('library-panel-wire') };
+  Object.keys(panels).forEach(function(k) {
+    if (panels[k]) panels[k].style.display = (k === mode) ? '' : 'none';
+  });
+  [['streamers', 'btn-library-src-streamers'], ['reddit', 'btn-library-src-reddit'], ['wire', 'btn-library-src-wire']].forEach(function(pair) {
+    var btn = g(pair[1]);
+    if (!btn) return;
+    btn.className = pair[0] === mode ? 'btn btn-gold btn-sm' : 'btn btn-outline btn-sm';
+  });
+  var intro = g('library-intro-copy');
+  if (intro) {
+    if (mode === 'reddit') {
+      intro.innerHTML = 'Pick a subreddit → <strong>Load library</strong> → check threads (video stages to R2 for preview) → <strong>COMPOSE →</strong> edit in Generate Composer.';
+      renderRedditSubDropdowns();
+    } else if (mode === 'wire') {
+      intro.innerHTML = 'Pick wire source → <strong>Load library</strong> → check stories → <strong>COMPOSE →</strong> edit in Generate Composer.';
+    } else {
+      intro.innerHTML = 'Select creators → <strong>Load library</strong> → check clips (each downloads to R2 for hover preview) → <strong>COMPOSE →</strong> edit in Generate Composer. Unused R2 staging clears Sunday EOW.';
+    }
+  }
+  syncLibraryWindowToPicker();
+}
+
+function loadLibraryReddit(forceReload) {
+  syncLibraryWindowToReddit();
+  previewRedditThreads(forceReload, 'library');
+}
+
+function loadLibraryWire(forceReload) {
+  var btn = g('btn-library-wire-load');
+  var picker = g('library-wire-picker');
+  var empty = g('library-wire-empty');
+  var statusEl = g('library-wire-fetch-status');
+  if (!forceReload && picker && picker.style.display !== 'none' && _newsPickerStories.length) {
+    picker.style.display = 'none';
+    if (empty) empty.style.display = '';
+    if (btn) btn.textContent = 'Load library';
+    return;
+  }
+  if (btn) { btn.textContent = 'FETCHING...'; btn.disabled = true; }
+  if (statusEl) statusEl.textContent = 'Fetching wire stories…';
+  _newsPickerStories = [];
+  var srcEl = g('library-wire-source');
+  var _pickSrc = srcEl ? srcEl.value : 'bbc';
+  if (g('news-source')) g('news-source').value = _pickSrc;
+  fetchCwnNewsVideos(function(d, err) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Load library'; }
+    if (err || !d || !(d.items || []).length) {
+      if (statusEl) statusEl.textContent = 'Fetch failed: ' + (err || 'no data');
+      alert('Could not fetch wire stories: ' + (err || 'no data'));
+      return;
+    }
+    var fetchLimit = getNewsFetchLimit();
+    (d.items || []).slice(0, fetchLimit).forEach(function(it) {
+      _newsPickerStories.push({
+        title: (it.title || '').trim(),
+        link: it.link || '',
+        videoUrl: it.hlsUrl || '',
+        hlsUrl: it.hlsUrl || '',
+        thumbnailUrl: it.thumbnail || '',
+        duration: it.duration != null ? it.duration : null,
+        orientation: it.sourceOrientation || it.orientation || 'landscape',
+        sourceOrientation: it.sourceOrientation || it.orientation || 'landscape',
+        pillarboxFilter: it.pillarboxFilter != null ? it.pillarboxFilter : null,
+        source: it.source || newsSourceStyle(it.source || _pickSrc).label,
+        pubDate: it.pubDate || '',
+        desc: (it.description || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 1200),
+        selected: false
+      });
+    });
+    renderNewsPicker(btn, fetchLimit, 'library-wire-picker');
+    if (empty) empty.style.display = 'none';
+    if (statusEl) statusEl.textContent = _newsPickerStories.length + ' stories loaded';
+    var sumEl = g('library-wire-selected-summary');
+    if (sumEl) sumEl.textContent = 'Check stories with video, then COMPOSE →.';
+  }, _pickSrc);
+}
+
+function syncLibraryWindowToReddit() {
+  var win = (g('library-window') && g('library-window').value) || '24h';
+  var rw = g('reddit-window');
+  if (rw) rw.value = win;
 }
 
 function libraryWindowToPubKey(win) {
@@ -2794,9 +3013,18 @@ function setLibraryWindow(win) {
   var el = g('library-window');
   if (el) el.value = win;
   syncLibraryWindowToPicker();
-  var picker = g('twitch-inline-picker');
-  if (picker && picker.style.display !== 'none' && _twitchPickerStreamers.length) {
-    loadLibraryClips(true);
+  syncLibraryWindowToReddit();
+  var libMode = (g('library-source-mode') && g('library-source-mode').value) || 'streamers';
+  if (libMode === 'streamers') {
+    var picker = g('twitch-inline-picker');
+    if (picker && picker.style.display !== 'none' && _twitchPickerStreamers.length) {
+      loadLibraryClips(true);
+    }
+  } else if (libMode === 'reddit') {
+    var rp = g('library-reddit-picker');
+    if (rp && rp.style.display !== 'none' && _redditPickerThreads.length) {
+      loadLibraryReddit(true);
+    }
   }
 }
 
@@ -2987,6 +3215,60 @@ function sendPickerToComposer() {
 
 function sendLibrarySelectionToGenerate() { sendPickerToComposer(); }
 
+function sendRedditToComposer() {
+  var picked = (_redditPickerThreads || []).filter(function(t) { return t.selected && t.videoUrl; });
+  if (!picked.length) {
+    alert('Load library, check threads with video, then COMPOSE →.');
+    return;
+  }
+  var pending = picked.filter(function(t) { return !t.stagedUrl && !t.playbackUrl; });
+  var statusEl = g('library-reddit-fetch-status') || g('twitch-fetch-status');
+  function finishHandoff() {
+    try {
+      sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
+        redditThreads: _redditPickerThreads.filter(function(t) { return t.selected && t.videoUrl; }),
+        vodSegment: null,
+        source: 'library-reddit'
+      }));
+    } catch (e) {}
+    nav('generate');
+  }
+  if (!pending.length) { finishHandoff(); return; }
+  if (statusEl) statusEl.textContent = 'Staging ' + pending.length + ' thread video(s) to R2…';
+  (function stageNext(i) {
+    if (i >= pending.length) {
+      if (statusEl) statusEl.textContent = 'Ready — opening Composer';
+      finishHandoff();
+      return;
+    }
+    stageRedditThread(pending[i], function(err) {
+      if (err) {
+        if (statusEl) statusEl.textContent = 'Stage failed: ' + err;
+        alert('Could not stage thread video: ' + err);
+        return;
+      }
+      if (statusEl) statusEl.textContent = 'Staging ' + (i + 1) + '/' + pending.length + '…';
+      stageNext(i + 1);
+    });
+  })(0);
+}
+
+function sendWireToComposer() {
+  var picked = (_newsPickerStories || []).filter(function(s) { return s.selected && s.hlsUrl; });
+  if (!picked.length) {
+    alert('Load library, check stories with video, then COMPOSE →.');
+    return;
+  }
+  try {
+    sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
+      wireStories: picked,
+      vodSegment: null,
+      source: 'library-wire'
+    }));
+  } catch (e) {}
+  nav('generate');
+}
+
 function applyComposerHandoff() {
   var raw;
   try { raw = sessionStorage.getItem('cwn_composer_handoff'); } catch (e) { return false; }
@@ -2997,8 +3279,18 @@ function applyComposerHandoff() {
   if (handoff.streamers && handoff.streamers.length) {
     _twitchPickerStreamers = handoff.streamers;
   }
+  if (handoff.redditThreads && handoff.redditThreads.length) {
+    _redditPickerThreads = handoff.redditThreads;
+    setNewsDeskMode('reddit');
+    switchGeneratePillar('news');
+  } else if (handoff.wireStories && handoff.wireStories.length) {
+    _newsPickerStories = handoff.wireStories;
+    setNewsDeskMode('wire');
+    switchGeneratePillar('news');
+  } else {
+    switchGeneratePillar('twitch');
+  }
   _composerVodSegment = handoff.vodSegment || null;
-  switchGeneratePillar('twitch');
   renderComposerHandoffSummary();
   if (typeof refreshCompLineupUI === 'function') refreshCompLineupUI();
   refreshGenerateComposer(true);
@@ -3013,9 +3305,31 @@ function applyComposerHandoff() {
 function renderComposerHandoffSummary() {
   var el = g('composer-handoff-summary');
   if (!el) return;
+  var redditSel = (_redditPickerThreads || []).filter(function(t) { return t.selected && t.videoUrl; });
+  var wireSel = (_newsPickerStories || []).filter(function(s) { return s.selected && s.hlsUrl; });
   var picked = collectCompPickedClips();
+  if (redditSel.length) {
+    var html = '<div style="font-size:10px;color:rgba(199,175,79,0.9);letter-spacing:1px;margin-bottom:8px;">FROM LIBRARY · THE THREAD · ' + redditSel.length + ' thread(s)</div>';
+    redditSel.forEach(function(t) {
+      html += '<div style="font-size:11px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);">'
+        + escHtml('r/' + (t.subreddit || '') + ' · ' + (t.title || '').slice(0, 72)) + '</div>';
+    });
+    html += '<div style="margin-top:8px;"><button type="button" class="btn btn-outline btn-sm" onclick="nav(\'library\');setLibrarySourceMode(\'reddit\')">← Clip Library</button></div>';
+    el.innerHTML = html;
+    return;
+  }
+  if (wireSel.length) {
+    var whtml = '<div style="font-size:10px;color:rgba(199,175,79,0.9);letter-spacing:1px;margin-bottom:8px;">FROM LIBRARY · WIRE · ' + wireSel.length + ' story/stories</div>';
+    wireSel.forEach(function(s) {
+      whtml += '<div style="font-size:11px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);">'
+        + escHtml((s.source || 'News') + ' · ' + (s.title || '').slice(0, 72)) + '</div>';
+    });
+    whtml += '<div style="margin-top:8px;"><button type="button" class="btn btn-outline btn-sm" onclick="nav(\'library\');setLibrarySourceMode(\'wire\')">← Clip Library</button></div>';
+    el.innerHTML = whtml;
+    return;
+  }
   if (!picked.length && !_composerVodSegment) {
-    el.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.45);">No lineup yet — pick streamers and clips in <button type="button" class="btn btn-outline btn-sm" onclick="nav(\'library\')">Clip Library</button>, then <strong>COMPOSE →</strong>.</div>';
+    el.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.45);">No lineup yet — pick in <button type="button" class="btn btn-outline btn-sm" onclick="nav(\'library\')">Clip Library</button>, then <strong>COMPOSE →</strong>.</div>';
     return;
   }
   var html = '<div style="font-size:10px;color:rgba(199,175,79,0.9);letter-spacing:1px;margin-bottom:8px;">FROM LIBRARY · ' + picked.length + ' clip(s)</div>';
@@ -4793,15 +5107,18 @@ function asmGate3Failed(batchJobId, resp) {
 }
 
 function asmFailed(batchJobId, errMsg) {
+  var msg = errMsg || 'Unknown assembly error';
   var badge = document.getElementById('asm-badge-'+batchJobId);
   if (badge) {
     badge.style.background = 'rgba(231,76,60,0.15)';
     badge.style.borderColor = 'rgba(231,76,60,0.5)';
     badge.style.color = '#e74c3c';
-    badge.innerHTML = '❌ ASSEMBLY FAILED — ' + errMsg;
+    badge.innerHTML = '❌ ASSEMBLY FAILED — ' + msg;
   }
   var logEl = document.getElementById('asm-log-'+batchJobId);
-  if (logEl) { logEl.textContent += '\n❌ Error: ' + errMsg + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+  if (logEl) { logEl.textContent += '\n❌ Error: ' + msg + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+  cwn_log('[assembly] FAILED ' + batchJobId + ': ' + msg, true);
+  alert('Assembly failed for ' + batchJobId + ':\n\n' + msg);
 }
 
 function logAssembly(batchJobId, msg) {
@@ -5368,7 +5685,15 @@ function isPostLivePublishHeld(job) {
   if (job.publishHold === 'post_live') return true;
   if (job.deliverySpec && job.deliverySpec.publishHold === 'post_live') return true;
   var ct = String(job.contentType || job.type || '').toLowerCase();
-  return ct === 'news-short' || ct === 'sports-short';
+  if (ct !== 'news-short' && ct !== 'sports-short') return false;
+  if (job.clipsOnly && (job.meta && (job.meta.redditSource || job.meta.source === 'reddit'))) return false;
+  if (job.clipsOnly && Array.isArray(job.orderItems)) {
+    var redditComp = job.orderItems.some(function(it) {
+      return it && (it.redditSource || it.postId || it.sourceType === 'reddit');
+    });
+    if (redditComp) return false;
+  }
+  return true;
 }
 
 function releasePostLivePublish(jobId) {
@@ -5408,20 +5733,23 @@ function releasePostLivePublish(jobId) {
 function resolveJobPreviewUrl(job) {
   if (!job) return '';
   var base = '';
-  if (job.driveUrl && String(job.driveUrl).indexOf('http') === 0) base = job.driveUrl;
-  else if (job.localPreviewUrl) {
+  // Prefer local /download/ — driveUrl (R2) can be stale when reassemble overwrites same filename (r3 vs r4).
+  if (job.localPreviewUrl) {
     base = job.localPreviewUrl.indexOf('http') === 0
       ? job.localPreviewUrl
       : (CFG.ffmpegUrl + job.localPreviewUrl);
   } else if (job.finalUrl && String(job.finalUrl).indexOf('/download/') > -1) {
     base = job.finalUrl.indexOf('http') === 0 ? job.finalUrl : (CFG.ffmpegUrl + job.finalUrl);
   } else if (job.filename) base = CFG.ffmpegUrl + '/download/' + job.filename;
+  else if (job.driveUrl && String(job.driveUrl).indexOf('http') === 0) base = job.driveUrl;
   if (!base) return '';
-  var bust = job.assembledAt ? Date.parse(job.assembledAt) : (job.assemblyId || job.id || Date.now());
-  return base + (base.indexOf('?') > -1 ? '&' : '?') + 'v=' + bust;
+  var bust = job.assemblyId || (job.assembledAt ? Date.parse(job.assembledAt) : (job.id || Date.now()));
+  return base + (base.indexOf('?') > -1 ? '&' : '?') + 'v=' + encodeURIComponent(String(bust));
 }
 
 function jobGate3Failed(job) {
+  if (job.qaOutcome === 'manual_review') return false;
+  if (job.gate3 && job.gate3.outcome === 'manual_review') return false;
   return job.status === 'gate3_failed'
     || job.qaOutcome === 'fail'
     || (job.gate3 && job.gate3.outcome === 'fail');
@@ -5808,8 +6136,8 @@ function renderQueue() {
     // ACTION BUTTONS
     var actions = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">';
     if (doneSegs.length) {
-      var asmLabel = job.assembledAt ? '↻ RE-ASSEMBLE' : '⚙ ASSEMBLE';
-      actions += '<button onclick="toggleAssembly(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm">'+asmLabel+'</button>';
+      var asmLabel = job.assembledAt ? '↻ OPEN ASSEMBLY PANEL' : '⚙ OPEN ASSEMBLY PANEL';
+      actions += '<button onclick="openAssemblyPanel(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" title="Opens FFmpeg panel — click RUN FFMPEG ASSEMBLE inside">'+asmLabel+'</button>';
     }
     var previewUrl = resolveJobPreviewUrl(job);
     if (previewUrl) {
@@ -6941,6 +7269,13 @@ function toggleAssembly(jobId) {
   var panel = document.getElementById('asm-panel-'+jobId);
   if (!panel) return;
   panel.classList.toggle('open');
+}
+
+function openAssemblyPanel(jobId) {
+  var panel = document.getElementById('asm-panel-'+jobId);
+  if (!panel) return;
+  if (!panel.classList.contains('open')) panel.classList.add('open');
+  alert('Assembly panel opened.\n\nClick RUN FFMPEG ASSEMBLE inside the panel to start (or use RE-ASSEMBLE FROM FILES on the job card).');
 }
 
 function importSegmentToCanva(jobId, segIndex) {
@@ -9379,10 +9714,672 @@ function _selectNbaShortClip(idx) {
   });
 }
 
+// ── News desk mode: wire vs Reddit (THE THREAD) ───────────────────────────────
+
+function getNewsDeskMode() {
+  return (g('news-desk-mode') && g('news-desk-mode').value) || 'wire';
+}
+
+function setNewsDeskMode(mode) {
+  if (!g('news-desk-mode')) return;
+  g('news-desk-mode').value = mode;
+  var wireBtn = g('btn-news-mode-wire');
+  var redditBtn = g('btn-news-mode-reddit');
+  var previewBtn = g('btn-preview-news');
+  if (wireBtn && redditBtn) {
+    wireBtn.className = mode === 'wire' ? 'btn btn-gold btn-sm' : 'btn btn-outline btn-sm';
+    redditBtn.className = mode === 'reddit' ? 'btn btn-gold btn-sm' : 'btn btn-outline btn-sm';
+    wireBtn.style.fontSize = redditBtn.style.fontSize = '10px';
+    wireBtn.style.padding = redditBtn.style.padding = '4px 12px';
+  }
+  if (previewBtn) previewBtn.textContent = mode === 'reddit' ? 'PICK THREADS' : 'Pick stories';
+  var srcSelect = g('news-source-select');
+  if (srcSelect) srcSelect.closest('.field').style.display = mode === 'reddit' ? 'none' : '';
+  var redditFields = g('reddit-desk-fields');
+  var redditWin = g('reddit-window-fields');
+  var redditSubFilter = g('reddit-sub-filter-fields');
+  if (redditFields) redditFields.style.display = mode === 'reddit' ? '' : 'none';
+  if (redditWin) redditWin.style.display = mode === 'reddit' ? '' : 'none';
+  if (redditSubFilter) redditSubFilter.style.display = mode === 'reddit' ? '' : 'none';
+  document.querySelectorAll('#news .gen-field-compact').forEach(function(el) {
+    if (!el.id || el.id.indexOf('reddit-') !== 0) return;
+    el.style.display = mode === 'reddit' ? '' : 'none';
+  });
+  if (mode !== 'reddit') {
+    var wireOnly = ['news-source-select', 'news-fetch-limit'];
+    wireOnly.forEach(function(id) {
+      var node = g(id);
+      if (node && node.closest('.field')) node.closest('.field').style.display = '';
+    });
+    var adv = document.querySelector('#news details.gen-advanced');
+    if (adv) adv.style.display = '';
+  } else {
+    var fetchLimit = g('news-fetch-limit');
+    if (fetchLimit && fetchLimit.closest('.field')) fetchLimit.closest('.field').style.display = 'none';
+    var adv = document.querySelector('#news details.gen-advanced');
+    if (adv) adv.style.display = 'none';
+    renderRedditSubDropdowns();
+  }
+  setPickerPanelVisible('news', false);
+  var redditPicker = g('reddit-inline-picker');
+  if (redditPicker) redditPicker.style.display = 'none';
+  _newsPickerStories = [];
+  _redditPickerThreads = [];
+}
+
+var _redditPickerThreads = [];
+var _redditActiveIdx = -1;
+var _redditSubFilter = 'all';
+
+var REDDIT_DEFAULT_SUB_ROSTER = ['PublicFreakout', 'InstantKarma', 'Whatcouldgowrong', 'videos'];
+var REDDIT_SUB_ROSTER_KEY = 'cwn_reddit_sub_roster';
+var REDDIT_SUB_LAST_KEY = 'cwn_reddit_sub_last';
+var REDDIT_SUB_FETCH_ALL_KEY = 'cwn_reddit_fetch_all';
+
+function normalizeRedditSubName(raw) {
+  var s = String(raw || '').trim().replace(/^r\//i, '').replace(/\s+/g, '');
+  if (!s || !/^[A-Za-z0-9_]+$/.test(s)) return '';
+  return s;
+}
+
+function loadRedditSubRoster() {
+  try {
+    var raw = localStorage.getItem(REDDIT_SUB_ROSTER_KEY);
+    if (raw) {
+      var list = JSON.parse(raw);
+      if (Array.isArray(list) && list.length) {
+        return list.map(normalizeRedditSubName).filter(Boolean);
+      }
+    }
+  } catch (_e) {}
+  return REDDIT_DEFAULT_SUB_ROSTER.slice();
+}
+
+function saveRedditSubRoster(list) {
+  var clean = [];
+  (list || []).forEach(function(name) {
+    var n = normalizeRedditSubName(name);
+    if (n && clean.indexOf(n) < 0) clean.push(n);
+  });
+  if (!clean.length) clean = REDDIT_DEFAULT_SUB_ROSTER.slice();
+  try { localStorage.setItem(REDDIT_SUB_ROSTER_KEY, JSON.stringify(clean)); } catch (_e) {}
+  return clean;
+}
+
+function getRedditSubLastSelected() {
+  try {
+    var last = localStorage.getItem(REDDIT_SUB_LAST_KEY);
+    if (last) return normalizeRedditSubName(last);
+  } catch (_e) {}
+  return loadRedditSubRoster()[0] || 'PublicFreakout';
+}
+
+function saveRedditSubLastSelected(name) {
+  var n = normalizeRedditSubName(name);
+  if (!n) return;
+  try { localStorage.setItem(REDDIT_SUB_LAST_KEY, n); } catch (_e) {}
+}
+
+function redditFetchAllSubsEnabled(ctx) {
+  var onLibrary = ctx === 'library';
+  var el = g(onLibrary ? 'library-reddit-fetch-all-subs' : 'reddit-fetch-all-subs');
+  if (el) return !!el.checked;
+  try { return localStorage.getItem(REDDIT_SUB_FETCH_ALL_KEY) === '1'; } catch (_e) {}
+  return false;
+}
+
+function saveRedditSubPrefs(ctx) {
+  var onLibrary = ctx === 'library';
+  var allEl = g(onLibrary ? 'library-reddit-fetch-all-subs' : 'reddit-fetch-all-subs');
+  var otherAll = g(onLibrary ? 'reddit-fetch-all-subs' : 'library-reddit-fetch-all-subs');
+  if (allEl && otherAll) otherAll.checked = allEl.checked;
+  try { localStorage.setItem(REDDIT_SUB_FETCH_ALL_KEY, allEl && allEl.checked ? '1' : '0'); } catch (_e) {}
+  var sel = g(onLibrary ? 'library-reddit-sub-select' : 'reddit-sub-select');
+  if (sel && sel.value) saveRedditSubLastSelected(sel.value);
+}
+
+function renderRedditSubDropdowns() {
+  var roster = loadRedditSubRoster();
+  var last = getRedditSubLastSelected();
+  if (roster.indexOf(last) < 0) last = roster[0];
+  var fetchAll = false;
+  try { fetchAll = localStorage.getItem(REDDIT_SUB_FETCH_ALL_KEY) === '1'; } catch (_e) {}
+  [['reddit-sub-select', 'reddit-fetch-all-subs'], ['library-reddit-sub-select', 'library-reddit-fetch-all-subs']].forEach(function(pair) {
+    var sel = g(pair[0]);
+    if (!sel) return;
+    sel.innerHTML = roster.map(function(name) {
+      return '<option value="' + escHtml(name) + '"' + (name === last ? ' selected' : '') + '>r/' + escHtml(name) + '</option>';
+    }).join('');
+    var allEl = g(pair[1]);
+    if (allEl) allEl.checked = fetchAll;
+  });
+}
+
+function onRedditSubSelectChange(ctx) {
+  var onLibrary = ctx === 'library';
+  var sel = g(onLibrary ? 'library-reddit-sub-select' : 'reddit-sub-select');
+  var other = g(onLibrary ? 'reddit-sub-select' : 'library-reddit-sub-select');
+  if (sel && sel.value) {
+    saveRedditSubLastSelected(sel.value);
+    if (other) other.value = sel.value;
+  }
+}
+
+function addRedditSubFromInput(ctx) {
+  var onLibrary = ctx === 'library';
+  var input = g(onLibrary ? 'library-reddit-sub-add-input' : 'reddit-sub-add-input');
+  var otherInput = g(onLibrary ? 'reddit-sub-add-input' : 'library-reddit-sub-add-input');
+  var name = normalizeRedditSubName(input && input.value);
+  if (!name) {
+    alert('Enter a valid subreddit name (letters, numbers, underscore only).');
+    return;
+  }
+  var roster = saveRedditSubRoster(loadRedditSubRoster().concat([name]));
+  saveRedditSubLastSelected(name);
+  renderRedditSubDropdowns();
+  var sel = g(onLibrary ? 'library-reddit-sub-select' : 'reddit-sub-select');
+  var otherSel = g(onLibrary ? 'reddit-sub-select' : 'library-reddit-sub-select');
+  if (sel) sel.value = name;
+  if (otherSel) otherSel.value = name;
+  if (input) input.value = '';
+  if (otherInput) otherInput.value = '';
+  var statusEl = onLibrary ? g('library-reddit-fetch-status') : g('news-status');
+  if (statusEl) statusEl.textContent = 'Added r/' + name + ' to saved list (' + roster.length + ' total)';
+}
+
+function getRedditSubsList(ctx) {
+  if (redditFetchAllSubsEnabled(ctx)) return loadRedditSubRoster();
+  var onLibrary = ctx === 'library'
+    || (g('library-source-mode') && g('library-source-mode').value === 'reddit');
+  var sel = g(onLibrary ? 'library-reddit-sub-select' : 'reddit-sub-select');
+  var one = normalizeRedditSubName(sel && sel.value) || getRedditSubLastSelected();
+  return one ? [one] : loadRedditSubRoster().slice(0, 1);
+}
+
+function buildRedditCandidatesUrlForSub(sub, win) {
+  return (CFG.ffmpegUrl || 'http://localhost:3000')
+    + '/reddit/candidates?comments=0&perSub=5&minScore=500&window=' + encodeURIComponent(win || getRedditWindow())
+    + '&subs=' + encodeURIComponent(sub);
+}
+
+function buildRedditCandidatesUrl(ctx) {
+  var subs = getRedditSubsList(ctx).join(',');
+  var win = getRedditWindow();
+  return (CFG.ffmpegUrl || 'http://localhost:3000')
+    + '/reddit/candidates?comments=0&perSub=5&minScore=500&window=' + encodeURIComponent(win)
+    + '&subs=' + encodeURIComponent(subs);
+}
+
+function fetchRedditCandidatesSequential(subs, win, onProgress, onDone) {
+  var allPosts = [];
+  var subErrors = [];
+  var idx = 0;
+  function next() {
+    if (idx >= subs.length) {
+      onDone(null, { posts: allPosts, subErrors: subErrors });
+      return;
+    }
+    var sub = subs[idx];
+    if (onProgress) onProgress(idx + 1, subs.length, sub);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', buildRedditCandidatesUrlForSub(sub, win), true);
+    xhr.timeout = 50000;
+    xhr.onload = function() {
+      try {
+        if (xhr.status >= 400) throw new Error('HTTP ' + xhr.status);
+        var d = JSON.parse(xhr.responseText || '{}');
+        if (d.ok && (d.posts || []).length) {
+          allPosts = allPosts.concat(d.posts);
+        } else if (d.ok) {
+          subErrors.push({ sub: sub, error: 'no video threads' });
+        } else {
+          subErrors.push({ sub: sub, error: d.error || 'fetch failed' });
+        }
+      } catch (e) {
+        subErrors.push({ sub: sub, error: e.message });
+      }
+      idx++;
+      next();
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+      subErrors.push({ sub: sub, error: 'timeout' });
+      idx++;
+      next();
+    };
+    xhr.send();
+  }
+  next();
+}
+
+function getRedditWindow() {
+  var libMode = g('library-source-mode') && g('library-source-mode').value === 'reddit';
+  if (libMode && g('library-window')) return g('library-window').value || '24h';
+  var el = g('reddit-window');
+  return (el && el.value) || '24h';
+}
+
+function setRedditWindow(win) {
+  var el = g('reddit-window');
+  if (el) el.value = win;
+  document.querySelectorAll('#reddit-window-pills .library-window-pill').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-win') === win);
+  });
+  var picker = g('reddit-inline-picker');
+  if (picker && picker.style.display !== 'none' && _redditPickerThreads.length) {
+    previewRedditThreads(true);
+  }
+}
+
+function getRedditPickerContext(ctx) {
+  var onLibrary = ctx === 'library'
+    || ((g('library-source-mode') && g('library-source-mode').value === 'reddit')
+      && typeof currentPage !== 'undefined' && currentPage === 'library');
+  return {
+    onLibrary: onLibrary,
+    btn: onLibrary ? g('btn-library-reddit-load') : g('btn-preview-news'),
+    picker: onLibrary ? g('library-reddit-picker') : g('reddit-inline-picker'),
+    empty: onLibrary ? g('library-reddit-empty') : null,
+    detailId: onLibrary ? 'library-reddit-thread-detail' : 'reddit-thread-detail',
+    subFilterHost: onLibrary ? g('library-reddit-sub-filter-pills') : g('reddit-sub-filter-pills'),
+    subFilterWrap: onLibrary ? g('library-reddit-sub-filter-fields') : g('reddit-sub-filter-fields'),
+    statusEl: onLibrary ? g('library-reddit-fetch-status') : g('news-status')
+  };
+}
+
+function loadRedditThreadComments(idx, onDone) {
+  var t = _redditPickerThreads[idx];
+  if (!t || !t.postId) { if (onDone) onDone('missing post'); return; }
+  if ((t.topComments || []).length) { if (onDone) onDone(null, t); return; }
+  t.commentsLoading = true;
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/reddit/thread/' + encodeURIComponent(t.postId) + '?commentLimit=30', true);
+  xhr.timeout = 90000;
+  xhr.onload = function() {
+    t.commentsLoading = false;
+    try {
+      var d = JSON.parse(xhr.responseText || '{}');
+      if (!d.ok || !d.post) throw new Error(d.error || 'thread load failed');
+      t.selftext = d.post.selftext || t.selftext;
+      t.topComments = d.post.topComments || [];
+      t.numComments = d.post.numComments || t.numComments;
+      if (onDone) onDone(null, t);
+    } catch (e) {
+      t.commentError = e.message;
+      if (onDone) onDone(e.message, t);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    t.commentsLoading = false;
+    t.commentError = 'Comments fetch timeout';
+    if (onDone) onDone('Comments fetch timeout', t);
+  };
+  xhr.send();
+}
+
+function mapRedditPosts(posts) {
+  return (posts || []).map(function(p) {
+    return {
+      postId: p.id,
+      title: p.title || '',
+      subreddit: p.subreddit || '',
+      score: p.score || 0,
+      numComments: p.numComments || 0,
+      selftext: p.selftext || '',
+      topComments: p.topComments || [],
+      videoUrl: p.videoUrl || p.url || '',
+      link: p.permalink || p.url || '',
+      redditPermalink: p.permalink || '',
+      redditSource: true,
+      source: 'reddit',
+      sourceType: 'reddit',
+      thumbnailUrl: p.thumbnail || '',
+      createdUtc: p.createdUtc || null,
+      selected: !!p.videoUrl
+    };
+  });
+}
+
+function renderRedditSubFilterPills(ctx) {
+  var c = getRedditPickerContext(ctx);
+  var host = c.subFilterHost || g('reddit-sub-filter-pills');
+  if (!host) return;
+  var subs = [];
+  _redditPickerThreads.forEach(function(t) {
+    var s = (t.subreddit || '').toLowerCase();
+    if (s && subs.indexOf(s) < 0) subs.push(s);
+  });
+  subs.sort();
+  var html = '<button type="button" class="library-window-pill' + (_redditSubFilter === 'all' ? ' active' : '') + '" onclick="setRedditSubFilter(\'all\')">ALL</button>';
+  subs.forEach(function(s) {
+    html += '<button type="button" class="library-window-pill' + (_redditSubFilter === s ? ' active' : '') + '" onclick="setRedditSubFilter(\'' + s + '\')">r/' + s + '</button>';
+  });
+  host.innerHTML = html;
+  if (c.subFilterWrap) c.subFilterWrap.style.display = subs.length ? '' : 'none';
+}
+
+function setRedditSubFilter(sub) {
+  _redditSubFilter = sub || 'all';
+  renderRedditSubFilterPills();
+  var c = getRedditPickerContext();
+  renderRedditPicker(c.btn);
+}
+
+function redditThreadsForDisplay() {
+  if (_redditSubFilter === 'all') return _redditPickerThreads;
+  return _redditPickerThreads.filter(function(t) {
+    return (t.subreddit || '').toLowerCase() === _redditSubFilter;
+  });
+}
+
+function redditGlobalIndex(displayIdx) {
+  var visible = redditThreadsForDisplay();
+  var t = visible[displayIdx];
+  if (!t) return -1;
+  return _redditPickerThreads.indexOf(t);
+}
+
+function applyStagedRedditFields(t, staged) {
+  if (!t || !staged) return;
+  var play = staged.playbackUrl || staged.r2Url || staged.stagedUrl;
+  if (!play) return;
+  t.playbackUrl = play;
+  t.stagedUrl = play;
+  t.r2Url = staged.r2Url || play;
+  t.staging = false;
+  t.stageError = null;
+}
+
+function stageRedditThread(t, onDone) {
+  if (!t || !t.videoUrl) { if (onDone) onDone('no video'); return; }
+  if (t.stagedUrl) { if (onDone) onDone(null, t); return; }
+  t.staging = true;
+  t.stageError = null;
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/reddit/stage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      postId: t.postId,
+      videoUrl: t.videoUrl,
+      subreddit: t.subreddit,
+      title: t.title,
+      link: t.link,
+      permalink: t.redditPermalink || t.link,
+      thumbnailUrl: t.thumbnailUrl || ''
+    })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !(d.staged && (d.staged.playbackUrl || d.staged.r2Url))) {
+        throw new Error(d.error || 'Reddit stage failed');
+      }
+      applyStagedRedditFields(t, d.staged);
+      if (onDone) onDone(null, t);
+    })
+    .catch(function(e) {
+      t.staging = false;
+      t.stageError = e.message;
+      if (onDone) onDone(e.message, t);
+    });
+}
+
+function escapeRedditText(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderRedditThreadDetail(idx, targetId) {
+  var detail = g(targetId || 'reddit-thread-detail');
+  if (!detail) return;
+  var t = _redditPickerThreads[idx];
+  if (!t) {
+    detail.innerHTML = '<div style="color:rgba(255,255,255,0.35);font-size:11px;padding:20px;">Select a thread to watch the video and read OP + comments.</div>';
+    return;
+  }
+
+  var videoBlock = '';
+  if (!t.videoUrl) {
+    videoBlock = '<div style="color:#e55;font-size:11px;padding:12px;">No video on this post — pick another thread for SHORT.</div>';
+  } else if (t.staging) {
+    videoBlock = '<div style="color:#c7af4f;font-size:11px;padding:12px;font-family:monospace;">Downloading to R2 for preview…</div>';
+  } else if (t.stageError) {
+    videoBlock = '<div style="color:#e55;font-size:11px;padding:12px;">Preview failed: ' + escapeRedditText(t.stageError)
+      + ' <button type="button" class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="focusRedditThread(' + idx + ',true)">Retry</button></div>';
+  } else if (t.stagedUrl || t.playbackUrl) {
+    var vsrc = escapeHtml(t.playbackUrl || t.stagedUrl);
+    videoBlock = '<div class="reddit-detail-video"><video controls playsinline preload="metadata" src="' + vsrc + '"></video></div>';
+  } else {
+    videoBlock = '<div style="color:rgba(255,255,255,0.45);font-size:11px;padding:12px;">Loading preview…</div>';
+  }
+
+  var opBody = (t.selftext || '').trim();
+  var threadHtml = '<div class="reddit-comment-op">OP · r/' + escapeRedditText(t.subreddit) + '</div>'
+    + '<div style="font-weight:700;color:#fff;margin-bottom:8px;">' + escapeRedditText(t.title) + '</div>';
+  if (opBody) {
+    threadHtml += '<div class="reddit-comment" style="border-left:2px solid rgba(199,175,79,0.4);padding-left:8px;">'
+      + escapeRedditText(opBody).replace(/\n/g, '<br>') + '</div>';
+  }
+  if (t.commentsLoading) {
+    threadHtml += '<div style="color:#c7af4f;margin-top:8px;font-size:11px;">Loading comments…</div>';
+  } else {
+    (t.topComments || []).forEach(function(c, ci) {
+      threadHtml += '<div class="reddit-comment">'
+        + '<div class="reddit-comment-meta">#' + (ci + 1) + ' · ' + escapeRedditText(c.author || 'anon') + ' · ' + (c.score || 0) + ' pts</div>'
+        + '<div>' + escapeRedditText((c.body || '').replace(/\s+/g, ' ').trim()).slice(0, 900) + '</div>'
+        + '</div>';
+    });
+    if (!(t.topComments || []).length) {
+      threadHtml += '<div style="color:rgba(255,255,255,0.35);margin-top:8px;">'
+        + (t.commentError ? ('Comments: ' + escapeRedditText(t.commentError)) : 'Comments load when you select a thread.')
+        + '</div>';
+    }
+  }
+
+  detail.innerHTML = videoBlock
+    + '<div class="reddit-detail-thread">' + threadHtml + '</div>';
+}
+
+function focusRedditThread(idx, forceStage) {
+  _redditActiveIdx = idx;
+  var t = _redditPickerThreads[idx];
+  if (!t) return;
+  t.selected = true;
+  var c = getRedditPickerContext();
+  renderRedditPicker(c.btn);
+  var detailId = c.detailId || 'reddit-thread-detail';
+  function afterComments() {
+    renderRedditThreadDetail(idx, detailId);
+  }
+  loadRedditThreadComments(idx, function() {
+    afterComments();
+    if (t.videoUrl && (!t.stagedUrl || forceStage) && !t.staging) {
+      stageRedditThread(t, function(err) {
+        renderRedditThreadDetail(idx, detailId);
+        if (!err) renderRedditPicker(c.btn);
+      });
+    }
+  });
+  if (!t.videoUrl) afterComments();
+}
+
+function toggleRedditThreadSelected(idx, checked) {
+  _redditPickerThreads[idx].selected = checked;
+  if (checked) focusRedditThread(idx);
+}
+
+function previewRedditThreads(forceReload, ctx) {
+  var c = getRedditPickerContext(ctx);
+  var btn = c.btn;
+  var picker = c.picker;
+  if (!btn || !picker) return;
+  if (!forceReload && picker.style.display !== 'none' && _redditPickerThreads.length > 0) {
+    picker.style.display = 'none';
+    if (c.empty) c.empty.style.display = '';
+    btn.textContent = c.onLibrary ? 'Load library' : 'PICK THREADS';
+    return;
+  }
+  syncLibraryWindowToReddit();
+  var subs = getRedditSubsList(c.onLibrary ? 'library' : null);
+  if (!subs.length) {
+    alert('Pick a subreddit from the dropdown (or add one with + Add).');
+    return;
+  }
+  var win = getRedditWindow();
+  btn.textContent = 'FETCHING...'; btn.disabled = true;
+  var progWrap = c.onLibrary ? g('library-reddit-progress-wrap') : null;
+  var progBar = c.onLibrary ? g('library-reddit-progress') : null;
+  if (progWrap) progWrap.style.display = subs.length > 1 ? '' : 'none';
+  if (progBar) progBar.style.width = '0%';
+  if (c.statusEl) c.statusEl.textContent = 'Fetching r/' + subs[0] + (subs.length > 1 ? (' (1/' + subs.length + ')') : '') + '…';
+  _redditPickerThreads = [];
+  _redditActiveIdx = -1;
+  _redditSubFilter = 'all';
+  fetchRedditCandidatesSequential(subs, win, function(cur, total, sub) {
+    if (c.statusEl) c.statusEl.textContent = 'Fetching r/' + sub + ' (' + cur + '/' + total + ')…';
+    if (progBar && total > 1) progBar.style.width = Math.round((cur / total) * 100) + '%';
+  }, function(err, result) {
+    btn.disabled = false;
+    if (progWrap) progWrap.style.display = 'none';
+    if (err) {
+      btn.textContent = c.onLibrary ? 'Load library' : 'PICK THREADS';
+      if (c.statusEl) c.statusEl.textContent = 'Fetch failed: ' + err.message;
+      alert('Reddit fetch failed: ' + err.message);
+      return;
+    }
+    var posts = (result && result.posts) || [];
+    var subErrors = (result && result.subErrors) || [];
+    if (!posts.length) {
+      btn.textContent = c.onLibrary ? 'Load library' : 'PICK THREADS';
+      var errMsg = subErrors.length
+        ? subErrors.map(function(e) { return 'r/' + e.sub + ': ' + e.error; }).join('; ')
+        : 'no video threads';
+      if (c.statusEl) c.statusEl.textContent = 'No threads — ' + errMsg;
+      alert('Reddit fetch failed — ' + errMsg + (subs.length > 1 ? ' Try one sub + Top 24H.' : ' Try Top 24H.'));
+      return;
+    }
+    _redditPickerThreads = mapRedditPosts(posts);
+    renderRedditSubFilterPills(c.onLibrary ? 'library' : null);
+    renderRedditPicker(btn);
+    if (c.empty) c.empty.style.display = 'none';
+    var note = _redditPickerThreads.length + ' threads';
+    if (subErrors.length) note += ' · ' + subErrors.length + ' sub(s) skipped';
+    note += ' · comments load on select';
+    if (c.statusEl) c.statusEl.textContent = note;
+    if (_redditPickerThreads.length) {
+      var firstVid = _redditPickerThreads.findIndex(function(t) { return !!t.videoUrl; });
+      if (firstVid >= 0) focusRedditThread(firstVid);
+    }
+  });
+}
+
+function renderRedditPicker(btn) {
+  if (!btn) btn = getRedditPickerContext().btn;
+  var c = getRedditPickerContext();
+  var picker = c.picker || g('reddit-inline-picker');
+  if (!picker) return;
+  btn.textContent = c.onLibrary ? 'Hide library' : 'HIDE PICKER';
+  var winLabel = ({ '24h': '24H', '7d': '7D', '30d': '30D', all: 'ALL TIME' })[getRedditWindow()] || getRedditWindow();
+  var subsLabel = getRedditSubsList(c.onLibrary ? 'library' : null).map(function(s) { return 'r/' + s; }).join(' · ');
+  var detailId = c.detailId || 'reddit-thread-detail';
+  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:8px;letter-spacing:1px;">'
+    + 'THE THREAD · TOP ' + winLabel + ' · ' + subsLabel
+    + (_redditSubFilter !== 'all' ? ' · showing r/' + _redditSubFilter : '')
+    + ' — click to preview (R2) + read comments'
+    + '</div>';
+  html += '<div class="reddit-picker-split">';
+  html += '<div class="reddit-thread-list">';
+
+  var visible = redditThreadsForDisplay();
+  var lastSub = null;
+  visible.forEach(function(t, displayIdx) {
+    var subKey = (t.subreddit || '').toLowerCase();
+    if (subKey !== lastSub) {
+      html += '<div style="font-size:9px;font-family:monospace;color:#c7af4f;letter-spacing:1px;padding:8px 4px 4px;margin-top:4px;">r/' + escapeRedditText(t.subreddit || '') + '</div>';
+      lastSub = subKey;
+    }
+    var globalIdx = redditGlobalIndex(displayIdx);
+    var isActive = globalIdx === _redditActiveIdx;
+    var hasVideo = !!(t.videoUrl);
+    var stageBadge = t.staging ? '… staging'
+      : (t.stagedUrl ? '✓ preview ready' : (hasVideo ? 'click to load' : 'no video'));
+    var stageClr = t.stagedUrl ? '#2ecc71' : (t.staging ? '#c7af4f' : 'rgba(255,255,255,0.35)');
+    html += '<div class="reddit-thread-row' + (isActive ? ' is-active' : '') + '" onclick="focusRedditThread(' + globalIdx + ')">'
+      + '<input type="checkbox" id="redditpick-' + globalIdx + '" ' + (t.selected ? 'checked' : '')
+      + ' onclick="event.stopPropagation(); toggleRedditThreadSelected(' + globalIdx + ', this.checked)" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;">'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:12px;color:#fff;line-height:1.3;">' + escapeRedditText((t.title || '').slice(0, 120)) + '</div>'
+      + '<div style="font-size:10px;font-family:monospace;margin-top:2px;color:rgba(255,255,255,0.4);">' + (t.score || 0) + ' pts · ' + (t.numComments || (t.topComments || []).length) + ' comments</div>'
+      + '<div style="font-size:9px;font-family:monospace;margin-top:3px;color:' + stageClr + ';">' + stageBadge + '</div>'
+      + '</div></div>';
+  });
+  if (!visible.length) {
+    html += '<div style="padding:12px;color:rgba(255,255,255,0.35);font-size:11px;">No video threads for this window/sub filter.</div>';
+  }
+  html += '</div>';
+  html += '<div id="' + detailId + '" class="reddit-thread-detail"></div>';
+  html += '</div>';
+  picker.innerHTML = html;
+  picker.style.display = '';
+  if (!c.onLibrary) setPickerPanelVisible('news', true);
+  renderRedditThreadDetail(_redditActiveIdx, detailId);
+  var selCount = (_redditPickerThreads || []).filter(function(t) { return t.selected; }).length;
+  var sumEl = c.onLibrary ? g('library-reddit-selected-summary') : null;
+  if (sumEl) sumEl.textContent = selCount ? (selCount + ' thread(s) selected — COMPOSE → to edit') : 'Check threads, then COMPOSE →.';
+}
+
+function redditItemFromThread(t) {
+  return {
+    postId: t.postId,
+    title: t.title,
+    subreddit: t.subreddit,
+    score: t.score,
+    numComments: t.numComments,
+    selftext: t.selftext,
+    topComments: t.topComments,
+    videoUrl: t.stagedUrl || t.playbackUrl || t.videoUrl,
+    url: t.stagedUrl || t.playbackUrl || t.videoUrl,
+    link: t.link,
+    redditPermalink: t.redditPermalink,
+    redditSource: true,
+    source: 'reddit',
+    sourceType: 'reddit',
+    thumbnailUrl: t.thumbnailUrl || '',
+    stagedUrl: t.stagedUrl || t.playbackUrl || '',
+    desc: (t.selftext || '') + '\n\n' + (t.topComments || []).slice(0, 5).map(function(c) { return c.body; }).join(' ')
+  };
+}
+
 // ── News short-form manual clip picker ───────────────────────────────────────
 var _newsShortClipPool = [];
 
 function openNewsShortClipPicker(platforms) {
+  if (getNewsDeskMode() === 'reddit') {
+    var gallery = g('news-short-clip-gallery');
+    var list = g('news-short-clip-list');
+    var status = g('news-short-clip-status');
+    if (gallery.style.display !== 'none' && _redditPickerThreads.length > 0) {
+      gallery.style.display = 'none';
+      return;
+    }
+    gallery.style.display = '';
+    list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;padding:8px;">Fetching Reddit threads...</div>';
+    if (_redditPickerThreads.length > 0) {
+      _renderRedditShortClipList(list, status, platforms);
+      return;
+    }
+    var subs = getRedditSubsList();
+    fetchRedditCandidatesSequential(subs, getRedditWindow(), function(cur, total, sub) {
+      list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;padding:8px;">Fetching r/' + sub + ' (' + cur + '/' + total + ')…</div>';
+    }, function(err, result) {
+      if (err || !(result && result.posts && result.posts.length)) {
+        var msg = err ? err.message : ((result && result.subErrors && result.subErrors[0] && result.subErrors[0].error) || 'no threads');
+        list.innerHTML = '<div style="color:#e55;padding:8px;">Reddit fetch failed — ' + escHtml(String(msg)) + '</div>';
+        return;
+      }
+      _redditPickerThreads = mapRedditPosts(result.posts).filter(function(p) { return !!p.videoUrl; });
+      _renderRedditShortClipList(list, status, platforms);
+    });
+    return;
+  }
+
   var gallery = g('news-short-clip-gallery');
   var list    = g('news-short-clip-list');
   var status  = g('news-short-clip-status');
@@ -9462,6 +10459,66 @@ function _renderNewsShortClipList(clips, list, status, platforms) {
   }).join('') + '</div>';
   status.textContent = _newsShortClipPool.length + ' stories — click one card to generate short';
   list._platforms = platforms;
+}
+
+function _renderRedditShortClipList(list, status, platforms) {
+  list.innerHTML = '<div class="reddit-picker-split" style="min-height:280px;">'
+    + '<div class="reddit-thread-list" style="max-height:300px;">'
+    + _redditPickerThreads.map(function(c, idx) {
+      var ready = !!(c.stagedUrl || c.playbackUrl);
+      return '<div class="reddit-thread-row' + (idx === _redditActiveIdx ? ' is-active' : '') + '" onclick="_selectRedditShortClip(' + idx + ')">'
+        + '<div style="flex:1;min-width:0;"><div style="font-size:12px;color:#fff;line-height:1.3;">' + escapeRedditText((c.title || '').slice(0, 100)) + '</div>'
+        + '<div style="font-size:10px;color:#c7af4f;font-family:monospace;">r/' + escapeRedditText(c.subreddit || '') + ' · ' + (c.score || 0)
+        + (ready ? ' · ✓ preview' : '') + '</div></div></div>';
+    }).join('')
+    + '</div>'
+    + '<div id="reddit-short-thread-detail" class="reddit-thread-detail"></div>'
+    + '</div>';
+  status.textContent = _redditPickerThreads.length + ' threads — click one (loads R2 preview) then pick platforms';
+  list._platforms = platforms;
+  if (_redditPickerThreads.length) {
+    var first = _redditPickerThreads.findIndex(function(t) { return !!t.videoUrl; });
+    if (first >= 0) {
+      _redditActiveIdx = first;
+      stageRedditThread(_redditPickerThreads[first], function() { _renderRedditShortDetail(first); });
+    }
+  }
+}
+
+function _renderRedditShortDetail(idx) {
+  _redditActiveIdx = idx;
+  renderRedditThreadDetail(idx, 'reddit-short-thread-detail');
+}
+
+function _selectRedditShortClip(idx) {
+  var c = _redditPickerThreads[idx];
+  if (!c) return;
+  _redditActiveIdx = idx;
+  var runSelect = function() {
+    showPlatformModal(function(sel) {
+      var pub = parsePlatformModalSelection(sel);
+      var item = redditItemFromThread(c);
+      g('news-short-clip-status').textContent = 'Selected r/' + c.subreddit + ' — generating script...';
+      setGenerateModeActive('news', 'short');
+      CURRENT_TYPE = 'news-short';
+      lockGenerateButton('btn-gen-news-short');
+      CURRENT_META = { source: 'reddit', postId: item.postId };
+      g('script-type-label').textContent = 'NEWS SHORT (THE THREAD) — "' + (item.title || '').slice(0, 55) + '"';
+      nav('generate');
+      callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, pub.platforms, { scheduledAt: pub.scheduledAt });
+    });
+  };
+  if (c.videoUrl && !c.stagedUrl && !c.staging) {
+    stageRedditThread(c, function(err) {
+      _renderRedditShortDetail(idx);
+      if (!err) runSelect();
+      else g('news-short-clip-status').textContent = 'Stage failed: ' + err;
+    });
+    _renderRedditShortDetail(idx);
+    return;
+  }
+  _renderRedditShortDetail(idx);
+  runSelect();
 }
 
 function _selectNewsShortClip(idx) {
@@ -9566,6 +10623,18 @@ function generateShort(type, platforms) {
   }
 
   if (type === 'news') {
+    if (getNewsDeskMode() === 'reddit') {
+      var _redditSelected = (_redditPickerThreads || []).filter(function(t) { return t.selected && t.videoUrl; });
+      if (_redditSelected.length > 0) {
+        var picked = _redditSelected[0];
+        var redditItem = redditItemFromThread(picked);
+        CURRENT_META = { source: 'reddit', postId: redditItem.postId };
+        g('script-type-label').textContent = 'NEWS SHORT (THE THREAD) — r/' + redditItem.subreddit + ': "' + (redditItem.title || '').slice(0, 55) + '"';
+        nav('generate');
+        callFullScriptServer('news-short', [redditItem], statusTagIdForType('news-short'), null, null, _shortPlatforms);
+        return;
+      }
+    }
     var _newsSelected = (window._newsPickerStories || []).filter(function(s){ return !!s.selected; });
     if (_newsSelected.length > 0) {
       var pickedStory = _newsSelected[0];
@@ -11461,6 +12530,10 @@ function newsSourceStyle(srcKey) {
 }
 
 function previewNewsStories() {
+  if (getNewsDeskMode() === 'reddit') {
+    previewRedditThreads();
+    return;
+  }
   var btn = g('btn-preview-news');
   var picker = g('news-inline-picker');
   if (picker.style.display !== 'none' && _newsPickerStories.length > 0) {
@@ -11507,9 +12580,10 @@ function previewNewsStories() {
   }, _pickSrc);
 }
 
-function renderNewsPicker(btn, maxCount) {
-  btn.textContent = 'HIDE PICKER';
-  var picker = g('news-inline-picker');
+function renderNewsPicker(btn, maxCount, pickerId) {
+  if (btn && typeof btn.textContent === 'string') btn.textContent = pickerId ? 'Hide library' : 'HIDE PICKER';
+  var picker = g(pickerId || 'news-inline-picker');
+  if (!picker) return;
   var filters = getPickerFilters('news');
   var visible = _newsPickerStories.filter(function(story) {
     return clipPassesPickerFilters(story, filters, { durationField: 'duration', dateField: 'pubDate' });
@@ -11580,7 +12654,13 @@ function renderNewsPicker(btn, maxCount) {
 
   html += '</div>';
   picker.innerHTML = html;
-  setPickerPanelVisible('news', true);
+  picker.style.display = '';
+  if (!pickerId) setPickerPanelVisible('news', true);
+  if (pickerId === 'library-wire-picker') {
+    var sel = (_newsPickerStories || []).filter(function(s) { return s.selected && s.hlsUrl; }).length;
+    var sumEl = g('library-wire-selected-summary');
+    if (sumEl) sumEl.textContent = sel ? (sel + ' story/stories selected — COMPOSE →') : 'Check stories with video, then COMPOSE →.';
+  }
 }
 
 function _toggleNewsStory(i) {
@@ -11747,6 +12827,25 @@ function getSelectedSportsExplorerClips() {
 }
 
 function getSelectedNewsPickerStories() {
+  if (getNewsDeskMode() === 'reddit') {
+    return (_redditPickerThreads || []).filter(function(t) { return t.selected && t.videoUrl; }).map(function(t) {
+      return {
+        title: t.title || '',
+        link: t.link || t.redditPermalink || '',
+        videoUrl: t.stagedUrl || t.playbackUrl || t.videoUrl || '',
+        hlsUrl: t.stagedUrl || t.playbackUrl || t.videoUrl || '',
+        thumbnailUrl: t.thumbnailUrl || '',
+        source: 'reddit/r/' + (t.subreddit || ''),
+        redditSource: true,
+        postId: t.postId,
+        subreddit: t.subreddit,
+        selftext: t.selftext,
+        topComments: t.topComments,
+        orientation: 'landscape',
+        sourceOrientation: 'landscape'
+      };
+    });
+  }
   return (_newsPickerStories || []).filter(function(s) { return s.selected && (s.hlsUrl || s.videoUrl); });
 }
 
@@ -12329,7 +13428,13 @@ function triggerSportsClipComp() {
 
 function triggerNewsClipComp() {
   var picked = getSelectedNewsPickerStories();
+  var redditMode = getNewsDeskMode() === 'reddit';
   if (!picked.length) {
+    if (redditMode) {
+      previewRedditThreads();
+      alert('Pick ' + PICKER_COMP_CLIP_COUNT + ' threads in THE THREAD, then CLIPS COMP.');
+      return;
+    }
     if (!g('news-inline-picker') || g('news-inline-picker').style.display === 'none' || !_newsPickerStories.length) {
       previewNewsStories();
     }
@@ -12501,6 +13606,23 @@ var _origGenerateNews = null;
 (function patchGenerateNews() {
   _origGenerateNews = typeof generateNews === 'function' ? generateNews : null;
   window.generateNewsWithPicker = function() {
+    if (getNewsDeskMode() === 'reddit') {
+      var redditSel = (_redditPickerThreads || []).filter(function(t) { return t.selected && t.videoUrl; });
+      if (redditSel.length > 0) {
+        var item = redditItemFromThread(redditSel[0]);
+        lockGenerateButton('btn-gen-news');
+        setGenerateModeActive('news', 'long');
+        CURRENT_TYPE = 'news';
+        CURRENT_META = { source: 'reddit', postId: item.postId };
+        setGeneratingState('news-status', 'NEWS VOD (THE THREAD) — analyzing post + comments...');
+        if (g('script-type-label')) g('script-type-label').textContent = 'NEWS VOD (THE THREAD) — r/' + item.subreddit;
+        nav('generate');
+        callFullScriptServer('news', [item], 'news-status', null);
+        return;
+      }
+      previewRedditThreads();
+      return;
+    }
     if (_newsPickerStories.length > 0) {
       var selected = _newsPickerStories.filter(function(s){ return s.selected && s.hlsUrl; });
       if (!selected.length) {
