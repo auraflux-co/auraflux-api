@@ -732,17 +732,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   </div>
                 </div>
                 <div id="reddit-desk-fields" class="field gen-field-compact" style="display:none;">
-                  <label>Subreddit</label>
-                  <select id="reddit-sub-select" class="field-input-compact" onchange="onRedditSubSelectChange()"></select>
+                  <label>Subreddits to load</label>
+                  <div id="reddit-sub-picks" style="margin-bottom:6px;"></div>
+                  <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="setRedditSubPickMode('all')">All saved</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="setRedditSubPickMode('one')">One only</button>
+                  </div>
                   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
                     <input type="text" id="reddit-sub-add-input" class="field-input-compact" placeholder="Add subreddit…" maxlength="48" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter'){event.preventDefault();addRedditSubFromInput();}">
                     <button type="button" class="btn btn-outline btn-sm" onclick="addRedditSubFromInput()">+ Add</button>
                   </div>
-                  <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:9px;color:rgba(255,255,255,0.45);cursor:pointer;">
-                    <input type="checkbox" id="reddit-fetch-all-subs" style="width:14px;height:14px;" onchange="saveRedditSubPrefs()">
-                    Load all saved subs (slower)
-                  </label>
-                  <span class="gen-status-line">Saved subs persist in this browser — pick one for fast load.</span>
+                  <span class="gen-status-line">Check subs to fetch — one is fast; all saved is slower.</span>
                 </div>
                 <div id="reddit-window-fields" class="field gen-field-compact" style="display:none;">
                   <label>Time window</label>
@@ -758,10 +758,6 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                     <option value="30d">Top 30D</option>
                     <option value="all">All time</option>
                   </select>
-                </div>
-                <div id="reddit-sub-filter-fields" class="field gen-field-compact" style="display:none;">
-                  <label>Filter by sub</label>
-                  <div id="reddit-sub-filter-pills" class="library-window-pills"></div>
                 </div>
                 <div class="field gen-field-compact">
                   <label>News source</label>
@@ -1612,21 +1608,18 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div id="library-panel-reddit" class="gen-workspace library-workspace" style="display:none;">
             <aside class="gen-sidebar streamers-controls">
               <div class="field" style="margin-bottom:8px;">
-                <label style="font-size:9px;color:rgba(255,255,255,0.45);letter-spacing:1px;">SUBREDDIT</label>
-                <select id="library-reddit-sub-select" class="field-input-compact" onchange="onRedditSubSelectChange('library')"></select>
+                <label style="font-size:9px;color:rgba(255,255,255,0.45);letter-spacing:1px;">SUBREDDITS TO LOAD</label>
+                <div id="library-reddit-sub-picks" style="margin-bottom:6px;"></div>
+                <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="setRedditSubPickMode('all')">All saved</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="setRedditSubPickMode('one')">One only</button>
+                </div>
                 <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
                   <input type="text" id="library-reddit-sub-add-input" class="field-input-compact" placeholder="Add subreddit…" maxlength="48" style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter'){event.preventDefault();addRedditSubFromInput('library');}">
                   <button type="button" class="btn btn-outline btn-sm" onclick="addRedditSubFromInput('library')">+ Add</button>
                 </div>
-                <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:9px;color:rgba(255,255,255,0.45);cursor:pointer;">
-                  <input type="checkbox" id="library-reddit-fetch-all-subs" style="width:14px;height:14px;" onchange="saveRedditSubPrefs('library')">
-                  Load all saved subs (slower)
-                </label>
               </div>
-              <div id="library-reddit-sub-filter-fields" style="margin-bottom:8px;display:none;">
-                <div id="library-reddit-sub-filter-pills" class="library-window-pills" style="flex-wrap:wrap;gap:4px;"></div>
-              </div>
-              <div id="library-reddit-selected-summary" class="streamer-selected-bar">Pick a subreddit, choose window above, then Load library.</div>
+              <div id="library-reddit-selected-summary" class="streamer-selected-bar">Check sub(s) to load, choose window above, then Load library.</div>
               <div class="progress-wrap" id="library-reddit-progress-wrap" style="display:none"><div class="progress-bar" id="library-reddit-progress" style="width:0%"></div></div>
               <div class="gen-action-bar">
                 <button id="btn-library-reddit-load" type="button" class="btn btn-outline" onclick="loadLibraryReddit()">Load library</button>
@@ -1645,7 +1638,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 </div>
                 <span class="gen-main-hint">Check threads → COMPOSE → edit in Generate Composer</span>
               </div>
-              <div id="library-reddit-empty" class="gen-main-empty">Pick a subreddit on the left, choose a time window above, then click <strong>Load library</strong>.</div>
+              <div id="library-reddit-empty" class="gen-main-empty">Check subreddit(s) on the left, choose a time window above, then click <strong>Load library</strong>.</div>
               <div id="library-reddit-picker" class="gen-picker-panel" style="display:none;"></div>
             </main>
           </div>
@@ -2898,7 +2891,7 @@ function libraryPageInit() {
     if (typeof loadStreamerList === 'function') loadStreamerList();
   });
   syncLibraryWindowToPicker();
-  renderRedditSubDropdowns();
+  renderRedditSubPickLists();
   var savedMode = 'streamers';
   try { savedMode = sessionStorage.getItem('cwn_library_source_mode') || savedMode; } catch (_e) {}
   setLibrarySourceMode(savedMode, true);
@@ -2924,7 +2917,7 @@ function setLibrarySourceMode(mode, skipPersist) {
   if (intro) {
     if (mode === 'reddit') {
       intro.innerHTML = 'Pick a subreddit → <strong>Load library</strong> → check threads (video stages to R2 for preview) → <strong>COMPOSE →</strong> edit in Generate Composer.';
-      renderRedditSubDropdowns();
+      renderRedditSubPickLists();
     } else if (mode === 'wire') {
       intro.innerHTML = 'Pick wire source → <strong>Load library</strong> → check stories → <strong>COMPOSE →</strong> edit in Generate Composer.';
     } else {
@@ -6029,7 +6022,11 @@ function renderQueue() {
           metaStrip += '</div>';
         });
       }
-      if (job.clipsOnly && jobStage === 'awaiting_review') {
+      var ctTitlePicker = String(job.contentType || job.type || '');
+      var isShortTitleJob = ctTitlePicker.indexOf('-short') >= 0 || job.formType === 'short';
+      var isTwitchLongForm = ctTitlePicker === 'twitch' && !isShortTitleJob && !job.clipsOnly;
+      var showTitlePicker = jobStage === 'awaiting_review' && (job.clipsOnly || isTwitchLongForm);
+      if (showTitlePicker) {
         var titlePool = job.titleCandidates && job.titleCandidates.length
           ? job.titleCandidates
           : (function() {
@@ -6042,7 +6039,7 @@ function renderQueue() {
                   seeds.push({ text: t, source: ti === 0 ? 'SEO' : 'SEO', rank: ti + 1, selected: false });
                 });
               }
-              if (job.clipCompBrief && job.clipCompBrief.leadTitleDraft) {
+              if (job.clipCompBrief && job.clipCompBrief.leadTitleDraft && (job.clipsOnly || isShortTitleJob)) {
                 var draftT = String(job.clipCompBrief.leadTitleDraft).trim();
                 var draftFull = /#Shorts/i.test(draftT) ? draftT : draftT + ' #Shorts';
                 if (!seeds.some(function(s){ return s.text.toLowerCase() === draftFull.toLowerCase(); })) {
@@ -6103,7 +6100,7 @@ function renderQueue() {
           : 'border:1px solid rgba(52,152,219,0.45);';
         metaStrip += '<div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin:8px 0 4px;">CUSTOM TITLE (you type it)</div>'
           + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'
-          + '<input type="text" id="' + titleInputId + '" value="' + escHtml(activeTitle) + '" maxlength="100" placeholder="YouTube title — #Shorts added automatically on Shorts" '
+          + '<input type="text" id="' + titleInputId + '" value="' + escHtml(activeTitle) + '" maxlength="100" placeholder="' + escHtml(isTwitchLongForm ? 'YouTube title — long-form episode (no #Shorts)' : 'YouTube title — #Shorts added automatically on Shorts') + '" '
           + 'style="flex:1;min-width:200px;padding:6px 8px;font-size:11px;border-radius:4px;' + titleInputBorder + 'background:rgba(0,0,0,0.35);color:#fff;" '
           + 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();applyCustomPublishTitle(\'' + job.id + '\');}" />'
           + '<button type="button" id="custom-title-btn-' + job.id + '" onclick="applyCustomPublishTitle(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;white-space:nowrap;">'
@@ -6113,6 +6110,11 @@ function renderQueue() {
           + '<div id="' + titleStatusId + '" style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:6px;">'
           + (isTitleCustomActive ? 'Custom title confirmed on card.' : 'Type title → USE CUSTOM → publish when ready (no re-assemble).')
           + '</div>'
+          + '</div>';
+      }
+      if (isTwitchLongForm && jobStage === 'awaiting_review') {
+        metaStrip += '<div style="font-size:10px;margin-top:6px;color:rgba(255,255,255,0.45);">'
+          + 'Written hook tease (3–5s bold on-screen text): next run will offer Whisper captions so you can approve the tease line before burn.'
           + '</div>';
       }
       if (job.clipsOnly) {
@@ -9737,10 +9739,8 @@ function setNewsDeskMode(mode) {
   if (srcSelect) srcSelect.closest('.field').style.display = mode === 'reddit' ? 'none' : '';
   var redditFields = g('reddit-desk-fields');
   var redditWin = g('reddit-window-fields');
-  var redditSubFilter = g('reddit-sub-filter-fields');
   if (redditFields) redditFields.style.display = mode === 'reddit' ? '' : 'none';
   if (redditWin) redditWin.style.display = mode === 'reddit' ? '' : 'none';
-  if (redditSubFilter) redditSubFilter.style.display = mode === 'reddit' ? '' : 'none';
   document.querySelectorAll('#news .gen-field-compact').forEach(function(el) {
     if (!el.id || el.id.indexOf('reddit-') !== 0) return;
     el.style.display = mode === 'reddit' ? '' : 'none';
@@ -9758,7 +9758,7 @@ function setNewsDeskMode(mode) {
     if (fetchLimit && fetchLimit.closest('.field')) fetchLimit.closest('.field').style.display = 'none';
     var adv = document.querySelector('#news details.gen-advanced');
     if (adv) adv.style.display = 'none';
-    renderRedditSubDropdowns();
+    renderRedditSubPickLists();
   }
   setPickerPanelVisible('news', false);
   var redditPicker = g('reddit-inline-picker');
@@ -9769,12 +9769,12 @@ function setNewsDeskMode(mode) {
 
 var _redditPickerThreads = [];
 var _redditActiveIdx = -1;
-var _redditSubFilter = 'all';
-
+var _redditPickerSurface = 'news'; // 'library' | 'news' — where THE THREAD picker renders
 var REDDIT_DEFAULT_SUB_ROSTER = ['PublicFreakout', 'InstantKarma', 'Whatcouldgowrong', 'videos'];
 var REDDIT_SUB_ROSTER_KEY = 'cwn_reddit_sub_roster';
 var REDDIT_SUB_LAST_KEY = 'cwn_reddit_sub_last';
 var REDDIT_SUB_FETCH_ALL_KEY = 'cwn_reddit_fetch_all';
+var REDDIT_SUB_PICKS_KEY = 'cwn_reddit_sub_picks';
 
 function normalizeRedditSubName(raw) {
   var s = String(raw || '').trim().replace(/^r\//i, '').replace(/\s+/g, '');
@@ -9820,49 +9820,87 @@ function saveRedditSubLastSelected(name) {
   try { localStorage.setItem(REDDIT_SUB_LAST_KEY, n); } catch (_e) {}
 }
 
-function redditFetchAllSubsEnabled(ctx) {
-  var onLibrary = ctx === 'library';
-  var el = g(onLibrary ? 'library-reddit-fetch-all-subs' : 'reddit-fetch-all-subs');
-  if (el) return !!el.checked;
-  try { return localStorage.getItem(REDDIT_SUB_FETCH_ALL_KEY) === '1'; } catch (_e) {}
-  return false;
-}
-
-function saveRedditSubPrefs(ctx) {
-  var onLibrary = ctx === 'library';
-  var allEl = g(onLibrary ? 'library-reddit-fetch-all-subs' : 'reddit-fetch-all-subs');
-  var otherAll = g(onLibrary ? 'reddit-fetch-all-subs' : 'library-reddit-fetch-all-subs');
-  if (allEl && otherAll) otherAll.checked = allEl.checked;
-  try { localStorage.setItem(REDDIT_SUB_FETCH_ALL_KEY, allEl && allEl.checked ? '1' : '0'); } catch (_e) {}
-  var sel = g(onLibrary ? 'library-reddit-sub-select' : 'reddit-sub-select');
-  if (sel && sel.value) saveRedditSubLastSelected(sel.value);
-}
-
-function renderRedditSubDropdowns() {
-  var roster = loadRedditSubRoster();
+function loadRedditSubPicks() {
+  try {
+    var raw = localStorage.getItem(REDDIT_SUB_PICKS_KEY);
+    if (raw) {
+      var list = JSON.parse(raw);
+      if (Array.isArray(list) && list.length) {
+        return list.map(normalizeRedditSubName).filter(Boolean);
+      }
+    }
+  } catch (_e) {}
+  try {
+    if (localStorage.getItem(REDDIT_SUB_FETCH_ALL_KEY) === '1') {
+      return loadRedditSubRoster().slice();
+    }
+  } catch (_e2) {}
   var last = getRedditSubLastSelected();
-  if (roster.indexOf(last) < 0) last = roster[0];
-  var fetchAll = false;
-  try { fetchAll = localStorage.getItem(REDDIT_SUB_FETCH_ALL_KEY) === '1'; } catch (_e) {}
-  [['reddit-sub-select', 'reddit-fetch-all-subs'], ['library-reddit-sub-select', 'library-reddit-fetch-all-subs']].forEach(function(pair) {
-    var sel = g(pair[0]);
-    if (!sel) return;
-    sel.innerHTML = roster.map(function(name) {
-      return '<option value="' + escHtml(name) + '"' + (name === last ? ' selected' : '') + '>r/' + escHtml(name) + '</option>';
-    }).join('');
-    var allEl = g(pair[1]);
-    if (allEl) allEl.checked = fetchAll;
+  var roster = loadRedditSubRoster();
+  if (last && roster.indexOf(last) >= 0) return [last];
+  return roster.length ? [roster[0]] : [];
+}
+
+function saveRedditSubPicks(list) {
+  var roster = loadRedditSubRoster();
+  var clean = [];
+  (list || []).forEach(function(name) {
+    var n = normalizeRedditSubName(name);
+    if (n && roster.indexOf(n) >= 0 && clean.indexOf(n) < 0) clean.push(n);
+  });
+  if (!clean.length && roster.length) clean = [roster[0]];
+  try { localStorage.setItem(REDDIT_SUB_PICKS_KEY, JSON.stringify(clean)); } catch (_e) {}
+  if (clean.length === 1) saveRedditSubLastSelected(clean[0]);
+  return clean;
+}
+
+function renderRedditSubPickLists() {
+  var roster = loadRedditSubRoster();
+  var picks = loadRedditSubPicks();
+  [['library-reddit-sub-picks'], ['reddit-sub-picks']].forEach(function(pair) {
+    var host = g(pair[0]);
+    if (!host) return;
+    var html = '';
+    roster.forEach(function(name) {
+      var on = picks.indexOf(name) >= 0;
+      html += '<label style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;">'
+        + '<input type="checkbox" style="width:14px;height:14px;"' + (on ? ' checked' : '')
+        + ' onchange="toggleRedditSubPick(\'' + name.replace(/'/g, '') + '\', this.checked)">'
+        + 'r/' + escHtml(name) + '</label>';
+    });
+    if (!roster.length) {
+      html = '<span style="font-size:10px;color:rgba(255,255,255,0.35);">Add a subreddit below.</span>';
+    }
+    host.innerHTML = html;
   });
 }
 
-function onRedditSubSelectChange(ctx) {
-  var onLibrary = ctx === 'library';
-  var sel = g(onLibrary ? 'library-reddit-sub-select' : 'reddit-sub-select');
-  var other = g(onLibrary ? 'reddit-sub-select' : 'library-reddit-sub-select');
-  if (sel && sel.value) {
-    saveRedditSubLastSelected(sel.value);
-    if (other) other.value = sel.value;
+function toggleRedditSubPick(name, checked) {
+  name = normalizeRedditSubName(name);
+  var picks = loadRedditSubPicks();
+  if (checked) {
+    if (picks.indexOf(name) < 0) picks.push(name);
+  } else {
+    picks = picks.filter(function(n) { return n !== name; });
+    if (!picks.length) {
+      alert('Keep at least one subreddit checked.');
+      renderRedditSubPickLists();
+      return;
+    }
   }
+  saveRedditSubPicks(picks);
+  renderRedditSubPickLists();
+}
+
+function setRedditSubPickMode(mode) {
+  var roster = loadRedditSubRoster();
+  if (!roster.length) return;
+  if (mode === 'all') {
+    saveRedditSubPicks(roster.slice());
+  } else {
+    saveRedditSubPicks([getRedditSubLastSelected() || roster[0]]);
+  }
+  renderRedditSubPickLists();
 }
 
 function addRedditSubFromInput(ctx) {
@@ -9876,11 +9914,10 @@ function addRedditSubFromInput(ctx) {
   }
   var roster = saveRedditSubRoster(loadRedditSubRoster().concat([name]));
   saveRedditSubLastSelected(name);
-  renderRedditSubDropdowns();
-  var sel = g(onLibrary ? 'library-reddit-sub-select' : 'reddit-sub-select');
-  var otherSel = g(onLibrary ? 'reddit-sub-select' : 'library-reddit-sub-select');
-  if (sel) sel.value = name;
-  if (otherSel) otherSel.value = name;
+  var picks = loadRedditSubPicks();
+  if (picks.indexOf(name) < 0) picks.push(name);
+  saveRedditSubPicks(picks);
+  renderRedditSubPickLists();
   if (input) input.value = '';
   if (otherInput) otherInput.value = '';
   var statusEl = onLibrary ? g('library-reddit-fetch-status') : g('news-status');
@@ -9888,17 +9925,23 @@ function addRedditSubFromInput(ctx) {
 }
 
 function getRedditSubsList(ctx) {
-  if (redditFetchAllSubsEnabled(ctx)) return loadRedditSubRoster();
-  var onLibrary = ctx === 'library'
-    || (g('library-source-mode') && g('library-source-mode').value === 'reddit');
-  var sel = g(onLibrary ? 'library-reddit-sub-select' : 'reddit-sub-select');
-  var one = normalizeRedditSubName(sel && sel.value) || getRedditSubLastSelected();
-  return one ? [one] : loadRedditSubRoster().slice(0, 1);
+  var picks = loadRedditSubPicks();
+  if (picks.length) return picks;
+  var roster = loadRedditSubRoster();
+  return roster.length ? [roster[0]] : [];
+}
+
+function getRedditMinScore(win) {
+  var w = String(win || getRedditWindow() || '24h').toLowerCase();
+  if (w === 'all' || w === 'alltime') return 500;
+  return 200;
 }
 
 function buildRedditCandidatesUrlForSub(sub, win) {
+  win = win || getRedditWindow();
   return (CFG.ffmpegUrl || 'http://localhost:3000')
-    + '/reddit/candidates?comments=0&perSub=5&minScore=500&window=' + encodeURIComponent(win || getRedditWindow())
+    + '/reddit/candidates?comments=0&perSub=5&minScore=' + getRedditMinScore(win)
+    + '&window=' + encodeURIComponent(win)
     + '&subs=' + encodeURIComponent(sub);
 }
 
@@ -9906,7 +9949,8 @@ function buildRedditCandidatesUrl(ctx) {
   var subs = getRedditSubsList(ctx).join(',');
   var win = getRedditWindow();
   return (CFG.ffmpegUrl || 'http://localhost:3000')
-    + '/reddit/candidates?comments=0&perSub=5&minScore=500&window=' + encodeURIComponent(win)
+    + '/reddit/candidates?comments=0&perSub=5&minScore=' + getRedditMinScore(win)
+    + '&window=' + encodeURIComponent(win)
     + '&subs=' + encodeURIComponent(subs);
 }
 
@@ -9923,7 +9967,7 @@ function fetchRedditCandidatesSequential(subs, win, onProgress, onDone) {
     if (onProgress) onProgress(idx + 1, subs.length, sub);
     var xhr = new XMLHttpRequest();
     xhr.open('GET', buildRedditCandidatesUrlForSub(sub, win), true);
-    xhr.timeout = 50000;
+    xhr.timeout = 120000;
     xhr.onload = function() {
       try {
         if (xhr.status >= 400) throw new Error('HTTP ' + xhr.status);
@@ -9931,7 +9975,7 @@ function fetchRedditCandidatesSequential(subs, win, onProgress, onDone) {
         if (d.ok && (d.posts || []).length) {
           allPosts = allPosts.concat(d.posts);
         } else if (d.ok) {
-          subErrors.push({ sub: sub, error: 'no video threads' });
+          subErrors.push({ sub: sub, error: 'no video threads (try r/videos or Top ALL TIME)' });
         } else {
           subErrors.push({ sub: sub, error: d.error || 'fetch failed' });
         }
@@ -9971,17 +10015,19 @@ function setRedditWindow(win) {
 }
 
 function getRedditPickerContext(ctx) {
-  var onLibrary = ctx === 'library'
-    || ((g('library-source-mode') && g('library-source-mode').value === 'reddit')
-      && typeof currentPage !== 'undefined' && currentPage === 'library');
+  if (ctx === 'library') _redditPickerSurface = 'library';
+  else if (ctx === 'news') _redditPickerSurface = 'news';
+  var onLibrary = _redditPickerSurface === 'library'
+    || ctx === 'library'
+    || (g('library-source-mode') && g('library-source-mode').value === 'reddit'
+      && g('library-panel-reddit') && g('library-panel-reddit').style.display !== 'none');
+  if (onLibrary) _redditPickerSurface = 'library';
   return {
     onLibrary: onLibrary,
     btn: onLibrary ? g('btn-library-reddit-load') : g('btn-preview-news'),
     picker: onLibrary ? g('library-reddit-picker') : g('reddit-inline-picker'),
     empty: onLibrary ? g('library-reddit-empty') : null,
     detailId: onLibrary ? 'library-reddit-thread-detail' : 'reddit-thread-detail',
-    subFilterHost: onLibrary ? g('library-reddit-sub-filter-pills') : g('reddit-sub-filter-pills'),
-    subFilterWrap: onLibrary ? g('library-reddit-sub-filter-fields') : g('reddit-sub-filter-fields'),
     statusEl: onLibrary ? g('library-reddit-fetch-status') : g('news-status')
   };
 }
@@ -10034,41 +10080,14 @@ function mapRedditPosts(posts) {
       sourceType: 'reddit',
       thumbnailUrl: p.thumbnail || '',
       createdUtc: p.createdUtc || null,
+      archiveFallback: !!p._archiveFallback,
       selected: !!p.videoUrl
     };
   });
 }
 
-function renderRedditSubFilterPills(ctx) {
-  var c = getRedditPickerContext(ctx);
-  var host = c.subFilterHost || g('reddit-sub-filter-pills');
-  if (!host) return;
-  var subs = [];
-  _redditPickerThreads.forEach(function(t) {
-    var s = (t.subreddit || '').toLowerCase();
-    if (s && subs.indexOf(s) < 0) subs.push(s);
-  });
-  subs.sort();
-  var html = '<button type="button" class="library-window-pill' + (_redditSubFilter === 'all' ? ' active' : '') + '" onclick="setRedditSubFilter(\'all\')">ALL</button>';
-  subs.forEach(function(s) {
-    html += '<button type="button" class="library-window-pill' + (_redditSubFilter === s ? ' active' : '') + '" onclick="setRedditSubFilter(\'' + s + '\')">r/' + s + '</button>';
-  });
-  host.innerHTML = html;
-  if (c.subFilterWrap) c.subFilterWrap.style.display = subs.length ? '' : 'none';
-}
-
-function setRedditSubFilter(sub) {
-  _redditSubFilter = sub || 'all';
-  renderRedditSubFilterPills();
-  var c = getRedditPickerContext();
-  renderRedditPicker(c.btn);
-}
-
 function redditThreadsForDisplay() {
-  if (_redditSubFilter === 'all') return _redditPickerThreads;
-  return _redditPickerThreads.filter(function(t) {
-    return (t.subreddit || '').toLowerCase() === _redditSubFilter;
-  });
+  return _redditPickerThreads;
 }
 
 function redditGlobalIndex(displayIdx) {
@@ -10206,20 +10225,22 @@ function toggleRedditThreadSelected(idx, checked) {
 }
 
 function previewRedditThreads(forceReload, ctx) {
+  if (ctx === 'library') _redditPickerSurface = 'library';
   var c = getRedditPickerContext(ctx);
   var btn = c.btn;
   var picker = c.picker;
   if (!btn || !picker) return;
   if (!forceReload && picker.style.display !== 'none' && _redditPickerThreads.length > 0) {
     picker.style.display = 'none';
-    if (c.empty) c.empty.style.display = '';
+    if (c.onLibrary) setLibraryRedditPickerVisible(false);
+    else if (c.empty) c.empty.style.display = '';
     btn.textContent = c.onLibrary ? 'Load library' : 'PICK THREADS';
     return;
   }
   syncLibraryWindowToReddit();
   var subs = getRedditSubsList(c.onLibrary ? 'library' : null);
   if (!subs.length) {
-    alert('Pick a subreddit from the dropdown (or add one with + Add).');
+    alert('Check at least one subreddit on the left.');
     return;
   }
   var win = getRedditWindow();
@@ -10231,7 +10252,6 @@ function previewRedditThreads(forceReload, ctx) {
   if (c.statusEl) c.statusEl.textContent = 'Fetching r/' + subs[0] + (subs.length > 1 ? (' (1/' + subs.length + ')') : '') + '…';
   _redditPickerThreads = [];
   _redditActiveIdx = -1;
-  _redditSubFilter = 'all';
   fetchRedditCandidatesSequential(subs, win, function(cur, total, sub) {
     if (c.statusEl) c.statusEl.textContent = 'Fetching r/' + sub + ' (' + cur + '/' + total + ')…';
     if (progBar && total > 1) progBar.style.width = Math.round((cur / total) * 100) + '%';
@@ -10256,11 +10276,12 @@ function previewRedditThreads(forceReload, ctx) {
       return;
     }
     _redditPickerThreads = mapRedditPosts(posts);
-    renderRedditSubFilterPills(c.onLibrary ? 'library' : null);
-    renderRedditPicker(btn);
+    renderRedditPicker(btn, c.onLibrary ? 'library' : 'news');
     if (c.empty) c.empty.style.display = 'none';
     var note = _redditPickerThreads.length + ' threads';
     if (subErrors.length) note += ' · ' + subErrors.length + ' sub(s) skipped';
+    var archiveN = _redditPickerThreads.filter(function(t) { return t.archiveFallback; }).length;
+    if (archiveN) note += ' · PullPush archive (no live ' + win + ' index)';
     note += ' · comments load on select';
     if (c.statusEl) c.statusEl.textContent = note;
     if (_redditPickerThreads.length) {
@@ -10270,9 +10291,17 @@ function previewRedditThreads(forceReload, ctx) {
   });
 }
 
-function renderRedditPicker(btn) {
-  if (!btn) btn = getRedditPickerContext().btn;
-  var c = getRedditPickerContext();
+function setLibraryRedditPickerVisible(visible) {
+  var panel = g('library-panel-reddit');
+  var main = panel && panel.querySelector('.library-main');
+  if (main) main.classList.toggle('gen-main-has-picker', !!visible);
+  var empty = g('library-reddit-empty');
+  if (empty) empty.style.display = visible ? 'none' : '';
+}
+
+function renderRedditPicker(btn, ctx) {
+  var c = getRedditPickerContext(ctx);
+  if (!btn) btn = c.btn;
   var picker = c.picker || g('reddit-inline-picker');
   if (!picker) return;
   btn.textContent = c.onLibrary ? 'Hide library' : 'HIDE PICKER';
@@ -10281,7 +10310,6 @@ function renderRedditPicker(btn) {
   var detailId = c.detailId || 'reddit-thread-detail';
   var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:8px;letter-spacing:1px;">'
     + 'THE THREAD · TOP ' + winLabel + ' · ' + subsLabel
-    + (_redditSubFilter !== 'all' ? ' · showing r/' + _redditSubFilter : '')
     + ' — click to preview (R2) + read comments'
     + '</div>';
   html += '<div class="reddit-picker-split">';
@@ -10318,7 +10346,8 @@ function renderRedditPicker(btn) {
   html += '</div>';
   picker.innerHTML = html;
   picker.style.display = '';
-  if (!c.onLibrary) setPickerPanelVisible('news', true);
+  if (c.onLibrary) setLibraryRedditPickerVisible(true);
+  else setPickerPanelVisible('news', true);
   renderRedditThreadDetail(_redditActiveIdx, detailId);
   var selCount = (_redditPickerThreads || []).filter(function(t) { return t.selected; }).length;
   var sumEl = c.onLibrary ? g('library-reddit-selected-summary') : null;

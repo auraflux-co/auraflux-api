@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-28 (CPD-1121) — THE THREAD live Reddit via Apify (`reddit_apify.js`); source priority OAuth→Apify→PullPush; checkbox sub multi-select + library picker fix. Set `REDDIT_USE_PULLPUSH=0` + `APIFY_API_TOKEN` (Doppler) then deploy when pipeline idle.
 **Last Updated:** 2026-06-27 (CPD-1120) — THE THREAD Reddit desk: Clip Library tab + subreddit dropdown (saved roster), sequential PullPush fetch, R2 stage, lazy comments, OAuth setup routes (`/reddit/oauth/authorize`), news-short path via reddit_source. Deployed C0. OAuth pending REDDIT_CLIENT_ID from Reddit dev app.
 **Last Updated:** 2026-06-28 (CPD-1119) — Twitch Soup bookends: SEO-first credits outro (scroll YT description + Infected bed), cold open montage loop, MPEG-TS final stitch, job preserve scripts. Deployed C0. Operator: FIX SEO + RE-ASSEMBLE on script_twitch_1782513992551.
 **Last Updated:** 2026-06-26 (CPD-1118) — Library UX simplify (single LIBRARY + Top 24H/7D/30D/ALL) + R2 clip staging on check (hover preview, full MP4 in Composer). Unused R2 purge Sunday EOW; used staging purge 7d post-EXECUTE. Presigned playback when R2_ASSETS_DOMAIN unset. Deployed C0.

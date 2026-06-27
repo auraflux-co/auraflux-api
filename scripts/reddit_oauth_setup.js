@@ -3,15 +3,16 @@
 /**
  * Reddit OAuth setup — print steps and optionally test credentials.
  *
- * Web app (recommended):
- *   1. Create app at https://www.reddit.com/prefs/apps → type "web app"
- *   2. Redirect URI: http://localhost:3000/reddit/oauth/callback
- *   3. Set REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET in .env
- *   4. pm2 running → open http://localhost:3000/reddit/oauth/authorize
- *   5. Copy REDDIT_REFRESH_TOKEN from callback page → set REDDIT_USE_PULLPUSH=0
+ * RECOMMENDED — Script app (Reddit often rejects localhost:3000 redirect URLs):
+ *   1. https://www.reddit.com/prefs/apps → "script" (personal use / your account)
+ *   2. Redirect URI: http://localhost:8080  ← Reddit requires a value; script apps ignore it
+ *   3. .env: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USERNAME, REDDIT_PASSWORD
+ *   4. REDDIT_USE_PULLPUSH=0 → deploy → curl http://localhost:3000/reddit/oauth/script-test
  *
- * Script app (fallback — own account only):
- *   Set REDDIT_USERNAME + REDDIT_PASSWORD + CLIENT_ID/SECRET, REDDIT_USE_PULLPUSH=0
+ * Web app (refresh token — only if Reddit accepts your redirect URL):
+ *   Redirect must match REDDIT_REDIRECT_URI exactly. Try:
+ *   - http://127.0.0.1:3000/reddit/oauth/callback
+ *   - http://localhost:8080/reddit/oauth/callback (+ set same in .env)
  *
  * Usage:
  *   node scripts/reddit_oauth_setup.js
@@ -29,28 +30,26 @@ function main() {
   console.log('\n=== Reddit desk auth status ===');
   console.log(JSON.stringify(status, null, 2));
 
+  console.log('\n── Script app (recommended) ──');
+  console.log('1. reddit.com/prefs/apps → create → type: script');
+  console.log('2. Redirect URI: http://localhost:8080  (dummy — not used for script apps)');
+  console.log('3. .env: CLIENT_ID, CLIENT_SECRET, USERNAME, PASSWORD, REDDIT_USE_PULLPUSH=0');
+  console.log('4. bash scripts/deploy_c0.sh');
+  console.log('5. curl http://localhost:3000/reddit/oauth/script-test');
+
+  console.log('\n── Web app (optional refresh token) ──');
+  console.log('If Reddit rejects localhost:3000, try 127.0.0.1 or port 8080:');
+  console.log('  REDDIT_REDIRECT_URI=' + REDIRECT);
+  console.log('  Then: http://localhost:3000/reddit/oauth/authorize');
+
   if (!process.env.REDDIT_CLIENT_ID) {
-    console.log('\n1. Create app: https://www.reddit.com/prefs/apps');
-    console.log('   Type: web app (or script for password grant on your account)');
-    console.log('   Redirect URI (web app):', REDIRECT);
-    console.log('2. Add to ~/cwn-c0/.env:');
-    console.log('   REDDIT_CLIENT_ID=...');
-    console.log('   REDDIT_CLIENT_SECRET=...');
-    console.log('   REDDIT_USER_AGENT=ClipzWorldNews:c0-reddit-desk:v1.0 (by /u/YOUR_USERNAME)');
-    console.log('3. Web app: visit http://localhost:3000/reddit/oauth/authorize');
-    console.log('   Script app: set REDDIT_USERNAME + REDDIT_PASSWORD, then --test');
+    console.log('\n→ Add REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET from the app you created.');
     return;
   }
 
   if (status.mode === 'pullpush') {
-    console.log('\nPullPush mode active (REDDIT_USE_PULLPUSH=1 or missing refresh/password).');
-    console.log('After OAuth: set REDDIT_USE_PULLPUSH=0 and redeploy.');
+    console.log('\nPullPush active — set REDDIT_USE_PULLPUSH=0 after credentials work.');
   }
-
-  console.log('\nOAuth URL (auraflux must be running on :3000):');
-  console.log('  http://localhost:3000/reddit/oauth/authorize');
-  console.log('\nStatus probe:');
-  console.log('  curl -s http://localhost:3000/reddit/status | python3 -m json.tool');
 
   if (process.argv.includes('--test')) {
     testFetch().catch((e) => {
@@ -61,7 +60,7 @@ function main() {
 }
 
 async function testFetch() {
-  console.log('\nTesting /r/PublicFreakout top (OAuth if configured)…');
+  console.log('\nTesting /r/PublicFreakout top (OAuth if USE_PULLPUSH=0)…');
   const client = new RedditClient({ usePullpush: false });
   const t0 = Date.now();
   const raw = await client.listSubreddit('PublicFreakout', { sort: 'top', window: '24h', limit: 10 });
