@@ -562,12 +562,14 @@ try {
     mergeJsonAvatarCheckpoints(persistedJobs, jsonJobsSnapshot);
     mergeJsonAssemblyOutputs(persistedJobs, jsonJobsSnapshot);
     mergeJsonOnlyJobs(persistedJobs, jsonJobsSnapshot);
+    global.persistedJobsRef = persistedJobs;
   } else {
     console.log(`[db] SQLite ready (${sqliteJobs.length} jobs). JSON file is primary for now.`);
   }
 } catch (e) {
   console.error('[db] SQLite init failed — falling back to jobs.json only:', e.message);
 }
+global.persistedJobsRef = persistedJobs;
 
 // Infer job stage from card fields for legacy jobs that predate the explicit stage field.
 // Used by /jobs filter and startup resume logic.
