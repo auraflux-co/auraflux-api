@@ -173,10 +173,13 @@
           "sourceTrack": true,
           "studioLaugh": {
             "enabled": true,
-            "maxDurationSec": 4.5,
+            "maxDurationSec": 4.8,
+            "reactionPauseSec": 4,
+            "holdVideoSec": 1.2,
             "volume": 0.85,
             "maxClipsPerVideo": 6,
             "minClipsPerVideo": 2,
+            "requireQaPass": true,
             "referenceUrls": [
               "https://www.youtube.com/watch?v=OzAQctMP53Q",
               "https://www.youtube.com/watch?v=ZopeSp8fK-0",
@@ -188,19 +191,24 @@
             "coldOpen": {
               "enabled": true,
               "durationSec": 15,
-              "logoSec": 2,
+              "maxDurationSec": 28,
+              "logoSec": 0,
               "montageClipSec": 1.5,
-              "musicVolume": 0.28,
+              "minBeatSec": 2.2,
+              "musicVolume": 0.36,
+              "musicBedFile": "operator/opening_music_bed.mp3",
+              "crowdBedVolume": 0,
               "voVolume": 1.0,
               "musicBedKey": "Oui",
-              "announcerVoiceId": "st7NwhTPEzqo2riw7qWC"
+              "announcerVoiceId": "ImxuPYFrGlORqdIAXrCk"
             },
             "outroCredits": {
               "enabled": true,
               "durationSec": 8,
               "minDurationSec": 12,
               "maxDurationSec": 55,
-              "scrollPxPerSec": 46,
+              "scrollPxPerSec": 52,
+              "fontSize": 36,
               "musicVolume": 0.32,
               "scroll": true,
               "musicBedKey": "Infected"
@@ -211,7 +219,7 @@
           "width": 1920,
           "height": 1080
         },
-        "avatarId": "65d2350024274cbe8222ddf82e5ae07c",
+        "avatarId": "f19253317d66403fb0a67ee26e0d2388",
         "voiceId": "2e598f1a6022448cb6710e5d44665325",
         "speakSpeed": 0.85
       },

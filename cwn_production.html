@@ -237,6 +237,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
   background:rgba(255,255,255,0.03); cursor:pointer; font-size:11px; line-height:1.2;
   transition:border-color 0.12s,background 0.12s;
 }
+.creator-chip input[type="checkbox"] { width:14px; height:14px; min-width:14px; flex-shrink:0; margin:0; accent-color:#9146ff; cursor:pointer; }
 .creator-chip:hover { border-color:rgba(199,175,79,0.35); background:rgba(255,255,255,0.06); }
 .creator-chip.is-selected { border-color:rgba(145,70,255,0.55); background:rgba(145,70,255,0.14); }
 .creator-chip.is-selected:hover { border-color:rgba(145,70,255,0.75); }
@@ -471,6 +472,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .cal-schedule-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; }
 .cal-schedule-modal.open { display:flex; }
 .cal-schedule-panel { background:#0d1524; border:1px solid rgba(199,175,79,0.35); border-radius:8px; padding:20px; max-width:480px; width:90%; max-height:80vh; overflow:auto; }
+.find-job-panel { background:#0d1524; border:1px solid rgba(199,175,79,0.35); border-radius:8px; padding:20px 22px; max-width:640px; width:94%; max-height:85vh; overflow:hidden; display:flex; flex-direction:column; }
+.find-job-list { overflow-y:auto; flex:1; margin-top:12px; }
+.find-job-row { display:flex; gap:12px; align-items:flex-start; padding:12px 14px; margin-bottom:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; }
+.find-job-row.in-queue { border-color:rgba(46,204,113,0.35); background:rgba(46,204,113,0.06); }
+.find-job-row:hover { border-color:rgba(199,175,79,0.35); }
 .cal-job-pick { display:block; width:100%; text-align:left; padding:8px 10px; margin-bottom:6px; background:rgba(199,175,79,0.08); border:1px solid rgba(199,175,79,0.2); color:#fff; font-size:11px; cursor:pointer; border-radius:4px; }
 .cal-job-pick:hover { border-color:#c7af4f; }
 .bc-cal-banner { font-size:11px; padding:10px 12px; margin-bottom:16px; border-radius:4px; background:rgba(199,175,79,0.08); border:1px solid rgba(199,175,79,0.25); line-height:1.45; }
@@ -1471,6 +1477,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   <button type="button" class="btn btn-outline btn-sm" onclick="syncStreamersFromFollows()" style="color:#9146ff;border-color:rgba(145,70,255,0.5);">Sync</button>
                   <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()">+ Add</button>
                 </div>
+                <div class="plat-check-list" style="padding:0 2px 2px;">
+                  <label class="plat-check-row"><input type="checkbox" id="streamer-plat-twitch" checked style="accent-color:#9146ff;" onchange="onStreamerPlatformFilterChange()"> Twitch</label>
+                  <label class="plat-check-row"><input type="checkbox" id="streamer-plat-kick" checked style="accent-color:#53fc18;" onchange="onStreamerPlatformFilterChange()"> Kick</label>
+                  <label class="plat-check-row"><input type="checkbox" id="streamer-plat-youtube" checked style="accent-color:#ff4444;" onchange="onStreamerPlatformFilterChange()"> YouTube</label>
+                </div>
                 <div class="streamer-sections-bar">
                   <button type="button" class="btn btn-outline btn-sm" onclick="setStreamerSectionsExpanded(true)">Expand all</button>
                   <button type="button" class="btn btn-outline btn-sm" onclick="setStreamerSectionsExpanded(false)">Collapse all</button>
@@ -1677,15 +1688,34 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
     <div class="page" id="page-queue">
       <div class="sec-title">JOB QUEUE <span class="badge" id="queue-count">0 JOBS</span></div>
       <div class="btn-row" style="margin-bottom:12px">
+        <button class="btn btn-gold btn-sm" onclick="openFindJobModal()" style="font-weight:700;">+ ADD JOB FROM SERVER</button>
         <button class="btn btn-outline btn-sm" onclick="refreshQueue()">REFRESH STATUS</button>
-        <button class="btn btn-outline btn-sm" onclick="restoreJobsFromServer(true)" style="border-color:rgba(199,175,79,0.5);color:#c7af4f;" title="Reload jobs from server — use after page refresh or server restart">↩ RESTORE JOBS</button>
         <button class="btn btn-red btn-sm" onclick="clearDone()">CLEAR COMPLETED</button>
-        <button class="btn btn-red btn-sm" onclick="clearAllJobs()">CLEAR ALL JOBS</button>
+        <button class="btn btn-outline btn-sm" onclick="clearAllJobs()" title="Remove all cards from this browser queue — does not delete videos on server">CLEAR QUEUE VIEW</button>
         <button class="btn btn-outline btn-sm" onclick="toggleErrorLog()">SHOW ERROR LOG</button>
       </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);margin:-4px 0 12px;line-height:1.5;">Your queue shows only jobs you add here or start from Generate. Pick by <strong style="color:rgba(199,175,79,0.8);">title</strong> — no IDs to memorize.</div>
       <div id="cwn-error-log" style="display:none;background:#0a0a0a;border:1px solid rgba(231,76,60,0.3);border-radius:4px;padding:10px 14px;margin-bottom:12px;font-family:monospace;font-size:11px;max-height:180px;overflow-y:auto;"></div>
       <div class="job-list" id="job-list">
         <div style="color:rgba(255,255,255,0.3);font-size:13px;padding:20px 0;">No jobs yet. Generate a video to get started.</div>
+      </div>
+    </div>
+
+    <!-- FIND JOB ON SERVER — pick by title, not ID -->
+    <div id="find-job-modal" class="cal-schedule-modal" onclick="if(event.target===this)closeFindJobModal()">
+      <div class="find-job-panel" onclick="event.stopPropagation()">
+        <div style="font-size:15px;font-weight:700;color:#c7af4f;margin-bottom:4px;">Add job to your queue</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:12px;line-height:1.5;">Pick the video by <strong>title</strong>. Only jobs you add appear in the queue below.</div>
+        <input id="find-job-search" type="text" placeholder="Search title or streamer…" oninput="renderFindJobList()"
+          style="width:100%;box-sizing:border-box;padding:10px 12px;background:#0a0f1e;border:1px solid rgba(199,175,79,0.25);border-radius:4px;color:#fff;font-size:13px;margin-bottom:10px;">
+        <div class="btn-row" style="margin-bottom:4px;">
+          <button type="button" class="btn btn-outline btn-sm find-job-filter active" data-filter="work" onclick="setFindJobFilter('work', this)">NEEDS REVIEW</button>
+          <button type="button" class="btn btn-outline btn-sm find-job-filter" data-filter="progress" onclick="setFindJobFilter('progress', this)">IN PROGRESS</button>
+          <button type="button" class="btn btn-outline btn-sm find-job-filter" data-filter="all" onclick="setFindJobFilter('all', this)">ALL RECENT</button>
+        </div>
+        <div id="find-job-status" style="font-size:10px;color:rgba(255,255,255,0.4);font-family:monospace;margin-bottom:4px;">Loading…</div>
+        <div class="find-job-list" id="find-job-list"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="closeFindJobModal()">Cancel</button>
       </div>
     </div>
 
@@ -3056,13 +3086,16 @@ function applyStagedClipFields(clip, staged) {
   clip.mp4Url = play;
   clip.staging = false;
   clip.stageError = null;
+  clip._stageInflight = false;
 }
 
 function stageClipForLibrary(clip, entry, onDone) {
   if (!clip || !clip.url) { if (onDone) onDone('no url'); return; }
   if (clip.stagedUrl) { if (onDone) onDone(null, clip); return; }
+  if (clip._stageInflight) return;
   clip.staging = true;
   clip.stageError = null;
+  clip._stageInflight = true;
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -3083,9 +3116,27 @@ function stageClipForLibrary(clip, entry, onDone) {
     })
     .catch(function(e) {
       clip.staging = false;
+      clip._stageInflight = false;
       clip.stageError = e.message;
       if (onDone) onDone(e.message, clip);
     });
+}
+
+function stagePendingSelectedClips(onDone) {
+  var pending = [];
+  (_twitchPickerStreamers || []).forEach(function(entry) {
+    (entry.clips || []).forEach(function(clip) {
+      if (!clip.selected || clip.stagedUrl || clip._stageInflight) return;
+      if (clip.staging) clip.staging = false;
+      pending.push({ clip: clip, entry: entry });
+    });
+  });
+  if (!pending.length) { if (onDone) onDone(null); return; }
+  (function next(i) {
+    if (i >= pending.length) { if (onDone) onDone(null); return; }
+    var p = pending[i];
+    stageClipForLibrary(p.clip, p.entry, function() { next(i + 1); });
+  })(0);
 }
 
 function ensureSelectedClipsStaged(callback) {
@@ -3132,7 +3183,15 @@ function ensureSelectedClipsStaged(callback) {
       if (failed.length) throw new Error('Failed to download: ' + failed.slice(0, 2).join(', '));
       callback(null);
     })
-    .catch(function(e) { callback(e.message || String(e)); })
+    .catch(function(e) {
+      need.forEach(function(p) {
+        if (p.clip && !p.clip.stagedUrl) {
+          p.clip.staging = false;
+          p.clip._stageInflight = false;
+        }
+      });
+      callback(e.message || String(e));
+    })
     .finally(function() {
       if (composeBtn) composeBtn.disabled = false;
       if (statusEl && !statusEl.textContent.startsWith('Stage failed')) {
@@ -5238,7 +5297,8 @@ function testFFmpegServer() {
 
 // ── JOB SYSTEM ────────────────────────────────────────────────────
 function addJob(type, title, videoId) {
-  var job = { id: videoId, type:type, title:title, status:'processing', created:new Date().toISOString(), url:null };
+  var job = { id: videoId, type:type, title:title, status:'processing', created:new Date().toISOString(), url:null, queuePinned: true };
+  markJobQueued(videoId, true);
   JOBS.unshift(job);
   saveJobs(); renderQueue();
   pollVideo(videoId,
@@ -5275,6 +5335,7 @@ function loadJobs() {
       return j;
     }).filter(function(j){ return !!j.id; });
     cwn_log('Loaded ' + JOBS.length + ' jobs from storage', false);
+    migrateQueuePinnedOnce();
   } catch(e) {
     cwn_log('loadJobs failed: '+e.message+' — clearing storage', true);
     JOBS = [];
@@ -5288,36 +5349,320 @@ function updateJob(jobId, updates) {
   saveJobs();
 }
 
-function clearAllJobs() {
-  if (!confirm('Clear ALL jobs from queue? This cannot be undone.')) return;
-  // Delete all jobs from server so they don't reappear on restore
+function migrateQueuePinnedOnce() {
+  if (localStorage.getItem('cwn_queue_migrated_v2')) return;
+  if (!JOBS.length) {
+    localStorage.setItem('cwn_queue_migrated_v2', '1');
+    return;
+  }
   JOBS.forEach(function(j) {
-    if (!j.id) return;
-    var xhr2 = new XMLHttpRequest();
-    xhr2.open('DELETE', CFG.ffmpegUrl + '/job/' + encodeURIComponent(j.id), true);
-    xhr2.send();
+    if (j && j.id) {
+      j.queuePinned = true;
+      markJobQueued(j.id, true);
+    }
   });
+  localStorage.setItem('cwn_queue_migrated_v2', '1');
+  cwn_log('[queue] migrated ' + JOBS.length + ' existing job(s) into your queue', false);
+}
+
+function clearAllJobs() {
+  if (!confirm('Clear queue view in this browser?\n\nVideos stay on the server — use + ADD JOB FROM SERVER to bring them back.')) return;
+  savePinnedIdSet(new Set());
   JOBS = [];
   saveJobs();
   renderQueue();
-  cwn_log('All jobs cleared', false);
+  cwn_log('Queue view cleared (server jobs unchanged)', false);
 }
 
-// ── RESTORE JOBS FROM SERVER ──────────────────────────────────────
-// Fetches GET /jobs from server.js and merges any jobs not already in
-// localStorage. Called on init (silent) and via ↩ RESTORE JOBS button.
-// Server persists job cards when Gate 1 passes + HeyGen is submitted.
-// Reconstructs segments in 'rendering' status so REFRESH IDs button appears.
+// ── JOB QUEUE (operator picks what shows — by title, not ID) ───────
+var QUEUE_PINNED_IDS_KEY = 'cwn_queue_pinned_ids';
+var _findJobCache = [];
+var _findJobFilter = 'work';
+
+function getPinnedIdSet() {
+  try {
+    var arr = JSON.parse(localStorage.getItem(QUEUE_PINNED_IDS_KEY) || '[]');
+    return new Set((arr || []).filter(Boolean));
+  } catch (_e) { return new Set(); }
+}
+
+function savePinnedIdSet(set) {
+  try { localStorage.setItem(QUEUE_PINNED_IDS_KEY, JSON.stringify(Array.from(set))); } catch (_e) {}
+}
+
+function isJobQueued(job) {
+  if (!job || !job.id) return false;
+  return !!job.queuePinned || getPinnedIdSet().has(job.id);
+}
+
+function markJobQueued(jobId, queued) {
+  var set = getPinnedIdSet();
+  if (queued) set.add(jobId); else set.delete(jobId);
+  savePinnedIdSet(set);
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  if (job) job.queuePinned = !!queued;
+  saveJobs();
+}
+
+function removeJobFromQueue(jobId) {
+  markJobQueued(jobId, false);
+  renderQueue();
+  cwn_log('[queue] removed from view: ' + jobId, false);
+}
+
+function jobTypeLabel(serverJob) {
+  var ct = String(serverJob.contentType || serverJob.type || '').toLowerCase();
+  if (serverJob.clipsOnly) return 'CLIPS COMP';
+  if (ct.indexOf('short') > -1 || (serverJob.jobId || '').indexOf('short') > -1) return 'CLIP SHORT';
+  if (ct.indexOf('twitch') > -1 || ct === 'twitch_soup') return 'TWITCH SOUP';
+  if (ct.indexOf('nba') > -1) return 'NBA';
+  if (ct.indexOf('news') > -1) return 'NEWS';
+  return (ct || 'VIDEO').toUpperCase();
+}
+
+function jobStageBadge(serverJob) {
+  var stage = serverJob.stage || serverJob.status || '';
+  if (stage === 'awaiting_review' || stage === 'metadata_review') return { text: 'NEEDS REVIEW', color: '#c7af4f' };
+  if (stage === 'published') return { text: 'PUBLISHED', color: '#2ecc71' };
+  if (stage === 'assembling' || serverJob.status === 'assembling') return { text: 'ASSEMBLING', color: '#3498db' };
+  if (stage === 'gate3_failed' || serverJob.status === 'gate3_failed') return { text: 'GATE 3 FAIL', color: '#e74c3c' };
+  if (stage === 'assembled' || serverJob.assembledAt) return { text: 'ASSEMBLED', color: '#9b59b6' };
+  if (stage === 'heygen_done' || serverJob.status === 'heygen_done') return { text: 'HEYGEN DONE', color: '#e67e22' };
+  return { text: String(stage || 'unknown').replace(/_/g, ' ').toUpperCase(), color: 'rgba(255,255,255,0.45)' };
+}
+
+function jobMatchesFindFilter(serverJob) {
+  var stage = serverJob.stage || serverJob.status || '';
+  if (_findJobFilter === 'all') return true;
+  if (_findJobFilter === 'progress') {
+    return ['assembling', 'heygen_done', 'all_sent', 'script_ready', 'awaiting_manual_segments', 'processing'].indexOf(stage) > -1
+      || serverJob.status === 'assembling' || serverJob.status === 'processing';
+  }
+  // work = needs operator attention
+  if (stage === 'published') return false;
+  return ['awaiting_review', 'metadata_review', 'assembled', 'gate3_failed', 'publish_scheduled', 'gate5_failed', 'music_review'].indexOf(stage) > -1
+    || serverJob.status === 'gate3_failed' || serverJob.status === 'completed';
+}
+
+function setFindJobFilter(filter, btn) {
+  _findJobFilter = filter;
+  document.querySelectorAll('.find-job-filter').forEach(function(b) {
+    b.style.borderColor = 'rgba(255,255,255,0.12)';
+    b.style.color = 'rgba(255,255,255,0.45)';
+  });
+  if (btn) {
+    btn.style.borderColor = 'rgba(199,175,79,0.6)';
+    btn.style.color = '#c7af4f';
+  }
+  renderFindJobList();
+}
+
+function openFindJobModal() {
+  var modal = document.getElementById('find-job-modal');
+  if (!modal) return;
+  modal.classList.add('open');
+  var search = document.getElementById('find-job-search');
+  if (search) search.value = '';
+  _findJobFilter = 'work';
+  setFindJobFilter('work', document.querySelector('.find-job-filter[data-filter="work"]'));
+  document.getElementById('find-job-status').textContent = 'Loading jobs from server…';
+  document.getElementById('find-job-list').innerHTML = '';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/jobs?restore=1&all=1', true);
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      _findJobCache = (resp.jobs || []).slice().sort(function(a, b) {
+        return new Date(b.savedAt || 0) - new Date(a.savedAt || 0);
+      });
+      renderFindJobList();
+    } catch (e) {
+      document.getElementById('find-job-status').textContent = 'Failed to load: ' + e.message;
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    document.getElementById('find-job-status').textContent = 'Server unreachable — is pm2 running?';
+  };
+  xhr.send();
+}
+
+function closeFindJobModal() {
+  var modal = document.getElementById('find-job-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function renderFindJobList() {
+  var listEl = document.getElementById('find-job-list');
+  var statusEl = document.getElementById('find-job-status');
+  if (!listEl || !statusEl) return;
+  var q = (document.getElementById('find-job-search') && document.getElementById('find-job-search').value || '').trim().toLowerCase();
+  var rows = _findJobCache.filter(function(j) {
+    if (!jobMatchesFindFilter(j)) return false;
+    if (!q) return true;
+    var title = String(j.title || j.scriptTitle || '').toLowerCase();
+    var id = String(j.jobId || j.id || '').toLowerCase();
+    var streamers = (j.streamers || []).map(function(s) { return (s && s.twitchUsername) ? s.twitchUsername : String(s || ''); }).join(' ').toLowerCase();
+    return title.indexOf(q) > -1 || id.indexOf(q) > -1 || streamers.indexOf(q) > -1;
+  });
+  statusEl.textContent = rows.length + ' job(s) — click ADD TO QUEUE';
+  if (!rows.length) {
+    listEl.innerHTML = '<div style="padding:16px;color:rgba(255,255,255,0.4);font-size:12px;">No jobs match. Try ALL RECENT or clear the search box.</div>';
+    return;
+  }
+  listEl.innerHTML = rows.map(function(j) {
+    var jid = j.jobId || j.id;
+    var title = escHtml(j.title || j.scriptTitle || 'Untitled');
+    var typeLbl = escHtml(jobTypeLabel(j));
+    var badge = jobStageBadge(j);
+    var when = j.savedAt ? new Date(j.savedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+    var inQueue = isJobQueued({ id: jid, queuePinned: j.queuePinned });
+    var rowCls = inQueue ? 'find-job-row in-queue' : 'find-job-row';
+    var btn = inQueue
+      ? '<span style="font-size:10px;color:#2ecc71;font-weight:700;white-space:nowrap;">✓ IN QUEUE</span>'
+      : '<button type="button" class="btn btn-gold btn-sm" style="white-space:nowrap;font-weight:700;" onclick="addJobToQueueFromServer(\'' + jid.replace(/'/g, "\\'") + '\', true)">ADD TO QUEUE</button>';
+    return '<div class="' + rowCls + '">'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:13px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:4px;">' + title + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:10px;font-family:monospace;">'
+      + '<span style="color:rgba(199,175,79,0.85);">' + typeLbl + '</span>'
+      + '<span style="color:' + badge.color + ';">' + escHtml(badge.text) + '</span>'
+      + '<span style="color:rgba(255,255,255,0.35);">' + escHtml(when) + '</span>'
+      + '</div></div>'
+      + '<div style="flex-shrink:0;display:flex;align-items:center;">' + btn + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function addJobToQueueFromServer(jobId, closeModal) {
+  if (!jobId) return;
+  cwn_log('[queue] adding ' + jobId + '…', false);
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId), true);
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok || !resp.job) {
+        alert('Could not load job:\n' + (resp.error || xhr.responseText));
+        return;
+      }
+      var serverJob = resp.job;
+      var existing = JOBS.find(function(j) { return j.id === jobId; });
+      if (existing) {
+        mergeServerJobIntoLocal(jobId, serverJob);
+        if (serverJob.heygen) existing.heygen = serverJob.heygen;
+      } else {
+        JOBS.unshift(buildLocalJobFromServerCard(serverJob));
+      }
+      markJobQueued(jobId, true);
+      renderQueue();
+      syncQueuePinToServer(jobId, true);
+      if (closeModal) closeFindJobModal();
+      nav('queue');
+      setTimeout(function() {
+        var el = document.getElementById('job-' + jobId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+      cwn_log('[queue] added: ' + (serverJob.title || jobId), false);
+    } catch (e) {
+      alert('Add to queue failed: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() { alert('Server unreachable — is pm2 running?'); };
+  xhr.send();
+}
+
+function syncQueuePinToServer(jobId, pin) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + (pin ? '/queue-pin' : '/queue-unpin'), true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 10000;
+  xhr.send('{}');
+}
+
+function rehydrateQueuedJobsFromServer() {
+  var ids = Array.from(getPinnedIdSet());
+  if (!ids.length) return;
+  ids.forEach(function(id, idx) {
+    if (JOBS.find(function(j) { return j.id === id; })) return;
+    setTimeout(function() { addJobToQueueFromServer(id, false); }, idx * 120);
+  });
+}
+
+// ── RESTORE JOBS FROM SERVER (legacy — prefer ADD JOB FROM SERVER) ──
+function hideUnpinnedRestored() {
+  JOBS = JOBS.filter(function(j) { return isJobQueued(j); });
+  saveJobs();
+  renderQueue();
+}
+
+function buildLocalJobFromServerCard(serverJob) {
+  var serverJobId = serverJob.jobId || serverJob.id;
+  var heygenData = serverJob.heygen || {};
+  var videoJobs = heygenData.videoJobs || [];
+  var clipUrls = serverJob.orderedClipUrls || [];
+  var segments = [];
+  var clipIdx = 0;
+  videoJobs.forEach(function(vj) {
+    var sceneName = vj.sceneName || ('Scene ' + (segments.length + 1));
+    var isSetup = sceneName.toUpperCase().indexOf('SETUP') > -1;
+    segments.push({
+      type: 'avatar', label: sceneName.replace(/_/g, ' '),
+      status: vj.url ? 'completed' : 'rendering',
+      videoId: vj.video_id || null, url: vj.url || null, truncated: false
+    });
+    if (isSetup && clipUrls[clipIdx]) {
+      var clip = clipUrls[clipIdx++];
+      segments.push({
+        type: 'source_clip', label: sceneName.replace(/_SETUP.*/i, '') + ' (CLIP ' + clipIdx + ')',
+        status: 'ready', clipUrl: clip.url || '', pageUrl: clip.pageUrl || '',
+        url: clip.url || '', clipTimingTargets: clip.clipTimingTargets || [],
+        clipTimingFormat: clip.clipTimingFormat || 'none', clipDuration: null, videoId: null
+      });
+    }
+  });
+  var scriptText = (serverJob.script && (serverJob.script.fullText || serverJob.script.text)) || serverJob.scriptText || '';
+  return {
+    id: serverJobId, scriptJobId: serverJob.scriptJobId || serverJobId,
+    type: serverJob.contentType || 'twitch',
+    title: serverJob.title || serverJob.scriptTitle || serverJobId,
+    status: serverJob.status || 'heygen_done', stage: serverJob.stage || null,
+    segments: segments, script: scriptText, heygen: heygenData,
+    queuePinned: true, created: serverJob.savedAt || new Date().toISOString(),
+    driveUrl: serverJob.driveUrl || null, assembledAt: serverJob.assembledAt || null,
+    assemblyId: serverJob.assemblyId || null, gate3: serverJob.gate3 || null,
+    publishCopy: serverJob.publishCopy || null, localPreviewUrl: serverJob.localPreviewUrl || null,
+    filename: serverJob.filename || null, outputPath: serverJob.outputPath || null,
+    _restoredFromServer: true
+  };
+}
+
+function pinJobById() { openFindJobModal(); }
+
+function toggleQueuePin(jobId, pin) {
+  if (pin) {
+    addJobToQueueFromServer(jobId, false);
+  } else {
+    removeJobFromQueue(jobId);
+    syncQueuePinToServer(jobId, false);
+  }
+}
+
 function restoreJobsFromServer(showAlert, _retryCount) {
   var retryCount = _retryCount || 0;
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', CFG.ffmpegUrl + '/jobs' + (showAlert ? '?restore=1' : ''), true);
+  // restore=1 without all=1 → server returns queuePinned jobs only (no 25-job flood)
+  xhr.open('GET', CFG.ffmpegUrl + '/jobs?restore=1', true);
   xhr.timeout = 30000;
   xhr.onload = function() {
     try {
       var resp = JSON.parse(xhr.responseText);
       if (!resp.ok || !resp.jobs || !resp.jobs.length) {
-        if (showAlert) cwn_log('[restore] No persisted jobs found on server', false);
+        if (showAlert) {
+          cwn_log('[restore] No queued jobs on server', false);
+          alert('No jobs on server match restore.\n\nUse + ADD JOB FROM SERVER and pick by title.');
+        }
         return;
       }
 
@@ -5488,14 +5833,18 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           return;
         }
 
+        // Dismissed review/gate5 jobs: server intentionally returns these — restore them.
         if (serverJob.status === 'dismissed') {
-          cwn_log('[restore] Skipping dismissed job ' + serverJob.jobId, false);
-          return;
+          var dismissedReviewStages = ['awaiting_review','metadata_review','publish_scheduled','music_review','gate5_failed','gate5_forced','gate5_running','assembled'];
+          if (dismissedReviewStages.indexOf(serverStage) === -1) {
+            cwn_log('[restore] Skipping dismissed job ' + serverJob.jobId, false);
+            return;
+          }
         }
 
-        // Skip already-published jobs — nothing to restore
+        // Published: only restore on manual ↩ (server sends recent published when restore=1).
         var isPublished = serverStage === 'published' || !!serverJob.publishedAt;
-        if (isPublished) {
+        if (isPublished && !showAlert) {
           cwn_log('[restore] Skipping published job ' + serverJob.jobId + ' — already complete', false);
           return;
         }
@@ -5594,8 +5943,12 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           publishHold: serverJob.publishHold || null,
           deliverySpec: serverJob.deliverySpec || null,
           postLivePublishReleased: !!serverJob.postLivePublishReleased,
+          republishNeeded: !!serverJob.republishNeeded,
+          lastPublishedDriveUrl: serverJob.lastPublishedDriveUrl || null,
           canvaUrl:    null, thumbnail: null, publishPrep: null,
           platforms:   { youtube: 'pending', tiktok: 'pending', instagram: 'pending' },
+          heygen:      heygenData,
+          queuePinned: !!serverJob.queuePinned,
           _restoredFromServer: true
         };
 
@@ -5788,11 +6141,19 @@ function toggleJobMediaPanel(jobId) {
 
 function renderQueue() {
   try {
-  g('queue-count').textContent = JOBS.length + ' JOBS';
+  var visibleJobs = JOBS.filter(function(j) { return isJobQueued(j); });
+  g('queue-count').textContent = visibleJobs.length + ' JOB' + (visibleJobs.length === 1 ? '' : 'S');
   var list = g('job-list');
-  if (!JOBS.length) { list.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:13px;padding:20px 0">No jobs yet.</div>'; return; }
+  if (!visibleJobs.length) {
+    list.innerHTML = '<div style="padding:28px 16px;text-align:center;">'
+      + '<div style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:14px;">Your queue is empty.</div>'
+      + '<button class="btn btn-gold" onclick="openFindJobModal()" style="font-weight:700;padding:10px 24px;">+ ADD JOB FROM SERVER</button>'
+      + '<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:14px;line-height:1.6;">Pick by video title — e.g. <em>Twitch Soup: Jason\'s Spelling Bee…</em><br>Or generate a new video — it auto-adds here.</div>'
+      + '</div>';
+    return;
+  }
 
-  list.innerHTML = JOBS.map(function(job, ji) {
+  list.innerHTML = visibleJobs.map(function(job, ji) {
     try {
     var status = job.status || 'unknown';
     var segments = job.segments || [];
@@ -6175,8 +6536,9 @@ function renderQueue() {
     if (jobStage === 'metadata_review') {
       actions += '<button onclick="regeneratePublishCopy(\'' + job.id + '\')" class="btn btn-gold btn-sm" title="Regenerate YT/TT/IG metadata until SEO QA passes">🔄 FIX SEO</button>';
     }
-    if ((jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'metadata_review' || jobStage === 'gate5_failed' || jobStage === 'publish_scheduled') && (job.driveUrl || job.finalUrl) && jobStage !== 'metadata_review' && !postLiveHeld) {
-      actions += '<button onclick="approveAndPublishJob(\'' + job.id + '\')" class="btn btn-green btn-sm" style="font-weight:700;" title="Upload to all platforms using assembly-generated SEO (Gate 5)">🚀 APPROVE &amp; PUBLISH</button>';
+    if ((jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'metadata_review' || jobStage === 'gate5_failed' || jobStage === 'publish_scheduled' || job.republishNeeded) && (job.driveUrl || job.finalUrl) && jobStage !== 'metadata_review' && !postLiveHeld) {
+      var republishLabel = job.republishNeeded ? '🚀 REPUBLISH NEW CUT' : '🚀 APPROVE &amp; PUBLISH';
+      actions += '<button onclick="approveAndPublishJob(\'' + job.id + '\')" class="btn btn-green btn-sm" style="font-weight:700;" title="Upload to all platforms using assembly-generated SEO (Gate 5)">' + republishLabel + '</button>';
     }
     if (postLiveHeld && (job.driveUrl || job.finalUrl)) {
       actions += '<button onclick="releasePostLivePublish(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Clear copyright hold after live — optional Twitch-cut Drive URL">🔓 RELEASE POST-LIVE PUBLISH</button>';
@@ -6215,9 +6577,20 @@ function renderQueue() {
       if (job.clipsOnly && jobStage === 'awaiting_review') {
         actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Rerun Hook Machine + Claude QA (CPD-1106) — does not burn video until you RE-ASSEMBLE">🎣 REGEN HOOKS</button>';
       }
-      actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Skip Gate 2 — build segments from card data and fire assembly. Files in manual_segments folder are used automatically.">📁 RE-ASSEMBLE FROM FILES</button>';
+      actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Full manual batch only — all MP4s in manual_segments root. For copy fixes use APPLY SCENE UPDATES.">📁 RE-ASSEMBLE FROM FILES</button>';
     } else if (jobActivelyAssembling(job)) {
       actions += '<span style="font-size:10px;color:#3498db;font-family:monospace;align-self:center;">⏳ assembling…</span>';
+    }
+    var canSceneUpdates = (pastHeygenStage || jobStage === 'published')
+      && !jobActivelyAssembling(job)
+      && (
+        (job.heygen && job.heygen.videoJobs && job.heygen.videoJobs.length)
+        || doneSegs.length >= 4
+      );
+    if (canSceneUpdates) {
+      actions += '<button onclick="applySceneUpdates(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;border:1px solid rgba(199,175,79,0.6);" title="Drop changed scene MP4s in tmp/manual_segments/JOBID/scene_updates/ then click — unchanged scenes stitch from job card HeyGen URLs">✏️ APPLY SCENE UPDATES</button>';
+      actions += '<button onclick="syncHeygenSceneUpdates(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(199,175,79,0.5);color:#c7af4f;" title="After HeyGen web re-render: poll account, detect newer scenes vs baseline, download + reassemble">↻ SYNC FROM HEYGEN</button>';
+      actions += '<button onclick="captureHeygenBaselineJob(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="font-size:10px;" title="Lock HeyGen video_id + timestamp per scene after a good assembly — required before SYNC FROM HEYGEN">🔒 LOCK BASELINE</button>';
     }
     actions += '</div>';
     // Short-form status div (for thumbnail + CapCut feedback)
@@ -6254,13 +6627,16 @@ function renderQueue() {
 
     // ASSEMBLY PANEL
     var asmDoneList = doneSegs.map(function(s){ return '<div style="font-size:10px;font-family:monospace;color:rgba(255,255,255,0.5);padding:1px 0;">✓ '+s.label+'</div>'; }).join('');
+    var asmPanelBtns = '<button id="asm-btn-'+job.id+'" onclick="this.textContent=\'⚙️ ASSEMBLING...\';this.disabled=true;assembleJob(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm">RUN FFMPEG ASSEMBLE</button>';
+    if (canSceneUpdates) {
+      asmPanelBtns += '<button onclick="applySceneUpdates(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;border:1px solid rgba(199,175,79,0.6);" title="Partial redo: drop MP4s in scene_updates/ only">✏️ APPLY SCENE UPDATES</button>';
+      asmPanelBtns += '<button onclick="syncHeygenSceneUpdates(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(199,175,79,0.5);color:#c7af4f;">↻ SYNC FROM HEYGEN</button>';
+    }
     var asmPanel = '<div class="assembly-panel" id="asm-panel-'+job.id+'">'
       +'<div class="assembly-title">⚙ FFMPEG — '+doneSegs.length+' of '+totalSegs+' segments ready</div>'
       +'<div style="margin-bottom:8px;">'+asmDoneList+'</div>'
       +'<div class="progress-wrap"><div class="progress-bar ffmpeg-bar" id="asm-progress-'+job.id+'" style="width:0%"></div></div>'
-      +'<div class="btn-row" style="margin-top:8px;">'
-      +'<button id="asm-btn-'+job.id+'" onclick="this.textContent=\'⚙️ ASSEMBLING...\';this.disabled=true;assembleJob(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm">RUN FFMPEG ASSEMBLE</button>'
-      +'</div>'
+      +'<div class="btn-row" style="margin-top:8px;">'+asmPanelBtns+'</div>'
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
     var tagCls = status==='completed'||status==='all_sent'?'tag-done':(status==='failed'||status==='gate3_failed')?'tag-failed':'tag-processing';
@@ -6282,9 +6658,12 @@ function renderQueue() {
     return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':(status==='failed'||status==='gate3_failed')?'failed':'')+'" id="job-'+job.id+'">'
       +'<div class="job-row-top"><div class="job-info" style="flex:1;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
-      +'<div><div class="job-title">'+job.title+'</div>'
+      +'<div><div class="job-title">'+job.title
+      + (job.queuePinned ? ' <span style="font-size:10px;color:#c7af4f;font-weight:700;">📌</span>' : '')
+      +'</div>'
       +'<div class="job-meta">'+(job.type||'video').toUpperCase().replace('-',' ')+' | '+new Date(job.created).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+(job.clipsOnly && (job.compCreativePreset || (job.compCreative && job.compCreative.preset)) ? (' | <span style="color:rgba(199,175,79,0.85);">' + escHtml(compCreativeDisplayName(job.compCreativePreset || (job.compCreative && job.compCreative.preset))) + '</span>') : '')+'</div>'
       +'<div class="job-id-line" style="font-size:10px;font-family:monospace;color:rgba(255,255,255,0.35);margin-top:4px;word-break:break-all;" title="Use this id for /tmp/manual_segments and resume API">ID: '+job.id+'</div>'
+      +'<button onclick="removeJobFromQueue(\'' + job.id + '\');syncQueuePinToServer(\'' + job.id + '\',false)" class="btn btn-outline btn-sm" style="margin-top:6px;font-size:10px;padding:2px 10px;border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);">✕ REMOVE FROM QUEUE</button>'
       +(job.manualSegments && job.manualSegments.manualDir
         ? '<div style="font-size:10px;font-family:monospace;color:rgba(199,175,79,0.55);margin-top:3px;word-break:break-all;">Manual drop: '+job.manualSegments.manualDir+'</div>'
           +((job.manualSegments.operatorGuideDir || job.manualSegments.operatorGuidePath)
@@ -6617,16 +6996,26 @@ function _pollForPublished(jobId) {
   function check() {
     attempts++;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', CFG.ffmpegUrl + '/jobs', true);
+    // Poll the job card directly — GET /jobs omits gate5_* and published stages.
+    xhr.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId), true);
     xhr.timeout = 10000;
     xhr.onload = function() {
       try {
         var resp = JSON.parse(xhr.responseText);
-        var serverJob = (resp.jobs || []).find(function(j){ return j.jobId === jobId; });
-        if (!serverJob) return;
-        var stage = serverJob.stage || '';
+        if (!resp.ok || !resp.job) {
+          if (attempts < maxAttempts) setTimeout(check, 10000);
+          return;
+        }
+        var stage = resp.job.stage || '';
         if (stage === 'published') {
           cwn_log('[gate5] ' + jobId + ' published ✅ — refreshing queue.', false);
+          var local = JOBS.find(function(j) { return j.id === jobId; });
+          if (local) {
+            local.stage = 'published';
+            local.status = resp.job.status || local.status;
+            local.publishedAt = resp.job.publishedAt || local.publishedAt;
+            saveJobs();
+          }
           restoreJobsFromServer(false);
           renderQueue();
         } else if (stage === 'gate5_failed') {
@@ -6987,6 +7376,133 @@ function selectClipHook(jobId, clipIndex, candidateIndex) {
     alert('Hook select request failed — is the server running?');
   };
   xhr.send(JSON.stringify({ clipIndex: clipIndex, candidateIndex: candidateIndex }));
+}
+
+// POST /job/:id/heygen/capture-baseline — lock timestamps after good assembly
+function captureHeygenBaselineJob(jobId) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/heygen/capture-baseline', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 60000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || xhr.responseText);
+      alert('✅ HeyGen baseline locked\n\n' + (resp.sceneCount || 0) + ' scenes — future re-renders in HeyGen web can be synced automatically.');
+    } catch (e) { alert('Baseline capture failed: ' + e.message); }
+  };
+  xhr.onerror = xhr.ontimeout = function() { alert('Server unreachable'); };
+  xhr.send('{}');
+}
+
+// Poll HeyGen account vs baseline → download overrides → partial reassemble
+function syncHeygenSceneUpdates(jobId) {
+  cwn_log('[heygen-sync] loading plan for ' + jobId, false);
+  var planXhr = new XMLHttpRequest();
+  planXhr.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/heygen/scene-sync-plan', true);
+  planXhr.timeout = 45000;
+  planXhr.onload = function() {
+    var info = null;
+    try { info = JSON.parse(planXhr.responseText); } catch (e) { info = { ok: false, error: e.message }; }
+    if (!info.ok && info.error) {
+      alert('❌ ' + info.error + '\n\nLock baseline first after a good assembly (🔒 LOCK HEYGEN BASELINE).');
+      return;
+    }
+    var diff = info.diff || {};
+    var overrides = diff.overrides || [];
+    if (!overrides.length) {
+      alert('No newer HeyGen renders vs baseline.\n\nEdit scenes in HeyGen web, wait for render, then try again.');
+      return;
+    }
+    var lines = [
+      'Sync scene updates from HeyGen for ' + jobId + '?',
+      '',
+      'Newer renders detected (' + overrides.length + '):',
+    ];
+    overrides.forEach(function(o) {
+      lines.push(' • ' + o.sceneName + ' (' + o.reason + ')');
+    });
+    lines.push('', 'Downloads to scene_updates/ then starts partial reassemble.');
+    if (!confirm(lines.join('\n'))) return;
+
+    var syncXhr = new XMLHttpRequest();
+    syncXhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/heygen/sync-scene-updates', true);
+    syncXhr.setRequestHeader('Content-Type', 'application/json');
+    syncXhr.timeout = 180000;
+    syncXhr.onload = function() {
+      var resp = null;
+      try { resp = JSON.parse(syncXhr.responseText); } catch (e) { resp = { ok: false, error: e.message }; }
+      if (!resp.ok) {
+        alert('❌ Sync failed:\n' + (resp.error || (resp.errors && resp.errors.join('\n')) || syncXhr.responseText));
+        return;
+      }
+      alert('✅ ' + (resp.message || 'Sync started'));
+      setTimeout(function() { fetchJobs(); renderQueue(); }, 2000);
+    };
+    syncXhr.onerror = syncXhr.ontimeout = function() { alert('Sync request failed — server running?'); };
+    syncXhr.send(JSON.stringify({ apply: true }));
+  };
+  planXhr.onerror = planXhr.ontimeout = function() { alert('Could not reach server for sync plan'); };
+  planXhr.send();
+}
+
+// POST /job/:id/scene-updates/apply — partial reassemble (changed scenes only; rest from job card)
+function applySceneUpdates(jobId) {
+  cwn_log('[scene-updates] ' + jobId + ' — loading plan…', false);
+  var planXhr = new XMLHttpRequest();
+  planXhr.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/scene-updates', true);
+  planXhr.timeout = 15000;
+  planXhr.onload = function() {
+    var info = null;
+    try { info = JSON.parse(planXhr.responseText); } catch (e) { info = { ok: false, error: e.message }; }
+    if (!info || !info.ok) {
+      alert('❌ Could not load scene update plan: ' + (info && info.error ? info.error : planXhr.responseText));
+      return;
+    }
+    var p = info.plan || {};
+    var lines = [
+      'Apply scene updates for ' + jobId + '?',
+      '',
+      'Overrides (' + (p.overrideLabels || []).length + '): ' + (p.overrideLabels || []).join(', '),
+      'Unchanged from job card HeyGen batch: ' + (p.unchangedFromJobCard || 0) + ' scenes',
+      'Avatar on card: ' + (p.avatarId || '—'),
+      '',
+      'Folder: tmp/manual_segments/' + jobId + '/scene_updates/',
+    ];
+    if (info.strayRootFiles > 0) {
+      lines.push('', 'Note: ' + info.strayRootFiles + ' stray file(s) in manual_segments root will be moved/ignored.');
+    }
+    if (!(p.overrideLabels || []).length) {
+      alert('No MP4s found in scene_updates/ yet.\n\nDrop HeyGen exports for changed scenes into:\n' + (info.sceneUpdatesDir || ('tmp/manual_segments/' + jobId + '/scene_updates/')));
+      return;
+    }
+    if (!confirm(lines.join('\n'))) return;
+
+    var applyXhr = new XMLHttpRequest();
+    applyXhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/scene-updates/apply', true);
+    applyXhr.setRequestHeader('Content-Type', 'application/json');
+    applyXhr.timeout = 60000;
+    applyXhr.onload = function() {
+      var resp = null;
+      try { resp = JSON.parse(applyXhr.responseText); } catch (e) { resp = { ok: false, error: e.message }; }
+      if (!resp.ok) {
+        var errMsg = resp.error || (resp.errors && resp.errors.join('\n')) || applyXhr.responseText;
+        alert('❌ Scene update failed:\n' + errMsg);
+        return;
+      }
+      cwn_log('[scene-updates] started: ' + (resp.overrideLabels || []).join(', '), false);
+      alert('✅ Partial re-assemble started\n\n' + (resp.message || '') + '\n\nWatch preview when assembly completes.');
+      setTimeout(function() { fetchJobs(); }, 2000);
+    };
+    applyXhr.onerror = applyXhr.ontimeout = function() {
+      alert('❌ Scene update request failed — is the server running?');
+    };
+    applyXhr.send(JSON.stringify({ sceneLabels: p.overrideLabels }));
+  };
+  planXhr.onerror = planXhr.ontimeout = function() {
+    alert('❌ Could not reach server for scene update plan.');
+  };
+  planXhr.send();
 }
 
 // POST /job/:id/reassemble — skip Gate 2, go straight to assembly using
@@ -9030,8 +9546,10 @@ function doSendToHeyGen(allParsed, avatarSegs, clipSegs) {
     finalUrl: null, finalPath: null, assembledAt: null,
     canvaUrl: null, canvaDesignId: null, canvaImportedAt: null,
     thumbnail: null, publishPrep: null,
-    platforms: { youtube: 'pending', tiktok: 'pending', instagram: 'pending' }
+    platforms: { youtube: 'pending', tiktok: 'pending', instagram: 'pending' },
+    queuePinned: true
   };
+  markJobQueued(batchJob.id, true);
   JOBS.unshift(batchJob); saveJobs(); renderQueue(); nav('queue');
 
   // Only send avatar segments to HeyGen — source_clips are already tracked
@@ -13515,6 +14033,8 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
           meta: { streamers: streamerNames, orderedClipUrls: clips }
         };
         if (!JOBS.some(function(j) { return j.id === d.jobId; })) {
+          localJob.queuePinned = true;
+          markJobQueued(d.jobId, true);
           JOBS.unshift(localJob);
           saveJobs();
           renderQueue();
@@ -13810,7 +14330,24 @@ var TWITCH_PICKER_DISPLAY_NAMES = {
 };
 
 function getSelectedStreamerPlatforms() {
-  return ['twitch', 'kick', 'youtube'];
+  var out = [];
+  if (g('streamer-plat-twitch') && g('streamer-plat-twitch').checked) out.push('twitch');
+  if (g('streamer-plat-kick') && g('streamer-plat-kick').checked) out.push('kick');
+  if (g('streamer-plat-youtube') && g('streamer-plat-youtube').checked) out.push('youtube');
+  return out.length ? out : ['twitch', 'kick', 'youtube'];
+}
+
+function onStreamerPlatformFilterChange() {
+  if (!getSelectedStreamerPlatforms().length) {
+    alert('Keep at least one platform checked.');
+    var tw = g('streamer-plat-twitch');
+    if (tw) tw.checked = true;
+    return;
+  }
+  renderStreamerChips();
+  if (g('twitch-inline-picker') && g('twitch-inline-picker').style.display !== 'none' && (_twitchPickerStreamers || []).length) {
+    previewTwitchClips(true);
+  }
 }
 
 var _twitchSubMode = 'clips';
@@ -14017,6 +14554,9 @@ function previewTwitchClips(forceReload) {
       });
     }
     renderTwitchPicker(btn, clipsPerStreamer);
+    stagePendingSelectedClips(function() {
+      renderTwitchPicker(btn, clipsPerStreamer);
+    });
   };
   xhr.onerror = xhr.ontimeout = function() {
     btn.textContent = 'Load library'; btn.disabled = false;
@@ -14107,6 +14647,10 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
         var clipWhen = _clipRelTime(clip.createdAt);
 
         html += '<div class="' + pickerCardClasses(isSelected, true) + '" onclick="_toggleTwitchClip(' + si + ',' + ci + ')">';
+        html += '<label class="picker-check" onclick="event.stopPropagation();">'
+          + '<input type="checkbox" id="tpick-' + si + '-' + ci + '" ' + (isSelected ? 'checked' : '')
+          + ' onchange="_setTwitchClipSelected(' + si + ',' + ci + ', this.checked)" style="width:14px;height:14px;">'
+          + '</label>';
         if (clip.stagedUrl || clip.playbackUrl) {
           var vsrc = escapeHtml(clip.playbackUrl || clip.stagedUrl);
           html += '<video class="picker-preview-video" src="' + vsrc + '" muted loop playsinline preload="metadata"'
@@ -14118,7 +14662,7 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
         } else {
           html += '<div class="picker-thumb-placeholder" style="height:55px;">NO THUMB</div>';
         }
-        if (clip.stageError) html += '<div class="picker-staging-badge">STAGE FAILED — retry check</div>';
+        if (clip.stageError) html += '<div class="picker-staging-badge">STAGE FAILED — click to retry</div>';
         else if (clip.stagedUrl) html += '<div class="picker-staging-badge">HOVER TO PREVIEW · FULL CLIP IN COMPOSER</div>';
         html += '<div class="picker-title">' + (clip.title || '').slice(0, 60) + '</div>';
         if (clipWhen) html += '<div class="picker-when">' + clipWhen + '</div>';
@@ -14141,6 +14685,15 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
   refreshCompLineupUI();
 }
 
+function _setTwitchClipSelected(si, ci, selected) {
+  if (!_twitchPickerStreamers[si]) return;
+  var entry = _twitchPickerStreamers[si];
+  var clip = entry.clips[ci];
+  if (!clip) return;
+  if (selected === !!clip.selected) return;
+  _toggleTwitchClip(si, ci);
+}
+
 function _toggleTwitchClip(si, ci) {
   if (!_twitchPickerStreamers[si]) return;
   var entry = _twitchPickerStreamers[si];
@@ -14151,6 +14704,9 @@ function _toggleTwitchClip(si, ci) {
 
   if (clip.selected) {
     clip.selected = false;
+    clip.staging = false;
+    clip._stageInflight = false;
+    clip.stageError = null;
   } else {
     if (clip.isUsed && !confirm('This clip was used in the last 7 days on this browser. Use it anyway?')) return;
     // Enforce CLIPS PER STREAMER cap: selecting past the limit swaps out the
@@ -14160,20 +14716,24 @@ function _toggleTwitchClip(si, ci) {
     if (selectedIdxs.length >= clipsPerStreamer) {
       var swapped = entry.clips[selectedIdxs[0]];
       swapped.selected = false;
+      swapped.staging = false;
+      swapped._stageInflight = false;
       swapMsg = entry.displayName + ': limit is ' + clipsPerStreamer + ' clip' + (clipsPerStreamer !== 1 ? 's' : '') + ' per streamer — swapped out "' + (swapped.title || '').slice(0, 40) + '"';
     }
     clip.selected = true;
+    if (clip.stageError) {
+      clip.stageError = null;
+      clip.staging = false;
+      clip._stageInflight = false;
+    }
   }
   entry.selected = entry.clips.some(function(c){ return c.selected; });
-  if (clip.selected && !clip.stagedUrl && !clip.staging) {
-    clip.staging = true;
-  }
   renderTwitchPicker(g('btn-preview-twitch'), clipsPerStreamer);
   if (swapMsg) {
     var statusEl = g('twitch-fetch-status');
     if (statusEl) statusEl.textContent = swapMsg;
   }
-  if (clip.selected && clip.staging && !clip.stagedUrl) {
+  if (clip.selected && !clip.stagedUrl && !clip._stageInflight) {
     stageClipForLibrary(clip, entry, function(err) {
       renderTwitchPicker(g('btn-preview-twitch'), clipsPerStreamer);
       var st = g('twitch-fetch-status');
@@ -14699,6 +15259,8 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.compCreativePreset) job.compCreativePreset = serverJob.compCreativePreset;
   if (serverJob.designSpec) job.designSpec = serverJob.designSpec;
   if (serverJob.designSpec && serverJob.designSpec.compCreative) job.compCreative = serverJob.designSpec.compCreative;
+  if (serverJob.heygen) job.heygen = serverJob.heygen;
+  if (serverJob.queuePinned === true || serverJob.queuePinned === false) job.queuePinned = !!serverJob.queuePinned;
   if (serverJob.publishHold) job.publishHold = serverJob.publishHold;
   if (serverJob.deliverySpec) job.deliverySpec = serverJob.deliverySpec;
   if (serverJob.postLivePublishReleased) job.postLivePublishReleased = serverJob.postLivePublishReleased;
@@ -14753,7 +15315,12 @@ function approveAndPublishJob(jobId) {
     }
   };
   xhr.onerror = xhr.ontimeout = function() { alert('❌ Server unreachable — is server.js running?'); };
-  xhr.send(JSON.stringify({}));
+  var pubBody = {};
+  var cloudUrl = job.driveUrl
+    || (job.state && job.state.savedOutputs && job.state.savedOutputs.driveUrl);
+  if (cloudUrl) pubBody.driveUrl = cloudUrl;
+  if (job.republishNeeded || job.stage === 'published') pubBody.forcePublish = true;
+  xhr.send(JSON.stringify(pubBody));
 }
 
 // ── PUBLISH PREP ──────────────────────────────────────────────────
@@ -15647,6 +16214,22 @@ function toggleStreamerChip(handle) {
   setSelectedStreamers(sel);
 }
 
+function setStreamerChipChecked(handle, checked) {
+  var h = String(handle || '').trim().toLowerCase().replace(/^@/, '');
+  if (!h) return;
+  var sel = getSelectedStreamers();
+  var idx = sel.indexOf(h);
+  if (checked && idx < 0) {
+    sel.push(h);
+    var roster = getStreamerRoster();
+    if (roster.indexOf(h) === -1) { roster.push(h); saveStreamerRoster(roster); }
+    setSelectedStreamers(sel);
+  } else if (!checked && idx >= 0) {
+    sel.splice(idx, 1);
+    setSelectedStreamers(sel);
+  }
+}
+
 function setAllStreamerChips(on) {
   setSelectedStreamers(on ? getStreamerRoster().slice() : []);
 }
@@ -16249,20 +16832,19 @@ function creatorChipHtml(h, isSelected, opts) {
   var label = meta.displayName && meta.displayName !== hk ? meta.displayName : (meta.displayName || hk);
   var jq = jsQuote(hk);
   var cls = 'creator-chip' + (isSelected ? ' is-selected' : '');
-  var action = opts.removeOnly
-    ? 'toggleStreamerChip(\'' + jq + '\')'
-    : 'toggleStreamerChip(\'' + jq + '\')';
   var xBtn = isSelected && opts.showRemove !== false
-    ? '<span class="creator-chip-x" onclick="event.stopPropagation();toggleStreamerChip(\'' + jq + '\')" title="Remove">×</span>'
+    ? '<span class="creator-chip-x" onclick="event.stopPropagation();setStreamerChipChecked(\'' + jq + '\', false)" title="Remove">×</span>'
     : '';
-  return '<button type="button" class="' + cls + '" onclick="' + action + '" title="@' + escapeHtml(hk) + '">'
+  return '<label class="' + cls + '" title="@' + escapeHtml(hk) + '">'
+    + '<input type="checkbox"' + (isSelected ? ' checked' : '')
+    + ' onchange="setStreamerChipChecked(\'' + jq + '\', this.checked)" onclick="event.stopPropagation()">'
     + '<span class="creator-chip-plat" style="color:' + ps.color + ';background:' + ps.bg + ';">' + ps.badge + '</span>'
     + '<span class="creator-chip-name">' + escapeHtml(label) + '</span>'
     + (opts.topViews != null && opts.topViews > 0
       ? '<span class="creator-chip-handle" style="color:#c7af4f;">' + formatBenchViewCount(opts.topViews) + ' views</span>'
       : (!isSelected && opts.showHandle ? '<span class="creator-chip-handle">@' + escapeHtml(hk) + '</span>' : ''))
     + xBtn
-    + '</button>';
+    + '</label>';
 }
 
 function filterStreamerRoster(roster, query, platFilter) {
@@ -17685,7 +18267,8 @@ libraryPageInit();
 renderComposerHandoffSummary();
 setTimeout(loadStyleGuides, 1000);
 setTimeout(renderPronunciationList, 500); // check for stored guides after server connects
-setTimeout(function(){ restoreJobsFromServer(false); }, 1500); // auto-restore persisted jobs from server on page load
+// Auto-restore disabled — rehydrate only jobs the operator added to their queue
+setTimeout(rehydrateQueuedJobsFromServer, 900);
 setTimeout(checkContentTypeStatus, 2000); // check for auto-disabled content types
 
 // Check for auto-disabled content types and show banner

@@ -31,46 +31,12 @@
       },
       "publish": {
         "pinnedCommentKey": "twitch",
-        "platforms": ["youtube"]
+        "platforms": ["youtube"],
+        "containsSyntheticMedia": false
       }
     },
     "nba": {
-      "label": "NBA Highlights (legacy alias)",
-      "deprecated": true,
-      "aliasOf": "sports",
-      "formFactor": "long",
-      "source": {
-        "module": "./sources/nba_source"
-      },
-      "heygen": {
-        "avatarId": "env:HEYGEN_AVATAR_ID",
-        "format": "landscape",
-        "speakSpeed": 0.85
-      },
-      "assembly": {
-        "chrome": {
-          "skin": "nba"
-        },
-        "ticker": "nba",
-        "sourceCrop": "crop=1920:1080,",
-        "voiceover": true
-      },
-      "qa": {
-        "checklistModule": "./qa/checklists/nba",
-        "gate1PassThreshold": 90,
-        "gate1ManualThreshold": 70,
-        "gate2PassThreshold": 85,
-        "gate2ManualThreshold": 65,
-        "gate3PassThreshold": 70,
-        "gate3ManualThreshold": 60
-      },
-      "publish": {
-        "pinnedCommentKey": "nba",
-        "platforms": ["youtube"]
-      }
-    },
-    "sports": {
-      "label": "Sports Highlights",
+      "label": "NBA Highlights",
       "formFactor": "long",
       "source": {
         "module": "./sources/nba_source"
@@ -206,11 +172,14 @@
     "news-short": {
       "label": "World News (Short-Form)",
       "formFactor": "short",
-      "clipsOnly": true,
       "source": {
         "module": "./sources/news_source"
       },
-      "heygen": null,
+      "heygen": {
+        "avatarId": "env:HEYGEN_AVATAR_SHORT_NEWS_ID",
+        "format": "portrait",
+        "speakSpeed": 0.95
+      },
       "assembly": {
         "chrome": {
           "skin": "news"
@@ -231,37 +200,6 @@
       },
       "publish": {
         "pinnedCommentKey": "news",
-        "platforms": ["youtube", "tiktok", "instagram"]
-      }
-    },
-    "sports-short": {
-      "label": "Sports Highlights (Short-Form)",
-      "formFactor": "short",
-      "clipsOnly": true,
-      "source": {
-        "module": "./sources/nba_source"
-      },
-      "heygen": null,
-      "assembly": {
-        "chrome": {
-          "skin": "nba"
-        },
-        "ticker": "nba",
-        "sourceCrop": "crop=1920:1080,",
-        "voiceover": false,
-        "layout": "split-screen"
-      },
-      "qa": {
-        "checklistModule": "./qa/checklists/nba",
-        "gate1PassThreshold": 90,
-        "gate1ManualThreshold": 70,
-        "gate2PassThreshold": 85,
-        "gate2ManualThreshold": 65,
-        "gate3PassThreshold": 70,
-        "gate3ManualThreshold": 60
-      },
-      "publish": {
-        "pinnedCommentKey": "nba",
         "platforms": ["youtube", "tiktok", "instagram"]
       }
     }

@@ -39,3 +39,15 @@ test('selectPublishTitle picks SEO candidate by index', () => {
   assert.equal(result.title, 'B #Shorts');
   assert.equal(card.publishCopy.youtube.title, 'B #Shorts');
 });
+
+test('long-form twitch custom title does not append #Shorts', () => {
+  const card = {
+    contentType: 'twitch',
+    formType: 'compilation',
+    publishCopy: { youtube: { titles: ['Jason\'s Spelling Bee Slip Stuns Crew'] } },
+  };
+  const result = applyOperatorCustomTitle(card, 'Spell Check Disaster Leaves Jason Speechless');
+  assert.equal(result.ok, true);
+  assert.equal(result.title, 'Spell Check Disaster Leaves Jason Speechless');
+  assert.ok(!/#Shorts/i.test(card.publishCopy.youtube.title));
+});

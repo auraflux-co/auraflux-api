@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-29 (CPD-1127) — Twitch Soup partial scene reassemble: scene_updates/ only, HeyGen sync, outroCredits after stitch on partial runs, queue pin/ADD JOB, R2 persist + publish dedupe. script_twitch_1782513992551 published 7:58. Deployed C0.
 **Last Updated:** 2026-06-28 (CPD-1123) — News Composer EXECUTE parity: WIRE + THE THREAD → news-short clip-comp via Library → COMPOSE → EXECUTE. Epic [CPD-1122](https://aurafluxco.atlassian.net/browse/CPD-1122).
 **Last Updated:** 2026-06-28 (CPD-1121 hotfix) — Reddit preview: v.redd.it HLS via ffmpeg (not yt-dlp); Apify comments require full permalink URL from UI.
 **Last Updated:** 2026-06-28 (CPD-1121) — THE THREAD live Reddit via Apify (`reddit_apify.js`); source priority OAuth→Apify→PullPush; checkbox sub multi-select + library picker fix. Set `REDDIT_USE_PULLPUSH=0` + `APIFY_API_TOKEN` (Doppler) then deploy when pipeline idle.

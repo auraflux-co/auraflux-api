@@ -1,0 +1,30 @@
+---
+description: C0 localhost — Rob operates creative/QA/publish; agents fix assembly and code only
+alwaysApply: true
+---
+
+# C0 Operator vs Agent — Non-Negotiable
+
+## Rob (dashboard only)
+
+- Picks content, composes, generates (script, HeyGen, cold open approval)
+- Reviews everything the pipeline exposes for creative/QA sign-off
+- **Only Rob hits Approve and Publish** in the job queue
+
+## Agent (terminals only)
+
+- Fix code when assembly output does not match creative direction
+- Reassemble when needed (after deploy, when no job ffmpeg is running)
+- Deploy via `bash scripts/deploy_c0.sh` **only when `pgrep -f tmp/asm_` is empty**
+- Serena QA on commits, Jira + Confluence updates per workflow rules
+
+## Agent MUST NOT
+
+- Call `POST /job/:id/run-gate5`, `POST /publish`, `POST /job/:id/advance` to Gate 5, or any upload path
+- Use `forcePublish: true` or bypass operator creative guards
+- Ask Rob whether workflow requirements apply — they are requirements
+- Restart pm2 / deploy while assembly ffmpeg is running
+
+## Agent success criteria
+
+Assembly output matches creative spec (bookends, laughs, credits, chrome, script). If not → fix code → deploy when idle → reassemble → Rob reviews again.

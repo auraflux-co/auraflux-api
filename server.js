@@ -457,6 +457,9 @@ try {
   persistedJobs = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
   jsonJobsSnapshot = { ...persistedJobs };
   console.log(`[jobs] Loaded ${Object.keys(persistedJobs).length} persisted jobs from disk`);
+  if (process.env.HEYGEN_AVATAR_ID) {
+    console.log(`[heygen] Long-form avatar: ${process.env.HEYGEN_AVATAR_ID}`);
+  }
 } catch(e) {
   persistedJobs = {};
 }
@@ -606,6 +609,13 @@ function saveJobCard(jobId, card) {
       card.sourceClipSegments = sourceClipSegments;
       console.log(`[jobs] Saved ${sourceClipSegments.length} source_clip segments to job card ${jobId}`);
     }
+  }
+
+  if (card?.heygen?.videoJobs?.length) {
+    try {
+      const { applyNormalizedHeygenVideoJobs } = require('./lib/heygen_video_jobs');
+      applyNormalizedHeygenVideoJobs(card);
+    } catch (_hgNorm) { /* non-fatal */ }
   }
 
   persistedJobs[jobId] = { ...card, savedAt: new Date().toISOString() };
@@ -2044,30 +2054,75 @@ app.get('/health', async (req, res) => {
   res.status(statusCode).json(health);
 });
 
-// GET /jobs — return persisted job cards for dashboard recovery after server restart
-// ?restore=1 — include assembled + awaiting_review jobs (manual ↩ RESTORE JOBS)
-app.get('/jobs', (req, res) => {
+// Review-queue + gate5 stages must survive dismiss — operator hides card locally, not on server.
+const REVIEW_QUEUE_STAGES = new Set([
+  'awaiting_review', 'metadata_review', 'publish_scheduled', 'music_review',
+  'gate5_failed', 'gate5_forced', 'gate5_running', 'assembled',
+]);
+
+/** Dedupe SQLite/JSON cards by jobId — keep newest savedAt per id. */
+function dedupeJobCardsByJobId(cards) {
+  const byId = new Map();
+  for (const card of cards || []) {
+    const key = card && (card.jobId || card.id);
+    if (!key) continue;
+    const prev = byId.get(key);
+    const saved = new Date(card.savedAt || card.assembledAt || card.publishedAt || 0).getTime();
+    const prevSaved = prev ? new Date(prev.savedAt || prev.assembledAt || prev.publishedAt || 0).getTime() : 0;
+    if (!prev || saved >= prevSaved) byId.set(key, card);
+  }
+  return [...byId.values()];
+}
+
+function listDashboardJobs({ restore = false, pinnedOnly = false } = {}) {
   const IN_FLIGHT_STAGES = new Set([
     'script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling', 'heygen_done',
-    'hook_review', 'awaiting_review', 'metadata_review', // ready for operator — must show without ↩ RESTORE
+    'hook_review', 'awaiting_review', 'metadata_review',
   ]);
   const RESTORE_STAGES = new Set([
     ...IN_FLIGHT_STAGES,
-    'heygen_done', 'assembling', 'assembled', 'hook_review', 'awaiting_review', 'metadata_review',
-    'publish_scheduled',
+    'assembled', 'publish_scheduled',
     'gate5_forced', 'gate5_running', 'gate5_failed', 'music_review',
   ]);
-  const allowedStages = req.query.restore === '1' ? RESTORE_STAGES : IN_FLIGHT_STAGES;
+  const allowedStages = restore ? RESTORE_STAGES : IN_FLIGHT_STAGES;
+  const publishedCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-  const actionableJobs = Object.values(persistedJobs).filter(job => {
+  let cards;
+  try {
+    cards = dedupeJobCardsByJobId(db.loadAllJobs());
+  } catch (_e) {
+    cards = dedupeJobCardsByJobId(Object.values(persistedJobs));
+  }
+
+  return cards.filter((job) => {
+    if (pinnedOnly && !job.queuePinned) return false;
+
     const status = job.status || '';
-    if (status === 'dismissed') return false;
-    if (status === 'gate3_failed') return true;
     const stage = job.stage || inferJobStage(job);
+
+    if (restore && stage === 'published') {
+      const ts = new Date(job.savedAt || job.publishedAt || job.assembledAt || 0).getTime();
+      return ts >= publishedCutoff;
+    }
     if (stage === 'published') return false;
+
+    if (status === 'dismissed') {
+      return REVIEW_QUEUE_STAGES.has(stage) || status === 'gate3_failed';
+    }
+    if (status === 'gate3_failed') return true;
     if (stage === 'failed') return !!job.clipsOnly;
     return allowedStages.has(stage);
   }).sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+}
+
+// GET /jobs — return persisted job cards for dashboard recovery after server restart
+// ?restore=1 — include assembled + awaiting_review + recent published (manual ↩ RESTORE PINNED)
+// ?restore=1&all=1 — restore every actionable job (legacy flood — avoid on dashboard load)
+// ?restore=1&pinned=1 — only queuePinned jobs (default when restore=1 without all=1)
+app.get('/jobs', (req, res) => {
+  const restore = req.query.restore === '1';
+  const pinnedOnly = restore && req.query.all !== '1';
+  const actionableJobs = listDashboardJobs({ restore, pinnedOnly });
 
   const { getJobBySpec } = require('./lib/db');
   const { buildGateStatusSnapshot } = require('./lib/job_spec_contracts');
@@ -2101,7 +2156,18 @@ app.get('/jobs', (req, res) => {
         if (spec) break;
       } catch (_e) {}
     }
-    return { ...reconciled, jobId: reconciled.jobId || reconciled.id, id: reconciled.id || reconciled.jobId, gateStatus: spec ? buildGateStatusSnapshot(spec) : null };
+    return {
+      ...reconciled,
+      jobId: reconciled.jobId || reconciled.id,
+      id: reconciled.id || reconciled.jobId,
+      gateStatus: spec ? buildGateStatusSnapshot(spec) : null,
+      republishNeeded: (() => {
+        try {
+          const { needsRepublish } = require('./lib/publish_dedupe');
+          return needsRepublish(reconciled, jobKey);
+        } catch (_e) { return false; }
+      })(),
+    };
   });
 
   res.json({ ok: true, count: jobsWithGateStatus.length, jobs: jobsWithGateStatus });
@@ -2136,13 +2202,57 @@ app.get('/job/:id', (req, res) => {
 
   res.json({
     ok: true,
-    job: {
-      jobId,
-      ...card,
-      driveUrl: card.driveUrl || savedOutputs.driveUrl || null,
-      publishCopy: publishCopy || null,
-    },
+    job: (() => {
+      const { needsRepublish, lastPublishedDriveUrl } = require('./lib/publish_dedupe');
+      const driveUrl = card.driveUrl || savedOutputs.driveUrl || null;
+      const enriched = { jobId, ...card, driveUrl, publishCopy: publishCopy || null };
+      enriched.republishNeeded = needsRepublish(enriched, jobId);
+      enriched.lastPublishedDriveUrl = lastPublishedDriveUrl(jobId);
+      return enriched;
+    })(),
   });
+});
+
+// GET /job/:id/post-assembly-rundown — timestamp QA timeline for Twitch Soup jobs
+app.get('/job/:id/post-assembly-rundown', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: 'Job not found: ' + jobId });
+
+  let rundown = card.postAssemblyRundown || null;
+  let rundownPath = card.postAssemblyRundownPath || null;
+
+  if (!rundown && rundownPath && fs.existsSync(rundownPath)) {
+    try {
+      rundown = JSON.parse(fs.readFileSync(rundownPath, 'utf8'));
+    } catch (_) { /* fall through */ }
+  }
+
+  if (!rundown && card.lastAsmId) {
+    const fallbackPath = path.join(__dirname, 'output', `${card.lastAsmId}_post_rundown.json`);
+    if (fs.existsSync(fallbackPath)) {
+      try {
+        rundown = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+        rundownPath = fallbackPath;
+      } catch (_) { /* fall through */ }
+    }
+  }
+
+  if (!rundown) {
+    return res.status(404).json({
+      ok: false,
+      error: 'No post-assembly rundown yet — run assembly first',
+      jobId,
+    });
+  }
+
+  let text = '';
+  try {
+    const { formatPostAssemblyRundownText } = require('./lib/twitch_bookends');
+    text = formatPostAssemblyRundownText(rundown);
+  } catch (_) { /* non-fatal */ }
+
+  res.json({ ok: true, jobId, rundownPath, text, rundown });
 });
 
 // DELETE /job/:id — remove a job from persistedJobs + jobs.json AND kill any active work
@@ -2541,23 +2651,28 @@ async function _runGate5ForCard(jobId) {
   }
 
   if (card.stage === 'published') {
-    console.log(`[run-gate5] ${jobId}: already published — skipping duplicate upload`);
-    return;
-  }
-  try {
-    const prior = db.getPublishedResults(jobId) || [];
-    if (prior.some(r => r.platform_job_id)) {
-      card.stage = 'published';
-      card.publishedAt = card.publishedAt || new Date(prior[0].published_at || Date.now()).toISOString();
-      saveJobCard(jobId, card);
-      console.log(`[run-gate5] ${jobId}: publish_results confirm prior upload — skipping duplicate`);
+    const { needsRepublish } = require('./lib/publish_dedupe');
+    if (!needsRepublish(card, jobId)) {
+      console.log(`[run-gate5] ${jobId}: already published — skipping duplicate upload`);
       return;
     }
-  } catch (_e) { /* non-fatal — proceed with upload */ }
+    console.log(`[run-gate5] ${jobId}: new assembly driveUrl — republishing`);
+  }
 
   const savedOutputs = card.state?.savedOutputs || {};
   const driveUrl = savedOutputs.driveUrl || card.driveUrl;
   if (!driveUrl) throw new Error(`driveUrl missing for ${jobId} — Drive upload may not have completed`);
+
+  try {
+    const { isDriveUrlAlreadyPublished } = require('./lib/publish_dedupe');
+    if (isDriveUrlAlreadyPublished(jobId, driveUrl)) {
+      card.stage = 'published';
+      card.publishedAt = card.publishedAt || new Date().toISOString();
+      saveJobCard(jobId, card);
+      console.log(`[run-gate5] ${jobId}: this driveUrl already on YouTube — skipping duplicate`);
+      return;
+    }
+  } catch (_e) { /* non-fatal — proceed with upload */ }
 
   // publishCopy may be in the DB spec's savedOutputs but not yet flushed to the in-memory card
   // (assembly saves it via saveOutput() which writes to DB, but card is in-memory snapshot).
@@ -3584,6 +3699,52 @@ app.post('/studio-laugh/extract-from-teach', async (req, res) => {
   }
 });
 
+// POST /studio-laugh/qa-library — Gemini QA on auto-extracted clips; rescans operator/ folder
+app.post('/studio-laugh/qa-library', async (req, res) => {
+  try {
+    const { qaLaughLibrary } = require('./lib/studio_laughter_qa');
+    const result = await qaLaughLibrary({ force: req.body?.force === true });
+    res.json({ ok: result.ok, ...result });
+  } catch (err) {
+    console.error('[studio-laugh/qa-library]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /studio-laugh/library — operator + QA status (for dashboard review)
+app.get('/studio-laugh/library', (_req, res) => {
+  try {
+    const {
+      readLaughManifest,
+      listLaughLibraryClips,
+      listOperatorLaughClips,
+      resolveOpeningCrowdBedPath,
+      resolveOpeningMusicBedPath,
+      getStudioLaughConfig,
+    } = require('./lib/studio_laughter');
+    const { loadBookendsConfig } = require('./lib/twitch_bookends');
+    const manifest = readLaughManifest();
+    const operator = listOperatorLaughClips();
+    const usable = listLaughLibraryClips();
+    const bookCfg = loadBookendsConfig('c0');
+    const openingBed = resolveOpeningMusicBedPath(bookCfg.coldOpen)
+      || resolveOpeningCrowdBedPath(bookCfg.coldOpen);
+    res.json({
+      ok: true,
+      operatorClipCount: operator.length,
+      usableClipCount: usable.length,
+      openingCrowdBed: openingBed ? path.basename(openingBed) : null,
+      openingCrowdBedPath: openingBed,
+      operatorDir: path.join(__dirname, 'assets', 'audio', 'studio_laugh', 'operator'),
+      segmentLaughsDir: path.join(__dirname, 'assets', 'audio', 'studio_laugh', 'operator', 'segment_laughs'),
+      manifest,
+      studioLaughConfig: getStudioLaughConfig('c0'),
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // POST /job/:id/regen-script — send script back to Gemini for Talk Soup voice rewrite
 app.post('/job/:id/regen-script', async (req, res) => {
   const jobId = req.params.id;
@@ -3692,8 +3853,9 @@ app.post('/job/:id/cold-open/generate', async (req, res) => {
         durationSec: vo.durationSec,
         beats: vo.beats || [],
         montageClipUrls: vo.montageClipUrls || [],
-        approved: false,
-        audioApproved: false,
+        announcerVoiceId: vo.announcerVoiceId,
+        approved: req.body?.preserveApproval ? (card.coldOpen?.approved ?? false) : false,
+        audioApproved: req.body?.preserveApproval ? (card.coldOpen?.audioApproved ?? false) : false,
         generatedAt: new Date().toISOString(),
       },
     };
@@ -3785,13 +3947,22 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
       || (card.segments || []).filter((s) => s.type === 'source_clip').length
       || items.length
       || 0;
-    ensurePublishMetadataComplete(publishCopy, { streamers, cc, isShort, clipCount: regenClipCount, compCreative: card.compCreative || null });
+    ensurePublishMetadataComplete(publishCopy, {
+      streamers,
+      cc,
+      isShort,
+      clipCount: regenClipCount,
+      compCreative: card.compCreative || null,
+      contentType,
+    });
     publishCopy = normalizePublishCopyShape(publishCopy);
 
     const jobSpec = { ...card, contentType, formType: isShort ? 'short' : 'compilation', streamers, items };
     const metaCheck = validatePublishMetadata(jobSpec, metadataFromPublishCopy(publishCopy));
 
+    const { seedTitleCandidates } = require('./lib/operator_publish_titles');
     card.publishCopy = publishCopy;
+    seedTitleCandidates(card);
     card.state = card.state || {};
     card.state.savedOutputs = card.state.savedOutputs || {};
     card.state.savedOutputs.publishCopy = publishCopy;
@@ -3841,6 +4012,7 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
       violations: metaCheck.violations,
       stage: card.stage,
       publishCopy,
+      titleCandidates: card.titleCandidates || null,
     });
   } catch (err) {
     console.error(`[regenerate-publish-copy] ${jobId}:`, err.message);
@@ -3854,20 +4026,36 @@ app.post('/job/:id/run-gate5', async (req, res) => {
   const card = persistedJobs[jobId];
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
 
-  if (card.stage === 'published') {
+  const { resolveCardDriveUrl, isDriveUrlAlreadyPublished, needsRepublish } = require('./lib/publish_dedupe');
+  const incomingDriveUrl = req.body.driveUrl || resolveCardDriveUrl(card);
+  const republishCard = incomingDriveUrl && incomingDriveUrl !== resolveCardDriveUrl(card)
+    ? {
+        ...card,
+        driveUrl: incomingDriveUrl,
+        state: {
+          ...(card.state || {}),
+          savedOutputs: { ...(card.state?.savedOutputs || {}), driveUrl: incomingDriveUrl },
+        },
+      }
+    : card;
+
+  if (card.stage === 'published' && !needsRepublish(republishCard, jobId)) {
     return res.json({ ok: true, skipped: true, message: 'Job already published — no duplicate upload.' });
   }
-  try {
-    const prior = db.getPublishedResults(jobId) || [];
-    if (prior.some(r => r.platform_job_id)) {
-      card.stage = 'published';
-      saveJobCard(jobId, card);
-      return res.json({ ok: true, skipped: true, message: 'Publish already confirmed — card marked published.' });
-    }
-  } catch (_e) { /* non-fatal */ }
+  if (incomingDriveUrl && isDriveUrlAlreadyPublished(jobId, incomingDriveUrl)) {
+    card.stage = 'published';
+    saveJobCard(jobId, card);
+    return res.json({ ok: true, skipped: true, message: 'This assembly was already uploaded — card marked published.' });
+  }
+  if (card.stage === 'published' && needsRepublish(republishCard, jobId)) {
+    card.stage = 'awaiting_review';
+    saveJobCard(jobId, card);
+  }
 
   const stage = card.stage || '';
-  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked', 'awaiting_review', 'metadata_review', 'publish_scheduled'].includes(stage)) {
+  const republish = needsRepublish(republishCard, jobId);
+  if (!['assembled', 'gate5_forced', 'gate5_failed', 'gate5_running', 'heygen_done', 'gate3b_blocked', 'awaiting_review', 'metadata_review', 'publish_scheduled'].includes(stage)
+    && !(stage === 'published' && republish)) {
     return res.status(400).json({ ok: false, error: `Job is at stage "${stage}" — run-gate5 only valid for assembled/heygen_done/awaiting_review/metadata_review/publish_scheduled/gate5_forced/gate5_failed/gate5_running` });
   }
 
@@ -4247,7 +4435,7 @@ app.post('/job/:id/heygen/sync-dashboard', (req, res) => {
   });
 });
 
-// POST /job/:id/resubmit-avatar — re-run avatar adapter (EchoMimic/HeyGen) for an approved script
+// POST /job/:id/resubmit-avatar — re-run HeyGen avatar renders for an approved script
 // Resumes from card.heygen.videoJobs checkpoints — skips scenes already completed.
 app.post('/job/:id/resubmit-avatar', (req, res) => {
   const jobId = req.params.id;
@@ -4257,7 +4445,12 @@ app.post('/job/:id/resubmit-avatar', (req, res) => {
   }
 
   const existing = card.heygen?.videoJobs || [];
-  const done = existing.filter((v) => v.status === 'completed' && v.video_id).length;
+  const onlyScenePattern = req.body?.onlyScenePattern;
+  const forceRerender = !!req.body?.forceRerender;
+  const filteredExisting = (forceRerender && onlyScenePattern)
+    ? existing.filter((v) => !new RegExp(String(onlyScenePattern), 'i').test(v.sceneName || ''))
+    : existing;
+  const done = filteredExisting.filter((v) => v.status === 'completed' && v.video_id).length;
   res.json({
     ok: true,
     jobId,
@@ -4283,24 +4476,24 @@ app.post('/job/:id/resubmit-avatar', (req, res) => {
         ...card,
         ...persistedJobs[jobId],
         stage: 'avatar_in_progress',
-        avatarEngine: process.env.AVATAR_ENGINE || 'heygen',
+        avatarEngine: 'heygen',
         heygen: { ...(card.heygen || {}), ...heygenPartial, videoJobs: heygenPartial.videoJobs }
       };
       saveJobCard(jobId, snap);
     };
 
-    console.log(`[resubmit-avatar:${jobId}] starting ${process.env.AVATAR_ENGINE || 'heygen'} — ${type}, ${format}${done ? ` (resume, ${done} done)` : ''}`);
+    console.log(`[resubmit-avatar:${jobId}] starting heygen — ${type}, ${format}${done ? ` (resume, ${done} done)` : ''}`);
     try {
       const heygenResult = await sendScriptToHeyGen(script, {
         contentType: type,
         format,
         jobId,
-        existingVideoJobs: existing,
-        onSceneComplete: ({ videoJobs }) => checkpoint({ videoJobs, engine: process.env.AVATAR_ENGINE || 'heygen' })
+        existingVideoJobs: filteredExisting,
+        onSceneComplete: ({ videoJobs }) => checkpoint({ videoJobs, engine: 'heygen' })
       });
       if (heygenResult?.error) throw new Error(heygenResult.error);
 
-      const updated = { ...card, stage: 'all_sent', avatarEngine: process.env.AVATAR_ENGINE || 'heygen', heygen: heygenResult };
+      const updated = { ...card, stage: 'all_sent', avatarEngine: 'heygen', heygen: heygenResult };
       saveJobCard(jobId, updated);
       console.log(`[resubmit-avatar:${jobId}] ✅ ${heygenResult.videoJobs?.length || 0} segments submitted`);
 
@@ -4320,7 +4513,7 @@ app.post('/job/:id/resubmit-avatar', (req, res) => {
     } catch (e) {
       console.error(`[resubmit-avatar:${jobId}] ❌ ${e.message}`);
       if (e.videoJobs?.length) {
-        checkpoint({ videoJobs: e.videoJobs, engine: process.env.AVATAR_ENGINE || 'heygen', lastError: e.message, failedScene: e.failedScene });
+        checkpoint({ videoJobs: e.videoJobs, engine: 'heygen', lastError: e.message, failedScene: e.failedScene });
         console.log(`[resubmit-avatar:${jobId}] 💾 checkpoint saved — ${e.videoJobs.length} scene(s) — resume with same endpoint`);
       }
       logError('RESUBMIT_AVATAR', e.message, { jobId, contentType: type, completedScenes: e.videoJobs?.length || done });
@@ -4406,6 +4599,281 @@ app.post('/job/:id/manual-segments/resume', (req, res) => {
   }
 });
 
+// POST /job/:id/queue-pin — creative director pins job to dashboard queue
+app.post('/job/:id/queue-pin', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  card.queuePinned = true;
+  card.queuePinnedAt = new Date().toISOString();
+  saveJobCard(jobId, card);
+  return res.json({ ok: true, jobId, queuePinned: true });
+});
+
+// POST /job/:id/queue-unpin — remove from pinned restore set
+app.post('/job/:id/queue-unpin', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  card.queuePinned = false;
+  card.queueUnpinnedAt = new Date().toISOString();
+  saveJobCard(jobId, card);
+  return res.json({ ok: true, jobId, queuePinned: false });
+});
+
+// POST /job/:id/heygen/capture-baseline — lock HeyGen timestamps after a good assembly
+app.post('/job/:id/heygen/capture-baseline', async (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (!card.heygen?.videoJobs?.length) {
+    return res.status(409).json({ ok: false, error: 'No heygen.videoJobs on card' });
+  }
+  try {
+    const { captureBaselineForJobCard } = require('./lib/heygen_scene_sync');
+    const { baseline, accountVideoCount } = await captureBaselineForJobCard(card);
+    saveJobCard(jobId, card);
+    return res.json({
+      ok: true,
+      jobId,
+      baselineCapturedAt: baseline.capturedAt,
+      sceneCount: Object.keys(baseline.scenes || {}).length,
+      accountVideoCount,
+      message: 'HeyGen baseline locked — future re-renders in HeyGen web can be detected by timestamp/video_id',
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message || String(e) });
+  }
+});
+
+// GET /job/:id/heygen/scene-sync-plan — diff account videos vs baseline (no download)
+app.get('/job/:id/heygen/scene-sync-plan', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  try {
+    const { fetchHeygenAccountVideos, diffHeygenSceneOverrides } = require('./lib/heygen_scene_sync');
+    const accountVideos = await fetchHeygenAccountVideos({ limit: 100 });
+    const diff = diffHeygenSceneOverrides(card, accountVideos);
+    return res.json({ ok: diff.ok, jobId, diff, accountVideoCount: accountVideos.length });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message || String(e) });
+  }
+});
+
+// POST /job/:id/heygen/sync-scene-updates — poll HeyGen, pull newer scenes, optional apply reassemble
+app.post('/job/:id/heygen/sync-scene-updates', async (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const apply = req.body?.apply !== false;
+  const sceneLabels = Array.isArray(req.body?.sceneLabels) ? req.body.sceneLabels : null;
+
+  try {
+    const { syncSceneUpdatesFromHeygen } = require('./lib/heygen_scene_sync');
+    const { writeSceneUpdatesReadme } = require('./lib/partial_scene_reassemble');
+    writeSceneUpdatesReadme(jobId);
+
+    const result = await syncSceneUpdatesFromHeygen(card, { applyLabels: sceneLabels });
+    if (!result.ok) {
+      return res.status(409).json({ ok: false, error: result.error, diff: result });
+    }
+    if (!result.downloaded?.labels?.length) {
+      saveJobCard(jobId, card);
+      return res.json({
+        ok: true,
+        jobId,
+        message: 'No newer HeyGen renders detected vs baseline',
+        diff: result,
+      });
+    }
+
+    saveJobCard(jobId, card);
+
+    if (!apply) {
+      return res.json({
+        ok: true,
+        jobId,
+        downloaded: result.downloaded,
+        diff: result,
+        message: `Downloaded ${result.downloaded.labels.length} scene(s) to scene_updates/ — click APPLY SCENE UPDATES or re-run with apply:true`,
+      });
+    }
+
+    req.body = { ...(req.body || {}), sceneLabels: result.downloaded.labels };
+    // Delegate to scene-updates/apply handler logic inline
+    const {
+      validatePartialSceneUpdateApply,
+      persistPartialUpdateManifest,
+      buildPartialReassemblePlan,
+    } = require('./lib/partial_scene_reassemble');
+
+    let validation = validatePartialSceneUpdateApply(jobId, card, {
+      explicitLabels: result.downloaded.labels,
+    });
+    if (!validation.ok) {
+      return res.status(409).json({
+        ok: false,
+        errors: validation.errors,
+        downloaded: result.downloaded,
+        plan: buildPartialReassemblePlan(jobId, card),
+      });
+    }
+
+    if (card.stage === 'published') {
+      delete card.publishRecord;
+      card.stage = 'assembled';
+    }
+    card.partialSceneUpdate = {
+      labels: validation.labels,
+      requestedAt: new Date().toISOString(),
+      previousAssemblyId: card.assemblyId || null,
+      source: 'heygen_scene_sync',
+    };
+    persistPartialUpdateManifest(jobId, card, validation.labels);
+    saveJobCard(jobId, card);
+
+    const partialSceneLabels = validation.labels;
+    const reassembleBody = { partialSceneLabels, fromHeygenSync: true };
+    // Trigger reassemble via internal call — reuse existing POST /job/:id/reassemble pattern
+    const axios = require('axios');
+    const port = process.env.PORT || 3000;
+    const base = `http://127.0.0.1:${port}`;
+    const asmResp = await axios.post(
+      `${base}/job/${encodeURIComponent(jobId)}/reassemble`,
+      reassembleBody,
+      { timeout: 60000, headers: { 'Content-Type': 'application/json' } }
+    ).catch((e) => ({ data: { ok: false, error: e.response?.data?.error || e.message } }));
+
+    return res.json({
+      ok: asmResp.data?.ok !== false,
+      jobId,
+      downloaded: result.downloaded,
+      overrideLabels: validation.labels,
+      reassemble: asmResp.data,
+      message: asmResp.data?.ok !== false
+        ? `Synced ${validation.labels.length} scene(s) from HeyGen and started partial reassemble`
+        : `Downloaded scenes but reassemble failed: ${asmResp.data?.error || 'unknown'}`,
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message || String(e) });
+  }
+});
+
+// GET /job/:id/scene-updates — plan for partial copy fixes (creative director)
+app.get('/job/:id/scene-updates', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const {
+    buildPartialReassemblePlan,
+    writeSceneUpdatesReadme,
+    countManualAvatarFilesOutsideSceneUpdates,
+    getSceneUpdatesDir,
+  } = require('./lib/partial_scene_reassemble');
+
+  writeSceneUpdatesReadme(jobId);
+  const plan = buildPartialReassemblePlan(jobId, card);
+  const strayRootFiles = countManualAvatarFilesOutsideSceneUpdates(jobId);
+
+  return res.json({
+    ok: true,
+    jobId,
+    plan,
+    strayRootFiles,
+    sceneUpdatesDir: getSceneUpdatesDir(jobId),
+    instructions: [
+      'Edit transcript copy for only the scenes that need changes.',
+      'Render those scenes in HeyGen web; export MP4s into scene_updates/ (not manual_segments root).',
+      'Click ✏️ APPLY SCENE UPDATES — unchanged scenes stitch from job card HeyGen URLs (same as last good assembly).',
+      'Review preview, then publish.',
+    ],
+  });
+});
+
+// POST /job/:id/scene-updates/apply — partial reassemble (override listed scenes only)
+app.post('/job/:id/scene-updates/apply', async (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const {
+    validatePartialSceneUpdateApply,
+    persistPartialUpdateManifest,
+    writeSceneUpdatesReadme,
+    migrateRootOverridesToSceneUpdates,
+    buildPartialReassemblePlan,
+    discoverSceneUpdateOverrides,
+    countManualAvatarFilesOutsideSceneUpdates,
+  } = require('./lib/partial_scene_reassemble');
+
+  writeSceneUpdatesReadme(jobId);
+
+  const pre = discoverSceneUpdateOverrides(jobId, card);
+  if (pre.labels.length && countManualAvatarFilesOutsideSceneUpdates(jobId) > 0) {
+    migrateRootOverridesToSceneUpdates(jobId, pre.labels);
+  }
+
+  let validation = validatePartialSceneUpdateApply(jobId, card, {
+    explicitLabels: req.body?.sceneLabels,
+  });
+
+  if (!validation.ok && req.body?.migrateRootFiles && req.body?.sceneLabels?.length) {
+    migrateRootOverridesToSceneUpdates(jobId, req.body.sceneLabels);
+    validation = validatePartialSceneUpdateApply(jobId, card, {
+      explicitLabels: req.body.sceneLabels,
+    });
+  }
+
+  if (!validation.ok) {
+    return res.status(409).json({
+      ok: false,
+      code: 'partial_scene_update_invalid',
+      errors: validation.errors,
+      plan: buildPartialReassemblePlan(jobId, card),
+    });
+  }
+
+  const labels = validation.labels;
+  if (card.stage === 'published') {
+    delete card.publishRecord;
+    card.stage = 'assembled';
+    saveJobCard(jobId, card);
+    console.log(`[scene-updates] ${jobId}: published → assembled for partial reassemble`);
+  }
+
+  card.partialSceneUpdate = {
+    labels,
+    requestedAt: new Date().toISOString(),
+    previousAssemblyId: card.assemblyId || null,
+  };
+  persistPartialUpdateManifest(jobId, card, labels);
+  saveJobCard(jobId, card);
+
+  const port = process.env.PORT || 3000;
+  try {
+    const axios = require('axios');
+    const rr = await axios.post(
+      `http://127.0.0.1:${port}/job/${encodeURIComponent(jobId)}/reassemble`,
+      { partialSceneLabels: labels },
+      { timeout: 15000 }
+    );
+    return res.json({
+      ok: true,
+      jobId,
+      overrideLabels: labels,
+      reassemble: rr.data,
+      message: `Partial scene update started — ${labels.length} scene(s) from scene_updates/, ${validation.plan.unchangedFromJobCard} unchanged from job card HeyGen batch. Review preview when assembly completes.`,
+    });
+  } catch (err) {
+    const status = err.response?.status || 500;
+    const data = err.response?.data || { error: err.message };
+    return res.status(status).json({ ok: false, code: 'partial_reassemble_failed', ...data });
+  }
+});
+
 // POST /job/:id/reassemble — skip Gate 2, build segmentData from the card's heygen.videoJobs
 // and orderedClipUrls, then fire /assemble directly.  Any files the operator dropped into
 // tmp/manual_segments/<jobId>/ are picked up automatically by applyManualOverrides inside
@@ -4419,6 +4887,22 @@ app.post('/job/:id/reassemble', async (req, res) => {
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
   if (card.stage === 'published') {
     return res.status(400).json({ ok: false, error: 'Job is already published — rollback first if you need to re-assemble.' });
+  }
+
+  const partialSceneLabels = Array.isArray(req.body?.partialSceneLabels)
+    ? req.body.partialSceneLabels.filter(Boolean)
+    : null;
+  if (!partialSceneLabels?.length) {
+    const { countManualAvatarFilesOutsideSceneUpdates } = require('./lib/partial_scene_reassemble');
+    const stray = countManualAvatarFilesOutsideSceneUpdates(jobId);
+    if (stray > 0 && !req.body?.fullManualBatch) {
+      return res.status(409).json({
+        ok: false,
+        code: 'use_partial_scene_updates',
+        error: `Found ${stray} avatar file(s) in manual_segments root. For copy-only fixes use ✏️ APPLY SCENE UPDATES (scene_updates/ folder). For a full manual batch pass fullManualBatch: true.`,
+        sceneUpdatesPath: `tmp/manual_segments/${jobId}/scene_updates/`,
+      });
+    }
   }
 
   const videoJobs     = card.heygen?.videoJobs || [];
@@ -4536,6 +5020,14 @@ app.post('/job/:id/reassemble', async (req, res) => {
     console.log(`[reassemble] ${jobId}: no manifest — rebuilt from videoJobs (${segmentData.length} segs, ${clipIdx} clips)`);
   }
 
+  try {
+    const { injectStudioLaughterSegments } = require('./lib/studio_laughter');
+    injectStudioLaughterSegments(segmentData, card.contentType || 'twitch', { customerId: card.customerId || 'c0' });
+    console.log(`[reassemble] ${jobId}: studio laughter injected (${segmentData.length} segments)`);
+  } catch (_laughInject) {
+    console.warn(`[reassemble] ${jobId}: studio laugh inject skipped: ${_laughInject.message}`);
+  }
+
   // ── Reset assembly-related state so old stitch artefacts are gone ──────────
   const retryNum  = (card._assemblyRetryCount || 0) + 1;
   const assemblyId = `asm_${jobId}_r${retryNum}`;
@@ -4548,6 +5040,10 @@ app.post('/job/:id/reassemble', async (req, res) => {
   delete card.finalUrl;
   delete card.outputPath;
   delete card.driveUrl;
+  if (card.state?.savedOutputs) {
+    delete card.state.savedOutputs.driveUrl;
+    delete card.state.savedOutputs.assembledPath;
+  }
   delete card.publishPrep;
   delete card.gate5;
   delete card._gate5Done;
@@ -4558,6 +5054,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
   delete card.qaOutcome;
   delete card.localPreviewUrl;
   delete card.assemblyError;
+  delete card.creditsOutroAppended;
   Object.keys(assemblyJobs).forEach(asmId => {
     if (assemblyJobs[asmId]?.sourceJobId === jobId) delete assemblyJobs[asmId];
   });
@@ -4655,6 +5152,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
   // ── Fire /assemble (continued) ───
   const payload = {
     operatorReassemble: true,
+    partialSceneLabels: partialSceneLabels?.length ? partialSceneLabels : null,
     segments:     segmentData.map(s => s.url),
     segmentData,
     labels:       segmentData.map(s => s.label),
@@ -4702,20 +5200,37 @@ app.post('/job/:id/reassemble', async (req, res) => {
     jobId,
     assemblyId,
     retryNum,
-    message: `Re-assembly r${retryNum} started — files from manual_segments will be used. Watch the dashboard for Gate 3 result.`,
+    message: partialSceneLabels?.length
+      ? `Partial re-assembly r${retryNum} started — ${partialSceneLabels.length} scene update(s) from scene_updates/, rest from job card.`
+      : `Re-assembly r${retryNum} started — files from manual_segments will be used. Watch the dashboard for Gate 3 result.`,
     segmentCount: segmentData.length,
     clipCount: clipIdx
   });
 
-  // Fire async so the HTTP response goes out first
+  // Fire async so the HTTP response goes out first — in-process (no localhost HTTP loopback timeout)
   setImmediate(async () => {
     try {
-      await axios.post(`http://localhost:${port}/assemble`, payload, { timeout: 20000 });
-      console.log(`[reassemble] ${jobId} r${retryNum}: /assemble fired (${segmentData.length} segs, ${clipIdx} clips)`);
+      const { handleAssemble } = require('./lib/assembly');
+      let ack = null;
+      const fakeRes = {
+        statusCode: 200,
+        status(code) { this.statusCode = code; return this; },
+        json(data) { ack = { status: this.statusCode, data }; },
+      };
+      await handleAssemble({ body: payload }, fakeRes, saveJobCard);
+      if (ack?.status >= 400) {
+        console.error(`[reassemble] ${jobId} r${retryNum}: assemble rejected (${ack.status}) — ${JSON.stringify(ack.data)}`);
+        return;
+      }
+      if (!ack?.data?.ok) {
+        console.error(`[reassemble] ${jobId} r${retryNum}: assemble did not ack`);
+        return;
+      }
+      console.log(`[reassemble] ${jobId} r${retryNum}: assemble started (${ack.data.assemblyId || assemblyId})`);
       const { startAssemblyCompletionPoll } = require('./lib/assembly_card_persist');
       startAssemblyCompletionPoll(jobId, assemblyId, card.contentType || 'twitch-short', { onPublished: tvAutoEnqueue });
     } catch (err) {
-      console.error(`[reassemble] ${jobId} r${retryNum}: /assemble failed — ${err.message}`);
+      console.error(`[reassemble] ${jobId} r${retryNum}: assemble failed — ${err.message}`);
     }
   });
 });
@@ -11587,8 +12102,6 @@ const server = app.listen(PORT, async () => {
   const gateTestMode = process.env.GATE_TEST_MODE === 'true';
   if (gateTestMode) {
     console.log(`   ⏸  GATE_TEST_MODE=true — HeyGen auto-send DISABLED ($0.33/segment protected)\n`);
-  } else if (String(process.env.AVATAR_ENGINE || 'heygen').toLowerCase() === 'echomimic') {
-    console.log(`   ⏸  AVATAR_ENGINE=echomimic — server auto-send OFF; dashboard SEND TO HEYGEN (HeyGen API)\n`);
   } else {
     console.log(`   🔴 GATE_TEST_MODE=false — HeyGen auto-send LIVE (each segment costs $0.33)\n`);
   }

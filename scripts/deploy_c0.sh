@@ -44,7 +44,7 @@ if [ ${#BLOCKERS[@]} -gt 0 ]; then
 fi
 
 echo "🚀 Restarting auraflux only (broadcast-sidecar untouched)…"
-pm2 restart auraflux
+pm2 restart auraflux --update-env
 
 GRID_RUNNING=$(curl -sf -m 3 "${SIDECAR_URL}/live-grid/status" 2>/dev/null | grep -q '"running":[[:space:]]*true' && echo 1 || echo 0)
 if [ "$GRID_RUNNING" = "0" ]; then

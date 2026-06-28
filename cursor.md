@@ -283,7 +283,7 @@ Script Gen → Gate 1 (≥90) → HeyGen Render → Gate 2 (≥85) → Assembly 
 
 **Avatar IDs:**
 
-- 16:9 compilations: `842f20b75ce242aea397f5030aa018aa` (landscape-native 4K, "ClipzWorld at his studio desk" — Bobby G faces viewer's LEFT)
+- 16:9 compilations: `65d2350024274cbe8222ddf82e5ae07c` (HeyGen "Black Framesmith" — city skyline + suit; **avatar ID includes background**, not a separate env)
 - 9:16 shorts: `ed57439c9c3d...`
 
 **Voice:** ID `2e598f1a6022448cb6710e5d44665325` ("cw") at 0.85 speed (compilations) or 0.95 speed (shorts)

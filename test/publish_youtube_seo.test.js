@@ -72,6 +72,30 @@ describe('publish YouTube SEO finalize', () => {
     expect(yt.wordCount).toBeGreaterThan(20);
   });
 
+  test('ensurePublishMetadataComplete long-form twitch strips Shorts title prefix hack', () => {
+    const { ensurePublishMetadataComplete } = require('../lib/publish');
+    const metadata = {
+      contentType: 'twitch',
+      youtube: {
+        bestTitle: { title: 'Jason\'s Spelling Bee Slip Stuns Crew' },
+        titles: ['Lacy: Jason\'s Spelling Bee Slip Stuns Viewers'],
+        title: 'Lacy: Jason\'s Spelling Bee Slip Stuns Viewers',
+        description: 'Welcome to Twitch Soup by ClipzWorld News. Jason bombs spelling bee while Lacy watches. '.repeat(8),
+        hashtags: ['#TwitchSoup', '#TwitchClips', '#ClipzWorldNews'],
+        tags: ['twitch', 'jasontheween'],
+      },
+    };
+    ensurePublishMetadataComplete(metadata, {
+      streamers: ['Lacy', 'Jason'],
+      cc: buildChannelConfig().clips,
+      isShort: false,
+      contentType: 'twitch',
+    });
+    expect(metadata.youtube.title).not.toMatch(/#Shorts/i);
+    expect(metadata.youtube.title).not.toMatch(/^Lacy:/i);
+    expect(metadata.youtube.title.toLowerCase()).toMatch(/jason|lacy/);
+  });
+
   test('normalizeDescriptionNewlines unescapes literal backslash-n', () => {
     const out = normalizeDescriptionNewlines('Line one\\n\\nLine two\\nLine three');
     expect(out).toBe('Line one\n\nLine two\nLine three');

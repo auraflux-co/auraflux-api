@@ -60,4 +60,16 @@ describe('publish copy prompt — long-form structured description (CPD-962)', (
     expect(out).toContain('do NOT copy burned hook text');
     expect(out).not.toContain('Burned on-screen hooks use');
   });
+
+  test('twitch long-form prompt uses episode title rules not Shorts comp rules', () => {
+    const out = buildPublishCopySystemPrompt({
+      ...base,
+      contentType: 'twitch',
+      isShort: false,
+      streamerCredits: '• jason: https://twitch.tv/jasontheween',
+    });
+    expect(out).toContain('TWITCH SOUP LONG-FORM EPISODE');
+    expect(out).toContain('NEVER append #Shorts');
+    expect(out).not.toContain('TWITCH CLIP COMP YOUTUBE TITLE RULES');
+  });
 });

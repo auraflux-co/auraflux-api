@@ -1,12 +1,13 @@
 {
   "version": 1,
-  "updated": "2026-06-13",
+  "updated": "2026-06-28",
   "curated": true,
-  "notes": "~1h rotation: Bobby G avatar Twitch Soup VODs + news desk. No streamer shorts, no NBA (off-season). Loop until fresh news VODs publish; then update this file.",
+  "notes": "liveAlso script_twitch_1782513992551 @ 2026-06-28T18:57:36.798Z",
   "targetDurationMin": 60,
   "videos": [
     "output/cwn_22clips_script_twitch_1781140275746.mp4",
     "output/twitch_wednesday_june_10_2026_57_avatar__22clips_script_twitch_1781140275746.mp4",
-    "output/cwn_7clips_script_news_1778523540964.mp4"
+    "output/cwn_7clips_script_news_1778523540964.mp4",
+    "output/twitch_soup_jason_s_spelling_bee_world_c_8clips_script_twitch_1782513992551.mp4"
   ]
 }

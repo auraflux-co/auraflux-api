@@ -1,0 +1,205 @@
+{
+  "builtAt": "2026-06-27T00:23:03.061Z",
+  "source": "teach_soup_references",
+  "referenceUrls": [
+    "https://www.youtube.com/watch?v=OzAQctMP53Q",
+    "https://www.youtube.com/watch?v=ZopeSp8fK-0",
+    "https://www.youtube.com/watch?v=XUl-BynnmCc",
+    "https://www.youtube.com/watch?v=yXIWkk-p9mo"
+  ],
+  "clipCount": 24,
+  "clips": [
+    {
+      "file": "laugh_OzAQctMP53Q_01.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=OzAQctMP53Q",
+      "sourceVideoId": "OzAQctMP53Q",
+      "startSec": 39.69,
+      "durationSec": 1.53,
+      "score": 23
+    },
+    {
+      "file": "laugh_OzAQctMP53Q_02.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=OzAQctMP53Q",
+      "sourceVideoId": "OzAQctMP53Q",
+      "startSec": 78.67,
+      "durationSec": 2.51,
+      "score": 23
+    },
+    {
+      "file": "laugh_OzAQctMP53Q_03.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=OzAQctMP53Q",
+      "sourceVideoId": "OzAQctMP53Q",
+      "startSec": 91.15,
+      "durationSec": 2.73,
+      "score": 23
+    },
+    {
+      "file": "laugh_OzAQctMP53Q_04.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=OzAQctMP53Q",
+      "sourceVideoId": "OzAQctMP53Q",
+      "startSec": 143.39,
+      "durationSec": 2.54,
+      "score": 23
+    },
+    {
+      "file": "laugh_OzAQctMP53Q_05.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=OzAQctMP53Q",
+      "sourceVideoId": "OzAQctMP53Q",
+      "startSec": 154.45,
+      "durationSec": 1.62,
+      "score": 23
+    },
+    {
+      "file": "laugh_OzAQctMP53Q_06.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=OzAQctMP53Q",
+      "sourceVideoId": "OzAQctMP53Q",
+      "startSec": 180.28,
+      "durationSec": 2.62,
+      "score": 23
+    },
+    {
+      "file": "laugh_ZopeSp8fK-0_01.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=ZopeSp8fK-0",
+      "sourceVideoId": "ZopeSp8fK-0",
+      "startSec": 54.99,
+      "durationSec": 2.63,
+      "score": 23
+    },
+    {
+      "file": "laugh_ZopeSp8fK-0_02.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=ZopeSp8fK-0",
+      "sourceVideoId": "ZopeSp8fK-0",
+      "startSec": 144.82,
+      "durationSec": 1.59,
+      "score": 23
+    },
+    {
+      "file": "laugh_ZopeSp8fK-0_03.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=ZopeSp8fK-0",
+      "sourceVideoId": "ZopeSp8fK-0",
+      "startSec": 234.69,
+      "durationSec": 1.76,
+      "score": 23
+    },
+    {
+      "file": "laugh_ZopeSp8fK-0_04.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=ZopeSp8fK-0",
+      "sourceVideoId": "ZopeSp8fK-0",
+      "startSec": 307.09,
+      "durationSec": 1.55,
+      "score": 23
+    },
+    {
+      "file": "laugh_ZopeSp8fK-0_05.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=ZopeSp8fK-0",
+      "sourceVideoId": "ZopeSp8fK-0",
+      "startSec": 388.44,
+      "durationSec": 1.47,
+      "score": 23
+    },
+    {
+      "file": "laugh_ZopeSp8fK-0_06.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=ZopeSp8fK-0",
+      "sourceVideoId": "ZopeSp8fK-0",
+      "startSec": 503.36,
+      "durationSec": 1.34,
+      "score": 23
+    },
+    {
+      "file": "laugh_XUl-BynnmCc_01.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=XUl-BynnmCc",
+      "sourceVideoId": "XUl-BynnmCc",
+      "startSec": 142.45,
+      "durationSec": 2.01,
+      "score": 23
+    },
+    {
+      "file": "laugh_XUl-BynnmCc_02.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=XUl-BynnmCc",
+      "sourceVideoId": "XUl-BynnmCc",
+      "startSec": 440.69,
+      "durationSec": 2.71,
+      "score": 23
+    },
+    {
+      "file": "laugh_XUl-BynnmCc_03.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=XUl-BynnmCc",
+      "sourceVideoId": "XUl-BynnmCc",
+      "startSec": 471.94,
+      "durationSec": 2.27,
+      "score": 23
+    },
+    {
+      "file": "laugh_XUl-BynnmCc_04.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=XUl-BynnmCc",
+      "sourceVideoId": "XUl-BynnmCc",
+      "startSec": 509.8,
+      "durationSec": 1.3,
+      "score": 23
+    },
+    {
+      "file": "laugh_XUl-BynnmCc_05.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=XUl-BynnmCc",
+      "sourceVideoId": "XUl-BynnmCc",
+      "startSec": 622.5,
+      "durationSec": 1.82,
+      "score": 23
+    },
+    {
+      "file": "laugh_XUl-BynnmCc_06.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=XUl-BynnmCc",
+      "sourceVideoId": "XUl-BynnmCc",
+      "startSec": 751.2,
+      "durationSec": 2.63,
+      "score": 23
+    },
+    {
+      "file": "laugh_yXIWkk-p9mo_01.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=yXIWkk-p9mo",
+      "sourceVideoId": "yXIWkk-p9mo",
+      "startSec": 124.34,
+      "durationSec": 1.37,
+      "score": 23
+    },
+    {
+      "file": "laugh_yXIWkk-p9mo_02.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=yXIWkk-p9mo",
+      "sourceVideoId": "yXIWkk-p9mo",
+      "startSec": 165.06,
+      "durationSec": 1.92,
+      "score": 23
+    },
+    {
+      "file": "laugh_yXIWkk-p9mo_03.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=yXIWkk-p9mo",
+      "sourceVideoId": "yXIWkk-p9mo",
+      "startSec": 274.38,
+      "durationSec": 1.65,
+      "score": 23
+    },
+    {
+      "file": "laugh_yXIWkk-p9mo_04.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=yXIWkk-p9mo",
+      "sourceVideoId": "yXIWkk-p9mo",
+      "startSec": 465.26,
+      "durationSec": 2.61,
+      "score": 23
+    },
+    {
+      "file": "laugh_yXIWkk-p9mo_05.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=yXIWkk-p9mo",
+      "sourceVideoId": "yXIWkk-p9mo",
+      "startSec": 777.84,
+      "durationSec": 1.4,
+      "score": 23
+    },
+    {
+      "file": "laugh_yXIWkk-p9mo_06.mp3",
+      "sourceUrl": "https://www.youtube.com/watch?v=yXIWkk-p9mo",
+      "sourceVideoId": "yXIWkk-p9mo",
+      "startSec": 1024.35,
+      "durationSec": 2.33,
+      "score": 23
+    }
+  ]
+}

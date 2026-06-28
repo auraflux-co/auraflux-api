@@ -70,7 +70,6 @@ function documentedVars(file) {
 function groupPrefix(name) {
   if (name.startsWith('NEXT_PUBLIC_')) return 'frontend';
   if (name.startsWith('LIVE_GRID_')) return 'live_grid';
-  if (name.startsWith('ECHOMIMIC_')) return 'echomimic';
   if (name.startsWith('ELEVENLABS_')) return 'elevenlabs';
   if (name.startsWith('HEYGEN_')) return 'heygen';
   if (name.startsWith('C0_')) return 'c0';
@@ -89,7 +88,6 @@ const GROUP_TITLES = {
   auth_billing: 'Auth + billing',
   r2: 'Cloudflare R2',
   runpod: 'RunPod',
-  echomimic: 'EchoMimic (tuning / ops)',
   live_grid: 'Live Grid (formal entries)',
   c0: 'C0 localhost flags',
   smoke: 'Smoke / test harness',
@@ -119,7 +117,7 @@ function buildBlock(missing) {
     '# =============================================================================',
     ''
   ];
-  for (const g of ['atlassian', 'auth_billing', 'r2', 'runpod', 'echomimic', 'live_grid', 'c0', 'smoke', 'e2e', 'social', 'elevenlabs', 'heygen', 'other']) {
+  for (const g of ['atlassian', 'auth_billing', 'r2', 'runpod', 'live_grid', 'c0', 'smoke', 'e2e', 'social', 'elevenlabs', 'heygen', 'other']) {
     if (!byGroup[g]?.length) continue;
     lines.push(`# --- ${GROUP_TITLES[g]} ---`);
     for (const v of byGroup[g]) {

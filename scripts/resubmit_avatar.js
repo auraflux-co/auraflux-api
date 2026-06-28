@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Re-submit avatar renders for a Gate-1-approved job (EchoMimic or HeyGen).
+ * Re-submit HeyGen avatar renders for a Gate-1-approved job.
  * Resumes from per-scene checkpoints in card.heygen.videoJobs when present.
  *
  * Usage:

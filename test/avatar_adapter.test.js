@@ -47,12 +47,16 @@ describe('core engine selection', () => {
     expect(avatar.resolveEngine('heygen').name).toBe('heygen');
   });
 
-  test('echomimic is a registered engine (CPD-991)', () => {
-    expect(avatar.resolveEngine('echomimic').name).toBe('echomimic');
+  test('unknown engine falls back to heygen with warning', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(avatar.resolveEngine('d-id').name).toBe('heygen');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
-  test('unknown engine throws with available list', () => {
-    expect(() => avatar.resolveEngine('d-id')).toThrow(/Unknown avatar engine 'd-id'.*heygen.*echomimic/);
+  test('unknown engine via env falls back to heygen', () => {
+    process.env.AVATAR_ENGINE = 'echomimic';
+    expect(avatar.resolveEngine().name).toBe('heygen');
   });
 });
 
