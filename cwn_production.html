@@ -2926,8 +2926,8 @@ function nav(page) {
     if (!applyComposerHandoff()) {
       applyLibraryHandoff();
       renderComposerHandoffSummary();
+      switchGeneratePillar('twitch');
     }
-    switchGeneratePillar('twitch');
   }
 }
 
@@ -3479,14 +3479,14 @@ function applyComposerHandoff() {
     _composerContentSource = 'twitch';
   }
   if (handoff.redditThreads && handoff.redditThreads.length) {
+    setNewsDeskMode('reddit');
     _redditPickerThreads = handoff.redditThreads;
     _composerContentSource = 'reddit';
-    setNewsDeskMode('reddit');
     switchGeneratePillar('news');
   } else if (handoff.wireStories && handoff.wireStories.length) {
+    setNewsDeskMode('wire');
     _newsPickerStories = handoff.wireStories;
     _composerContentSource = 'wire';
-    setNewsDeskMode('wire');
     switchGeneratePillar('news');
   } else if (handoff.streamers && handoff.streamers.length) {
     switchGeneratePillar('twitch');
@@ -3509,7 +3509,7 @@ function renderComposerHandoffSummary() {
   var el = g('composer-handoff-summary');
   if (!el) return;
   var redditSel = (_redditPickerThreads || []).filter(function(t) { return t.selected && t.videoUrl; });
-  var wireSel = (_newsPickerStories || []).filter(function(s) { return s.selected && s.hlsUrl; });
+  var wireSel = (_newsPickerStories || []).filter(function(s) { return s.selected && (s.hlsUrl || s.stagedUrl || s.playbackUrl); });
   var picked = collectCompPickedClips();
   if (redditSel.length) {
     var html = '<div style="font-size:10px;color:rgba(199,175,79,0.9);letter-spacing:1px;margin-bottom:8px;">FROM LIBRARY · THE THREAD · ' + redditSel.length + ' thread(s)</div>';
@@ -12794,9 +12794,6 @@ function setCompLineupLead(idx) {
 }
 
 function getCompLineupForDispatch(maxCount) {
-  refreshCompLineupUI();
-  var lineup = (_compLineup || []).slice();
-  if (lineup.length >= maxCount) return lineup.slice(0, maxCount);
   var picked = collectCompPickedClips();
   reconcileCompLineup(picked);
   return (_compLineup || []).slice(0, maxCount);
@@ -13404,6 +13401,7 @@ function previewNewsStories() {
 
 function renderNewsPicker(btn, maxCount, pickerId) {
   if (btn && typeof btn.textContent === 'string') btn.textContent = pickerId ? 'Hide library' : 'HIDE PICKER';
+  window._newsPickerRenderTarget = pickerId || 'news-inline-picker';
   var picker = g(pickerId || 'news-inline-picker');
   if (!picker) return;
   var filters = getPickerFilters('news');
@@ -13496,7 +13494,9 @@ function _toggleNewsStory(i) {
 }
 
 function _renderNewsPickerCards() {
-  renderNewsPicker(g('btn-preview-news'), getNewsFetchLimit());
+  var target = window._newsPickerRenderTarget || 'news-inline-picker';
+  var btn = target === 'library-wire-picker' ? g('btn-library-wire-load') : g('btn-preview-news');
+  renderNewsPicker(btn, getNewsFetchLimit(), target === 'news-inline-picker' ? null : target);
 }
 
 // ── Batch shorts ──────────────────────────────────────────────────────────────
