@@ -3777,7 +3777,15 @@ app.get('/job/:id/scene-order-preflight', (req, res) => {
     return res.json({ ok: true, skipped: true, reason: 'not_twitch_long_form' });
   }
   const preflight = buildSceneOrderPreflight({ card });
-  res.json({ ok: preflight.ok, jobId, preflight });
+  let heygenShow = null;
+  try {
+    const { heygenShowPreflight, loadHeygenShows } = require('./lib/heygen_shows');
+    heygenShow = heygenShowPreflight({ customerId: card.customerId || 'c0', card });
+    if (!heygenShow.ok) preflight.blockers.push(...(heygenShow.blockers || []));
+    preflight.ok = preflight.blockers.length === 0;
+    preflight.heygenShows = loadHeygenShows(card.customerId || 'c0');
+  } catch (_e) { /* non-fatal */ }
+  res.json({ ok: preflight.ok, jobId, preflight, heygenShow });
 });
 
 // POST /job/:id/scene-order-confirm — operator confirms ordered scene list (gate: heygen | assembly)
@@ -3831,6 +3839,11 @@ app.post('/job/:id/heygen/send-approved', async (req, res) => {
     if (!gate.ok) {
       return res.status(409).json({ ok: false, code: gate.code, error: gate.error });
     }
+    const { heygenShowPreflight } = require('./lib/heygen_shows');
+    const showPf = heygenShowPreflight({ customerId: card.customerId || 'c0', card });
+    if (!showPf.ok) {
+      return res.status(409).json({ ok: false, code: 'heygen_show_invalid', error: showPf.blockers.join('; ') });
+    }
   }
 
   saveJobCard(jobId, card);
@@ -3867,6 +3880,9 @@ app.post('/job/:id/heygen/send-approved', async (req, res) => {
         contentType: type,
         format,
         jobId,
+        card,
+        customerId: card.customerId || 'c0',
+        showKey: req.body?.showKey || card.heygenShowKey,
         onSceneComplete: ({ videoJobs }) => checkpoint({ videoJobs, engine: 'heygen' }),
       });
       if (heygenResult?.error) throw new Error(heygenResult.error);

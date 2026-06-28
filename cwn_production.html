@@ -1360,6 +1360,15 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           </div>
         </div>
       </div>
+      <div class="sec-title">PUBLISHED TALK SOUP EPISODES <span class="badge" id="postlive-published-count">0</span></div>
+      <div class="stats-table-wrap" style="margin-bottom:18px;">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Job</th><th>Title</th><th>Duration</th><th>Published</th><th>Rundown</th><th></th>
+          </tr></thead>
+          <tbody id="postlive-published-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Loading published jobs…</td></tr></tbody>
+        </table>
+      </div>
       <div class="sec-title">YOUTUBE LIVE ARCHIVE <span class="badge" id="postlive-vod-count">0</span></div>
       <div class="stats-table-wrap" style="margin-bottom:18px;">
         <table class="stats-table">
@@ -3795,6 +3804,7 @@ function statsTabPill(tab) {
 // ── POST-LIVE VOD PAGE ─────────────────────────────────────────────
 window._postLiveVods = [];
 window._postLiveSessions = [];
+window._postLivePublishedJobs = [];
 window._postLiveCsvText = '';
 window._postLiveActiveSession = null;
 window._postLiveCandidateSelection = {};
@@ -3810,6 +3820,60 @@ function postLiveEsc(s) {
 function postLivePageInit() {
   postLiveLoadVods(false);
   postLiveLoadSessions();
+  postLiveLoadPublishedJobs();
+}
+
+function postLiveLoadPublishedJobs() {
+  fetch(CFG.ffmpegUrl + '/post-live/published-jobs?limit=30')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      window._postLivePublishedJobs = d.jobs || [];
+      if (g('postlive-published-count')) g('postlive-published-count').textContent = String(window._postLivePublishedJobs.length);
+      postLiveRenderPublishedJobs();
+    })
+    .catch(function() {
+      if (g('postlive-published-body')) {
+        g('postlive-published-body').innerHTML = '<tr><td colspan="6" style="padding:16px;color:#e74c3c;">Could not load published jobs</td></tr>';
+      }
+    });
+}
+
+function postLiveRenderPublishedJobs() {
+  var body = g('postlive-published-body');
+  if (!body) return;
+  var rows = window._postLivePublishedJobs || [];
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">No published Talk Soup jobs yet</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(function(j) {
+    var pub = j.publishedAt ? String(j.publishedAt).slice(0, 10) : '—';
+    return '<tr>'
+      + '<td style="font-family:monospace;font-size:10px;">' + postLiveEsc(j.jobId) + '</td>'
+      + '<td>' + postLiveEsc(j.title || j.jobId) + '</td>'
+      + '<td>' + postLiveFmtDuration(j.durationSec) + '</td>'
+      + '<td>' + pub + '</td>'
+      + '<td>' + (j.hasRundown ? '✓' : '—') + '</td>'
+      + '<td><button class="btn btn-gold btn-sm" onclick="postLiveRegisterFromJob(\'' + postLiveEsc(j.jobId) + '\')">→ Shorts session</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function postLiveRegisterFromJob(jobId) {
+  fetch(CFG.ffmpegUrl + '/post-live/sessions/register-from-job', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId: jobId })
+  })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(resp) {
+      if (!resp.ok || !resp.data.ok) throw new Error((resp.data && resp.data.error) || 'Register failed');
+      postLiveLoadSessions();
+      if (resp.data.videoId) postLiveShowCandidates(resp.data.videoId);
+      var st = g('postlive-import-status');
+      if (st) st.textContent = 'Registered ' + jobId + ' → ' + resp.data.sceneCount + ' scene(s) for ~30s short pick';
+    })
+    .catch(function(e) { alert('Register from job failed: ' + e.message); });
 }
 
 function postLiveFmtDuration(sec) {
@@ -3938,14 +4002,17 @@ function postLiveRenderSessions() {
     var mu = (s.muteRanges || []).length;
     var claims = ex + mu;
     var st = s.analyzeStatus || 'idle';
-    var stColor = st === 'ready' ? '#2ecc71' : (st === 'running' ? '#c7af4f' : (st === 'failed' ? '#e74c3c' : 'rgba(255,255,255,0.4)'));
+    var stColor = st === 'ready' || st === 'scene_ready' ? '#2ecc71' : (st === 'running' ? '#c7af4f' : (st === 'failed' ? '#e74c3c' : 'rgba(255,255,255,0.4)'));
+    var candCount = (s.sceneCandidates && s.sceneCandidates.length) || (s.candidates || []).length;
+    var kindTag = s.sessionKind === 'published_episode' ? ' · episode' : '';
     var rowCls = window._postLiveViewVideoId === s.videoId ? ' class="postlive-session-active"' : '';
     return '<tr' + rowCls + ' data-video-id="' + postLiveEsc(s.videoId) + '">'
       + '<td style="max-width:280px;"><a href="' + s.url + '" target="_blank" style="color:#fff;">' + (s.title || s.videoId) + '</a>'
+      + (s.sourceJobId ? '<div style="font-size:10px;color:rgba(199,175,79,0.6);">' + postLiveEsc(s.sourceJobId) + '</div>' : '')
       + (s.streamer ? '<div style="font-size:10px;color:rgba(255,255,255,0.35);">' + s.streamer + '</div>' : '') + '</td>'
       + '<td>' + claims + ' <span style="font-size:9px;opacity:0.6;">(' + ex + ' ex / ' + mu + ' mute)</span></td>'
-      + '<td style="color:' + stColor + ';">' + st + (s.analyzeError ? ' — ' + s.analyzeError.slice(0, 40) : '') + '</td>'
-      + '<td>' + ((s.candidates || []).length) + '</td>'
+      + '<td style="color:' + stColor + ';">' + st + kindTag + (s.analyzeError ? ' — ' + s.analyzeError.slice(0, 40) : '') + '</td>'
+      + '<td>' + candCount + '</td>'
       + '<td>' + fmtDate(s.updatedAt) + '</td>'
       + '<td style="white-space:nowrap;">'
       + '<button class="btn btn-gold btn-sm" onclick="postLiveAnalyze(\'' + s.videoId + '\')">Review</button> '
@@ -4066,10 +4133,15 @@ function postLiveShowCandidates(videoId) {
         return;
       }
       var cands = s.candidates || [];
+      var sceneCands = s.sceneCandidates || [];
       if (s.analyzeStatus === 'running') {
         body.innerHTML = '<p style="color:#c7af4f;">Gemini still running… wait for Analyze = <strong>ready</strong>, then click View again.</p>';
         if (st) st.textContent = 'Gemini still running…';
         postLiveScrollToCandidates();
+        return;
+      }
+      if (!cands.length && sceneCands.length) {
+        postLiveRenderSceneCandidates(s, sceneCands, st);
         return;
       }
       if (!cands.length) {
@@ -4224,10 +4296,78 @@ function postLiveSelectAllCandidates(on) {
   postLiveShowCandidates(s.videoId);
 }
 
+function postLiveRenderSceneCandidates(s, sceneCands, st) {
+  var body = g('postlive-candidates-body');
+  var title = g('postlive-candidates-title');
+  if (title) {
+    title.textContent = 'SCENE PICKER (~30s short) — ' + (s.title || s.videoId)
+      + (s.sourceJobId ? ' · from ' + s.sourceJobId : '');
+  }
+  if (!body) return;
+  var sel = window._postLiveCandidateSelection[s.videoId];
+  var idealSec = 30;
+  var warnOverSec = 45;
+  function selectedTotal() {
+    var total = 0;
+    sceneCands.forEach(function(c, i) {
+      var key = 'scene-' + i;
+      if (sel[key]) total += (c.durationSec || ((c.end_s || 0) - (c.start_s || 0)));
+    });
+    return Math.round(total * 10) / 10;
+  }
+  function updateTotalBar() {
+    var bar = g('postlive-scene-total-bar');
+    if (!bar) return;
+    var total = selectedTotal();
+    var cls = total > warnOverSec ? 'color:#e74c3c;' : (total >= idealSec - 5 && total <= idealSec + 5 ? 'color:#2ecc71;' : 'color:#c7af4f;');
+    bar.innerHTML = '<strong style="' + cls + '">Selected total: ' + total + 's</strong> · target ~' + idealSec + 's'
+      + (total > warnOverSec ? ' — over ' + warnOverSec + 's, trim selection' : '');
+  }
+  body.innerHTML = '<p style="color:rgba(255,255,255,0.55);margin:0 0 10px;">Pick scenes from the published episode rundown. Aim for ~30s total for one short.</p>'
+    + '<div id="postlive-scene-total-bar" style="margin-bottom:12px;font-size:12px;"></div>'
+    + sceneCands.map(function(c, i) {
+      var key = 'scene-' + i;
+      if (sel[key] == null) sel[key] = false;
+      var start = c.start_s || 0;
+      var end = c.end_s || (start + (c.durationSec || 30));
+      var dur = c.durationSec || (end - start);
+      var warn = dur > warnOverSec ? ' style="color:#e67e22;"' : '';
+      var ytJump = s.url + (s.url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Math.floor(start) + 's';
+      return '<label style="display:block;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
+        + '<div style="display:flex;gap:10px;align-items:flex-start;">'
+        + '<input type="checkbox" style="margin-top:3px;" '
+        + (sel[key] ? 'checked' : '') + ' onchange="postLiveToggleCandidate(\'' + s.videoId + '\',\'' + key + '\',this.checked);postLiveUpdateSceneTotal();">'
+        + '<div style="flex:1;">'
+        + '<strong style="color:#c7af4f;">' + postLiveEsc(c.sceneLabel || c.title || ('Scene ' + (i + 1))) + '</strong>'
+        + ' <span' + warn + '>' + Math.round(dur * 10) / 10 + 's</span>'
+        + ' <span style="font-family:monospace;opacity:0.5;">' + Math.floor(start / 60) + ':' + String(Math.floor(start % 60)).padStart(2, '0')
+        + '–' + Math.floor(end / 60) + ':' + String(Math.floor(end % 60)).padStart(2, '0') + '</span>'
+        + ' <a href="' + postLiveEsc(ytJump) + '" target="_blank" style="color:rgba(199,175,79,0.7);font-size:10px;margin-left:6px;">YouTube ↗</a>'
+        + '</div></div></label>';
+    }).join('');
+  window.postLiveUpdateSceneTotal = updateTotalBar;
+  updateTotalBar();
+  if (st) st.textContent = 'Scene picker — select ~30s of scenes for short comp';
+  postLiveScrollToCandidates();
+}
+
 function postLiveGetSelectedCandidates() {
   var s = window._postLiveActiveSession;
-  if (!s || !s.candidates) return [];
+  if (!s) return [];
   var sel = window._postLiveCandidateSelection[s.videoId] || {};
+  if (s.sceneCandidates && s.sceneCandidates.length) {
+    return s.sceneCandidates.filter(function(c, i) {
+      return sel['scene-' + i];
+    }).map(function(c) {
+      return {
+        title: c.title || c.sceneLabel || 'Scene',
+        start_s: c.start_s || 0,
+        end_s: c.end_s || ((c.start_s || 0) + (c.durationSec || 30)),
+        sceneLabel: c.sceneLabel,
+      };
+    });
+  }
+  if (!s.candidates) return [];
   return s.candidates.filter(function(c) {
     var key = String(c.start_s || 0) + '-' + String(c.end_s || (c.start_s || 0) + 60);
     return sel[key];
@@ -9625,7 +9765,7 @@ function parseSceneHeadersLocal(script) {
   return rows;
 }
 
-function renderSceneOrderRows(rows, preflight) {
+function renderSceneOrderRows(rows, preflight, heygenShow) {
   var panel = g('scene-order-panel');
   if (!panel) return;
   if (!rows || !rows.length) {
@@ -9633,9 +9773,18 @@ function renderSceneOrderRows(rows, preflight) {
     return;
   }
   var html = '<div style="font-size:10px;letter-spacing:2px;color:rgba(199,175,79,0.75);margin-bottom:6px;">SCENE ORDER (' + rows.length + ')</div>';
-  html += '<table class="scene-order-table"><thead><tr><th>#</th><th>Scene</th><th>Type</th></tr></thead><tbody>';
+  if (heygenShow && heygenShow.summary) {
+    html += '<div style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:8px;">HeyGen show: ' + heygenShow.summary + '</div>';
+  } else if (heygenShow && heygenShow.blockers && heygenShow.blockers.length) {
+    html += '<div style="font-size:11px;color:#e74c3c;margin-bottom:8px;">HeyGen: ' + heygenShow.blockers.join('; ') + '</div>';
+  }
+  if (preflight && preflight.totalDurationSec) {
+    html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:6px;">Rundown total ~' + Math.round(preflight.totalDurationSec) + 's</div>';
+  }
+  html += '<table class="scene-order-table"><thead><tr><th>#</th><th>Scene</th><th>Type</th><th>Dur</th></tr></thead><tbody>';
   rows.forEach(function(r) {
-    html += '<tr><td>' + r.index + '</td><td>' + r.name + '</td><td>' + (r.type || 'avatar') + '</td></tr>';
+    var dur = r.durationSec != null ? (Math.round(r.durationSec * 10) / 10) + 's' : '—';
+    html += '<tr><td>' + r.index + '</td><td>' + r.name + '</td><td>' + (r.type || 'avatar') + '</td><td>' + dur + '</td></tr>';
   });
   html += '</tbody></table>';
   if (preflight && preflight.blockers && preflight.blockers.length) {
@@ -9659,7 +9808,7 @@ function refreshSceneOrderPanel(cb) {
     try {
       var resp = JSON.parse(xhr.responseText);
       if (resp.preflight && resp.preflight.rows) {
-        renderSceneOrderRows(resp.preflight.rows, resp.preflight);
+        renderSceneOrderRows(resp.preflight.rows, resp.preflight, resp.heygenShow);
         window._sceneOrderConfirmed = !!(resp.preflight.heygenConfirmed);
         var st = g('scene-order-status');
         if (st) {

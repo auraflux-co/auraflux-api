@@ -187,6 +187,15 @@
               "https://www.youtube.com/watch?v=yXIWkk-p9mo"
             ]
           },
+          "heygenShows": {
+            "talkSoup": {
+              "label": "Talk Soup",
+              "avatarEnv": "HEYGEN_AVATAR_ID",
+              "voiceEnv": "HEYGEN_VOICE_ID",
+              "heygenFolder": "TalkSoup",
+              "default": true
+            }
+          },
           "twitchBookends": {
             "coldOpen": {
               "enabled": true,
