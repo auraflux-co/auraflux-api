@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-28 (CPD-1127) — Pipeline self-healing: Gate 2 skip on partial reassemble, segment download cache, download stall timeout, assembly stall watchdog (15m stitch / 5m download), publish guard (creditsOutroAppended + 465s min), idempotent outro append. r37 verified ~478s. Deployed C0.
 **Last Updated:** 2026-06-29 (CPD-1122) — Creative Director parity complete on C0: streamer list-row checkboxes + section select-all; wire R2 staging (`/wire/stage`); wire/reddit USED dedup badges; Library Avatar VOD for THE THREAD + WIRE; Generate news Short/Comp deprecated → Library → COMPOSE → EXECUTE. Epic [CPD-1122](https://aurafluxco.atlassian.net/browse/CPD-1122).
 **Last Updated:** 2026-06-29 (CPD-1127) — Twitch Soup partial scene reassemble: scene_updates/ only, HeyGen sync, outroCredits after stitch on partial runs, queue pin/ADD JOB, R2 persist + publish dedupe. script_twitch_1782513992551 published 7:58. Deployed C0.
 **Last Updated:** 2026-06-28 (CPD-1123) — News Composer EXECUTE parity: WIRE + THE THREAD → news-short clip-comp via Library → COMPOSE → EXECUTE. Epic [CPD-1122](https://aurafluxco.atlassian.net/browse/CPD-1122).
