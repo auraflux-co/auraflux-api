@@ -18,7 +18,7 @@
 
 ---
 
-**Last Updated:** 2026-06-25 (CPD-1131/1132/1133) — Talk Soup loop phases 3–5: heygenShows env map + preflight, Post-Live register-from-job + ~30s scene picker, unified scaffold panel. Deployed C0 (`553aadd0`).
+**Last Updated:** 2026-06-25 (CPD-1132) — Repurpose UI: renamed Post-Live VODs → Repurpose; Published Soup / Live Archive tabs.
 **Last Updated:** 2026-06-28 (CPD-1129/1130) — Talk Soup pre-HeyGen: visible script editor, hold-before-send default, server-only HeyGen, scene order confirm gates. Deployed C0.
 **Last Updated:** 2026-06-28 (CPD-1127) — Pipeline self-healing: Gate 2 skip on partial reassemble, segment download cache, download stall timeout, assembly stall watchdog (15m stitch / 5m download), publish guard (creditsOutroAppended + 465s min), idempotent outro append. r37 verified ~478s. Deployed C0.
 **Last Updated:** 2026-06-29 (CPD-1122) — Creative Director parity complete on C0: streamer list-row checkboxes + section select-all; wire R2 staging (`/wire/stage`); wire/reddit USED dedup badges; Library Avatar VOD for THE THREAD + WIRE; Generate news Short/Comp deprecated → Library → COMPOSE → EXECUTE. Epic [CPD-1122](https://aurafluxco.atlassian.net/browse/CPD-1122).

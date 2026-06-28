@@ -371,6 +371,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .card-header { background:linear-gradient(90deg,#131f38,#0f1a30); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(199,175,79,0.1); }
 .card-title { font-family:'Bebas Neue',sans-serif; font-size:14px; color:#c7af4f; letter-spacing:2px; }
 .card-body { padding:14px 16px; }
+.repurpose-tab-panel { display:none; }
+.repurpose-tab-panel.active { display:block; }
 .postlive-candidates-open { border-color:rgba(199,175,79,0.55) !important; box-shadow:0 0 0 1px rgba(199,175,79,0.35), 0 8px 24px rgba(0,0,0,0.35); }
 .postlive-session-active td { background:rgba(199,175,79,0.08) !important; }
 .postlive-cand-row { display:grid; grid-template-columns:minmax(200px,280px) 1fr; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); align-items:start; }
@@ -646,7 +648,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="sidebar-lbl">TOOLS</div>
       <button class="sidebar-btn" onclick="nav('publish')"><span class="icon">Y</span> Publish Prep</button>
       <button class="sidebar-btn" onclick="nav('stats')"><span class="icon">S</span> Channel Stats</button>
-      <button class="sidebar-btn" onclick="nav('postlive')"><span class="icon">L</span> Post-Live VODs</button>
+      <button class="sidebar-btn" onclick="nav('postlive')"><span class="icon">R</span> Repurpose</button>
       <button class="sidebar-btn" onclick="nav('abtest')"><span class="icon">T</span> Thumbnails</button>
       <button class="sidebar-btn" onclick="nav('settings')"><span class="icon">~</span> Settings</button>
     </div>
@@ -1325,71 +1327,88 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       </div>
     </div>
 
-    <!-- POST-LIVE VOD PAGE -->
+    <!-- REPURPOSE PAGE (published Soup + live archive → shorts) -->
     <div class="page stats-page" id="page-postlive">
       <div class="stats-head">
         <div>
-          <h2 class="gen-page-title" style="margin:0;">Post-Live VODs</h2>
-          <div id="postlive-subtitle" style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">Pull YouTube lives → claims CSV → Gemini watches VOD samples + learns from recent clip comps</div>
+          <h2 class="gen-page-title" style="margin:0;">Repurpose</h2>
+          <div id="postlive-subtitle" style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">Published Talk Soup → scene picks (~30s) · Live archive → claims CSV → Gemini clip picks</div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      </div>
+      <div class="gen-pillar-tabs" role="tablist" style="margin-bottom:14px;">
+        <button type="button" role="tab" id="repurpose-tab-soup" class="gen-pillar-tab active" onclick="postLiveSwitchTab('soup')">Published Soup</button>
+        <button type="button" role="tab" id="repurpose-tab-live" class="gen-pillar-tab" onclick="postLiveSwitchTab('live')">Live Archive</button>
+      </div>
+
+      <div id="postlive-panel-soup" class="repurpose-tab-panel active">
+        <div id="postlive-banner-soup" class="stats-banner stats-banner-warn" style="margin-bottom:12px;">
+          <strong>Published Soup → short:</strong> Pick a published Talk Soup job → <strong>→ Shorts session</strong> → select scenes (~30s total) → CLIPS COMP or Streamers picker.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <button class="btn btn-outline btn-sm" onclick="postLiveLoadPublishedJobs()">↻ Refresh episodes</button>
+        </div>
+        <div class="sec-title">PUBLISHED TALK SOUP EPISODES <span class="badge" id="postlive-published-count">0</span></div>
+        <div class="stats-table-wrap" style="margin-bottom:18px;">
+          <table class="stats-table">
+            <thead><tr>
+              <th>Job</th><th>Title</th><th>Duration</th><th>Published</th><th>Rundown</th><th></th>
+            </tr></thead>
+            <tbody id="postlive-published-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Loading published jobs…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="postlive-panel-live" class="repurpose-tab-panel">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
           <button class="btn btn-outline btn-sm" onclick="postLiveLoadVods(true)">↻ Refresh lives</button>
           <button class="btn btn-outline btn-sm" onclick="postLiveSyncSessions()">⇄ Sync to sessions</button>
           <a class="btn btn-outline btn-sm" href="/post-live/claims/template.csv" download style="text-decoration:none;line-height:1.6;">↓ Claims CSV template</a>
         </div>
-      </div>
-      <div id="postlive-banner" class="stats-banner stats-banner-warn" style="margin-bottom:12px;">
-        <strong>Workflow:</strong> 1) Sync lives from @clipzworldnews · 2) Export claims from YouTube Studio into CSV · 3) Upload CSV · 4) Run Gemini review · 5) Pick clips (picker wiring next).
-      </div>
-      <div class="card" style="margin-bottom:14px;">
-        <div class="card-header"><div class="card-title">UPLOAD CLAIMS CSV</div></div>
-        <div class="card-body" style="font-size:12px;line-height:1.7;">
-          <p style="color:rgba(255,255,255,0.55);margin:0 0 10px;">
-            Columns: <code style="color:#c7af4f;">title, url, streamer, claim_start, claim_end, action, notes</code>.
-            <code>action=exclude</code> → Gemini skips that window.
-            <code>action=mute</code> → skip in Gemini + saved for later audio mute on export.
-            Omit claim columns to register a clean VOD only.
-          </p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-            <input type="file" id="postlive-csv-file" accept=".csv,text/csv" onchange="postLiveCsvSelected(this)">
-            <label style="font-size:11px;color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:6px;">
-              <input type="checkbox" id="postlive-replace-claims"> Replace existing claims (don’t merge)
-            </label>
-            <button class="btn btn-gold btn-sm" onclick="postLiveImportCsv()">Import CSV</button>
-            <span id="postlive-import-status" style="font-size:11px;color:rgba(255,255,255,0.4);"></span>
+        <div id="postlive-banner-live" class="stats-banner stats-banner-warn" style="margin-bottom:12px;">
+          <strong>Live archive workflow:</strong> Sync lives from @clipzworldnews → export claims from YouTube Studio → upload CSV → Gemini review → pick clips → CLIPS COMP.
+        </div>
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header"><div class="card-title">UPLOAD CLAIMS CSV</div></div>
+          <div class="card-body" style="font-size:12px;line-height:1.7;">
+            <p style="color:rgba(255,255,255,0.55);margin:0 0 10px;">
+              Columns: <code style="color:#c7af4f;">title, url, streamer, claim_start, claim_end, action, notes</code>.
+              <code>action=exclude</code> → Gemini skips that window.
+              <code>action=mute</code> → skip in Gemini + saved for later audio mute on export.
+              Omit claim columns to register a clean VOD only.
+            </p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              <input type="file" id="postlive-csv-file" accept=".csv,text/csv" onchange="postLiveCsvSelected(this)">
+              <label style="font-size:11px;color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" id="postlive-replace-claims"> Replace existing claims (don’t merge)
+              </label>
+              <button class="btn btn-gold btn-sm" onclick="postLiveImportCsv()">Import CSV</button>
+              <span id="postlive-import-status" style="font-size:11px;color:rgba(255,255,255,0.4);"></span>
+            </div>
           </div>
         </div>
+        <div class="sec-title">YOUTUBE LIVE ARCHIVE <span class="badge" id="postlive-vod-count">0</span></div>
+        <div class="stats-table-wrap" style="margin-bottom:18px;">
+          <table class="stats-table">
+            <thead><tr>
+              <th>Title</th><th>Streamer</th><th>Duration</th><th>Views</th><th>Published</th><th></th>
+            </tr></thead>
+            <tbody id="postlive-vod-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Click Refresh lives…</td></tr></tbody>
+          </table>
+        </div>
       </div>
-      <div class="sec-title">PUBLISHED TALK SOUP EPISODES <span class="badge" id="postlive-published-count">0</span></div>
-      <div class="stats-table-wrap" style="margin-bottom:18px;">
-        <table class="stats-table">
-          <thead><tr>
-            <th>Job</th><th>Title</th><th>Duration</th><th>Published</th><th>Rundown</th><th></th>
-          </tr></thead>
-          <tbody id="postlive-published-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Loading published jobs…</td></tr></tbody>
-        </table>
-      </div>
-      <div class="sec-title">YOUTUBE LIVE ARCHIVE <span class="badge" id="postlive-vod-count">0</span></div>
-      <div class="stats-table-wrap" style="margin-bottom:18px;">
-        <table class="stats-table">
-          <thead><tr>
-            <th>Title</th><th>Streamer</th><th>Duration</th><th>Views</th><th>Published</th><th></th>
-          </tr></thead>
-          <tbody id="postlive-vod-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Click Refresh lives…</td></tr></tbody>
-        </table>
-      </div>
-      <div class="sec-title">SESSIONS (CLAIMS + GEMINI) <span class="badge" id="postlive-session-count">0</span></div>
+
+      <div class="sec-title">SESSIONS <span class="badge" id="postlive-session-count">0</span></div>
       <div class="stats-table-wrap">
         <table class="stats-table">
           <thead><tr>
-            <th>Title</th><th>Claims</th><th>Analyze</th><th>Candidates</th><th>Updated</th><th></th>
+            <th>Title</th><th>Source</th><th>Analyze</th><th>Candidates</th><th>Updated</th><th></th>
           </tr></thead>
           <tbody id="postlive-session-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">No sessions yet</td></tr></tbody>
         </table>
       </div>
       <div id="postlive-candidates" style="margin-top:16px;display:none;" class="card postlive-candidates-panel">
         <div class="card-header">
-          <div class="card-title" id="postlive-candidates-title">GEMINI CANDIDATES</div>
+          <div class="card-title" id="postlive-candidates-title">CLIP PICKS</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-outline btn-sm" onclick="postLiveSelectAllCandidates(true)">Select all</button>
             <button class="btn btn-outline btn-sm" onclick="postLiveSelectAllCandidates(false)">Clear</button>
@@ -3801,7 +3820,7 @@ function statsTabPill(tab) {
   return '<span class="stats-tab-pill ' + cls + '">' + tab + '</span>';
 }
 
-// ── POST-LIVE VOD PAGE ─────────────────────────────────────────────
+// ── REPURPOSE PAGE (published Soup + live archive) ─────────────────
 window._postLiveVods = [];
 window._postLiveSessions = [];
 window._postLivePublishedJobs = [];
@@ -3809,6 +3828,17 @@ window._postLiveCsvText = '';
 window._postLiveActiveSession = null;
 window._postLiveCandidateSelection = {};
 window._postLiveViewVideoId = null;
+window._postLiveTab = 'soup';
+
+function postLiveSwitchTab(tab) {
+  window._postLiveTab = tab === 'live' ? 'live' : 'soup';
+  ['soup', 'live'].forEach(function(t) {
+    var panel = g('postlive-panel-' + t);
+    var btn = g('repurpose-tab-' + t);
+    if (panel) panel.classList.toggle('active', t === window._postLiveTab);
+    if (btn) btn.classList.toggle('active', t === window._postLiveTab);
+  });
+}
 
 function postLiveEsc(s) {
   return String(s == null ? '' : s)
@@ -3818,9 +3848,10 @@ function postLiveEsc(s) {
 }
 
 function postLivePageInit() {
+  postLiveSwitchTab(window._postLiveTab || 'soup');
+  postLiveLoadPublishedJobs();
   postLiveLoadVods(false);
   postLiveLoadSessions();
-  postLiveLoadPublishedJobs();
 }
 
 function postLiveLoadPublishedJobs() {
@@ -3868,6 +3899,7 @@ function postLiveRegisterFromJob(jobId) {
     .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
     .then(function(resp) {
       if (!resp.ok || !resp.data.ok) throw new Error((resp.data && resp.data.error) || 'Register failed');
+      postLiveSwitchTab('soup');
       postLiveLoadSessions();
       if (resp.data.videoId) postLiveShowCandidates(resp.data.videoId);
       var st = g('postlive-import-status');
@@ -3892,7 +3924,7 @@ function postLiveLoadVods(refresh) {
       return r.text().then(function(t) {
         try { return JSON.parse(t); } catch (e) {
           throw new Error(r.status === 404
-            ? 'Post-live API not loaded — run: pm2 restart auraflux (not broadcast-sidecar)'
+            ? 'Repurpose API not loaded — run: pm2 restart auraflux (not broadcast-sidecar)'
             : 'Server returned non-JSON (HTTP ' + r.status + ')');
         }
       });
@@ -3976,7 +4008,7 @@ function postLiveLoadSessions() {
     .then(function(r) {
       return r.text().then(function(t) {
         try { return JSON.parse(t); } catch (e) {
-          if (r.status === 404) throw new Error('Post-live API not loaded — pm2 restart auraflux');
+          if (r.status === 404) throw new Error('Repurpose API not loaded — pm2 restart auraflux');
           throw new Error('Server returned non-JSON (HTTP ' + r.status + ')');
         }
       });
@@ -3994,7 +4026,7 @@ function postLiveRenderSessions() {
   if (!tbody) return;
   var rows = window._postLiveSessions || [];
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Sync lives or import claims CSV</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Register a published episode or sync a live archive VOD</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(function(s) {
@@ -4004,18 +4036,26 @@ function postLiveRenderSessions() {
     var st = s.analyzeStatus || 'idle';
     var stColor = st === 'ready' || st === 'scene_ready' ? '#2ecc71' : (st === 'running' ? '#c7af4f' : (st === 'failed' ? '#e74c3c' : 'rgba(255,255,255,0.4)'));
     var candCount = (s.sceneCandidates && s.sceneCandidates.length) || (s.candidates || []).length;
-    var kindTag = s.sessionKind === 'published_episode' ? ' · episode' : '';
+    var isEpisode = s.sessionKind === 'published_episode';
+    var sourceLabel = isEpisode
+      ? '<span style="color:#c7af4f;">Published Soup</span>'
+      : (claims
+        ? 'Live · ' + claims + ' claim(s)'
+        : 'Live archive');
     var rowCls = window._postLiveViewVideoId === s.videoId ? ' class="postlive-session-active"' : '';
+    var reviewBtn = isEpisode && st === 'scene_ready'
+      ? ''
+      : '<button class="btn btn-gold btn-sm" onclick="postLiveAnalyze(\'' + s.videoId + '\')">Review</button> ';
     return '<tr' + rowCls + ' data-video-id="' + postLiveEsc(s.videoId) + '">'
       + '<td style="max-width:280px;"><a href="' + s.url + '" target="_blank" style="color:#fff;">' + (s.title || s.videoId) + '</a>'
       + (s.sourceJobId ? '<div style="font-size:10px;color:rgba(199,175,79,0.6);">' + postLiveEsc(s.sourceJobId) + '</div>' : '')
       + (s.streamer ? '<div style="font-size:10px;color:rgba(255,255,255,0.35);">' + s.streamer + '</div>' : '') + '</td>'
-      + '<td>' + claims + ' <span style="font-size:9px;opacity:0.6;">(' + ex + ' ex / ' + mu + ' mute)</span></td>'
-      + '<td style="color:' + stColor + ';">' + st + kindTag + (s.analyzeError ? ' — ' + s.analyzeError.slice(0, 40) : '') + '</td>'
+      + '<td>' + sourceLabel + '</td>'
+      + '<td style="color:' + stColor + ';">' + st + (s.analyzeError ? ' — ' + s.analyzeError.slice(0, 40) : '') + '</td>'
       + '<td>' + candCount + '</td>'
       + '<td>' + fmtDate(s.updatedAt) + '</td>'
       + '<td style="white-space:nowrap;">'
-      + '<button class="btn btn-gold btn-sm" onclick="postLiveAnalyze(\'' + s.videoId + '\')">Review</button> '
+      + reviewBtn
       + '<button class="btn btn-outline btn-sm" onclick="postLiveShowCandidates(\'' + s.videoId + '\')">View</button>'
       + '</td></tr>';
   }).join('');
@@ -4085,7 +4125,7 @@ function postLiveShowCandidates(videoId) {
   window._postLiveViewVideoId = videoId;
   postLiveRenderSessions();
   var st = g('postlive-import-status');
-  if (st) st.textContent = 'Loading Gemini candidates…';
+  if (st) st.textContent = 'Loading clip picks…';
   var panel = g('postlive-candidates');
   if (panel) {
     panel.style.display = 'block';
@@ -4097,7 +4137,7 @@ function postLiveShowCandidates(videoId) {
         try { return { ok: r.ok, status: r.status, data: JSON.parse(t) }; }
         catch (e) {
           throw new Error(r.status === 404
-            ? 'Post-live API not loaded — pm2 restart auraflux'
+            ? 'Repurpose API not loaded — pm2 restart auraflux'
             : 'Server returned non-JSON (HTTP ' + r.status + ')');
         }
       });
@@ -4107,6 +4147,8 @@ function postLiveShowCandidates(videoId) {
         throw new Error((resp.data && resp.data.error) || 'Session not found');
       }
       var s = resp.data.session;
+      if (s.sessionKind === 'published_episode') postLiveSwitchTab('soup');
+      else postLiveSwitchTab('live');
       window._postLiveActiveSession = s;
       if (!window._postLiveCandidateSelection[s.videoId]) {
         window._postLiveCandidateSelection[s.videoId] = {};
@@ -4126,7 +4168,7 @@ function postLiveShowCandidates(videoId) {
           : (s.retentionContext && s.retentionContext.peakCount
             ? ' · ' + s.retentionContext.peakCount + ' retention peak(s)'
             : '');
-        title.textContent = 'GEMINI CANDIDATES — ' + (s.title || s.videoId) + styleHint + mediaHint;
+        title.textContent = 'CLIP PICKS — ' + (s.title || s.videoId) + styleHint + mediaHint;
       }
       if (!panel || !body) {
         alert('Candidates panel missing — hard refresh the page (Cmd+Shift+R)');
@@ -4431,7 +4473,7 @@ function postLiveSendToStreamerPicker() {
   setPickerPanelVisible('twitch', true);
   if (btn) btn.textContent = 'HIDE PICKER';
   var st = g('twitch-fetch-status');
-  if (st) st.textContent = picked.length + ' post-live Gemini pick(s) loaded — use Short or Comp';
+  if (st) st.textContent = picked.length + ' repurpose clip pick(s) loaded — use Short or Comp';
 }
 
 function postLiveDispatchComp() {
