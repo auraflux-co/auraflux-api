@@ -3194,6 +3194,7 @@ function stageClipForLibrary(clip, entry, onDone) {
     .then(function(d) {
       if (!d.ok || !(d.clip && (d.clip.playbackUrl || d.clip.r2Url))) throw new Error(d.error || (d.clip && d.clip.error) || 'stage failed');
       applyStagedClipFields(clip, d.clip);
+      rerenderTwitchPicker();
       if (onDone) onDone(null, clip);
     })
     .catch(function(e) {
@@ -3202,6 +3203,29 @@ function stageClipForLibrary(clip, entry, onDone) {
       clip.stageError = e.message;
       if (onDone) onDone(e.message, clip);
     });
+}
+
+function pickerClipPreviewUrl(clip) {
+  if (!clip) return '';
+  return clip.playbackUrl || clip.stagedUrl || clip.r2Url || clip.mp4Url || clip.cdnUrl || '';
+}
+
+function resolveClipUrlsForPicker(onDone) {
+  var clips = [];
+  (_twitchPickerStreamers || []).forEach(function(entry) {
+    (entry.clips || []).forEach(function(c) {
+      if (c.url && !pickerClipPreviewUrl(c)) clips.push(c);
+    });
+  });
+  if (!clips.length) { if (onDone) onDone(); return; }
+  resolveClipUrls(clips, function() { if (onDone) onDone(); });
+}
+
+function rerenderTwitchPicker() {
+  var btn = g('btn-preview-twitch');
+  if (!btn) return;
+  var clipsPerStreamer = parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10);
+  renderTwitchPicker(btn, clipsPerStreamer);
 }
 
 function stagePendingSelectedClips(onDone) {
@@ -3217,7 +3241,10 @@ function stagePendingSelectedClips(onDone) {
   (function next(i) {
     if (i >= pending.length) { if (onDone) onDone(null); return; }
     var p = pending[i];
-    stageClipForLibrary(p.clip, p.entry, function() { next(i + 1); });
+    stageClipForLibrary(p.clip, p.entry, function() {
+      rerenderTwitchPicker();
+      next(i + 1);
+    });
   })(0);
 }
 
@@ -15157,6 +15184,9 @@ function previewTwitchClips(forceReload) {
       });
     }
     renderTwitchPicker(btn, clipsPerStreamer);
+    resolveClipUrlsForPicker(function() {
+      renderTwitchPicker(btn, clipsPerStreamer);
+    });
     stagePendingSelectedClips(function() {
       renderTwitchPicker(btn, clipsPerStreamer);
     });
@@ -15257,7 +15287,12 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
         if (clip.stagedUrl || clip.playbackUrl) {
           var vsrc = escapeHtml(clip.playbackUrl || clip.stagedUrl);
           html += '<video class="picker-preview-video" src="' + vsrc + '" muted loop playsinline preload="metadata"'
-            + ' onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;" onclick="event.stopPropagation();"></video>';
+            + ' onmouseenter="this.play()" onmouseleave="if(!this.controls){this.pause();this.currentTime=0;}" onclick="event.stopPropagation();this.controls=!this.controls;this.muted=!this.controls;if(this.controls)this.play();"></video>';
+        } else if (clip.mp4Url || clip.cdnUrl) {
+          var vsrc2 = escapeHtml(clip.mp4Url || clip.cdnUrl);
+          html += '<video class="picker-preview-video" src="' + vsrc2 + '" muted loop playsinline preload="metadata"'
+            + ' onmouseenter="this.play()" onmouseleave="if(!this.controls){this.pause();this.currentTime=0;}" onclick="event.stopPropagation();this.controls=!this.controls;this.muted=!this.controls;if(this.controls)this.play();"></video>';
+          html += '<div class="picker-staging-badge">HOVER TO PREVIEW · CDN (R2 on select)</div>';
         } else if (clip.staging) {
           html += '<div class="picker-thumb-placeholder" style="height:55px;">DOWNLOADING…</div>';
         } else if (thumb) {
@@ -15338,7 +15373,7 @@ function _toggleTwitchClip(si, ci) {
   }
   if (clip.selected && !clip.stagedUrl && !clip._stageInflight) {
     stageClipForLibrary(clip, entry, function(err) {
-      renderTwitchPicker(g('btn-preview-twitch'), clipsPerStreamer);
+      rerenderTwitchPicker();
       var st = g('twitch-fetch-status');
       if (err && st) st.textContent = 'Download failed — ' + err;
       else if (clip.stagedUrl && st) st.textContent = 'Clip ready — hover card to preview';
