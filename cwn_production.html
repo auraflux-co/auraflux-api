@@ -237,7 +237,20 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
   background:rgba(255,255,255,0.03); cursor:pointer; font-size:11px; line-height:1.2;
   transition:border-color 0.12s,background 0.12s;
 }
-.creator-chip input[type="checkbox"] { width:14px; height:14px; min-width:14px; flex-shrink:0; margin:0; accent-color:#9146ff; cursor:pointer; }
+.creator-chip input[type="checkbox"] { width:18px; height:18px; min-width:18px; flex-shrink:0; margin:0; accent-color:#9146ff; cursor:pointer; }
+.creator-row-grid { display:flex; flex-direction:column; gap:3px; padding:4px 6px 8px; }
+.creator-row {
+  display:grid; grid-template-columns:22px 36px minmax(0,1fr) auto; align-items:center; gap:8px;
+  padding:6px 8px; border:1px solid rgba(255,255,255,0.06); border-radius:6px;
+  background:#0d1524; cursor:pointer; transition:border-color 0.12s,background 0.12s;
+}
+.creator-row:hover { border-color:rgba(199,175,79,0.25); background:#101828; }
+.creator-row.is-selected { border-color:rgba(145,70,255,0.5); background:rgba(145,70,255,0.12); }
+.creator-row input[type="checkbox"] { width:18px; height:18px; min-width:18px; accent-color:#9146ff; cursor:pointer; margin:0; }
+.creator-row-name { font-size:12px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.creator-row-meta { font-size:9px; color:rgba(255,255,255,0.35); font-family:monospace; }
+.streamer-roster-section > summary .section-select-check { margin-right:4px; }
+.streamer-roster-section > summary .section-select-check input { width:16px; height:16px; accent-color:#9146ff; cursor:pointer; vertical-align:middle; }
 .creator-chip:hover { border-color:rgba(199,175,79,0.35); background:rgba(255,255,255,0.06); }
 .creator-chip.is-selected { border-color:rgba(145,70,255,0.55); background:rgba(145,70,255,0.14); }
 .creator-chip.is-selected:hover { border-color:rgba(145,70,255,0.75); }
@@ -807,10 +820,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <div class="gen-action-bar">
                   <button id="btn-preview-news" class="btn btn-outline" onclick="previewNewsStories()">Pick stories</button>
                   <div class="gen-action-primary">
-                    <button id="btn-gen-news" class="btn btn-gold" onclick="generateNewsWithPicker()" title="News VOD — full newscast with Bobby G avatar (when pipeline is ready)">Generate VOD</button>
-                    <div class="gen-action-row">
-                      <button id="btn-gen-news-short" class="btn btn-outline" onclick="triggerNewsShort()">Short</button>
-                      <button id="btn-gen-news-comp" class="btn btn-outline" onclick="triggerNewsClipComp()" title="Stitch 4 selected stories into one portrait short">Comp</button>
+                    <button id="btn-gen-news" class="btn btn-gold" onclick="generateNewsWithPicker()" title="News VOD — use Clip Library → Avatar VOD → for long-form">Generate VOD</button>
+                    <div class="gen-action-row" style="display:none;">
+                      <button id="btn-gen-news-short" class="btn btn-outline" onclick="routeNewsPickerToLibrary('short')" title="Use Clip Library → COMPOSE → EXECUTE">Short</button>
+                      <button id="btn-gen-news-comp" class="btn btn-outline" onclick="routeNewsPickerToLibrary('comp')" title="Use Clip Library → COMPOSE → EXECUTE">Comp</button>
                     </div>
                   </div>
                 </div>
@@ -1491,18 +1504,18 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   <div id="streamer-selected-chips" class="creator-chip-grid is-compact"></div>
                 </details>
                 <details open class="streamer-roster-section" id="streamer-section-templates-wrap">
-                  <summary><span>Templates · VOD lineup</span><span class="streamer-section-count" id="streamer-count-templates">0</span></summary>
+                  <summary><label class="section-select-check" onclick="event.stopPropagation();"><input type="checkbox" id="section-check-templates" onchange="toggleStreamerSectionAll('templates', this.checked)"></label><span>Templates · VOD lineup</span><span class="streamer-section-count" id="streamer-count-templates">0</span></summary>
                   <div id="streamer-section-templates" class="creator-chip-grid is-section"></div>
                   <div class="streamer-section-actions">
                     <button type="button" class="btn btn-outline btn-sm" onclick="applyStreamerTemplateSelection()">Select all templates</button>
                   </div>
                 </details>
                 <details class="streamer-roster-section" id="streamer-section-following-wrap">
-                  <summary><span>Following · Twitch &amp; YouTube</span><span class="streamer-section-count" id="streamer-count-following">0</span></summary>
+                  <summary><label class="section-select-check" onclick="event.stopPropagation();"><input type="checkbox" id="section-check-following" onchange="toggleStreamerSectionAll('following', this.checked)"></label><span>Following · Twitch &amp; YouTube</span><span class="streamer-section-count" id="streamer-count-following">0</span></summary>
                   <div id="streamer-section-following" class="creator-chip-grid is-section"></div>
                 </details>
                 <details class="streamer-roster-section" id="streamer-section-bench-wrap">
-                  <summary><span>Bench · backup</span><span class="streamer-section-count" id="streamer-count-bench">0</span></summary>
+                  <summary><label class="section-select-check" onclick="event.stopPropagation();"><input type="checkbox" id="section-check-bench" onchange="toggleStreamerSectionAll('bench', this.checked)"></label><span>Bench · backup</span><span class="streamer-section-count" id="streamer-count-bench">0</span></summary>
                   <div id="streamer-section-bench" class="creator-chip-grid is-section"></div>
                   <div id="streamer-bench-auto-hint" class="gen-status-line" style="padding:0 8px 2px;font-size:9px;min-height:14px;"></div>
                   <div class="streamer-section-actions">
@@ -1511,7 +1524,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   </div>
                 </details>
                 <details class="streamer-roster-section" id="streamer-section-kick-wrap">
-                  <summary><span>Kick · manual</span><span class="streamer-section-count" id="streamer-count-kick">0</span></summary>
+                  <summary><label class="section-select-check" onclick="event.stopPropagation();"><input type="checkbox" id="section-check-kick" onchange="toggleStreamerSectionAll('kick', this.checked)"></label><span>Kick · manual</span><span class="streamer-section-count" id="streamer-count-kick">0</span></summary>
                   <div id="streamer-section-kick" class="creator-chip-grid is-section"></div>
                   <div class="streamer-section-actions">
                     <button type="button" class="btn btn-outline btn-sm" onclick="addStreamerFromUrl()" style="color:#53fc18;border-color:rgba(83,252,24,0.4);">+ Kick URL</button>
@@ -1635,6 +1648,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <div class="gen-action-bar">
                 <button id="btn-library-reddit-load" type="button" class="btn btn-outline" onclick="loadLibraryReddit()">Load library</button>
                 <button type="button" class="btn btn-gold" onclick="sendRedditToComposer()">COMPOSE →</button>
+                <button type="button" class="btn btn-outline" onclick="sendRedditToAvatarVod()" title="Long-form THE THREAD with Bobby G avatar">Avatar VOD →</button>
               </div>
               <span id="library-reddit-fetch-status" class="gen-status-line"></span>
             </aside>
@@ -1668,6 +1682,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <div class="gen-action-bar">
                 <button id="btn-library-wire-load" type="button" class="btn btn-outline" onclick="loadLibraryWire()">Load library</button>
                 <button type="button" class="btn btn-gold" onclick="sendWireToComposer()">COMPOSE →</button>
+                <button type="button" class="btn btn-outline" onclick="sendWireToAvatarVod()" title="Long-form wire news with Bobby G avatar">Avatar VOD →</button>
               </div>
               <span id="library-wire-fetch-status" class="gen-status-line"></span>
             </aside>
@@ -2959,7 +2974,9 @@ function setLibrarySourceMode(mode, skipPersist) {
 
 function loadLibraryReddit(forceReload) {
   syncLibraryWindowToReddit();
-  previewRedditThreads(forceReload, 'library');
+  refreshUsedClipsFromServer(function() {
+    previewRedditThreads(forceReload, 'library');
+  });
 }
 
 function loadLibraryWire(forceReload) {
@@ -3004,11 +3021,13 @@ function loadLibraryWire(forceReload) {
         selected: false
       });
     });
-    renderNewsPicker(btn, fetchLimit, 'library-wire-picker');
-    if (empty) empty.style.display = 'none';
-    if (statusEl) statusEl.textContent = _newsPickerStories.length + ' stories loaded';
-    var sumEl = g('library-wire-selected-summary');
-    if (sumEl) sumEl.textContent = 'Check stories with video, then COMPOSE →.';
+    refreshUsedClipsFromServer(function() {
+      renderNewsPicker(btn, fetchLimit, 'library-wire-picker');
+      if (empty) empty.style.display = 'none';
+      if (statusEl) statusEl.textContent = _newsPickerStories.length + ' stories loaded';
+      var sumEl = g('library-wire-selected-summary');
+      if (sumEl) sumEl.textContent = 'Check stories with video, then COMPOSE →.';
+    });
   }, _pickSrc);
 }
 
@@ -3307,19 +3326,145 @@ function sendRedditToComposer() {
 }
 
 function sendWireToComposer() {
-  var picked = (_newsPickerStories || []).filter(function(s) { return s.selected && s.hlsUrl; });
+  var picked = (_newsPickerStories || []).filter(function(s) { return s.selected && (s.hlsUrl || s.stagedUrl); });
   if (!picked.length) {
     alert('Load library, check stories with video, then COMPOSE →.');
     return;
   }
-  try {
-    sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
-      wireStories: picked,
-      vodSegment: null,
-      source: 'library-wire'
-    }));
-  } catch (e) {}
-  nav('generate');
+  var pending = picked.filter(function(s) { return !s.stagedUrl && !s.playbackUrl && s.hlsUrl; });
+  var statusEl = g('library-wire-fetch-status') || g('twitch-fetch-status');
+  function finishHandoff() {
+    try {
+      sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
+        wireStories: _newsPickerStories.filter(function(s) { return s.selected && (s.hlsUrl || s.stagedUrl); }),
+        vodSegment: null,
+        source: 'library-wire'
+      }));
+    } catch (e) {}
+    _composerContentSource = 'wire';
+    nav('generate');
+  }
+  if (!pending.length) { finishHandoff(); return; }
+  if (statusEl) statusEl.textContent = 'Staging ' + pending.length + ' wire story video(s) to R2…';
+  (function stageNext(i) {
+    if (i >= pending.length) {
+      if (statusEl) statusEl.textContent = 'Ready — opening Composer';
+      finishHandoff();
+      return;
+    }
+    stageWireStory(pending[i], function(err) {
+      if (err) {
+        if (statusEl) statusEl.textContent = 'Stage failed: ' + err;
+        alert('Could not stage wire video: ' + err);
+        return;
+      }
+      if (statusEl) statusEl.textContent = 'Staging ' + (i + 1) + '/' + pending.length + '…';
+      stageNext(i + 1);
+    });
+  })(0);
+}
+
+function applyStagedWireFields(s, staged) {
+  if (!s || !staged) return;
+  var play = staged.playbackUrl || staged.r2Url || staged.stagedUrl;
+  if (!play) return;
+  s.playbackUrl = play;
+  s.stagedUrl = play;
+  s.r2Url = staged.r2Url || play;
+  s.staging = false;
+  s.stageError = null;
+}
+
+function stageWireStory(s, onDone) {
+  if (!s || !s.hlsUrl) { if (onDone) onDone('no video'); return; }
+  if (s.stagedUrl) { if (onDone) onDone(null, s); return; }
+  s.staging = true;
+  s.stageError = null;
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/wire/stage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      hlsUrl: s.hlsUrl,
+      link: s.link || s.url,
+      title: s.title || '',
+      sourceKey: s.sourceKey || s.source || 'wire',
+      storyId: s.storyId || s.videoId || '',
+      thumbnailUrl: s.thumbnailUrl || '',
+      duration: s.duration || 0
+    })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !(d.staged && (d.staged.playbackUrl || d.staged.r2Url))) {
+        throw new Error(d.error || 'Wire stage failed');
+      }
+      applyStagedWireFields(s, d.staged);
+      if (onDone) onDone(null, s);
+    })
+    .catch(function(e) {
+      s.staging = false;
+      s.stageError = e.message;
+      if (onDone) onDone(e.message, s);
+    });
+}
+
+function sendRedditToAvatarVod() {
+  var picked = (_redditPickerThreads || []).filter(function(t) { return t.selected && t.videoUrl; });
+  if (picked.length !== 1) {
+    alert('Select exactly one thread with video for Avatar VOD long-form.');
+    return;
+  }
+  var t = picked[0];
+  function launch() {
+    var item = redditItemFromThread(t);
+    lockGenerateButton('btn-gen-news');
+    setGenerateModeActive('news', 'long');
+    CURRENT_TYPE = 'news';
+    CURRENT_META = { source: 'reddit', postId: item.postId, redditDesk: true };
+    setGeneratingState('news-status', 'NEWS VOD (THE THREAD) — analyzing post + comments...');
+    if (g('script-type-label')) g('script-type-label').textContent = 'NEWS VOD (THE THREAD) — r/' + item.subreddit;
+    nav('generate');
+    callFullScriptServer('news', [item], 'news-status', null);
+  }
+  if (t.stagedUrl || t.playbackUrl) { launch(); return; }
+  stageRedditThread(t, function(err) {
+    if (err) { alert('Could not stage thread video: ' + err); return; }
+    launch();
+  });
+}
+
+function sendWireToAvatarVod() {
+  var picked = (_newsPickerStories || []).filter(function(s) { return s.selected && s.hlsUrl; });
+  if (picked.length < 1) {
+    alert('Select at least one wire story with video for Avatar VOD.');
+    return;
+  }
+  var selected = picked.slice(0, 4);
+  function launch() {
+    lockGenerateButton('btn-gen-news');
+    setGenerateModeActive('news', 'long');
+    CURRENT_TYPE = 'news';
+    setGeneratingState('news-status', 'NEWS VOD — Analyzing ' + selected.length + ' stories with Gemini...');
+    if (g('script-type-label')) g('script-type-label').textContent = 'NEWS VOD — ' + selected.length + ' wire stories';
+    nav('generate');
+    callFullScriptServer('news', selected, 'news-status', null);
+  }
+  var pending = selected.filter(function(s) { return !s.stagedUrl && !s.playbackUrl; });
+  if (!pending.length) { launch(); return; }
+  (function stageNext(i) {
+    if (i >= pending.length) { launch(); return; }
+    stageWireStory(pending[i], function(err) {
+      if (err) { alert('Could not stage wire video: ' + err); return; }
+      stageNext(i + 1);
+    });
+  })(0);
+}
+
+function routeNewsPickerToLibrary(mode) {
+  var desk = getNewsDeskMode();
+  nav('library');
+  setLibrarySourceMode(desk === 'reddit' ? 'reddit' : 'wire');
+  alert('Clip Library → pick stories → COMPOSE → → set delivery to ' + (mode === 'comp' ? 'Comp' : 'Short') + ' → EXECUTE.');
 }
 
 function applyComposerHandoff() {
@@ -10893,13 +11038,15 @@ function renderRedditPicker(btn, ctx) {
     var stageBadge = t.staging ? '… staging'
       : (t.stagedUrl ? '✓ preview ready' : (hasVideo ? 'click to load' : 'no video'));
     var stageClr = t.stagedUrl ? '#2ecc71' : (t.staging ? '#c7af4f' : 'rgba(255,255,255,0.35)');
+    var usedBadge = isStoryUsed('reddit', t.postId, t.link || t.redditPermalink)
+      ? ' · <span style="color:rgba(255,165,0,0.85);">USED</span>' : '';
     html += '<div class="reddit-thread-row' + (isActive ? ' is-active' : '') + '" onclick="focusRedditThread(' + globalIdx + ')">'
       + '<input type="checkbox" id="redditpick-' + globalIdx + '" ' + (t.selected ? 'checked' : '')
       + ' onclick="event.stopPropagation(); toggleRedditThreadSelected(' + globalIdx + ', this.checked)" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;">'
       + '<div style="flex:1;min-width:0;">'
       + '<div style="font-size:12px;color:#fff;line-height:1.3;">' + escapeRedditText((t.title || '').slice(0, 120)) + '</div>'
       + '<div style="font-size:10px;font-family:monospace;margin-top:2px;color:rgba(255,255,255,0.4);">' + (t.score || 0) + ' pts · ' + (t.numComments || (t.topComments || []).length) + ' comments'
-      + (t.createdUtc ? ' · ' + escapeRedditText(formatRedditTimestamp(t.createdUtc)) : '') + '</div>'
+      + (t.createdUtc ? ' · ' + escapeRedditText(formatRedditTimestamp(t.createdUtc)) : '') + usedBadge + '</div>'
       + '<div style="font-size:9px;font-family:monospace;margin-top:3px;color:' + stageClr + ';">' + stageBadge + '</div>'
       + '</div></div>';
   });
@@ -13302,6 +13449,8 @@ function renderNewsPicker(btn, maxCount, pickerId) {
     var durClr = pickerDurColor(dur);
     var when = _clipRelTime(story.pubDate);
     var cursor = hasVideo ? 'pointer' : 'not-allowed';
+    var usedBadge = isStoryUsed('wire', story.storyId || story.videoId, story.link)
+      ? '<span style="font-size:8px;background:rgba(255,165,0,0.2);color:rgba(255,165,0,0.85);padding:1px 4px;border-radius:3px;margin-left:4px;">USED</span>' : '';
 
     html += '<div class="' + pickerCardClasses(isSelected, hasVideo) + '" onclick="' + (hasVideo ? '_toggleNewsStory(' + i + ')' : '') + '" style="cursor:' + cursor + ';">';
     html += '<label class="picker-check" onclick="event.stopPropagation();">'
@@ -13324,6 +13473,7 @@ function renderNewsPicker(btn, maxCount, pickerId) {
     } else {
       html += '<span style="font-size:8px;color:rgba(46,204,113,0.7);">✓ VIDEO</span>';
     }
+    html += usedBadge;
     html += '</div></div>';
   });
 
@@ -16750,17 +16900,70 @@ function renderStreamerSectionGrid(elId, handles, selSet, emptyMsg) {
     el.innerHTML = emptyMsg;
     return;
   }
-  el.className = 'creator-chip-grid is-section';
+  el.className = 'creator-row-grid is-section';
   var views = window._streamerTopClipViews || {};
   var isBench = elId === 'streamer-section-bench';
   el.innerHTML = handles.map(function(h) {
-    var opts = { showHandle: true };
+    var opts = { showHandle: true, listRow: true };
     if (isBench) {
       var tv = views[String(h).toLowerCase()];
       if (tv != null) opts.topViews = tv;
     }
-    return creatorChipHtml(h, !!selSet[h], opts);
+    return creatorRowHtml(h, !!selSet[h], opts);
   }).join('');
+  syncStreamerSectionChecks();
+}
+
+function creatorRowHtml(h, isSelected, opts) {
+  opts = opts || {};
+  var hk = String(h).toLowerCase().replace(/^@/, '');
+  var meta = window._creatorRegistryMap[hk] || window._creatorRegistryMap[h] || {};
+  var plat = meta.platform || 'twitch';
+  var ps = streamerPlatformStyle(plat);
+  var label = meta.displayName && meta.displayName !== hk ? meta.displayName : (meta.displayName || hk);
+  var jq = jsQuote(hk);
+  var cls = 'creator-row' + (isSelected ? ' is-selected' : '');
+  var metaLine = opts.topViews != null && opts.topViews > 0
+    ? formatBenchViewCount(opts.topViews) + ' views'
+    : '@' + hk;
+  return '<div class="' + cls + '" onclick="setStreamerChipChecked(\'' + jq + '\', ' + (!isSelected) + ')">'
+    + '<input type="checkbox"' + (isSelected ? ' checked' : '')
+    + ' onclick="event.stopPropagation();setStreamerChipChecked(\'' + jq + '\', this.checked)">'
+    + '<span class="creator-chip-plat" style="color:' + ps.color + ';background:' + ps.bg + ';">' + ps.badge + '</span>'
+    + '<div style="min-width:0;"><div class="creator-row-name">' + escapeHtml(label) + '</div>'
+    + '<div class="creator-row-meta">' + escapeHtml(metaLine) + '</div></div>'
+    + '</div>';
+}
+
+function toggleStreamerSectionAll(sectionKey, checked) {
+  var roster = getStreamerRoster();
+  var buckets = classifyStreamerSections(roster);
+  var handles = buckets[sectionKey] || [];
+  if (!handles.length) return;
+  var sel = getSelectedStreamers();
+  var set = {};
+  sel.forEach(function(h) { set[h] = true; });
+  handles.forEach(function(h) {
+    var hk = String(h).toLowerCase();
+    if (checked) set[hk] = true;
+    else delete set[hk];
+  });
+  setSelectedStreamers(Object.keys(set));
+}
+
+function syncStreamerSectionChecks() {
+  var roster = getStreamerRoster();
+  var buckets = classifyStreamerSections(roster);
+  var selSet = {};
+  getSelectedStreamers().forEach(function(h) { selSet[h] = true; });
+  [['templates', 'section-check-templates'], ['following', 'section-check-following'], ['bench', 'section-check-bench'], ['kick', 'section-check-kick']].forEach(function(pair) {
+    var handles = buckets[pair[0]] || [];
+    var el = g(pair[1]);
+    if (!el || !handles.length) return;
+    var n = countSelectedIn(handles, selSet);
+    el.checked = n === handles.length;
+    el.indeterminate = n > 0 && n < handles.length;
+  });
 }
 
 function updateStreamerSectionCount(elId, count, selectedInSection) {
@@ -17040,6 +17243,7 @@ function refreshUsedClipsFromServer(cb) {
       _serverUsedClipIds = {};
       (d.clipIds || []).forEach(function(id) { if (id) _serverUsedClipIds[id] = true; });
       (d.urls || []).forEach(function(url) {
+        if (url) _serverUsedClipIds[url] = true;
         var id = extractClipId(url);
         if (id) _serverUsedClipIds[id] = true;
       });
@@ -17052,6 +17256,19 @@ function extractClipId(clipUrl) {
   if (!clipUrl) return '';
   var m = clipUrl.match(/\/clip\/([^/?]+)/) || clipUrl.match(/clips\.twitch\.tv\/([^/?]+)/);
   return m ? m[1] : clipUrl;
+}
+
+function storyUsedKey(platform, id, url) {
+  if (id) return platform + ':' + id;
+  return url || '';
+}
+
+function isStoryUsed(platform, id, url) {
+  var key = storyUsedKey(platform, id, url);
+  if (key && _serverUsedClipIds[key]) return true;
+  if (url && _serverUsedClipIds[url]) return true;
+  if (id && _serverUsedClipIds[id]) return true;
+  return false;
 }
 
 function markClipsUsed(clipUrls) {
