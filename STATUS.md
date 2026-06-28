@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-28 (CPD-1125) — Library→Publish E2E gold path: auto confirm-hooks at hook_review, 30m pipeline timeout, Publish Prep + Gate 5 (private clip-comp). Verified private YouTube publish on streamer comp. Deployed C0.
 **Last Updated:** 2026-06-25 (CPD-1132) — Repurpose universal: any published long-form (scene mode) + livestreams (manual timestamp clips).
 **Last Updated:** 2026-06-28 (CPD-1129/1130) — Talk Soup pre-HeyGen: visible script editor, hold-before-send default, server-only HeyGen, scene order confirm gates. Deployed C0.
 **Last Updated:** 2026-06-28 (CPD-1127) — Pipeline self-healing: Gate 2 skip on partial reassemble, segment download cache, download stall timeout, assembly stall watchdog (15m stitch / 5m download), publish guard (creditsOutroAppended + 465s min), idempotent outro append. r37 verified ~478s. Deployed C0.

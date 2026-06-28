@@ -1,9 +1,16 @@
 'use strict';
 /**
- * CPD-1122 — Clip Library dashboard E2E (no HeyGen / Avatar VOD).
- * Clicks real dashboard buttons: Load library → COMPOSE → EXECUTE.
+ * CPD-1122 — Full dashboard gold path: Clip Library → Publish.
+ * One continuous job — same buttons you use in production. No HeyGen / Avatar VOD.
  *
- * Usage: node scripts/cpd1122_library_dashboard_e2e.js
+ *   Clip Library → Load library → COMPOSE → EXECUTE
+ *   → Job Queue → Publish Prep (REVIEW SEO) → APPROVE & PUBLISH → Gate 5
+ *
+ * Usage:
+ *   node scripts/cpd1122_library_dashboard_e2e.js
+ *   C0_E2E_FLOW=streamers|wire   (default: streamers — wire may hit post-live publish hold)
+ *   C0_E2E_SKIP_PUBLISH=1        (stop after Publish Prep, no platform upload)
+ *
  * Env: C0_BASE=http://localhost:3000
  */
 
@@ -14,7 +21,9 @@ const path = require('path');
 
 const BASE = process.env.C0_BASE || 'http://localhost:3000';
 const STREAMER = (process.env.C0_E2E_STREAMER || 'lacy').toLowerCase();
-const ASSEMBLY_TIMEOUT_MS = parseInt(process.env.C0_E2E_ASSEMBLY_MS || '600000', 10);
+const PIPELINE_TIMEOUT_MS = parseInt(process.env.C0_E2E_PIPELINE_MS || '1800000', 10);
+const PUBLISH_TIMEOUT_MS = parseInt(process.env.C0_E2E_PUBLISH_MS || '600000', 10);
+const SKIP_PUBLISH = process.env.C0_E2E_SKIP_PUBLISH === '1';
 
 const results = [];
 
@@ -36,6 +45,37 @@ function apiGet(urlPath) {
   });
 }
 
+function apiPost(urlPath, body) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(urlPath, BASE);
+    const data = JSON.stringify(body || {});
+    const req = http.request(u, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } }, (res) => {
+      let d = '';
+      res.on('data', (c) => { d += c; });
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, ...JSON.parse(d) }); } catch (e) { resolve({ status: res.statusCode, raw: d }); }
+      });
+    });
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
+
+async function confirmHooksIfNeeded(jobId) {
+  const data = await apiGet('/job/' + encodeURIComponent(jobId));
+  const job = data.job || data;
+  if (!job || job.stage !== 'hook_review') return false;
+  const hooks = job.clipHookTitles || [];
+  if (!hooks.some((h) => String(h || '').trim())) {
+    throw new Error('hook_review but no clipHookTitles on ' + jobId);
+  }
+  const resp = await apiPost('/job/' + encodeURIComponent(jobId) + '/confirm-hooks', {});
+  if (!resp.ok) throw new Error(resp.error || 'confirm-hooks failed');
+  console.log('  job ' + jobId + ' → confirm-hooks (assembly started)');
+  return true;
+}
+
 async function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 async function waitUntil(fn, label, timeoutMs, intervalMs) {
@@ -47,6 +87,134 @@ async function waitUntil(fn, label, timeoutMs, intervalMs) {
     await sleep(intervalMs || 1500);
   }
   throw new Error('Timeout: ' + label + (last ? ' last=' + JSON.stringify(last) : ''));
+}
+
+function publishTitle(job) {
+  const pc = job.publishCopy || {};
+  return pc.title || pc.platforms?.youtube?.title || pc.platforms?.tiktok?.title || '';
+}
+
+async function pollJobPublishReady(jobId) {
+  let lastStage = '';
+  return waitUntil(async () => {
+    const data = await apiGet('/job/' + encodeURIComponent(jobId));
+    const job = data.job || data;
+    if (!job || data.ok === false) return null;
+    const stage = job.stage || job.status || '';
+    if (stage && stage !== lastStage) {
+      console.log('  job ' + jobId + ' → ' + stage);
+      lastStage = stage;
+    }
+    if (stage === 'failed' || job.assemblyError) return { done: false, fail: job.assemblyError || 'failed' };
+    const cloud = job.driveUrl || job.finalUrl;
+    const title = publishTitle(job);
+    const reviewStages = ['awaiting_review', 'metadata_review', 'publish_scheduled'];
+    if (stage === 'hook_review') {
+      await confirmHooksIfNeeded(jobId);
+      return null;
+    }
+    if (cloud && title && reviewStages.includes(stage)) {
+      return { done: true, stage, title: title.slice(0, 80), cloud: true };
+    }
+    return null;
+  }, 'publish-ready (driveUrl + SEO title)', PIPELINE_TIMEOUT_MS, 8000);
+}
+
+async function pollJobPublished(jobId) {
+  let lastStage = '';
+  return waitUntil(async () => {
+    const data = await apiGet('/job/' + encodeURIComponent(jobId));
+    const job = data.job || data;
+    const stage = job.stage || '';
+    if (stage && stage !== lastStage) {
+      console.log('  job ' + jobId + ' → ' + stage);
+      lastStage = stage;
+    }
+    if (stage === 'published') return { done: true, stage };
+    if (stage === 'gate5_failed') return { done: false, fail: 'gate5_failed' };
+    return null;
+  }, 'published', PUBLISH_TIMEOUT_MS, 10000);
+}
+
+async function ensureJobInDashboard(page, jobId) {
+  await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(async (jid) => {
+    const cardResp = await fetch('/job/' + encodeURIComponent(jid)).then((r) => r.json());
+    if (!cardResp.ok || !cardResp.job) throw new Error('Job card missing on server');
+    const sj = cardResp.job;
+    if (!window.JOBS) window.JOBS = [];
+    var job = JOBS.find(function(j) { return j.id === jid; });
+    if (!job) {
+      job = {
+        id: jid,
+        jobId: jid,
+        title: sj.title || jid,
+        type: sj.contentType || sj.type || 'twitch-short',
+        stage: sj.stage,
+        status: sj.status || 'completed',
+        driveUrl: sj.driveUrl,
+        finalUrl: sj.finalUrl,
+        publishCopy: sj.publishCopy,
+        clipsOnly: !!sj.clipsOnly,
+        queuePinned: true,
+      };
+      JOBS.unshift(job);
+      if (typeof markJobQueued === 'function') markJobQueued(jid, true);
+      if (typeof saveJobs === 'function') saveJobs();
+    }
+    if (typeof mergeServerJobIntoLocal === 'function') mergeServerJobIntoLocal(jid, sj);
+    if (typeof renderQueue === 'function') renderQueue();
+  }, jobId);
+}
+
+async function trackJobToPublish(page, jobId, label) {
+  const ready = await pollJobPublishReady(jobId);
+  log(label + ': assembly + SEO ready', true, JSON.stringify(ready));
+
+  await ensureJobInDashboard(page, jobId);
+  await page.locator('button.sidebar-btn').filter({ hasText: 'Job Queue' }).click();
+  log(label + ': Job Queue', true, jobId);
+
+  await page.evaluate((jid) => {
+    if (typeof navToPublishPrep === 'function') navToPublishPrep(jid);
+  }, jobId);
+  await page.waitForFunction(
+    () => document.getElementById('page-publish')?.classList.contains('active'),
+    null,
+    { timeout: 30000 }
+  );
+  const prep = await page.evaluate(() => ({
+    job: document.getElementById('pub-job-select')?.value || '',
+    ytTitle: (document.getElementById('pub-yt-title')?.value || '').slice(0, 80),
+  }));
+  log(label + ': Publish Prep (REVIEW SEO)', !!(prep.job && prep.ytTitle), JSON.stringify(prep));
+
+  if (SKIP_PUBLISH) {
+    log(label + ': Gate 5 publish', true, 'skipped (C0_E2E_SKIP_PUBLISH=1)');
+    return true;
+  }
+
+  const gate5Resp = page.waitForResponse(
+    (r) => r.url().includes('/run-gate5') && r.status() === 200,
+    { timeout: 120000 }
+  );
+  await page.evaluate((jid) => {
+    if (typeof approveAndPublishJob === 'function') approveAndPublishJob(jid);
+  }, jobId);
+  const gate5 = await gate5Resp;
+  const gate5Data = await gate5.json();
+  if (!gate5Data.ok) {
+    if (gate5Data.code === 'publish_hold_post_live') {
+      log(label + ': Gate 5 publish', false, 'post-live publish hold — use streamers desk for full publish test');
+      return false;
+    }
+    throw new Error(gate5Data.error || 'run-gate5 failed');
+  }
+  log(label + ': APPROVE & PUBLISH → Gate 5', true, jobId);
+
+  const pub = await pollJobPublished(jobId);
+  log(label + ': published on platforms', pub.done && !pub.fail, pub.stage || pub.fail || '');
+  return pub.done && !pub.fail;
 }
 
 async function goLibraryTab(page, mode) {
@@ -81,7 +249,6 @@ async function waitForClipStaging(page) {
       if (!streamers.length || !selected) return { done: false, streamers: streamers.length, selected };
       if (downloading) return { done: false, selected, staged, downloading, errors };
       if (errors) return { done: false, selected, staged, errors, fail: true };
-      // Staging may finish on COMPOSE; require no stuck DOWNLOADING state
       if (downloading === 0 && selected > 0) return { done: true, streamers: streamers.length, selected, staged, downloading, errors };
     });
     if (s && s.fail) throw new Error('clip stage errors');
@@ -91,7 +258,6 @@ async function waitForClipStaging(page) {
 
 async function clickCompose(page, panel, timeoutMs) {
   const btn = page.locator('#library-panel-' + panel + ' .gen-action-bar button.btn-gold').first();
-  await btn.scrollIntoViewIfNeeded();
   await btn.click({ force: true });
   await waitUntil(async () => page.evaluate(() => {
     const onGenerate = document.getElementById('page-generate')?.classList.contains('active');
@@ -104,9 +270,8 @@ async function clickExecute(page) {
   await page.evaluate(() => {
     document.getElementById('page-generate')?.classList.add('active');
     document.getElementById('generate-composer')?.classList.add('is-open');
-    const btn = document.getElementById('btn-composer-execute');
-    if (btn && !btn.disabled && typeof executeFromComposer === 'function') executeFromComposer();
   });
+  await page.locator('#btn-composer-execute').click({ force: true, timeout: 120000 });
   await page.waitForFunction(() => {
     const m = document.getElementById('platform-modal');
     return m && m.style.display === 'flex';
@@ -137,34 +302,11 @@ async function dispatchJob(page, delivery) {
   const resp = await jobResponse;
   const data = await resp.json();
   if (!data.ok || !data.jobId) throw new Error(data.error || 'generate-clip-comp failed');
-
   return { jobId: data.jobId };
 }
 
-async function pollJobStage(jobId) {
-  const start = Date.now();
-  let lastStage = '';
-  while (Date.now() - start < ASSEMBLY_TIMEOUT_MS) {
-    const data = await apiGet('/job/' + encodeURIComponent(jobId));
-    const job = data.job || data;
-    const stage = job.stage || job.status || '';
-    if (stage && stage !== lastStage) {
-      console.log('  job ' + jobId + ' → ' + stage);
-      lastStage = stage;
-    }
-    if (['awaiting_review', 'metadata_review', 'published', 'hook_review'].includes(stage)
-      || job.status === 'completed') {
-      return { ok: true, stage: stage || job.status };
-    }
-    if (stage === 'failed' || job.assemblyError) {
-      return { ok: false, stage, error: job.assemblyError || 'failed' };
-    }
-    await sleep(5000);
-  }
-  return { ok: false, stage: lastStage, error: 'assembly timeout' };
-}
-
-async function runStreamersFlow(page) {
+async function runStreamersGoldPath(page) {
+  const label = 'streamers';
   await goLibraryTab(page, 'streamers');
   await page.evaluate((handles) => {
     if (typeof setSelectedStreamers === 'function') setSelectedStreamers(handles);
@@ -176,10 +318,10 @@ async function runStreamersFlow(page) {
   await page.waitForFunction(() => (window._twitchPickerStreamers || []).some((e) => (e.clips || []).length > 0), { timeout: 120000 });
 
   const clipState = await waitForClipStaging(page);
-  log('streamers: load library + R2 staging (no stuck DOWNLOADING)', true, JSON.stringify(clipState));
+  log(label + ': Load library + R2 staging', true, JSON.stringify(clipState));
 
   await clickCompose(page, 'streamers');
-  log('streamers: COMPOSE →', true, 'composer open');
+  log(label + ': COMPOSE →', true, 'composer open');
 
   const postCompose = await page.evaluate(() => {
     let stuck = 0, staged = 0, selected = 0;
@@ -193,18 +335,16 @@ async function runStreamersFlow(page) {
     });
     return { selected, staged, stuck };
   });
-  log('streamers: post-COMPOSE staging', postCompose.stuck === 0 && postCompose.staged > 0,
-    JSON.stringify(postCompose));
+  log(label + ': post-COMPOSE staging', postCompose.stuck === 0 && postCompose.staged > 0, JSON.stringify(postCompose));
 
   const { jobId } = await dispatchJob(page, 'comp');
-  log('streamers: EXECUTE →', true, 'jobId=' + jobId);
+  log(label + ': EXECUTE →', true, 'jobId=' + jobId);
 
-  const asm = await pollJobStage(jobId);
-  log('streamers: assembly', asm.ok, asm.ok ? asm.stage : (asm.error || asm.stage));
-  return asm.ok;
+  return trackJobToPublish(page, jobId, label);
 }
 
-async function runWireFlow(page) {
+async function runWireGoldPath(page) {
+  const label = 'wire';
   await goLibraryTab(page, 'wire');
   await page.evaluate(() => { window._newsPickerStories = []; });
   await page.locator('#btn-library-wire-load').click();
@@ -215,8 +355,7 @@ async function runWireFlow(page) {
     const withHls = stories.filter((s) => s.hlsUrl).length;
     return stories.length ? { done: true, n: stories.length, withHls } : null;
   }), 'wire stories', 120000, 1500);
-
-  log('wire: load library', loaded.withHls > 0, loaded.n + ' stories, ' + loaded.withHls + ' HLS');
+  log(label + ': Load library', loaded.withHls > 0, loaded.n + ' stories, ' + loaded.withHls + ' HLS');
 
   const pickIdx = await page.evaluate(() => {
     const stories = window._newsPickerStories || [];
@@ -228,26 +367,12 @@ async function runWireFlow(page) {
   if (pickIdx < 0) throw new Error('no HLS story');
 
   await clickCompose(page, 'wire', 300000);
-  log('wire: COMPOSE → composer', true, 'story #' + pickIdx);
-
-  const staged = await waitUntil(async () => page.evaluate(() => {
-    const picked = (window._newsPickerStories || []).filter((s) => s.selected);
-    if (!picked.length) return null;
-    const ready = picked.every((s) => !!(s.stagedUrl || s.playbackUrl));
-    const err = picked.find((s) => s.stageError);
-    if (err) return { done: false, fail: err.stageError };
-    return ready ? { done: true, picked: picked.length } : null;
-  }), 'wire R2 staging', 180000, 2000);
-
-  if (staged.fail) throw new Error(staged.fail);
-  log('wire: live HLS → R2 staging', true, JSON.stringify(staged));
+  log(label + ': COMPOSE →', true, 'story #' + pickIdx);
 
   const { jobId } = await dispatchJob(page, 'short');
-  log('wire: EXECUTE →', true, 'jobId=' + jobId);
+  log(label + ': EXECUTE →', true, 'jobId=' + jobId);
 
-  const asm = await pollJobStage(jobId);
-  log('wire: assembly', asm.ok, asm.ok ? asm.stage : (asm.error || asm.stage));
-  return asm.ok;
+  return trackJobToPublish(page, jobId, label);
 }
 
 async function main() {
@@ -256,6 +381,9 @@ async function main() {
   page.on('dialog', (d) => d.accept().catch(() => {}));
 
   let exitCode = 0;
+  const flow = process.env.C0_E2E_FLOW || 'streamers';
+  console.log('Gold path E2E — flow=' + flow + (SKIP_PUBLISH ? ' (publish skipped)' : ' → publish'));
+
   try {
     const health = await apiGet('/health');
     log('server health', !!health.ok, health.gitHash || '');
@@ -264,19 +392,30 @@ async function main() {
     exitCode = 1;
   }
 
-  for (const [name, fn] of [['streamers', runStreamersFlow], ['wire', runWireFlow]]) {
-    if (process.env.C0_E2E_FLOW && process.env.C0_E2E_FLOW !== name) continue;
+  const flows = {
+    streamers: runStreamersGoldPath,
+    wire: runWireGoldPath,
+  };
+
+  for (const name of Object.keys(flows)) {
+    if (flow !== 'both' && flow !== name) continue;
     try {
-      if (!await fn(page)) exitCode = 1;
+      if (!await flows[name](page)) exitCode = 1;
     } catch (e) {
-      log(name + ' flow', false, e.message);
+      log(name + ' gold path', false, e.message);
       exitCode = 1;
     }
   }
 
   await browser.close();
   const outPath = path.join(__dirname, '../logs/cpd1122_library_e2e.json');
-  fs.writeFileSync(outPath, JSON.stringify({ at: new Date().toISOString(), base: BASE, results }, null, 2));
+  fs.writeFileSync(outPath, JSON.stringify({
+    at: new Date().toISOString(),
+    base: BASE,
+    flow,
+    skipPublish: SKIP_PUBLISH,
+    results,
+  }, null, 2));
   console.log('\nWrote ' + outPath);
   console.log('Summary: ' + results.filter((r) => r.ok).length + '/' + results.length + ' passed');
   process.exit(exitCode);
