@@ -3202,6 +3202,7 @@ function sendPickerToComposer() {
         source: 'library'
       }));
     } catch (e) {}
+    _composerContentSource = 'twitch';
     nav('generate');
   });
 }
@@ -3271,15 +3272,20 @@ function applyComposerHandoff() {
   try { handoff = JSON.parse(raw); } catch (e) { return false; }
   if (handoff.streamers && handoff.streamers.length) {
     _twitchPickerStreamers = handoff.streamers;
+    _composerContentSource = 'twitch';
   }
   if (handoff.redditThreads && handoff.redditThreads.length) {
     _redditPickerThreads = handoff.redditThreads;
+    _composerContentSource = 'reddit';
     setNewsDeskMode('reddit');
     switchGeneratePillar('news');
   } else if (handoff.wireStories && handoff.wireStories.length) {
     _newsPickerStories = handoff.wireStories;
+    _composerContentSource = 'wire';
     setNewsDeskMode('wire');
     switchGeneratePillar('news');
+  } else if (handoff.streamers && handoff.streamers.length) {
+    switchGeneratePillar('twitch');
   } else {
     switchGeneratePillar('twitch');
   }
@@ -5736,7 +5742,7 @@ function resolveJobPreviewUrl(job) {
   } else if (job.filename) base = CFG.ffmpegUrl + '/download/' + job.filename;
   else if (job.driveUrl && String(job.driveUrl).indexOf('http') === 0) base = job.driveUrl;
   if (!base) return '';
-  var bust = job.assemblyId || (job.assembledAt ? Date.parse(job.assembledAt) : (job.id || Date.now()));
+  var bust = job.previewRevision || job.assemblyId || (job.assembledAt ? Date.parse(job.assembledAt) : (job.id || Date.now()));
   return base + (base.indexOf('?') > -1 ? '&' : '?') + 'v=' + encodeURIComponent(String(bust));
 }
 
@@ -10048,6 +10054,7 @@ function loadRedditThreadComments(idx, onDone) {
       var d = JSON.parse(xhr.responseText || '{}');
       if (!d.ok || !d.post) throw new Error(d.error || 'thread load failed');
       t.selftext = d.post.selftext || t.selftext;
+      t.createdUtc = d.post.createdUtc || t.createdUtc;
       t.topComments = d.post.topComments || [];
       t.numComments = d.post.numComments || t.numComments;
       if (onDone) onDone(null, t);
@@ -10073,7 +10080,14 @@ function mapRedditPosts(posts) {
       score: p.score || 0,
       numComments: p.numComments || 0,
       selftext: p.selftext || '',
-      topComments: p.topComments || [],
+      topComments: (p.topComments || []).map(function(c) {
+        return {
+          author: c.author,
+          body: c.body,
+          score: c.score,
+          createdUtc: c.createdUtc || null
+        };
+      }),
       videoUrl: p.videoUrl || p.url || '',
       link: p.permalink || p.url || '',
       redditPermalink: p.permalink || p.link || '',
@@ -10147,6 +10161,31 @@ function escapeRedditText(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+/** Unix seconds → relative + absolute (ET) for thread list / OP / comments. */
+function formatRedditTimestamp(utcSec) {
+  if (utcSec == null || utcSec === '') return '';
+  var n = Number(utcSec);
+  if (!n || isNaN(n)) return '';
+  var d = new Date(n * 1000);
+  if (isNaN(d.getTime())) return '';
+  var abs = d.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+  var agoMs = Date.now() - d.getTime();
+  var rel;
+  if (agoMs < 60000) rel = 'just now';
+  else if (agoMs < 3600000) rel = Math.floor(agoMs / 60000) + 'm ago';
+  else if (agoMs < 86400000) rel = Math.floor(agoMs / 3600000) + 'h ago';
+  else if (agoMs < 604800000) rel = Math.floor(agoMs / 86400000) + 'd ago';
+  else rel = Math.floor(agoMs / 604800000) + 'w ago';
+  return rel + ' · ' + abs + ' ET';
+}
+
 function renderRedditThreadDetail(idx, targetId) {
   var detail = g(targetId || 'reddit-thread-detail');
   if (!detail) return;
@@ -10172,7 +10211,10 @@ function renderRedditThreadDetail(idx, targetId) {
   }
 
   var opBody = (t.selftext || '').trim();
-  var threadHtml = '<div class="reddit-comment-op">OP · r/' + escapeRedditText(t.subreddit) + '</div>'
+  var opWhen = formatRedditTimestamp(t.createdUtc);
+  var threadHtml = '<div class="reddit-comment-op">OP · r/' + escapeRedditText(t.subreddit)
+    + (opWhen ? ' · <span style="font-weight:400;color:rgba(255,255,255,0.45);">' + escapeRedditText(opWhen) + '</span>' : '')
+    + '</div>'
     + '<div style="font-weight:700;color:#fff;margin-bottom:8px;">' + escapeRedditText(t.title) + '</div>';
   if (opBody) {
     threadHtml += '<div class="reddit-comment" style="border-left:2px solid rgba(199,175,79,0.4);padding-left:8px;">'
@@ -10182,8 +10224,10 @@ function renderRedditThreadDetail(idx, targetId) {
     threadHtml += '<div style="color:#c7af4f;margin-top:8px;font-size:11px;">Loading comments…</div>';
   } else {
     (t.topComments || []).forEach(function(c, ci) {
+      var cWhen = formatRedditTimestamp(c.createdUtc);
       threadHtml += '<div class="reddit-comment">'
-        + '<div class="reddit-comment-meta">#' + (ci + 1) + ' · ' + escapeRedditText(c.author || 'anon') + ' · ' + (c.score || 0) + ' pts</div>'
+        + '<div class="reddit-comment-meta">#' + (ci + 1) + ' · ' + escapeRedditText(c.author || 'anon') + ' · ' + (c.score || 0) + ' pts'
+        + (cWhen ? ' · ' + escapeRedditText(cWhen) : '') + '</div>'
         + '<div>' + escapeRedditText((c.body || '').replace(/\s+/g, ' ').trim()).slice(0, 900) + '</div>'
         + '</div>';
     });
@@ -10336,7 +10380,8 @@ function renderRedditPicker(btn, ctx) {
       + ' onclick="event.stopPropagation(); toggleRedditThreadSelected(' + globalIdx + ', this.checked)" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;">'
       + '<div style="flex:1;min-width:0;">'
       + '<div style="font-size:12px;color:#fff;line-height:1.3;">' + escapeRedditText((t.title || '').slice(0, 120)) + '</div>'
-      + '<div style="font-size:10px;font-family:monospace;margin-top:2px;color:rgba(255,255,255,0.4);">' + (t.score || 0) + ' pts · ' + (t.numComments || (t.topComments || []).length) + ' comments</div>'
+      + '<div style="font-size:10px;font-family:monospace;margin-top:2px;color:rgba(255,255,255,0.4);">' + (t.score || 0) + ' pts · ' + (t.numComments || (t.topComments || []).length) + ' comments'
+      + (t.createdUtc ? ' · ' + escapeRedditText(formatRedditTimestamp(t.createdUtc)) : '') + '</div>'
       + '<div style="font-size:9px;font-family:monospace;margin-top:3px;color:' + stageClr + ';">' + stageBadge + '</div>'
       + '</div></div>';
   });
@@ -10500,6 +10545,7 @@ function _renderRedditShortClipList(list, status, platforms) {
       return '<div class="reddit-thread-row' + (idx === _redditActiveIdx ? ' is-active' : '') + '" onclick="_selectRedditShortClip(' + idx + ')">'
         + '<div style="flex:1;min-width:0;"><div style="font-size:12px;color:#fff;line-height:1.3;">' + escapeRedditText((c.title || '').slice(0, 100)) + '</div>'
         + '<div style="font-size:10px;color:#c7af4f;font-family:monospace;">r/' + escapeRedditText(c.subreddit || '') + ' · ' + (c.score || 0)
+        + (c.createdUtc ? ' · ' + escapeRedditText(formatRedditTimestamp(c.createdUtc)) : '')
         + (ready ? ' · ✓ preview' : '') + '</div></div></div>';
     }).join('')
     + '</div>'
@@ -11470,15 +11516,18 @@ function buildCompositionSpecFromUI() {
       var c = p.clip || {};
       ensureComposerTrimDefaults(c);
       return {
-        url: c.url, pageUrl: c.url, mp4Url: c.stagedUrl || c.r2Url || c.mp4Url || '',
+        url: c.url, pageUrl: c.pageUrl || c.url, mp4Url: c.stagedUrl || c.r2Url || c.mp4Url || '',
         stagedUrl: c.stagedUrl || c.r2Url || '', title: c.title || '', streamer: p.name, displayName: p.displayName,
         duration: c.duration || 60, trimStart: c.composerTrimStart, trimEnd: c.composerTrimEnd,
-        thumbnailUrl: c.thumbnailUrl || '', order: idx, orientation: 'landscape', game: c.game || '', views: c.views || 0
+        thumbnailUrl: c.thumbnailUrl || '', order: idx, orientation: 'landscape', game: c.game || '', views: c.views || 0,
+        postId: c.postId, redditSource: c.redditSource, selftext: c.selftext, topComments: c.topComments, permalink: c.permalink,
+        wireSource: c.wireSource
       };
     });
   }
   return {
     deliveryFormat: delivery,
+    contentSource: _composerContentSource || 'twitch',
     compCreativePreset: creativePayload.compCreativePreset,
     compCreative: creativePayload.compCreative,
     clips: clips,
@@ -11714,6 +11763,9 @@ function executeFromComposer() {
 function executeComposerShorts(spec) {
   var clips = spec.clips || [];
   if (!clips.length) { alert('No clips'); return; }
+  var contentType = spec.contentType || 'twitch-short';
+  var isNews = /^news/i.test(contentType);
+  var statusTag = isNews ? 'news-status' : 'twitch-gen-status';
   showPlatformModal(function(sel) {
     var pub = parsePlatformModalSelection(sel);
     lockGenerateButton('btn-composer-execute');
@@ -11721,10 +11773,10 @@ function executeComposerShorts(spec) {
     function next() {
       if (idx >= clips.length) { unlockGenerateButtons(); return; }
       var c = clips[idx++];
-      var allClips = [{ streamer: c.streamer, displayName: c.displayName, title: c.title, url: c.url, mp4Url: c.url }];
-      resolveTwitchClipUrls(allClips, function() {
+      function dispatchShort() {
+        var playUrl = c.mp4Url || c.stagedUrl || c.url;
         var payload = {
-          url: allClips[0].mp4Url || allClips[0].url,
+          url: playUrl,
           pageUrl: c.pageUrl || c.url,
           title: c.title,
           streamer: c.streamer,
@@ -11733,7 +11785,15 @@ function executeComposerShorts(spec) {
           trimStart: c.trimStart,
           trimEnd: c.trimEnd
         };
-        markClipsUsed([c.url]);
+        if (c.postId || c.redditSource) {
+          payload.postId = c.postId;
+          payload.redditSource = true;
+          payload.redditPermalink = c.pageUrl || c.permalink;
+          payload.selftext = c.selftext || '';
+          payload.topComments = c.topComments || [];
+          payload.subreddit = c.streamer;
+        }
+        if (!isNews) markClipsUsed([c.url]);
         var xhr = new XMLHttpRequest();
         xhr.open('POST', (CFG.ffmpegUrl || 'http://localhost:3000') + '/generate-clip-comp', true);
         xhr.setRequestHeader('Content-Type', 'application/json');
@@ -11742,35 +11802,43 @@ function executeComposerShorts(spec) {
             var resp = JSON.parse(xhr.responseText || '{}');
             if (xhr.status === 200 && resp.ok) {
               if (pub.scheduledAt) applyJobPublishSchedule(resp.jobId, pub.platforms, pub.scheduledAt);
-              startClipCompReviewPoll(resp.jobId, 'twitch-gen-status');
+              startClipCompReviewPoll(resp.jobId, statusTag);
             }
           } catch(e) {}
           next();
         };
         xhr.onerror = function() { next(); };
-        var reqBody = {
+        xhr.send(JSON.stringify({
           clips: [payload],
           platforms: pub.platforms,
-          contentType: 'twitch-short',
+          contentType: contentType,
           compCreativePreset: spec.compCreativePreset,
           compCreative: (spec.compCreative && spec.compCreative.preset !== spec.compCreativePreset) ? spec.compCreative : undefined
-        };
-        xhr.send(JSON.stringify(reqBody));
-      });
+        }));
+      }
+      if (isNews) {
+        dispatchShort();
+      } else {
+        var allClips = [{ streamer: c.streamer, displayName: c.displayName, title: c.title, url: c.url, mp4Url: c.url }];
+        resolveTwitchClipUrls(allClips, function() {
+          c.url = allClips[0].mp4Url || allClips[0].url;
+          dispatchShort();
+        });
+      }
     }
     next();
   });
 }
 
 function executeComposerComp(spec) {
+  var contentType = spec.contentType || 'twitch-short';
+  var isNews = /^news/i.test(contentType);
+  var statusTag = isNews ? 'news-status' : 'twitch-gen-status';
   showPlatformModal(function(sel) {
     var pub = parsePlatformModalSelection(sel);
     lockGenerateButton('btn-composer-execute');
-    var allClips = spec.clips.map(function(c) {
-      return { streamer: c.streamer, displayName: c.displayName, title: c.title, url: c.url, views: c.views || 0, game: c.game || '' };
-    });
-    resolveTwitchClipUrls(allClips, function() {
-      var clips = allClips.map(function(c, i) {
+    function dispatchComp(resolvedClips) {
+      var clips = resolvedClips.map(function(c, i) {
         var src = spec.clips[i] || {};
         return {
           url: c.mp4Url || c.url,
@@ -11781,12 +11849,23 @@ function executeComposerComp(spec) {
           orientation: 'landscape',
           trimStart: src.trimStart,
           trimEnd: src.trimEnd,
-          duration: src.durationHint
+          duration: src.durationHint,
+          postId: src.postId,
+          redditSource: src.redditSource,
+          redditPermalink: src.pageUrl,
+          selftext: src.selftext,
+          topComments: src.topComments,
+          subreddit: src.streamer
         };
       });
-      markClipsUsed(allClips.map(function(c){ return c.url; }).filter(Boolean));
-      _dispatchClipCompFromPicker(clips, spec.contentType || 'twitch-short', pub.platforms, 'twitch-gen-status', g('twitch-fetch-status'), pub.scheduledAt, {});
+      if (!isNews) markClipsUsed(resolvedClips.map(function(c){ return c.url; }).filter(Boolean));
+      _dispatchClipCompFromPicker(clips, contentType, pub.platforms, statusTag, g(isNews ? 'news-status' : 'twitch-fetch-status'), pub.scheduledAt, {});
+    }
+    var allClips = spec.clips.map(function(c) {
+      return { streamer: c.streamer, displayName: c.displayName, title: c.title, url: c.mp4Url || c.stagedUrl || c.url, mp4Url: c.mp4Url || c.stagedUrl || c.url, views: c.views || 0, game: c.game || '' };
     });
+    if (isNews) dispatchComp(allClips);
+    else resolveTwitchClipUrls(allClips, function() { dispatchComp(allClips); });
   });
 }
 
@@ -11874,12 +11953,59 @@ var _nbaPickerGames = [];   // [{gameId, away, home, awayAbbr, homeAbbr, awaySco
 var _newsPickerStories = []; // [{title, link, videoUrl, hlsUrl, thumbnailUrl, orientation, pillarboxFilter, pubDate, selected}]
 var _twitchPickerStreamers = []; // [{name, displayName, selected, clips:[{title,url,views,game,thumbnailUrl,mp4Url,isBackup}], dropReason}]
 var _compLineup = []; // comp order: [{ si, ci, name, displayName, clip }]
+var _composerContentSource = 'twitch'; // twitch | reddit | wire — drives collectCompPickedClips + contentType
 
 function compLineupKey(p) {
   return String(p.si) + ':' + String(p.ci);
 }
 
 function collectCompPickedClips() {
+  if (_composerContentSource === 'reddit') {
+    return (_redditPickerThreads || []).filter(function(t) { return t.selected && t.videoUrl; }).map(function(t, idx) {
+      var playUrl = t.stagedUrl || t.playbackUrl || t.videoUrl || '';
+      return {
+        si: idx, ci: 0, name: t.subreddit || 'reddit', displayName: 'THREAD',
+        clip: {
+          url: playUrl,
+          pageUrl: t.redditPermalink || t.link || playUrl,
+          mp4Url: t.stagedUrl || t.playbackUrl || '',
+          stagedUrl: t.stagedUrl || t.playbackUrl || '',
+          title: t.title || '',
+          streamer: t.subreddit || 'reddit',
+          displayName: 'THREAD',
+          duration: 120,
+          thumbnailUrl: t.thumbnailUrl || '',
+          selected: true,
+          redditSource: true,
+          postId: t.postId,
+          selftext: t.selftext || '',
+          topComments: t.topComments || [],
+          permalink: t.redditPermalink || t.link || ''
+        }
+      };
+    });
+  }
+  if (_composerContentSource === 'wire') {
+    return (_newsPickerStories || []).filter(function(s) { return s.selected && (s.hlsUrl || s.videoUrl); }).map(function(s, idx) {
+      var playUrl = s.stagedUrl || s.hlsUrl || s.videoUrl || '';
+      return {
+        si: idx, ci: 0, name: (s.source || 'wire').toLowerCase(), displayName: s.source || 'News',
+        clip: {
+          url: playUrl,
+          pageUrl: s.link || playUrl,
+          mp4Url: playUrl,
+          stagedUrl: s.stagedUrl || '',
+          title: s.title || '',
+          streamer: s.source || 'News',
+          displayName: s.source || 'News',
+          duration: s.duration || 120,
+          thumbnailUrl: s.thumbnailUrl || '',
+          selected: true,
+          wireSource: true
+        }
+      };
+    });
+  }
   var picked = [];
   (_twitchPickerStreamers || []).forEach(function(entry, si) {
     if (entry.dropReason || !entry.selected) return;
