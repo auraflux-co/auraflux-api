@@ -80,4 +80,31 @@ describe('twitch_bookends', () => {
     assert.ok(r.qaFeatures.some((f) => f.feature === 'studio_laugh' && f.status === 'pass'));
     assert.equal(r.totalDurationSec, 46.5);
   });
+
+  it('buildTwitchSoupPostAssemblyRundown emits per-clip segmentLabel entries (CPD-1134)', async () => {
+    const { buildTwitchSoupPostAssemblyRundown } = require('../lib/twitch_bookends');
+    const segs = [
+      { label: 'INTRO', type: 'avatar' },
+      { label: 'LACY_INTRO', type: 'avatar' },
+      { label: 'LACY_CLIP1_SETUP', type: 'avatar' },
+      { label: 'LACY_CLIP1', type: 'source_clip' },
+      { label: 'LACY_CLIP1_REACTION', type: 'avatar' },
+    ];
+    const segmentDurations = [8, 9, 10, 30, 5];
+    const r = await buildTwitchSoupPostAssemblyRundown({
+      asmId: 'asm_cpd1134',
+      jobId: 'script_twitch_test',
+      card: { thumbnailDriveUrl: 'https://x' },
+      segsToProcess: segs,
+      segmentDurations,
+      coldOpenSec: 15,
+      bodySecBeforeCredits: 77,
+      creditsSec: 27,
+      verifyResult: { ok: true, decodeOk: true, creditsAppended: true },
+    });
+    assert.equal(r.twitchClipCount, 1);
+    assert.ok(r.entries.some((e) => e.segmentLabel === 'LACY_CLIP1' && e.feature === 'twitch_clip'));
+    assert.ok(r.entries.some((e) => e.segmentLabel === 'LACY_INTRO'));
+    assert.notEqual(r.entries.find((e) => e.segmentLabel === 'INTRO')?.durationSec, 77);
+  });
 });
