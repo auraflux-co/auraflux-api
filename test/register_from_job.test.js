@@ -15,9 +15,10 @@ const STORE_BACKUP = STORE_PATH + '.testbak';
 
 describe('register_from_job', () => {
   it('isPublishedTalkSoupJob detects published twitch long-form', () => {
-    assert.equal(isPublishedTalkSoupJob({ contentType: 'twitch', stage: 'published' }), true);
-    assert.equal(isPublishedTalkSoupJob({ contentType: 'twitch-short', stage: 'published' }), false);
-    assert.equal(isPublishedTalkSoupJob({ contentType: 'twitch', clipsOnly: true }), false);
+    const yt = { publishRecord: { youtubeUrl: 'https://www.youtube.com/watch?v=abc12345678' } };
+    assert.equal(isPublishedTalkSoupJob({ contentType: 'twitch', stage: 'published', ...yt }), true);
+    assert.equal(isPublishedTalkSoupJob({ contentType: 'twitch-short', stage: 'published', ...yt }), false);
+    assert.equal(isPublishedTalkSoupJob({ contentType: 'twitch', clipsOnly: true, ...yt }), false);
   });
 
   it('resolvePublishedVideoUrl finds youtube url on card', () => {
@@ -48,7 +49,7 @@ describe('register_from_job', () => {
       };
       const r = registerSessionFromJob('script_twitch_test123', card);
       assert.equal(r.videoId, 'dQw4w9WgXcQ');
-      assert.equal(r.session.sessionKind, 'published_episode');
+      assert.equal(r.session.sessionKind, 'published_long_form');
       assert.equal(r.session.sourceJobId, 'script_twitch_test123');
       assert.ok(r.repurpose.candidates.length >= 1);
     } finally {

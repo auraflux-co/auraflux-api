@@ -1,81 +1,63 @@
 'use strict';
-// CPD-998: repurpose step — published longform spawns a vertical sibling.
-const { pickRepurposeAction, isEnabled } = require('../lib/services/repurpose');
 
-describe('repurpose — isEnabled', () => {
-  const orig = process.env.REPURPOSE_SHORTS;
-  afterEach(() => {
-    if (orig === undefined) delete process.env.REPURPOSE_SHORTS;
-    else process.env.REPURPOSE_SHORTS = orig;
-  });
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+const {
+  isPublishedLongFormJob,
+  getRepurposeMode,
+  parseTimeSec,
+  buildManualClipCandidate,
+  mergeClipCandidates,
+  summarizePublishedJob,
+} = require('../lib/post_live/repurpose');
 
-  test('default off', () => {
-    delete process.env.REPURPOSE_SHORTS;
-    expect(isEnabled()).toBe(false);
-  });
-
-  test('on enables', () => {
-    process.env.REPURPOSE_SHORTS = 'on';
-    expect(isEnabled()).toBe(true);
-  });
-});
-
-describe('repurpose — pickRepurposeAction', () => {
-  const twitchCard = {
-    jobId: 'script_twitch_123',
-    contentType: 'twitch',
-    orderedClipUrls: [
-      { url: 'https://cdn/clip1.mp4', pageUrl: 'https://twitch.tv/c1', streamer: 'ron', displayName: 'Ron', title: 'Clutch 1' },
-      { url: 'https://cdn/clip2.mp4', pageUrl: 'https://twitch.tv/c2', streamer: 'lacy', displayName: 'Lacy', title: 'Clutch 2' },
-    ],
-  };
-
-  test('twitch longform → clip short from first clip', () => {
-    const a = pickRepurposeAction(twitchCard);
-    expect(a.kind).toBe('clip-short');
-    expect(a.path).toBe('/generate-clip-comp');
-    expect(a.body.clips).toHaveLength(1);
-    expect(a.body.clips[0].url).toBe('https://cdn/clip1.mp4');
-    expect(a.body.contentType).toBe('twitch-short');
-    expect(a.body.repurposedFrom).toBe('script_twitch_123');
-  });
-
-  test('top10 variant → clip short from LAST clip (countdown #1)', () => {
-    const a = pickRepurposeAction({ ...twitchCard, scriptVariant: 'top10' });
-    expect(a.body.clips[0].url).toBe('https://cdn/clip2.mp4');
-  });
-
-  test('news longform → news-short via generate-full-script', () => {
-    const a = pickRepurposeAction({
-      jobId: 'script_news_9',
+describe('repurpose', () => {
+  it('isPublishedLongFormJob accepts any published non-short job with YouTube URL', () => {
+    assert.equal(isPublishedLongFormJob({
+      contentType: 'twitch',
+      stage: 'published',
+      publishRecord: { youtubeUrl: 'https://www.youtube.com/watch?v=abc12345678' },
+    }), true);
+    assert.equal(isPublishedLongFormJob({
       contentType: 'news',
-      newsItems: [{ title: 'Story A', videoUrl: 'https://v/a.mp4' }, { title: 'Story B' }],
+      publishedAt: '2026-06-01',
+      driveUrl: 'https://www.youtube.com/watch?v=abc12345678',
+    }), true);
+    assert.equal(isPublishedLongFormJob({ contentType: 'twitch-short', stage: 'published' }), false);
+    assert.equal(isPublishedLongFormJob({ contentType: 'twitch', clipsOnly: true, stage: 'published' }), false);
+  });
+
+  it('getRepurposeMode prefers scene when rundown exists', () => {
+    assert.equal(getRepurposeMode({
+      postAssemblyRundown: { entries: [{ segmentLabel: 'INTRO', durationSec: 10 }] },
+    }), 'scene');
+    assert.equal(getRepurposeMode({ script: { raw: '=== INTRO ===\nHi' } }), 'scene');
+    assert.equal(getRepurposeMode({ title: 'Live only' }), 'timestamp');
+  });
+
+  it('buildManualClipCandidate parses M:SS', () => {
+    const c = buildManualClipCandidate({ start_s: '1:30', end_s: '2:00', title: 'Moment' });
+    assert.equal(c.start_s, 90);
+    assert.equal(c.end_s, 120);
+    assert.equal(c.durationSec, 30);
+    assert.equal(c.source, 'manual_timestamp');
+  });
+
+  it('mergeClipCandidates dedupes identical windows', () => {
+    const a = buildManualClipCandidate({ start_s: 0, end_s: 30, title: 'A' });
+    const merged = mergeClipCandidates([a], [a]);
+    assert.equal(merged.length, 1);
+  });
+
+  it('summarizePublishedJob includes show and mode', () => {
+    const s = summarizePublishedJob('job1', {
+      contentType: 'twitch',
+      title: 'Soup',
+      stage: 'published',
+      publishRecord: { youtubeUrl: 'https://youtu.be/dQw4w9WgXcQ' },
+      postAssemblyRundown: { entries: [{ segmentLabel: 'CLIP1', durationSec: 20 }] },
     });
-    expect(a.kind).toBe('full-script-short');
-    expect(a.path).toBe('/generate-full-script');
-    expect(a.body.type).toBe('news-short');
-    expect(a.body.items).toEqual([{ title: 'Story A', videoUrl: 'https://v/a.mp4' }]);
-    expect(a.body.repurposedFrom).toBe('script_news_9');
-  });
-
-  test('nba longform → nba-short', () => {
-    const a = pickRepurposeAction({ jobId: 'j', contentType: 'nba', nbaItems: [{ matchup: 'NYK @ BOS' }] });
-    expect(a.body.type).toBe('nba-short');
-  });
-
-  test('loop guard: short-form cards never repurpose', () => {
-    expect(pickRepurposeAction({ contentType: 'twitch-short', orderedClipUrls: twitchCard.orderedClipUrls })).toBeNull();
-    expect(pickRepurposeAction({ contentType: 'news-short', newsItems: [{ title: 'x' }] })).toBeNull();
-  });
-
-  test('loop guard: clips-only and already-repurposed cards never repurpose', () => {
-    expect(pickRepurposeAction({ ...twitchCard, clipsOnly: true })).toBeNull();
-    expect(pickRepurposeAction({ ...twitchCard, repurposedFrom: 'script_twitch_1' })).toBeNull();
-  });
-
-  test('no source material → null', () => {
-    expect(pickRepurposeAction({ contentType: 'twitch', orderedClipUrls: [] })).toBeNull();
-    expect(pickRepurposeAction({ contentType: 'news', newsItems: [] })).toBeNull();
-    expect(pickRepurposeAction(null)).toBeNull();
+    assert.equal(s.repurposeMode, 'scene');
+    assert.equal(s.showLabel, 'Talk Soup');
   });
 });

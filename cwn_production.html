@@ -1332,26 +1332,26 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
       <div class="stats-head">
         <div>
           <h2 class="gen-page-title" style="margin:0;">Repurpose</h2>
-          <div id="postlive-subtitle" style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">Published Talk Soup → scene picks (~30s) · Live archive → claims CSV → Gemini clip picks</div>
+          <div id="postlive-subtitle" style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">Long-form shows → scene timestamps from HeyGen scaffold · Livestreams → you set clip start/stop → shorts comp</div>
         </div>
       </div>
       <div class="gen-pillar-tabs" role="tablist" style="margin-bottom:14px;">
-        <button type="button" role="tab" id="repurpose-tab-soup" class="gen-pillar-tab active" onclick="postLiveSwitchTab('soup')">Published Soup</button>
-        <button type="button" role="tab" id="repurpose-tab-live" class="gen-pillar-tab" onclick="postLiveSwitchTab('live')">Live Archive</button>
+        <button type="button" role="tab" id="repurpose-tab-soup" class="gen-pillar-tab active" onclick="postLiveSwitchTab('soup')">Published Shows</button>
+        <button type="button" role="tab" id="repurpose-tab-live" class="gen-pillar-tab" onclick="postLiveSwitchTab('live')">Livestreams</button>
       </div>
 
       <div id="postlive-panel-soup" class="repurpose-tab-panel active">
         <div id="postlive-banner-soup" class="stats-banner stats-banner-warn" style="margin-bottom:12px;">
-          <strong>Published Soup → short:</strong> Pick a published Talk Soup job → <strong>→ Shorts session</strong> → select scenes (~30s total) → CLIPS COMP or Streamers picker.
+          <strong>Long-form pipeline → short:</strong> Any published show that ran through HeyGen scaffolding already has <strong>scenes + timestamps</strong> on the job card (post-assembly rundown). Register → pick scenes (~30s) → CLIPS COMP. Same path for Talk Soup and future shows.
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
           <button class="btn btn-outline btn-sm" onclick="postLiveLoadPublishedJobs()">↻ Refresh episodes</button>
         </div>
-        <div class="sec-title">PUBLISHED TALK SOUP EPISODES <span class="badge" id="postlive-published-count">0</span></div>
+        <div class="sec-title">PUBLISHED LONG-FORM SHOWS <span class="badge" id="postlive-published-count">0</span></div>
         <div class="stats-table-wrap" style="margin-bottom:18px;">
           <table class="stats-table">
             <thead><tr>
-              <th>Job</th><th>Title</th><th>Duration</th><th>Published</th><th>Rundown</th><th></th>
+              <th>Job</th><th>Show</th><th>Title</th><th>Duration</th><th>Mode</th><th></th>
             </tr></thead>
             <tbody id="postlive-published-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Loading published jobs…</td></tr></tbody>
           </table>
@@ -1365,7 +1365,21 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <a class="btn btn-outline btn-sm" href="/post-live/claims/template.csv" download style="text-decoration:none;line-height:1.6;">↓ Claims CSV template</a>
         </div>
         <div id="postlive-banner-live" class="stats-banner stats-banner-warn" style="margin-bottom:12px;">
-          <strong>Live archive workflow:</strong> Sync lives from @clipzworldnews → export claims from YouTube Studio → upload CSV → Gemini review → pick clips → CLIPS COMP.
+          <strong>Livestream workflow:</strong> No HeyGen scaffold — you define <strong>clip start/stop</strong> (timestamp mode) or let Gemini suggest moments after claims CSV. Use manual clip windows below, or sync lives → claims → Review.
+        </div>
+        <div class="card" style="margin-bottom:14px;" id="postlive-manual-clip-card">
+          <div class="card-header"><div class="card-title">MANUAL CLIP WINDOWS (timestamp mode)</div></div>
+          <div class="card-body" style="font-size:12px;line-height:1.7;">
+            <p style="color:rgba(255,255,255,0.55);margin:0 0 10px;">Register a live VOD first, then add start/stop for each clip segment. Times as <code style="color:#c7af4f;">M:SS</code> or seconds. Target ~30s per short pick.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px;">
+              <label style="font-size:11px;">Session video ID<br><input type="text" id="postlive-manual-video-id" class="field-input-compact" style="width:140px;" placeholder="YouTube video ID"></label>
+              <label style="font-size:11px;">Label<br><input type="text" id="postlive-manual-title" class="field-input-compact" style="width:120px;" placeholder="Highlight"></label>
+              <label style="font-size:11px;">Start<br><input type="text" id="postlive-manual-start" class="field-input-compact" style="width:72px;" placeholder="1:30"></label>
+              <label style="font-size:11px;">End<br><input type="text" id="postlive-manual-end" class="field-input-compact" style="width:72px;" placeholder="2:00"></label>
+              <button type="button" class="btn btn-gold btn-sm" onclick="postLiveAddManualClip()">+ Add window</button>
+            </div>
+            <span id="postlive-manual-status" style="font-size:11px;color:rgba(255,255,255,0.4);"></span>
+          </div>
         </div>
         <div class="card" style="margin-bottom:14px;">
           <div class="card-header"><div class="card-title">UPLOAD CLAIMS CSV</div></div>
@@ -3869,25 +3883,62 @@ function postLiveLoadPublishedJobs() {
     });
 }
 
+function postLiveIsPublishedSession(s) {
+  return !!(s && (s.sessionKind === 'published_long_form' || s.sessionKind === 'published_episode'));
+}
+
 function postLiveRenderPublishedJobs() {
   var body = g('postlive-published-body');
   if (!body) return;
   var rows = window._postLivePublishedJobs || [];
   if (!rows.length) {
-    body.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">No published Talk Soup jobs yet</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">No published long-form shows yet</td></tr>';
     return;
   }
   body.innerHTML = rows.map(function(j) {
-    var pub = j.publishedAt ? String(j.publishedAt).slice(0, 10) : '—';
+    var modeLabel = j.repurposeMode === 'scene'
+      ? '<span style="color:#2ecc71;">Scenes</span>'
+      : '<span style="color:#c7af4f;">Timestamp</span>';
     return '<tr>'
       + '<td style="font-family:monospace;font-size:10px;">' + postLiveEsc(j.jobId) + '</td>'
+      + '<td>' + postLiveEsc(j.showLabel || j.contentType || '—') + '</td>'
       + '<td>' + postLiveEsc(j.title || j.jobId) + '</td>'
       + '<td>' + postLiveFmtDuration(j.durationSec) + '</td>'
-      + '<td>' + pub + '</td>'
-      + '<td>' + (j.hasRundown ? '✓' : '—') + '</td>'
-      + '<td><button class="btn btn-gold btn-sm" onclick="postLiveRegisterFromJob(\'' + postLiveEsc(j.jobId) + '\')">→ Shorts session</button></td>'
+      + '<td>' + modeLabel + (j.hasRundown ? '' : ' <span style="opacity:0.45;font-size:9px;">no rundown</span>') + '</td>'
+      + '<td><button class="btn btn-gold btn-sm" onclick="postLiveRegisterFromJob(\'' + postLiveEsc(j.jobId) + '\')">→ Repurpose</button></td>'
       + '</tr>';
   }).join('');
+}
+
+function postLiveAddManualClip() {
+  var videoId = (g('postlive-manual-video-id') && g('postlive-manual-video-id').value.trim())
+    || (window._postLiveActiveSession && window._postLiveActiveSession.videoId)
+    || window._postLiveViewVideoId;
+  if (!videoId) { alert('Enter a session video ID or open a live session first.'); return; }
+  var start = g('postlive-manual-start') && g('postlive-manual-start').value;
+  var end = g('postlive-manual-end') && g('postlive-manual-end').value;
+  var title = g('postlive-manual-title') && g('postlive-manual-title').value;
+  var st = g('postlive-manual-status');
+  if (st) st.textContent = 'Adding clip window…';
+  fetch(CFG.ffmpegUrl + '/post-live/sessions/' + encodeURIComponent(videoId) + '/manual-clips', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ start_s: start, end_s: end, title: title || undefined })
+  })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(resp) {
+      if (!resp.ok || !resp.data.ok) throw new Error((resp.data && resp.data.error) || 'Add failed');
+      if (st) st.textContent = 'Added — ' + resp.data.sceneCount + ' clip window(s) on session';
+      postLiveSwitchTab('live');
+      postLiveLoadSessions();
+      postLiveShowCandidates(videoId);
+      if (g('postlive-manual-start')) g('postlive-manual-start').value = '';
+      if (g('postlive-manual-end')) g('postlive-manual-end').value = '';
+    })
+    .catch(function(e) {
+      if (st) st.textContent = 'Failed: ' + e.message;
+      alert('Add clip window failed: ' + e.message);
+    });
 }
 
 function postLiveRegisterFromJob(jobId) {
@@ -3933,10 +3984,6 @@ function postLiveLoadVods(refresh) {
       if (!d.ok) throw new Error(d.error || 'fetch failed');
       window._postLiveVods = d.vods || [];
       if (g('postlive-vod-count')) g('postlive-vod-count').textContent = String(window._postLiveVods.length);
-      if (g('postlive-subtitle')) {
-        g('postlive-subtitle').textContent = '@' + (d.handle || 'clipzworldnews') + ' · ' + window._postLiveVods.length + ' streaming lives' +
-          (d.stale ? ' (cached)' : '') + ' · updated ' + new Date(d.fetchedAt || Date.now()).toLocaleString();
-      }
       postLiveRenderVods();
     })
     .catch(function(e) {
@@ -3967,6 +4014,8 @@ function postLiveRenderVods() {
 function postLiveRegisterVod(videoId) {
   var v = (window._postLiveVods || []).find(function(x) { return x.videoId === videoId; });
   if (!v) return;
+  var mid = g('postlive-manual-video-id');
+  if (mid) mid.value = videoId;
   fetch(CFG.ffmpegUrl + '/post-live/vods/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -4036,12 +4085,14 @@ function postLiveRenderSessions() {
     var st = s.analyzeStatus || 'idle';
     var stColor = st === 'ready' || st === 'scene_ready' ? '#2ecc71' : (st === 'running' ? '#c7af4f' : (st === 'failed' ? '#e74c3c' : 'rgba(255,255,255,0.4)'));
     var candCount = (s.sceneCandidates && s.sceneCandidates.length) || (s.candidates || []).length;
-    var isEpisode = s.sessionKind === 'published_episode';
+    var isEpisode = postLiveIsPublishedSession(s);
     var sourceLabel = isEpisode
-      ? '<span style="color:#c7af4f;">Published Soup</span>'
-      : (claims
-        ? 'Live · ' + claims + ' claim(s)'
-        : 'Live archive');
+      ? '<span style="color:#c7af4f;">' + postLiveEsc(s.showLabel || 'Long-form show') + '</span>'
+      : (s.repurposeMode === 'timestamp' || s.analyzeStatus === 'timestamp_manual'
+        ? '<span style="color:#6cb6ff;">Live · timestamp</span>'
+        : (claims
+          ? 'Live · ' + claims + ' claim(s)'
+          : 'Livestream'));
     var rowCls = window._postLiveViewVideoId === s.videoId ? ' class="postlive-session-active"' : '';
     var reviewBtn = isEpisode && st === 'scene_ready'
       ? ''
@@ -4147,8 +4198,12 @@ function postLiveShowCandidates(videoId) {
         throw new Error((resp.data && resp.data.error) || 'Session not found');
       }
       var s = resp.data.session;
-      if (s.sessionKind === 'published_episode') postLiveSwitchTab('soup');
-      else postLiveSwitchTab('live');
+      if (postLiveIsPublishedSession(s)) postLiveSwitchTab('soup');
+      else {
+        postLiveSwitchTab('live');
+        var mid = g('postlive-manual-video-id');
+        if (mid) mid.value = s.videoId;
+      }
       window._postLiveActiveSession = s;
       if (!window._postLiveCandidateSelection[s.videoId]) {
         window._postLiveCandidateSelection[s.videoId] = {};
@@ -4184,6 +4239,13 @@ function postLiveShowCandidates(videoId) {
       }
       if (!cands.length && sceneCands.length) {
         postLiveRenderSceneCandidates(s, sceneCands, st);
+        return;
+      }
+      if (!cands.length && !sceneCands.length && !postLiveIsPublishedSession(s)) {
+        body.innerHTML = '<p style="color:rgba(255,255,255,0.55);">No clip picks yet.</p>'
+          + '<p style="margin-top:8px;color:rgba(255,255,255,0.45);">Livestream: add <strong>Manual clip windows</strong> on the Livestreams tab (start/stop), or run <strong>Review</strong> for Gemini picks.</p>';
+        if (st) st.textContent = 'Use timestamp mode or Gemini Review';
+        postLiveScrollToCandidates();
         return;
       }
       if (!cands.length) {
