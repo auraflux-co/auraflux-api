@@ -1500,7 +1500,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   <button type="button" class="btn btn-outline btn-sm" onclick="setStreamerSectionsExpanded(false)">Collapse all</button>
                 </div>
                 <details open class="streamer-roster-section streamer-roster-section-selected" id="streamer-section-selected-wrap">
-                  <summary><span>Selected for today</span><span class="streamer-section-count" id="streamer-count-selected">0</span></summary>
+                  <summary><label class="section-select-check" onclick="event.stopPropagation();"><input type="checkbox" id="section-check-selected" onchange="toggleStreamerSectionAll('selected', this.checked)"></label><span>Selected for today</span><span class="streamer-section-count" id="streamer-count-selected">0</span></summary>
                   <div id="streamer-selected-chips" class="creator-chip-grid is-compact"></div>
                 </details>
                 <details open class="streamer-roster-section" id="streamer-section-templates-wrap">
@@ -1531,7 +1531,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   </div>
                 </details>
                 <details open class="streamer-roster-section" id="streamer-section-clip-groups-wrap">
-                  <summary><span>Clip groups · saved 4-packs</span><span class="streamer-section-count" id="streamer-count-clip-groups">0</span></summary>
+                  <summary><label class="section-select-check" onclick="event.stopPropagation();"><input type="checkbox" id="section-check-clip-groups" onchange="toggleStreamerSectionAll('clipGroups', this.checked)"></label><span>Clip groups · saved 4-packs</span><span class="streamer-section-count" id="streamer-count-clip-groups">0</span></summary>
                   <div class="clip-group-editor-hint" style="padding:0 8px 6px;">Quick picker targets only — does not change Templates, Following, or Bench listings.</div>
                   <div id="clip-group-editor" class="clip-group-editor" style="display:none;">
                     <input type="hidden" id="clip-group-editor-id" value="">
@@ -16816,7 +16816,8 @@ function renderClipPickerGroupsList() {
   var api = clipPickerGroupsApi();
   if (!list || !api) return;
   var groups = getClipPickerGroups();
-  updateStreamerSectionCount('streamer-count-clip-groups', groups.length, groups.length);
+  var activeCount = window._activeClipPickerGroupId ? 1 : 0;
+  updateStreamerSectionCount('streamer-count-clip-groups', groups.length, activeCount);
   if (!groups.length) {
     list.innerHTML = '<span style="color:rgba(255,255,255,0.35);font-size:11px;padding:4px 8px;">No saved groups yet — create a 4-creator pack, then hit <strong>Pick clips</strong>.</span>';
     return;
@@ -16839,6 +16840,7 @@ function renderClipPickerGroupsList() {
       + '<button type="button" class="btn btn-outline btn-sm" onclick="deleteClipPickerGroup(\'' + gid + '\')" style="color:#ff6b6b;border-color:rgba(255,107,107,0.35);">Delete</button>'
       + '</div></div>';
   }).join('');
+  syncStreamerSectionChecks();
 }
 
 function classifyStreamerSections(roster) {
@@ -16936,6 +16938,14 @@ function creatorRowHtml(h, isSelected, opts) {
 }
 
 function toggleStreamerSectionAll(sectionKey, checked) {
+  if (sectionKey === 'selected') {
+    if (!checked) setSelectedStreamers([]);
+    return;
+  }
+  if (sectionKey === 'clipGroups') {
+    applyAllClipGroupsToSelection(checked);
+    return;
+  }
   var roster = getStreamerRoster();
   var buckets = classifyStreamerSections(roster);
   var handles = buckets[sectionKey] || [];
@@ -16951,6 +16961,38 @@ function toggleStreamerSectionAll(sectionKey, checked) {
   setSelectedStreamers(Object.keys(set));
 }
 
+function applyAllClipGroupsToSelection(checked) {
+  var groups = getClipPickerGroups();
+  if (!groups.length) return;
+  if (!checked) {
+    var inGroups = {};
+    groups.forEach(function(g) {
+      (g.streamers || []).forEach(function(h) { inGroups[String(h).toLowerCase()] = true; });
+    });
+    setSelectedStreamers(getSelectedStreamers().filter(function(h) { return !inGroups[String(h).toLowerCase()]; }));
+    window._activeClipPickerGroupId = null;
+    renderClipPickerGroupsList();
+    return;
+  }
+  var union = [];
+  var seen = {};
+  groups.forEach(function(g) {
+    (g.streamers || []).forEach(function(h) {
+      var hk = String(h).toLowerCase();
+      if (!seen[hk]) { seen[hk] = true; union.push(hk); }
+    });
+  });
+  var roster = getStreamerRoster();
+  var changed = false;
+  union.forEach(function(h) {
+    if (roster.indexOf(h) === -1) { roster.push(h); changed = true; }
+  });
+  if (changed) saveStreamerRoster(roster);
+  setSelectedStreamers(union, { fromClipGroup: true });
+  window._activeClipPickerGroupId = groups.length === 1 ? groups[0].id : null;
+  renderClipPickerGroupsList();
+}
+
 function syncStreamerSectionChecks() {
   var roster = getStreamerRoster();
   var buckets = classifyStreamerSections(roster);
@@ -16964,6 +17006,31 @@ function syncStreamerSectionChecks() {
     el.checked = n === handles.length;
     el.indeterminate = n > 0 && n < handles.length;
   });
+  var selEl = g('section-check-selected');
+  if (selEl) {
+    var nSel = getSelectedStreamers().length;
+    selEl.checked = nSel > 0;
+    selEl.indeterminate = false;
+  }
+  var cgEl = g('section-check-clip-groups');
+  var groups = getClipPickerGroups();
+  if (cgEl && groups.length) {
+    var union = [];
+    var seen = {};
+    groups.forEach(function(g) {
+      (g.streamers || []).forEach(function(h) {
+        var hk = String(h).toLowerCase();
+        if (!seen[hk]) { seen[hk] = true; union.push(hk); }
+      });
+    });
+    var applied = union.length && union.every(function(h) { return selSet[h]; });
+    var anyApplied = union.some(function(h) { return selSet[h]; });
+    cgEl.checked = applied;
+    cgEl.indeterminate = anyApplied && !applied;
+  } else if (cgEl) {
+    cgEl.checked = false;
+    cgEl.indeterminate = false;
+  }
 }
 
 function updateStreamerSectionCount(elId, count, selectedInSection) {
@@ -17201,6 +17268,7 @@ function renderStreamerChips() {
   if (cnt) cnt.textContent = sel.length + ' selected';
   renderStreamerSelectedSummary(sel);
   renderClipPickerGroupsList();
+  syncStreamerSectionChecks();
 }
 
 function saveClipsPerStreamer() {
