@@ -35,7 +35,18 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .cards-grid.pillar-single { grid-template-columns:1fr; }
 
 /* ── Generate page (CPD-1027 UX) ── */
-.gen-page { max-width:1400px; }
+.gen-script-review { margin-top:14px; display:none; }
+.gen-script-review.open { display:block; }
+.gen-script-review textarea.script-editor {
+  width:100%; min-height:220px; max-height:420px; font-family:monospace; font-size:11px;
+  background:rgba(0,0,0,0.35); color:#e8e8e8; border:1px solid rgba(199,175,79,0.25);
+  border-radius:6px; padding:12px; line-height:1.5; resize:vertical;
+}
+.scene-order-table { width:100%; border-collapse:collapse; font-size:11px; margin:10px 0; }
+.scene-order-table th, .scene-order-table td { padding:6px 8px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.06); }
+.scene-order-table th { color:rgba(199,175,79,0.8); font-size:10px; letter-spacing:1px; }
+.scene-order-confirmed { color:#2ecc71; font-size:11px; font-weight:600; }
+.scene-order-stale { color:#e67e22; font-size:11px; }
 .gen-page-head { margin-bottom:20px; }
 .gen-page-title-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
 .gen-page-title { font-family:'Bebas Neue',sans-serif; font-size:28px; color:#c7af4f; letter-spacing:3px; margin:0; font-weight:400; }
@@ -980,6 +991,16 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         </div>
         <div class="card-body">
           <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;font-family:monospace;color:rgba(255,255,255,0.4);" id="script-stats"></div>
+          <div id="gen-script-review" class="gen-script-review">
+            <div style="font-size:10px;letter-spacing:2px;color:#c7af4f;font-weight:700;margin:12px 0 8px;">SCRIPT REVIEW — edit before HeyGen</div>
+            <textarea id="gen-script-editor" class="script-editor" oninput="onGenScriptEditorInput()" placeholder="Script appears here after Generate…"></textarea>
+            <div id="scene-order-panel" style="margin-top:12px;"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="refreshSceneOrderPanel()">↻ Refresh scene list</button>
+              <button type="button" id="btn-scene-order-confirm" class="btn btn-outline btn-sm" onclick="confirmSceneOrderGate('heygen')">✓ Confirm scene order</button>
+              <span id="scene-order-status" style="font-size:11px;"></span>
+            </div>
+          </div>
           <div id="script-qa-result"></div>
           <div id="preflight-panel" style="display:none;margin:10px 0;padding:12px 16px;border-radius:6px;font-size:12px;font-family:monospace;line-height:1.6;border:1px solid;max-height:220px;overflow-y:auto;"></div>
         </div>
@@ -7767,6 +7788,29 @@ function _showAssemblyPreflight(jobId, job, pf) {
 
 function _doReassembleConfirmed(jobId, job) {
   if (!job) job = JOBS.find(function(j){ return j.id === jobId; });
+  var ct = (job && (job.contentType || job.type)) || '';
+  if (isTwitchLongFormType(ct)) {
+    var cx = new XMLHttpRequest();
+    cx.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/scene-order-confirm', true);
+    cx.setRequestHeader('Content-Type', 'application/json');
+    cx.onload = function() {
+      try {
+        var cr = JSON.parse(cx.responseText);
+        if (!cr.ok) throw new Error(cr.error || 'Scene order not confirmed');
+        _doReassemblePost(jobId, job);
+      } catch (e) {
+        alert('❌ Assembly blocked — confirm scene order on Generate (or fix script order):\n' + e.message);
+      }
+    };
+    cx.onerror = function() { alert('Server unreachable'); };
+    cx.send(JSON.stringify({ gate: 'assembly' }));
+    return;
+  }
+  _doReassemblePost(jobId, job);
+}
+
+function _doReassemblePost(jobId, job) {
+  if (!job) job = JOBS.find(function(j){ return j.id === jobId; });
   var retryNum = ((job && job._assemblyRetryCount) || 0) + 1;
   var pf = document.getElementById('job-preflight-' + jobId);
   if (pf) pf.remove();
@@ -8347,6 +8391,9 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
       g('main-script').value = resp.script;
       updateScriptStats();
       syncScriptViewFromPipeline();
+      showGenScriptReview(isTwitchLongFormType(type));
+      if (g('gen-script-editor')) g('gen-script-editor').value = resp.script;
+      if (isTwitchLongFormType(type)) refreshSceneOrderPanel();
       var mins = Math.floor((resp.estSecs||0)/60);
       var secs = (resp.estSecs||0)%60;
       var statusEl = g(statusElId);
@@ -8442,7 +8489,9 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
     unlockGenerateButtons();
   };
   var holdEl = g('hold-before-heygen');
-  var holdBeforeHeygen = holdEl ? holdEl.checked : false;
+  var isLongTwitch = isTwitchLongFormType(type);
+  if (holdEl && isLongTwitch) holdEl.checked = true;
+  var holdBeforeHeygen = isLongTwitch ? true : (holdEl ? holdEl.checked : false);
   var payload = { type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {}, platforms: platforms || null, holdBeforeHeygen: holdBeforeHeygen };
   // CPD-997: extra fields (e.g. scriptVariant: 'top10') merged into the request
   if (extra && typeof extra === 'object') Object.keys(extra).forEach(function(k){ payload[k] = extra[k]; });
@@ -9537,7 +9586,157 @@ function estDurFmt(secs) {
   return secs >= 60 ? Math.floor(secs/60)+'m '+(secs%60)+'s' : secs+'s';
 }
 
+function isTwitchLongFormType(type) {
+  type = String(type || CURRENT_TYPE || '');
+  return type.indexOf('twitch') >= 0 && type.indexOf('-short') < 0 && type.indexOf('short') < 0;
+}
+
+function showGenScriptReview(show) {
+  var el = g('gen-script-review');
+  if (el) el.classList.toggle('open', !!show);
+}
+
+function onGenScriptEditorInput() {
+  var ed = g('gen-script-editor');
+  var main = g('main-script');
+  if (ed && main) main.value = ed.value;
+  updateScriptStats();
+  syncScriptViewFromPipeline();
+  window._sceneOrderConfirmed = false;
+  var st = g('scene-order-status');
+  if (st) st.innerHTML = '<span class="scene-order-stale">Script changed — re-confirm scene order</span>';
+  refreshSceneOrderPanelLocal();
+}
+
+function parseSceneHeadersLocal(script) {
+  var rows = [];
+  var lines = String(script || '').split('\n');
+  var idx = 0;
+  lines.forEach(function(line) {
+    var m = line.match(/===\s*(.+?)\s*===/);
+    if (m) {
+      idx++;
+      var name = m[1].trim();
+      var type = /_CLIP/i.test(name) && !/_SETUP|_REACTION/i.test(name) ? 'source_clip' : 'avatar';
+      if (/^INTRO$/i.test(name) || /^OUTRO$/i.test(name)) type = 'avatar';
+      rows.push({ index: idx, name: name, type: type });
+    }
+  });
+  return rows;
+}
+
+function renderSceneOrderRows(rows, preflight) {
+  var panel = g('scene-order-panel');
+  if (!panel) return;
+  if (!rows || !rows.length) {
+    panel.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);">No scenes — generate script first.</div>';
+    return;
+  }
+  var html = '<div style="font-size:10px;letter-spacing:2px;color:rgba(199,175,79,0.75);margin-bottom:6px;">SCENE ORDER (' + rows.length + ')</div>';
+  html += '<table class="scene-order-table"><thead><tr><th>#</th><th>Scene</th><th>Type</th></tr></thead><tbody>';
+  rows.forEach(function(r) {
+    html += '<tr><td>' + r.index + '</td><td>' + r.name + '</td><td>' + (r.type || 'avatar') + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  if (preflight && preflight.blockers && preflight.blockers.length) {
+    html += '<div style="color:#e74c3c;font-size:11px;">' + preflight.blockers.join('<br>') + '</div>';
+  }
+  panel.innerHTML = html;
+}
+
+function refreshSceneOrderPanelLocal() {
+  var script = (g('gen-script-editor') && g('gen-script-editor').value) || (g('main-script') && g('main-script').value) || '';
+  renderSceneOrderRows(parseSceneHeadersLocal(script));
+}
+
+function refreshSceneOrderPanel(cb) {
+  refreshSceneOrderPanelLocal();
+  var jobId = window.CURRENT_META && window.CURRENT_META.scriptJobId;
+  if (!jobId) { if (cb) cb(); return; }
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/scene-order-preflight', true);
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (resp.preflight && resp.preflight.rows) {
+        renderSceneOrderRows(resp.preflight.rows, resp.preflight);
+        window._sceneOrderConfirmed = !!(resp.preflight.heygenConfirmed);
+        var st = g('scene-order-status');
+        if (st) {
+          if (resp.preflight.heygenConfirmed) st.innerHTML = '<span class="scene-order-confirmed">✓ Scene order confirmed for HeyGen</span>';
+          else if (resp.preflight.assemblyConfirmed) st.innerHTML = '<span class="scene-order-confirmed">✓ Confirmed for assembly</span>';
+          else st.innerHTML = '';
+        }
+      }
+    } catch (_e) { /* local list still shown */ }
+    if (cb) cb();
+  };
+  xhr.onerror = function() { if (cb) cb(); };
+  xhr.send();
+}
+
+function confirmSceneOrderGate(gate, cb) {
+  gate = gate || 'heygen';
+  var jobId = window.CURRENT_META && window.CURRENT_META.scriptJobId;
+  if (!jobId) { alert('No job ID — generate script first.'); return; }
+  var script = (g('gen-script-editor') && g('gen-script-editor').value) || (g('main-script') && g('main-script').value) || '';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/scene-order-confirm', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Confirm failed');
+      window._sceneOrderConfirmed = true;
+      var st = g('scene-order-status');
+      if (st) st.innerHTML = '<span class="scene-order-confirmed">✓ Scene order confirmed' + (gate === 'assembly' ? ' for assembly' : ' for HeyGen') + '</span>';
+      if (cb) cb(null, resp);
+    } catch (e) {
+      alert(e.message);
+      if (cb) cb(e);
+    }
+  };
+  xhr.onerror = function() { alert('Server unreachable'); if (cb) cb(new Error('network')); };
+  xhr.send(JSON.stringify({ gate: gate, script: script }));
+}
+
+function sendToHeyGenServer() {
+  var jobId = window.CURRENT_META && window.CURRENT_META.scriptJobId;
+  if (!jobId) { alert('No job ID — generate script first (Avatar VOD).'); return; }
+  var script = (g('gen-script-editor') && g('gen-script-editor').value.trim()) || (g('main-script') && g('main-script').value.trim()) || '';
+  if (!script) { alert('No script to send'); return; }
+
+  function doSend() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/heygen/send-approved', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function() {
+      try {
+        var resp = JSON.parse(xhr.responseText);
+        if (!resp.ok) throw new Error(resp.error || 'HeyGen send failed');
+        g('script-type-label').textContent = 'SENDING TO HEYGEN (server) — ' + jobId;
+        alert('HeyGen render started on server for ' + jobId + '. Watch Queue for progress.');
+        if (typeof loadServerJobs === 'function') loadServerJobs();
+        nav('queue');
+      } catch (e) { alert(e.message); }
+    };
+    xhr.onerror = function() { alert('Server unreachable'); };
+    xhr.send(JSON.stringify({ script: script }));
+  }
+
+  if (window._sceneOrderConfirmed) {
+    doSend();
+    return;
+  }
+  confirmSceneOrderGate('heygen', function(err) {
+    if (!err) doSend();
+  });
+}
+
 function sendToHeyGen() {
+  if (isTwitchLongFormType(CURRENT_TYPE)) {
+    return sendToHeyGenServer();
+  }
   var script = g('main-script').value.trim();
   if (!script) { alert('No script to send'); return; }
 
@@ -9937,6 +10136,7 @@ function triggerGate2(batchJob) {
 }
 
 function sendToHeyGenManual() {
+  if (isTwitchLongFormType(CURRENT_TYPE)) return sendToHeyGenServer();
   var qaEl = g('script-qa-result');
   if (qaEl) qaEl.innerHTML += '<div style="margin-top:6px;font-size:11px;color:#c7af4f;">⚠️ Manual override — sending to HeyGen despite score below auto-pass threshold (90).</div>';
   sendToHeyGen();
@@ -15970,9 +16170,9 @@ function displayScriptQA(scriptQA) {
   ];
 
   if (scriptQA.outcome === 'pass' && scriptQA.held) {
-    html.push('<div style="font-size:12px;color:#c7af4f;font-weight:700;margin-bottom:6px;">⏸ HELD — script ready, HeyGen auto-send skipped</div>');
-    html.push('<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:10px;">Gate 1 passed (' + scriptQA.score + '/100). Review and edit the script in the textarea above — find the scene you want to change, update the words, then click:</div>');
-    html.push('<button onclick="sendToHeyGen()" class="btn btn-gold btn-sm" style="font-size:12px;padding:8px 18px;">APPROVE &amp; SEND TO HEYGEN →</button>');
+    html.push('<div style="font-size:12px;color:#c7af4f;font-weight:700;margin-bottom:6px;">⏸ HELD — review script and scene order below</div>');
+    html.push('<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:10px;">Gate 1 passed (' + scriptQA.score + '/100). Edit script in the panel below, confirm scene order, then send to HeyGen (server path — no browser batch job).</div>');
+    html.push('<button onclick="sendToHeyGenServer()" class="btn btn-gold btn-sm" style="font-size:12px;padding:8px 18px;">APPROVE &amp; SEND TO HEYGEN →</button>');
     // Highlight the send button in the header too
     html.push('<script>var _hb=document.getElementById("send-to-heygen-btn");if(_hb){_hb.style.opacity="";_hb.style.boxShadow="0 0 0 2px #c7af4f";_hb.textContent="APPROVE & SEND TO HEYGEN →";}<\/script>');
   } else if (scriptQA.outcome === 'pass') {
@@ -15985,7 +16185,7 @@ function displayScriptQA(scriptQA) {
         html.push('<div style="font-size:11px;color:rgba(255,255,255,0.6);">  -' + d.points + '  ' + d.reason + '</div>');
       });
     }
-    html.push('<button onclick="sendToHeyGenManual()" class="btn btn-gold btn-sm" style="margin-top:8px;">APPROVE & SEND TO HEYGEN →</button>');
+    html.push('<button onclick="sendToHeyGenServer()" class="btn btn-gold btn-sm" style="margin-top:8px;">APPROVE & SEND TO HEYGEN →</button>');
   } else {
     html.push('<div style="font-size:11px;color:#e74c3c;margin-bottom:8px;">❌ Hard fail — script returned to Claude. See why-doc for details.</div>');
     if (scriptQA.deductions && scriptQA.deductions.length) {

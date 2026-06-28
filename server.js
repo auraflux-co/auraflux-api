@@ -3767,6 +3767,137 @@ app.post('/job/:id/regen-script', async (req, res) => {
   }
 });
 
+// GET /job/:id/scene-order-preflight — ordered scene list for HeyGen / assembly gates (CPD-1130)
+app.get('/job/:id/scene-order-preflight', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  const { buildSceneOrderPreflight, isTwitchLongForm } = require('./lib/scene_order_gate');
+  if (!isTwitchLongForm(card)) {
+    return res.json({ ok: true, skipped: true, reason: 'not_twitch_long_form' });
+  }
+  const preflight = buildSceneOrderPreflight({ card });
+  res.json({ ok: preflight.ok, jobId, preflight });
+});
+
+// POST /job/:id/scene-order-confirm — operator confirms ordered scene list (gate: heygen | assembly)
+app.post('/job/:id/scene-order-confirm', (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  const gate = req.body?.gate === 'assembly' ? 'assembly' : 'heygen';
+  const script = req.body?.script || card.script?.raw;
+  if (script && script !== card.script?.raw) {
+    card = { ...card, script: { ...(card.script || {}), raw: script } };
+  }
+  const { confirmSceneOrder, isTwitchLongForm } = require('./lib/scene_order_gate');
+  if (!isTwitchLongForm(card)) {
+    return res.json({ ok: true, skipped: true });
+  }
+  const result = confirmSceneOrder(card, gate, script);
+  if (!result.ok) {
+    return res.status(409).json({ ok: false, code: 'scene_order_invalid', error: result.error, preflight: result.preflight });
+  }
+  saveJobCard(jobId, result.card);
+  res.json({
+    ok: true,
+    jobId,
+    gate,
+    confirmedAt: result.confirmedAt,
+    preflight: result.preflight,
+  });
+});
+
+// POST /job/:id/heygen/send-approved — server-only HeyGen send after scene order confirm (CPD-1129)
+app.post('/job/:id/heygen/send-approved', async (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (!process.env.HEYGEN_API_KEY && process.env.HEYGEN_SIM_MODE !== 'true') {
+    return res.status(400).json({ ok: false, error: 'HEYGEN_API_KEY not set' });
+  }
+
+  const script = String(req.body?.script || card.script?.raw || '').trim();
+  if (!script) return res.status(400).json({ ok: false, error: 'No script to send' });
+
+  card = {
+    ...card,
+    script: { ...(card.script || {}), raw: script },
+  };
+
+  const { assertSceneOrderGate, isTwitchLongForm } = require('./lib/scene_order_gate');
+  if (isTwitchLongForm(card)) {
+    const gate = assertSceneOrderGate(card, 'heygen', script);
+    if (!gate.ok) {
+      return res.status(409).json({ ok: false, code: gate.code, error: gate.error });
+    }
+  }
+
+  saveJobCard(jobId, card);
+
+  res.json({
+    ok: true,
+    jobId,
+    message: 'HeyGen send started (server path)',
+  });
+
+  (async () => {
+    const type = card.contentType || 'twitch';
+    const format = String(type).includes('-short') ? 'portrait' : 'landscape';
+    let scriptForHeygen = script
+      .replace(/^HOOK:\s*/mg, '')
+      .replace(/^REACTION:\s*/mg, '')
+      .replace(/^CAPTION:\s*.+$/mg, '')
+      .replace(/\[(?:pause|beat)[^\]]*\]/gi, '')
+      .replace(/\n{3,}/g, '\n\n').trim();
+
+    const checkpoint = (heygenPartial) => {
+      const snap = {
+        ...card,
+        ...persistedJobs[jobId],
+        stage: 'avatar_in_progress',
+        avatarEngine: 'heygen',
+        heygen: { ...(card.heygen || {}), ...heygenPartial, videoJobs: heygenPartial.videoJobs },
+      };
+      saveJobCard(jobId, snap);
+    };
+
+    try {
+      const heygenResult = await sendScriptToHeyGen(scriptForHeygen, {
+        contentType: type,
+        format,
+        jobId,
+        onSceneComplete: ({ videoJobs }) => checkpoint({ videoJobs, engine: 'heygen' }),
+      });
+      if (heygenResult?.error) throw new Error(heygenResult.error);
+
+      const updated = {
+        ...card,
+        stage: 'all_sent',
+        avatarEngine: 'heygen',
+        heygen: heygenResult,
+      };
+      saveJobCard(jobId, updated);
+      console.log(`[heygen/send-approved:${jobId}] ✅ ${heygenResult.videoJobs?.length || 0} scenes submitted`);
+
+      const manualWf = require('./lib/manual_segment_workflow');
+      if (manualWf.useC0ImmediateManualHold(updated)) {
+        const prep = await manualWf.prepareC0ManualHoldAfterHeyGen(jobId, updated);
+        updated.stage = 'awaiting_manual_segments';
+        updated.manualSegments = prep.manualSegments;
+        saveJobCard(jobId, updated);
+      }
+    } catch (err) {
+      console.error(`[heygen/send-approved:${jobId}]`, err.message);
+      saveJobCard(jobId, {
+        ...persistedJobs[jobId],
+        stage: 'heygen_failed',
+        heygenError: err.message,
+      });
+    }
+  })();
+});
+
 // ── Twitch Soup sidebar thumbnails (operator approval before assembly burn) ──
 app.get('/job/:id/sidebar-thumbs', (req, res) => {
   const card = persistedJobs[req.params.id];
@@ -4902,6 +5033,14 @@ app.post('/job/:id/reassemble', async (req, res) => {
         error: `Found ${stray} avatar file(s) in manual_segments root. For copy-only fixes use ✏️ APPLY SCENE UPDATES (scene_updates/ folder). For a full manual batch pass fullManualBatch: true.`,
         sceneUpdatesPath: `tmp/manual_segments/${jobId}/scene_updates/`,
       });
+    }
+  }
+
+  const { assertSceneOrderGate, isTwitchLongForm } = require('./lib/scene_order_gate');
+  if (isTwitchLongForm(card) && !req.body?.skipSceneOrderGate) {
+    const gate = assertSceneOrderGate(card, 'assembly');
+    if (!gate.ok) {
+      return res.status(409).json({ ok: false, code: gate.code, error: gate.error });
     }
   }
 
