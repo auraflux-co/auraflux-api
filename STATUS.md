@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-28 (CPD-1123) — News Composer EXECUTE parity: WIRE + THE THREAD → news-short clip-comp via Library → COMPOSE → EXECUTE. Epic [CPD-1122](https://aurafluxco.atlassian.net/browse/CPD-1122).
 **Last Updated:** 2026-06-28 (CPD-1121 hotfix) — Reddit preview: v.redd.it HLS via ffmpeg (not yt-dlp); Apify comments require full permalink URL from UI.
 **Last Updated:** 2026-06-28 (CPD-1121) — THE THREAD live Reddit via Apify (`reddit_apify.js`); source priority OAuth→Apify→PullPush; checkbox sub multi-select + library picker fix. Set `REDDIT_USE_PULLPUSH=0` + `APIFY_API_TOKEN` (Doppler) then deploy when pipeline idle.
 **Last Updated:** 2026-06-27 (CPD-1120) — THE THREAD Reddit desk: Clip Library tab + subreddit dropdown (saved roster), sequential PullPush fetch, R2 stage, lazy comments, OAuth setup routes (`/reddit/oauth/authorize`), news-short path via reddit_source. Deployed C0. OAuth pending REDDIT_CLIENT_ID from Reddit dev app.
