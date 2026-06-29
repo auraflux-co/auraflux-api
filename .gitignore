@@ -166,6 +166,7 @@ video_generation_custom_*.csv
 !app/public/brand/*.jpg
 !app/public/*.png
 !app/public/*.ico
+!assets/hook_emoji/*.png
 
 # Debug ingest logs (per-session; do not commit)
 .cursor/debug-*.log

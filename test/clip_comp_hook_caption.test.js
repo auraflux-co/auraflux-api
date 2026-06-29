@@ -48,10 +48,10 @@ test('_buildHookDrawtextFilters uses two drawtext filters for two lines', () => 
   assert.ok(!vf.includes('applynfor'));
 });
 
-test('_wrapHookLines strips emoji that FFmpeg cannot render', () => {
+test('_wrapHookLines keeps emoji in burned hook text', () => {
   const lines = _wrapHookLines('World Cup Game! 😂', 2, 36);
   const joined = lines.join(' ');
-  assert.ok(!joined.includes('😂'));
+  assert.ok(joined.includes('😂'));
   assert.match(joined, /World Cup Game/);
 });
 

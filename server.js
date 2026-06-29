@@ -6486,6 +6486,14 @@ app.get('/broadcast-config.js', (req, res) => {
   );
 });
 
+// Hook emoji picklist for dashboard custom-hook dropdown (lib/hook_emoji.js)
+app.get('/assets/hook_emoji_picker.js', (req, res) => {
+  const { HOOK_EMOJI_PICKLIST } = require('./lib/hook_emoji');
+  res.type('application/javascript');
+  res.set('Cache-Control', 'public, max-age=300');
+  res.send(`window.HOOK_EMOJI_PICKLIST=${JSON.stringify(HOOK_EMOJI_PICKLIST)};`);
+});
+
 // Serve assets folder for images (Bobby G, etc.)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
