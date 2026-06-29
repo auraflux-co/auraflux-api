@@ -15143,7 +15143,7 @@ function previewTwitchClips(forceReload) {
   var twFilters = getPickerFilters('twitch');
   var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
     + '&platforms=' + encodeURIComponent(getSelectedStreamerPlatforms().join(','))
-    + '&clipsPer=' + clipsPerStreamer;
+    + '&library=1&clipsPer=50&clipSort=recent';
   if (twFilters.durMin != null) qs += '&durMin=' + twFilters.durMin;
   if (twFilters.durMax != null) qs += '&durMax=' + twFilters.durMax;
   if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;

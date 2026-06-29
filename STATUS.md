@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-28 (CPD-1125) — Twitch clip fetch parity: Helix ended_at for 30d windows, library recent sort, no forced 24h on ALL. Deployed C0.
 **Last Updated:** 2026-06-28 (CPD-1125) — Clip picker preview fix: re-render after R2 stage, CDN /clip-url hover preview, click for controls. Deployed C0.
 **Last Updated:** 2026-06-28 (CPD-1125) — Library→Publish E2E gold path: auto confirm-hooks at hook_review, 30m pipeline timeout, Publish Prep + Gate 5 (private clip-comp). Verified private YouTube publish on streamer comp. Deployed C0.
 **Last Updated:** 2026-06-25 (CPD-1132) — Repurpose test plan + route integration tests; fix persistedJobsRef stale after SQLite load.

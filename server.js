@@ -8528,6 +8528,7 @@ app.get('/streamers/clips', async (req, res) => {
   const pubHours = parseFloat(req.query.pubHours);
   const durMin = parseNewsQueryInt(req.query.durMin);
   const durMax = parseNewsQueryInt(req.query.durMax);
+  const clipSort = req.query.clipSort === 'recent' ? 'recent' : 'popular';
 
   try {
     const results = await streamerPicker.fetchStreamerPickerClips({
@@ -8537,6 +8538,7 @@ app.get('/streamers/clips', async (req, res) => {
       pubHours: Number.isFinite(pubHours) ? pubHours : null,
       durMin,
       durMax,
+      clipSort,
     });
     res.json({ ok: true, streamers: results, clipsPer, platforms });
   } catch (err) {
