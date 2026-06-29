@@ -1640,13 +1640,15 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                   </span>
                 </div>
               </div>
-              <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" class="field-input-compact" style="display:none" aria-hidden="true">
-                <option value="1">1 clip</option>
-                <option value="2" selected>2 clips</option>
-                <option value="3">3 clips</option>
-                <option value="4">4 clips</option>
-                <option value="5">5 clips</option>
-              </select>
+              <div class="field" style="margin-bottom:8px;">
+                <label for="twitch-clips-per-main" style="font-size:9px;color:rgba(255,255,255,0.45);letter-spacing:1px;">MAX PICKS PER STREAMER</label>
+                <select id="twitch-clips-per-main" onchange="saveClipsPerStreamer()" class="field-input-compact" title="How many clips you can check per creator before COMPOSE">
+                  <option value="2" selected>2 clips</option>
+                  <option value="3">3 clips</option>
+                  <option value="4">4 clips</option>
+                  <option value="5">5 clips</option>
+                </select>
+              </div>
               <select id="twitch-picker-pub-window" style="display:none" aria-hidden="true">
                 <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="any">Top ALL</option>
               </select>
@@ -5901,6 +5903,7 @@ function jobTypeLabel(serverJob) {
 
 function jobStageBadge(serverJob) {
   var stage = serverJob.stage || serverJob.status || '';
+  if (stage === 'hook_review') return { text: 'HOOK REVIEW', color: '#c7af4f' };
   if (stage === 'awaiting_review' || stage === 'metadata_review') return { text: 'NEEDS REVIEW', color: '#c7af4f' };
   if (stage === 'published') return { text: 'PUBLISHED', color: '#2ecc71' };
   if (stage === 'assembling' || serverJob.status === 'assembling') return { text: 'ASSEMBLING', color: '#3498db' };
@@ -5919,7 +5922,7 @@ function jobMatchesFindFilter(serverJob) {
   }
   // work = needs operator attention
   if (stage === 'published') return false;
-  return ['awaiting_review', 'metadata_review', 'assembled', 'gate3_failed', 'publish_scheduled', 'gate5_failed', 'music_review'].indexOf(stage) > -1
+  return ['awaiting_review', 'metadata_review', 'assembled', 'gate3_failed', 'publish_scheduled', 'gate5_failed', 'music_review', 'hook_review'].indexOf(stage) > -1
     || serverJob.status === 'gate3_failed' || serverJob.status === 'completed';
 }
 
@@ -6332,7 +6335,7 @@ function restoreJobsFromServer(showAlert, _retryCount) {
         var isGate5InFlight = (serverStage === 'gate5_forced' || serverStage === 'gate5_running');
 
         // Review-ready jobs always restore (auto + manual) so new clip comps appear in Queue.
-        var isAwaitingOperator = serverStage === 'awaiting_review' || serverStage === 'metadata_review' || serverStage === 'assembled' || serverStage === 'publish_scheduled';
+        var isAwaitingOperator = serverStage === 'awaiting_review' || serverStage === 'metadata_review' || serverStage === 'assembled' || serverStage === 'publish_scheduled' || serverStage === 'hook_review';
         var isAssembledDone = !isGate5InFlight && isAwaitingOperator;
         if (isAssembledDone && !showAlert && serverStage === 'assembled' && !serverJob.driveUrl) {
           cwn_log('[restore] Skipping legacy assembled job ' + serverJob.jobId + ' on auto-restore — use ↩ RESTORE JOBS', false);
@@ -6340,7 +6343,7 @@ function restoreJobsFromServer(showAlert, _retryCount) {
         }
 
         var isAssembled = isAwaitingOperator || !!(serverJob.assembledAt);
-        var isAssembling = serverJob.status === 'assembling';
+        var isAssembling = serverJob.status === 'assembling' || serverStage === 'assembling';
         var isGate3Failed = serverJob.status === 'gate3_failed' || (qaOutcome === 'fail' && serverJob.clipsOnly);
         var restoredStatus = isGate3Failed ? 'gate3_failed'
           : (isFailed && serverJob.clipsOnly) ? 'failed'
@@ -6413,6 +6416,7 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           designSpec: serverJob.designSpec || null,
           clipHookTitles: serverJob.clipHookTitles || null,
           clipHookCandidates: serverJob.clipHookCandidates || null,
+          hooksConfirmedAt: serverJob.hooksConfirmedAt || null,
           titleCandidates: serverJob.titleCandidates || null,
           captionsApplied: serverJob.captionsApplied,
           whisperCaptionsExpected: serverJob.whisperCaptionsExpected,
@@ -6587,7 +6591,8 @@ function jobGate3Failed(job) {
 }
 
 function jobActivelyAssembling(job) {
-  return job.status === 'assembling' && !jobGate3Failed(job);
+  var st = job.stage || '';
+  return (job.status === 'assembling' || st === 'assembling') && !jobGate3Failed(job);
 }
 
 function formatGate3ReportText(job) {
@@ -6618,6 +6623,124 @@ function toggleJobMediaPanel(jobId) {
   if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
+/** Burned-hook picker — preAssembly=true before first FFmpeg; false after assembly for re-burn. */
+function renderBurnedHookPickerMarkup(job, preAssembly) {
+  var html = '';
+  var hookClipCount = Math.max(
+    (job.clipHookTitles && job.clipHookTitles.length) || 0,
+    (job.clipHookCandidates && job.clipHookCandidates.length) || 0,
+    (job.meta && job.meta.orderedClipUrls && job.meta.orderedClipUrls.length) || 0,
+    1
+  );
+  var nextStepHint = preAssembly
+    ? 'Pick or type hooks, then click <strong>▶ BUILD VIDEO</strong> below.'
+    : 'Type your line → USE CUSTOM → 📁 RE-ASSEMBLE FROM FILES to burn.';
+  var customSavedHint = preAssembly
+    ? 'Saved — click ▶ BUILD VIDEO when ready.'
+    : 'Saved on server — next: 📁 RE-ASSEMBLE FROM FILES to burn into MP4';
+  for (var clipIdx = 0; clipIdx < hookClipCount; clipIdx++) {
+    var pool = (job.clipHookCandidates && job.clipHookCandidates[clipIdx]) ? job.clipHookCandidates[clipIdx] : [];
+    var activeHook = (job.clipHookTitles && job.clipHookTitles[clipIdx]) ? String(job.clipHookTitles[clipIdx]).trim() : '';
+    var inputId = 'custom-hook-input-' + job.id + '-' + clipIdx;
+    var statusId = 'custom-hook-status-' + job.id + '-' + clipIdx;
+    var isCustomActive = pool.some(function(c) {
+      return c && c.operatorCustom && c.selected
+        && String(c.text || '').trim().toLowerCase() === activeHook.toLowerCase();
+    });
+    var panelBorder = isCustomActive
+      ? 'border:1px solid rgba(46,204,113,0.55);'
+      : 'border:1px solid rgba(199,175,79,0.15);';
+    html += '<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,0.25);' + panelBorder + 'border-radius:6px;">'
+      + '<div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.6);letter-spacing:1.5px;margin-bottom:6px;">'
+      + 'BURNED HOOK · CLIP ' + (clipIdx + 1)
+      + '</div>';
+    if (isCustomActive) {
+      html += '<div style="font-size:10px;color:#2ecc71;font-weight:700;margin-bottom:8px;padding:6px 8px;background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.35);border-radius:4px;">'
+        + '● CUSTOM HOOK SELECTED · "' + escHtml(activeHook.slice(0, 56)) + '"'
+        + '<div style="font-size:9px;font-weight:500;color:rgba(46,204,113,0.85);margin-top:3px;">' + customSavedHint + '</div>'
+        + '</div>';
+    } else if (activeHook) {
+      html += '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:6px;">'
+        + 'Active hook: "' + escHtml(activeHook.slice(0, 56)) + '"'
+        + '</div>';
+    }
+    var aiCount = pool.filter(function(c){ return c && !c.operatorCustom && String(c.text||'').trim(); }).length;
+    if (aiCount) {
+      html += '<div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:4px;">AI CANDIDATES (optional)</div>';
+      for (var candIdx = 0; candIdx < pool.length && candIdx < 6; candIdx++) {
+        var cand = pool[candIdx];
+        if (!cand || cand.operatorCustom) continue;
+        var hookText = String(cand.text || '').trim();
+        if (!hookText) continue;
+        var isActive = !isCustomActive && activeHook && hookText.toLowerCase() === activeHook.toLowerCase();
+        var qaTag = cand.qaPassed ? (' ✓' + (cand.qaScore != null ? ' ' + cand.qaScore : '')) : (cand.qaScore != null ? ' · QA ' + cand.qaScore : '');
+        var formulaTag = cand.formula ? (' · ' + escHtml(String(cand.formula).slice(0, 22))) : '';
+        html += '<button type="button" onclick="selectClipHook(\'' + job.id + '\',' + clipIdx + ',' + candIdx + ')" '
+          + 'style="display:block;width:100%;text-align:left;margin:0 0 4px;padding:6px 8px;font-size:10px;line-height:1.35;cursor:pointer;border-radius:4px;'
+          + (isActive
+            ? 'background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.45);color:#2ecc71;'
+            : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);')
+          + '">'
+          + (isActive ? '● ' : '○ ') + escHtml(hookText.slice(0, 56))
+          + '<span style="opacity:0.55;">' + formulaTag + qaTag + '</span>'
+          + '</button>';
+      }
+    } else if (!activeHook) {
+      html += '<div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:6px;">No AI candidates yet — type your own hook below or wait for Hook Machine.</div>';
+    }
+    var inputBorder = isCustomActive
+      ? 'border:1px solid rgba(46,204,113,0.55);'
+      : 'border:1px solid rgba(199,175,79,0.35);';
+    html += '<div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin:8px 0 4px;">CUSTOM HOOK (you type it)</div>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'
+      + '<input type="text" id="' + inputId + '" value="' + escHtml(activeHook) + '" maxlength="72" placeholder="Your hook line — max 72 chars, no streamer name" '
+      + 'style="flex:1;min-width:180px;padding:6px 8px;font-size:11px;border-radius:4px;' + inputBorder + 'background:rgba(0,0,0,0.35);color:#fff;" '
+      + 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();applyCustomClipHook(\'' + job.id + '\',' + clipIdx + ');}" />'
+      + '<button type="button" id="custom-hook-btn-' + job.id + '-' + clipIdx + '" onclick="applyCustomClipHook(\'' + job.id + '\',' + clipIdx + ')" class="btn btn-gold btn-sm" style="font-weight:700;white-space:nowrap;">'
+      + (isCustomActive ? '✓ CUSTOM ACTIVE' : '✓ USE CUSTOM')
+      + '</button>'
+      + '</div>'
+      + '<div id="' + statusId + '" style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:6px;">'
+      + (isCustomActive ? 'Custom hook confirmed on card.' : nextStepHint)
+      + '</div>'
+      + '</div>';
+  }
+  return html;
+}
+
+function confirmClipHooksAndBuild(jobId) {
+  var job = JOBS.find(function(j){ return j.id === jobId; });
+  var btn = document.getElementById('confirm-hooks-btn-' + jobId);
+  if (btn) { btn.disabled = true; btn.textContent = '⚙ BUILDING…'; }
+  cwn_log('[hook] ' + jobId + ' — confirm hooks + start FFmpeg', false);
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/confirm-hooks', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 120000;
+  xhr.onload = function() {
+    var resp = null;
+    try { resp = JSON.parse(xhr.responseText); } catch(e) { resp = { ok: false, error: e.message }; }
+    if (!resp.ok) {
+      if (btn) { btn.disabled = false; btn.textContent = '▶ BUILD VIDEO'; }
+      alert('Build failed: ' + (resp.error || xhr.status));
+      return;
+    }
+    if (job) {
+      job.stage = 'assembling';
+      job.status = 'assembling';
+      job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
+      saveJobs();
+    }
+    renderQueue();
+    startClipCompReviewPoll(jobId, null);
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (btn) { btn.disabled = false; btn.textContent = '▶ BUILD VIDEO'; }
+    alert('Build request failed — check pm2 logs; server may still be assembling.');
+  };
+  xhr.send(JSON.stringify({}));
+}
+
 function renderQueue() {
   try {
   var visibleJobs = JOBS.filter(function(j) { return isJobQueued(j); });
@@ -6641,18 +6764,31 @@ function renderQueue() {
     var totalSegs = segments.length;
     var anyRendering = segments.some(function(s){ return s.status==='rendering'||s.status==='generating'; });
 
+    var jobStage = job.stage || '';
+    var previewUrlEarly = resolveJobPreviewUrl(job);
+    var ffmpegDone = !!(job.assembledAt || job.driveUrl || previewUrlEarly);
+    var hooksReviewActive = job.clipsOnly && jobStage === 'hook_review' && !job.hooksConfirmedAt;
+    var ffmpegActive = !ffmpegDone && !hooksReviewActive && (
+      jobActivelyAssembling(job)
+      || jobStage === 'assembling'
+      || (job.clipsOnly && (status === 'processing' || status === 'all_sent') && !!job.hooksConfirmedAt)
+    );
+
     // PIPELINE STATUS BAR
     var pipe = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 10px;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);">';
     if (job.clipsOnly) {
       var clipsReady = clipSlots.filter(function(s){ return s.clipUrl || s.url; }).length;
       var clipTotal = clipSlots.length || totalSegs;
-      pipe += pipeStep('CLIPS '+clipsReady+'/'+clipTotal, clipTotal > 0 && clipsReady >= clipTotal, !(job.assembledAt || job.driveUrl), '#9b59b6');
+      pipe += pipeStep('CLIPS '+clipsReady+'/'+clipTotal, clipTotal > 0 && clipsReady >= clipTotal, false, '#9b59b6');
+      if (hooksReviewActive || job.hooksConfirmedAt || jobStage === 'hook_review') {
+        pipe += pipeStep('HOOKS', !!job.hooksConfirmedAt && !hooksReviewActive, hooksReviewActive, '#c7af4f');
+      }
     } else {
       pipe += pipeStep('SCRIPT', !!(job.script&&job.script.length>10), false, '#c7af4f');
       var hgDone = doneSegs.length===totalSegs&&totalSegs>0;
       pipe += pipeStep('HEYGEN '+doneSegs.length+'/'+totalSegs, hgDone, anyRendering, '#e74c3c');
     }
-    pipe += pipeStep('FFMPEG', !!(job.assembledAt || job.driveUrl || resolveJobPreviewUrl(job)), !!(status==='processing'||status==='all_sent'||jobActivelyAssembling(job))&&!job.assembledAt&&!job.driveUrl&&!resolveJobPreviewUrl(job), '#e67e22');
+    pipe += pipeStep('FFMPEG', ffmpegDone, ffmpegActive, '#e67e22');
     if (job.clipsOnly) {
       var g3Pass = !!(job.gate3 && job.gate3.outcome !== 'fail' && job.gate3.score >= 60);
       var g3Fail = jobGate3Failed(job);
@@ -6717,7 +6853,16 @@ function renderQueue() {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.12);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:11px;color:#3498db;">'
         + '⏳ <strong>Re-assembling now</strong> — old preview/SEO stays visible until FFmpeg finishes. Watch for <strong>✅ ASSEMBLY COMPLETE</strong> on the card (or ↩ RESTORE JOBS after ~5–10 min).'
         + '</div>';
-    } else if (job.clipsOnly && !job.driveUrl && !resolveJobPreviewUrl(job) && jobStage !== 'failed' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
+    } else if (job.clipsOnly && jobStage === 'hook_review' && !job.hooksConfirmedAt) {
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.1);border:1px solid rgba(199,175,79,0.45);border-radius:6px;font-size:11px;color:#c7af4f;">'
+        + '🎣 <strong>HOOK REVIEW</strong> — pick AI candidates or type custom hooks for each clip. FFmpeg does not start until you click <strong>▶ BUILD VIDEO</strong>.'
+        + '</div>';
+      metaStrip += renderBurnedHookPickerMarkup(job, true);
+      metaStrip += '<div style="margin:10px 0 4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+        + '<button type="button" id="confirm-hooks-btn-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;padding:8px 16px;">▶ BUILD VIDEO</button>'
+        + '<button type="button" onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine (~1–3 min per clip)">🎣 REGEN HOOKS</button>'
+        + '</div>';
+    } else if (job.clipsOnly && !job.driveUrl && !resolveJobPreviewUrl(job) && jobStage !== 'failed' && jobStage !== 'hook_review' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:11px;color:#3498db;">'
         + '⏳ Assembling clip comp — preview + SEO will appear when FFmpeg finishes.'
         + '</div>';
@@ -6767,79 +6912,7 @@ function renderQueue() {
         }
       }
       if (job.clipsOnly && jobStage === 'awaiting_review') {
-        var hookClipCount = Math.max(
-          (job.clipHookTitles && job.clipHookTitles.length) || 0,
-          (job.clipHookCandidates && job.clipHookCandidates.length) || 0,
-          (job.meta && job.meta.orderedClipUrls && job.meta.orderedClipUrls.length) || 0,
-          1
-        );
-        for (var clipIdx = 0; clipIdx < hookClipCount; clipIdx++) {
-          var pool = (job.clipHookCandidates && job.clipHookCandidates[clipIdx]) ? job.clipHookCandidates[clipIdx] : [];
-          var activeHook = (job.clipHookTitles && job.clipHookTitles[clipIdx]) ? String(job.clipHookTitles[clipIdx]).trim() : '';
-          var inputId = 'custom-hook-input-' + job.id + '-' + clipIdx;
-          var statusId = 'custom-hook-status-' + job.id + '-' + clipIdx;
-          var isCustomActive = pool.some(function(c) {
-            return c && c.operatorCustom && c.selected
-              && String(c.text || '').trim().toLowerCase() === activeHook.toLowerCase();
-          });
-          var panelBorder = isCustomActive
-            ? 'border:1px solid rgba(46,204,113,0.55);'
-            : 'border:1px solid rgba(199,175,79,0.15);';
-          metaStrip += '<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,0.25);' + panelBorder + 'border-radius:6px;">'
-            + '<div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.6);letter-spacing:1.5px;margin-bottom:6px;">'
-            + 'BURNED HOOK · CLIP ' + (clipIdx + 1)
-            + '</div>';
-          if (isCustomActive) {
-            metaStrip += '<div style="font-size:10px;color:#2ecc71;font-weight:700;margin-bottom:8px;padding:6px 8px;background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.35);border-radius:4px;">'
-              + '● CUSTOM HOOK SELECTED · "' + escHtml(activeHook.slice(0, 56)) + '"'
-              + '<div style="font-size:9px;font-weight:500;color:rgba(46,204,113,0.85);margin-top:3px;">Saved on server — next: 📁 RE-ASSEMBLE FROM FILES to burn into MP4</div>'
-              + '</div>';
-          } else if (activeHook) {
-            metaStrip += '<div style="font-size:10px;color:rgba(255,255,255,0.55);margin-bottom:6px;">'
-              + 'Active hook: "' + escHtml(activeHook.slice(0, 56)) + '"'
-              + '</div>';
-          }
-          var aiCount = pool.filter(function(c){ return c && !c.operatorCustom && String(c.text||'').trim(); }).length;
-          if (aiCount) {
-            metaStrip += '<div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:4px;">AI CANDIDATES (optional)</div>';
-            for (var candIdx = 0; candIdx < pool.length && candIdx < 6; candIdx++) {
-              var cand = pool[candIdx];
-              if (!cand || cand.operatorCustom) continue;
-              var hookText = String(cand.text || '').trim();
-              if (!hookText) continue;
-              var isActive = !isCustomActive && activeHook && hookText.toLowerCase() === activeHook.toLowerCase();
-              var qaTag = cand.qaPassed ? (' ✓' + (cand.qaScore != null ? ' ' + cand.qaScore : '')) : (cand.qaScore != null ? ' · QA ' + cand.qaScore : '');
-              var formulaTag = cand.formula ? (' · ' + escHtml(String(cand.formula).slice(0, 22))) : '';
-              metaStrip += '<button type="button" onclick="selectClipHook(\'' + job.id + '\',' + clipIdx + ',' + candIdx + ')" '
-                + 'style="display:block;width:100%;text-align:left;margin:0 0 4px;padding:6px 8px;font-size:10px;line-height:1.35;cursor:pointer;border-radius:4px;'
-                + (isActive
-                  ? 'background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.45);color:#2ecc71;'
-                  : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);')
-                + '">'
-                + (isActive ? '● ' : '○ ') + escHtml(hookText.slice(0, 56))
-                + '<span style="opacity:0.55;">' + formulaTag + qaTag + '</span>'
-                + '</button>';
-            }
-          } else {
-            metaStrip += '<div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:6px;">No AI candidates — type your own hook below.</div>';
-          }
-          var inputBorder = isCustomActive
-            ? 'border:1px solid rgba(46,204,113,0.55);'
-            : 'border:1px solid rgba(199,175,79,0.35);';
-          metaStrip += '<div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin:8px 0 4px;">CUSTOM HOOK (you type it)</div>'
-            + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'
-            + '<input type="text" id="' + inputId + '" value="' + escHtml(activeHook) + '" maxlength="72" placeholder="Your hook line — max 72 chars, no streamer name" '
-            + 'style="flex:1;min-width:180px;padding:6px 8px;font-size:11px;border-radius:4px;' + inputBorder + 'background:rgba(0,0,0,0.35);color:#fff;" '
-            + 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();applyCustomClipHook(\'' + job.id + '\',' + clipIdx + ');}" />'
-            + '<button type="button" id="custom-hook-btn-' + job.id + '-' + clipIdx + '" onclick="applyCustomClipHook(\'' + job.id + '\',' + clipIdx + ')" class="btn btn-gold btn-sm" style="font-weight:700;white-space:nowrap;">'
-            + (isCustomActive ? '✓ CUSTOM ACTIVE' : '✓ USE CUSTOM')
-            + '</button>'
-            + '</div>'
-            + '<div id="' + statusId + '" style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:6px;">'
-            + (isCustomActive ? 'Custom hook confirmed on card.' : 'Type your line → USE CUSTOM → 📁 RE-ASSEMBLE FROM FILES to burn.')
-            + '</div>'
-            + '</div>';
-        }
+        metaStrip += renderBurnedHookPickerMarkup(job, false);
       } else if (job.clipHookCandidates && job.clipHookCandidates.length) {
         job.clipHookCandidates.forEach(function(pool, clipIdx) {
           if (!pool || !pool.length) return;
@@ -7048,6 +7121,10 @@ function renderQueue() {
     }
     // RE-ASSEMBLE FROM FILES — uses manual_segments folder overrides, skips Gate 2 (chrome burning).
     // Show for clip comps / post-HeyGen jobs including awaiting_review (operator re-burn after code fixes).
+    if (job.clipsOnly && jobStage === 'hook_review' && !job.hooksConfirmedAt) {
+      actions += '<button type="button" id="confirm-hooks-btn-action-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;">▶ BUILD VIDEO</button>';
+      actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine">🎣 REGEN HOOKS</button>';
+    }
     var pastHeygenStage = ['all_sent','awaiting_manual_segments','heygen_done','assembled','assembling','gate3_failed',
       'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1
       || ['awaiting_review','metadata_review','publish_scheduled','assembled'].indexOf(jobStage) > -1
@@ -7119,7 +7196,7 @@ function renderQueue() {
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
     var tagCls = status==='completed'||status==='all_sent'?'tag-done':(status==='failed'||status==='gate3_failed')?'tag-failed':'tag-processing';
-    var tagLbl = (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl)) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
+    var tagLbl = (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review')) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
     var pctBar = (status==='processing'||anyRendering)?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
 
     var mediaPanel = '';
@@ -7695,14 +7772,14 @@ function regenerateClipHooks(jobId) {
     }
     job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
     job.clipHookCandidates = resp.clipHookCandidates || job.clipHookCandidates;
-    job.stage = resp.stage || 'awaiting_review';
+    job.stage = resp.stage || 'hook_review';
     saveJobs();
     renderQueue();
     var summary = (resp.clips || []).map(function(c, i) {
       return 'Clip ' + (i + 1) + ': "' + (c.hook || '') + '"' + (c.qaPassed ? ' ✓' + c.qaScore : ' (QA ' + (c.qaScore || '?') + ')');
     }).join('\\n');
-    cwn_log('[hook] regen done — pick candidate then RE-ASSEMBLE', false);
-    alert('✅ Hooks regenerated!\\n\\n' + summary + '\\n\\nUse HOOK PICKER if you want a different candidate, then 📁 RE-ASSEMBLE FROM FILES.');
+    cwn_log('[hook] regen done — pick candidate then BUILD VIDEO', false);
+    alert('✅ Hooks regenerated!\\n\\n' + summary + '\\n\\nPick hooks (or type custom), then ▶ BUILD VIDEO.');
   };
   xhr.onerror = xhr.ontimeout = function() {
     alert('Hook regen timed out or failed — check pm2 logs; server may still be running Gemini.');
@@ -7814,12 +7891,15 @@ function applyCustomClipHook(jobId, clipIndex) {
     if (job) {
       job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
       job.clipHookCandidates = resp.clipHookCandidates || job.clipHookCandidates;
-      job.stage = 'awaiting_review';
+      if (job.stage !== 'hook_review') job.stage = 'awaiting_review';
       saveJobs();
     }
-    cwn_log('[hook] custom saved: "' + resp.hook + '" — RE-ASSEMBLE to burn', false);
+    cwn_log('[hook] custom saved: "' + resp.hook + '"', false);
     renderQueue();
-    alert('✅ Custom hook saved!\\n\\n"' + resp.hook + '"\\n\\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.');
+    var nextMsg = (job && job.stage === 'hook_review')
+      ? '✅ Custom hook saved!\n\n"' + resp.hook + '"\n\nClick ▶ BUILD VIDEO when all clips are set.'
+      : '✅ Custom hook saved!\n\n"' + resp.hook + '"\n\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.';
+    alert(nextMsg);
   };
   xhr.onerror = xhr.ontimeout = function() {
     if (btn) { btn.disabled = false; btn.textContent = '✓ USE CUSTOM'; }
@@ -7846,10 +7926,13 @@ function selectClipHook(jobId, clipIndex, candidateIndex) {
     }
     job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
     job.clipHookCandidates = resp.clipHookCandidates || job.clipHookCandidates;
-    cwn_log('[hook] selected: "' + resp.hook + '" — RE-ASSEMBLE to burn', false);
+    cwn_log('[hook] selected: "' + resp.hook + '"', false);
     saveJobs();
     renderQueue();
-    alert('✅ Hook selected!\\n\\n"' + resp.hook + '"\\n\\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.');
+    var nextHookMsg = (job.stage === 'hook_review')
+      ? '✅ Hook selected!\n\n"' + resp.hook + '"\n\nClick ▶ BUILD VIDEO when ready.'
+      : '✅ Hook selected!\n\n"' + resp.hook + '"\n\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.';
+    alert(nextHookMsg);
   };
   xhr.onerror = xhr.ontimeout = function() {
     alert('Hook select request failed — is the server running?');
@@ -11128,24 +11211,38 @@ function getRedditMinScore(win) {
   return 200;
 }
 
-function buildRedditCandidatesUrlForSub(sub, win) {
+function getRedditPerSub(ctx) {
+  var onLibrary = ctx === 'library' || _redditPickerSurface === 'library'
+    || (g('library-source-mode') && g('library-source-mode').value === 'reddit');
+  return onLibrary ? LIBRARY_PICKER_ITEMS_PER : 5;
+}
+
+function buildRedditCandidatesUrlForSub(sub, win, ctx) {
   win = win || getRedditWindow();
-  return (CFG.ffmpegUrl || 'http://localhost:3000')
-    + '/reddit/candidates?comments=0&perSub=5&minScore=' + getRedditMinScore(win)
+  var perSub = getRedditPerSub(ctx);
+  var qs = 'comments=0&perSub=' + perSub
+    + '&minScore=' + getRedditMinScore(win)
     + '&window=' + encodeURIComponent(win)
     + '&subs=' + encodeURIComponent(sub);
+  if (perSub >= LIBRARY_PICKER_ITEMS_PER) qs += '&library=1';
+  return (CFG.ffmpegUrl || 'http://localhost:3000') + '/reddit/candidates?' + qs;
 }
 
 function buildRedditCandidatesUrl(ctx) {
   var subs = getRedditSubsList(ctx).join(',');
   var win = getRedditWindow();
-  return (CFG.ffmpegUrl || 'http://localhost:3000')
-    + '/reddit/candidates?comments=0&perSub=5&minScore=' + getRedditMinScore(win)
+  var perSub = getRedditPerSub(ctx);
+  var qs = 'comments=0&perSub=' + perSub
+    + '&minScore=' + getRedditMinScore(win)
     + '&window=' + encodeURIComponent(win)
     + '&subs=' + encodeURIComponent(subs);
+  if (perSub >= LIBRARY_PICKER_ITEMS_PER) qs += '&library=1';
+  return (CFG.ffmpegUrl || 'http://localhost:3000') + '/reddit/candidates?' + qs;
 }
 
-function fetchRedditCandidatesSequential(subs, win, onProgress, onDone) {
+function fetchRedditCandidatesSequential(subs, win, onProgress, onDone, ctx) {
+  var perSub = getRedditPerSub(ctx);
+  var fetchTimeout = perSub >= LIBRARY_PICKER_ITEMS_PER ? 180000 : 120000;
   var allPosts = [];
   var subErrors = [];
   var idx = 0;
@@ -11157,8 +11254,8 @@ function fetchRedditCandidatesSequential(subs, win, onProgress, onDone) {
     var sub = subs[idx];
     if (onProgress) onProgress(idx + 1, subs.length, sub);
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', buildRedditCandidatesUrlForSub(sub, win), true);
-    xhr.timeout = 120000;
+    xhr.open('GET', buildRedditCandidatesUrlForSub(sub, win, ctx), true);
+    xhr.timeout = fetchTimeout;
     xhr.onload = function() {
       try {
         if (xhr.status >= 400) throw new Error('HTTP ' + xhr.status);
@@ -11519,7 +11616,7 @@ function previewRedditThreads(forceReload, ctx) {
       var firstVid = _redditPickerThreads.findIndex(function(t) { return !!t.videoUrl; });
       if (firstVid >= 0) focusRedditThread(firstVid);
     }
-  });
+  }, c.onLibrary ? 'library' : (ctx || 'news'));
 }
 
 function setLibraryRedditPickerVisible(visible) {
@@ -11639,7 +11736,7 @@ function openNewsShortClipPicker(platforms) {
       }
       _redditPickerThreads = mapRedditPosts(result.posts).filter(function(p) { return !!p.videoUrl; });
       _renderRedditShortClipList(list, status, platforms);
-    });
+    }, 'news');
     return;
   }
 
@@ -12836,6 +12933,7 @@ function refreshGenerateComposer(callValidate) {
     if (trimWrap) trimWrap.innerHTML = '<div style="font-size:10px;color:rgba(255,255,255,0.4);">VOD segment mode — adjust timeline above.</div>';
   }
   var body = buildCompositionSpecFromUI();
+  refreshCompCreativeLabel();
   renderComposerPreviewMock(body, null);
   fetchFfmpegComposerPreview(body);
   if (callValidate !== false) {
@@ -13099,13 +13197,13 @@ function formatCompDurationTotal(totalSec) {
 
 /** Mirrors lib/clip_comp_creative.js COMP_LINEUP_TARGETS for UI + guards. */
 var COMP_LINEUP_TARGETS = {
-  classic_blur_pad: { lineupSlots: 4, minClips: 4, maxClips: 4, minDurationSec: 0, maxDurationSec: 180 },
-  full_bleed: { lineupSlots: 4, minClips: 4, maxClips: 4, minDurationSec: 0, maxDurationSec: 180 },
-  dahbluh_clean: { lineupSlots: 4, minClips: 4, maxClips: 4, minDurationSec: 0, maxDurationSec: 180 },
+  classic_blur_pad: { lineupSlots: 4, minClips: 2, maxClips: 4, minDurationSec: 0, maxDurationSec: 180 },
+  full_bleed: { lineupSlots: 4, minClips: 2, maxClips: 4, minDurationSec: 0, maxDurationSec: 180 },
+  dahbluh_clean: { lineupSlots: 4, minClips: 2, maxClips: 4, minDurationSec: 0, maxDurationSec: 180 },
   serpent_ranked: { lineupSlots: 5, minClips: 2, maxClips: 8, minDurationSec: 0, maxDurationSec: 180 },
   serpent_ranked_vod: { lineupSlots: 10, minClips: 8, maxClips: 12, minDurationSec: 480, maxDurationSec: 1200 },
   twitch_comp_vod: { lineupSlots: 8, minClips: 4, maxClips: 12, minDurationSec: 480, maxDurationSec: 1200 },
-  custom: { lineupSlots: 4, minClips: 4, maxClips: 10, minDurationSec: 0, maxDurationSec: 1200 }
+  custom: { lineupSlots: 4, minClips: 2, maxClips: 10, minDurationSec: 0, maxDurationSec: 1200 }
 };
 
 function getCompLineupSpec() {
@@ -13685,6 +13783,7 @@ var _origGenerateNBA = null;
 // ── Shared picker filters (news · twitch · nba/sports) ───────────────────────
 
 var PICKER_PUB_WINDOW_HOURS = { any: null, '6h': 6, '24h': 24, '48h': 48, '3d': 72, '7d': 168, '30d': 720 };
+var LIBRARY_PICKER_ITEMS_PER = 50;
 
 function _pickerFilterEl(kind, field) {
   return g(kind + '-picker-' + field) || (kind === 'sports' ? g('nba-picker-' + field) : null);
@@ -14276,6 +14375,9 @@ function startClipCompReviewPoll(jobId, statusElId) {
           if (statusElId) setCompStatus(statusElId, 'Comp assembled — job ' + jobId, 'success');
           return;
         }
+        if (st === 'hook_review') {
+          if (statusElId) setCompStatus(statusElId, 'Hooks ready — pick on queue card, then BUILD VIDEO', 'started');
+        }
         if (statusElId && (st === 'assembling' || st === 'heygen_done')) {
           setCompStatus(statusElId, 'Stitching clips — job ' + jobId, 'assembling');
         }
@@ -14324,8 +14426,9 @@ function populateCompCreativeSelect() {
 function refreshCompCreativeLabel() {
   var el = g('comp-creative-label');
   if (!el) return;
-  var stored = loadCompCreativePresetFromStorage();
-  var e = compCreativeCatalogEntry(stored.preset || 'classic_blur_pad');
+  var sel = g('comp-creative-preset');
+  var preset = (sel && sel.value) || loadCompCreativePresetFromStorage().preset || 'classic_blur_pad';
+  var e = compCreativeCatalogEntry(preset);
   if (!e) {
     el.textContent = 'Select a creative preset — each code (C1–C7) defines clip count + which button to use.';
     return;
@@ -14433,19 +14536,23 @@ function getTwitchClipActionState() {
     state.compVod.title = 'Edited comp VOD — intro, bridges, ' + spec.minClips + '–' + spec.maxClips + ' clips';
     state.hint = '→ Pick 4–8 clips in lineup, then Comp VOD';
   } else {
-    state.comp.title = 'Stitch ' + spec.lineupSlots + ' lineup clips into one Short';
-    if (pickedCount > 0 && pickedCount < spec.minClips) {
+    state.comp.title = 'Stitch ' + spec.minClips + '–' + spec.lineupSlots + ' lineup clips into one Short';
+    if (pickedCount === 1) {
+      state.short.recommended = true;
       state.comp.enabled = false;
-      state.comp.title = 'Comp needs ' + spec.lineupSlots + ' clips — only ' + pickedCount + ' selected (use Short for 1 clip each)';
-      state.short.recommended = pickedCount === 1;
-      state.hint = pickedCount + ' clip selected — use Short (1 job per clip), not Comp';
-    } else if (pickedCount === spec.lineupSlots) {
+      state.comp.title = 'Comp needs at least ' + spec.minClips + ' clips — pick one more, or use Short for a single clip';
+      state.hint = '→ 1 clip — Short (1 job) or pick another clip for Comp';
+    } else if (pickedCount > 0 && pickedCount < spec.minClips) {
+      state.comp.enabled = false;
+      state.comp.title = 'Comp needs at least ' + spec.minClips + ' clips — only ' + pickedCount + ' selected';
+      state.hint = '→ Pick ' + (spec.minClips - pickedCount) + ' more clip(s) for Comp, or use Short';
+    } else if (pickedCount >= spec.minClips && pickedCount <= spec.lineupSlots) {
       state.comp.recommended = true;
-      state.hint = '→ ' + spec.lineupSlots + ' clips ready — Comp stitches one Short';
+      state.hint = '→ ' + pickedCount + ' clip(s) ready — Comp stitches one Short';
     } else if (pickedCount > spec.lineupSlots) {
       state.hint = '→ First ' + spec.lineupSlots + ' in lineup used for Comp · Short = 1 job per checked clip';
     } else {
-      state.hint = 'Short = 1 clip each · Comp = ' + spec.lineupSlots + '-clip Short · Comp VOD = switch preset first';
+      state.hint = 'Short = 1 clip · Comp = ' + spec.minClips + '–' + spec.lineupSlots + ' clips · Comp VOD = switch preset first';
     }
   }
   return state;
@@ -14464,7 +14571,7 @@ function refreshTwitchActionBar() {
   var state = getTwitchClipActionState();
   var spec = getCompLineupSpec();
   applyTwitchClipActionButton('btn-gen-twitch-short', state.short, 'Short');
-  applyTwitchClipActionButton('btn-gen-twitch-comp', state.comp, state.preset === 'serpent_ranked' ? ('Comp · Top ' + spec.lineupSlots) : ('Comp · ' + spec.lineupSlots));
+  applyTwitchClipActionButton('btn-gen-twitch-comp', state.comp, state.preset === 'serpent_ranked' ? ('Comp · Top ' + spec.lineupSlots) : ('Comp · ' + spec.minClips + '–' + spec.lineupSlots));
   applyTwitchClipActionButton('btn-gen-twitch-comp-vod', state.compVod, state.preset === 'serpent_ranked_vod' ? 'Comp VOD · Top 10' : 'Comp VOD');
   var hintEl = g('twitch-action-hint');
   if (hintEl) hintEl.textContent = state.hint;
@@ -14535,6 +14642,13 @@ function buildCompCreativeRequestPayload(streamerHint) {
     compCreativePreset: preset,
     compCreative: overrides
   };
+}
+
+function onCompCreativePresetChange() {
+  var hm = g('comp-creative-hook-mode');
+  if (hm) delete hm.dataset.userPicked;
+  refreshCompCreativeChips();
+  refreshTwitchActionBar();
 }
 
 function refreshCompCreativeChips() {
@@ -14686,7 +14800,7 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
           title: clips.length === 1 ? ('Clip Short — ' + (streamerNames[0] || 'Twitch'))
             : ('Clips Comp — ' + (streamerNames.slice(0, 3).join(', ') || 'Twitch')),
           status: 'processing',
-          stage: 'heygen_done',
+          stage: 'hook_review',
           clipsOnly: true,
           compCreativePreset: creativePayload.compCreativePreset,
           compCreative: d.compCreative || null,
@@ -15185,7 +15299,7 @@ function previewTwitchClips(forceReload) {
   var twFilters = getPickerFilters('twitch');
   var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
     + '&platforms=' + encodeURIComponent(getSelectedStreamerPlatforms().join(','))
-    + '&library=1&clipsPer=50&clipSort=' + encodeURIComponent(getLibraryClipSort());
+    + '&library=1&clipsPer=' + LIBRARY_PICKER_ITEMS_PER + '&clipSort=' + encodeURIComponent(getLibraryClipSort());
   if (twFilters.durMin != null) qs += '&durMin=' + twFilters.durMin;
   if (twFilters.durMax != null) qs += '&durMax=' + twFilters.durMax;
   if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;
@@ -15917,16 +16031,23 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.assembledAt) job.assembledAt = serverJob.assembledAt;
   if (serverJob.scheduledPublishAt) job.scheduledPublishAt = serverJob.scheduledPublishAt;
   if (serverJob.stage) job.stage = serverJob.stage;
+  if (serverJob.stage === 'assembling' || serverJob.status === 'assembling') {
+    job.status = 'assembling';
+    job.stage = 'assembling';
+  } else if (serverJob.stage === 'hook_review') {
+    job.status = 'processing';
+    job.stage = 'hook_review';
+  } else if (serverJob.status === 'gate3_failed') job.status = 'gate3_failed';
   if (serverJob.finalUrl) job.finalUrl = serverJob.finalUrl;
   if (serverJob.localPreviewUrl) job.localPreviewUrl = serverJob.localPreviewUrl;
   if (serverJob.filename) job.filename = serverJob.filename;
   if (serverJob.outputPath) job.outputPath = serverJob.outputPath;
   if (serverJob.gate3) job.gate3 = serverJob.gate3;
   if (serverJob.qaOutcome) job.qaOutcome = serverJob.qaOutcome;
-  if (serverJob.status === 'gate3_failed') job.status = 'gate3_failed';
   if (serverJob.metadataQaViolations) job.metadataQaViolations = serverJob.metadataQaViolations;
   if (serverJob.clipHookTitles && serverJob.clipHookTitles.length) job.clipHookTitles = serverJob.clipHookTitles;
   if (serverJob.clipHookCandidates && serverJob.clipHookCandidates.length) job.clipHookCandidates = serverJob.clipHookCandidates;
+  if (serverJob.hooksConfirmedAt) job.hooksConfirmedAt = serverJob.hooksConfirmedAt;
   if (serverJob.titleCandidates && serverJob.titleCandidates.length) job.titleCandidates = serverJob.titleCandidates;
   if (serverJob.captionsApplied === true || serverJob.captionsApplied === false) job.captionsApplied = serverJob.captionsApplied;
   if (serverJob.whisperCaptionsExpected === true || serverJob.whisperCaptionsExpected === false) {
@@ -17826,7 +17947,13 @@ function loadClipsPerStreamer() {
   try {
     var saved = localStorage.getItem('cwn_clips_per_streamer');
     var sel = g('twitch-clips-per-main');
-    if (saved && sel) sel.value = saved;
+    if (!sel) return;
+    var n = parseInt(saved || '2', 10);
+    if (!Number.isFinite(n) || n < 2) {
+      n = 2;
+      localStorage.setItem('cwn_clips_per_streamer', '2');
+    }
+    sel.value = String(n);
   } catch(e) {}
 }
 
