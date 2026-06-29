@@ -8628,7 +8628,11 @@ app.get('/streamers/clips', async (req, res) => {
     .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   const clipsPerCap = req.query.library === '1' ? 50 : 10;
   const clipsPer = Math.max(1, Math.min(clipsPerCap, parseInt(req.query.clipsPer, 10) || (req.query.library === '1' ? 50 : 2)));
+  const pubWindow = String(req.query.pubWindow || req.query.window || '').trim() || null;
   const pubHours = parseFloat(req.query.pubHours);
+  const pubHoursMin = parseFloat(req.query.pubHoursMin);
+  const pubHoursMax = parseFloat(req.query.pubHoursMax);
+  const libraryMode = req.query.library === '1' || req.query.library === 'true';
   const durMin = parseNewsQueryInt(req.query.durMin);
   const durMax = parseNewsQueryInt(req.query.durMax);
   const clipSort = req.query.clipSort === 'recent' ? 'recent' : 'popular';
@@ -8638,10 +8642,14 @@ app.get('/streamers/clips', async (req, res) => {
       streamers,
       platforms,
       clipsPer,
+      pubWindow: pubWindow || undefined,
       pubHours: Number.isFinite(pubHours) ? pubHours : null,
+      pubHoursMin: Number.isFinite(pubHoursMin) ? pubHoursMin : null,
+      pubHoursMax: Number.isFinite(pubHoursMax) ? pubHoursMax : null,
       durMin,
       durMax,
       clipSort,
+      libraryMode,
     });
     res.json({ ok: true, streamers: results, clipsPer, platforms });
   } catch (err) {

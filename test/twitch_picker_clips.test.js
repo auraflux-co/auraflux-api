@@ -5,14 +5,14 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-test('fetchTwitchClips sets ended_at when started_at window is used', () => {
+test('fetchTwitchClips uses clip_pub_window for helix started_at/ended_at', () => {
   const src = fs.readFileSync(
     path.join(__dirname, '../lib/pickers/streamers/adapters/twitch.js'),
     'utf8',
   );
+  assert.match(src, /resolveClipPubWindow/);
   assert.match(src, /if \(startedAt\) params\.set\('started_at', startedAt\)/);
   assert.match(src, /if \(endedAt\) params\.set\('ended_at', endedAt\)/);
-  assert.match(src, /const endedAt = startedAt \? new Date\(\)\.toISOString\(\) : null/);
 });
 
 test('fetchStreamerPickerClips does not force 24h when pubHours is null', () => {

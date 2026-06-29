@@ -1650,7 +1650,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 </select>
               </div>
               <select id="twitch-picker-pub-window" style="display:none" aria-hidden="true">
-                <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="any">Top ALL</option>
+                <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="all">Top 30D+</option>
               </select>
               <details class="gen-advanced">
                 <summary>Duration filters</summary>
@@ -1684,10 +1684,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <h3 class="gen-main-title" id="twitch-main-title">LIBRARY</h3>
                 <div class="library-head-controls">
                   <div class="library-window-pills" id="library-window-pills">
-                    <button type="button" class="library-window-pill active" data-win="24h" onclick="setLibraryWindow('24h')">Top 24H</button>
-                    <button type="button" class="library-window-pill" data-win="7d" onclick="setLibraryWindow('7d')">Top 7D</button>
-                    <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">Top 30D</button>
-                    <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">Top ALL</button>
+                    <button type="button" class="library-window-pill active" data-win="24h" onclick="setLibraryWindow('24h')">24H</button>
+                    <button type="button" class="library-window-pill" data-win="7d" onclick="setLibraryWindow('7d')">24H–7D</button>
+                    <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">7D–30D</button>
+                    <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">30D+</button>
                   </div>
                   <div class="library-sort-pills" id="library-clip-sort-pills">
                     <span class="library-sort-label">Sort</span>
@@ -1698,7 +1698,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <span class="gen-main-hint" id="twitch-main-hint">Check clips → COMPOSE → edit in Generate</span>
               </div>
               <select id="library-window" style="display:none" aria-hidden="true">
-                <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="all">Top ALL</option>
+                <option value="24h" selected>24H</option><option value="7d">24H–7D</option><option value="30d">7D–30D</option><option value="all">30D+</option>
               </select>
               <select id="library-clip-sort" style="display:none" aria-hidden="true">
                 <option value="popular" selected>Popular</option><option value="recent">Recent</option>
@@ -3116,7 +3116,8 @@ function syncLibraryWindowToReddit() {
 }
 
 function libraryWindowToPubKey(win) {
-  return win === 'all' ? 'any' : (win || '24h');
+  if (win === 'all') return 'all';
+  return win || '24h';
 }
 
 function getLibraryClipSort() {
@@ -9164,7 +9165,8 @@ function buildStreamerClipsQuery(streamers, clipsPer, platforms, maxClipsPer) {
     + '&clipsPer=' + requested;
   if (twFilters.durMin != null) qs += '&durMin=' + twFilters.durMin;
   if (twFilters.durMax != null) qs += '&durMax=' + twFilters.durMax;
-  if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;
+  if (twFilters.pubWindow) qs += '&pubWindow=' + encodeURIComponent(twFilters.pubWindow);
+  else if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;
   return qs;
 }
 
@@ -13855,6 +13857,13 @@ var _origGenerateNBA = null;
 
 // ── Shared picker filters (news · twitch · nba/sports) ───────────────────────
 
+var PICKER_PUB_WINDOW_BANDS = {
+  '24h': { minHours: 0, maxHours: 24, label: '0–24h' },
+  '7d': { minHours: 24, maxHours: 168, label: '24h–7d' },
+  '30d': { minHours: 168, maxHours: 720, label: '7d–30d' },
+  'all': { minHours: 720, maxHours: null, label: '30d+' },
+  'any': { minHours: 720, maxHours: null, label: '30d+' }
+};
 var PICKER_PUB_WINDOW_HOURS = { any: null, '6h': 6, '24h': 24, '48h': 48, '3d': 72, '7d': 168, '30d': 720 };
 var LIBRARY_PICKER_ITEMS_PER = 50;
 
@@ -13868,14 +13877,18 @@ function getPickerFilters(kind) {
   var pubEl = _pickerFilterEl(kind, 'pub-window');
   var durMinRaw = minEl && minEl.value !== '' ? parseInt(minEl.value, 10) : null;
   var durMaxRaw = maxEl && maxEl.value !== '' ? parseInt(maxEl.value, 10) : null;
-  var pubKey = (pubEl && pubEl.value) ? pubEl.value : 'any';
-  var pubHours = PICKER_PUB_WINDOW_HOURS[pubKey];
+  var pubKey = (pubEl && pubEl.value) ? pubEl.value : '24h';
+  if (pubKey === 'any') pubKey = 'all';
+  var band = PICKER_PUB_WINDOW_BANDS[pubKey] || PICKER_PUB_WINDOW_BANDS['24h'];
   return {
     durMin: Number.isFinite(durMinRaw) ? durMinRaw : null,
     durMax: Number.isFinite(durMaxRaw) ? durMaxRaw : null,
     pubWindow: pubKey,
-    pubHours: pubHours,
-    pubSinceMs: pubHours ? (Date.now() - pubHours * 3600000) : null
+    pubBandLabel: band.label,
+    pubHoursMin: band.minHours,
+    pubHoursMax: band.maxHours,
+    pubHours: null,
+    pubSinceMs: null
   };
 }
 
@@ -13892,14 +13905,28 @@ function clipPassesPickerFilters(item, filters, opts) {
   if (filters.durMax != null) {
     if (!Number.isFinite(dur) || dur > filters.durMax) return false;
   }
-  if (filters.pubSinceMs) {
+  if (filters.pubHoursMin != null || filters.pubHoursMax != null) {
     var dateStr = opts.dateStr != null ? opts.dateStr
       : (opts.dateField && item[opts.dateField] ? item[opts.dateField]
         : (item.pubDate || item.publishedAt || item.createdAt || item.gameDate || null));
     if (dateStr) {
       var iso = String(dateStr).length === 10 ? (dateStr + 'T23:59:59') : dateStr;
       var t = new Date(iso).getTime();
-      if (Number.isFinite(t) && t < filters.pubSinceMs) return false;
+      if (Number.isFinite(t)) {
+        var ageMs = Date.now() - t;
+        var minMs = (filters.pubHoursMin || 0) * 3600000;
+        var maxMs = filters.pubHoursMax != null ? filters.pubHoursMax * 3600000 : Infinity;
+        if (ageMs < minMs || ageMs >= maxMs) return false;
+      }
+    }
+  } else if (filters.pubSinceMs) {
+    var dateStrLegacy = opts.dateStr != null ? opts.dateStr
+      : (opts.dateField && item[opts.dateField] ? item[opts.dateField]
+        : (item.pubDate || item.publishedAt || item.createdAt || item.gameDate || null));
+    if (dateStrLegacy) {
+      var isoLegacy = String(dateStrLegacy).length === 10 ? (dateStrLegacy + 'T23:59:59') : dateStrLegacy;
+      var tLegacy = new Date(isoLegacy).getTime();
+      if (Number.isFinite(tLegacy) && tLegacy < filters.pubSinceMs) return false;
     }
   }
   return true;
@@ -13910,7 +13937,8 @@ function pickerFilterQueryString(filters) {
   var q = [];
   if (filters.durMin != null) q.push('durMin=' + encodeURIComponent(filters.durMin));
   if (filters.durMax != null) q.push('durMax=' + encodeURIComponent(filters.durMax));
-  if (filters.pubHours != null) q.push('pubHours=' + encodeURIComponent(filters.pubHours));
+  if (filters.pubWindow) q.push('pubWindow=' + encodeURIComponent(filters.pubWindow));
+  else if (filters.pubHours != null) q.push('pubHours=' + encodeURIComponent(filters.pubHours));
   return q.length ? ('&' + q.join('&')) : '';
 }
 
@@ -13920,7 +13948,8 @@ function pickerFilterSummaryLine(filters, shown, total) {
   if (filters.durMin != null || filters.durMax != null) {
     parts.push('duration ' + (filters.durMin != null ? filters.durMin : '0') + '–' + (filters.durMax != null ? filters.durMax : '∞') + 's');
   }
-  if (filters.pubHours != null) parts.push('published last ' + filters.pubWindow);
+  if (filters.pubBandLabel) parts.push('age ' + filters.pubBandLabel);
+  else if (filters.pubHours != null) parts.push('published last ' + filters.pubWindow);
   if (!parts.length) return '';
   var line = parts.join(' · ');
   if (total != null && shown != null && shown < total) line += ' — showing ' + shown + '/' + total;
@@ -15378,7 +15407,8 @@ function previewTwitchClips(forceReload) {
     + '&library=1&clipsPer=' + LIBRARY_PICKER_ITEMS_PER + '&clipSort=' + encodeURIComponent(getLibraryClipSort());
   if (twFilters.durMin != null) qs += '&durMin=' + twFilters.durMin;
   if (twFilters.durMax != null) qs += '&durMax=' + twFilters.durMax;
-  if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;
+  if (twFilters.pubWindow) qs += '&pubWindow=' + encodeURIComponent(twFilters.pubWindow);
+  else if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;
 
   var xhr = new XMLHttpRequest();
   xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/streamers/clips?' + qs, true);
