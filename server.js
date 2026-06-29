@@ -2079,7 +2079,7 @@ function dedupeJobCardsByJobId(cards) {
 function listDashboardJobs({ restore = false, pinnedOnly = false } = {}) {
   const IN_FLIGHT_STAGES = new Set([
     'script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling', 'heygen_done',
-    'hook_review', 'awaiting_review', 'metadata_review',
+    'hooks_generating', 'hook_review', 'awaiting_review', 'metadata_review',
   ]);
   const RESTORE_STAGES = new Set([
     ...IN_FLIGHT_STAGES,
@@ -4280,8 +4280,13 @@ app.get('/job/:id/assembly-preflight', (req, res) => {
   let manifest = null;
   try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); } catch(_) {}
 
-  const segments = manifest?.segments || [];
   const sceneItems = card?.designSpec?.sceneStructure?.items || [];
+
+  const mode = String(req.query.mode || 'manual').toLowerCase();
+  const isReassemble = mode === 'reassemble';
+  const videoJobs = card?.heygen?.videoJobs || [];
+  const orderedClips = card?.orderedClipUrls || [];
+  const sceneUpdatesDir = path.join(manualDir, 'scene_updates');
 
   // Build expected chrome story order from the CARD (picker order), not DB spec
   const chromeStoryOrder = sceneItems.map((it, i) => ({
@@ -4290,23 +4295,63 @@ app.get('/job/:id/assembly-preflight', (req, res) => {
     sceneId: it.sceneId || `ITEM${i+1}`
   }));
 
+  let segments = manifest?.segments || [];
+  if (segments.length === 0 && isReassemble) {
+    try {
+      const { buildManualHoldSegmentData } = require('./lib/manual_segment_workflow');
+      segments = buildManualHoldSegmentData(card) || [];
+    } catch (_) { /* fall through */ }
+  }
+
   const report = {
     jobId,
+    mode,
     contentType: card.contentType,
     manualDir,
     dirExists,
     chromeStoryOrder,
     segments: [],
+    note: isReassemble
+      ? 'Reassemble uses HeyGen cache URLs + Twitch clip URLs — local HeyGen folder exports are not required.'
+      : null,
     summary: { total: 0, avatar: 0, sourceClip: 0, present: 0, missing: 0, dimensionOk: 0, dimensionWrong: 0, audioOk: 0, audioMissing: 0 }
   };
 
-  if (!dirExists || segments.length === 0) {
-    report.error = dirExists ? 'manifest.json missing — job has not reached manual checkpoint yet' : 'manual_segments folder does not exist yet';
+  if (segments.length === 0) {
+    report.error = dirExists
+      ? 'manifest.json missing — job has not reached manual checkpoint yet'
+      : 'manual_segments folder does not exist yet';
+    return res.json(report);
+  }
+  if (!isReassemble && !dirExists) {
+    report.error = 'manual_segments folder does not exist yet';
     return res.json(report);
   }
 
   const { spawnSync } = require('child_process');
 
+  /** Match avatar segment to nested export folder (manual root or scene_updates/). */
+  function pickNestedAvatarExport(nestedDir, segLabel, heygenOrdinal, absoluteIdx) {
+    if (!fs.existsSync(nestedDir)) return null;
+    const nested = _discoverNestedExports(nestedDir);
+    const labelMatches = segLabel ? nested.filter(n => n.label === segLabel) : [];
+    const byLabel = labelMatches.length === 1
+      ? labelMatches[0]
+      : labelMatches.length > 1
+        ? labelMatches.reduce((best, n) =>
+            Math.abs(n.ord - heygenOrdinal) < Math.abs(best.ord - heygenOrdinal) ? n : best)
+        : null;
+    const byHeygenOrd = nested.find(n => n.ord === heygenOrdinal && (
+      !n.label || !segLabel || n.label === segLabel || _labelSuffixMatch(n.label, segLabel)
+    ));
+    const byAbsoluteIdx = nested.find(n => n.ord === absoluteIdx && (
+      !n.label || !segLabel || n.label === segLabel || _labelSuffixMatch(n.label, segLabel)
+    ));
+    const pick = byLabel || byHeygenOrd || byAbsoluteIdx;
+    return pick?.mp4Path || null;
+  }
+
+  let clipOrdIdx = 0;
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i];
     const segType = seg.type || 'avatar';
@@ -4318,48 +4363,38 @@ app.get('/job/:id/assembly-preflight', (req, res) => {
       const typeTag = 'clip';
       const safeLabel = String(seg.label || 'seg').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
       expectedFile = path.join(manualDir, `${String(i).padStart(2, '0')}_${typeTag}_${safeLabel}.mp4`);
-    } else {
-      // Nested HeyGen folder for avatar segments
-      expectedFile = null; // checked via label matching below
     }
 
-    // For avatar: mirror the 3-priority matching used in applyManualOverrides so the
-    // preflight accurately reflects whether assembly will find each segment.
     let foundMp4 = null;
-    if (segType === 'avatar') {
+    let remoteSource = null; // heygen | twitch_clip
+
+    if (isReassemble) {
+      const segLabel = String(seg.label || '').toUpperCase().trim();
+      const heygenOrdinal = segments.slice(0, i).filter(s => (s.type || 'avatar') !== 'source_clip').length;
+
+      if (segType === 'source_clip') {
+        const clipEntry = orderedClips[clipOrdIdx++] || {};
+        const clipUrl = seg.url || clipEntry.url || clipEntry.clipUrl || clipEntry.pageUrl;
+        if (clipUrl) {
+          remoteSource = 'twitch_clip';
+        } else if (expectedFile && fs.existsSync(expectedFile) && fs.statSync(expectedFile).size > 10000) {
+          foundMp4 = expectedFile;
+        }
+      } else {
+        foundMp4 = pickNestedAvatarExport(sceneUpdatesDir, segLabel, heygenOrdinal, i);
+        if (!foundMp4) {
+          const matchingJob = videoJobs.find(j => (j.sceneName || j.scene) === seg.label);
+          if (matchingJob?.video_url || matchingJob?.url) remoteSource = 'heygen';
+        }
+      }
+    } else if (segType === 'avatar') {
       if (dirExists) {
-        const nested = _discoverNestedExports(manualDir);
         const segLabel = String(seg.label || '').toUpperCase().trim();
-        // heygenOrdinal = count of non-source_clip segments before this index
         const heygenOrdinal = segments.slice(0, i).filter(s => (s.type || 'avatar') !== 'source_clip').length;
-
-        // Priority 1: exact label match (e.g. folder "RON_INTRO" === seg label "RON_INTRO")
-        const labelMatches = segLabel ? nested.filter(n => n.label === segLabel) : [];
-        const byLabel = labelMatches.length === 1
-          ? labelMatches[0]
-          : labelMatches.length > 1
-            ? labelMatches.reduce((best, n) =>
-                Math.abs(n.ord - heygenOrdinal) < Math.abs(best.ord - heygenOrdinal) ? n : best)
-            : null;
-
-        // Priority 2: HeyGen avatar ordinal + scene-type suffix match
-        // (handles NBA short labels "G1_INTRO" matching manifest "GAME1_NEW_YORK_KNICKS_..._INTRO")
-        const byHeygenOrd = nested.find(n => n.ord === heygenOrdinal && (
-          !n.label || !segLabel || n.label === segLabel || _labelSuffixMatch(n.label, segLabel)
-        ));
-
-        // Priority 3: absolute index + suffix match (fallback when user names folders 00_, 01_…)
-        const byAbsoluteIdx = nested.find(n => n.ord === i && (
-          !n.label || !segLabel || n.label === segLabel || _labelSuffixMatch(n.label, segLabel)
-        ));
-
-        const pick = byLabel || byHeygenOrd || byAbsoluteIdx;
-        if (pick) foundMp4 = pick.mp4Path;
+        foundMp4 = pickNestedAvatarExport(manualDir, segLabel, heygenOrdinal, i);
       }
-    } else {
-      if (expectedFile && fs.existsSync(expectedFile) && fs.statSync(expectedFile).size > 10000) {
-        foundMp4 = expectedFile;
-      }
+    } else if (expectedFile && fs.existsSync(expectedFile) && fs.statSync(expectedFile).size > 10000) {
+      foundMp4 = expectedFile;
     }
 
     // Probe dimensions + audio if file found
@@ -4395,15 +4430,36 @@ app.get('/job/:id/assembly-preflight', (req, res) => {
         dimOk = true;
       }
     }
+    if (remoteSource && !foundMp4) {
+      if (remoteSource === 'heygen') {
+        dimOk = true;
+        hasAudio = true;
+      } else if (remoteSource === 'twitch_clip') {
+        dimOk = true;
+        hasAudio = true;
+      }
+    }
     const isPortraitClip = segType === 'source_clip' && width && height && height > width;
+
+    let fileLabel = '(nested folder)';
+    if (foundMp4) {
+      fileLabel = path.basename(path.dirname(foundMp4) === manualDir ? foundMp4 : path.dirname(foundMp4));
+    } else if (remoteSource === 'heygen') {
+      fileLabel = 'HeyGen cache URL';
+    } else if (remoteSource === 'twitch_clip') {
+      fileLabel = 'Twitch clip URL';
+    } else if (expectedFile) {
+      fileLabel = path.basename(expectedFile);
+    }
 
     const row = {
       index: i,
       label: seg.label,
       type: segType,
-      present: !!foundMp4,
-      file: foundMp4 ? path.basename(path.dirname(foundMp4) === manualDir ? foundMp4 : path.dirname(foundMp4)) : (expectedFile ? path.basename(expectedFile) : '(nested folder)'),
-      dimensions: width ? `${width}x${height}${isPortraitClip ? ' (portrait→pillarbox)' : ''}` : null,
+      present: !!foundMp4 || !!remoteSource,
+      file: fileLabel,
+      source: remoteSource || (foundMp4 ? 'local' : null),
+      dimensions: width ? `${width}x${height}${isPortraitClip ? ' (portrait→pillarbox)' : ''}` : (remoteSource ? '(remote — probed at assembly)' : null),
       dimensionsOk: dimOk,
       hasAudio,
       chromeStory: chromeStory ? `[${chromeStory.position}] ${chromeStory.title}` : null,
@@ -5657,8 +5713,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     createdAt:   new Date().toISOString(),
     createdBy:   req.body.createdBy || 'dashboard',
     calendarSlotId: req.body.calendarSlotId || null,
-    stage:       'heygen_done',
-    status:      'assembling',
+    stage:       'hooks_generating',
+    status:      'processing',
     gate1:         gate1Result || undefined,
     // Synthetic all-clip scene script: keeps saveJobCard segment extraction and
     // the /reassemble script-driven rebuild (CPD-932) working with no avatar scenes.
@@ -5839,6 +5895,13 @@ app.post('/job/:id/regenerate-hooks', async (req, res) => {
   }
   if (!card.clipsOnly) {
     return res.status(400).json({ ok: false, error: 'Hook regen is for clip-comp / clip-short jobs only.' });
+  }
+  if (card.hooksOperatorLocked && req.body.force !== true) {
+    return res.status(409).json({
+      ok: false,
+      code: 'hooks_operator_locked',
+      error: 'Hooks are operator-locked — pass force=true to overwrite.',
+    });
   }
 
   const orderedClips = card.orderedClipUrls || [];
@@ -6093,6 +6156,12 @@ app.post('/job/:id/confirm-hooks', (req, res) => {
   if (!(card.clipHookTitles || []).some((h) => String(h || '').trim())) {
     return res.status(400).json({ ok: false, error: 'Pick at least one hook before building.' });
   }
+  const { recordOperatorCreativeEdit } = require('./lib/operator_creative_audit');
+  recordOperatorCreativeEdit(card, {
+    kind: 'hooks_confirm_build',
+    text: (card.clipHookTitles || []).map((h) => String(h || '').trim()).filter(Boolean).join(' | '),
+    meta: { clipCount: (card.clipHookTitles || []).length },
+  });
   card.hooksConfirmedAt = new Date().toISOString();
   card.hooksOperatorLocked = true;
   card.hooksPendingReassemble = false;

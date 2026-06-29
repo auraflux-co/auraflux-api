@@ -5535,83 +5535,51 @@ function asmComplete(batchJobId, resp) {
         saveJobs();
         renderQueue();
       }
+      triggerGate5(job);
     });
-    setTimeout(function() { triggerGate5(job); }, 2000);
   }
 }
 
-// ── GATE 5: Final Video Review (Gemini visual QA on assembled MP4) ──
+// ── GATE 5: Post-assembly — sync server Gate 3 (publish Gate 5 runs at APPROVE & PUBLISH) ──
 function triggerGate5(job) {
   if (!job || !job.finalUrl) return;
-  if (job._gate5Running || job._gate5Done) return;
+  if (job._gate5Done) return;
   job._gate5Running = true;
 
   var qaEl = document.getElementById('gate5-result-' + job.id);
   if (qaEl) {
     qaEl.style.display = '';
     qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(52,152,219,0.4);border-radius:4px;">'
-      + '<span style="color:#3498db;font-size:11px;font-family:monospace;">⏳ GATE 5 — Gemini reviewing final assembled video...</span>'
+      + '<span style="color:#3498db;font-size:11px;font-family:monospace;">⏳ Syncing assembly QA from server...</span>'
       + '</div>';
   }
 
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', CFG.ffmpegUrl + '/gate5-review', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 300000; // 5 min — Gemini video upload can take time
-  xhr.onload = function() {
-    try {
-      var result = JSON.parse(xhr.responseText);
-      job._gate5Done = true;
-      job._gate5Running = false;
-      job.gate5 = result;
-      saveJobs();
-
-      var color = result.score >= 85 ? '#2ecc71' : result.score >= 70 ? '#c7af4f' : '#e74c3c';
-      var outcomeLabel = result.score >= 85 ? '✅ GATE 5 PASS — Ready to publish'
-        : result.score >= 70 ? '🟡 GATE 5 REVIEW — Minor issues, proceed with caution'
-        : '❌ GATE 5 FAIL — Issues detected, review before publishing';
-
-      var html = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid ' + color + ';border-radius:4px;">'
-        + '<div style="font-size:9px;letter-spacing:2px;color:' + color + ';font-weight:900;margin-bottom:4px;">GATE 5 — FINAL VIDEO QA (GEMINI)</div>'
-        + '<div style="font-size:18px;font-weight:700;color:' + color + ';">' + result.score + '/100</div>'
-        + '<div style="font-size:11px;color:' + color + ';margin-bottom:4px;">' + outcomeLabel + '</div>';
-
-      if (result.breakdown) {
-        var b = result.breakdown;
-        html += '<div style="font-size:10px;color:rgba(255,255,255,0.5);font-family:monospace;">'
-          + 'Visual: ' + (b.visualQuality||0) + '/30 · Audio: ' + (b.audioQuality||0) + '/30 · Clips: ' + (b.clipIntegration||0) + '/30 · Pacing: ' + (b.pacing||0) + '/10'
-          + '</div>';
-      }
-      if (result.issues && result.issues.length) {
-        html += '<div style="font-size:10px;color:#e74c3c;margin-top:4px;">';
-        result.issues.forEach(function(issue) { html += '⚠ ' + issue + '<br>'; });
-        html += '</div>';
-      }
-      if (result.score >= 85) {
-        html += '<div style="font-size:10px;color:#2ecc71;margin-top:4px;">✅ Video quality confirmed — auto-publishing to platforms.</div>';
-      }
-      html += '</div>';
-
-      if (qaEl) qaEl.innerHTML = html;
-
-      renderQueue();
-    } catch(e) {
-      job._gate5Running = false;
-      if (qaEl) qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:4px;">'
-        + '<span style="color:rgba(255,255,255,0.3);font-size:11px;">Gate 5 error: ' + e.message + '</span></div>';
-    }
-  };
-  xhr.onerror = xhr.ontimeout = function() {
+  fetchJobCard(job.id, function(err, serverJob) {
     job._gate5Running = false;
-    if (qaEl) qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:4px;">'
-      + '<span style="color:rgba(255,255,255,0.3);font-size:11px;">Gate 5 skipped — server unreachable</span></div>';
-  };
-  xhr.send(JSON.stringify({
-    jobId:    job.id,
-    videoUrl: job.finalUrl,
-    jobTitle: job.title,
-    contentType: job.type || 'twitch'
-  }));
+    if (err || !serverJob) {
+      if (qaEl) qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(231,76,60,0.4);border-radius:4px;">'
+        + '<span style="color:#e74c3c;font-size:11px;">Could not load server QA — use REFRESH STATUS</span></div>';
+      return;
+    }
+    mergeServerJobIntoLocal(job.id, serverJob);
+    job._gate5Done = true;
+    var g3 = serverJob.gate3 || job.gate3;
+    if (qaEl) {
+      if (g3 && (g3.outcome || g3.score != null)) {
+        var color = (g3.outcome === 'pass' || (g3.score != null && g3.score >= 85)) ? '#2ecc71'
+          : (g3.score != null && g3.score >= 70) ? '#c7af4f' : '#e74c3c';
+        qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid ' + color + '55;border-radius:4px;">'
+          + '<span style="color:' + color + ';font-size:11px;font-family:monospace;">Gate 3: '
+          + escHtml(String(g3.outcome || 'review')) + (g3.score != null ? ' · ' + g3.score + '/100' : '')
+          + ' — use 🚀 APPROVE &amp; PUBLISH for Gate 5</span></div>';
+      } else {
+        qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(46,204,113,0.4);border-radius:4px;">'
+          + '<span style="color:#2ecc71;font-size:11px;font-family:monospace;">✅ Assembly complete — use 🚀 APPROVE &amp; PUBLISH when ready</span></div>';
+      }
+    }
+    saveJobs();
+    renderQueue();
+  });
 }
 
 function asmGate3Failed(batchJobId, resp) {
@@ -5913,6 +5881,7 @@ function jobTypeLabel(serverJob) {
 function jobStageBadge(serverJob) {
   var stage = serverJob.stage || serverJob.status || '';
   if (stage === 'hook_review') return { text: 'HOOK REVIEW', color: '#c7af4f' };
+  if (stage === 'hooks_generating') return { text: 'HOOKS GEN', color: '#3498db' };
   if (stage === 'awaiting_review' || stage === 'metadata_review') return { text: 'NEEDS REVIEW', color: '#c7af4f' };
   if (stage === 'published') return { text: 'PUBLISHED', color: '#2ecc71' };
   if (stage === 'assembling' || serverJob.status === 'assembling') return { text: 'ASSEMBLING', color: '#3498db' };
@@ -5931,7 +5900,7 @@ function jobMatchesFindFilter(serverJob) {
   }
   // work = needs operator attention
   if (stage === 'published') return false;
-  return ['awaiting_review', 'metadata_review', 'assembled', 'gate3_failed', 'publish_scheduled', 'gate5_failed', 'music_review', 'hook_review'].indexOf(stage) > -1
+  return ['awaiting_review', 'metadata_review', 'assembled', 'gate3_failed', 'publish_scheduled', 'gate5_failed', 'music_review', 'hook_review', 'hooks_generating'].indexOf(stage) > -1
     || serverJob.status === 'gate3_failed' || serverJob.status === 'completed';
 }
 
@@ -6030,46 +5999,43 @@ function renderFindJobList() {
   }).join('');
 }
 
-function addJobToQueueFromServer(jobId, closeModal) {
+function refreshQueuedJobFromServer(jobId, opts) {
+  opts = opts || {};
   if (!jobId) return;
-  cwn_log('[queue] adding ' + jobId + '…', false);
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId), true);
-  xhr.timeout = 30000;
-  xhr.onload = function() {
-    try {
-      var resp = JSON.parse(xhr.responseText);
-      if (!resp.ok || !resp.job) {
-        alert('Could not load job:\n' + (resp.error || xhr.responseText));
-        return;
-      }
-      var serverJob = resp.job;
-      if (serverJob.card && serverJob.card.heygen && !serverJob.heygen) {
-        serverJob.heygen = serverJob.card.heygen;
-      }
-      var existing = JOBS.find(function(j) { return j.id === jobId; });
-      if (existing) {
-        mergeServerJobIntoLocal(jobId, serverJob);
-        if (serverJob.heygen) existing.heygen = serverJob.heygen;
-      } else {
-        JOBS.unshift(buildLocalJobFromServerCard(serverJob));
-      }
-      markJobQueued(jobId, true);
-      renderQueue();
-      syncQueuePinToServer(jobId, true);
-      if (closeModal) closeFindJobModal();
-      nav('queue');
+  fetchJobCard(jobId, function(err, serverJob) {
+    if (err || !serverJob) {
+      if (opts.alertOnError) alert('Could not load job:\n' + (err && err.message ? err.message : 'Server unreachable'));
+      return;
+    }
+    if (serverJob.card && serverJob.card.heygen && !serverJob.heygen) {
+      serverJob.heygen = serverJob.card.heygen;
+    }
+    var existing = JOBS.find(function(j) { return j.id === jobId; });
+    if (existing) {
+      mergeServerJobIntoLocal(jobId, serverJob);
+      if (serverJob.heygen) existing.heygen = serverJob.heygen;
+    } else {
+      JOBS.unshift(buildLocalJobFromServerCard(serverJob));
+    }
+    markJobQueued(jobId, true);
+    syncQueuePinToServer(jobId, true);
+    saveJobs();
+    renderQueue();
+    if (opts.closeModal) closeFindJobModal();
+    if (opts.navQueue) nav('queue');
+    if (opts.scrollTo) {
       setTimeout(function() {
         var el = document.getElementById('job-' + jobId);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 200);
-      cwn_log('[queue] added: ' + (serverJob.title || jobId), false);
-    } catch (e) {
-      alert('Add to queue failed: ' + e.message);
     }
-  };
-  xhr.onerror = xhr.ontimeout = function() { alert('Server unreachable — is pm2 running?'); };
-  xhr.send();
+    cwn_log('[queue] synced: ' + (serverJob.title || jobId), false);
+  });
+}
+
+function addJobToQueueFromServer(jobId, closeModal) {
+  cwn_log('[queue] adding ' + jobId + '…', false);
+  refreshQueuedJobFromServer(jobId, { closeModal: closeModal, navQueue: true, scrollTo: true, alertOnError: true });
 }
 
 function syncQueuePinToServer(jobId, pin) {
@@ -6081,11 +6047,14 @@ function syncQueuePinToServer(jobId, pin) {
 }
 
 function rehydrateQueuedJobsFromServer() {
-  var ids = Array.from(getPinnedIdSet());
-  if (!ids.length) return;
-  ids.forEach(function(id, idx) {
-    if (JOBS.find(function(j) { return j.id === id; })) return;
-    setTimeout(function() { addJobToQueueFromServer(id, false); }, idx * 120);
+  var ids = new Set(Array.from(getPinnedIdSet()));
+  JOBS.forEach(function(j) {
+    if (j && j.id && isJobQueued(j)) ids.add(j.id);
+  });
+  var list = Array.from(ids);
+  if (!list.length) return;
+  list.forEach(function(id, idx) {
+    setTimeout(function() { refreshQueuedJobFromServer(id); }, idx * 120);
   });
 }
 
@@ -6616,7 +6585,9 @@ function jobActivelyAssembling(job) {
   if (st === 'awaiting_review' || st === 'metadata_review' || st === 'assembled' || st === 'publish_scheduled' || st === 'published') {
     return false;
   }
+  if (job.assembledAt || (job.assemblyId && (job.localPreviewUrl || job.filename || job.outputPath))) return false;
   if (job.driveUrl || job.localPreviewUrl || (job.gate3 && job.gate3.outcome === 'pass')) return false;
+  if (job.status === 'completed' && (job.localPreviewUrl || job.assembledAt || job.assemblyId)) return false;
   return (job.status === 'assembling' || st === 'assembling') && !jobGate3Failed(job);
 }
 
@@ -6649,16 +6620,16 @@ function isOperatorCustomTitleActive(job, titlePool, activeTitle) {
 
 /** Pull server card when local queue is stale (hooks, title, stage, driveUrl). */
 function syncQueueJobsFromServer() {
-  JOBS.forEach(function(job) {
-    if (!job || !job.id) return;
-    var st = job.stage || '';
-    var needsSync = job.status === 'assembling' || st === 'assembling' || st === 'hook_review'
-      || st === 'awaiting_review' || st === 'metadata_review' || st === 'assembled'
-      || (job.clipsOnly && job.assemblyId && !job.driveUrl);
-    if (!needsSync) return;
-    fetchJobCard(job.id, function(err, serverJob) {
-      if (!err && serverJob) mergeServerJobIntoLocal(job.id, serverJob);
-    });
+  var seen = {};
+  JOBS.filter(function(j) { return j && j.id && isJobQueued(j); }).forEach(function(job) {
+    if (seen[job.id]) return;
+    seen[job.id] = true;
+    refreshQueuedJobFromServer(job.id);
+  });
+  getPinnedIdSet().forEach(function(id) {
+    if (seen[id]) return;
+    seen[id] = true;
+    refreshQueuedJobFromServer(id);
   });
 }
 
@@ -6688,6 +6659,27 @@ function jobWhisperCaptionsExpected(job) {
 function toggleJobMediaPanel(jobId) {
   var el = document.getElementById('job-media-' + jobId);
   if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+/** Warn when burned MP4 hooks differ from operator selection (server publish guard). */
+function burnedHooksMismatchBanner(job) {
+  if (!job || !job.clipsOnly) return '';
+  if (job.hooksPendingReassemble) {
+    return '<div style="margin-top:6px;padding:6px 10px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.45);border-radius:4px;font-size:10px;color:#e74c3c;font-weight:700;">'
+      + '⚠ Hooks changed — RE-ASSEMBLE FROM FILES before publish</div>';
+  }
+  var burned = job.burnedHookTitles || [];
+  var selected = job.clipHookTitles || [];
+  if (!burned.length) return '';
+  for (var i = 0; i < Math.max(burned.length, selected.length); i++) {
+    var b = String(burned[i] || '').trim().toLowerCase();
+    var s = String(selected[i] || '').trim().toLowerCase();
+    if (b && s && b !== s) {
+      return '<div style="margin-top:6px;padding:6px 10px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.45);border-radius:4px;font-size:10px;color:#e74c3c;font-weight:700;">'
+        + '⚠ Clip ' + (i + 1) + ' burned hook differs from selection — RE-ASSEMBLE before publish</div>';
+    }
+  }
+  return '';
 }
 
 /** Burned-hook picker — preAssembly=true before first FFmpeg; false after assembly for re-burn. */
@@ -6919,6 +6911,10 @@ function renderQueue() {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.12);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:11px;color:#3498db;">'
         + '⏳ <strong>Re-assembling now</strong> — old preview/SEO stays visible until FFmpeg finishes. Watch for <strong>✅ ASSEMBLY COMPLETE</strong> on the card (or ↩ RESTORE JOBS after ~5–10 min).'
         + '</div>';
+    } else if (job.clipsOnly && jobStage === 'hooks_generating') {
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:11px;color:#3498db;">'
+        + '🤖 <strong>HOOKS GENERATING</strong> — Hook Machine is writing candidates (~1–3 min). The picker appears when ready.'
+        + '</div>';
     } else if (job.clipsOnly && jobStage === 'hook_review' && !job.hooksConfirmedAt) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.1);border:1px solid rgba(199,175,79,0.45);border-radius:6px;font-size:11px;color:#c7af4f;">'
         + '🎣 <strong>HOOK REVIEW</strong> — pick AI candidates or type custom hooks for each clip. FFmpeg does not start until you click <strong>▶ BUILD VIDEO</strong>.'
@@ -6928,7 +6924,7 @@ function renderQueue() {
         + '<button type="button" id="confirm-hooks-btn-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;padding:8px 16px;">▶ BUILD VIDEO</button>'
         + '<button type="button" onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine (~1–3 min per clip)">🎣 REGEN HOOKS</button>'
         + '</div>';
-    } else if (job.clipsOnly && !job.driveUrl && !resolveJobPreviewUrl(job) && jobStage !== 'failed' && jobStage !== 'hook_review' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
+    } else if (job.clipsOnly && !job.driveUrl && !resolveJobPreviewUrl(job) && jobStage !== 'failed' && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:11px;color:#3498db;">'
         + '⏳ Assembling clip comp — preview + SEO will appear when FFmpeg finishes.'
         + '</div>';
@@ -6978,6 +6974,7 @@ function renderQueue() {
         }
       }
       if (job.clipsOnly && jobStage === 'awaiting_review') {
+        metaStrip += burnedHooksMismatchBanner(job);
         metaStrip += renderBurnedHookPickerMarkup(job, false);
       } else if (job.clipHookCandidates && job.clipHookCandidates.length) {
         job.clipHookCandidates.forEach(function(pool, clipIdx) {
@@ -7266,7 +7263,7 @@ function renderQueue() {
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
     var tagCls = status==='completed'||status==='all_sent'?'tag-done':(status==='failed'||status==='gate3_failed')?'tag-failed':'tag-processing';
-    var tagLbl = (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobStage === 'assembled' && (job.driveUrl || previewUrl)) ? 'REVIEW' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review' && jobStage !== 'awaiting_review' && jobStage !== 'assembled' && jobStage !== 'metadata_review')) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
+    var tagLbl = (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'hooks_generating') ? 'HOOKS GEN' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobStage === 'assembled' && (job.driveUrl || previewUrl)) ? 'REVIEW' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && jobStage !== 'awaiting_review' && jobStage !== 'assembled' && jobStage !== 'metadata_review')) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
     var pctBar = (status==='processing'||anyRendering)?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
 
     var mediaPanel = '';
@@ -8147,7 +8144,7 @@ function reassembleFromFiles(jobId) {
   // Run preflight check first — show segment verification before any assembly
   cwn_log('[preflight] ' + jobId + ' — checking manual_segments…', false);
   var pfXhr = new XMLHttpRequest();
-  pfXhr.open('GET', CFG.ffmpegUrl + '/job/' + jobId + '/assembly-preflight', true);
+  pfXhr.open('GET', CFG.ffmpegUrl + '/job/' + jobId + '/assembly-preflight?mode=reassemble', true);
   pfXhr.timeout = 15000;
   pfXhr.onload = function() {
     var pf = null;
@@ -8237,6 +8234,9 @@ function _showAssemblyPreflight(jobId, job, pf) {
   var summaryText = allOk
     ? '✅ All ' + (pf.summary.total) + ' segments verified — ready to assemble (retry #' + retryNum + ')'
     : '⚠ ' + (missing > 0 ? missing + ' missing' : '') + (dimWrong > 0 ? ' · ' + dimWrong + ' wrong dimensions' : '') + (noAudio > 0 ? ' · ' + noAudio + ' no audio' : '');
+  if (pf && pf.mode === 'reassemble' && pf.note) {
+    html += '<div style="margin-bottom:8px;color:rgba(52,152,219,0.85);font-size:10px;">' + escHtml(pf.note) + '</div>';
+  }
 
   html += '<div style="margin-top:8px;color:' + summaryColor + ';font-weight:700;">' + summaryText + '</div>';
   html += '<div style="margin-top:8px;display:flex;gap:8px;">';
@@ -14451,6 +14451,9 @@ function startClipCompReviewPoll(jobId, statusElId) {
         if (st === 'hook_review') {
           if (statusElId) setCompStatus(statusElId, 'Hooks ready — pick on queue card, then BUILD VIDEO', 'started');
         }
+        if (st === 'hooks_generating') {
+          if (statusElId) setCompStatus(statusElId, 'Hook Machine running — candidates in ~1–3 min', 'assembling');
+        }
         if (statusElId && (st === 'assembling' || st === 'heygen_done')) {
           setCompStatus(statusElId, 'Stitching clips — job ' + jobId, 'assembling');
         }
@@ -14873,7 +14876,7 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
           title: clips.length === 1 ? ('Clip Short — ' + (streamerNames[0] || 'Twitch'))
             : ('Clips Comp — ' + (streamerNames.slice(0, 3).join(', ') || 'Twitch')),
           status: 'processing',
-          stage: 'hook_review',
+          stage: 'hooks_generating',
           clipsOnly: true,
           compCreativePreset: creativePayload.compCreativePreset,
           compCreative: d.compCreative || null,
@@ -16110,6 +16113,9 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   } else if (serverJob.stage === 'hook_review') {
     job.status = 'processing';
     job.stage = 'hook_review';
+  } else if (serverJob.stage === 'hooks_generating') {
+    job.status = 'processing';
+    job.stage = 'hooks_generating';
   } else if (serverJob.status === 'gate3_failed') job.status = 'gate3_failed';
   if (serverJob.finalUrl) job.finalUrl = serverJob.finalUrl;
   if (serverJob.localPreviewUrl) job.localPreviewUrl = serverJob.localPreviewUrl;
@@ -16120,6 +16126,16 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.metadataQaViolations) job.metadataQaViolations = serverJob.metadataQaViolations;
   if (serverJob.clipHookTitles && serverJob.clipHookTitles.length) job.clipHookTitles = serverJob.clipHookTitles;
   if (serverJob.clipHookCandidates && serverJob.clipHookCandidates.length) job.clipHookCandidates = serverJob.clipHookCandidates;
+  if (serverJob.burnedHookTitles && serverJob.burnedHookTitles.length) job.burnedHookTitles = serverJob.burnedHookTitles;
+  if (serverJob.hooksOperatorLocked === true || serverJob.hooksOperatorLocked === false) {
+    job.hooksOperatorLocked = !!serverJob.hooksOperatorLocked;
+  }
+  if (serverJob.hooksPendingReassemble === true || serverJob.hooksPendingReassemble === false) {
+    job.hooksPendingReassemble = !!serverJob.hooksPendingReassemble;
+  }
+  if (Array.isArray(serverJob.operatorCreativeAudit) && serverJob.operatorCreativeAudit.length) {
+    job.operatorCreativeAudit = serverJob.operatorCreativeAudit;
+  }
   if (serverJob.hooksConfirmedAt) job.hooksConfirmedAt = serverJob.hooksConfirmedAt;
   if (serverJob.titleCandidates && serverJob.titleCandidates.length) job.titleCandidates = serverJob.titleCandidates;
   if (serverJob.operatorTitleLocked === true || serverJob.operatorTitleLocked === false) {

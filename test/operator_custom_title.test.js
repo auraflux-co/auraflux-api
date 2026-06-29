@@ -57,6 +57,20 @@ test('reapplyOperatorTitleIfLocked restores selected custom title after SEO over
   assert.equal(card.publishCopy.youtube.title, "#Funnymike's Before and After Streamer U Interview #Shorts");
 });
 
+test('reapplyOperatorTitleIfLocked survives seedTitleCandidates SEO overwrite', () => {
+  const { seedTitleCandidates } = require('../lib/operator_publish_titles');
+  const card = {
+    clipsOnly: true,
+    contentType: 'twitch-short',
+    operatorTitleLocked: true,
+    title: 'My Locked Title',
+    publishCopy: { youtube: { title: 'SEO Overwrite #Shorts', titles: ['SEO Overwrite #Shorts'] } },
+  };
+  seedTitleCandidates(card);
+  reapplyOperatorTitleIfLocked(card);
+  assert.equal(card.publishCopy.youtube.title, 'My Locked Title #Shorts');
+});
+
 test('long-form twitch custom title does not append #Shorts', () => {
   const card = {
     contentType: 'twitch',
