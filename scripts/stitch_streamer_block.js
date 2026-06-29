@@ -7,6 +7,8 @@
  * Usage:
  *   node scripts/stitch_streamer_block.js --streamer LACY --asm-id asm_script_twitch_1782513992551_r43
  *   node scripts/stitch_streamer_block.js --streamer LACY --asm-id ... --handoff JASON
+ *   node scripts/stitch_streamer_block.js --streamer LACY --asm-id ... --gemini
+ *   node scripts/stitch_streamer_block.js --streamer LACY --asm-id ... --merged
  */
 
 if (!process.env.USE_LOCAL_FFMPEG) process.env.USE_LOCAL_FFMPEG = '1';
@@ -21,19 +23,13 @@ const {
 } = require('../lib/assembly');
 const { ffmpegPath } = require('../lib/ffmpeg_utils');
 const { probeDurationSec } = require('../lib/clip_comp_tts');
+const {
+  LEGACY_BLOCK_SEGMENTS,
+  MERGED_BLOCK_SEGMENTS,
+} = require('../lib/soup_streamer_block_segments');
 
 const execFileAsync = promisify(execFile);
 const ROOT = path.join(__dirname, '..');
-
-const BLOCK_SEGMENTS = [
-  { key: 'intro', type: 'avatar', slug: 'intro', labelSuffix: '_INTRO' },
-  { key: 'clip1_setup', type: 'avatar', slug: 'clip1_setup', labelSuffix: '_CLIP1_SETUP' },
-  { key: 'clip1', type: 'source_clip', slug: 'clip1_setup_clip', labelSuffix: '_CLIP1_SETUP_CLIP' },
-  { key: 'clip1_reaction', type: 'avatar', slug: 'clip1_reaction', labelSuffix: '_CLIP1_REACTION' },
-  { key: 'clip2_setup', type: 'avatar', slug: 'clip2_setup', labelSuffix: '_CLIP2_SETUP' },
-  { key: 'clip2', type: 'source_clip', slug: 'clip2_setup_clip', labelSuffix: '_CLIP2_SETUP_CLIP' },
-  { key: 'clip2_reaction', type: 'avatar', slug: 'clip2_reaction', labelSuffix: '_CLIP2_REACTION' },
-];
 
 function parseArgs(argv) {
   const out = {
@@ -43,11 +39,17 @@ function parseArgs(argv) {
     windowSec: 3,
     outDir: null,
     tmpDir: path.join(ROOT, 'tmp'),
+    gemini: false,
+    metrics: false,
+    merged: false,
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--streamer') out.streamer = String(argv[++i] || 'LACY').toUpperCase();
     else if (a === '--asm-id') out.asmId = argv[++i];
+    else if (a === '--gemini') out.gemini = true;
+    else if (a === '--metrics') out.metrics = true;
+    else if (a === '--merged') out.merged = true;
     else if (a === '--handoff') out.handoff = String(argv[++i] || '').toUpperCase();
     else if (a === '--window') out.windowSec = Number(argv[++i]) || 3;
     else if (a === '--out-dir') out.outDir = argv[++i];
@@ -56,8 +58,8 @@ function parseArgs(argv) {
   return out;
 }
 
-function resolveSegmentFile(tmpDir, asmId, index, slug, preferCrowd = false) {
-  const prefix = `${asmId}_${index}_`;
+function resolveSegmentFile(tmpDir, asmId, index, slug, preferCrowd = false, { slugOnly = false } = {}) {
+  const prefix = slugOnly ? `${asmId}_` : `${asmId}_${index}_`;
   const candidates = fs.readdirSync(tmpDir).filter((f) => {
     if (!f.startsWith(prefix)) return false;
     if (!f.includes(slug)) return false;
@@ -97,7 +99,9 @@ async function joinTimes(files, types, labels) {
       ? soupJoinTransition(types[i], types[i + 1], labels[i], labels[i + 1])
       : null;
     const overlap = spec?.useXfade ? (spec.videoDur ?? 0.22) : 0;
-    const holdExtra = spec?.mode === 'hold_cut' ? (spec.holdSec ?? 0.12) : 0;
+    const holdExtra = spec?.mode === 'hold_cut'
+      ? (spec.holdSec ?? 0.14) + (spec.slateSec ?? 0.06)
+      : 0;
     if (i < files.length - 1) {
       points.push({
         index: i + 1,
@@ -120,15 +124,19 @@ async function main() {
   }
 
   const streamer = opts.streamer;
+  const blockSegments = opts.merged ? MERGED_BLOCK_SEGMENTS : LEGACY_BLOCK_SEGMENTS;
   const files = [];
   const types = [];
   const labels = [];
 
-  for (let i = 0; i < BLOCK_SEGMENTS.length; i++) {
-    const seg = BLOCK_SEGMENTS[i];
+  for (let i = 0; i < blockSegments.length; i++) {
+    const seg = blockSegments[i];
     const idx = i + 1;
-    const preferCrowd = seg.key.includes('reaction');
-    const fp = resolveSegmentFile(opts.tmpDir, opts.asmId, idx, `${streamer.toLowerCase()}_${seg.slug}`, preferCrowd);
+    const preferCrowd = !!seg.preferCrowd;
+    const slug = `${streamer.toLowerCase()}_${seg.slug}`;
+    const fp = resolveSegmentFile(opts.tmpDir, opts.asmId, idx, slug, preferCrowd, {
+      slugOnly: opts.merged,
+    });
     if (!fp) {
       console.error(`Missing segment ${idx} ${streamer}_${seg.slug} under ${opts.tmpDir}`);
       process.exit(1);
@@ -140,9 +148,11 @@ async function main() {
   }
 
   if (opts.handoff) {
-    const handoffIdx = 8;
+    const handoffIdx = opts.merged ? 6 : 8;
     const handoffSlug = `${opts.handoff.toLowerCase()}_intro`;
-    const handoffFile = resolveSegmentFile(opts.tmpDir, opts.asmId, handoffIdx, handoffSlug);
+    const handoffFile = resolveSegmentFile(opts.tmpDir, opts.asmId, handoffIdx, handoffSlug, false, {
+      slugOnly: opts.merged,
+    });
     if (!handoffFile) {
       console.error(`Missing handoff intro ${opts.handoff}_INTRO (index ${handoffIdx})`);
       process.exit(1);
@@ -168,15 +178,25 @@ async function main() {
   });
 
   const joins = await joinTimes(files, types, labels);
-  const report = { streamer, asmId: opts.asmId, blockMp4, stitchMeta, joins: [] };
+  const report = {
+    streamer,
+    asmId: opts.asmId,
+    blockMp4,
+    stitchMeta,
+    _segmentFiles: files,
+    _segmentLabels: labels,
+    joins: [],
+  };
 
   for (const j of joins) {
     const slug = `${String(j.index).padStart(2, '0')}_${j.from}_to_${j.to}`.replace(/[^a-zA-Z0-9]+/g, '_');
     const clipPath = path.join(clipsDir, `${slug}.mp4`);
     await extractClip(blockMp4, j.atSec, opts.windowSec, clipPath);
-    const policyName = j.policy?.mode === 'hold_cut'
-      ? 'hold_cut'
-      : (j.policy?.useXfade ? 'xfade' : 'cut');
+    const policyName = j.policy?.sceneReset
+      ? 'scene_reset'
+      : j.policy?.mode === 'hold_cut'
+        ? 'hold_cut'
+        : (j.policy?.useXfade ? 'xfade' : 'cut');
     report.joins.push({ ...j, policyName, clip: clipPath });
     console.log(`  clip ${j.index}: ${j.from} → ${j.to}  [${policyName}]  ~${j.atSec.toFixed(1)}s`);
   }
@@ -189,7 +209,9 @@ async function main() {
     `Full block: \`${blockMp4}\``,
     '',
     '## Pattern (this block)',
-    'INTRO → CLIP1_SETUP → clip → REACTION → CLIP2_SETUP → clip → CLIP2_REACTION',
+    opts.merged
+      ? 'INTRO(+CLIP1_SETUP merged) → clip → REACTION(+CLIP2_SETUP merged) → clip → CLIP2_REACTION'
+      : 'INTRO → CLIP1_SETUP → clip → REACTION → CLIP2_SETUP → clip → CLIP2_REACTION',
     opts.handoff ? `→ **${opts.handoff}_INTRO** (handoff test)` : '',
     '',
     '## Boundary clips',
@@ -200,6 +222,30 @@ async function main() {
 
   console.log(`\n→ ${outDir}`);
   console.log(`→ ${blockMp4}`);
+
+  if (opts.gemini) {
+    const { qaStreamerBlockReport } = require('../lib/soup_stitch_gemini_qa');
+    console.log('\n[gemini-stitch-qa] reviewing boundary clips...');
+    const summary = await qaStreamerBlockReport(path.join(outDir, 'block_report.json'));
+    if (!summary.overallPass) {
+      console.log('[gemini-stitch-qa] FAIL — see gemini_qa_report.md for failed joins');
+      process.exitCode = 2;
+    }
+  }
+
+  if (opts.metrics) {
+    const { scoreStreamerBlockJoins } = require('../lib/soup_join_visual_metrics');
+    console.log('\n[join-metrics] objective visual scoring...');
+    const summary = await scoreStreamerBlockJoins(path.join(outDir, 'block_report.json'));
+    for (const r of summary.results) {
+      const v = r.visual || {};
+      console.log(`  ${r.from}→${r.to}: score=${v.score ?? '—'} pass=${v.pass ? 'YES' : 'NO'} issues=${(v.issues || []).join(',') || 'none'} tailMotion=${v.metrics?.tailMotion ?? '—'}`);
+    }
+    if (!summary.overallPass) {
+      console.log('[join-metrics] FAIL — see visual_metrics_report.json');
+      process.exitCode = process.exitCode || 2;
+    }
+  }
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

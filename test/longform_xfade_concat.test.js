@@ -18,26 +18,33 @@ test('long-form group concat uses xfade helper wired to transition param', () =>
 test('soupJoinTransition: per-boundary streamer block policy', () => {
   const { soupJoinTransition } = require('../lib/assembly');
   assert.equal(soupJoinTransition('source_clip', 'avatar').useXfade, false);
-  assert.equal(soupJoinTransition('avatar', 'source_clip').useXfade, true);
+  assert.equal(soupJoinTransition('avatar', 'source_clip').useXfade, false);
+  assert.equal(soupJoinTransition('avatar', 'source_clip').transition, 'cut');
+  assert.equal(soupJoinTransition('avatar', 'source_clip', 'LACY_CLIP1_SETUP', 'LACY_CLIP1_SETUP_CLIP').audioFadeSec, 0.05);
 
   const introSetup = soupJoinTransition('avatar', 'avatar', 'LACY_INTRO', 'LACY_CLIP1_SETUP');
-  assert.equal(introSetup.mode, 'hold_cut');
-  assert.equal(introSetup.useXfade, false);
+  assert.equal(introSetup.useXfade, true);
+  assert.equal(introSetup.videoDur, 0.22);
+  assert.equal(introSetup.prepStableTail, true);
+  assert.equal(introSetup.sceneReset, true);
 
   const reactionSetup = soupJoinTransition('avatar', 'avatar', 'LACY_CLIP1_REACTION', 'LACY_CLIP2_SETUP');
   assert.equal(reactionSetup.useXfade, true);
   assert.equal(reactionSetup.fadeReactionTail, true);
+  assert.equal(reactionSetup.prepStableTail, true);
 
   const handoff = soupJoinTransition('avatar', 'avatar', 'LACY_CLIP2_REACTION', 'JASON_INTRO');
   assert.equal(handoff.useXfade, true);
+  assert.equal(handoff.videoDur, 0.22);
   assert.equal(handoff.streamerHandoff, true);
-  assert.equal(handoff.reactionTailFadeSec, 0.45);
+  assert.equal(handoff.fadeReactionTail, true);
+  assert.equal(handoff.prepStableTail, true);
 });
 
-test('concatMediaWithTransition accepts segTypes for mixed join policy', () => {
+test('concatMediaWithTransition uses mixed path when hold_cut joins present', () => {
   const src = fs.readFileSync(path.join(__dirname, '../lib/assembly.js'), 'utf8');
-  assert.match(src, /segTypes/);
-  assert.match(src, /soupJoinUsesXfade/);
-  assert.match(src, /mergeTwoWithCut/);
-  assert.match(src, /concatTsToMp4\(voResult\.files, groupMp4, true, transition, voResult\.types, voResult\.labels\)/);
+  assert.match(src, /hasHoldCut/);
+  assert.match(src, /prepStableTail/);
+  assert.match(src, /soupSceneResetXfade/);
+  assert.match(src, /soup_segment_prep/);
 });
