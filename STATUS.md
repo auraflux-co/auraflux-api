@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-29 (CPD-1144) — Twitch Soup scene-reset stitch (r41): hard-cut video on INTRO→CLIP1_SETUP + CLIP1_REACTION→CLIP2_SETUP; audio-only fade for crowd tail. Verified `script_twitch_1782513992551` r41 ~445s. Deployed C0.
 **Last Updated:** 2026-06-29 (CPD-1136–1143) — Dashboard trust bundle: title lock survives SEO seed, queue sync all pinned/queued jobs, dead gate5-review removed, clip-comp assembly poll, hooks_generating stage, burned-hook mismatch banner, regen-hooks lock guard, reassemble preflight remote URLs. **Not deployed** — job in assembly; push only.
 **Last Updated:** 2026-06-29 (CPD-1135) — Operator creative guard: hook review BUILD VIDEO panel, operator-locked hooks/titles survive re-assemble, operatorCreativeAudit trail, queue server sync (ASSEMBLING badge fix). 2-clip comp minClips=2. Published funnymike 2-clip comp. Deployed C0.
 **Last Updated:** 2026-06-28 (CPD-1125) — Twitch clip fetch parity: Helix ended_at for 30d windows, library recent sort, no forced 24h on ALL. Deployed C0.
