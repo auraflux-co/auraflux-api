@@ -6012,6 +6012,11 @@ function renderFindJobList() {
     var btn = inQueue
       ? '<span style="font-size:10px;color:#2ecc71;font-weight:700;white-space:nowrap;">✓ IN QUEUE</span>'
       : '<button type="button" class="btn btn-gold btn-sm" style="white-space:nowrap;font-weight:700;" onclick="addJobToQueueFromServer(\'' + jid.replace(/'/g, "\\'") + '\', true)">ADD TO QUEUE</button>';
+    var canReasm = !!(j.assemblyId || j.assembledAt || (j.heygen && j.heygen.videoJobs && j.heygen.videoJobs.length >= 4))
+      && (j.stage || '') !== 'published';
+    var reasmBtn = canReasm
+      ? '<button type="button" class="btn btn-outline btn-sm" style="margin-left:6px;white-space:nowrap;color:#3498db;" onclick="addJobToQueueFromServer(\'' + jid.replace(/'/g, "\\'") + '\', true);setTimeout(function(){reassembleFromFiles(\'' + jid.replace(/'/g, "\\'") + '\');},800);">↻ RE-ASSEMBLE</button>'
+      : '';
     return '<div class="' + rowCls + '">'
       + '<div style="flex:1;min-width:0;">'
       + '<div style="font-size:13px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:4px;">' + title + '</div>'
@@ -6020,7 +6025,7 @@ function renderFindJobList() {
       + '<span style="color:' + badge.color + ';">' + escHtml(badge.text) + '</span>'
       + '<span style="color:rgba(255,255,255,0.35);">' + escHtml(when) + '</span>'
       + '</div></div>'
-      + '<div style="flex-shrink:0;display:flex;align-items:center;">' + btn + '</div>'
+      + '<div style="flex-shrink:0;display:flex;align-items:center;gap:4px;">' + btn + reasmBtn + '</div>'
       + '</div>';
   }).join('');
 }
@@ -6039,6 +6044,9 @@ function addJobToQueueFromServer(jobId, closeModal) {
         return;
       }
       var serverJob = resp.job;
+      if (serverJob.card && serverJob.card.heygen && !serverJob.heygen) {
+        serverJob.heygen = serverJob.card.heygen;
+      }
       var existing = JOBS.find(function(j) { return j.id === jobId; });
       if (existing) {
         mergeServerJobIntoLocal(jobId, serverJob);
@@ -6122,7 +6130,8 @@ function buildLocalJobFromServerCard(serverJob) {
     segments: segments, script: scriptText, heygen: heygenData,
     queuePinned: true, created: serverJob.savedAt || new Date().toISOString(),
     driveUrl: serverJob.driveUrl || null, assembledAt: serverJob.assembledAt || null,
-    assemblyId: serverJob.assemblyId || null, gate3: serverJob.gate3 || null,
+    assemblyId: serverJob.assemblyId || null, asmId: serverJob.assemblyId || serverJob.asmId || null,
+    gate3: serverJob.gate3 || null,
     publishCopy: serverJob.publishCopy || null, localPreviewUrl: serverJob.localPreviewUrl || null,
     filename: serverJob.filename || null, outputPath: serverJob.outputPath || null,
     _restoredFromServer: true
@@ -6609,6 +6618,21 @@ function jobActivelyAssembling(job) {
   }
   if (job.driveUrl || job.localPreviewUrl || (job.gate3 && job.gate3.outcome === 'pass')) return false;
   return (job.status === 'assembling' || st === 'assembling') && !jobGate3Failed(job);
+}
+
+/** Long-form / post-HeyGen jobs eligible for POST /job/:id/reassemble (manifest + cached URLs). */
+function canReassembleJob(job) {
+  if (!job || !job.id) return false;
+  if (jobActivelyAssembling(job)) return false;
+  var st = job.stage || '';
+  if (st === 'published') return false;
+  if (job.clipsOnly && st === 'hook_review' && !job.hooksConfirmedAt) return false;
+  var heygenCount = (job.heygen && job.heygen.videoJobs && job.heygen.videoJobs.length) || 0;
+  var doneSegs = (job.segments || []).filter(function(s) { return s.type !== 'source_clip' && s.status === 'completed' && s.url; }).length;
+  return !!(job.assemblyId || job.assembledAt || job.driveUrl || resolveJobPreviewUrl(job)
+    || heygenCount >= 4 || doneSegs >= 4
+    || st === 'awaiting_review' || st === 'metadata_review' || st === 'assembled'
+    || st === 'publish_scheduled' || st === 'gate3_failed' || st === 'gate5_failed');
 }
 
 function normalizeTitleForPickerCompare(t) {
@@ -7172,16 +7196,15 @@ function renderQueue() {
       actions += '<button type="button" id="confirm-hooks-btn-action-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;">▶ BUILD VIDEO</button>';
       actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine">🎣 REGEN HOOKS</button>';
     }
-    var pastHeygenStage = ['all_sent','awaiting_manual_segments','heygen_done','assembled','assembling','gate3_failed',
-      'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1
-      || ['awaiting_review','metadata_review','publish_scheduled','assembled'].indexOf(jobStage) > -1
-      || !!(job.assembledAt || job.driveUrl || resolveJobPreviewUrl(job));
-    if (pastHeygenStage && jobStage !== 'published' && !jobActivelyAssembling(job)) {
+    var pastHeygenStage = canReassembleJob(job)
+      || ['all_sent','awaiting_manual_segments','heygen_done','assembled','assembling','gate3_failed',
+        'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1;
+    if (canReassembleJob(job)) {
       if (job.clipsOnly && jobStage === 'awaiting_review') {
         actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Rerun Hook Machine + Claude QA (CPD-1106) — does not burn video until you RE-ASSEMBLE">🎣 REGEN HOOKS</button>';
       }
-      actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Full manual batch only — all MP4s in manual_segments root. For copy fixes use APPLY SCENE UPDATES.">📁 RE-ASSEMBLE FROM FILES</button>';
-    } else if (jobActivelyAssembling(job)) {
+      actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Rebuild from HeyGen cache + manifest — no new credits">↻ RE-ASSEMBLE</button>';
+    } else if (pastHeygenStage && jobActivelyAssembling(job)) {
       actions += '<span style="font-size:10px;color:#3498db;font-family:monospace;align-self:center;">⏳ assembling…</span>';
     }
     var canSceneUpdates = (pastHeygenStage || jobStage === 'published')
@@ -16116,6 +16139,7 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.designSpec) job.designSpec = serverJob.designSpec;
   if (serverJob.designSpec && serverJob.designSpec.compCreative) job.compCreative = serverJob.designSpec.compCreative;
   if (serverJob.heygen) job.heygen = serverJob.heygen;
+  if (serverJob.assemblyId) { job.assemblyId = serverJob.assemblyId; job.asmId = serverJob.assemblyId; }
   if (serverJob.queuePinned === true || serverJob.queuePinned === false) job.queuePinned = !!serverJob.queuePinned;
   if (serverJob.publishHold) job.publishHold = serverJob.publishHold;
   if (serverJob.deliverySpec) job.deliverySpec = serverJob.deliverySpec;
