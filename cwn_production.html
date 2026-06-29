@@ -621,6 +621,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .bc-bench-chip { display:inline-block; font-size:10px; padding:2px 8px; margin:2px; border-radius:10px; background:#0d1524; border:1px solid rgba(255,255,255,0.12); }
 .bc-log { font-family:monospace; font-size:10px; color:rgba(255,255,255,0.5); max-height:80px; overflow-y:auto; white-space:pre-wrap; background:#060a12; padding:8px; border-radius:4px; }
 </style>
+<script src="/assets/hook_emoji_picker.js"></script>
 </head>
 <body>
 
@@ -3259,11 +3260,17 @@ function resolveClipUrlsForPicker(onDone) {
   var clips = [];
   (_twitchPickerStreamers || []).forEach(function(entry) {
     (entry.clips || []).forEach(function(c) {
-      if (c.url && !pickerClipPreviewUrl(c)) clips.push(c);
+      if (!c.selected || !c.url || pickerClipPreviewUrl(c)) return;
+      clips.push(c);
     });
   });
   if (!clips.length) { if (onDone) onDone(); return; }
   resolveClipUrls(clips, function() { if (onDone) onDone(); });
+}
+
+function resolveSelectedClipPreview(clip, onDone) {
+  if (!clip || !clip.url || pickerClipPreviewUrl(clip)) { if (onDone) onDone(); return; }
+  resolveClipUrls([clip], function() { if (onDone) onDone(); });
 }
 
 function rerenderTwitchPicker() {
@@ -6017,11 +6024,11 @@ function refreshQueuedJobFromServer(jobId, opts) {
       if (serverJob.heygen) existing.heygen = serverJob.heygen;
     } else {
       JOBS.unshift(buildLocalJobFromServerCard(serverJob));
+      saveJobs();
+      scheduleQueueRender();
     }
     markJobQueued(jobId, true);
     syncQueuePinToServer(jobId, true);
-    saveJobs();
-    renderQueue();
     if (opts.closeModal) closeFindJobModal();
     if (opts.navQueue) nav('queue');
     if (opts.scrollTo) {
@@ -6091,17 +6098,35 @@ function buildLocalJobFromServerCard(serverJob) {
       });
     }
   });
+  if (!segments.length && clipUrls.length) {
+    clipUrls.forEach(function(c, ci) {
+      segments.push({
+        type: 'source_clip',
+        label: c.label || ('CLIP_' + (ci + 1)),
+        status: (c.url || c.clipUrl) ? 'completed' : 'queued',
+        clipUrl: c.url || c.clipUrl || '',
+        url: c.url || c.clipUrl || '',
+        pageUrl: c.pageUrl || ''
+      });
+    });
+  }
   var scriptText = (serverJob.script && (serverJob.script.fullText || serverJob.script.text)) || serverJob.scriptText || '';
   return {
     id: serverJobId, scriptJobId: serverJob.scriptJobId || serverJobId,
     type: serverJob.contentType || 'twitch',
     title: serverJob.title || serverJob.scriptTitle || serverJobId,
     status: serverJob.status || 'heygen_done', stage: serverJob.stage || null,
+    clipsOnly: !!serverJob.clipsOnly,
     segments: segments, script: scriptText, heygen: heygenData,
     queuePinned: true, created: serverJob.savedAt || new Date().toISOString(),
     driveUrl: serverJob.driveUrl || null, assembledAt: serverJob.assembledAt || null,
     assemblyId: serverJob.assemblyId || null, asmId: serverJob.assemblyId || serverJob.asmId || null,
     gate3: serverJob.gate3 || null,
+    clipHookTitles: serverJob.clipHookTitles || null,
+    clipHookCandidates: serverJob.clipHookCandidates || null,
+    hooksConfirmedAt: serverJob.hooksConfirmedAt || null,
+    compCreative: serverJob.compCreative || null,
+    compCreativePreset: serverJob.compCreativePreset || null,
     publishCopy: serverJob.publishCopy || null, localPreviewUrl: serverJob.localPreviewUrl || null,
     filename: serverJob.filename || null, outputPath: serverJob.outputPath || null,
     _restoredFromServer: true
@@ -6662,6 +6687,58 @@ function toggleJobMediaPanel(jobId) {
   if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
+var _hookInputDrafts = {};
+var _titleInputDrafts = {};
+var _queueRenderTimer = null;
+var _queueRenderDeferred = false;
+
+function saveHookInputDraft(jobId, clipIdx, value) {
+  _hookInputDrafts[jobId + '-' + clipIdx] = value;
+}
+function insertHookEmoji(jobId, clipIdx, emoji) {
+  if (!emoji) return;
+  var input = document.getElementById('custom-hook-input-' + jobId + '-' + clipIdx);
+  if (!input) return;
+  var cur = String(input.value || '');
+  var spacer = cur && !/\s$/.test(cur) ? ' ' : '';
+  var next = (cur + spacer + emoji).slice(0, 72);
+  input.value = next;
+  saveHookInputDraft(jobId, clipIdx, next);
+  input.focus();
+}
+function clearHookInputDraft(jobId, clipIdx) {
+  delete _hookInputDrafts[jobId + '-' + clipIdx];
+}
+function saveTitleInputDraft(jobId, value) {
+  _titleInputDrafts[jobId] = value;
+}
+function clearTitleInputDraft(jobId) {
+  delete _titleInputDrafts[jobId];
+}
+function isOperatorDraftInputFocused() {
+  var ae = document.activeElement;
+  if (!ae || !ae.id) return false;
+  return ae.id.indexOf('custom-hook-input-') === 0 || ae.id.indexOf('custom-title-input-') === 0;
+}
+function scheduleQueueRender(force) {
+  if (!force && isOperatorDraftInputFocused()) {
+    _queueRenderDeferred = true;
+    return;
+  }
+  clearTimeout(_queueRenderTimer);
+  _queueRenderTimer = setTimeout(function() {
+    if (!force && isOperatorDraftInputFocused()) {
+      _queueRenderDeferred = true;
+      return;
+    }
+    _queueRenderDeferred = false;
+    renderQueueNow();
+  }, force ? 0 : 100);
+}
+function renderQueue(force) {
+  scheduleQueueRender(!!force);
+}
+
 /** Warn when burned MP4 hooks differ from operator selection (server publish guard). */
 function burnedHooksMismatchBanner(job) {
   if (!job || !job.clipsOnly) return '';
@@ -6748,13 +6825,25 @@ function renderBurnedHookPickerMarkup(job, preAssembly) {
     } else if (!activeHook) {
       html += '<div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:6px;">No AI candidates yet — type your own hook below or wait for Hook Machine.</div>';
     }
+    var draftKey = job.id + '-' + clipIdx;
+    var displayHook = Object.prototype.hasOwnProperty.call(_hookInputDrafts, draftKey)
+      ? _hookInputDrafts[draftKey]
+      : activeHook;
     var inputBorder = isCustomActive
       ? 'border:1px solid rgba(46,204,113,0.55);'
       : 'border:1px solid rgba(199,175,79,0.35);';
     html += '<div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin:8px 0 4px;">CUSTOM HOOK (you type it)</div>'
       + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'
-      + '<input type="text" id="' + inputId + '" value="' + escHtml(activeHook) + '" maxlength="72" placeholder="Your hook line — max 72 chars, no streamer name" '
+      + '<select id="hook-emoji-pick-' + job.id + '-' + clipIdx + '" onchange="insertHookEmoji(\'' + job.id + '\',' + clipIdx + ',this.value)" '
+      + 'style="padding:6px 8px;font-size:11px;border-radius:4px;border:1px solid rgba(199,175,79,0.35);background:rgba(0,0,0,0.45);color:#fff;max-width:110px;" title="Add emoji to hook">'
+      + '<option value="">+ 😀</option>'
+      + (typeof HOOK_EMOJI_PICKLIST !== 'undefined' ? HOOK_EMOJI_PICKLIST.map(function(e) {
+          return '<option value="' + escHtml(e.char) + '">' + escHtml(e.char + ' ' + e.label) + '</option>';
+        }).join('') : '')
+      + '</select>'
+      + '<input type="text" id="' + inputId + '" value="' + escHtml(displayHook) + '" maxlength="72" placeholder="Your hook line — max 72 chars, emoji OK" '
       + 'style="flex:1;min-width:180px;padding:6px 8px;font-size:11px;border-radius:4px;' + inputBorder + 'background:rgba(0,0,0,0.35);color:#fff;" '
+      + 'oninput="saveHookInputDraft(\'' + job.id + '\',' + clipIdx + ',this.value)" '
       + 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();applyCustomClipHook(\'' + job.id + '\',' + clipIdx + ');}" />'
       + '<button type="button" id="custom-hook-btn-' + job.id + '-' + clipIdx + '" onclick="applyCustomClipHook(\'' + job.id + '\',' + clipIdx + ')" class="btn btn-gold btn-sm" style="font-weight:700;white-space:nowrap;">'
       + (isCustomActive ? '✓ CUSTOM ACTIVE' : '✓ USE CUSTOM')
@@ -6801,7 +6890,7 @@ function confirmClipHooksAndBuild(jobId) {
   xhr.send(JSON.stringify({}));
 }
 
-function renderQueue() {
+function renderQueueNow() {
   try {
   var visibleJobs = JOBS.filter(function(j) { return isJobQueued(j); });
   g('queue-count').textContent = visibleJobs.length + ' JOB' + (visibleJobs.length === 1 ? '' : 'S');
@@ -6825,18 +6914,19 @@ function renderQueue() {
     var anyRendering = segments.some(function(s){ return s.status==='rendering'||s.status==='generating'; });
 
     var jobStage = job.stage || '';
+    var isClipCompJob = !!(job.clipsOnly || ((jobStage === 'hook_review' || jobStage === 'hooks_generating') && (job.type || '').indexOf('short') > -1));
     var previewUrlEarly = resolveJobPreviewUrl(job);
     var ffmpegDone = !!(job.assembledAt || job.driveUrl || previewUrlEarly);
-    var hooksReviewActive = job.clipsOnly && jobStage === 'hook_review' && !job.hooksConfirmedAt;
+    var hooksReviewActive = isClipCompJob && jobStage === 'hook_review' && !job.hooksConfirmedAt;
     var ffmpegActive = !ffmpegDone && !hooksReviewActive && (
       jobActivelyAssembling(job)
       || jobStage === 'assembling'
-      || (job.clipsOnly && (status === 'processing' || status === 'all_sent') && !!job.hooksConfirmedAt)
+      || (isClipCompJob && (status === 'processing' || status === 'all_sent') && !!job.hooksConfirmedAt)
     );
 
     // PIPELINE STATUS BAR
     var pipe = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 10px;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);">';
-    if (job.clipsOnly) {
+    if (isClipCompJob) {
       var clipsReady = clipSlots.filter(function(s){ return s.clipUrl || s.url; }).length;
       var clipTotal = clipSlots.length || totalSegs;
       pipe += pipeStep('CLIPS '+clipsReady+'/'+clipTotal, clipTotal > 0 && clipsReady >= clipTotal, false, '#9b59b6');
@@ -6849,7 +6939,7 @@ function renderQueue() {
       pipe += pipeStep('HEYGEN '+doneSegs.length+'/'+totalSegs, hgDone, anyRendering, '#e74c3c');
     }
     pipe += pipeStep('FFMPEG', ffmpegDone, ffmpegActive, '#e67e22');
-    if (job.clipsOnly) {
+    if (isClipCompJob) {
       var g3Pass = !!(job.gate3 && job.gate3.outcome !== 'fail' && job.gate3.score >= 60);
       var g3Fail = jobGate3Failed(job);
       pipe += pipeStep('GATE 3 QA', g3Pass || (!!job.driveUrl && !g3Fail), jobActivelyAssembling(job) || (g3Fail && !g3Pass), g3Fail ? '#e74c3c' : '#9b59b6');
@@ -6912,11 +7002,11 @@ function renderQueue() {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.12);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:11px;color:#3498db;">'
         + '⏳ <strong>Re-assembling now</strong> — old preview/SEO stays visible until FFmpeg finishes. Watch for <strong>✅ ASSEMBLY COMPLETE</strong> on the card (or ↩ RESTORE JOBS after ~5–10 min).'
         + '</div>';
-    } else if (job.clipsOnly && jobStage === 'hooks_generating') {
+    } else if (isClipCompJob && jobStage === 'hooks_generating') {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:11px;color:#3498db;">'
         + '🤖 <strong>HOOKS GENERATING</strong> — Hook Machine is writing candidates (~1–3 min). The picker appears when ready.'
         + '</div>';
-    } else if (job.clipsOnly && jobStage === 'hook_review' && !job.hooksConfirmedAt) {
+    } else if (isClipCompJob && jobStage === 'hook_review' && !job.hooksConfirmedAt) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.1);border:1px solid rgba(199,175,79,0.45);border-radius:6px;font-size:11px;color:#c7af4f;">'
         + '🎣 <strong>HOOK REVIEW</strong> — pick AI candidates or type custom hooks for each clip. FFmpeg does not start until you click <strong>▶ BUILD VIDEO</strong>.'
         + '</div>';
@@ -6925,7 +7015,7 @@ function renderQueue() {
         + '<button type="button" id="confirm-hooks-btn-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;padding:8px 16px;">▶ BUILD VIDEO</button>'
         + '<button type="button" onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine (~1–3 min per clip)">🎣 REGEN HOOKS</button>'
         + '</div>';
-    } else if (job.clipsOnly && !job.driveUrl && !resolveJobPreviewUrl(job) && jobStage !== 'failed' && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
+    } else if (isClipCompJob && !job.driveUrl && !resolveJobPreviewUrl(job) && jobStage !== 'failed' && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:11px;color:#3498db;">'
         + '⏳ Assembling clip comp — preview + SEO will appear when FFmpeg finishes.'
         + '</div>';
@@ -7086,10 +7176,14 @@ function renderQueue() {
         var titleInputBorder = isTitleCustomActive
           ? 'border:1px solid rgba(46,204,113,0.55);'
           : 'border:1px solid rgba(52,152,219,0.45);';
+        var displayTitle = Object.prototype.hasOwnProperty.call(_titleInputDrafts, job.id)
+          ? _titleInputDrafts[job.id]
+          : activeTitle;
         metaStrip += '<div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin:8px 0 4px;">CUSTOM TITLE (you type it)</div>'
           + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'
-          + '<input type="text" id="' + titleInputId + '" value="' + escHtml(activeTitle) + '" maxlength="100" placeholder="' + escHtml(isTwitchLongForm ? 'YouTube title — long-form episode (no #Shorts)' : 'YouTube title — #Shorts added automatically on Shorts') + '" '
+          + '<input type="text" id="' + titleInputId + '" value="' + escHtml(displayTitle) + '" maxlength="100" placeholder="' + escHtml(isTwitchLongForm ? 'YouTube title — long-form episode (no #Shorts)' : 'YouTube title — #Shorts added automatically on Shorts') + '" '
           + 'style="flex:1;min-width:200px;padding:6px 8px;font-size:11px;border-radius:4px;' + titleInputBorder + 'background:rgba(0,0,0,0.35);color:#fff;" '
+          + 'oninput="saveTitleInputDraft(\'' + job.id + '\',this.value)" '
           + 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();applyCustomPublishTitle(\'' + job.id + '\');}" />'
           + '<button type="button" id="custom-title-btn-' + job.id + '" onclick="applyCustomPublishTitle(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;white-space:nowrap;">'
           + (isTitleCustomActive ? '✓ CUSTOM ACTIVE' : '✓ USE CUSTOM')
@@ -7105,7 +7199,7 @@ function renderQueue() {
           + 'Written hook tease (3–5s bold on-screen text): next run will offer Whisper captions so you can approve the tease line before burn.'
           + '</div>';
       }
-      if (job.clipsOnly) {
+      if (isClipCompJob) {
         if (!jobWhisperCaptionsExpected(job)) {
           metaStrip += '<div style="font-size:10px;margin-top:4px;color:rgba(255,255,255,0.45);">'
             + '✓ Whisper off — creative preset uses burned hooks only (no auto-captions)'
@@ -7190,7 +7284,7 @@ function renderQueue() {
     }
     // RE-ASSEMBLE FROM FILES — uses manual_segments folder overrides, skips Gate 2 (chrome burning).
     // Show for clip comps / post-HeyGen jobs including awaiting_review (operator re-burn after code fixes).
-    if (job.clipsOnly && jobStage === 'hook_review' && !job.hooksConfirmedAt) {
+    if (isClipCompJob && jobStage === 'hook_review' && !job.hooksConfirmedAt) {
       actions += '<button type="button" id="confirm-hooks-btn-action-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;">▶ BUILD VIDEO</button>';
       actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine">🎣 REGEN HOOKS</button>';
     }
@@ -7891,8 +7985,9 @@ function applyCustomPublishTitle(jobId) {
       try { job.publishPrep = publishCopyToPrep(job.publishCopy); } catch (_e) {}
       saveJobs();
     }
+    clearTitleInputDraft(jobId);
     cwn_log('[title] custom saved: "' + resp.title + '"', false);
-    renderQueue();
+    renderQueue(true);
     alert('✅ Custom title saved!\\n\\n"' + resp.title + '"\\n\\nUsed when you 🚀 APPROVE & PUBLISH (no re-assemble needed).');
   };
   xhr.onerror = xhr.ontimeout = function() {
@@ -7964,8 +8059,9 @@ function applyCustomClipHook(jobId, clipIndex) {
       if (job.stage !== 'hook_review') job.stage = 'awaiting_review';
       saveJobs();
     }
+    clearHookInputDraft(jobId, clipIndex);
     cwn_log('[hook] custom saved: "' + resp.hook + '"', false);
-    renderQueue();
+    renderQueue(true);
     var nextMsg = (job && job.stage === 'hook_review')
       ? '✅ Custom hook saved!\n\n"' + resp.hook + '"\n\nClick ▶ BUILD VIDEO when all clips are set.'
       : '✅ Custom hook saved!\n\n"' + resp.hook + '"\n\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.';
@@ -7996,9 +8092,10 @@ function selectClipHook(jobId, clipIndex, candidateIndex) {
     }
     job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
     job.clipHookCandidates = resp.clipHookCandidates || job.clipHookCandidates;
+    clearHookInputDraft(jobId, clipIndex);
     cwn_log('[hook] selected: "' + resp.hook + '"', false);
     saveJobs();
-    renderQueue();
+    renderQueue(true);
     var nextHookMsg = (job.stage === 'hook_review')
       ? '✅ Hook selected!\n\n"' + resp.hook + '"\n\nClick ▶ BUILD VIDEO when ready.'
       : '✅ Hook selected!\n\n"' + resp.hook + '"\n\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.';
@@ -8480,7 +8577,6 @@ function importJobToCanva(jobId) {
 
 function refreshQueue() {
   syncQueueJobsFromServer();
-  renderQueue();
   JOBS.forEach(function(job) {
     if (job.status === 'processing') {
       pollVideo(job.id,
@@ -15428,12 +15524,11 @@ function previewTwitchClips(forceReload) {
             platform: c.platform || s.platform
           };
         });
-        autoSelectTwitchClips(clips, clipsPerStreamer);
         return {
           name: s.login,
           displayName: s.displayName || s.login,
           platform: s.platform || 'twitch',
-          selected: !s.dropReason && clips.length > 0,
+          selected: false,
           clips: clips,
           clipsRaw: clips.slice(),
           dropReason: s.dropReason,
@@ -15446,12 +15541,6 @@ function previewTwitchClips(forceReload) {
       });
     }
     renderTwitchPicker(btn, clipsPerStreamer);
-    resolveClipUrlsForPicker(function() {
-      renderTwitchPicker(btn, clipsPerStreamer);
-    });
-    stagePendingSelectedClips(function() {
-      renderTwitchPicker(btn, clipsPerStreamer);
-    });
   };
   xhr.onerror = xhr.ontimeout = function() {
     btn.textContent = 'Load library'; btn.disabled = false;
@@ -15546,24 +15635,24 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
           + '<input type="checkbox" id="tpick-' + si + '-' + ci + '" ' + (isSelected ? 'checked' : '')
           + ' onchange="_setTwitchClipSelected(' + si + ',' + ci + ', this.checked)" style="width:14px;height:14px;">'
           + '</label>';
-        if (clip.stagedUrl || clip.playbackUrl) {
-          var vsrc = escapeHtml(clip.playbackUrl || clip.stagedUrl);
+        var previewSrc = clip.selected ? pickerClipPreviewUrl(clip) : '';
+        if (previewSrc) {
+          var vsrc = escapeHtml(previewSrc);
           html += '<video class="picker-preview-video" src="' + vsrc + '" muted loop playsinline preload="metadata"'
             + ' onmouseenter="this.play()" onmouseleave="if(!this.controls){this.pause();this.currentTime=0;}" onclick="event.stopPropagation();this.controls=!this.controls;this.muted=!this.controls;if(this.controls)this.play();"></video>';
-        } else if (clip.mp4Url || clip.cdnUrl) {
-          var vsrc2 = escapeHtml(clip.mp4Url || clip.cdnUrl);
-          html += '<video class="picker-preview-video" src="' + vsrc2 + '" muted loop playsinline preload="metadata"'
-            + ' onmouseenter="this.play()" onmouseleave="if(!this.controls){this.pause();this.currentTime=0;}" onclick="event.stopPropagation();this.controls=!this.controls;this.muted=!this.controls;if(this.controls)this.play();"></video>';
-          html += '<div class="picker-staging-badge">HOVER TO PREVIEW · CDN (R2 on select)</div>';
+          if (!clip.stagedUrl && !clip.playbackUrl && (clip.mp4Url || clip.cdnUrl)) {
+            html += '<div class="picker-staging-badge">HOVER · CDN · click for controls</div>';
+          } else if (clip.stagedUrl || clip.playbackUrl) {
+            html += '<div class="picker-staging-badge">HOVER TO PREVIEW · click for full controls</div>';
+          }
         } else if (clip.staging) {
           html += '<div class="picker-thumb-placeholder" style="height:55px;">DOWNLOADING…</div>';
         } else if (thumb) {
-          html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;" onerror="this.style.display=\'none\'">';
+          html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">';
         } else {
           html += '<div class="picker-thumb-placeholder" style="height:55px;">NO THUMB</div>';
         }
         if (clip.stageError) html += '<div class="picker-staging-badge">STAGE FAILED — click to retry</div>';
-        else if (clip.stagedUrl) html += '<div class="picker-staging-badge">HOVER TO PREVIEW · FULL CLIP IN COMPOSER</div>';
         html += '<div class="picker-title">' + (clip.title || '').slice(0, 60) + '</div>';
         if (clipWhen) html += '<div class="picker-when">' + clipWhen + '</div>';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">'
@@ -15633,13 +15722,18 @@ function _toggleTwitchClip(si, ci) {
     var statusEl = g('twitch-fetch-status');
     if (statusEl) statusEl.textContent = swapMsg;
   }
-  if (clip.selected && !clip.stagedUrl && !clip._stageInflight) {
-    stageClipForLibrary(clip, entry, function(err) {
+  if (clip.selected && !clip._stageInflight) {
+    resolveSelectedClipPreview(clip, function() {
       rerenderTwitchPicker();
-      var st = g('twitch-fetch-status');
-      if (err && st) st.textContent = 'Download failed — ' + err;
-      else if (clip.stagedUrl && st) st.textContent = 'Clip ready — hover card to preview';
     });
+    if (!clip.stagedUrl) {
+      stageClipForLibrary(clip, entry, function(err) {
+        rerenderTwitchPicker();
+        var st = g('twitch-fetch-status');
+        if (err && st) st.textContent = 'Download failed — ' + err;
+        else if (clip.stagedUrl && st) st.textContent = 'Clip ready — hover card to preview · click for full controls';
+      });
+    }
   }
 }
 
@@ -16137,6 +16231,10 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.assembledAt) job.assembledAt = serverJob.assembledAt;
   if (serverJob.scheduledPublishAt) job.scheduledPublishAt = serverJob.scheduledPublishAt;
   if (serverJob.stage) job.stage = serverJob.stage;
+  if (serverJob.clipsOnly === true || serverJob.clipsOnly === false) job.clipsOnly = !!serverJob.clipsOnly;
+  else if (!job.clipsOnly && (serverJob.stage === 'hook_review' || serverJob.stage === 'hooks_generating') && (serverJob.contentType || job.type || '').indexOf('short') > -1) {
+    job.clipsOnly = true;
+  }
   if (serverJob.stage === 'assembling' || serverJob.status === 'assembling') {
     job.status = 'assembling';
     job.stage = 'assembling';
@@ -16195,7 +16293,7 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
     job.status = 'completed';
   }
   saveJobs();
-  renderQueue();
+  scheduleQueueRender();
   return job;
 }
 
@@ -19325,6 +19423,14 @@ loadJobs();
 initCompCreativePanel();
 initHeader();
 setTimeout(syncQueueJobsFromServer, 600);
+document.addEventListener('focusout', function(ev) {
+  var id = (ev.target && ev.target.id) || '';
+  if (id.indexOf('custom-hook-input-') === 0 || id.indexOf('custom-title-input-') === 0) {
+    setTimeout(function() {
+      if (_queueRenderDeferred && !isOperatorDraftInputFocused()) scheduleQueueRender(true);
+    }, 80);
+  }
+}, true);
 loadReferenceLibrary();
 loadPronunciations();
 loadStreamerList();

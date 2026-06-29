@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-30 (CPD-1145, CPD-1146) — Clip Library browse fix: no bulk /clip-url or R2 staging on load; thumbs + lazy load until operator checks a clip; CDN preview then R2 on select. Hook review: clipsOnly sync, emoji picklist + Twemoji burn overlay, debounced queue render. Deployed C0.
 **Last Updated:** 2026-06-29 (CPD-1144) — HeyGen scene merges for Talk Soup streamer blocks: INTRO+CLIP1_SETUP and CLIP1_REACTION+CLIP2_SETUP merged before HeyGen submit (eliminates 009/055 avatar flash). Crowd on merged *_REACTION at assembly. Validated LACY full block ~123s. Deployed C0.
 **Last Updated:** 2026-06-29 (CPD-1144) — Twitch Soup scene-reset stitch (r41): hard-cut video on INTRO→CLIP1_SETUP + CLIP1_REACTION→CLIP2_SETUP; audio-only fade for crowd tail. Verified `script_twitch_1782513992551` r41 ~445s. Deployed C0.
 **Last Updated:** 2026-06-29 (CPD-1144) — Clip Library banded windows: 24H / 24H–7D / 7D–30D / 30D+ (non-overlapping); library fetch up to 500 clips/band; Recent+Popular sort within band. Not deployed. title lock survives SEO seed, queue sync all pinned/queued jobs, dead gate5-review removed, clip-comp assembly poll, hooks_generating stage, burned-hook mismatch banner, regen-hooks lock guard, reassemble preflight remote URLs. **Not deployed** — job in assembly; push only.
