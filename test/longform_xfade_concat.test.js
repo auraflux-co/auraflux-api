@@ -10,29 +10,28 @@ test('long-form group concat uses xfade helper wired to transition param', () =>
   assert.match(src, /async function concatMediaWithTransition\(/);
   assert.match(src, /xfade=transition=/);
   assert.match(src, /acrossfade=d=/);
+  assert.match(src, /mergeTwoWithHoldCut/);
   assert.match(src, /concatTsToMp4 = async \(tsList, outMp4, encodeAudio = true, trans = transition, tsTypes = null, tsLabels = null\)/);
   assert.match(src, /concatMediaWithTransition\(stitchPaths, stitchTmp/);
 });
 
-test('soupJoinTransition: all avatar dialogues use gold-standard 0.22s crossfade', () => {
+test('soupJoinTransition: per-boundary streamer block policy', () => {
   const { soupJoinTransition } = require('../lib/assembly');
   assert.equal(soupJoinTransition('source_clip', 'avatar').useXfade, false);
   assert.equal(soupJoinTransition('avatar', 'source_clip').useXfade, true);
 
-  const gold = soupJoinTransition('avatar', 'avatar', 'LACY_CLIP2_REACTION', 'JASON_INTRO');
   const introSetup = soupJoinTransition('avatar', 'avatar', 'LACY_INTRO', 'LACY_CLIP1_SETUP');
-  const reactionSetup = soupJoinTransition('avatar', 'avatar', 'LACY_CLIP1_REACTION', 'LACY_CLIP2_SETUP');
+  assert.equal(introSetup.mode, 'hold_cut');
+  assert.equal(introSetup.useXfade, false);
 
-  for (const spec of [gold, introSetup, reactionSetup]) {
-    assert.equal(spec.useXfade, true);
-    assert.equal(spec.videoDur, 0.22);
-    assert.equal(spec.transition, 'crossfade');
-  }
-  assert.equal(introSetup.sceneReset, true);
-  assert.equal(reactionSetup.sceneReset, true);
+  const reactionSetup = soupJoinTransition('avatar', 'avatar', 'LACY_CLIP1_REACTION', 'LACY_CLIP2_SETUP');
+  assert.equal(reactionSetup.useXfade, true);
   assert.equal(reactionSetup.fadeReactionTail, true);
-  assert.equal(reactionSetup.reactionTailFadeSec, 0.35);
-  assert.equal(gold.sceneReset, false);
+
+  const handoff = soupJoinTransition('avatar', 'avatar', 'LACY_CLIP2_REACTION', 'JASON_INTRO');
+  assert.equal(handoff.useXfade, true);
+  assert.equal(handoff.streamerHandoff, true);
+  assert.equal(handoff.reactionTailFadeSec, 0.45);
 });
 
 test('concatMediaWithTransition accepts segTypes for mixed join policy', () => {
