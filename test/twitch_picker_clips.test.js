@@ -20,3 +20,11 @@ test('fetchStreamerPickerClips does not force 24h when pubHours is null', () => 
   assert.match(src, /pubHours: pubHours != null \? pubHours : null/);
   assert.doesNotMatch(src, /pubHours: pubHours \|\| 24/);
 });
+
+test('library clip fetch exposes popular/recent sort toggle', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../cwn_production.html'), 'utf8');
+  assert.match(html, /function getLibraryClipSort\(/);
+  assert.match(html, /setLibraryClipSort\('popular'\)/);
+  assert.match(html, /clipSort=' \+ encodeURIComponent\(getLibraryClipSort\(\)\)/);
+  assert.match(html, /id="library-clip-sort"/);
+});

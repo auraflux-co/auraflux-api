@@ -64,6 +64,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .library-window-pill { font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:1.5px; padding:6px 14px; border:1px solid rgba(199,175,79,0.25); border-radius:5px; cursor:pointer; background:transparent; color:rgba(255,255,255,0.45); }
 .library-window-pill:hover { color:rgba(255,255,255,0.75); }
 .library-window-pill.active { background:rgba(199,175,79,0.15); color:#c7af4f; border-color:rgba(199,175,79,0.5); }
+.library-head-controls { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.library-sort-pills { display:flex; gap:4px; flex-wrap:wrap; align-items:center; padding-left:10px; border-left:1px solid rgba(255,255,255,0.08); }
+.library-sort-label { font-size:9px; letter-spacing:1px; color:rgba(255,255,255,0.35); margin-right:2px; text-transform:uppercase; }
 .picker-preview-video { width:100%; height:72px; object-fit:cover; border-radius:4px; margin-bottom:5px; background:#000; display:block; }
 .reddit-picker-split { display:grid; grid-template-columns:minmax(220px,38%) 1fr; gap:12px; min-height:360px; align-items:stretch; }
 .reddit-thread-list { max-height:420px; overflow-y:auto; padding-right:6px; border-right:1px solid rgba(255,255,255,0.06); }
@@ -1677,16 +1680,26 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <main class="gen-main library-main">
               <div class="library-main-head">
                 <h3 class="gen-main-title" id="twitch-main-title">LIBRARY</h3>
-                <div class="library-window-pills" id="library-window-pills">
-                  <button type="button" class="library-window-pill active" data-win="24h" onclick="setLibraryWindow('24h')">Top 24H</button>
-                  <button type="button" class="library-window-pill" data-win="7d" onclick="setLibraryWindow('7d')">Top 7D</button>
-                  <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">Top 30D</button>
-                  <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">Top ALL</button>
+                <div class="library-head-controls">
+                  <div class="library-window-pills" id="library-window-pills">
+                    <button type="button" class="library-window-pill active" data-win="24h" onclick="setLibraryWindow('24h')">Top 24H</button>
+                    <button type="button" class="library-window-pill" data-win="7d" onclick="setLibraryWindow('7d')">Top 7D</button>
+                    <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">Top 30D</button>
+                    <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">Top ALL</button>
+                  </div>
+                  <div class="library-sort-pills" id="library-clip-sort-pills">
+                    <span class="library-sort-label">Sort</span>
+                    <button type="button" class="library-window-pill active" data-sort="popular" onclick="setLibraryClipSort('popular')">Popular</button>
+                    <button type="button" class="library-window-pill" data-sort="recent" onclick="setLibraryClipSort('recent')">Recent</button>
+                  </div>
                 </div>
                 <span class="gen-main-hint" id="twitch-main-hint">Check clips → COMPOSE → edit in Generate</span>
               </div>
               <select id="library-window" style="display:none" aria-hidden="true">
                 <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="all">Top ALL</option>
+              </select>
+              <select id="library-clip-sort" style="display:none" aria-hidden="true">
+                <option value="popular" selected>Popular</option><option value="recent">Recent</option>
               </select>
               <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, choose a time window above, then click <strong>Load library</strong>.</div>
               <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
@@ -3104,14 +3117,43 @@ function libraryWindowToPubKey(win) {
   return win === 'all' ? 'any' : (win || '24h');
 }
 
+function getLibraryClipSort() {
+  var el = g('library-clip-sort');
+  var sort = el && el.value ? el.value : 'popular';
+  return sort === 'recent' ? 'recent' : 'popular';
+}
+
+function syncLibraryClipSortPills() {
+  var sort = getLibraryClipSort();
+  document.querySelectorAll('#library-clip-sort-pills .library-window-pill').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-sort') === sort);
+  });
+}
+
+function setLibraryClipSort(sort) {
+  sort = sort === 'recent' ? 'recent' : 'popular';
+  var el = g('library-clip-sort');
+  if (el) el.value = sort;
+  syncLibraryClipSortPills();
+  var libMode = (g('library-source-mode') && g('library-source-mode').value) || 'streamers';
+  if (libMode === 'streamers') {
+    var picker = g('twitch-inline-picker');
+    if (picker && picker.style.display !== 'none' && _twitchPickerStreamers.length) {
+      loadLibraryClips(true);
+    }
+  }
+}
+
 function syncLibraryWindowToPicker() {
   var winEl = g('library-window');
   var win = winEl ? winEl.value : '24h';
   var pub = g('twitch-picker-pub-window');
   if (pub) pub.value = libraryWindowToPubKey(win);
-  document.querySelectorAll('.library-window-pill').forEach(function(btn) {
+  document.querySelectorAll('#library-window-pills .library-window-pill, .library-main-head .library-window-pills .library-window-pill').forEach(function(btn) {
+    if (!btn.getAttribute('data-win')) return;
     btn.classList.toggle('active', btn.getAttribute('data-win') === win);
   });
+  syncLibraryClipSortPills();
 }
 
 function setLibraryWindow(win) {
@@ -15143,7 +15185,7 @@ function previewTwitchClips(forceReload) {
   var twFilters = getPickerFilters('twitch');
   var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
     + '&platforms=' + encodeURIComponent(getSelectedStreamerPlatforms().join(','))
-    + '&library=1&clipsPer=50&clipSort=recent';
+    + '&library=1&clipsPer=50&clipSort=' + encodeURIComponent(getLibraryClipSort());
   if (twFilters.durMin != null) qs += '&durMin=' + twFilters.durMin;
   if (twFilters.durMax != null) qs += '&durMax=' + twFilters.durMax;
   if (twFilters.pubHours != null) qs += '&pubHours=' + twFilters.pubHours;
