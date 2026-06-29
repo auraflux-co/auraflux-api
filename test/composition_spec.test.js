@@ -29,14 +29,21 @@ describe('composition_spec', () => {
     assert.equal(validation.ok, true);
   });
 
-  it('validates comp clip count', () => {
-    const { spec, validation } = buildCompositionSpec({
+  it('validates comp clip count — classic allows 2+ clips', () => {
+    const two = buildCompositionSpec({
       deliveryFormat: 'comp',
       compCreativePreset: 'classic_blur_pad',
       clips: [{ url: 'https://a', duration: 30 }, { url: 'https://b', duration: 30 }],
     });
-    assert.equal(validation.ok, false);
-    assert.ok(validation.errors.some((e) => e.includes('at least')));
+    assert.equal(two.validation.ok, true);
+
+    const one = buildCompositionSpec({
+      deliveryFormat: 'comp',
+      compCreativePreset: 'classic_blur_pad',
+      clips: [{ url: 'https://a', duration: 30 }],
+    });
+    assert.equal(one.validation.ok, false);
+    assert.ok(one.validation.errors.some((e) => e.includes('at least')));
   });
 
   it('maps to generate-clip-comp body', () => {

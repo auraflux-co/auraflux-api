@@ -5908,8 +5908,15 @@ app.post('/job/:id/custom-title', async (req, res) => {
   if (!rawTitle) return res.status(400).json({ ok: false, error: 'titleText is required.' });
 
   const { applyOperatorCustomTitle } = require('./lib/operator_publish_titles');
+  const { recordOperatorCreativeEdit, previousTitle } = require('./lib/operator_creative_audit');
+  const prevTitle = previousTitle(card);
   const result = applyOperatorCustomTitle(card, rawTitle);
   if (!result.ok) return res.status(400).json(result);
+  recordOperatorCreativeEdit(card, {
+    kind: 'title_custom',
+    text: result.title || rawTitle,
+    previous: prevTitle,
+  });
 
   if (card.stage !== 'awaiting_review') card.stage = 'awaiting_review';
   saveJobCard(jobId, card);
@@ -5937,8 +5944,16 @@ app.post('/job/:id/select-title', async (req, res) => {
 
   const candidateIndex = Math.max(0, parseInt(req.body.candidateIndex, 10) || 0);
   const { selectPublishTitle } = require('./lib/operator_publish_titles');
+  const { recordOperatorCreativeEdit, previousTitle } = require('./lib/operator_creative_audit');
+  const prevTitle = previousTitle(card);
   const result = selectPublishTitle(card, candidateIndex);
   if (!result.ok) return res.status(400).json(result);
+  recordOperatorCreativeEdit(card, {
+    kind: 'title_select',
+    text: result.title,
+    previous: prevTitle,
+    meta: { candidateIndex },
+  });
 
   const { markTitleSelection } = require('./lib/operator_creative_guard');
   markTitleSelection(card);
@@ -5975,8 +5990,16 @@ app.post('/job/:id/custom-hook', (req, res) => {
 
   const { applyOperatorCustomHook } = require('./lib/clip_comp_hooks');
   const { markHookSelection } = require('./lib/operator_creative_guard');
+  const { recordOperatorCreativeEdit, previousHookAt } = require('./lib/operator_creative_audit');
+  const prevHook = previousHookAt(card, clipIndex);
   const result = applyOperatorCustomHook(card, clipIndex, rawHook);
   if (!result.ok) return res.status(400).json(result);
+  recordOperatorCreativeEdit(card, {
+    kind: 'hook_custom',
+    clipIndex,
+    text: result.hook,
+    previous: prevHook,
+  });
   markHookSelection(card, clipIndex, result.hook);
 
   return finishHookPickResponse(req, res, jobId, card, {
@@ -6106,6 +6129,9 @@ app.post('/job/:id/select-hook', (req, res) => {
   const hookText = String(selected.text || '').trim();
   if (!hookText) return res.status(400).json({ ok: false, error: 'Selected candidate has no hook text.' });
 
+  const { recordOperatorCreativeEdit, previousHookAt } = require('./lib/operator_creative_audit');
+  const prevHook = previousHookAt(card, clipIndex);
+
   card.clipHookTitles = Array.isArray(card.clipHookTitles) ? card.clipHookTitles.slice() : [];
   while (card.clipHookTitles.length <= clipIndex) card.clipHookTitles.push('');
   card.clipHookTitles[clipIndex] = hookText;
@@ -6122,6 +6148,14 @@ app.post('/job/:id/select-hook', (req, res) => {
 
   const { markHookSelection } = require('./lib/operator_creative_guard');
   markHookSelection(card, clipIndex, hookText);
+  card.hooksOperatorLocked = true;
+  recordOperatorCreativeEdit(card, {
+    kind: 'hook_select',
+    clipIndex,
+    text: hookText,
+    previous: prevHook,
+    meta: { candidateIndex },
+  });
 
   return finishHookPickResponse(req, res, jobId, card, {
     clipIndex,

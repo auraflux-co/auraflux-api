@@ -5520,13 +5520,22 @@ function asmComplete(batchJobId, resp) {
     }
   }
 
-  // Update job in manifest
+  // Update job in manifest — then sync server card (driveUrl, stage, gate3)
   var job = JOBS.find(function(j){ return j.id === batchJobId; });
   if (job) {
-    job.finalUrl = downloadUrl;
-    job.assembledAt = new Date().toISOString();
-    saveJobs(); renderQueue();
-    // ── Gate 5: Auto-trigger final video review after assembly ──
+    if (downloadUrl) job.finalUrl = downloadUrl;
+    job.assembledAt = job.assembledAt || new Date().toISOString();
+    saveJobs();
+    renderQueue();
+    fetchJobCard(batchJobId, function(err, serverJob) {
+      if (!err && serverJob) {
+        mergeServerJobIntoLocal(batchJobId, serverJob);
+      } else {
+        job.status = 'completed';
+        saveJobs();
+        renderQueue();
+      }
+    });
     setTimeout(function() { triggerGate5(job); }, 2000);
   }
 }
@@ -6418,6 +6427,8 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           clipHookCandidates: serverJob.clipHookCandidates || null,
           hooksConfirmedAt: serverJob.hooksConfirmedAt || null,
           titleCandidates: serverJob.titleCandidates || null,
+          operatorTitleLocked: !!serverJob.operatorTitleLocked,
+          operatorTitleSelectedAt: serverJob.operatorTitleSelectedAt || null,
           captionsApplied: serverJob.captionsApplied,
           whisperCaptionsExpected: serverJob.whisperCaptionsExpected,
           clipCompTransformApplied: serverJob.clipCompTransformApplied,
@@ -6591,8 +6602,40 @@ function jobGate3Failed(job) {
 }
 
 function jobActivelyAssembling(job) {
+  if (!job) return false;
   var st = job.stage || '';
+  if (st === 'awaiting_review' || st === 'metadata_review' || st === 'assembled' || st === 'publish_scheduled' || st === 'published') {
+    return false;
+  }
+  if (job.driveUrl || job.localPreviewUrl || (job.gate3 && job.gate3.outcome === 'pass')) return false;
   return (job.status === 'assembling' || st === 'assembling') && !jobGate3Failed(job);
+}
+
+function normalizeTitleForPickerCompare(t) {
+  return String(t || '').trim().replace(/\s+#Shorts\s*$/i, '').toLowerCase();
+}
+
+function isOperatorCustomTitleActive(job, titlePool, activeTitle) {
+  if (job && job.operatorTitleLocked) return true;
+  return titlePool.some(function(c) {
+    return c && c.operatorCustom && c.selected
+      && normalizeTitleForPickerCompare(c.text) === normalizeTitleForPickerCompare(activeTitle);
+  });
+}
+
+/** Pull server card when local queue is stale (hooks, title, stage, driveUrl). */
+function syncQueueJobsFromServer() {
+  JOBS.forEach(function(job) {
+    if (!job || !job.id) return;
+    var st = job.stage || '';
+    var needsSync = job.status === 'assembling' || st === 'assembling' || st === 'hook_review'
+      || st === 'awaiting_review' || st === 'metadata_review' || st === 'assembled'
+      || (job.clipsOnly && job.assemblyId && !job.driveUrl);
+    if (!needsSync) return;
+    fetchJobCard(job.id, function(err, serverJob) {
+      if (!err && serverJob) mergeServerJobIntoLocal(job.id, serverJob);
+    });
+  });
 }
 
 function formatGate3ReportText(job) {
@@ -6824,7 +6867,6 @@ function renderQueue() {
 
     // SEO / publish metadata preview (clip comps + review-hold jobs)
     var metaStrip = '';
-    var jobStage = job.stage || '';
     var pubPayload = resolvePublishPayload(job);
     var hasSeo = !!(pubPayload && pubPayload.title);
     var postLiveHeld = isPostLivePublishHeld(job);
@@ -6967,15 +7009,20 @@ function renderQueue() {
               }
               return seeds;
             })();
-        var activeTitle = (pubPayload && pubPayload.title) ? String(pubPayload.title).trim() : '';
-        if (!activeTitle && titlePool.length) {
+        var activeTitle = '';
+        var selCustomTitle = titlePool.find(function(c) { return c && c.operatorCustom && c.selected; });
+        if (selCustomTitle && String(selCustomTitle.text || '').trim()) {
+          activeTitle = String(selCustomTitle.text).trim();
+        } else if (pubPayload && pubPayload.title) {
+          activeTitle = String(pubPayload.title).trim();
+        } else if (job.title) {
+          activeTitle = String(job.title).trim();
+          if (isShortTitleJob && !/#Shorts/i.test(activeTitle)) activeTitle += ' #Shorts';
+        } else if (titlePool.length) {
           var selTitle = titlePool.find(function(c){ return c.selected; });
           activeTitle = selTitle ? String(selTitle.text).trim() : String(titlePool[0].text || '').trim();
         }
-        var isTitleCustomActive = titlePool.some(function(c) {
-          return c && c.operatorCustom && c.selected
-            && String(c.text || '').trim().toLowerCase() === activeTitle.toLowerCase();
-        });
+        var isTitleCustomActive = isOperatorCustomTitleActive(job, titlePool, activeTitle);
         var titleInputId = 'custom-title-input-' + job.id;
         var titleStatusId = 'custom-title-status-' + job.id;
         var titlePanelBorder = isTitleCustomActive
@@ -7196,7 +7243,7 @@ function renderQueue() {
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
     var tagCls = status==='completed'||status==='all_sent'?'tag-done':(status==='failed'||status==='gate3_failed')?'tag-failed':'tag-processing';
-    var tagLbl = (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review')) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
+    var tagLbl = (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobStage === 'assembled' && (job.driveUrl || previewUrl)) ? 'REVIEW' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review' && jobStage !== 'awaiting_review' && jobStage !== 'assembled' && jobStage !== 'metadata_review')) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
     var pctBar = (status==='processing'||anyRendering)?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
 
     var mediaPanel = '';
@@ -7816,6 +7863,8 @@ function applyCustomPublishTitle(jobId) {
     if (job) {
       job.publishCopy = resp.publishCopy || job.publishCopy;
       job.titleCandidates = resp.titleCandidates || job.titleCandidates;
+      job.title = (resp.title || '').replace(/\s+#Shorts\s*$/i, '').trim() || job.title;
+      job.operatorTitleLocked = true;
       job.stage = resp.stage || 'awaiting_review';
       job.metadataQaViolations = null;
       try { job.publishPrep = publishCopyToPrep(job.publishCopy); } catch (_e) {}
@@ -8406,6 +8455,7 @@ function importJobToCanva(jobId) {
 }
 
 function refreshQueue() {
+  syncQueueJobsFromServer();
   renderQueue();
   JOBS.forEach(function(job) {
     if (job.status === 'processing') {
@@ -16049,6 +16099,11 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.clipHookCandidates && serverJob.clipHookCandidates.length) job.clipHookCandidates = serverJob.clipHookCandidates;
   if (serverJob.hooksConfirmedAt) job.hooksConfirmedAt = serverJob.hooksConfirmedAt;
   if (serverJob.titleCandidates && serverJob.titleCandidates.length) job.titleCandidates = serverJob.titleCandidates;
+  if (serverJob.operatorTitleLocked === true || serverJob.operatorTitleLocked === false) {
+    job.operatorTitleLocked = !!serverJob.operatorTitleLocked;
+  }
+  if (serverJob.operatorTitleSelectedAt) job.operatorTitleSelectedAt = serverJob.operatorTitleSelectedAt;
+  if (serverJob.title) job.title = serverJob.title;
   if (serverJob.captionsApplied === true || serverJob.captionsApplied === false) job.captionsApplied = serverJob.captionsApplied;
   if (serverJob.whisperCaptionsExpected === true || serverJob.whisperCaptionsExpected === false) {
     job.whisperCaptionsExpected = serverJob.whisperCaptionsExpected;
@@ -19199,6 +19254,7 @@ loadDashboardConfig().then(function() {
 loadJobs();
 initCompCreativePanel();
 initHeader();
+setTimeout(syncQueueJobsFromServer, 600);
 loadReferenceLibrary();
 loadPronunciations();
 loadStreamerList();
