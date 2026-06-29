@@ -25,7 +25,7 @@ test('soupJoinTransition: per-boundary streamer block policy', () => {
   const introSetup = soupJoinTransition('avatar', 'avatar', 'LACY_INTRO', 'LACY_CLIP1_SETUP');
   assert.equal(introSetup.useXfade, true);
   assert.equal(introSetup.videoDur, 0.22);
-  assert.equal(introSetup.prepStableTail, true);
+  assert.equal(introSetup.prepStableTail, false);
   assert.equal(introSetup.sceneReset, true);
 
   const reactionSetup = soupJoinTransition('avatar', 'avatar', 'LACY_CLIP1_REACTION', 'LACY_CLIP2_SETUP');
