@@ -6489,6 +6489,7 @@ function markJobQueued(jobId, queued) {
 
 function removeJobFromQueue(jobId) {
   markJobQueued(jobId, false);
+  syncQueuePinToServer(jobId, false);
   renderQueue();
   cwn_log('[queue] removed from view: ' + jobId, false);
 }
@@ -6637,17 +6638,26 @@ function refreshQueuedJobFromServer(jobId, opts) {
     if (serverJob.card && serverJob.card.heygen && !serverJob.heygen) {
       serverJob.heygen = serverJob.card.heygen;
     }
+    var serverPinned = !!serverJob.queuePinned;
+    var shouldPin = opts.pin === true || (opts.pin !== false && !!opts.addToQueue);
     var existing = JOBS.find(function(j) { return j.id === jobId; });
-    if (existing) {
-      mergeServerJobIntoLocal(jobId, serverJob);
-      if (serverJob.heygen) existing.heygen = serverJob.heygen;
-    } else {
+    if (!existing) {
+      if (!shouldPin && !serverPinned) return;
       JOBS.unshift(buildLocalJobFromServerCard(serverJob));
       saveJobs();
       scheduleQueueRender();
+    } else {
+      mergeServerJobIntoLocal(jobId, serverJob);
+      if (serverJob.heygen) existing.heygen = serverJob.heygen;
     }
-    markJobQueued(jobId, true);
-    syncQueuePinToServer(jobId, true);
+    if (shouldPin) {
+      markJobQueued(jobId, true);
+      syncQueuePinToServer(jobId, true);
+    } else if (serverPinned) {
+      markJobQueued(jobId, true);
+    } else {
+      markJobQueued(jobId, false);
+    }
     if (opts.closeModal) closeFindJobModal();
     if (opts.navQueue) nav('queue');
     if (opts.scrollTo) {
@@ -6662,7 +6672,7 @@ function refreshQueuedJobFromServer(jobId, opts) {
 
 function addJobToQueueFromServer(jobId, closeModal) {
   cwn_log('[queue] adding ' + jobId + '…', false);
-  refreshQueuedJobFromServer(jobId, { closeModal: closeModal, navQueue: true, scrollTo: true, alertOnError: true });
+  refreshQueuedJobFromServer(jobId, { addToQueue: true, pin: true, closeModal: closeModal, navQueue: true, scrollTo: true, alertOnError: true });
 }
 
 function syncQueuePinToServer(jobId, pin) {
@@ -7006,7 +7016,9 @@ function restoreJobsFromServer(showAlert, _retryCount) {
         var isAssembled = isAwaitingOperator || !!(serverJob.assembledAt);
         var isAssembling = serverJob.status === 'assembling' || serverStage === 'assembling';
         var isGate3Failed = serverJob.status === 'gate3_failed' || (qaOutcome === 'fail' && serverJob.clipsOnly);
+        var isGate1Failed = serverStage === 'gate1_failed' || serverJob.gate1Outcome === 'fail';
         var restoredStatus = isGate3Failed ? 'gate3_failed'
+          : isGate1Failed ? 'failed'
           : (isFailed && serverJob.clipsOnly) ? 'failed'
           : isAssembling ? 'assembling'
           : isAssembled ? 'completed'
@@ -7068,6 +7080,9 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           assemblyId: serverJob.assemblyId || null,
           assemblyError: serverJob.assemblyError || null,
           gate3: serverJob.gate3 || null,
+          gate1Outcome: serverJob.gate1Outcome || null,
+          gate1Score: serverJob.gate1Score != null ? serverJob.gate1Score : null,
+          gate1Summary: serverJob.gate1Summary || null,
           qaOutcome: serverJob.qaOutcome || null,
           localPreviewUrl: serverJob.localPreviewUrl || null,
           filename: serverJob.filename || null,
@@ -8074,9 +8089,16 @@ function renderQueueNow() {
       +'<div class="btn-row" style="margin-top:8px;">'+asmPanelBtns+'</div>'
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
-    var tagCls = status==='completed'||status==='all_sent'?'tag-done':(status==='failed'||status==='gate3_failed')?'tag-failed':'tag-processing';
-    var tagLbl = (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'hooks_generating') ? 'HOOKS GEN' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobStage === 'assembled' && (job.driveUrl || previewUrl)) ? 'REVIEW' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && jobStage !== 'awaiting_review' && jobStage !== 'assembled' && jobStage !== 'metadata_review')) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
-    var pctBar = (status==='processing'||anyRendering)?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
+    var tagCls = status==='completed'||status==='all_sent'?'tag-done':(status==='failed'||status==='gate3_failed'||jobStage==='gate1_failed')?'tag-failed':'tag-processing';
+    var tagLbl = (jobStage === 'gate1_failed' || (jobStage === 'failed' && job.gate1Outcome === 'fail')) ? 'GATE 1 FAIL'
+      : (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'hooks_generating') ? 'HOOKS GEN' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobStage === 'assembled' && (job.driveUrl || previewUrl)) ? 'REVIEW' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && jobStage !== 'awaiting_review' && jobStage !== 'assembled' && jobStage !== 'metadata_review')) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
+    var pctBar = (status==='processing'||anyRendering) && jobStage !== 'gate1_failed' ?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
+    var gate1FailBanner = jobStage === 'gate1_failed'
+      ? '<div style="margin:8px 0;padding:8px 10px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.45);border-radius:4px;font-size:14px;color:#e74c3c;">'
+        + '⚠ Gate 1 failed — script scene headers missing or malformed. Open script in Generate, fix <code>=== SCENE ===</code> lines, then re-run.'
+        + (job.gate1Score != null ? ' (score ' + job.gate1Score + ')' : '')
+        + '</div>'
+      : '';
 
     var mediaPanel = '';
     if (previewUrl || job.gate3) {
@@ -8094,7 +8116,7 @@ function renderQueueNow() {
         + '</div>';
     }
 
-    return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':(status==='failed'||status==='gate3_failed')?'failed':'')+'" id="job-'+job.id+'">'
+    return '<div class="job-row '+(status==='all_sent'||status==='completed'?'done':(status==='failed'||status==='gate3_failed'||jobStage==='gate1_failed')?'failed':'')+'" id="job-'+job.id+'">'
       +'<div class="job-row-top"><div class="job-info" style="flex:1;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">'
       +'<div><div class="job-title">'+job.title
@@ -8112,7 +8134,7 @@ function renderQueueNow() {
       +'</div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+pipe+creativeBar+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+mediaPanel+platBar+actions+segToggle+segHtml
+      +pctBar+gate1FailBanner+pipe+creativeBar+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+mediaPanel+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -9750,6 +9772,7 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
         // Always pull authoritative card from server (saved for pass + non-pass Gate 1).
         refreshQueuedJobFromServer(resp.metricsJobId, {
           quiet: true,
+          pin: true,
           navQueue: isTwitchLongFormType(type),
           scrollTo: false
         });
@@ -17115,6 +17138,12 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.stage === 'assembling' || serverJob.status === 'assembling') {
     job.status = 'assembling';
     job.stage = 'assembling';
+  } else if (serverJob.stage === 'gate1_failed' || serverJob.gate1Outcome === 'fail') {
+    job.status = 'failed';
+    job.stage = 'gate1_failed';
+  } else if (serverJob.stage === 'gate1_review') {
+    job.status = 'processing';
+    job.stage = 'gate1_review';
   } else if (serverJob.stage === 'hook_review') {
     job.status = 'processing';
     job.stage = 'hook_review';
@@ -17166,6 +17195,9 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.deliverySpec) job.deliverySpec = serverJob.deliverySpec;
   if (serverJob.postLivePublishReleased) job.postLivePublishReleased = serverJob.postLivePublishReleased;
   if (serverJob.postLivePublishReleasedAt) job.postLivePublishReleasedAt = serverJob.postLivePublishReleasedAt;
+  if (serverJob.gate1Outcome) job.gate1Outcome = serverJob.gate1Outcome;
+  if (serverJob.gate1Score != null) job.gate1Score = serverJob.gate1Score;
+  if (serverJob.gate1Summary) job.gate1Summary = serverJob.gate1Summary;
   if (serverJob.stage === 'metadata_review' || serverJob.stage === 'awaiting_review') {
     job.status = 'completed';
   }
