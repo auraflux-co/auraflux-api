@@ -13,9 +13,22 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .credit-badge { background:rgba(199,175,79,0.15); border:1px solid rgba(199,175,79,0.3); padding:6px 14px; border-radius:4px; font-size:11px; font-weight:700; color:#c7af4f; letter-spacing:2px; }
 .date-badge { font-size:11px; color:rgba(255,255,255,0.4); letter-spacing:2px; }
 
-.layout { display:grid; grid-template-columns:260px 1fr; min-height:calc(100vh - 57px); }
+.layout { display:grid; grid-template-columns:var(--sidebar-width, 200px) 1fr; min-height:calc(100vh - 57px); transition:grid-template-columns 0.2s ease; }
+.layout.sidebar-compact { --sidebar-width:168px; }
+.layout.sidebar-collapsed { --sidebar-width:52px; }
 
-.sidebar { background:#0a0f1e; border-right:1px solid rgba(199,175,79,0.1); padding:20px 0; }
+.sidebar { background:#0a0f1e; border-right:1px solid rgba(199,175,79,0.1); padding:20px 0; overflow:hidden; position:relative; }
+.sidebar-resize-handle { position:absolute; top:0; right:0; width:5px; height:100%; cursor:col-resize; z-index:5; background:transparent; }
+.sidebar-resize-handle:hover { background:rgba(199,175,79,0.25); }
+.layout.sidebar-collapsed .sidebar-lbl { display:none; }
+.layout.sidebar-collapsed .sidebar-divider { margin:8px 6px; }
+.layout.sidebar-collapsed .sidebar-btn { padding:10px 0; justify-content:center; gap:0; font-size:0; letter-spacing:0; }
+.layout.sidebar-collapsed .sidebar-btn .icon { font-size:15px; width:auto; }
+.layout.sidebar-collapsed .sidebar-btn.active { border-right:none; border-left:3px solid #c7af4f; }
+.layout.sidebar-compact .sidebar-btn { padding:8px 12px; font-size:13px; }
+.layout.sidebar-compact .sidebar-lbl { padding:8px 12px 4px; letter-spacing:2px; }
+.sidebar-toggle-btn { background:rgba(199,175,79,0.08); border:1px solid rgba(199,175,79,0.25); color:#c7af4f; font-size:14px; padding:4px 10px; border-radius:4px; cursor:pointer; line-height:1.4; }
+.sidebar-toggle-btn:hover { background:rgba(199,175,79,0.15); }
 .sidebar-section { margin-bottom:4px; }
 .sidebar-lbl { font-size:9px; font-weight:900; color:rgba(199,175,79,0.4); letter-spacing:3px; padding:8px 20px 4px; }
 .sidebar-btn { width:100%; text-align:left; background:none; border:none; color:rgba(255,255,255,0.5); font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700; letter-spacing:1px; padding:10px 20px; cursor:pointer; display:flex; align-items:center; gap:10px; transition:all 0.15s; }
@@ -197,6 +210,12 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .gen-picker-list-row.is-selected { border-color:rgba(145,70,255,0.5); background:rgba(145,70,255,0.12); }
 .gen-picker-streamer-block { border-bottom:1px solid rgba(255,255,255,0.05); padding:8px 4px; }
 .gen-picker-streamer-block.is-dropped { border-color:rgba(255,60,60,0.2); }
+.gen-picker-streamer-block.is-collapsed { background:rgba(255,255,255,0.02); border-radius:6px; }
+.gen-picker-streamer-block.is-done { border-left:2px solid rgba(46,204,113,0.45); }
+.gen-picker-streamer-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; width:100%; }
+.gen-picker-collapsed-summary { font-size:10px; color:rgba(255,255,255,0.45); padding:2px 0 6px 24px; line-height:1.45; }
+.gen-picker-collapse-btn { font-size:9px; padding:2px 7px; line-height:1.3; flex-shrink:0; }
+.library-picks-hint { font-size:9px; color:rgba(255,255,255,0.4); line-height:1.45; margin:6px 0 0; min-height:14px; }
 .gen-picker-panel:empty { display:none; }
 .gen-pillar-card[data-pillar="news"] .gen-workspace,
 .gen-pillar-card[data-pillar="twitch"] .gen-workspace { min-height:calc(100vh - 240px); }
@@ -313,7 +332,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .field-input-compact { width:100%; background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.25);padding:6px 8px;font-size:12px;border-radius:4px; }
 
 /* Channel stats page */
-.stats-page { max-width:1200px; }
+.stats-page { max-width:min(1680px, 100%); }
 .stats-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
 .stats-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
 .stats-card { background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:8px; padding:12px 14px; }
@@ -490,6 +509,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .cal-published { border-left-color:#2ecc71 !important; }
 .cal-progress { border-left-color:#3498db !important; }
 .cal-scheduled { border-left-color:#e67e22 !important; }
+.cal-yt-studio { border-left-color:#ff0000 !important; background:rgba(255,0,0,0.08); }
+.cal-yt-studio .cal-item-sub { color:rgba(255,120,120,0.85) !important; }
 .cal-skipped { opacity:0.4; text-decoration:line-through; }
 .cal-section-label { font-size:8px; letter-spacing:1px; color:rgba(199,175,79,0.6); margin:8px 0 4px; }
 .cal-live-strip { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
@@ -508,6 +529,71 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .find-job-row:hover { border-color:rgba(199,175,79,0.35); }
 .cal-job-pick { display:block; width:100%; text-align:left; padding:8px 10px; margin-bottom:6px; background:rgba(199,175,79,0.08); border:1px solid rgba(199,175,79,0.2); color:#fff; font-size:11px; cursor:pointer; border-radius:4px; }
 .cal-job-pick:hover { border-color:#c7af4f; }
+.cal-month-layout { display:grid; grid-template-columns:minmax(0,1fr) var(--cal-sidebar-width,220px); gap:0; align-items:start; transition:grid-template-columns .18s ease; }
+.cal-month-layout.cal-sidebar-hidden { --cal-sidebar-width:0px; }
+.cal-sidebar-col { position:relative; min-width:0; overflow:hidden; }
+.cal-sidebar-col .cal-sidebar { padding-left:12px; }
+.cal-sidebar-resize-handle { position:absolute; left:-6px; top:0; bottom:0; width:12px; cursor:col-resize; z-index:3; touch-action:none; }
+.cal-sidebar-resize-handle::after { content:''; position:absolute; left:5px; top:8px; bottom:8px; width:2px; border-radius:1px; background:rgba(199,175,79,0.18); transition:background .15s,width .15s; }
+.cal-sidebar-resize-handle:hover::after, .cal-sidebar-resize-handle.cal-dragging::after { background:rgba(199,175,79,0.55); width:3px; left:4px; }
+.cal-kpi-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:10px 0; }
+.cal-kpi { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 10px; }
+.cal-kpi-label { font-size:9px; letter-spacing:.5px; color:rgba(255,255,255,0.45); text-transform:uppercase; }
+.cal-kpi-val { font-size:16px; font-weight:700; color:#fff; margin-top:2px; font-family:Bebas Neue,sans-serif; letter-spacing:1px; }
+.cal-kpi-sub { font-size:9px; color:rgba(255,255,255,0.4); margin-top:2px; }
+.cal-plan-bars { display:grid; gap:6px; margin:8px 0 4px; }
+.cal-plan-bar-row { display:grid; grid-template-columns:52px 1fr 36px; gap:8px; align-items:center; font-size:9px; color:rgba(255,255,255,0.5); }
+.cal-plan-bar-track { height:6px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden; }
+.cal-plan-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,rgba(199,175,79,0.35),rgba(199,175,79,0.75)); max-width:100%; }
+.cal-job-table { width:100%; border-collapse:collapse; margin-top:10px; font-size:10px; }
+.cal-job-table th { text-align:left; padding:6px 8px; color:rgba(199,175,79,0.65); font-size:9px; letter-spacing:.5px; border-bottom:1px solid rgba(255,255,255,0.08); }
+.cal-job-table td { padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; }
+.cal-job-table tr:hover td { background:rgba(255,255,255,0.02); }
+@media (max-width:1100px) {
+  .cal-month-layout, .cal-month-layout.cal-sidebar-hidden { grid-template-columns:1fr; }
+  .cal-sidebar-col { display:block; }
+  .cal-sidebar-resize-handle { display:none; }
+  .cal-sidebar-col .cal-sidebar { padding-left:0; margin-top:12px; }
+  .cal-kpi-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+.cal-month-shell { background:#0d1524; border:1px solid rgba(199,175,79,0.12); border-radius:8px; padding:12px; }
+.cal-month-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+.cal-month-title { font-family:Bebas Neue,sans-serif; font-size:22px; letter-spacing:2px; color:#c7af4f; }
+.cal-month-nav { display:flex; gap:6px; }
+.cal-month-dow { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px; }
+.cal-month-dow span { font-size:9px; font-weight:900; letter-spacing:1px; color:rgba(199,175,79,0.45); text-align:center; }
+.cal-month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.cal-month-pad { visibility:hidden; pointer-events:none; }
+.cal-month-day { min-height:92px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px; cursor:pointer; transition:border-color .15s; }
+.cal-month-day:hover { border-color:rgba(199,175,79,0.35); }
+.cal-month-day.cal-today { border-color:rgba(199,175,79,0.55); background:rgba(199,175,79,0.06); }
+.cal-month-day.cal-past { opacity:0.92; }
+.cal-month-day.cal-selected { border-color:#3498db; box-shadow:0 0 0 1px rgba(52,152,219,0.35); }
+.cal-month-day.cal-goal-met { border-left:3px solid #2ecc71; }
+.cal-month-day.cal-goal-partial { border-left:3px solid #e67e22; }
+.cal-month-day.cal-goal-missed { border-left:3px solid #e74c3c; }
+.cal-month-daynum { font-size:11px; font-weight:700; color:#fff; margin-bottom:4px; }
+.cal-month-plan { font-size:9px; color:rgba(255,255,255,0.45); line-height:1.45; }
+.cal-month-actual { font-size:9px; color:rgba(255,255,255,0.65); margin-top:3px; line-height:1.45; }
+.cal-month-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
+.cal-chip { font-size:8px; padding:1px 4px; border-radius:3px; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.7); }
+.cal-chip.scheduled { background:rgba(230,126,34,0.15); color:#e67e22; }
+.cal-chip.published { background:rgba(46,204,113,0.15); color:#2ecc71; }
+.cal-sidebar { position:sticky; top:12px; }
+.cal-ns-compact { font-size:10px; line-height:1.55; color:rgba(255,255,255,0.55); }
+.cal-day-panel { margin-top:12px; background:#0d1524; border:1px solid rgba(199,175,79,0.15); border-radius:8px; padding:14px; }
+.cal-day-panel h3 { margin:0 0 8px; font-size:13px; color:#c7af4f; letter-spacing:1px; }
+.cal-plan-form { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0; }
+.cal-plan-form label { display:block; font-size:9px; color:rgba(255,255,255,0.45); margin-bottom:3px; }
+.cal-plan-form input { width:100%; background:#0a1020; border:1px solid rgba(199,175,79,0.25); color:#fff; padding:6px; border-radius:4px; font-size:12px; }
+.cal-month-times { font-size:8px; color:rgba(255,255,255,0.5); line-height:1.5; margin-top:3px; max-height:28px; overflow:hidden; }
+.cal-time-chip { display:inline-block; margin-right:4px; white-space:nowrap; }
+.cal-item-time { font-size:10px; font-weight:700; color:#c7af4f; min-width:52px; font-family:monospace; }
+.cal-item-row { display:flex; gap:8px; align-items:flex-start; padding:6px 8px; margin-bottom:4px; background:rgba(255,255,255,0.03); border-radius:4px; font-size:10px; }
+.cal-item-row .cal-item-title { flex:1; color:#fff; line-height:1.35; }
+.cal-item-row .cal-item-meta { font-size:8px; color:rgba(255,255,255,0.4); font-family:monospace; }
+.cal-legend { display:flex; flex-wrap:wrap; gap:10px; font-size:9px; color:rgba(255,255,255,0.45); margin-bottom:10px; }
+.cal-month-summary { font-size:10px; color:rgba(255,255,255,0.5); margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.06); }
 .bc-cal-banner { font-size:11px; padding:10px 12px; margin-bottom:16px; border-radius:4px; background:rgba(199,175,79,0.08); border:1px solid rgba(199,175,79,0.25); line-height:1.45; }
 
 .ab-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
@@ -628,13 +714,15 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 <div class="header">
   <h1>CWN PRODUCTION DASHBOARD</h1>
   <div class="header-right">
+    <button type="button" class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="cycleSidebarMode()" title="Cycle sidebar: normal → compact → icons only">☰</button>
     <div class="date-badge" id="hdr-date"></div>
     <div class="credit-badge" id="hdr-credits">-- CREDITS</div>
   </div>
 </div>
 
-<div class="layout">
-  <div class="sidebar">
+<div class="layout" id="app-layout">
+  <div class="sidebar" id="app-sidebar">
+    <div class="sidebar-resize-handle" id="sidebar-resize-handle" title="Drag to resize sidebar"></div>
     <div class="sidebar-section">
       <div class="sidebar-lbl">DAILY PRODUCTION</div>
       <button class="sidebar-btn active" onclick="nav('library')"><span class="icon">L</span> Clip Library</button>
@@ -1453,11 +1541,22 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
         </div>
       </div>
       <div id="stats-banner"></div>
+      <div id="stats-calendar-block" class="card" style="margin-bottom:14px;display:none;">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div class="card-title">CALENDAR PRODUCTION</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="clearCalendarStatsFilter()">Clear filter</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="nav('calendar')">Open calendar</button>
+          </div>
+        </div>
+        <div class="card-body" id="stats-calendar-body" style="font-size:11px;line-height:1.6;color:rgba(255,255,255,0.6);">—</div>
+      </div>
       <div id="stats-northstar" class="ns-section card" style="margin-bottom:14px;">
         <div class="card-header ns-head">
           <div class="card-title ns-title">NORTH STAR — $300/DAY</div>
           <div class="ns-date-bar">
             <select id="ns-range-days" class="field-input-compact" style="width:auto;" onchange="onNorthStarRangePresetChange()">
+              <option value="1">1 day</option>
               <option value="7">7 days</option>
               <option value="14">14 days</option>
               <option value="28" selected>28 days</option>
@@ -1532,7 +1631,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
     <!-- CLIP LIBRARY PAGE (CPD-1098 / CPD-1118) — pick streamers + clips, send to Composer -->
     <div class="page active" id="page-library">
       <div class="sec-title">CLIP LIBRARY <span class="badge" id="library-count">LIBRARY</span></div>
-      <p id="library-intro-copy" style="font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 10px;line-height:1.5;">Select creators → <strong>Load library</strong> → check clips (each downloads to R2 for hover preview) → <strong>COMPOSE →</strong> edit in Generate Composer. Unused R2 staging clears Sunday EOW.</p>
+      <p id="library-intro-copy" style="font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 10px;line-height:1.5;">Select creators → <strong>Load library</strong> → check clips → <strong>Save picks</strong> (auto-saves too) → add more creators and reload without losing checks → <strong>COMPOSE →</strong></p>
       <div class="btn-row library-source-tabs" style="margin-bottom:12px;gap:6px;">
         <input type="hidden" id="library-source-mode" value="streamers">
         <button type="button" id="btn-library-src-streamers" class="btn btn-gold btn-sm" onclick="setLibrarySourceMode('streamers')">STREAMERS</button>
@@ -1599,7 +1698,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 </details>
                 <details open class="streamer-roster-section" id="streamer-section-clip-groups-wrap">
                   <summary><label class="section-select-check" onclick="event.stopPropagation();"><input type="checkbox" id="section-check-clip-groups" onchange="toggleStreamerSectionAll('clipGroups', this.checked)"></label><span>Clip groups · saved 4-packs</span><span class="streamer-section-count" id="streamer-count-clip-groups">0</span></summary>
-                  <div class="clip-group-editor-hint" style="padding:0 8px 6px;">Quick picker targets only — does not change Templates, Following, or Bench listings.</div>
+                  <div class="clip-group-editor-hint" style="padding:0 8px 6px;">Pick creators from <strong>Following</strong> or <strong>Bench</strong> only — add new streamers to the roster first, then save the group.</div>
                   <div id="clip-group-editor" class="clip-group-editor" style="display:none;">
                     <input type="hidden" id="clip-group-editor-id" value="">
                     <div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Group name</div>
@@ -1651,7 +1750,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 </select>
               </div>
               <select id="twitch-picker-pub-window" style="display:none" aria-hidden="true">
-                <option value="24h" selected>Top 24H</option><option value="7d">Top 7D</option><option value="30d">Top 30D</option><option value="all">Top 30D+</option>
+                <option value="last24h">Last 24H</option><option value="last7d" selected>Last 7D</option><option value="last30d">Last 30D</option><option value="7d">24H–7D</option><option value="30d">7D–30D</option><option value="all">30D+</option>
               </select>
               <details class="gen-advanced">
                 <summary>Duration filters</summary>
@@ -1669,8 +1768,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
               <div class="gen-action-bar">
                 <button id="btn-preview-twitch" class="btn btn-outline" onclick="loadLibraryClips()">Load library</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="saveLibraryClipPicks(true)" title="Save checked clips to this browser">Save picks</button>
                 <button type="button" class="btn btn-gold" onclick="sendPickerToComposer()">COMPOSE →</button>
               </div>
+              <div id="library-picks-hint" class="library-picks-hint"></div>
               <details class="gen-advanced" style="margin-top:6px;">
                 <summary>Operator</summary>
                 <div class="gen-advanced-body">
@@ -1685,7 +1786,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <h3 class="gen-main-title" id="twitch-main-title">LIBRARY</h3>
                 <div class="library-head-controls">
                   <div class="library-window-pills" id="library-window-pills">
-                    <button type="button" class="library-window-pill active" data-win="24h" onclick="setLibraryWindow('24h')">24H</button>
+                    <button type="button" class="library-window-pill" data-win="last24h" onclick="setLibraryWindow('last24h')">Last 24H</button>
+                    <button type="button" class="library-window-pill active" data-win="last7d" onclick="setLibraryWindow('last7d')">Last 7D</button>
+                    <button type="button" class="library-window-pill" data-win="last30d" onclick="setLibraryWindow('last30d')">Last 30D</button>
                     <button type="button" class="library-window-pill" data-win="7d" onclick="setLibraryWindow('7d')">24H–7D</button>
                     <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">7D–30D</button>
                     <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">30D+</button>
@@ -1699,7 +1802,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
                 <span class="gen-main-hint" id="twitch-main-hint">Check clips → COMPOSE → edit in Generate</span>
               </div>
               <select id="library-window" style="display:none" aria-hidden="true">
-                <option value="24h" selected>24H</option><option value="7d">24H–7D</option><option value="30d">7D–30D</option><option value="all">30D+</option>
+                <option value="last24h">Last 24H</option><option value="last7d" selected>Last 7D</option><option value="last30d">Last 30D</option><option value="7d">24H–7D</option><option value="30d">7D–30D</option><option value="all">30D+</option>
               </select>
               <select id="library-clip-sort" style="display:none" aria-hidden="true">
                 <option value="popular" selected>Popular</option><option value="recent">Recent</option>
@@ -1735,10 +1838,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
               <div class="library-main-head">
                 <h3 class="gen-main-title">THE THREAD</h3>
                 <div class="library-window-pills">
-                  <button type="button" class="library-window-pill active" data-win="24h" onclick="setLibraryWindow('24h')">Top 24H</button>
-                  <button type="button" class="library-window-pill" data-win="7d" onclick="setLibraryWindow('7d')">Top 7D</button>
-                  <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">Top 30D</button>
-                  <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">Top ALL</button>
+                  <button type="button" class="library-window-pill" data-win="last24h" onclick="setLibraryWindow('last24h')">Last 24H</button>
+                  <button type="button" class="library-window-pill active" data-win="last7d" onclick="setLibraryWindow('last7d')">Last 7D</button>
+                  <button type="button" class="library-window-pill" data-win="last30d" onclick="setLibraryWindow('last30d')">Last 30D</button>
+                  <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">30D+</button>
                 </div>
                 <span class="gen-main-hint">Check threads → COMPOSE → edit in Generate Composer</span>
               </div>
@@ -1815,36 +1918,69 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 
     <!-- CONTENT CALENDAR PAGE -->
     <div class="page" id="page-calendar">
-      <div class="sec-title">CONTENT CALENDAR <span class="badge">MASTER PLAN</span></div>
+      <div class="sec-title">CONTENT CALENDAR <span class="badge">MONTHLY PLAN</span></div>
       <div class="btn-row" style="margin-bottom:12px;">
         <button class="btn btn-outline btn-sm" onclick="calendarRefresh()">REFRESH</button>
         <button class="btn btn-gold btn-sm" onclick="calUnlockOwner()">OWNER UNLOCK</button>
-        <span style="font-size:10px;color:rgba(255,255,255,0.4);align-self:center;">Production · Live streams · VOD publish — hard rules; only you override with PIN</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.4);align-self:center;">Plan the month · track jobs + YouTube · plan vs published</span>
       </div>
-      <div class="card" style="margin-bottom:16px;" id="cal-northstar-card">
-        <div class="card-header"><div class="card-title">NORTH STAR CADENCE (YOUTUBE)</div></div>
-        <div class="card-body" id="cal-northstar" style="font-size:11px;line-height:1.6;color:rgba(255,255,255,0.55);">Loading…</div>
+      <div id="cal-yt-studio-banner" style="display:none;font-size:10px;color:rgba(255,255,255,0.5);margin:-4px 0 12px;padding:8px 12px;border:1px solid rgba(255,0,0,0.25);border-radius:6px;background:rgba(255,0,0,0.06);"></div>
+      <div class="cal-month-layout" id="cal-month-layout">
+        <div class="cal-main-col">
+          <div class="cal-month-shell">
+            <div class="cal-month-head">
+              <div class="cal-month-title" id="cal-month-title">—</div>
+              <div class="cal-month-nav">
+                <button class="btn btn-outline btn-sm" onclick="calPrevMonth()">◀</button>
+                <button class="btn btn-outline btn-sm" onclick="calThisMonth()">TODAY</button>
+                <button class="btn btn-outline btn-sm" onclick="calNextMonth()">▶</button>
+                <button class="btn btn-outline btn-sm" id="cal-sidebar-toggle" onclick="calToggleSidebar()" title="Show or hide North Star + month defaults panel">◧ Panel</button>
+                <button class="btn btn-outline btn-sm" onclick="calOpenStatsForMonth()" title="Channel Stats for this month">📊 STATS</button>
+              </div>
+            </div>
+            <div class="cal-legend">
+              <span>▮ Short</span><span>▬ Long-form</span><span>● Live</span>
+              <span style="margin-left:8px;">Planned = your targets · Actual = jobs + YouTube</span>
+            </div>
+            <div class="cal-month-dow">
+              <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+            </div>
+            <div class="cal-month-grid" id="calendar-grid"></div>
+            <div class="cal-month-summary" id="cal-month-summary"></div>
+          </div>
+          <div class="cal-day-panel" id="cal-day-panel" style="display:none;">
+            <h3 id="cal-day-panel-title">Day detail</h3>
+            <div id="cal-day-panel-body"></div>
+          </div>
+        </div>
+        <div class="cal-sidebar-col" id="cal-sidebar-col">
+          <div class="cal-sidebar-resize-handle" id="cal-sidebar-resize-handle" title="Drag to resize · double-click to reset"></div>
+          <div class="cal-sidebar" id="cal-sidebar">
+          <div class="card" id="cal-northstar-card">
+            <div class="card-header"><div class="card-title">NORTH STAR CADENCE</div></div>
+            <div class="card-body cal-ns-compact" id="cal-northstar">Loading…</div>
+          </div>
+          <div class="card" style="margin-top:12px;">
+            <div class="card-header"><div class="card-title">MONTH DEFAULTS</div></div>
+            <div class="card-body">
+              <div class="cal-plan-form" id="cal-month-defaults-form">
+                <div><label>Shorts / day</label><input type="number" id="cal-def-short" min="0" max="20" value="3"></div>
+                <div><label>Long-form / day</label><input type="number" id="cal-def-longform" min="0" max="10" value="1"></div>
+                <div><label>Live / day</label><input type="number" id="cal-def-live" min="0" max="5" value="1"></div>
+              </div>
+              <button class="btn btn-gold btn-sm" onclick="calSaveMonthDefaults()">SAVE MONTH DEFAULTS</button>
+              <div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:8px;">Applies to days you haven't customized. Click a day to edit that day only.</div>
+            </div>
+          </div>
+          </div>
+        </div>
       </div>
-      <div class="card" style="margin-bottom:16px;">
-        <div class="card-header" style="border-top:1px solid rgba(199,175,79,0.1);margin-top:8px;"><div class="card-title">GUIDELINES</div></div>
-        <div class="card-body cal-guidelines-grid" id="cal-guidelines">Loading…</div>
-        <div class="card-header" style="border-top:1px solid rgba(199,175,79,0.1);"><div class="card-title">PUBLISH BY PLATFORM</div></div>
-        <div class="card-body" id="cal-publish-rules">—</div>
-        </details>
-      </div>
-      <div class="calendar-grid" id="calendar-grid"></div>
       <div id="cal-schedule-modal" class="cal-schedule-modal" onclick="if(event.target===this)calCloseSchedule()">
         <div class="cal-schedule-panel">
           <div style="font-size:12px;font-weight:700;color:#c7af4f;margin-bottom:8px;" id="cal-schedule-title">Schedule publish</div>
           <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:12px;" id="cal-schedule-sub">Pick an assembled job</div>
           <div id="cal-schedule-jobs"></div>
           <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="calCloseSchedule()">Cancel</button>
-        </div>
-      </div>
-      <div class="cards-grid" style="margin-top:16px;">
-        <div class="card">
-          <div class="card-header"><div class="card-title">THIS WEEK (detail)</div></div>
-          <div class="card-body"><div id="schedule-list" style="font-family:Arial,sans-serif;font-size:13px;line-height:2;color:rgba(255,255,255,0.8);"></div></div>
         </div>
       </div>
     </div>
@@ -2985,7 +3121,30 @@ var CURRENT_META = {}; // stores extra per-job metadata (gameIds, headline, etc)
 var _assemblyFiredForJob = {}; // dedup lock to prevent multiple /assemble calls for same jobId
 
 // ── NAVIGATION ────────────────────────────────────────────────────
+var CWN_ACTIVE_PAGE_KEY = 'cwn_active_page';
+var CWN_GENERATE_PILLAR_KEY = 'cwn_generate_pillar';
+
+function persistActivePage(page) {
+  if (!page) return;
+  try { localStorage.setItem(CWN_ACTIVE_PAGE_KEY, page); } catch (_e) {}
+  if (window.history && window.history.replaceState) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    window.history.replaceState({}, '', url.pathname + url.search);
+  }
+}
+
+function readPersistedPage() {
+  try {
+    var fromUrl = new URL(window.location.href).searchParams.get('page');
+    if (fromUrl) return fromUrl;
+    return localStorage.getItem(CWN_ACTIVE_PAGE_KEY) || '';
+  } catch (_e) { return ''; }
+}
+
 function nav(page) {
+  if (!page) return;
+  persistActivePage(page);
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
   document.querySelectorAll('.sidebar-btn').forEach(function(b){ b.classList.remove('active'); });
   var pg = document.getElementById('page-'+page);
@@ -3005,7 +3164,7 @@ function nav(page) {
     if (!applyComposerHandoff()) {
       applyLibraryHandoff();
       renderComposerHandoffSummary();
-      switchGeneratePillar('twitch');
+      loadGeneratePillarPref();
     }
   }
 }
@@ -3150,7 +3309,7 @@ function setLibraryClipSort(sort) {
 
 function syncLibraryWindowToPicker() {
   var winEl = g('library-window');
-  var win = winEl ? winEl.value : '24h';
+  var win = winEl ? winEl.value : 'last7d';
   var pub = g('twitch-picker-pub-window');
   if (pub) pub.value = libraryWindowToPubKey(win);
   document.querySelectorAll('#library-window-pills .library-window-pill, .library-main-head .library-window-pills .library-window-pill').forEach(function(btn) {
@@ -3253,7 +3412,8 @@ function stageClipForLibrary(clip, entry, onDone) {
 
 function pickerClipPreviewUrl(clip) {
   if (!clip) return '';
-  return clip.playbackUrl || clip.stagedUrl || clip.r2Url || clip.mp4Url || clip.cdnUrl || '';
+  // Hover preview uses R2 only — Twitch CDN signed URLs often render black in <video>.
+  return clip.playbackUrl || clip.stagedUrl || clip.r2Url || '';
 }
 
 function resolveClipUrlsForPicker(onDone) {
@@ -3673,8 +3833,25 @@ function renderComposerHandoffSummary() {
     el.innerHTML = whtml;
     return;
   }
-  if (!picked.length && !_composerVodSegment) {
+  if (!picked.length && !_composerVodSegment && !_composerRepurposeContext) {
     el.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,0.45);">No lineup yet — pick in <button type="button" class="btn btn-outline btn-sm" onclick="nav(\'library\')">Clip Library</button>, then <strong>COMPOSE →</strong>.</div>';
+    return;
+  }
+  if (_composerRepurposeContext) {
+    var rpPicked = collectCompPickedClips();
+    var rpHtml = '<div style="font-size:10px;color:rgba(199,175,79,0.9);letter-spacing:1px;margin-bottom:8px;">FROM REPURPOSE · ' + rpPicked.length + ' scene(s)</div>';
+    rpPicked.forEach(function(p, i) {
+      var c = p.clip || {};
+      rpHtml += '<div style="font-size:11px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);">'
+        + (i + 1) + '. <strong>' + escapeHtml(c.sceneLabel || c.title || ('Scene ' + (i + 1))) + '</strong>'
+        + (c.postLiveVod && c.trimStart != null
+          ? (' <span style="opacity:0.55;">' + Math.floor(c.trimStart / 60) + ':' + String(Math.floor(c.trimStart % 60)).padStart(2, '0') + '–' + Math.floor((c.trimEnd || 0) / 60) + ':' + String(Math.floor((c.trimEnd || 0) % 60)).padStart(2, '0') + '</span>')
+          : '')
+        + '</div>';
+    });
+    rpHtml += '<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:8px;">Review trim + creative preset, then <strong>EXECUTE → ASSEMBLY</strong>.</div>';
+    rpHtml += '<button type="button" class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="nav(\'postlive\')">← Back to Repurpose</button>';
+    el.innerHTML = rpHtml;
     return;
   }
   var html = '<div style="font-size:10px;color:rgba(199,175,79,0.9);letter-spacing:1px;margin-bottom:8px;">FROM LIBRARY · ' + picked.length + ' clip(s)</div>';
@@ -3771,6 +3948,189 @@ function switchTab(name) {
 // ── CHANNEL STATS PAGE ─────────────────────────────────────────────
 window._channelStatsReport = null;
 var NORTHSTAR_RANGE_KEY = 'cwn_northstar_range';
+var CALENDAR_STATS_FILTER_KEY = 'cwn_calendar_stats_filter';
+
+function getCalendarStatsFilter() {
+  try {
+    var raw = sessionStorage.getItem(CALENDAR_STATS_FILTER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_e) { return null; }
+}
+
+function saveCalendarStatsFilter(filter) {
+  try {
+    if (!filter) sessionStorage.removeItem(CALENDAR_STATS_FILTER_KEY);
+    else sessionStorage.setItem(CALENDAR_STATS_FILTER_KEY, JSON.stringify(filter));
+  } catch (_e) { /* ignore */ }
+}
+
+function applyCalendarStatsFilter(rangeReport) {
+  if (!rangeReport || !rangeReport.ok) return;
+  saveCalendarStatsFilter({
+    startDate: rangeReport.startDate,
+    endDate: rangeReport.endDate,
+    label: rangeReport.label,
+    jobIds: rangeReport.jobIds || [],
+    youtubeVideoIds: rangeReport.youtubeVideoIds || [],
+    items: (rangeReport.actual && rangeReport.actual.items) || [],
+    jobVideoMap: rangeReport.jobVideoMap || {},
+    planned: rangeReport.planned,
+    actual: rangeReport.actual && rangeReport.actual.counts,
+  });
+  var end = rangeReport.endDate;
+  var start = rangeReport.startDate;
+  var days = Math.max(1, Math.round((new Date(end + 'T12:00:00') - new Date(start + 'T12:00:00')) / 86400000) + 1);
+  var daysEl = g('ns-range-days');
+  var endEl = g('ns-range-end');
+  if (daysEl) daysEl.value = String(Math.min(90, days));
+  if (endEl) endEl.value = end;
+  saveNorthStarRangePrefs(readNorthStarRangeFromUi());
+  renderCalendarStatsBlock(rangeReport);
+  nav('stats');
+  loadChannelStats(false);
+}
+window.applyCalendarStatsFilter = applyCalendarStatsFilter;
+
+function clearCalendarStatsFilter() {
+  saveCalendarStatsFilter(null);
+  var block = g('stats-calendar-block');
+  if (block) block.style.display = 'none';
+  renderChannelStatsTable();
+}
+window.clearCalendarStatsFilter = clearCalendarStatsFilter;
+
+function renderCalendarStatsBlock(filterOrReport) {
+  var block = g('stats-calendar-block');
+  var body = g('stats-calendar-body');
+  if (!block || !body) return;
+  var f = filterOrReport || getCalendarStatsFilter();
+  if (!f) { block.style.display = 'none'; return; }
+  block.style.display = 'block';
+  var p = f.planned || {};
+  var a = (f.actual && f.actual.counts) ? f.actual.counts : (f.actual || {});
+  if (f.actual && f.actual.counts && !f.planned) {
+    p = f.planned || {};
+    a = f.actual.counts;
+  }
+  var items = f.items || (filterOrReport && filterOrReport.actual && filterOrReport.actual.items) || [];
+  var jobs = (f.jobIds || []).length;
+
+  function planBar(fmt, icon, planned, actual) {
+    var pct = planned > 0 ? Math.min(100, Math.round((actual / planned) * 100)) : (actual > 0 ? 100 : 0);
+    return '<div class="cal-plan-bar-row"><span>' + icon + ' ' + fmt + '</span>'
+      + '<div class="cal-plan-bar-track"><div class="cal-plan-bar-fill" style="width:' + pct + '%;"></div></div>'
+      + '<span>' + (actual || 0) + '/' + (planned || 0) + '</span></div>';
+  }
+
+  var headerHtml = '<div><b style="color:#c7af4f;">' + escHtml(f.label || (f.startDate + ' → ' + f.endDate)) + '</b></div>'
+    + '<div style="margin-top:6px;">Plan: ' + (p.short || 0) + '▮ ' + (p.longform || 0) + '▬ ' + (p.live || 0) + '●'
+    + ' · Actual: ' + (a.short || 0) + '▮ ' + (a.longform || 0) + '▬ ' + (a.live || 0) + '●</div>'
+    + '<div class="cal-plan-bars">'
+    + planBar('Short', '▮', p.short, a.short)
+    + planBar('VOD', '▬', p.longform, a.longform)
+    + planBar('Live', '●', p.live, a.live)
+    + '</div>'
+    + '<div id="stats-calendar-kpis" style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.45);">Loading views breakdown…</div>';
+
+  body.innerHTML = headerHtml;
+
+  var catalog = (window._channelStatsReport && window._channelStatsReport.catalog && window._channelStatsReport.catalog.items) || [];
+  if (!catalog.length) {
+    var kpiEl = g('stats-calendar-kpis');
+    if (kpiEl) kpiEl.innerHTML = jobs + ' job(s) in range · <span style="color:rgba(255,255,255,0.35);">Refresh channel stats for views per planned short/VOD.</span>';
+    return;
+  }
+
+  var apiBase = (typeof CFG !== 'undefined' && CFG.ffmpegUrl) ? CFG.ffmpegUrl : '';
+  fetch(apiBase + '/calendar/kpis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      calendarItems: items,
+      catalogItems: catalog,
+      jobVideoMap: f.jobVideoMap || {},
+    }),
+  }).then(function(r) { return r.json(); }).then(function(kpis) {
+    renderCalendarStatsKpis(f, kpis, items.length);
+  }).catch(function() {
+    var kpiEl = g('stats-calendar-kpis');
+    if (kpiEl) kpiEl.textContent = 'Could not load calendar KPI breakdown.';
+  });
+}
+
+function renderCalendarStatsKpis(filter, kpis, itemCount) {
+  var kpiEl = g('stats-calendar-kpis');
+  if (!kpiEl || !kpis || !kpis.ok) {
+    if (kpiEl) kpiEl.textContent = 'KPI breakdown unavailable.';
+    return;
+  }
+  var bf = kpis.byFormat || {};
+  function kpiCard(label, fmt) {
+    var b = bf[fmt] || {};
+    return '<div class="cal-kpi"><div class="cal-kpi-label">' + label + '</div>'
+      + '<div class="cal-kpi-val">' + fmtNum(b.views || 0) + '</div>'
+      + '<div class="cal-kpi-sub">' + (b.matched || 0) + ' with stats · ' + (b.actual || 0) + ' planned</div></div>';
+  }
+  var cards = '<div class="cal-kpi-row">'
+    + kpiCard('▮ Shorts', 'short')
+    + kpiCard('▬ Long-form', 'longform')
+    + kpiCard('● Live', 'live')
+    + '<div class="cal-kpi"><div class="cal-kpi-label">Total views</div>'
+    + '<div class="cal-kpi-val">' + fmtNum(kpis.totalViews || 0) + '</div>'
+    + '<div class="cal-kpi-sub">' + (kpis.matchedCount || 0) + '/' + (itemCount || kpis.totalItems || 0) + ' linked to YouTube</div></div>'
+    + '</div>';
+
+  var rows = (kpis.rows || []).map(function(row) {
+    var fmtIcon = row.format === 'short' ? '▮' : (row.format === 'live' ? '●' : '▬');
+    var time = row.timeEt ? escHtml(row.timeEt) : '—';
+    var title = escHtml((row.title || 'Untitled').slice(0, 72));
+    var views = row.matched ? fmtNum(row.views) : '<span style="opacity:0.4;">—</span>';
+    var subs = row.matched && row.subsGained ? ('+' + fmtNum(row.subsGained)) : '—';
+    var status = row.status === 'published' ? '<span style="color:#2ecc71;">pub</span>'
+      : (row.status === 'scheduled' ? '<span style="color:#e67e22;">sched</span>' : escHtml(row.status || '—'));
+    var jobLink = row.jobId
+      ? '<a href="#" onclick="openJobFromStats(\'' + escHtml(row.jobId).replace(/'/g, "\\'") + '\');return false;" style="color:#3498db;font-family:monospace;font-size:9px;">' + escHtml(row.jobId.slice(-12)) + '</a>'
+      : '—';
+    var ytLink = row.url ? ' <a href="' + escHtml(row.url) + '" target="_blank" rel="noopener" style="color:#c7af4f;">↗</a>' : '';
+    return '<tr><td>' + time + '</td><td>' + fmtIcon + ' ' + title + ytLink + '</td><td>' + views + '</td><td>' + subs + '</td><td>' + status + '</td><td>' + jobLink + '</td></tr>';
+  }).join('');
+
+  var table = rows
+    ? '<table class="cal-job-table"><thead><tr><th>Time ET</th><th>Title</th><th>Views</th><th>Subs</th><th>Status</th><th>Job</th></tr></thead><tbody>' + rows + '</tbody></table>'
+    : '<div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.35);">No production items in this range yet.</div>';
+
+  var unmatched = kpis.unmatchedCount > 0
+    ? '<div style="margin-top:6px;font-size:9px;color:rgba(255,255,255,0.35);">' + kpis.unmatchedCount + ' item(s) not linked to YouTube yet — schedule via queue to tie job IDs.</div>'
+    : '';
+
+  kpiEl.innerHTML = cards + table + unmatched;
+}
+
+function openJobFromStats(jobId) {
+  if (!jobId) return;
+  nav('generate');
+  setTimeout(function() {
+    if (typeof scrollToJobCard === 'function') scrollToJobCard(jobId);
+  }, 300);
+}
+window.openJobFromStats = openJobFromStats;
+
+function catalogItemMatchesCalendarFilter(it, filter) {
+  if (!filter) return true;
+  var ids = filter.youtubeVideoIds || [];
+  if (!ids.length && !(filter.jobIds || []).length) return true;
+  var vid = it.video_id || it.videoId || '';
+  if (!vid && it.url) {
+    var m = String(it.url).match(/[?&]v=([^&]+)/);
+    if (m) vid = m[1];
+  }
+  if (vid && ids.indexOf(vid) >= 0) return true;
+  var title = String(it.title || '').toLowerCase();
+  for (var i = 0; i < (filter.jobIds || []).length; i++) {
+    if (title.indexOf(String(filter.jobIds[i]).toLowerCase()) >= 0) return true;
+  }
+  return false;
+}
 
 function northStarYesterdayYmd() {
   var d = new Date();
@@ -3837,6 +4197,7 @@ function onNorthStarRangeCustomChange() {
 
 function statsPageInit() {
   initNorthStarRangeControls();
+  renderCalendarStatsBlock(getCalendarStatsFilter());
   loadChannelStats(false);
 }
 
@@ -3878,9 +4239,11 @@ function getFilteredChannelStatsItems() {
   var items = (d.catalog && d.catalog.items) || [];
   var tabF = (g('stats-filter-tab') || {}).value || 'all';
   var catF = (g('stats-filter-cat') || {}).value || 'all';
+  var calF = getCalendarStatsFilter();
   return items.filter(function(it) {
     if (tabF !== 'all' && it.tab !== tabF) return false;
     if (catF !== 'all' && it.category !== catF) return false;
+    if (calF && !catalogItemMatchesCalendarFilter(it, calF)) return false;
     return true;
   });
 }
@@ -3949,15 +4312,24 @@ function postLivePageInit() {
 
 function postLiveLoadPublishedJobs() {
   fetch(CFG.ffmpegUrl + '/post-live/published-jobs?limit=30')
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+      return r.text().then(function(t) {
+        try { return JSON.parse(t); } catch (e) {
+          throw new Error(r.status === 404
+            ? 'Repurpose API not loaded — run: pm2 restart auraflux (not broadcast-sidecar)'
+            : 'Server returned non-JSON (HTTP ' + r.status + ')');
+        }
+      });
+    })
     .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'fetch failed');
       window._postLivePublishedJobs = d.jobs || [];
       if (g('postlive-published-count')) g('postlive-published-count').textContent = String(window._postLivePublishedJobs.length);
       postLiveRenderPublishedJobs();
     })
-    .catch(function() {
+    .catch(function(e) {
       if (g('postlive-published-body')) {
-        g('postlive-published-body').innerHTML = '<tr><td colspan="6" style="padding:16px;color:#e74c3c;">Could not load published jobs</td></tr>';
+        g('postlive-published-body').innerHTML = '<tr><td colspan="6" style="padding:16px;color:#e74c3c;">' + postLiveEsc(e.message || 'Could not load published jobs') + '</td></tr>';
       }
     });
 }
@@ -4146,7 +4518,13 @@ function postLiveLoadSessions() {
       if (g('postlive-session-count')) g('postlive-session-count').textContent = String(window._postLiveSessions.length);
       postLiveRenderSessions();
     })
-    .catch(function() {});
+    .catch(function(e) {
+      var tbody = g('postlive-session-body');
+      var msg = (e && e.message) ? e.message : 'Could not load sessions';
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:#e74c3c;">' + postLiveEsc(msg) + '</td></tr>';
+      }
+    });
 }
 
 function postLiveRenderSessions() {
@@ -4277,6 +4655,19 @@ function postLiveShowCandidates(videoId) {
         throw new Error((resp.data && resp.data.error) || 'Session not found');
       }
       var s = resp.data.session;
+      if (postLiveIsPublishedSession(s) && s.sourceJobId) {
+        return fetch(CFG.ffmpegUrl + '/post-live/sessions/register-from-job', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobId: s.sourceJobId }),
+        }).then(function(r) { return r.json(); }).then(function(reg) {
+          if (reg.ok && reg.session) return reg.session;
+          return s;
+        }).catch(function() { return s; });
+      }
+      return s;
+    })
+    .then(function(s) {
       if (postLiveIsPublishedSession(s)) postLiveSwitchTab('soup');
       else {
         postLiveSwitchTab('live');
@@ -4506,7 +4897,7 @@ function postLiveRenderSceneCandidates(s, sceneCands, st) {
     bar.innerHTML = '<strong style="' + cls + '">Selected total: ' + total + 's</strong> · target ~' + idealSec + 's'
       + (total > warnOverSec ? ' — over ' + warnOverSec + 's, trim selection' : '');
   }
-  body.innerHTML = '<p style="color:rgba(255,255,255,0.55);margin:0 0 10px;">Pick scenes from the published episode rundown. Aim for ~30s total for one short.</p>'
+  body.innerHTML = '<p style="color:rgba(255,255,255,0.55);margin:0 0 10px;">Pick scenes from the published episode rundown. Aim for ~30s total for one short — include <strong style="color:#3498db;">source clips</strong> (reacted-to Twitch footage) plus setup/reaction if needed.</p>'
     + '<div id="postlive-scene-total-bar" style="margin-bottom:12px;font-size:12px;"></div>'
     + sceneCands.map(function(c, i) {
       var key = 'scene-' + i;
@@ -4516,12 +4907,18 @@ function postLiveRenderSceneCandidates(s, sceneCands, st) {
       var dur = c.durationSec || (end - start);
       var warn = dur > warnOverSec ? ' style="color:#e67e22;"' : '';
       var ytJump = s.url + (s.url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Math.floor(start) + 's';
+      var isSource = c.segmentKind === 'source_clip'
+        || (c.sceneLabel && /_(SETUP_CLIP|INTRO_CLIP|REACTION_CLIP)$/i.test(c.sceneLabel));
+      var kindBadge = isSource
+        ? ' <span style="color:#3498db;font-size:9px;font-weight:700;letter-spacing:.5px;">📺 SOURCE</span>'
+        : ' <span style="color:rgba(255,255,255,0.35);font-size:9px;">BOBBY G</span>';
       return '<label style="display:block;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;">'
         + '<div style="display:flex;gap:10px;align-items:flex-start;">'
         + '<input type="checkbox" style="margin-top:3px;" '
         + (sel[key] ? 'checked' : '') + ' onchange="postLiveToggleCandidate(\'' + s.videoId + '\',\'' + key + '\',this.checked);postLiveUpdateSceneTotal();">'
         + '<div style="flex:1;">'
-        + '<strong style="color:#c7af4f;">' + postLiveEsc(c.sceneLabel || c.title || ('Scene ' + (i + 1))) + '</strong>'
+        + '<strong style="color:' + (isSource ? '#3498db' : '#c7af4f') + ';">' + postLiveEsc(c.sceneLabel || c.title || ('Scene ' + (i + 1))) + '</strong>'
+        + kindBadge
         + ' <span' + warn + '>' + Math.round(dur * 10) / 10 + 's</span>'
         + ' <span style="font-family:monospace;opacity:0.5;">' + Math.floor(start / 60) + ':' + String(Math.floor(start % 60)).padStart(2, '0')
         + '–' + Math.floor(end / 60) + ':' + String(Math.floor(end % 60)).padStart(2, '0') + '</span>'
@@ -4532,6 +4929,24 @@ function postLiveRenderSceneCandidates(s, sceneCands, st) {
   updateTotalBar();
   if (st) st.textContent = 'Scene picker — select ~30s of scenes for short comp';
   postLiveScrollToCandidates();
+}
+
+function repurposeStreamerFromSceneLabel(sceneLabel) {
+  var label = String(sceneLabel || '').toUpperCase();
+  var m = label.match(/^([A-Z0-9]+)_CLIP/);
+  if (!m) return null;
+  var key = m[1].toLowerCase();
+  return TWITCH_PICKER_DISPLAY_NAMES[key] || (key.charAt(0).toUpperCase() + key.slice(1));
+}
+
+function repurposeCompTitleFromPicks(session, picked) {
+  var names = [];
+  picked.forEach(function(c) {
+    var n = repurposeStreamerFromSceneLabel(c.sceneLabel);
+    if (n && names.indexOf(n) < 0) names.push(n);
+  });
+  if (!names.length) names.push(resolvePostLiveStreamerDisplay(session.streamer));
+  return 'Clips Comp — ' + names.join(', ') + ' (Repurpose)';
 }
 
 function postLiveGetSelectedCandidates() {
@@ -4547,6 +4962,7 @@ function postLiveGetSelectedCandidates() {
         start_s: c.start_s || 0,
         end_s: c.end_s || ((c.start_s || 0) + (c.durationSec || 30)),
         sceneLabel: c.sceneLabel,
+        segmentKind: c.segmentKind || '',
       };
     });
   }
@@ -4558,19 +4974,23 @@ function postLiveGetSelectedCandidates() {
 }
 
 function postLiveBuildCompClips(session, candidates) {
-  var streamer = session.streamer || 'streamer';
   return candidates.map(function(c) {
+    var sceneName = repurposeStreamerFromSceneLabel(c.sceneLabel);
+    var login = sceneName ? normalizeStreamerHandle(sceneName) : resolvePostLiveStreamerLogin(session.streamer);
+    var displayName = sceneName || resolvePostLiveStreamerDisplay(session.streamer);
     return {
       url: session.url,
       pageUrl: session.url,
       clipUrl: session.url,
-      title: c.title || 'Highlight',
-      streamer: streamer,
-      displayName: streamer,
+      title: c.sceneLabel || c.title || 'Highlight',
+      streamer: login,
+      displayName: displayName,
       trimStart: c.start_s || 0,
       trimEnd: c.end_s || (c.start_s || 0) + 60,
       postLiveVod: true,
-      platform: 'youtube'
+      platform: 'youtube',
+      sceneLabel: c.sceneLabel || '',
+      segmentKind: c.segmentKind || ''
     };
   });
 }
@@ -4580,8 +5000,9 @@ function postLiveSendToStreamerPicker() {
   var picked = postLiveGetSelectedCandidates();
   if (!s) { alert('Open candidates for a session first (View).'); return; }
   if (!picked.length) { alert('Select at least one candidate.'); return; }
-  var streamer = (s.streamer || 'streamer').toLowerCase();
-  var displayName = s.streamer || streamer;
+  var streamer = resolvePostLiveStreamerLogin(s.streamer);
+  var displayName = (typeof s.streamer === 'object' && s.streamer && s.streamer.displayName)
+    || TWITCH_PICKER_DISPLAY_NAMES[streamer] || streamer;
   _twitchPickerStreamers = [{
     name: streamer,
     displayName: displayName,
@@ -4614,7 +5035,73 @@ function postLiveSendToStreamerPicker() {
   setPickerPanelVisible('twitch', true);
   if (btn) btn.textContent = 'HIDE PICKER';
   var st = g('twitch-fetch-status');
-  if (st) st.textContent = picked.length + ' repurpose clip pick(s) loaded — use Short or Comp';
+  if (st) st.textContent = picked.length + ' repurpose clip pick(s) loaded — CLIPS COMP opens Composer';
+}
+
+function postLiveHandoffToComposer(s, picked) {
+  var clips = postLiveBuildCompClips(s, picked);
+  var streamer = resolvePostLiveStreamerLogin(s.streamer);
+  var displayName = (typeof s.streamer === 'object' && s.streamer && s.streamer.displayName)
+    || TWITCH_PICKER_DISPLAY_NAMES[streamer] || streamer;
+  _twitchPickerStreamers = [{
+    name: streamer,
+    displayName: displayName,
+    platform: 'youtube',
+    selected: true,
+    clips: clips.map(function(c, ci) {
+      return {
+        title: c.title || ('Scene ' + (ci + 1)),
+        url: c.url,
+        pageUrl: c.pageUrl,
+        clipUrl: c.clipUrl,
+        views: 0,
+        game: 'post-live',
+        thumbnailUrl: '',
+        duration: Math.max(1, (c.trimEnd || 0) - (c.trimStart || 0)),
+        selected: true,
+        platform: 'youtube',
+        postLiveVod: true,
+        trimStart: c.trimStart,
+        trimEnd: c.trimEnd,
+        sceneLabel: c.sceneLabel || '',
+        segmentKind: c.segmentKind || '',
+        streamer: c.streamer || streamer,
+        displayName: c.displayName || displayName
+      };
+    }),
+    clipsRaw: [],
+    dropReason: null
+  }];
+  _composerRepurposeContext = {
+    postLiveVodSessionId: s.videoId,
+    postLiveMuteRanges: s.muteRanges || [],
+    repurposedFrom: s.sourceJobId || null,
+    title: repurposeCompTitleFromPicks(s, picked),
+    repurposeFastHooks: true
+  };
+  _composerContentSource = 'twitch';
+  if (g('twitch-streamers')) g('twitch-streamers').value = streamer;
+  nav('generate');
+  switchGeneratePillar('twitch');
+  var btn = g('btn-preview-twitch');
+  renderTwitchPicker(btn, clips.length);
+  setPickerPanelVisible('twitch', true);
+  if (btn) btn.textContent = 'HIDE PICKER';
+  if (g('composer-delivery')) {
+    g('composer-delivery').value = 'comp';
+    g('composer-delivery').dataset.userSet = '1';
+  }
+  reconcileCompLineup(collectCompPickedClips());
+  renderComposerHandoffSummary();
+  refreshGenerateComposer(true);
+  var panel = g('generate-composer');
+  if (panel) panel.classList.add('is-open');
+  scrollToComposer();
+  var st = g('postlive-import-status');
+  if (st) {
+    st.textContent = clips.length + ' repurpose scene(s) in Composer — lock trim/hooks, then EXECUTE → ASSEMBLY';
+  }
+  cwn_log('[repurpose] Composer handoff — ' + clips.length + ' scene(s) from ' + (s.videoId || 'vod'), false);
 }
 
 function postLiveDispatchComp() {
@@ -4626,17 +5113,7 @@ function postLiveDispatchComp() {
     if (!confirm(picked.length + ' selected — comp uses first 4 in rank order. Continue?')) return;
     picked = picked.slice(0, 4);
   }
-  showPlatformModal(function(sel) {
-    var pub = parsePlatformModalSelection(sel);
-    var clips = postLiveBuildCompClips(s, picked);
-    var statusEl = g('postlive-import-status');
-    if (statusEl) statusEl.textContent = 'CLIPS COMP — ' + clips.length + ' segment(s) from ' + (s.title || s.videoId).slice(0, 40);
-    _dispatchClipCompFromPicker(clips, 'twitch-short', pub.platforms, null, statusEl, pub.scheduledAt, {
-      postLiveVodSessionId: s.videoId,
-      postLiveMuteRanges: s.muteRanges || []
-    });
-    nav('queue');
-  });
+  postLiveHandoffToComposer(s, picked);
 }
 
 function loadChannelStats(refresh) {
@@ -4762,6 +5239,7 @@ function renderChannelStats(d) {
   }
 
   renderChannelStatsTable();
+  if (getCalendarStatsFilter()) renderCalendarStatsBlock(getCalendarStatsFilter());
 }
 
 function fmtUsd(n) {
@@ -5888,10 +6366,12 @@ function jobTypeLabel(serverJob) {
 
 function jobStageBadge(serverJob) {
   var stage = serverJob.stage || serverJob.status || '';
+  if (serverJob.youtubeConfirmedPublished || stage === 'published') {
+    return { text: serverJob.youtubeConfirmedPublished ? 'PUBLISHED · YT' : 'PUBLISHED', color: '#2ecc71' };
+  }
   if (stage === 'hook_review') return { text: 'HOOK REVIEW', color: '#c7af4f' };
   if (stage === 'hooks_generating') return { text: 'HOOKS GEN', color: '#3498db' };
   if (stage === 'awaiting_review' || stage === 'metadata_review') return { text: 'NEEDS REVIEW', color: '#c7af4f' };
-  if (stage === 'published') return { text: 'PUBLISHED', color: '#2ecc71' };
   if (stage === 'assembling' || serverJob.status === 'assembling') return { text: 'ASSEMBLING', color: '#3498db' };
   if (stage === 'gate3_failed' || serverJob.status === 'gate3_failed') return { text: 'GATE 3 FAIL', color: '#e74c3c' };
   if (stage === 'assembled' || serverJob.assembledAt) return { text: 'ASSEMBLED', color: '#9b59b6' };
@@ -5903,12 +6383,12 @@ function jobMatchesFindFilter(serverJob) {
   var stage = serverJob.stage || serverJob.status || '';
   if (_findJobFilter === 'all') return true;
   if (_findJobFilter === 'progress') {
-    return ['assembling', 'heygen_done', 'all_sent', 'script_ready', 'awaiting_manual_segments', 'processing'].indexOf(stage) > -1
+    return ['assembling', 'heygen_done', 'all_sent', 'script_ready', 'gate1_review', 'gate1_failed', 'awaiting_manual_segments', 'processing'].indexOf(stage) > -1
       || serverJob.status === 'assembling' || serverJob.status === 'processing';
   }
-  // work = needs operator attention
-  if (stage === 'published') return false;
-  return ['awaiting_review', 'metadata_review', 'assembled', 'gate3_failed', 'publish_scheduled', 'gate5_failed', 'music_review', 'hook_review', 'hooks_generating'].indexOf(stage) > -1
+  // work = needs operator attention (YouTube-confirmed published excluded)
+  if (serverJob.youtubeConfirmedPublished || stage === 'published') return false;
+  return ['awaiting_review', 'metadata_review', 'assembled', 'gate3_failed', 'publish_scheduled', 'gate5_failed', 'music_review', 'hook_review', 'hooks_generating', 'gate1_review', 'gate1_failed'].indexOf(stage) > -1
     || serverJob.status === 'gate3_failed' || serverJob.status === 'completed';
 }
 
@@ -6037,7 +6517,7 @@ function refreshQueuedJobFromServer(jobId, opts) {
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 200);
     }
-    cwn_log('[queue] synced: ' + (serverJob.title || jobId), false);
+    if (!opts.quiet) cwn_log('[queue] synced: ' + (serverJob.title || jobId), false);
   });
 }
 
@@ -6055,15 +6535,42 @@ function syncQueuePinToServer(jobId, pin) {
 }
 
 function rehydrateQueuedJobsFromServer() {
-  var ids = new Set(Array.from(getPinnedIdSet()));
-  JOBS.forEach(function(j) {
-    if (j && j.id && isJobQueued(j)) ids.add(j.id);
-  });
-  var list = Array.from(ids);
-  if (!list.length) return;
-  list.forEach(function(id, idx) {
-    setTimeout(function() { refreshQueuedJobFromServer(id); }, idx * 120);
-  });
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/jobs?restore=1', true);
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    var ids = new Set(Array.from(getPinnedIdSet()));
+    JOBS.forEach(function(j) {
+      if (j && j.id && isJobQueued(j)) ids.add(j.id);
+    });
+    try {
+      var resp = JSON.parse(xhr.responseText || '{}');
+      (resp.jobs || []).forEach(function(serverJob) {
+        var jid = serverJob.jobId || serverJob.id;
+        if (!jid) return;
+        // Only rehydrate server-pinned jobs; unpinned jobs stay in FIND JOB modal.
+        if (!serverJob.queuePinned) return;
+        ids.add(jid);
+      });
+    } catch (_e) { /* local pins only */ }
+    var list = Array.from(ids);
+    if (!list.length) return;
+    list.forEach(function(id, idx) {
+      setTimeout(function() { refreshQueuedJobFromServer(id); }, idx * 120);
+    });
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    var ids = new Set(Array.from(getPinnedIdSet()));
+    JOBS.forEach(function(j) {
+      if (j && j.id && isJobQueued(j)) ids.add(j.id);
+    });
+    var list = Array.from(ids);
+    if (!list.length) return;
+    list.forEach(function(id, idx) {
+      setTimeout(function() { refreshQueuedJobFromServer(id); }, idx * 120);
+    });
+  };
+  xhr.send();
 }
 
 // ── RESTORE JOBS FROM SERVER (legacy — prefer ADD JOB FROM SERVER) ──
@@ -6110,7 +6617,7 @@ function buildLocalJobFromServerCard(serverJob) {
       });
     });
   }
-  var scriptText = (serverJob.script && (serverJob.script.fullText || serverJob.script.text)) || serverJob.scriptText || '';
+  var scriptText = (serverJob.script && (serverJob.script.raw || serverJob.script.fullText || serverJob.script.text)) || serverJob.scriptText || '';
   return {
     id: serverJobId, scriptJobId: serverJob.scriptJobId || serverJobId,
     type: serverJob.contentType || 'twitch',
@@ -6127,7 +6634,9 @@ function buildLocalJobFromServerCard(serverJob) {
     hooksConfirmedAt: serverJob.hooksConfirmedAt || null,
     compCreative: serverJob.compCreative || null,
     compCreativePreset: serverJob.compCreativePreset || null,
-    publishCopy: serverJob.publishCopy || null, localPreviewUrl: serverJob.localPreviewUrl || null,
+    publishCopy: serverPublishCopy(serverJob) || null,
+    publishPrep: (function() { var _pc = serverPublishCopy(serverJob); return _pc ? publishCopyToPrep(_pc) : null; })(),
+    localPreviewUrl: serverJob.localPreviewUrl || null,
     filename: serverJob.filename || null, outputPath: serverJob.outputPath || null,
     _restoredFromServer: true
   };
@@ -6460,6 +6969,9 @@ function restoreJobsFromServer(showAlert, _retryCount) {
         JOBS.push(restoredJob);
         existingIds[serverJobId] = true;
         added++;
+        if (serverJob.queuePinned) {
+          markJobQueued(serverJobId, true);
+        }
 
         // If Gate 5 is actively uploading, start polling so the card auto-updates to "published".
         if (isGate5InFlight) {
@@ -6600,9 +7112,9 @@ function resolveJobPreviewUrl(job) {
 function jobGate3Failed(job) {
   if (job.qaOutcome === 'manual_review') return false;
   if (job.gate3 && job.gate3.outcome === 'manual_review') return false;
-  return job.status === 'gate3_failed'
-    || job.qaOutcome === 'fail'
-    || (job.gate3 && job.gate3.outcome === 'fail');
+  if (job.qaOutcome === 'pass' || (job.gate3 && job.gate3.outcome === 'pass')) return false;
+  if (job.qaOutcome === 'fail' || (job.gate3 && job.gate3.outcome === 'fail')) return true;
+  return job.status === 'gate3_failed';
 }
 
 function jobActivelyAssembling(job) {
@@ -6644,18 +7156,24 @@ function isOperatorCustomTitleActive(job, titlePool, activeTitle) {
   });
 }
 
+var _lastQueueServerSync = 0;
+
 /** Pull server card when local queue is stale (hooks, title, stage, driveUrl). */
-function syncQueueJobsFromServer() {
+function syncQueueJobsFromServer(opts) {
+  opts = opts || {};
+  var now = Date.now();
+  if (!opts.force && now - _lastQueueServerSync < 45000) return;
+  _lastQueueServerSync = now;
   var seen = {};
   JOBS.filter(function(j) { return j && j.id && isJobQueued(j); }).forEach(function(job) {
     if (seen[job.id]) return;
     seen[job.id] = true;
-    refreshQueuedJobFromServer(job.id);
+    refreshQueuedJobFromServer(job.id, { quiet: true });
   });
   getPinnedIdSet().forEach(function(id) {
     if (seen[id]) return;
     seen[id] = true;
-    refreshQueuedJobFromServer(id);
+    refreshQueuedJobFromServer(id, { quiet: true });
   });
 }
 
@@ -6684,7 +7202,49 @@ function jobWhisperCaptionsExpected(job) {
 
 function toggleJobMediaPanel(jobId) {
   var el = document.getElementById('job-media-' + jobId);
-  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if (!el) return;
+  var opening = el.style.display === 'none' || !el.style.display;
+  el.style.display = opening ? 'block' : 'none';
+  if (!opening) window._queuePreviewLock = 0;
+}
+
+function captureQueueMediaState() {
+  var state = {};
+  document.querySelectorAll('[id^="job-media-"]').forEach(function(panel) {
+    if (panel.style.display === 'none') return;
+    var jobId = panel.id.replace('job-media-', '');
+    var vid = panel.querySelector('video');
+    state[jobId] = {
+      open: true,
+      time: vid && Number.isFinite(vid.currentTime) ? vid.currentTime : 0,
+      wasPlaying: !!(vid && !vid.paused && !vid.ended && vid.currentTime > 0)
+    };
+  });
+  return state;
+}
+
+function restoreQueueMediaState(state) {
+  if (!state) return;
+  Object.keys(state).forEach(function(jobId) {
+    if (!state[jobId] || !state[jobId].open) return;
+    var panel = document.getElementById('job-media-' + jobId);
+    if (!panel) return;
+    panel.style.display = 'block';
+    var vid = panel.querySelector('video');
+    if (!vid) return;
+    var saved = state[jobId];
+    var resume = function() {
+      if (saved.time > 0.25) {
+        try { vid.currentTime = saved.time; } catch (_e) {}
+      }
+      if (saved.wasPlaying) {
+        window._queuePreviewLock = 1;
+        vid.play().catch(function() { window._queuePreviewLock = 0; });
+      }
+    };
+    if (vid.readyState >= 1) resume();
+    else vid.addEventListener('loadedmetadata', resume, { once: true });
+  });
 }
 
 var _hookInputDrafts = {};
@@ -6715,19 +7275,30 @@ function saveTitleInputDraft(jobId, value) {
 function clearTitleInputDraft(jobId) {
   delete _titleInputDrafts[jobId];
 }
+function isJobPreviewPlaying() {
+  if (window._queuePreviewLock) return true;
+  var panels = document.querySelectorAll('[id^="job-media-"]');
+  for (var i = 0; i < panels.length; i++) {
+    if (panels[i].style.display === 'none') continue;
+    var vid = panels[i].querySelector('video');
+    if (vid && !vid.paused && vid.currentTime > 0 && !vid.ended) return true;
+  }
+  return false;
+}
+
 function isOperatorDraftInputFocused() {
   var ae = document.activeElement;
   if (!ae || !ae.id) return false;
   return ae.id.indexOf('custom-hook-input-') === 0 || ae.id.indexOf('custom-title-input-') === 0;
 }
 function scheduleQueueRender(force) {
-  if (!force && isOperatorDraftInputFocused()) {
+  if (!force && (isOperatorDraftInputFocused() || isJobPreviewPlaying() || window._queuePreviewLock)) {
     _queueRenderDeferred = true;
     return;
   }
   clearTimeout(_queueRenderTimer);
   _queueRenderTimer = setTimeout(function() {
-    if (!force && isOperatorDraftInputFocused()) {
+    if (!force && (isOperatorDraftInputFocused() || isJobPreviewPlaying() || window._queuePreviewLock)) {
       _queueRenderDeferred = true;
       return;
     }
@@ -6892,6 +7463,7 @@ function confirmClipHooksAndBuild(jobId) {
 
 function renderQueueNow() {
   try {
+  var queueMediaState = captureQueueMediaState();
   var visibleJobs = JOBS.filter(function(j) { return isJobQueued(j); });
   g('queue-count').textContent = visibleJobs.length + ' JOB' + (visibleJobs.length === 1 ? '' : 'S');
   var list = g('job-list');
@@ -6974,8 +7546,12 @@ function renderQueueNow() {
 
     // SEO / publish metadata preview (clip comps + review-hold jobs)
     var metaStrip = '';
+    if ((jobStage === 'awaiting_review' || jobStage === 'metadata_review' || jobStage === 'publish_scheduled' || job.assembledAt)
+        && (resolveJobPreviewUrl(job) || job.driveUrl) && !hasPublishMetadata(job)) {
+      ensurePublishCopyHydrated(job.id);
+    }
     var pubPayload = resolvePublishPayload(job);
-    var hasSeo = !!(pubPayload && pubPayload.title);
+    var hasSeo = hasPublishMetadata(job);
     var postLiveHeld = isPostLivePublishHeld(job);
     if (postLiveHeld) {
       var holdReason = (job.deliverySpec && job.deliverySpec.publishHoldReason)
@@ -7024,7 +7600,7 @@ function renderQueueNow() {
         + '⛔ METADATA QA — fix before publish: ' + escHtml(job.metadataQaViolations.slice(0, 3).join(' · '))
         + '<div style="margin-top:6px;color:rgba(255,255,255,0.55);">Click 🔄 FIX SEO to auto-regenerate metadata, or ↩ RESTORE JOBS if copy looks stale.</div>'
         + '</div>';
-    } else if ((job.publishCopy || job.driveUrl) && hasSeo && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || jobStage === 'publish_scheduled' || job.assembledAt)) {
+    } else if ((resolveJobPreviewUrl(job) || job.driveUrl || resolvePublishCopy(job)) && hasSeo && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || jobStage === 'publish_scheduled' || job.assembledAt)) {
       var tagCount = (pubPayload.tags || []).length;
       var hashCount = ((pubPayload.description || '').match(/#\w+/g) || []).length;
       var schedNote = (jobStage === 'publish_scheduled' && job.scheduledPublishAt)
@@ -7104,14 +7680,12 @@ function renderQueueNow() {
           ? job.titleCandidates
           : (function() {
               var seeds = [];
-              var pcLocal = job.publishCopy || (job.state && job.state.savedOutputs && job.state.savedOutputs.publishCopy);
-              if (pcLocal && pcLocal.youtube && Array.isArray(pcLocal.youtube.titles)) {
-                pcLocal.youtube.titles.forEach(function(t, ti) {
-                  if (!t) return;
-                  if (seeds.some(function(s){ return s.text.toLowerCase() === String(t).toLowerCase(); })) return;
-                  seeds.push({ text: t, source: ti === 0 ? 'SEO' : 'SEO', rank: ti + 1, selected: false });
-                });
-              }
+              var pcLocal = resolvePublishCopy(job);
+              youtubeTitleOptionsFromPublishCopy(pcLocal).forEach(function(t, ti) {
+                if (!t) return;
+                if (seeds.some(function(s){ return s.text.toLowerCase() === String(t).toLowerCase(); })) return;
+                seeds.push({ text: t, source: ti === 0 ? 'SEO' : 'SEO', rank: ti + 1, selected: false });
+              });
               if (job.clipCompBrief && job.clipCompBrief.leadTitleDraft && (job.clipsOnly || isShortTitleJob)) {
                 var draftT = String(job.clipCompBrief.leadTitleDraft).trim();
                 var draftFull = /#Shorts/i.test(draftT) ? draftT : draftT + ' #Shorts';
@@ -7210,11 +7784,15 @@ function renderQueueNow() {
             + '</div>';
         } else {
           metaStrip += '<div style="font-size:10px;margin-top:4px;color:#e67e22;">'
-            + '⚠ Whisper captions missing — RE-ASSEMBLE FROM FILES'
+            + '⚠ Whisper captions not detected on export — preview anyway; use ↻ RE-ASSEMBLE FROM FILES only if speech is missing burned-in'
             + '</div>';
         }
       }
       metaStrip += '</div>';
+    } else if ((resolveJobPreviewUrl(job) || job.driveUrl) && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || job.assembledAt)) {
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:11px;color:#3498db;">'
+        + '⏳ <strong>Loading publish metadata</strong> from server — title, description, and tags will appear in a moment.'
+        + '</div>';
     }
 
     // ACTION BUTTONS
@@ -7365,7 +7943,11 @@ function renderQueueNow() {
     if (previewUrl || job.gate3) {
       var g3PanelText = escHtml(formatGate3ReportText(job));
       mediaPanel = '<div id="job-media-' + job.id + '" style="display:none;margin:10px 0;padding:10px;background:rgba(0,0,0,0.35);border:1px solid rgba(199,175,79,0.25);border-radius:8px;">'
-        + (previewUrl ? '<video controls playsinline preload="metadata" src="' + previewUrl + '" onerror="this.outerHTML=\'<div style=&quot;color:#e74c3c;font-size:11px;padding:8px;&quot;>Preview unavailable — click ↩ RESTORE JOBS or wait for reassemble to finish.</div>\'" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:10px;"></video>' : '')
+        + (previewUrl ? '<video controls playsinline preload="auto" src="' + previewUrl + '" onplay="window._queuePreviewLock=1" onpause="if(window._queuePreviewLock){window._queuePreviewLock=0;if(window._queueRenderDeferred)scheduleQueueRender(true);}" onended="window._queuePreviewLock=0;if(window._queueRenderDeferred)scheduleQueueRender(true);" onerror="this.outerHTML=\'<div style=&quot;color:#e74c3c;font-size:11px;padding:8px;&quot;>Preview unavailable — click ↩ RESTORE JOBS or wait for reassemble to finish.</div>\'" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:6px;"></video>'
+          + '<div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+          + '<a href="' + previewUrl + '" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:10px;text-decoration:none;">↗ OPEN FULL PREVIEW (new tab)</a>'
+          + '<span style="font-size:9px;color:rgba(255,255,255,0.4);font-family:monospace;">Queue refresh pauses while video plays</span>'
+          + '</div>' : '')
         + (job.gate3 ? '<div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.75);letter-spacing:2px;margin-bottom:6px;">GATE 3 QA (GEMINI)</div>'
           + '<div style="font-size:10px;color:rgba(255,255,255,0.75);font-family:monospace;white-space:pre-wrap;max-height:220px;overflow:auto;">'
           + g3PanelText
@@ -7399,6 +7981,7 @@ function renderQueueNow() {
       return '<div class="job-row failed"><div class="job-info"><div class="job-title">'+(job.title||'Unknown')+'</div><div class="job-meta" style="color:#e74c3c;">Render error: '+jobErr.message+'</div></div></div>';
     }
   }).join('');
+  restoreQueueMediaState(queueMediaState);
   } catch(err) {
     cwn_log('renderQueue crashed: '+err.message, true);
     g('job-list').innerHTML = '<div style="color:#e74c3c;font-size:12px;padding:10px;">Queue render error — '+err.message+'</div>';
@@ -8576,7 +9159,7 @@ function importJobToCanva(jobId) {
 }
 
 function refreshQueue() {
-  syncQueueJobsFromServer();
+  renderQueue();
   JOBS.forEach(function(job) {
     if (job.status === 'processing') {
       pollVideo(job.id,
@@ -8964,8 +9547,23 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
       var secs = (resp.estSecs||0)%60;
       var statusEl = g(statusElId);
       if (statusEl) {
-        statusEl.className = 'tag tag-done';
-        statusEl.innerHTML = '<span class="tag-dot"></span> SCRIPT READY';
+        var qaOutcome = resp.scriptQA && resp.scriptQA.outcome;
+        if (qaOutcome === 'pass') {
+          statusEl.className = 'tag tag-done';
+          statusEl.innerHTML = resp.scriptQA.held
+            ? '<span class="tag-dot"></span> SCRIPT READY — HELD'
+            : '<span class="tag-dot"></span> SCRIPT READY';
+        } else if (qaOutcome === 'manual_review' || qaOutcome === 'sendback') {
+          statusEl.className = 'tag tag-done';
+          statusEl.innerHTML = '<span class="tag-dot"></span> GATE 1 REVIEW';
+        } else if (qaOutcome) {
+          statusEl.className = 'tag';
+          statusEl.style.borderColor = '#e74c3c';
+          statusEl.innerHTML = '<span class="tag-dot" style="background:#e74c3c"></span> GATE 1 FAIL';
+        } else {
+          statusEl.className = 'tag tag-done';
+          statusEl.innerHTML = '<span class="tag-dot"></span> SCRIPT READY';
+        }
       }
       g('script-type-label').textContent = (type.toUpperCase()) + ' — ' + resp.wordCount + ' words, est. ' + mins + 'm ' + secs + 's';
       if (g('script-stats')) g('script-stats').innerHTML = '<span style="color:#2ecc71;">✓ ' + resp.wordCount + ' words · est. ' + mins + 'm ' + secs + 's · ' + resp.geminiHits + ' Gemini analyses</span>';
@@ -9007,21 +9605,24 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
         console.log('[script] Stored scriptJobId for directive sidecar:', resp.metricsJobId);
         // Save scriptJobId on the correct job card — find by jobId match first,
         // then fall back to most recent non-failed job
-        var currentJob = JOBS.find(function(j){ return j.id === resp.metricsJobId; })
-                      || JOBS.find(function(j){ return j.status !== 'failed'; });
-        if (currentJob && resp.metricsJobId) {
+        // Always pull authoritative card from server (saved for pass + non-pass Gate 1).
+        refreshQueuedJobFromServer(resp.metricsJobId, {
+          quiet: true,
+          navQueue: isTwitchLongFormType(type),
+          scrollTo: false
+        });
+        var currentJob = JOBS.find(function(j){ return j.id === resp.metricsJobId; });
+        if (currentJob) {
           currentJob.scriptJobId = resp.metricsJobId;
           if (resp.orderedClipUrls && resp.orderedClipUrls.length > 0) {
             currentJob.orderedClipUrls = resp.orderedClipUrls;
           }
-          if (resp.script) {
-            currentJob.script = resp.script;
-          }
-          if (resp.captionText) {
-            currentJob.captionText = resp.captionText;
-          }
-          if (resp.captionStyle) {
-            currentJob.captionStyle = resp.captionStyle;
+          if (resp.script) currentJob.script = resp.script;
+          if (resp.captionText) currentJob.captionText = resp.captionText;
+          if (resp.captionStyle) currentJob.captionStyle = resp.captionStyle;
+          if (resp.scriptQA) {
+            currentJob.gate1Score = resp.scriptQA.score;
+            currentJob.gate1Outcome = resp.scriptQA.outcome;
           }
           saveJobs();
         }
@@ -9371,7 +9972,7 @@ function finalizeStreamerClipItems(items, streamers, statusElId, onReady) {
 }
 
 function generateTwitch() {
-  var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  var streamers = g('twitch-streamers').value.split(',').map(function(s){ return normalizeStreamerHandle(s.trim()); }).filter(Boolean);
   if (!streamers.length) { alert('No streamers configured.'); return; }
   lockGenerateButton('btn-gen-twitch');
   setGenerateModeActive('twitch', 'long');
@@ -12796,6 +13397,10 @@ function compClipDurationSec(clip) {
 
 function ensureComposerTrimDefaults(clip) {
   if (!clip) return;
+  if (clip.postLiveVod && clip.trimStart != null && clip.trimEnd != null) {
+    if (clip.composerTrimStart == null) clip.composerTrimStart = Number(clip.trimStart);
+    if (clip.composerTrimEnd == null) clip.composerTrimEnd = Number(clip.trimEnd);
+  }
   var dur = Math.round(Number(clip.duration || clip.clipDuration || 60) || 60);
   if (clip.composerTrimStart == null) clip.composerTrimStart = 0;
   if (clip.composerTrimEnd == null) clip.composerTrimEnd = dur;
@@ -12803,6 +13408,7 @@ function ensureComposerTrimDefaults(clip) {
 
 var _composerDeliveryFormat = 'short';
 var _composerVodSegment = null;
+var _composerRepurposeContext = null;
 var _composerPreviewSeq = 0;
 
 function clearComposerVodSegment() {
@@ -12957,8 +13563,11 @@ function buildCompositionSpecFromUI() {
       streamer: slot.name || c.streamer || '',
       displayName: slot.displayName || c.displayName || '',
       duration: c.duration || c.clipDuration || 60,
-      trimStart: c.composerTrimStart,
-      trimEnd: c.composerTrimEnd,
+      trimStart: c.postLiveVod ? (c.composerTrimStart != null ? c.composerTrimStart : c.trimStart) : c.composerTrimStart,
+      trimEnd: c.postLiveVod ? (c.composerTrimEnd != null ? c.composerTrimEnd : c.trimEnd) : c.composerTrimEnd,
+      postLiveVod: !!c.postLiveVod,
+      sceneLabel: c.sceneLabel || '',
+      segmentKind: c.segmentKind || '',
       thumbnailUrl: c.thumbnailUrl || '',
       order: idx,
       orientation: 'landscape',
@@ -13294,18 +13903,23 @@ function executeComposerComp(spec) {
     var pub = parsePlatformModalSelection(sel);
     lockGenerateButton('btn-composer-execute');
     function dispatchComp(resolvedClips) {
+      var repurposeCtx = window._composerRepurposeContext || {};
       var clips = resolvedClips.map(function(c, i) {
         var src = spec.clips[i] || {};
         return {
           url: c.mp4Url || c.url,
-          pageUrl: src.pageUrl || c.url,
-          title: c.title,
-          streamer: c.streamer,
-          displayName: c.displayName,
+          pageUrl: src.pageUrl || c.pageUrl || c.url,
+          clipUrl: src.pageUrl || c.pageUrl || c.url,
+          title: c.title || src.title,
+          streamer: c.streamer || src.streamer,
+          displayName: c.displayName || src.displayName,
           orientation: 'landscape',
           trimStart: src.trimStart,
           trimEnd: src.trimEnd,
           duration: src.durationHint,
+          postLiveVod: !!src.postLiveVod,
+          sceneLabel: src.sceneLabel || '',
+          segmentKind: src.segmentKind || '',
           postId: src.postId,
           redditSource: src.redditSource,
           redditPermalink: src.pageUrl,
@@ -13315,12 +13929,33 @@ function executeComposerComp(spec) {
         };
       });
       if (!isNews) markClipsUsed(resolvedClips.map(function(c){ return c.url; }).filter(Boolean));
-      _dispatchClipCompFromPicker(clips, contentType, pub.platforms, statusTag, g(isNews ? 'news-status' : 'twitch-fetch-status'), pub.scheduledAt, {});
+      var postLiveOpts = repurposeCtx.postLiveVodSessionId ? {
+        postLiveVodSessionId: repurposeCtx.postLiveVodSessionId,
+        postLiveMuteRanges: repurposeCtx.postLiveMuteRanges,
+        repurposedFrom: repurposeCtx.repurposedFrom,
+        title: repurposeCtx.title,
+        repurposeFastHooks: !!repurposeCtx.repurposeFastHooks
+      } : {};
+      _dispatchClipCompFromPicker(clips, contentType, pub.platforms, statusTag, g(isNews ? 'news-status' : 'twitch-fetch-status'), pub.scheduledAt, postLiveOpts);
+      if (repurposeCtx.postLiveVodSessionId) window._composerRepurposeContext = null;
     }
     var allClips = spec.clips.map(function(c) {
-      return { streamer: c.streamer, displayName: c.displayName, title: c.title, url: c.mp4Url || c.stagedUrl || c.url, mp4Url: c.mp4Url || c.stagedUrl || c.url, views: c.views || 0, game: c.game || '' };
+      return {
+        streamer: c.streamer,
+        displayName: c.displayName,
+        title: c.title,
+        url: c.pageUrl || c.mp4Url || c.stagedUrl || c.url,
+        pageUrl: c.pageUrl || c.url,
+        mp4Url: c.mp4Url || c.stagedUrl || c.url,
+        postLiveVod: c.postLiveVod,
+        trimStart: c.trimStart,
+        trimEnd: c.trimEnd,
+        views: c.views || 0,
+        game: c.game || ''
+      };
     });
-    if (isNews) dispatchComp(allClips);
+    var allPostLive = allClips.length > 0 && allClips.every(function(c) { return c.postLiveVod; });
+    if (isNews || allPostLive) dispatchComp(allClips);
     else resolveTwitchClipUrls(allClips, function() { dispatchComp(allClips); });
   });
 }
@@ -13954,6 +14589,9 @@ var _origGenerateNBA = null;
 // ── Shared picker filters (news · twitch · nba/sports) ───────────────────────
 
 var PICKER_PUB_WINDOW_BANDS = {
+  last24h: { minHours: 0, maxHours: 24, label: 'last 24h' },
+  last7d: { minHours: 0, maxHours: 168, label: 'last 7d' },
+  last30d: { minHours: 0, maxHours: 720, label: 'last 30d' },
   '24h': { minHours: 0, maxHours: 24, label: '0–24h' },
   '7d': { minHours: 24, maxHours: 168, label: '24h–7d' },
   '30d': { minHours: 168, maxHours: 720, label: '7d–30d' },
@@ -13973,9 +14611,9 @@ function getPickerFilters(kind) {
   var pubEl = _pickerFilterEl(kind, 'pub-window');
   var durMinRaw = minEl && minEl.value !== '' ? parseInt(minEl.value, 10) : null;
   var durMaxRaw = maxEl && maxEl.value !== '' ? parseInt(maxEl.value, 10) : null;
-  var pubKey = (pubEl && pubEl.value) ? pubEl.value : '24h';
+  var pubKey = (pubEl && pubEl.value) ? pubEl.value : 'last7d';
   if (pubKey === 'any') pubKey = 'all';
-  var band = PICKER_PUB_WINDOW_BANDS[pubKey] || PICKER_PUB_WINDOW_BANDS['24h'];
+  var band = PICKER_PUB_WINDOW_BANDS[pubKey] || PICKER_PUB_WINDOW_BANDS['last7d'];
   return {
     durMin: Number.isFinite(durMinRaw) ? durMinRaw : null,
     durMax: Number.isFinite(durMaxRaw) ? durMaxRaw : null,
@@ -14992,14 +15630,15 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
       var d = JSON.parse(xhr.responseText || '{}');
       if (xhr.status === 200 && d.ok) {
         msg = 'CLIPS COMP started — ' + d.clipCount + ' clip(s), job ' + d.jobId;
+        cwn_log('[repurpose] ✅ Job created: ' + d.jobId, false);
         if (scheduledAt) applyJobPublishSchedule(d.jobId, platforms, scheduledAt);
         var streamerNames = clips.map(function(c) { return c.displayName || c.streamer || ''; }).filter(Boolean);
         var creativePayload = buildCompCreativeRequestPayload(streamerNames[0] || '');
         var localJob = {
           id: d.jobId,
           type: contentType,
-          title: clips.length === 1 ? ('Clip Short — ' + (streamerNames[0] || 'Twitch'))
-            : ('Clips Comp — ' + (streamerNames.slice(0, 3).join(', ') || 'Twitch')),
+          title: postLiveOpts.title || (clips.length === 1 ? ('Clip Short — ' + (streamerNames[0] || 'Twitch'))
+            : ('Clips Comp — ' + (streamerNames.slice(0, 3).join(', ') || 'Twitch'))),
           status: 'processing',
           stage: 'hooks_generating',
           clipsOnly: true,
@@ -15022,6 +15661,7 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
         if (!JOBS.some(function(j) { return j.id === d.jobId; })) {
           localJob.queuePinned = true;
           markJobQueued(d.jobId, true);
+          syncQueuePinToServer(d.jobId, true);
           JOBS.unshift(localJob);
           saveJobs();
           renderQueue();
@@ -15031,6 +15671,8 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
         startClipCompReviewPoll(d.jobId, statusId);
       } else {
         msg = 'CLIPS COMP failed: ' + (d.error || ('HTTP ' + xhr.status));
+        cwn_log('[repurpose] ❌ ' + msg, true);
+        alert(msg);
         if (statusId) setCompStatus(statusId, msg, 'failed');
       }
     } catch (e) {
@@ -15053,6 +15695,9 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
   if (scheduledAt) body.scheduledAt = scheduledAt;
   if (postLiveOpts.postLiveVodSessionId) body.postLiveVodSessionId = postLiveOpts.postLiveVodSessionId;
   if (postLiveOpts.postLiveMuteRanges) body.postLiveMuteRanges = postLiveOpts.postLiveMuteRanges;
+  if (postLiveOpts.repurposedFrom) body.repurposedFrom = postLiveOpts.repurposedFrom;
+  if (postLiveOpts.repurposeFastHooks) body.repurposeFastHooks = true;
+  if (postLiveOpts.title) body.title = postLiveOpts.title;
   xhr.send(JSON.stringify(body));
 }
 
@@ -15316,6 +15961,172 @@ var TWITCH_PICKER_DISPLAY_NAMES = {
   'extraemily':'ExtraEmily','yourragegaming':'Rage','yourrage':'Rage'
 };
 
+var _libraryPicksSaveTimer = null;
+
+function libraryClipPicksApi() {
+  return window.LibraryClipPicks || null;
+}
+
+function saveLibraryClipPicks(manual) {
+  var api = libraryClipPicksApi();
+  if (!api || !(_twitchPickerStreamers || []).length) {
+    if (manual) alert('Load library and pick clips first.');
+    return false;
+  }
+  var payload = api.serializePicks(_twitchPickerStreamers, {
+    groupId: window._activeClipPickerGroupId || null,
+    streamerLogins: getSelectedStreamers(),
+  });
+  if (!api.countSavedClips(payload)) {
+    if (manual) alert('No clips checked yet.');
+    return false;
+  }
+  try {
+    localStorage.setItem(api.STORAGE_KEY, JSON.stringify(payload));
+  } catch (e) {
+    if (manual) alert('Could not save picks: ' + e.message);
+    return false;
+  }
+  updateLibraryPicksSaveHint(payload, manual ? 'saved' : 'auto');
+  return true;
+}
+
+function loadLibraryClipPicksFromStorage() {
+  var api = libraryClipPicksApi();
+  if (!api) return null;
+  try {
+    var raw = localStorage.getItem(api.STORAGE_KEY);
+    return raw ? api.parseStored(raw) : null;
+  } catch (e) { return null; }
+}
+
+function applySavedLibraryClipPicks() {
+  var saved = loadLibraryClipPicksFromStorage();
+  if (!saved || !(_twitchPickerStreamers || []).length) return false;
+  var api = libraryClipPicksApi();
+  if (!api) return false;
+  api.applyPicks(_twitchPickerStreamers, saved);
+  updateLibraryPicksSaveHint(saved, 'restored');
+  return true;
+}
+
+function clearLibraryClipPicks() {
+  var api = libraryClipPicksApi();
+  if (api) {
+    try { localStorage.removeItem(api.STORAGE_KEY); } catch (e) { /* ignore */ }
+  }
+  (_twitchPickerStreamers || []).forEach(function(e) { e.collapsed = false; });
+  updateLibraryPicksSaveHint(null, 'cleared');
+}
+
+function scheduleAutoSaveLibraryPicks() {
+  if (_libraryPicksSaveTimer) clearTimeout(_libraryPicksSaveTimer);
+  _libraryPicksSaveTimer = setTimeout(function() { saveLibraryClipPicks(false); }, 700);
+}
+
+function updateLibraryPicksSaveHint(payload, mode) {
+  var el = g('library-picks-hint');
+  if (!el) return;
+  var api = libraryClipPicksApi();
+  if (!payload || !api) {
+    el.innerHTML = mode === 'cleared' ? 'Saved picks cleared.' : '';
+    return;
+  }
+  var n = api.countSavedClips(payload);
+  var when = payload.savedAt ? new Date(payload.savedAt).toLocaleString() : '';
+  var label = mode === 'restored' ? 'Restored' : (mode === 'saved' ? 'Saved' : (mode === 'idle' ? '' : 'Auto-saved'));
+  if (mode === 'idle') {
+    el.innerHTML = '<strong>' + n + '</strong> clip' + (n !== 1 ? 's' : '') + ' saved in this browser'
+      + (when ? ' · ' + when : '')
+      + ' — Load library to restore'
+      + ' · <button type="button" class="btn btn-outline btn-sm gen-picker-collapse-btn" onclick="clearLibraryClipPicks()">Clear saved</button>';
+    return;
+  }
+  el.innerHTML = label + ' <strong>' + n + '</strong> clip' + (n !== 1 ? 's' : '')
+    + (when ? ' · ' + when : '')
+    + ' · <button type="button" class="btn btn-outline btn-sm gen-picker-collapse-btn" onclick="clearLibraryClipPicks()">Clear saved</button>';
+}
+
+function toggleStreamerPickerCollapsed(si, collapsed) {
+  var entry = _twitchPickerStreamers[si];
+  if (!entry) return;
+  entry.collapsed = (collapsed !== undefined) ? !!collapsed : !entry.collapsed;
+  renderTwitchPicker(g('btn-preview-twitch'), parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10));
+  scheduleAutoSaveLibraryPicks();
+}
+window.toggleStreamerPickerCollapsed = toggleStreamerPickerCollapsed;
+
+function markStreamerPickerDone(si) {
+  var entry = _twitchPickerStreamers[si];
+  if (!entry) return;
+  var n = entry.clips.filter(function(c) { return c.selected; }).length;
+  if (!n) { alert('Select at least one clip first.'); return; }
+  entry.collapsed = true;
+  entry.selected = true;
+  renderTwitchPicker(g('btn-preview-twitch'), parseInt((g('twitch-clips-per-main') && g('twitch-clips-per-main').value) || '2', 10));
+  scheduleAutoSaveLibraryPicks();
+}
+window.markStreamerPickerDone = markStreamerPickerDone;
+
+function streamerPickerCollapsedSummary(entry) {
+  var titles = entry.clips.filter(function(c) { return c.selected; }).map(function(c) {
+    return (c.title || 'Clip').slice(0, 42);
+  });
+  if (!titles.length) return '';
+  return titles.join(' · ');
+}
+
+window.saveLibraryClipPicks = saveLibraryClipPicks;
+window.clearLibraryClipPicks = clearLibraryClipPicks;
+window.scheduleAutoSaveLibraryPicks = scheduleAutoSaveLibraryPicks;
+
+function refreshLibraryPicksIdleHint() {
+  if ((_twitchPickerStreamers || []).length) return;
+  var saved = loadLibraryClipPicksFromStorage();
+  var api = libraryClipPicksApi();
+  if (saved && api && api.countSavedClips(saved)) updateLibraryPicksSaveHint(saved, 'idle');
+}
+
+/** Wrong Twitch accounts share on-air names — map to canonical login before Helix fetch. */
+var STREAMER_LOGIN_ALIASES = {
+  yonna: 'yonnajay',
+  ron: 'stableronaldo',
+  rage: 'yourragegaming',
+  yourrage: 'yourragegaming',
+  emily: 'extraemily',
+  jason: 'jasontheween'
+};
+
+function normalizeStreamerHandle(h) {
+  var key = String(h || '').trim().toLowerCase().replace(/^@/, '').replace(/\s+/g, '');
+  if (!key) return '';
+  if (STREAMER_LOGIN_ALIASES[key]) return STREAMER_LOGIN_ALIASES[key];
+  if (TWITCH_PICKER_DISPLAY_NAMES[key]) return key;
+  for (var login in TWITCH_PICKER_DISPLAY_NAMES) {
+    if (!Object.prototype.hasOwnProperty.call(TWITCH_PICKER_DISPLAY_NAMES, login)) continue;
+    var onAir = String(TWITCH_PICKER_DISPLAY_NAMES[login] || '').toLowerCase().replace(/\s+/g, '');
+    if (onAir && onAir === key) return login;
+  }
+  return key;
+}
+
+function resolvePostLiveStreamerLogin(raw) {
+  if (!raw) return 'streamer';
+  if (typeof raw === 'object') {
+    return normalizeStreamerHandle(raw.twitchUsername || raw.login || raw.name || raw.displayName || 'streamer');
+  }
+  return normalizeStreamerHandle(raw);
+}
+
+function resolvePostLiveStreamerDisplay(raw) {
+  if (!raw) return 'Streamer';
+  if (typeof raw === 'object') {
+    return raw.displayName || TWITCH_PICKER_DISPLAY_NAMES[resolvePostLiveStreamerLogin(raw)] || raw.twitchUsername || 'Streamer';
+  }
+  var login = normalizeStreamerHandle(raw);
+  return TWITCH_PICKER_DISPLAY_NAMES[login] || login;
+}
+
 function getSelectedStreamerPlatforms() {
   var out = [];
   if (g('streamer-plat-twitch') && g('streamer-plat-twitch').checked) out.push('twitch');
@@ -15358,7 +16169,7 @@ function previewTwitchVods() {
   }
   btn.textContent = 'FETCHING...'; btn.disabled = true;
   _twitchPickerVods = [];
-  var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  var streamers = g('twitch-streamers').value.split(',').map(function(s){ return normalizeStreamerHandle(s.trim()); }).filter(Boolean);
   if (!streamers.length) { btn.textContent = 'FETCH VODS'; btn.disabled = false; alert('Enter streamers first.'); return; }
   var qs = 'streamers=' + encodeURIComponent(streamers.join(',')) + '&limit=10';
   var xhr = new XMLHttpRequest();
@@ -15490,7 +16301,7 @@ function previewTwitchClips(forceReload) {
   btn.textContent = 'Loading…'; btn.disabled = true;
   _twitchPickerStreamers = [];
   refreshUsedClipsFromServer(function() {
-  var streamers = g('twitch-streamers').value.split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  var streamers = g('twitch-streamers').value.split(',').map(function(s){ return normalizeStreamerHandle(s.trim()); }).filter(Boolean);
   if (!streamers.length) {
     btn.textContent = 'Load library'; btn.disabled = false;
     alert('Select at least one creator on the left first.');
@@ -15540,6 +16351,7 @@ function previewTwitchClips(forceReload) {
         return { name: name, displayName: TWITCH_PICKER_DISPLAY_NAMES[name] || name, platform: 'twitch', selected: false, clips: [], dropReason: e.message };
       });
     }
+    applySavedLibraryClipPicks();
     renderTwitchPicker(btn, clipsPerStreamer);
   };
   xhr.onerror = xhr.ontimeout = function() {
@@ -15593,26 +16405,51 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
 
   _twitchPickerStreamers.forEach(function(entry, si) {
     var isDropped = !!entry.dropReason;
-    var blockCls = 'gen-picker-streamer-block' + (isDropped ? ' is-dropped' : '');
+    var isCollapsed = !!entry.collapsed && !isDropped;
+    var clipCount = entry.clips.filter(function(c){ return c.selected; }).length;
+    var blockCls = 'gen-picker-streamer-block'
+      + (isDropped ? ' is-dropped' : '')
+      + (isCollapsed ? ' is-collapsed is-done' : '');
     var nameColor = isDropped ? 'rgba(255,80,80,0.7)' : '#fff';
 
     html += '<div class="' + blockCls + '">';
-    html += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:' + (entry.clips.length ? '6' : '0') + 'px;">'
+
+    if (isCollapsed) {
+      var summary = streamerPickerCollapsedSummary(entry);
+      html += '<div class="gen-picker-streamer-head">'
+        + '<span style="font-weight:700;font-family:Barlow Condensed,sans-serif;font-size:14px;color:' + nameColor + ';">'
+        + entry.displayName + '</span>'
+        + '<span style="font-size:9px;color:rgba(255,255,255,0.35);font-family:monospace;">@' + postLiveEsc(entry.name || '') + '</span>'
+        + '<span style="font-size:10px;color:rgba(46,204,113,0.8);font-family:monospace;">✓ ' + clipCount + ' picked</span>'
+        + '<button type="button" class="btn btn-outline btn-sm gen-picker-collapse-btn" onclick="event.stopPropagation();toggleStreamerPickerCollapsed(' + si + ', false)">Expand</button>'
+        + '</div>';
+      if (summary) {
+        html += '<div class="gen-picker-collapsed-summary">' + postLiveEsc(summary) + '</div>';
+      }
+      html += '</div>';
+      return;
+    }
+
+    html += '<div class="gen-picker-streamer-head" style="margin-bottom:' + (entry.clips.length ? '6' : '0') + 'px;">'
+      + '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0;">'
       + '<input type="checkbox" id="tpick-' + si + '" ' + (entry.selected && !isDropped ? 'checked' : '') + (isDropped ? ' disabled' : '')
-      + ' onchange="_twitchPickerStreamers[' + si + '].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;">'
+      + ' onchange="_twitchPickerStreamers[' + si + '].selected=this.checked;scheduleAutoSaveLibraryPicks()" style="width:14px;height:14px;flex-shrink:0;">'
       + '<span style="font-weight:700;font-family:Barlow Condensed,sans-serif;font-size:14px;color:' + nameColor + ';min-width:90px;">'
       + entry.displayName + '</span>'
+      + '<span style="font-size:9px;color:rgba(255,255,255,0.35);font-family:monospace;">@' + postLiveEsc(entry.name || '') + '</span>'
       + '<span style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);">'
       + (entry.platform || 'twitch') + '</span>';
 
     if (isDropped) {
       html += '<span style="font-size:10px;color:rgba(255,80,80,0.7);font-family:monospace;">✗ ' + entry.dropReason + '</span>';
     } else {
-      var clipCount = entry.clips.filter(function(c){ return c.selected; }).length;
       html += '<span style="font-size:10px;color:rgba(46,204,113,0.8);font-family:monospace;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);padding:1px 8px;border-radius:8px;">'
         + clipCount + ' clip' + (clipCount !== 1 ? 's' : '') + ' selected</span>';
+      if (clipCount > 0) {
+        html += '<button type="button" class="btn btn-outline btn-sm gen-picker-collapse-btn" onclick="event.stopPropagation();markStreamerPickerDone(' + si + ')">Done</button>';
+      }
     }
-    html += '</label>';
+    html += '</label></div>';
 
     if (entry.clips.length > 0) {
       html += '<div class="gen-picker-grid" style="padding-left:24px;">';
@@ -15640,13 +16477,21 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
           var vsrc = escapeHtml(previewSrc);
           html += '<video class="picker-preview-video" src="' + vsrc + '" muted loop playsinline preload="metadata"'
             + ' onmouseenter="this.play()" onmouseleave="if(!this.controls){this.pause();this.currentTime=0;}" onclick="event.stopPropagation();this.controls=!this.controls;this.muted=!this.controls;if(this.controls)this.play();"></video>';
-          if (!clip.stagedUrl && !clip.playbackUrl && (clip.mp4Url || clip.cdnUrl)) {
-            html += '<div class="picker-staging-badge">HOVER · CDN · click for controls</div>';
-          } else if (clip.stagedUrl || clip.playbackUrl) {
-            html += '<div class="picker-staging-badge">HOVER TO PREVIEW · click for full controls</div>';
+          html += '<div class="picker-staging-badge">HOVER TO PREVIEW · R2 ready · click for controls</div>';
+        } else if (clip.staging || clip._stageInflight) {
+          if (thumb) {
+            html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;opacity:0.45;" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">';
+          } else {
+            html += '<div class="picker-thumb-placeholder" style="height:55px;">DOWNLOADING…</div>';
           }
-        } else if (clip.staging) {
-          html += '<div class="picker-thumb-placeholder" style="height:55px;">DOWNLOADING…</div>';
+          html += '<div class="picker-staging-badge">DOWNLOADING TO R2…</div>';
+        } else if (clip.selected && (clip.mp4Url || clip.cdnUrl) && !clip.stagedUrl) {
+          if (thumb) {
+            html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">';
+          } else {
+            html += '<div class="picker-thumb-placeholder" style="height:55px;">RESOLVING…</div>';
+          }
+          html += '<div class="picker-staging-badge">CDN resolved · R2 on select</div>';
         } else if (thumb) {
           html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">';
         } else {
@@ -15722,6 +16567,7 @@ function _toggleTwitchClip(si, ci) {
     var statusEl = g('twitch-fetch-status');
     if (statusEl) statusEl.textContent = swapMsg;
   }
+  scheduleAutoSaveLibraryPicks();
   if (clip.selected && !clip._stageInflight) {
     resolveSelectedClipPreview(clip, function() {
       rerenderTwitchPicker();
@@ -15757,8 +16603,10 @@ function generateTwitchWithPicker() {
 
   var items = activeStreamers.map(function(entry) {
     var selectedClips = entry.clips.filter(function(c){ return c.selected; });
-    if (!selectedClips.length) selectedClips = entry.clips.slice(0, clipsPerStreamer);
-    selectedClips = selectedClips.slice(0, clipsPerStreamer); // hard cap at dropdown value
+    if (!selectedClips.length) {
+      selectedClips = entry.clips.slice(0, clipsPerStreamer);
+    }
+    // Avatar VOD: use every clip the operator selected (library lineup) — dropdown cap is for auto-fetch only.
     return {
       streamer: entry.displayName,
       displayName: entry.displayName,
@@ -16039,6 +16887,37 @@ function resolvePublishCopy(job) {
   return null;
 }
 
+function hasPublishMetadata(job) {
+  var pc = resolvePublishCopy(job);
+  if (pc) {
+    var prep = publishCopyToPrep(pc);
+    if (prep && prep.title && ((prep.description && prep.description.length) || (prep.tags && prep.tags.length) || (prep.tiktokCaption && prep.tiktokCaption.length))) {
+      return true;
+    }
+  }
+  var cached = job && job.publishPrep;
+  return !!(cached && cached.title && ((cached.description && cached.description.length) || (cached.tags && cached.tags.length) || (cached.tiktokCaption && cached.tiktokCaption.length)));
+}
+
+var _publishCopyHydratePending = {};
+function ensurePublishCopyHydrated(jobId) {
+  if (!jobId || _publishCopyHydratePending[jobId]) return;
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  if (!job || hasPublishMetadata(job)) return;
+  _publishCopyHydratePending[jobId] = true;
+  fetchJobCard(jobId, function(err, serverJob) {
+    delete _publishCopyHydratePending[jobId];
+    if (!err && serverJob) mergeServerJobIntoLocal(jobId, serverJob);
+  });
+}
+
+function youtubeTitleOptionsFromPublishCopy(pc) {
+  if (!pc) return [];
+  var yt = pickYoutubeFromPublishCopy(pc);
+  if (Array.isArray(yt.titles) && yt.titles.length) return yt.titles.filter(Boolean);
+  return yt.title ? [yt.title] : [];
+}
+
 function serverPublishCopy(serverJob) {
   if (!serverJob) return null;
   return serverJob.publishCopy
@@ -16231,6 +17110,8 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.assembledAt) job.assembledAt = serverJob.assembledAt;
   if (serverJob.scheduledPublishAt) job.scheduledPublishAt = serverJob.scheduledPublishAt;
   if (serverJob.stage) job.stage = serverJob.stage;
+  if (serverJob.youtubeConfirmedPublished) job.youtubeConfirmedPublished = true;
+  if (serverJob.youtubeVideoId) job.youtubeVideoId = serverJob.youtubeVideoId;
   if (serverJob.clipsOnly === true || serverJob.clipsOnly === false) job.clipsOnly = !!serverJob.clipsOnly;
   else if (!job.clipsOnly && (serverJob.stage === 'hook_review' || serverJob.stage === 'hooks_generating') && (serverJob.contentType || job.type || '').indexOf('short') > -1) {
     job.clipsOnly = true;
@@ -17172,7 +18053,9 @@ function loadCreatorRegistryFromServer(cb) {
           || c.id;
         key = String(key || c.id).toLowerCase().replace(/^@/, '');
         window._creatorRegistryMap[key] = {
-          displayName: c.displayName,
+          displayName: (c.platforms && c.platforms.twitch && c.platforms.twitch.displayName)
+            || (c.platforms && c.platforms.kick && c.platforms.kick.displayName)
+            || c.displayName || key,
           platform: plat,
           kind: c.kind,
           sources: c.sources || [],
@@ -17186,6 +18069,7 @@ function loadCreatorRegistryFromServer(cb) {
         return c.id;
       }).filter(Boolean);
       if (roster.length) saveStreamerRoster(roster);
+      migrateSelectedStreamerLogins();
       if (cb) cb();
     })
     .catch(function(){ if (cb) cb(); });
@@ -17211,17 +18095,36 @@ function saveStreamerRoster(roster) {
 
 function getSelectedStreamers() {
   return ((g('twitch-streamers') || {value:''}).value || '')
-    .split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+    .split(',').map(function(s){ return normalizeStreamerHandle(s.trim()); }).filter(Boolean);
 }
 
 function setSelectedStreamers(list, opts) {
   opts = opts || {};
   var el = g('twitch-streamers');
   if (!el) return;
-  el.value = list.join(',');
+  el.value = list.map(normalizeStreamerHandle).filter(Boolean).join(',');
   saveStreamerList();
   if (!opts.fromClipGroup) syncActiveClipPickerGroup();
   renderStreamerChips();
+}
+
+function migrateSelectedStreamerLogins() {
+  var sel = getSelectedStreamers();
+  var el = g('twitch-streamers');
+  if (el && sel.length) {
+    var normalized = sel.join(',');
+    if (el.value !== normalized) el.value = normalized;
+    saveStreamerList();
+  }
+  try {
+    var raw = localStorage.getItem('CWN_STREAMER_ROSTER');
+    if (raw) {
+      var roster = JSON.parse(raw).map(normalizeStreamerHandle).filter(Boolean);
+      var uniq = [];
+      roster.forEach(function(h) { if (uniq.indexOf(h) < 0) uniq.push(h); });
+      saveStreamerRoster(uniq);
+    }
+  } catch (_e) { /* ignore */ }
 }
 
 function toggleStreamerChip(handle) {
@@ -17580,17 +18483,81 @@ function syncActiveClipPickerGroup() {
   window._activeClipPickerGroupId = match ? match.id : null;
 }
 
+function getClipGroupPickerHandles() {
+  var buckets = classifyStreamerSections(getStreamerRoster());
+  var seen = {};
+  var out = [];
+  buckets.following.forEach(function(h) {
+    if (seen[h]) return;
+    seen[h] = true;
+    var meta = window._creatorRegistryMap[h] || {};
+    out.push({ handle: h, section: 'Following', label: meta.displayName || h });
+  });
+  buckets.bench.forEach(function(h) {
+    if (seen[h]) return;
+    seen[h] = true;
+    var meta = window._creatorRegistryMap[h] || {};
+    out.push({ handle: h, section: 'Bench', label: meta.displayName || h });
+  });
+  return out;
+}
+
 function renderClipPickerGroupEditorSlots(values) {
   var wrap = g('clip-group-editor-slots');
   var api = clipPickerGroupsApi();
   if (!wrap || !api) return;
   values = values || [];
+  var options = getClipGroupPickerHandles();
   var html = '';
   for (var i = 0; i < api.MAX_STREAMERS_PER_GROUP; i++) {
+    var selected = api.normalizeHandle(values[i] || '');
     html += '<div><div style="font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:3px;">Creator ' + (i + 1) + '</div>';
-    html += '<input type="text" class="field-input-compact clip-group-slot-input" data-slot="' + i + '" placeholder="@handle" value="' + escapeHtml(values[i] || '') + '"></div>';
+    html += '<select class="field-input-compact clip-group-slot-select" data-slot="' + i + '">';
+    html += '<option value="">— pick from Following / Bench —</option>';
+    var lastSection = '';
+    options.forEach(function(opt) {
+      if (opt.section !== lastSection) {
+        if (lastSection) html += '</optgroup>';
+        html += '<optgroup label="' + escapeHtml(opt.section) + '">';
+        lastSection = opt.section;
+      }
+      var sel = selected === opt.handle ? ' selected' : '';
+      html += '<option value="' + escapeHtml(opt.handle) + '"' + sel + '>' + escapeHtml(opt.label) + ' (@' + escapeHtml(opt.handle) + ')</option>';
+    });
+    if (lastSection) html += '</optgroup>';
+    html += '</select></div>';
   }
+  html += '<div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:6px;line-height:1.45;">'
+    + 'Only creators in <strong>Following</strong> or <strong>Bench</strong>. '
+    + '<button type="button" class="btn btn-outline btn-sm gen-picker-collapse-btn" onclick="promptAddStreamerToRoster()">+ Add new streamer</button>'
+    + ' then reopen this editor.</div>';
   wrap.innerHTML = html;
+}
+
+function promptAddStreamerToRoster() {
+  var handle = prompt('Twitch/Kick handle to add to roster (then add to Following via sync):');
+  if (!handle) return;
+  handle = normalizeStreamerHandle(String(handle).trim());
+  if (!handle) return;
+  var roster = getStreamerRoster();
+  if (roster.indexOf(handle) === -1) {
+    roster.push(handle);
+    saveStreamerRoster(roster);
+  }
+  alert('@' + handle + ' added to roster. Run Sync follows if needed, then reopen the group editor.');
+  loadStreamerList();
+}
+
+function readClipGroupEditorValues() {
+  var api = clipPickerGroupsApi();
+  if (!api) return [];
+  var slots = document.querySelectorAll('.clip-group-slot-select');
+  var streamers = [];
+  for (var i = 0; i < slots.length; i++) {
+    var v = api.normalizeHandle(slots[i].value);
+    if (v) streamers.push(v);
+  }
+  return streamers;
 }
 
 function openClipGroupEditor(id) {
@@ -17614,18 +18581,6 @@ function openClipGroupEditor(id) {
 function cancelClipGroupEditor() {
   var editor = g('clip-group-editor');
   if (editor) editor.style.display = 'none';
-}
-
-function readClipGroupEditorValues() {
-  var api = clipPickerGroupsApi();
-  if (!api) return [];
-  var slots = document.querySelectorAll('.clip-group-slot-input');
-  var streamers = [];
-  for (var i = 0; i < slots.length; i++) {
-    var v = api.normalizeHandle(slots[i].value);
-    if (v) streamers.push(v);
-  }
-  return streamers;
 }
 
 function fillClipGroupEditorFromSelection() {
@@ -17694,6 +18649,7 @@ function renderClipPickerGroupsList() {
   updateStreamerSectionCount('streamer-count-clip-groups', groups.length, activeCount);
   if (!groups.length) {
     list.innerHTML = '<span style="color:rgba(255,255,255,0.35);font-size:11px;padding:4px 8px;">No saved groups yet — create a 4-creator pack, then hit <strong>Pick clips</strong>.</span>';
+    refreshLibraryPicksIdleHint();
     return;
   }
   list.innerHTML = groups.map(function(group) {
@@ -17715,6 +18671,7 @@ function renderClipPickerGroupsList() {
       + '</div></div>';
   }).join('');
   syncStreamerSectionChecks();
+  refreshLibraryPicksIdleHint();
 }
 
 function classifyStreamerSections(roster) {
@@ -19419,9 +20376,73 @@ loadDashboardConfig().then(function() {
     }
   }, 4000);
 });
+// ── SIDEBAR LAYOUT (width / collapse) ─────────────────────────────
+var SIDEBAR_LAYOUT_KEY = 'cwn_sidebar_layout';
+
+function initSidebarLayout() {
+  var layout = g('app-layout');
+  if (!layout) return;
+  try {
+    var saved = localStorage.getItem(SIDEBAR_LAYOUT_KEY);
+    if (saved) {
+      var p = JSON.parse(saved);
+      if (p.mode === 'compact') layout.classList.add('sidebar-compact');
+      else if (p.mode === 'collapsed') layout.classList.add('sidebar-collapsed');
+      if (p.width && p.mode === 'custom') {
+        document.documentElement.style.setProperty('--sidebar-width', Number(p.width) + 'px');
+      }
+    }
+  } catch (_e) { /* ignore */ }
+  var handle = g('sidebar-resize-handle');
+  if (handle) {
+    var dragging = false;
+    handle.addEventListener('mousedown', function(ev) {
+      dragging = true;
+      ev.preventDefault();
+      layout.classList.remove('sidebar-compact', 'sidebar-collapsed');
+    });
+    document.addEventListener('mousemove', function(ev) {
+      if (!dragging) return;
+      var w = Math.max(52, Math.min(320, ev.clientX));
+      document.documentElement.style.setProperty('--sidebar-width', w + 'px');
+    });
+    document.addEventListener('mouseup', function() {
+      if (!dragging) return;
+      dragging = false;
+      var w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width'), 10) || 200;
+      localStorage.setItem(SIDEBAR_LAYOUT_KEY, JSON.stringify({ mode: 'custom', width: w }));
+    });
+  }
+}
+
+function cycleSidebarMode() {
+  var layout = g('app-layout');
+  if (!layout) return;
+  document.documentElement.style.removeProperty('--sidebar-width');
+  if (layout.classList.contains('sidebar-collapsed')) {
+    layout.classList.remove('sidebar-collapsed');
+    localStorage.setItem(SIDEBAR_LAYOUT_KEY, JSON.stringify({ mode: 'normal' }));
+  } else if (layout.classList.contains('sidebar-compact')) {
+    layout.classList.remove('sidebar-compact');
+    layout.classList.add('sidebar-collapsed');
+    localStorage.setItem(SIDEBAR_LAYOUT_KEY, JSON.stringify({ mode: 'collapsed' }));
+  } else {
+    layout.classList.add('sidebar-compact');
+    localStorage.setItem(SIDEBAR_LAYOUT_KEY, JSON.stringify({ mode: 'compact' }));
+  }
+}
+window.cycleSidebarMode = cycleSidebarMode;
+
 loadJobs();
+initSidebarLayout();
 initCompCreativePanel();
 initHeader();
+var _bootPage = readPersistedPage();
+if (_bootPage && document.getElementById('page-' + _bootPage)) {
+  nav(_bootPage);
+} else {
+  loadGeneratePillarPref();
+}
 setTimeout(syncQueueJobsFromServer, 600);
 document.addEventListener('focusout', function(ev) {
   var id = (ev.target && ev.target.id) || '';
@@ -19441,7 +20462,7 @@ libraryPageInit();
 renderComposerHandoffSummary();
 setTimeout(loadStyleGuides, 1000);
 setTimeout(renderPronunciationList, 500); // check for stored guides after server connects
-// Auto-restore disabled — rehydrate only jobs the operator added to their queue
+// Rehydrate queue from server-side queuePinned + localStorage pins (no 25-job flood — pinned only)
 setTimeout(rehydrateQueuedJobsFromServer, 900);
 setTimeout(checkContentTypeStatus, 2000); // check for auto-disabled content types
 
@@ -20601,6 +21622,7 @@ liveTvRefresh();
 setInterval(liveTvRefresh, 15000);
 </script>
 <script src="/assets/clip_picker_groups.js"></script>
+<script src="/assets/library_clip_picks.js"></script>
 <script src="/assets/calendar_dashboard.js"></script>
 <script src="/assets/broadcast_dashboard.js"></script>
 <script>

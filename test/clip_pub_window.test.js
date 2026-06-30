@@ -41,8 +41,18 @@ test('resolveClipPubWindow sets helix started_at older than ended_at for 7d band
   assert.ok(new Date(band.startedAt) < new Date(band.endedAt));
 });
 
+test('last7d band matches Twitch range=7d (cumulative 0–7d)', () => {
+  const band = resolveClipPubWindow({ pubWindow: 'last7d' });
+  const now = Date.now();
+  assert.equal(band.minHours, 0);
+  assert.equal(band.maxHours, 168);
+  assert.equal(clipInPubBand(new Date(now - 12 * 3600000).toISOString(), band), true);
+  assert.equal(clipInPubBand(new Date(now - 48 * 3600000).toISOString(), band), true);
+  assert.equal(clipInPubBand(new Date(now - 169 * 3600000).toISOString(), band), false);
+});
+
 test('PUB_BANDS covers library window keys', () => {
-  for (const k of ['24h', '7d', '30d', 'all']) {
+  for (const k of ['last7d', 'last24h', 'last30d', '24h', '7d', '30d', 'all']) {
     assert.ok(PUB_BANDS[k], k);
   }
 });

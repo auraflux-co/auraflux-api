@@ -34,6 +34,28 @@ describe('scene_scaffold_panel', () => {
     assert.ok(clip);
     assert.equal(clip.start_s, 25);
     assert.equal(clip.durationSec, 30);
+    assert.equal(clip.segmentKind, 'source_clip');
     assert.equal(r.targets.idealSec, 30);
+  });
+
+  it('buildRepurposeSceneCandidates includes Twitch source clips (_SETUP_CLIP)', () => {
+    const soupRundown = {
+      entries: [
+        { segmentLabel: 'LACY_CLIP1_SETUP', startSec: 31.5, endSec: 42.1, durationSec: 10.6, feature: 'avatar_segment' },
+        { segmentLabel: 'LACY_CLIP1_SETUP_CLIP', startSec: 42.1, endSec: 72.2, durationSec: 30, feature: 'twitch_clip', label: 'Twitch clip — LACY_CLIP1_SETUP_CLIP' },
+        { segmentLabel: 'LACY_CLIP1_REACTION', startSec: 72.2, endSec: 77.4, durationSec: 5.2, feature: 'bobby_reaction' },
+      ],
+    };
+    const r = buildRepurposeSceneCandidates({ card: { contentType: 'twitch' }, rundown: soupRundown });
+    const source = r.candidates.find((c) => c.sceneLabel === 'LACY_CLIP1_SETUP_CLIP');
+    const setup = r.candidates.find((c) => c.sceneLabel === 'LACY_CLIP1_SETUP');
+    const reaction = r.candidates.find((c) => c.sceneLabel === 'LACY_CLIP1_REACTION');
+    assert.ok(source, 'source clip missing from picker');
+    assert.equal(source.segmentKind, 'source_clip');
+    assert.equal(source.durationSec, 30);
+    assert.ok(setup);
+    assert.ok(reaction);
+    assert.equal(r.candidates.indexOf(setup) < r.candidates.indexOf(source), true);
+    assert.equal(r.candidates.indexOf(source) < r.candidates.indexOf(reaction), true);
   });
 });

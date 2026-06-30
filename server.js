@@ -2060,6 +2060,7 @@ app.get('/health', async (req, res) => {
 const REVIEW_QUEUE_STAGES = new Set([
   'awaiting_review', 'metadata_review', 'publish_scheduled', 'music_review',
   'gate5_failed', 'gate5_forced', 'gate5_running', 'assembled',
+  'hook_review', 'hooks_generating',
 ]);
 
 /** Dedupe SQLite/JSON cards by jobId — keep newest savedAt per id. */
@@ -2078,7 +2079,8 @@ function dedupeJobCardsByJobId(cards) {
 
 function listDashboardJobs({ restore = false, pinnedOnly = false } = {}) {
   const IN_FLIGHT_STAGES = new Set([
-    'script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling', 'heygen_done',
+    'script_ready', 'gate1_review', 'gate1_failed',
+    'all_sent', 'awaiting_manual_segments', 'assembling', 'heygen_done',
     'hooks_generating', 'hook_review', 'awaiting_review', 'metadata_review',
   ]);
   const RESTORE_STAGES = new Set([
@@ -2096,11 +2098,22 @@ function listDashboardJobs({ restore = false, pinnedOnly = false } = {}) {
     cards = dedupeJobCardsByJobId(Object.values(persistedJobs));
   }
 
-  return cards.filter((job) => {
-    if (pinnedOnly && !job.queuePinned) return false;
+  try {
+    const { reconcileAllJobCardsWithYouTube } = require('./lib/job_youtube_reconcile');
+    const ytStats = reconcileAllJobCardsWithYouTube(cards, { persist: true, saveJobCard });
+    if (ytStats.promoted > 0) {
+      console.log(`[jobs] YouTube catalog promoted ${ytStats.promoted} job(s) to published`);
+    }
+  } catch (e) {
+    console.warn('[jobs] YouTube reconcile skipped:', e.message);
+  }
 
+  return cards.filter((job) => {
     const status = job.status || '';
     const stage = job.stage || inferJobStage(job);
+
+    // restore=1 (default, no all=1): queuePinned only — use ?restore=1&all=1 to browse all actionable.
+    if (pinnedOnly && !job.queuePinned) return false;
 
     if (restore && stage === 'published') {
       const ts = new Date(job.savedAt || job.publishedAt || job.assembledAt || 0).getTime();
@@ -2187,6 +2200,17 @@ app.get('/job/:id', (req, res) => {
     saveJobCard(jobId, reconciled);
     card = reconciled;
   }
+
+  try {
+    const { reconcileJobCardYouTube } = require('./lib/job_youtube_reconcile');
+    const yt = reconcileJobCardYouTube(card);
+    if (yt.changed) {
+      saveJobCard(jobId, yt.card);
+      card = yt.card;
+    } else if (yt.youtubeConfirmed) {
+      card = yt.card;
+    }
+  } catch (_e) { /* non-fatal */ }
 
   const savedOutputs = card.state?.savedOutputs || {};
   const _pcUsable = (pc) => pc && (pc.title || pc.youtube || pc.platforms?.youtube);
@@ -2899,6 +2923,10 @@ app.post('/job/:id/schedule', (req, res) => {
   card.scheduledPublishAt = due.toISOString();
   card.deliverySpec = card.deliverySpec || {};
   card.deliverySpec.scheduledAt = due.toISOString();
+  try {
+    const { stampJobCalendarMeta } = require('./lib/calendar/month_plan');
+    stampJobCalendarMeta(card);
+  } catch (_e) { /* non-fatal */ }
   // If the video is already assembled and waiting, hold it now;
   // otherwise assembly's Gate 5 trigger will see the schedule and hold.
   if (['assembled', 'gate5_forced', 'gate5_failed'].includes(card.stage)) {
@@ -3312,11 +3340,169 @@ app.get('/live-grid/files', (req, res) => {
   }
 });
 
-// GET /calendar/plan — master week plan (production + live + publish)
-app.get('/calendar/plan', (req, res) => {
+// GET /calendar/month — monthly plan vs actual (jobs + YouTube)
+app.get('/calendar/month', async (req, res) => {
+  try {
+    const { buildMonthPlan } = require('./lib/calendar/month_plan');
+    const { getYoutubeCalendarItems } = require('./lib/calendar/youtube_studio_sync');
+    const year = Number(req.query.year) || new Date().getFullYear();
+    const month = Number(req.query.month) || (new Date().getMonth() + 1);
+    const refreshYoutube = req.query.refreshYoutube === '1' || req.query.refresh === '1';
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`;
+    let studio = { items: [] };
+    try {
+      studio = await getYoutubeCalendarItems({
+        startDate,
+        endDate,
+        refresh: refreshYoutube,
+        persistedJobs,
+      });
+    } catch (e) {
+      console.warn('[calendar/month] YouTube sync failed:', e.message);
+    }
+    const plan = buildMonthPlan({
+      year,
+      month,
+      persistedJobs,
+      youtubeItems: studio.items || [],
+    });
+    plan.youtubeStudio = {
+      ok: studio.ok !== false,
+      count: (studio.items || []).length,
+      fetchedAt: studio.fetchedAt || null,
+      stale: !!studio.stale,
+    };
+    res.json(plan);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// PUT /calendar/month/day — set planned targets for one day { dateKey, short, longform, live, note }
+app.put('/calendar/month/day', (req, res) => {
+  try {
+    const { setDayPlan } = require('./lib/calendar/month_plan');
+    const { dateKey, short, longform, live, note } = req.body || {};
+    if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+      return res.status(400).json({ ok: false, error: 'dateKey required (YYYY-MM-DD)' });
+    }
+    const [y, m] = dateKey.split('-').map(Number);
+    const result = setDayPlan({ year: y, month: m, dateKey, targets: { short, longform, live }, note });
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// PUT /calendar/month/defaults — set default daily targets for a month
+app.put('/calendar/month/defaults', (req, res) => {
+  try {
+    const { setMonthDefaultTargets } = require('./lib/calendar/month_plan');
+    const year = Number(req.body?.year);
+    const month = Number(req.body?.month);
+    if (!year || !month) return res.status(400).json({ ok: false, error: 'year and month required' });
+    const result = setMonthDefaultTargets({
+      year,
+      month,
+      targets: {
+        short: req.body.short,
+        longform: req.body.longform,
+        live: req.body.live,
+      },
+    });
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /calendar/range — plan vs actual for date range (stats + calendar sync)
+app.get('/calendar/range', async (req, res) => {
+  try {
+    const { buildCalendarRangeReport } = require('./lib/calendar/month_plan');
+    const { getYoutubeCalendarItems } = require('./lib/calendar/youtube_studio_sync');
+    const startDate = req.query.start || req.query.startDate;
+    const endDate = req.query.end || req.query.endDate || startDate;
+    if (!startDate) return res.status(400).json({ ok: false, error: 'start or startDate required (YYYY-MM-DD)' });
+    const refreshYoutube = req.query.refreshYoutube === '1' || req.query.refresh === '1';
+    let studio = { items: [] };
+    try {
+      studio = await getYoutubeCalendarItems({
+        startDate,
+        endDate,
+        refresh: refreshYoutube,
+        persistedJobs,
+      });
+    } catch (e) {
+      console.warn('[calendar/range] YouTube sync failed:', e.message);
+    }
+    const report = buildCalendarRangeReport({
+      startDate,
+      endDate,
+      persistedJobs,
+      youtubeItems: studio.items || [],
+    });
+    if (!report.ok) return res.status(400).json(report);
+    res.json(report);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// POST /calendar/kpis — views breakdown for calendar items vs channel catalog
+app.post('/calendar/kpis', express.json(), (req, res) => {
+  try {
+    const { buildCalendarStatsKpis } = require('./lib/calendar/calendar_stats_kpis');
+    res.json(buildCalendarStatsKpis(req.body || {}));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /calendar/plan — master week plan (production + live + publish + YouTube Studio)
+app.get('/calendar/plan', async (req, res) => {
   try {
     const { buildWeekPlan } = require('./lib/calendar/master_plan');
-    res.json(buildWeekPlan({ persistedJobs }));
+    const { getYoutubeStudioSchedule, attachStudioScheduleToWeek } = require('./lib/calendar/youtube_studio_sync');
+    const refreshYoutube = req.query.refreshYoutube === '1' || req.query.refresh === '1';
+    let studio = { ok: false, items: [] };
+    try {
+      studio = await getYoutubeStudioSchedule({ refresh: refreshYoutube, persistedJobs });
+    } catch (e) {
+      console.warn('[calendar/plan] YouTube Studio sync failed:', e.message);
+    }
+    const plan = buildWeekPlan({ persistedJobs });
+    plan.days = attachStudioScheduleToWeek(plan.days, studio.items || []);
+    plan.youtubeStudio = {
+      ok: studio.ok !== false,
+      count: (studio.items || []).length,
+      fetchedAt: studio.fetchedAt || null,
+      stale: !!studio.stale,
+      staleError: studio.staleError || null,
+      message: studio.message || null,
+      connectUrl: studio.connectUrl || '/connect/youtube',
+      channelTitle: studio.channelTitle || null,
+      daysAhead: studio.daysAhead || null,
+      scan: studio.scan || null,
+    };
+    res.json(plan);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /calendar/youtube-studio — scheduled uploads from YouTube Studio only
+app.get('/calendar/youtube-studio', async (req, res) => {
+  try {
+    const { getYoutubeStudioSchedule, DEFAULT_DAYS_AHEAD } = require('./lib/calendar/youtube_studio_sync');
+    const refresh = req.query.refresh === '1' || req.query.refreshYoutube === '1';
+    const result = await getYoutubeStudioSchedule({
+      refresh,
+      daysAhead: Number(req.query.days) || DEFAULT_DAYS_AHEAD,
+      persistedJobs,
+    });
+    res.json(result);
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
@@ -5153,6 +5339,9 @@ app.post('/job/:id/reassemble', async (req, res) => {
       clipTimingFormat:  c.clipTimingFormat || 'none',
       pillarboxFilter:   c.pillarboxFilter != null ? c.pillarboxFilter : null,
       sourceOrientation: c.sourceOrientation || c.orientation || 'landscape',
+      trimStart:         c.trimStart != null ? Number(c.trimStart) : undefined,
+      trimEnd:           c.trimEnd != null ? Number(c.trimEnd) : undefined,
+      postLiveVod:       !!c.postLiveVod,
     }));
     clipIdx = orderedClips.length;
     console.log(`[reassemble] ${jobId}: clips-only rebuild (${segmentData.length} clips)`);
@@ -5612,6 +5801,10 @@ app.post('/generate-clip-comp', async (req, res) => {
     (clips.length === 1 ? `Clip Short — ${streamers[0] || 'Twitch'}`
                         : `Clips Comp — ${streamers.join(', ') || 'Twitch'}`);
   const jobId     = `script_${contentType}_${Date.now()}`;
+  const compositionSpec = req.body.compositionSpec || null;
+  const editorSignedOffAt = req.body.editorSignedOff
+    ? (req.body.editorSignedOffAt || new Date().toISOString())
+    : null;
 
   // Job spec — same contract as the script flow so all gates read normally.
   // contentType twitch-short inherits the CPD-932 short-form gate handling.
@@ -5688,13 +5881,11 @@ app.post('/generate-clip-comp', async (req, res) => {
     trimStart:   c.trimStart != null ? Number(c.trimStart) : undefined,
     trimEnd:     c.trimEnd != null ? Number(c.trimEnd) : undefined,
     postLiveVod: !!c.postLiveVod,
+    sceneLabel:  c.sceneLabel || '',
+    segmentKind: c.segmentKind || '',
   }));
 
   const compDeliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType, compCreative });
-  const compositionSpec = req.body.compositionSpec || null;
-  const editorSignedOffAt = req.body.editorSignedOff
-    ? (req.body.editorSignedOffAt || new Date().toISOString())
-    : null;
 
   const card = {
     id:          jobId,
@@ -5737,6 +5928,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     clipCompProfile: 'streamer',
     postLiveVodSessionId: postLiveVodSessionId || null,
     postLiveMuteRanges: postLiveMuteRanges.length ? postLiveMuteRanges : null,
+    queuePinned: true,
+    queuePinnedAt: new Date().toISOString(),
     _assemblyRetryCount: 1
   };
   saveJobCard(jobId, card);
@@ -5813,7 +6006,7 @@ app.post('/generate-clip-comp', async (req, res) => {
 
   setImmediate(async () => {
     try {
-      const { generateClipCompCreativeBriefWithTimeout, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
+      const { generateClipCompCreativeBriefWithTimeout, buildRepurposeClipCompBrief, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
       const { fireClipCompAssembly } = require('./lib/clip_comp_dispatch_assembly');
       const hookItems = clips.map(c => ({
         title: c.title || '',
@@ -5824,12 +6017,20 @@ app.post('/generate-clip-comp', async (req, res) => {
         thumbnailUrl: c.thumbnailUrl || '',
         game: c.game || '',
         viewCount: c.views || c.viewCount || null,
+        sceneLabel: c.sceneLabel || '',
+        segmentKind: c.segmentKind || '',
       }));
-      console.log(`[clip-comp] ${jobId}: generating Gemini creative brief for ${orderedClipUrls.length} clips...`);
-      const clipCompBrief = await generateClipCompCreativeBriefWithTimeout(orderedClipUrls, hookItems, {
-        log: (m) => console.log(`[clip-comp] ${jobId}${m}`),
-        compCreative: card.compCreative || null,
-      });
+      const repurposeFast = !!(req.body.repurposeFastHooks && req.body.repurposedFrom);
+      console.log(`[clip-comp] ${jobId}: generating ${repurposeFast ? 'repurpose scene' : 'Gemini creative'} brief for ${orderedClipUrls.length} clips...`);
+      const clipCompBrief = repurposeFast
+        ? await buildRepurposeClipCompBrief(orderedClipUrls, hookItems, {
+          log: (m) => console.log(`[clip-comp] ${jobId}${m}`),
+          compCreative: card.compCreative || null,
+        })
+        : await generateClipCompCreativeBriefWithTimeout(orderedClipUrls, hookItems, {
+          log: (m) => console.log(`[clip-comp] ${jobId}${m}`),
+          compCreative: card.compCreative || null,
+        });
       if (clipCompBrief.fallbackBrief) {
         console.warn(`[clip-comp] ${jobId}: using fallback brief (Gemini timeout or error)`);
       }

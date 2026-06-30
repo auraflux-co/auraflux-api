@@ -27,6 +27,14 @@ describe('repurpose', () => {
     assert.equal(isPublishedLongFormJob({ contentType: 'twitch', clipsOnly: true, stage: 'published' }), false);
   });
 
+  it('isPublishedLongFormJob accepts gate5Result.platforms.youtube.url', () => {
+    assert.equal(isPublishedLongFormJob({
+      contentType: 'twitch',
+      stage: 'published',
+      gate5Result: { platforms: { youtube: { url: 'https://www.youtube.com/watch?v=abc12345678' } } },
+    }), true);
+  });
+
   it('getRepurposeMode prefers scene when rundown exists', () => {
     assert.equal(getRepurposeMode({
       postAssemblyRundown: { entries: [{ segmentLabel: 'INTRO', durationSec: 10 }] },
