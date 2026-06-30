@@ -6,4 +6,5 @@ cd "$ROOT"
 echo "=== avatar_vod_gate1_smoke ==="
 node test/normalize_inline_scene_headers.test.js
 node test/avatar_vod_gate1_structure.test.js
+node test/gate1_handoff_review.test.js
 echo "=== avatar_vod_gate1_smoke PASS ==="

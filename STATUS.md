@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-30 (CPD-1189b) — Gate 1 handoff review fix: normalize script before handoff header check (portal1 passed but handoff failed on inline raw). Truncated Gemini QA JSON salvage. Deployed C0.
 **Last Updated:** 2026-06-30 (CPD-1189) — Avatar VOD Gate 1 structure fix: `normalizeScriptForGate1` splits inline Gemini `=== HEADER ===` lines and aligns names to jobSpec contract (fixes PORTAL1_STRUCTURE_MISMATCH found 0/22). Dashboard gate1_failed sync + queue pin fix. Tests: `scripts/avatar_vod_gate1_smoke.sh`. Deployed C0.
 **Last Updated:** 2026-06-30 (CPD-1183) — Calendar platform publish times (YouTube API + Upload-Post for TikTok/IG); Gate 5 fix missing resolveSyntheticMediaFlags import (TikTok/IG failed since 2026-06-27). Deployed C0.
 **Last Updated:** 2026-06-30 (CPD-1182) — Full dashboard readability pass: 724 font bumps across cwn_production.html + calendar + broadcast JS; 16px base, panel borders, per-page CSS (library, queue, calendar, broadcast, stats, repurpose, publish, settings). Script: scripts/bump_dashboard_fonts.js. Deployed C0.
