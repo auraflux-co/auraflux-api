@@ -224,12 +224,12 @@
   function renderViewBands(vb) {
     if (!vb?.bands?.length) return '';
     let html = `<div class="bc-band-head" style="margin-top:14px;">VIEW BANDS (5k → 250k+) — what competitors run</div>`;
-    html += `<div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:8px;">${vb.sourceNote || ''} · Pool ${vb.poolSize || '—'} live VODs · ${vb.atLeast5k || '—'} with 5k+ views</div>`;
+    html += `<div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:8px;">${vb.sourceNote || ''} · Pool ${vb.poolSize || '—'} live VODs · ${vb.atLeast5k || '—'} with 5k+ views</div>`;
 
     if (vb.streamTypeLegend?.length) {
       html += `<div class="bc-type-legend">`;
       for (const leg of vb.streamTypeLegend) {
-        html += `${bcTypeChip(leg.id)} <span style="font-size:9px;color:rgba(255,255,255,0.45);margin-right:10px;">${leg.short}</span>`;
+        html += `${bcTypeChip(leg.id)} <span style="font-size:13px;color:rgba(255,255,255,0.45);margin-right:10px;">${leg.short}</span>`;
       }
       html += `</div>`;
     }
@@ -248,7 +248,7 @@
       for (const ex of (band.examples || []).slice(0, 5)) {
         html += `<div class="bc-ex-row">
           ${bcTypeChip(ex.streamType)}
-          <span style="font-size:9px;color:rgba(255,255,255,0.35);margin-left:4px;">${(ex.views || 0).toLocaleString()} views · ${ex.region || ''}</span>
+          <span style="font-size:13px;color:rgba(255,255,255,0.35);margin-left:4px;">${(ex.views || 0).toLocaleString()} views · ${ex.region || ''}</span>
           <div class="bc-ex-title">${(ex.title || '').replace(/</g, '&lt;').slice(0, 72)}</div>
           <div class="bc-ex-meta">${(ex.channel || '').replace(/</g, '&lt;')}</div>
         </div>`;
@@ -259,7 +259,7 @@
     const ns = vb.newsSports5kTo160k;
     if (ns?.regions?.length) {
       html += `<div class="bc-band-head" style="margin-top:12px;">LOCAL NEWS & SPORTS (5k–160k) — by region</div>`;
-      html += `<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px;">${ns.note || ''}</div>`;
+      html += `<div style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:6px;">${ns.note || ''}</div>`;
       html += `<table class="bc-region-table"><tr><td><b>Region</b></td><td><b>Count</b></td><td><b>Feed / Prod / Party</b></td></tr>`;
       for (const r of ns.regions.slice(0, 10)) {
         html += `<tr><td>${r.region}</td><td>${r.total}</td><td>${r.feed || 0} / ${r.produced || 0} / ${r.watchparty || 0}</td></tr>`;
@@ -267,7 +267,7 @@
       html += `</table>`;
       const topReg = ns.regions[0];
       if (topReg?.examples?.length) {
-        html += `<div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:8px;">Example (${topReg.region}):</div>`;
+        html += `<div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:8px;">Example (${topReg.region}):</div>`;
         for (const ex of topReg.examples.slice(0, 2)) {
           html += `<div class="bc-ex-row">${bcTypeChip(ex.streamType)} <span class="bc-ex-title">${(ex.title || '').slice(0, 60)}</span></div>`;
         }
@@ -285,7 +285,7 @@
         Tier A: sports watch-alongs, long-run news desk, esports finals — <b>YouTube Live</b> with commentary/transform layers.<br>
         Tier C: 4-up Twitch multiview — keep on YouTube late night only; <b>not</b> the Twitch TV loop.<br>
         Full playbook loads after server reload — run hybrid collect if view bands empty.</div>
-        <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.35);">Your pipeline (Bobby G VODs + news) feeds Tier A news desk — but production rate is ~1 hr/day, not 6+ hours of live.</div>`;
+        <div style="margin-top:8px;font-size:14px;color:rgba(255,255,255,0.35);">Your pipeline (Bobby G VODs + news) feeds Tier A news desk — but production rate is ~1 hr/day, not 6+ hours of live.</div>`;
       return;
     }
 
@@ -312,7 +312,7 @@
             <b>${item.format}</b> <span class="bc-play-ev">(${item.evidence || ''})</span>
             <div class="bc-play-ch">${item.channelLabel || ''}</div>
             <div style="margin-top:4px;color:rgba(255,255,255,0.7);">${item.robSummary || item.build || ''}</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;">Status: ${item.wiringDetail || item.wiringStatus}</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-top:4px;">Status: ${item.wiringDetail || item.wiringStatus}</div>
           </div>`;
         }
       }
@@ -336,8 +336,8 @@
       el.style.borderColor = 'rgba(231,76,60,0.35)';
       el.innerHTML = `<b style="color:#e74c3c;">Livestreams paused for today (${cal.date})</b><br>
         Auto Twitch TV and YouTube Grid are off — scheduler will not start streams.
-        ${cal.livePauseReason ? `<br><span style="font-size:10px;color:rgba(255,255,255,0.5);">${cal.livePauseReason}</span>` : ''}
-        <br><span style="font-size:10px;color:rgba(255,255,255,0.45);">VOD production slots still run · override on Content Calendar tab</span>`;
+        ${cal.livePauseReason ? `<br><span style="font-size:14px;color:rgba(255,255,255,0.5);">${cal.livePauseReason}</span>` : ''}
+        <br><span style="font-size:14px;color:rgba(255,255,255,0.45);">VOD production slots still run · override on Content Calendar tab</span>`;
       return;
     }
     const yt = cal.youtubeNow;
@@ -345,7 +345,7 @@
     el.innerHTML = `<b style="color:#c7af4f;">Calendar drives today</b><br>
       ${yt ? `YouTube Live now: <b>${yt.label}</b> (${yt.mode}) — pick this mode below before GO LIVE.` : 'YouTube Live: between dayparts — check scheduler.'}<br>
       Twitch TV window: <b>${cal.twitchTv?.window || '—'}</b> · ${cal.twitchTv?.contentRule || ''}<br>
-      <span style="font-size:10px;color:rgba(255,255,255,0.45);">Produce today: ${prod || '—'} · Full plan on Content Calendar tab</span>`;
+      <span style="font-size:14px;color:rgba(255,255,255,0.45);">Produce today: ${prod || '—'} · Full plan on Content Calendar tab</span>`;
     const modeSel = g('lg-seo-mode');
     if (modeSel && yt?.mode && modeSel.value !== yt.mode) {
       const hasOpt = [...modeSel.options].some((o) => o.value === yt.mode);
@@ -445,7 +445,7 @@
 
     const shorts = board.pipelineShorts || [];
     const shortsHtml = shorts.length
-      ? `<div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.35);">${shorts.length} streamer short(s) in Job Queue — YouTube/TikTok only, not Twitch TV</div>`
+      ? `<div style="margin-top:8px;font-size:14px;color:rgba(255,255,255,0.35);">${shorts.length} streamer short(s) in Job Queue — YouTube/TikTok only, not Twitch TV</div>`
       : '';
 
     const gapsHtml = (board.gaps || []).length
@@ -456,7 +456,7 @@
 
     const ev = board.activeEvent;
     const evHtml = ev
-      ? `<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:10px;">YouTube Grid event slot: <b style="color:#c7af4f;">${ev.eventTitle || ev.eventId}</b></div>`
+      ? `<div style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:10px;">YouTube Grid event slot: <b style="color:#c7af4f;">${ev.eventTitle || ev.eventId}</b></div>`
       : '';
 
     el.innerHTML = `
@@ -467,7 +467,7 @@
         <div class="bc-board-col"><h4>READY FOR TWITCH TV</h4>${readyHtml}</div>
       </div>
       ${gapsHtml}
-      <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.3);">This board shows the gap between the calendar and what&apos;s on disk. Pick Ready items in ClipzWorld TV below.</div>`;
+      <div style="margin-top:8px;font-size:14px;color:rgba(255,255,255,0.3);">This board shows the gap between the calendar and what&apos;s on disk. Pick Ready items in ClipzWorld TV below.</div>`;
   }
 
   async function broadcastRefreshEventFeed() {
@@ -487,10 +487,10 @@
     if (feed?.url) {
       el.innerHTML = `<b style="color:#c7af4f;">EVENT FEED (Q1)</b> · ${feed.platform || 'live'} · ${feed.channel || ''}<br>
         <span style="color:#fff;">${feed.title || 'Live'}</span>
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;">${feed.source} · ${ev?.eventTitle || ev?.eventId || 'event_night'}</div>`;
+        <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-top:4px;">${feed.source} · ${ev?.eventTitle || ev?.eventId || 'event_night'}</div>`;
     } else {
       el.innerHTML = `<b style="color:#c7af4f;">EVENT FEED</b> — none live right now for <i>${ev?.eventTitle || ev?.eventId || 'event'}</i>.
-        <div style="font-size:10px;margin-top:4px;">Will use co-streams only, or event file if set above.</div>`;
+        <div style="font-size:14px;margin-top:4px;">Will use co-streams only, or event file if set above.</div>`;
     }
   }
 
@@ -509,7 +509,7 @@
   async function broadcastRefreshAnalytics() {
     const el = g('bc-analytics-body');
     if (!el) return;
-    el.innerHTML = '<div style="color:rgba(255,255,255,0.35);font-size:11px;">Loading analytics…</div>';
+    el.innerHTML = '<div style="color:rgba(255,255,255,0.35);font-size:15px;">Loading analytics…</div>';
     try {
       const days = Number(g('bc-analytics-days')?.value) || 14;
       _bcAnalytics = await bcFetch(`/live-grid/analytics/hourly?days=${days}`);
@@ -773,19 +773,19 @@
 
     const files = layout?.filePaths || {};
     const fileLines = Object.entries(files).filter(([, v]) => v)
-      .map(([k, v]) => `<div style="font-size:10px;color:rgba(255,255,255,0.45);">${k}: ${String(v).split('/').pop()}</div>`).join('');
+      .map(([k, v]) => `<div style="font-size:14px;color:rgba(255,255,255,0.45);">${k}: ${String(v).split('/').pop()}</div>`).join('');
 
     const feed = layout?.eventFeed || p.layout?.eventFeed;
     const feedLine = feed?.url
-      ? `<div style="font-size:10px;color:#2ecc71;margin-top:6px;">Live feed: ${feed.title || feed.channel} (${feed.platform})</div>`
+      ? `<div style="font-size:14px;color:#2ecc71;margin-top:6px;">Live feed: ${feed.title || feed.channel} (${feed.platform})</div>`
       : '';
 
     el.innerHTML = `
       <div style="margin-bottom:8px;"><b style="color:#c7af4f;">${active.toUpperCase()}</b>
-        <span style="color:rgba(255,255,255,0.4);font-size:11px;"> scheduled: ${sched}${ev ? ' · ' + ev.eventTitle : ''}</span></div>
-      ${layout?.title ? `<div style="font-size:12px;margin-bottom:8px;">${layout.title}</div>` : ''}
+        <span style="color:rgba(255,255,255,0.4);font-size:15px;"> scheduled: ${sched}${ev ? ' · ' + ev.eventTitle : ''}</span></div>
+      ${layout?.title ? `<div style="font-size:16px;margin-bottom:8px;">${layout.title}</div>` : ''}
       ${feedLine}
-      <div class="bc-quad-grid">${quads || '<span style="color:rgba(255,255,255,0.3);font-size:11px;">Start grid to see quadrants</span>'}</div>
+      <div class="bc-quad-grid">${quads || '<span style="color:rgba(255,255,255,0.3);font-size:15px;">Start grid to see quadrants</span>'}</div>
       ${fileLines}`;
   }
 
@@ -794,24 +794,24 @@
     if (!el) return;
     const d = _bcSched;
     if (!d || !d.enabled) {
-      el.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);">Scheduler disabled (STREAM_SCHEDULER=off)</div>';
+      el.innerHTML = '<div style="font-size:15px;color:rgba(255,255,255,0.4);">Scheduler disabled (STREAM_SCHEDULER=off)</div>';
       return;
     }
     const streams = d.streams || [];
     if (streams.every((s) => s.paused)) {
-      el.innerHTML = `<div style="font-size:12px;color:#e74c3c;margin-bottom:6px;"><b>Paused for today</b> — no auto start/stop</div>
-        ${streams.map((s) => `<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:4px;">${s.name}: off${s.pauseReason ? ' · ' + s.pauseReason : ''}</div>`).join('')}`;
+      el.innerHTML = `<div style="font-size:16px;color:#e74c3c;margin-bottom:6px;"><b>Paused for today</b> — no auto start/stop</div>
+        ${streams.map((s) => `<div style="font-size:15px;color:rgba(255,255,255,0.45);margin-bottom:4px;">${s.name}: off${s.pauseReason ? ' · ' + s.pauseReason : ''}</div>`).join('')}`;
       return;
     }
     el.innerHTML = streams.map(s => {
       if (s.paused || !s.window) {
-        return `<div style="margin-bottom:8px;font-size:12px;color:rgba(255,255,255,0.4);"><b>${s.name}</b> paused today</div>`;
+        return `<div style="margin-bottom:8px;font-size:16px;color:rgba(255,255,255,0.4);"><b>${s.name}</b> paused today</div>`;
       }
       const inW = s.inWindow ? '<span style="color:#2ecc71;">● in window</span>' : '<span style="color:rgba(255,255,255,0.35);">○ out</span>';
       const next = s.next ? `${s.next.action} in ~${s.next.inMinutes}m` : '';
-      return `<div style="margin-bottom:8px;font-size:12px;">
+      return `<div style="margin-bottom:8px;font-size:16px;">
         <b style="color:#c7af4f;">${s.name}</b> ${fmtWindow(s.window)} ${inW}
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);">${next}</div></div>`;
+        <div style="font-size:14px;color:rgba(255,255,255,0.4);">${next}</div></div>`;
     }).join('');
   }
 
@@ -838,7 +838,7 @@
     if (!el) return;
     const d = _bcAnalytics;
     if (!d || !d.ok) {
-      el.innerHTML = `<div style="color:#e88;font-size:11px;">${d?.error || 'YouTube analytics unavailable — connect at /connect/youtube'}</div>`;
+      el.innerHTML = `<div style="color:#e88;font-size:15px;">${d?.error || 'YouTube analytics unavailable — connect at /connect/youtube'}</div>`;
       return;
     }
     const buckets = d.hourly || [];
@@ -854,10 +854,10 @@
     const rec = d.recommendation;
     el.innerHTML = `
       <div class="bc-bar-chart">${bars}</div>
-      ${rec ? `<div style="margin-top:12px;font-size:12px;">
+      ${rec ? `<div style="margin-top:12px;font-size:16px;">
         <b style="color:#c7af4f;">Recommended window:</b> ${rec.windowEt} ET
         (${rec.lengthHours}h, ~${Math.round(rec.totalMinutes)} min watched in sample)
-        <button class="btn btn-outline btn-sm" style="margin-left:8px;font-size:10px;padding:2px 8px;"
+        <button class="btn btn-outline btn-sm" style="margin-left:8px;font-size:14px;padding:2px 8px;"
           onclick="navigator.clipboard.writeText('LIVE_GRID_WINDOW=${rec.windowEt}')">COPY ENV</button></div>` : ''}`;
   }
 
@@ -866,15 +866,15 @@
     if (!el) return;
     const d = _bcAllowlist;
     if (!d || !d.events) {
-      el.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.35);">—</div>';
+      el.innerHTML = '<div style="font-size:15px;color:rgba(255,255,255,0.35);">—</div>';
       return;
     }
     const events = d.events.map(e =>
-      `<div style="margin-bottom:6px;font-size:11px;"><span class="bc-tier bc-tier-${e.tier}">${e.tier}</span>
+      `<div style="margin-bottom:6px;font-size:15px;"><span class="bc-tier bc-tier-${e.tier}">${e.tier}</span>
         <b>${e.label}</b> <span style="color:rgba(255,255,255,0.35);">${(e.modes || []).join(', ')}</span></div>`
     ).join('');
     const tv = d.twitchTv || {};
-    el.innerHTML = events + (tv.allowedPatterns ? `<div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,0.4);">
+    el.innerHTML = events + (tv.allowedPatterns ? `<div style="margin-top:10px;font-size:14px;color:rgba(255,255,255,0.4);">
       Twitch TV allows: ${tv.allowedPatterns.join(', ')}</div>` : '');
   }
 
@@ -893,10 +893,10 @@
       if (!d?.ok) err = d?.error || 'Discovery failed';
       else list = d.bench || [];
     }
-    if (err) { el.innerHTML = `<div style="font-size:11px;color:#e88;">${err}</div>`; return; }
+    if (err) { el.innerHTML = `<div style="font-size:15px;color:#e88;">${err}</div>`; return; }
     el.innerHTML = list.length
       ? list.map(l => `<span class="bc-bench-chip">${l}</span>`).join('')
-      : '<div style="font-size:11px;color:rgba(255,255,255,0.35);">Empty bench</div>';
+      : '<div style="font-size:15px;color:rgba(255,255,255,0.35);">Empty bench</div>';
   }
 
   function populateFileSelects() {
@@ -982,7 +982,7 @@
     const el = g('bc-env-panel');
     if (!el || !_bcOps?.env) return;
     el.innerHTML = Object.entries(_bcOps.env).map(([k, v]) =>
-      `<div style="font-size:10px;font-family:monospace;"><span style="color:#c7af4f;">${k}</span>=${v ?? '(unset)'}</div>`
+      `<div style="font-size:14px;font-family:monospace;"><span style="color:#c7af4f;">${k}</span>=${v ?? '(unset)'}</div>`
     ).join('');
   }
 
