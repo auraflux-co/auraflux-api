@@ -795,6 +795,7 @@ input[type="url"], input[type="password"], select, textarea {
       <div class="sidebar-lbl">TOOLS</div>
       <button class="sidebar-btn" onclick="nav('publish')"><span class="icon">Y</span> Publish Prep</button>
       <button class="sidebar-btn" onclick="nav('stats')"><span class="icon">S</span> Channel Stats</button>
+      <button class="sidebar-btn" onclick="nav('intelligence')"><span class="icon">I</span> Intelligence</button>
       <button class="sidebar-btn" onclick="nav('postlive')"><span class="icon">R</span> Repurpose</button>
       <button class="sidebar-btn" onclick="nav('abtest')"><span class="icon">T</span> Thumbnails</button>
       <button class="sidebar-btn" onclick="nav('settings')"><span class="icon">~</span> Settings</button>
@@ -1686,6 +1687,68 @@ input[type="url"], input[type="password"], select, textarea {
         </table>
       </div>
       <div id="stats-sources" style="margin-top:12px;font-size:14px;color:rgba(255,255,255,0.3);line-height:1.6;"></div>
+    </div>
+
+    <!-- INTELLIGENCE PAGE (CPD-1193) — Content Memory + learning loop -->
+    <div class="page stats-page" id="page-intelligence">
+      <div class="stats-head">
+        <div>
+          <h2 class="gen-page-title" style="margin:0;">Intelligence</h2>
+          <div id="intel-subtitle" style="font-size:15px;color:rgba(255,255,255,0.35);margin-top:4px;">Content Memory · post-publish learning · title/tag hints for Generate</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" id="intel-refresh-btn" onclick="loadIntelligencePage(true)">↻ Refresh</button>
+          <button type="button" class="btn btn-gold btn-sm" id="intel-sync-btn" onclick="syncIntelligenceMemory()">⇄ Sync analytics</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="nav('stats')">Channel Stats</button>
+          <a href="/connect/youtube" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;line-height:1.6;">YouTube OAuth</a>
+        </div>
+      </div>
+      <div id="intel-banner" class="stats-banner stats-banner-warn" style="margin-bottom:12px;">
+        <strong>Learning loop:</strong> Every successful publish writes Content Memory. Click <strong>Sync analytics</strong> to pull YouTube performance into memory. Generate and Publish Prep can use winning titles/tags from history.
+      </div>
+      <div class="cards-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:14px;">
+        <div class="card"><div class="card-body" style="text-align:center;">
+          <div style="font-size:13px;color:rgba(255,255,255,0.4);">Videos in memory</div>
+          <div id="intel-stat-total" style="font-size:28px;font-weight:600;color:#c7af4f;">—</div>
+        </div></div>
+        <div class="card"><div class="card-body" style="text-align:center;">
+          <div style="font-size:13px;color:rgba(255,255,255,0.4);">Synced w/ analytics</div>
+          <div id="intel-stat-synced" style="font-size:28px;font-weight:600;color:#2ecc71;">—</div>
+        </div></div>
+        <div class="card"><div class="card-body" style="text-align:center;">
+          <div style="font-size:13px;color:rgba(255,255,255,0.4);">Pending sync</div>
+          <div id="intel-stat-pending" style="font-size:28px;font-weight:600;color:#e67e22;">—</div>
+        </div></div>
+        <div class="card"><div class="card-body" style="text-align:center;">
+          <div style="font-size:13px;color:rgba(255,255,255,0.4);">Publish decisions</div>
+          <div id="intel-stat-decisions" style="font-size:28px;font-weight:600;">—</div>
+        </div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div class="card-title">RECOMMEND CONTEXT (preview)</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <select id="intel-filter-content-type" class="field-input-compact" onchange="loadIntelligenceRecommend()">
+              <option value="">All types</option>
+              <option value="twitch">Twitch</option>
+              <option value="news">News</option>
+              <option value="nba">Sports</option>
+            </select>
+            <input type="text" id="intel-filter-streamer" class="field-input-compact" placeholder="Streamer (optional)" onchange="loadIntelligenceRecommend()">
+          </div>
+        </div>
+        <div class="card-body" id="intel-recommend-body" style="font-size:15px;line-height:1.6;color:rgba(255,255,255,0.55);">Loading…</div>
+      </div>
+      <div class="sec-title">TOP PERFORMERS <span class="badge" id="intel-top-count">0</span></div>
+      <div class="stats-table-wrap">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Title</th><th>Video ID</th><th>Views</th><th>Job</th><th>Streamer</th>
+          </tr></thead>
+          <tbody id="intel-top-body"><tr><td colspan="5" style="padding:16px;color:rgba(255,255,255,0.35);">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="intel-status" style="margin-top:12px;font-size:14px;color:rgba(255,255,255,0.3);"></div>
     </div>
 
     <!-- CLIP LIBRARY PAGE (CPD-1098 / CPD-1118) — pick streamers + clips, send to Composer -->
@@ -3219,6 +3282,7 @@ function nav(page) {
   if (page === 'publish') pubPopulateJobDropdown();
   if (page === 'abtest') thumbPopulateDropdown();
   if (page === 'stats') statsPageInit();
+  if (page === 'intelligence') intelligencePageInit();
   if (page === 'postlive') postLivePageInit();
   if (page === 'library') libraryPageInit();
   if (page === 'generate') {
@@ -4302,6 +4366,129 @@ function statsPageInit() {
   initNorthStarRangeControls();
   renderCalendarStatsBlock(getCalendarStatsFilter());
   loadChannelStats(false);
+}
+
+function intelligencePageInit() {
+  loadIntelligencePage(false);
+}
+
+function intelApiBase() {
+  return resolveApiBase();
+}
+
+function loadIntelligencePage(forceRefresh) {
+  var base = intelApiBase();
+  var statusEl = g('intel-status');
+  if (statusEl && forceRefresh) statusEl.textContent = 'Refreshing…';
+
+  fetch(base + '/intelligence/stats')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'stats failed');
+      var s = d.stats || {};
+      if (g('intel-stat-total')) g('intel-stat-total').textContent = fmtNum(s.total);
+      if (g('intel-stat-synced')) g('intel-stat-synced').textContent = fmtNum(s.synced);
+      if (g('intel-stat-pending')) g('intel-stat-pending').textContent = fmtNum(s.pendingSync);
+      if (g('intel-stat-decisions')) g('intel-stat-decisions').textContent = fmtNum(s.decisions);
+      var banner = g('intel-banner');
+      if (banner) {
+        if (s.total === 0) {
+          banner.className = 'stats-banner stats-banner-warn';
+          banner.innerHTML = '<strong>No Content Memory yet.</strong> Publish a job through Portal 5 — memory is written automatically on successful YouTube publish.';
+        } else if (s.pendingSync > 0) {
+          banner.className = 'stats-banner stats-banner-warn';
+          banner.innerHTML = '<strong>' + s.pendingSync + ' video(s) pending analytics sync.</strong> Click <strong>Sync analytics</strong> (requires YouTube Analytics OAuth scope).';
+        } else {
+          banner.className = 'stats-banner stats-banner-ok';
+          banner.innerHTML = '<strong>Content Memory active.</strong> ' + s.total + ' videos tracked · ' + s.synced + ' synced with YouTube Analytics.';
+        }
+      }
+      return loadIntelligenceTop(base);
+    })
+    .then(function() { return loadIntelligenceRecommend(); })
+    .then(function() {
+      if (statusEl) statusEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
+    })
+    .catch(function(e) {
+      var banner = g('intel-banner');
+      if (banner) {
+        banner.className = 'stats-banner stats-banner-warn';
+        banner.innerHTML = '<strong>Intelligence API unavailable</strong> — ' + escHtml(e.message || 'load failed') + '. Run <code>bash scripts/deploy_c0.sh</code> to load new routes.';
+      }
+      if (g('intel-top-body')) {
+        g('intel-top-body').innerHTML = '<tr><td colspan="5" style="padding:16px;color:#e74c3c;">' + escHtml(e.message || 'Error') + '</td></tr>';
+      }
+    });
+}
+
+function loadIntelligenceTop(base) {
+  base = base || intelApiBase();
+  return fetch(base + '/intelligence/top?limit=15')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'top failed');
+      var rows = d.performers || [];
+      if (g('intel-top-count')) g('intel-top-count').textContent = String(rows.length);
+      var body = g('intel-top-body');
+      if (!body) return;
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="5" style="padding:16px;color:rgba(255,255,255,0.35);">No performance data yet — sync analytics after publish</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(function(v) {
+        return '<tr><td>' + escHtml(v.title || '—') + '</td><td><code style="color:#c7af4f;">' + escHtml(v.platformVideoId || '—') + '</code></td><td>' + fmtNum(v.views || v.score || 0) + '</td><td>' + escHtml(v.jobId || '—') + '</td><td>' + escHtml(v.streamer || '—') + '</td></tr>';
+      }).join('');
+    });
+}
+
+function loadIntelligenceRecommend() {
+  var base = intelApiBase();
+  var ct = (g('intel-filter-content-type') || {}).value || '';
+  var streamer = (g('intel-filter-streamer') || {}).value || '';
+  var qs = '?formFactor=short&limit=5';
+  if (ct) qs += '&contentType=' + encodeURIComponent(ct);
+  if (streamer) qs += '&streamer=' + encodeURIComponent(streamer.trim());
+  return fetch(base + '/intelligence/recommend-context' + qs)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var el = g('intel-recommend-body');
+      if (!el) return;
+      if (!d.sampleSize) {
+        el.innerHTML = '<p style="margin:0;">' + escHtml((d.hints && d.hints[0]) || 'No historical matches.') + '</p>';
+        return;
+      }
+      var titles = (d.winningTitles || []).slice(0, 5).map(function(t) { return '<li>' + escHtml(t) + '</li>'; }).join('');
+      var tags = (d.topTags || []).slice(0, 10).map(function(t) { return '<span class="tag tag-pending" style="margin:2px;">' + escHtml(t) + '</span>'; }).join('');
+      el.innerHTML = '<p style="margin:0 0 8px;">' + escHtml(d.hints[0] || '') + ' · avg views ' + fmtNum(d.avgViews) + '</p>' +
+        (titles ? '<div style="margin-bottom:8px;"><strong>Winning titles</strong><ul style="margin:4px 0 0 18px;">' + titles + '</ul></div>' : '') +
+        (tags ? '<div><strong>Top tags</strong><div style="margin-top:6px;">' + tags + '</div></div>' : '');
+    })
+    .catch(function(e) {
+      if (g('intel-recommend-body')) g('intel-recommend-body').textContent = e.message || 'Recommend failed';
+    });
+}
+
+function syncIntelligenceMemory() {
+  var base = intelApiBase();
+  var btn = g('intel-sync-btn');
+  var statusEl = g('intel-status');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  if (statusEl) statusEl.textContent = 'Pulling YouTube analytics into Content Memory…';
+  fetch(base + '/intelligence/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ platform: 'youtube', days: 28, limit: 50 }) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'sync failed');
+      var ok = (d.results || []).filter(function(x) { return x.ok; }).length;
+      var fail = (d.results || []).filter(function(x) { return !x.ok; }).length;
+      if (statusEl) statusEl.textContent = 'Sync complete — ' + ok + ' updated' + (fail ? ', ' + fail + ' skipped/failed' : '');
+      loadIntelligencePage(true);
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Sync failed: ' + (e.message || 'error');
+    })
+    .finally(function() {
+      if (btn) { btn.disabled = false; btn.textContent = '⇄ Sync analytics'; }
+    });
 }
 
 function fmtNum(n) {

@@ -2864,6 +2864,9 @@ app.get('/connect/youtube/status', (req, res) => {
 // Post-live VOD registry — channel lives + claims CSV + Gemini review (skip claimed ranges)
 app.use(require('./lib/routes/post_live'));
 
+// CPD-1190 — Intelligence Engine (Content Memory, analytics facade, SEO context)
+app.use(require('./lib/routes/intelligence'));
+
 // GET /stats/channel — Videos + Shorts + Streams catalog; YouTube Analytics when OAuth connected
 app.get('/stats/channel', async (req, res) => {
   try {
