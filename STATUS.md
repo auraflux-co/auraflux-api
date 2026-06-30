@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — Sprint 7 complete (CPD-318/592/554/974/399/963 docs + UX gate); commit 8d55f51f+ pending push.
+**Deploy Mode:** dev — fix(cpd-324) BullMQ worker restore deploying to auraflux-api.
 
 **Last Updated:** 2026-06-21 (Sprint 7 close) — pricing sync, E2E Gemini UX gate, ops runbooks, C0 repo policy.
 **Last Updated:** 2026-06-21 (CPD-1013/1014/999/1026) — trusted domains, publish guard, worker rootCause, portal5 poll test.
@@ -209,6 +209,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(cpd-324): restore BullMQ pipeline worker** — #637 accidentally removed startPipelineWorker; all queued jobs stuck since June 13. | server.js, STATUS.md | pending | 2026-06-30 ET |
 | Cursor | **feat(cpd-1074/1077): fleet pause + roster refresh + ops monitors** — fleetPaused gate; pause-all API; dashboard FLEET PAUSED; CPU/concurrent watchers. | solo_roster_fleet.json, orchestrator, manager, live_routes, fleet_health, dashboard, monitors, .env.example, STATUS.md | 2016eb70 | 2026-06-23 ET |
 | Cursor | **feat(cpd-1073): brand frame overlay** — optional 720p PNG frame on solo ffmpeg before RTMP. | solo_brand_frame.js, solo_publishers.js, test/solo_brand_frame.test.js, STATUS.md | 61097349 | 2026-06-23 ET |
 | Cursor | **feat(cpd-1072): live mirror disclaimers** — LIVE_MIRROR_DISCLAIMER + grid co-stream block in solo SEO. | seo.js, solo_seo.js, test/solo_seo_fleet.test.js, STATUS.md | 0a349cb5 | 2026-06-23 ET |

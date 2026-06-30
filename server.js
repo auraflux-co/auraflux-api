@@ -9057,6 +9057,18 @@ const server = app.listen(PORT, async () => {
   });
   startMonitoring(); // Start pipeline event monitoring
 
+  // BullMQ pipeline worker — processes jobs from Redis queue (CPD-324)
+  if (process.env.REDIS_URL) {
+    try {
+      const { startPipelineWorker } = require('./lib/queue/worker');
+      startPipelineWorker();
+    } catch (e) {
+      console.warn('⚠️  Pipeline worker failed to start:', e.message);
+    }
+  } else {
+    console.warn('[server] REDIS_URL not set — BullMQ worker disabled, using in-process fallback');
+  }
+
   // CPD-924: deferred publish cron — fires Gate 5 for 'publish_scheduled' cards when due
   try {
     const { startSchedulingCron } = require('./lib/services/scheduling_cron');
@@ -9118,6 +9130,11 @@ const server = app.listen(PORT, async () => {
 // Graceful shutdown — waits for both HeyGen pollers and in-flight assembly jobs
 async function gracefulShutdown(signal) {
   console.log(`\n[shutdown] ${signal} received — checking in-flight work...`);
+
+  try {
+    const { stopPipelineWorker } = require('./lib/queue/worker');
+    stopPipelineWorker();
+  } catch (_) { /* worker may not have started */ }
 
   const pollerCount   = activePollers.size;
   const assemblyCount = Object.keys(assemblyJobs).filter(id => assemblyJobs[id].status === 'running').length;
