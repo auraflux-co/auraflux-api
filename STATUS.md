@@ -1,6 +1,6 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — CPD-1184 operator brand bypass deploying to auraflux-api.
+**Deploy Mode:** dev — CPD-1185/1186/1187 production fixes deploying to auraflux-api.
 
 **Last Updated:** 2026-06-21 (Sprint 7 close) — pricing sync, E2E Gemini UX gate, ops runbooks, C0 repo policy.
 **Last Updated:** 2026-06-21 (CPD-1013/1014/999/1026) — trusted domains, publish guard, worker rootCause, portal5 poll test.
@@ -209,7 +209,8 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1184): operator jobs list brand bypass** — superadmin GET /jobs?all=true skips X-Brand-Id validation. | brand_access.js, brand_access.test.js, STATUS.md | pending | 2026-06-30 ET |
+| Cursor | **fix(cpd-1185/1186/1187): brand_id + startup rescue + postprocess export** — createJobSpec brandId; restore rescueInterruptedJobs; applyPostProcessingEffects wrapper. | job_spec.js, startup, assembly_postprocess.js, server.js, tests, STATUS.md | pending | 2026-06-30 ET |
+| Cursor | **fix(cpd-1184): operator jobs list brand bypass** — superadmin GET /jobs?all=true skips X-Brand-Id validation. | brand_access.js, brand_access.test.js, STATUS.md | aba1cfc7 | 2026-06-30 ET |
 | Cursor | **fix(cpd-869): My Jobs list empty** — legacy GET /jobs in server.js shadowed jobs_c1 Postgres list; include null brand_id in list filter. | server.js, postgres.js, jobs.js, cwn_production.html, STATUS.md | pending | 2026-06-30 ET |
 | Cursor | **fix(cpd-324): restore BullMQ pipeline worker** — #637 accidentally removed startPipelineWorker; all queued jobs stuck since June 13. | server.js, STATUS.md | 4e0a2682 | 2026-06-30 ET |
 | Cursor | **feat(cpd-1074/1077): fleet pause + roster refresh + ops monitors** — fleetPaused gate; pause-all API; dashboard FLEET PAUSED; CPU/concurrent watchers. | solo_roster_fleet.json, orchestrator, manager, live_routes, fleet_health, dashboard, monitors, .env.example, STATUS.md | 2016eb70 | 2026-06-23 ET |

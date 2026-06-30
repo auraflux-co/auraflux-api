@@ -9069,6 +9069,19 @@ const server = app.listen(PORT, async () => {
     console.warn('[server] REDIS_URL not set — BullMQ worker disabled, using in-process fallback');
   }
 
+  // CPD-1186: rescue jobs stuck in 'running' after deploy/restart (removed in #637)
+  if (process.env.DATABASE_URL) {
+    try {
+      const { rescueInterruptedJobs, promoteAssembledJobs } = require('./lib/startup');
+      rescueInterruptedJobs();
+      setTimeout(() => promoteAssembledJobs(), 5000);
+      setInterval(rescueInterruptedJobs, 5 * 60 * 1000);
+      setInterval(promoteAssembledJobs, 5 * 60 * 1000);
+    } catch (e) {
+      console.warn('[server] Startup job rescue failed:', e.message);
+    }
+  }
+
   // CPD-924: deferred publish cron — fires Gate 5 for 'publish_scheduled' cards when due
   try {
     const { startSchedulingCron } = require('./lib/services/scheduling_cron');
