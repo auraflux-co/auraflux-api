@@ -2015,9 +2015,9 @@ app.get('/health', async (req, res) => {
   res.status(statusCode).json(health);
 });
 
-// GET /jobs — return all persisted job cards for dashboard recovery after server restart
-// Dashboard calls this on load to restore the job queue (script + HeyGen video IDs)
-app.get('/jobs', (req, res) => {
+// GET /job-cards — C0 dashboard recovery (legacy in-memory cards)
+// C1+ My Jobs uses GET /jobs in jobs_c1.js — do not register both on the same path.
+app.get('/job-cards', (req, res) => {
   // Only return in-flight jobs. Completed (assembled, published) and
   // failed/dismissed jobs are excluded — they do not need to restore on page load.
   const IN_FLIGHT_STAGES = new Set(['script_ready', 'all_sent', 'awaiting_manual_segments', 'assembling']);

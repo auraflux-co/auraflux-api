@@ -301,6 +301,13 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
           <div class="card-body">
             <!-- CPD-963: default aljazeera — AP/Reuters wire video is Content ID'd (AP UK claim 2026-06-12) -->
             <input type="hidden" id="news-source" value="aljazeera">
+            <input type="hidden" id="news-desk-mode" value="wire">
+            <div class="field"><label>DESK</label>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button type="button" id="btn-news-mode-wire" class="btn btn-gold btn-sm" style="font-size:10px;padding:4px 12px;" onclick="setNewsDeskMode('wire')">WIRE NEWS</button>
+                <button type="button" id="btn-news-mode-reddit" class="btn btn-outline btn-sm" style="font-size:10px;padding:4px 12px;" onclick="setNewsDeskMode('reddit')">THE THREAD (Reddit)</button>
+              </div>
+            </div>
             <div class="field"><label>SOURCES</label>
               <div style="font-size:12px;color:rgba(255,255,255,0.6);font-family:monospace;padding:8px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;background:rgba(255,255,255,0.03);">All Sources (AJ · BBC · AP · Reuters)</div>
             </div>
@@ -308,6 +315,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
             <div class="progress-wrap" id="news-progress-wrap" style="display:none"><div class="progress-bar" id="news-progress" style="width:0%"></div></div>
             <!-- inline story picker — populated by previewNewsStories() -->
             <div id="news-inline-picker" style="display:none;margin-bottom:10px;max-height:260px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
+            <div id="reddit-inline-picker" style="display:none;margin-bottom:10px;max-height:260px;overflow-y:auto;border:1px solid rgba(199,175,79,0.15);border-radius:6px;padding:8px;background:#060a12;"></div>
             <!-- short-form clip gallery — shown when SHORT is clicked, lets user pick one story -->
             <div id="news-short-clip-gallery" style="display:none;margin-bottom:10px;border:1px solid rgba(28,232,255,0.25);border-radius:6px;padding:10px;background:#060a12;">
               <div style="font-size:10px;color:rgba(28,232,255,0.7);font-family:monospace;letter-spacing:1px;margin-bottom:8px;">PICK ONE STORY FOR SHORT FORM — CLICK TO SELECT</div>
@@ -2334,13 +2342,13 @@ function clearAllJobs() {
 }
 
 // ── RESTORE JOBS FROM SERVER ──────────────────────────────────────
-// Fetches GET /jobs from server.js and merges any jobs not already in
+// Fetches GET /job-cards from server.js and merges any jobs not already in
 // localStorage. Called on init (silent) and via ↩ RESTORE JOBS button.
 // Server persists job cards when Gate 1 passes + HeyGen is submitted.
 // Reconstructs segments in 'rendering' status so REFRESH IDs button appears.
 function restoreJobsFromServer(showAlert) {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', CFG.ffmpegUrl + '/jobs', true);
+  xhr.open('GET', CFG.ffmpegUrl + '/job-cards', true);
   xhr.timeout = 10000;
   xhr.onload = function() {
     try {
@@ -3113,7 +3121,7 @@ function _pollForPublished(jobId) {
   function check() {
     attempts++;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', CFG.ffmpegUrl + '/jobs', true);
+    xhr.open('GET', CFG.ffmpegUrl + '/job-cards', true);
     xhr.timeout = 10000;
     xhr.onload = function() {
       try {
@@ -5867,6 +5875,44 @@ function _selectNbaShortClip(idx) {
 var _newsShortClipPool = [];
 
 function openNewsShortClipPicker(platforms) {
+  if (getNewsDeskMode() === 'reddit') {
+    var gallery = g('news-short-clip-gallery');
+    var list = g('news-short-clip-list');
+    var status = g('news-short-clip-status');
+    if (gallery.style.display !== 'none' && _redditPickerThreads.length > 0) {
+      gallery.style.display = 'none';
+      return;
+    }
+    gallery.style.display = '';
+    list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace;padding:8px;">Fetching Reddit threads...</div>';
+    if (_redditPickerThreads.length > 0) {
+      _renderRedditShortClipList(list, status, platforms);
+      return;
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/reddit/candidates?perSub=2&minScore=500', true);
+    xhr.timeout = 180000;
+    xhr.onload = function() {
+      try {
+        var d = JSON.parse(xhr.responseText || '{}');
+        if (!d.ok) throw new Error(d.error || 'fetch failed');
+        _redditPickerThreads = (d.posts || []).map(function(p) {
+          return {
+            postId: p.id, title: p.title, subreddit: p.subreddit, score: p.score,
+            numComments: p.numComments, selftext: p.selftext, topComments: p.topComments || [],
+            videoUrl: p.videoUrl || p.url, permalink: p.permalink, thumbnailUrl: p.thumbnail
+          };
+        }).filter(function(p) { return !!p.videoUrl; });
+        _renderRedditShortClipList(list, status, platforms);
+      } catch (e) {
+        list.innerHTML = '<div style="color:#e55;padding:8px;">' + e.message + '</div>';
+      }
+    };
+    xhr.onerror = xhr.ontimeout = function() { list.innerHTML = '<div style="color:#e55;padding:8px;">Reddit fetch timeout</div>'; };
+    xhr.send();
+    return;
+  }
+
   var gallery = g('news-short-clip-gallery');
   var list    = g('news-short-clip-list');
   var status  = g('news-short-clip-status');
@@ -5941,6 +5987,32 @@ function _renderNewsShortClipList(clips, list, status, platforms) {
   }).join('');
   status.textContent = _newsShortClipPool.length + ' stories with video — click one to generate short';
   list._platforms = platforms;
+}
+
+function _renderRedditShortClipList(list, status, platforms) {
+  list.innerHTML = _redditPickerThreads.map(function(c, idx) {
+    return '<div onclick="_selectRedditShortClip(' + idx + ')" data-idx="' + idx + '" id="reddit-short-clip-' + idx + '" '
+      + 'style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);">'
+      + '<div style="flex:1;min-width:0;"><div style="font-size:12px;color:#fff;line-height:1.3;">' + (c.title || '').slice(0, 100) + '</div>'
+      + '<div style="font-size:10px;color:#c7af4f;font-family:monospace;">r/' + (c.subreddit || '') + ' · ' + (c.score || 0) + ' · ' + ((c.topComments || []).length) + ' comments</div></div></div>';
+  }).join('');
+  status.textContent = _redditPickerThreads.length + ' threads — click one for THE THREAD short';
+  list._platforms = platforms;
+}
+
+function _selectRedditShortClip(idx) {
+  var c = _redditPickerThreads[idx];
+  if (!c) return;
+  showPlatformModal(function(platforms) {
+    var item = redditItemFromThread(c);
+    g('news-short-clip-status').textContent = 'Selected r/' + c.subreddit + ' — generating...';
+    setGenerateModeActive('news', 'short');
+    CURRENT_TYPE = 'news-short';
+    lockGenerateButton('btn-gen-news-short');
+    CURRENT_META = { source: 'reddit', postId: item.postId };
+    g('script-type-label').textContent = 'NEWS SHORT (THE THREAD) — "' + (item.title || '').slice(0, 55) + '"';
+    callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, platforms);
+  });
 }
 
 function _selectNewsShortClip(idx) {
@@ -6036,6 +6108,17 @@ function generateShort(type, platforms) {
   }
 
   if (type === 'news') {
+    if (getNewsDeskMode() === 'reddit') {
+      var _redditSelected = (_redditPickerThreads || []).filter(function(t) { return t.selected && t.videoUrl; });
+      if (_redditSelected.length > 0) {
+        var picked = _redditSelected[0];
+        var item = redditItemFromThread(picked);
+        CURRENT_META = { source: 'reddit', postId: item.postId };
+        g('script-type-label').textContent = 'NEWS SHORT (THE THREAD) — r/' + item.subreddit + ': "' + (item.title || '').slice(0, 55) + '"';
+        callFullScriptServer('news-short', [item], statusTagIdForType('news-short'), null, null, _shortPlatforms);
+        return;
+      }
+    }
     var _newsSelected = (window._newsPickerStories || []).filter(function(s){ return !!s.selected; });
     if (_newsSelected.length > 0) {
       var pickedStory = _newsSelected[0];
@@ -6758,9 +6841,135 @@ var _origGenerateNBA = null;
   };
 })();
 
+// ── News desk mode: wire vs Reddit (THE THREAD) ───────────────────────────────
+
+function getNewsDeskMode() {
+  return (g('news-desk-mode') && g('news-desk-mode').value) || 'wire';
+}
+
+function setNewsDeskMode(mode) {
+  if (!g('news-desk-mode')) return;
+  g('news-desk-mode').value = mode;
+  var wireBtn = g('btn-news-mode-wire');
+  var redditBtn = g('btn-news-mode-reddit');
+  var previewBtn = g('btn-preview-news');
+  if (wireBtn && redditBtn) {
+    wireBtn.className = mode === 'wire' ? 'btn btn-gold btn-sm' : 'btn btn-outline btn-sm';
+    redditBtn.className = mode === 'reddit' ? 'btn btn-gold btn-sm' : 'btn btn-outline btn-sm';
+    wireBtn.style.fontSize = redditBtn.style.fontSize = '10px';
+    wireBtn.style.padding = redditBtn.style.padding = '4px 12px';
+  }
+  if (previewBtn) previewBtn.textContent = mode === 'reddit' ? 'PICK THREADS' : 'PICK STORIES';
+  var wirePicker = g('news-inline-picker');
+  var redditPicker = g('reddit-inline-picker');
+  if (wirePicker) wirePicker.style.display = 'none';
+  if (redditPicker) redditPicker.style.display = 'none';
+  _newsPickerStories = [];
+  _redditPickerThreads = [];
+}
+
+var _redditPickerThreads = [];
+
+function previewRedditThreads() {
+  var btn = g('btn-preview-news');
+  var picker = g('reddit-inline-picker');
+  if (picker.style.display !== 'none' && _redditPickerThreads.length > 0) {
+    picker.style.display = 'none';
+    btn.textContent = 'PICK THREADS';
+    return;
+  }
+  btn.textContent = 'FETCHING...'; btn.disabled = true;
+  _redditPickerThreads = [];
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/reddit/candidates?perSub=2&minScore=500', true);
+  xhr.timeout = 180000;
+  xhr.onload = function() {
+    btn.disabled = false;
+    try {
+      var d = JSON.parse(xhr.responseText || '{}');
+      if (!d.ok || !(d.posts || []).length) throw new Error(d.error || 'no threads');
+      (d.posts || []).forEach(function(p) {
+        _redditPickerThreads.push({
+          postId: p.id,
+          title: p.title || '',
+          subreddit: p.subreddit || '',
+          score: p.score || 0,
+          numComments: p.numComments || 0,
+          selftext: p.selftext || '',
+          topComments: p.topComments || [],
+          videoUrl: p.videoUrl || p.url || '',
+          link: p.permalink || p.url || '',
+          redditPermalink: p.permalink || '',
+          redditSource: true,
+          source: 'reddit',
+          sourceType: 'reddit',
+          thumbnailUrl: p.thumbnail || '',
+          selected: true
+        });
+      });
+      renderRedditPicker(btn);
+    } catch (e) {
+      btn.textContent = 'PICK THREADS';
+      alert('Reddit fetch failed: ' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    btn.disabled = false;
+    btn.textContent = 'PICK THREADS';
+    alert('Reddit fetch failed — timeout or offline');
+  };
+  xhr.send();
+}
+
+function renderRedditPicker(btn) {
+  btn.textContent = 'HIDE PICKER';
+  var picker = g('reddit-inline-picker');
+  var html = '<div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:monospace;margin-bottom:6px;letter-spacing:1px;">'
+    + 'SELECT THREADS — r/' + (_redditPickerThreads[0] ? _redditPickerThreads[0].subreddit : '?') + '+ · TOP CHECKED USED FOR SHORT/LONG'
+    + '</div>';
+  _redditPickerThreads.forEach(function(t, i) {
+    var hasVideo = !!(t.videoUrl);
+    html += '<label style="display:flex;align-items:flex-start;gap:8px;padding:5px 6px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;">'
+      + '<input type="checkbox" id="redditpick-' + i + '" ' + (t.selected ? 'checked' : '') + ' onchange="_redditPickerThreads[' + i + '].selected=this.checked" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;">'
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:12px;color:#fff;line-height:1.3;">' + (t.title || '').slice(0, 120) + '</div>'
+      + '<div style="font-size:10px;font-family:monospace;margin-top:2px;color:#c7af4f;">r/' + (t.subreddit || '') + ' · ' + (t.score || 0) + ' pts · ' + (t.topComments || []).length + ' comments</div>'
+      + '</div>'
+      + (hasVideo ? '<span style="font-size:9px;color:#2ecc71;">✓ VIDEO</span>' : '<span style="font-size:9px;color:#e55;">NO VIDEO</span>')
+      + '</label>';
+  });
+  picker.innerHTML = html;
+  picker.style.display = '';
+}
+
+function redditItemFromThread(t) {
+  return {
+    postId: t.postId,
+    title: t.title,
+    subreddit: t.subreddit,
+    score: t.score,
+    numComments: t.numComments,
+    selftext: t.selftext,
+    topComments: t.topComments,
+    videoUrl: t.videoUrl,
+    url: t.videoUrl,
+    link: t.link,
+    redditPermalink: t.redditPermalink,
+    redditSource: true,
+    source: 'reddit',
+    sourceType: 'reddit',
+    thumbnailUrl: t.thumbnailUrl || '',
+    desc: (t.selftext || '') + '\n\n' + (t.topComments || []).slice(0, 5).map(function(c) { return c.body; }).join(' ')
+  };
+}
+
 // ── News inline story picker ──────────────────────────────────────────────────
 
 function previewNewsStories() {
+  if (getNewsDeskMode() === 'reddit') {
+    previewRedditThreads();
+    return;
+  }
   var btn = g('btn-preview-news');
   var picker = g('news-inline-picker');
   if (picker.style.display !== 'none' && _newsPickerStories.length > 0) {
