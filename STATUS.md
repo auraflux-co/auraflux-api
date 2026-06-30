@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-06-30 (CPD-1189c) — Avatar VOD full path: prepareScriptForGate1 (intro/outro/entity), sendback→held pass, handoff spine fix, heygen/send-approved starts poller, Gate 0 URL sync, CINNA header false-positive fix. E2E: scripts/avatar_vod_e2e.js (Gate 1→HeyGen sim→assembly). **Assembly stitch unchanged** — CPD-1144 0.22s crossfade/scene-reset still used for all twitch long-form including Avatar VOD reassemble.
 **Last Updated:** 2026-06-30 (CPD-1189b) — Gate 1 handoff review fix: normalize script before handoff header check (portal1 passed but handoff failed on inline raw). Truncated Gemini QA JSON salvage. Deployed C0.
 **Last Updated:** 2026-06-30 (CPD-1189) — Avatar VOD Gate 1 structure fix: `normalizeScriptForGate1` splits inline Gemini `=== HEADER ===` lines and aligns names to jobSpec contract (fixes PORTAL1_STRUCTURE_MISMATCH found 0/22). Dashboard gate1_failed sync + queue pin fix. Tests: `scripts/avatar_vod_gate1_smoke.sh`. Deployed C0.
 **Last Updated:** 2026-06-30 (CPD-1183) — Calendar platform publish times (YouTube API + Upload-Post for TikTok/IG); Gate 5 fix missing resolveSyntheticMediaFlags import (TikTok/IG failed since 2026-06-27). Deployed C0.

@@ -4045,8 +4045,16 @@ app.post('/job/:id/heygen/send-approved', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'HEYGEN_API_KEY not set' });
   }
 
-  const script = String(req.body?.script || card.script?.raw || '').trim();
+  let script = String(req.body?.script || card.script?.raw || '').trim();
   if (!script) return res.status(400).json({ ok: false, error: 'No script to send' });
+
+  const expectedHeaders = (card?.designSpec?.sceneStructure?.sceneHeaders || [])
+    .map((h) => String(h || '').trim())
+    .filter(Boolean);
+  if (expectedHeaders.length) {
+    const { normalizeScriptForGate1 } = require('./lib/scaffold');
+    script = normalizeScriptForGate1(script, expectedHeaders);
+  }
 
   card = {
     ...card,
@@ -4122,6 +4130,10 @@ app.post('/job/:id/heygen/send-approved', async (req, res) => {
         updated.stage = 'awaiting_manual_segments';
         updated.manualSegments = prep.manualSegments;
         saveJobCard(jobId, updated);
+      } else {
+        startHeyGenPoller(jobId, persistedJobs[jobId] || updated).catch((e) => {
+          console.error(`[heygen/send-approved:${jobId}] poller error: ${e.message}`);
+        });
       }
     } catch (err) {
       console.error(`[heygen/send-approved:${jobId}]`, err.message);
