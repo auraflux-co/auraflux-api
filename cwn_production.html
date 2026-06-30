@@ -1699,6 +1699,7 @@ input[type="url"], input[type="password"], select, textarea {
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" class="btn btn-outline btn-sm" id="intel-refresh-btn" onclick="loadIntelligencePage(true)">↻ Refresh</button>
           <button type="button" class="btn btn-gold btn-sm" id="intel-sync-btn" onclick="syncIntelligenceMemory()">⇄ Sync analytics</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="backfillIntelligenceMemory()">⬆ Backfill jobs</button>
           <button type="button" class="btn btn-outline btn-sm" onclick="nav('stats')">Channel Stats</button>
           <a href="/connect/youtube" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;line-height:1.6;">YouTube OAuth</a>
         </div>
@@ -2158,6 +2159,7 @@ input[type="url"], input[type="password"], select, textarea {
           </div>
           <div id="pub-status" style="margin-top:8px;font-size:15px;color:rgba(255,255,255,0.4);font-family:monospace;"></div>
           <div id="pub-seo-audit" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(52,152,219,0.06);border:1px solid rgba(52,152,219,0.2);border-radius:4px;font-size:14px;font-family:monospace;color:rgba(255,255,255,0.55);white-space:pre-wrap;"></div>
+          <div id="pub-intel-hints" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(199,175,79,0.06);border:1px solid rgba(199,175,79,0.2);border-radius:4px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.6);"></div>
         </div>
       </div>
 
@@ -4480,7 +4482,8 @@ function syncIntelligenceMemory() {
       if (!d.ok) throw new Error(d.error || 'sync failed');
       var ok = (d.results || []).filter(function(x) { return x.ok; }).length;
       var fail = (d.results || []).filter(function(x) { return !x.ok; }).length;
-      if (statusEl) statusEl.textContent = 'Sync complete — ' + ok + ' updated' + (fail ? ', ' + fail + ' skipped/failed' : '');
+      var recon = d.reconcile && d.reconcile.updated ? d.reconcile.updated : 0;
+      if (statusEl) statusEl.textContent = 'Sync complete — ' + ok + ' updated' + (fail ? ', ' + fail + ' skipped/failed' : '') + (recon ? ', ' + recon + ' outcomes reconciled' : '');
       loadIntelligencePage(true);
     })
     .catch(function(e) {
@@ -4488,6 +4491,61 @@ function syncIntelligenceMemory() {
     })
     .finally(function() {
       if (btn) { btn.disabled = false; btn.textContent = '⇄ Sync analytics'; }
+    });
+}
+
+function backfillIntelligenceMemory() {
+  var base = intelApiBase();
+  var statusEl = g('intel-status');
+  if (statusEl) statusEl.textContent = 'Backfilling published jobs into Content Memory…';
+  fetch(base + '/intelligence/backfill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 150 }) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'backfill failed');
+      var ok = (d.results || []).filter(function(x) { return x.ok; }).length;
+      if (statusEl) statusEl.textContent = 'Backfill complete — ' + ok + ' videos seeded from published jobs';
+      loadIntelligencePage(true);
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Backfill failed: ' + (e.message || 'error');
+    });
+}
+
+function loadPublishIntelHints(job) {
+  var el = g('pub-intel-hints');
+  if (!el) return;
+  if (!job) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  var base = resolveApiBase();
+  var ct = (job.type || job.contentType || 'twitch').replace(/-short$/, '');
+  var streamer = '';
+  if (Array.isArray(job.streamers) && job.streamers.length) streamer = job.streamers[0];
+  else if (job.streamer) streamer = job.streamer;
+  var qs = '?contentType=' + encodeURIComponent(ct) + '&formFactor=' + (String(job.type || '').includes('short') ? 'short' : 'long');
+  if (streamer) qs += '&streamer=' + encodeURIComponent(streamer);
+  el.style.display = '';
+  el.innerHTML = 'Loading Content Memory hints…';
+  fetch(base + '/intelligence/publish-context' + qs)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'failed');
+      var ctx = d.intelligenceContext || {};
+      if (!ctx.sampleSize) {
+        el.innerHTML = '<strong>Intelligence:</strong> No historical matches yet — publish + sync analytics to unlock winning title/tag patterns. <button type="button" class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="nav(\'intelligence\')">Open Intelligence</button>';
+        return;
+      }
+      var titles = (ctx.winningTitles || []).slice(0, 3).map(function(t) { return escHtml(t); }).join(' · ');
+      var tags = (ctx.topTags || []).slice(0, 8).map(function(t) { return '<span class="tag tag-pending" style="margin:2px;">' + escHtml(t) + '</span>'; }).join('');
+      el.innerHTML = '<strong>Intelligence</strong> (' + ctx.sampleSize + ' similar videos, avg ' + fmtNum(ctx.avgViews) + ' views)<br>' +
+        (titles ? '<span style="color:rgba(255,255,255,0.45);">Winning titles:</span> ' + titles + '<br>' : '') +
+        (tags ? '<div style="margin-top:6px;">' + tags + '</div>' : '') +
+        '<button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="nav(\'intelligence\')">Full Intelligence →</button>';
+    })
+    .catch(function(e) {
+      el.innerHTML = '<strong>Intelligence:</strong> ' + escHtml(e.message || 'unavailable');
     });
 }
 
@@ -19583,6 +19641,7 @@ function pubJobSelected() {
     var hlWrap0 = g('pub-headline-wrap');
     if (hlWrap0) hlWrap0.style.display = 'none';
     loadPubChecklist('');
+    loadPublishIntelHints(null);
     return;
   }
   var job = JOBS.find(function(j){ return j.id === jobId; });
@@ -19634,6 +19693,7 @@ function pubJobSelected() {
   var hlWrap = g('pub-headline-wrap');
   hlWrap.style.display = (!isNba && job.type !== 'nba') ? '' : 'none';
   loadPubChecklist(jobId);
+  loadPublishIntelHints(job);
 
   var auditEl = g('pub-seo-audit');
   if (auditEl) {

@@ -73,7 +73,7 @@ describe('intelligence service (CPD-1190)', () => {
       streamer: 'ludwig',
       formFactor: 'short',
       title: 'Ludwig reacts hard',
-      metadata: { title: 'Ludwig reacts hard', tags: ['ludwig', 'react'] },
+      metadata: { title: 'Ludwig reacts hard', tags: ['ludwig', 'react'], thumbnailTextIdeas: ['SHOCKED'] },
       performance: { views: 12000 },
     });
     const ctx = intelligence.recommendContext({
@@ -85,5 +85,7 @@ describe('intelligence service (CPD-1190)', () => {
     assert.ok(ctx.sampleSize >= 1);
     assert.ok(ctx.winningTitles.includes('Ludwig reacts hard'));
     assert.ok(ctx.topTags.includes('ludwig'));
+    assert.ok(ctx.promptBlock);
+    assert.ok(ctx.topThumbnailIdeas.includes('SHOCKED'));
   });
 });
