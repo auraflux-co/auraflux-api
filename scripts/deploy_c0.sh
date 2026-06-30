@@ -58,3 +58,12 @@ else
 fi
 
 echo "✅ Deploy complete — dashboard/API on :3000; streams on sidecar :${SIDECAR_PORT}"
+
+# Ensure dashboard cache warmer is registered (pm2 cron — every 20 min by default)
+if pm2 describe dashboard-cache-warm >/dev/null 2>&1; then
+  pm2 restart dashboard-cache-warm --update-env >/dev/null 2>&1 || true
+else
+  pm2 start ecosystem.config.js --only dashboard-cache-warm --update-env >/dev/null 2>&1 || true
+fi
+pm2 save >/dev/null 2>&1 || true
+bash scripts/warm_dashboard_cache.sh --bg

@@ -26,11 +26,89 @@
 
   async function calFetch(path, opts) {
     const r = await fetch(CAL_BASE + path, opts);
+    if (!r.ok) {
+      let detail = '';
+      try {
+        const err = await r.json();
+        detail = err.error || err.message || '';
+      } catch (_) {
+        try { detail = await r.text(); } catch (_e) { /* ignore */ }
+      }
+      throw new Error(detail || `HTTP ${r.status}`);
+    }
     return r.json();
   }
 
   const FORMAT_ICON = { short: '▮', longform: '▬', live: '●' };
   const PILLAR_ICON = { twitch: '🎮', news: '📰', sports: '🏀', streaming: '📺' };
+
+  function monthCacheKey(year, month) {
+    return `${year}-${String(month).padStart(2, '0')}`;
+  }
+
+  function loadMonthCache(year, month) {
+    try {
+      const all = JSON.parse(localStorage.getItem(CAL_MONTH_CACHE_KEY) || '{}');
+      return all[monthCacheKey(year, month)] || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function saveMonthCache(year, month, plan) {
+    try {
+      const all = JSON.parse(localStorage.getItem(CAL_MONTH_CACHE_KEY) || '{}');
+      all[monthCacheKey(year, month)] = { plan, savedAt: new Date().toISOString() };
+      localStorage.setItem(CAL_MONTH_CACHE_KEY, JSON.stringify(all));
+    } catch (_) { /* ignore */ }
+  }
+
+  function bustMonthCache(year, month) {
+    try {
+      const all = JSON.parse(localStorage.getItem(CAL_MONTH_CACHE_KEY) || '{}');
+      delete all[monthCacheKey(year, month)];
+      localStorage.setItem(CAL_MONTH_CACHE_KEY, JSON.stringify(all));
+    } catch (_) { /* ignore */ }
+  }
+
+  function loadViewPrefs() {
+    try {
+      return JSON.parse(localStorage.getItem(CAL_VIEW_PREFS_KEY) || 'null');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function saveViewPrefs() {
+    try {
+      localStorage.setItem(CAL_VIEW_PREFS_KEY, JSON.stringify({
+        year: _viewYear,
+        month: _viewMonth,
+        selectedDate: _selectedDate,
+      }));
+    } catch (_) { /* ignore */ }
+  }
+
+  function formatCacheAge(iso) {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function renderCalendarCacheBanner(savedAt, fromCache) {
+    const el = g('cal-cache-banner');
+    if (!el) return;
+    if (!fromCache) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = 'block';
+    const when = formatCacheAge(savedAt);
+    el.innerHTML = `Showing saved calendar from ${when || 'last session'}. Click <strong>REFRESH</strong> to sync YouTube + Upload-Post.`;
+  }
 
   function planLine(planned) {
     const parts = [];
@@ -138,7 +216,9 @@
     const itemsHtml = (day.actual.items || []).length
       ? day.actual.items.map((it) => {
         const icon = PILLAR_ICON[it.pillar] || FORMAT_ICON[it.format] || '·';
-        const st = it.status === 'published' ? '✓ published' : (it.status === 'scheduled' ? '⏱ scheduled' : it.status);
+        const st = it.status === 'published' ? '✓ published'
+          : (it.status === 'scheduled' ? '⏱ scheduled'
+            : (it.status === 'live' ? '● live now' : it.status));
         const timeLabel = it.timeEt ? `${it.timeEt} ET` : '';
         const src = calendarSourceLabel(it);
         const jobLink = it.jobId
@@ -195,7 +275,10 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dateKey, short, longform, live, note }),
     });
-    if (d.ok) calendarRefresh();
+    if (d.ok) {
+      bustMonthCache(_viewYear, _viewMonth);
+      calendarRefresh(false);
+    }
     else alert(d.error || 'Save failed');
   };
 
@@ -211,7 +294,10 @@
         live: Number(g('cal-def-live')?.value) || 0,
       }),
     });
-    if (d.ok) calendarRefresh();
+    if (d.ok) {
+      bustMonthCache(_viewYear, _viewMonth);
+      calendarRefresh(false);
+    }
     else alert(d.error || 'Save failed');
   };
 
@@ -219,14 +305,14 @@
     _viewMonth -= 1;
     if (_viewMonth < 1) { _viewMonth = 12; _viewYear -= 1; }
     _selectedDate = null;
-    calendarRefresh();
+    calendarRefresh(false);
   };
 
   window.calNextMonth = function () {
     _viewMonth += 1;
     if (_viewMonth > 12) { _viewMonth = 1; _viewYear += 1; }
     _selectedDate = null;
-    calendarRefresh();
+    calendarRefresh(false);
   };
 
   window.calThisMonth = function () {
@@ -234,7 +320,7 @@
     _viewYear = now.getFullYear();
     _viewMonth = now.getMonth() + 1;
     _selectedDate = null;
-    calendarRefresh();
+    calendarRefresh(false);
   };
 
   async function fetchCalendarRange(start, end) {
@@ -297,7 +383,8 @@
     if (d.ok) {
       alert(d.message || 'Scheduled');
       calCloseSchedule();
-      calendarRefresh();
+      bustMonthCache(_viewYear, _viewMonth);
+      calendarRefresh(false);
     } else {
       alert(d.error || 'Schedule failed');
     }
@@ -340,36 +427,106 @@
       sessionStorage.setItem('cwn_calendar_owner', '1');
       _ownerUnlocked = true;
       alert('Owner mode on.');
-      calendarRefresh();
+      calendarRefresh(false);
     } else {
       alert(verify.error || 'Wrong PIN');
     }
   };
 
-  window.calendarRefresh = async function () {
-    try {
-      _calMonth = await calFetch(`/calendar/month?year=${_viewYear}&month=${_viewMonth}&refreshYoutube=1`);
-    } catch (_) {
-      _calMonth = null;
+  window.calendarRefresh = async function (forceRefresh) {
+    saveViewPrefs();
+    const refreshBtn = g('cal-refresh-btn');
+
+    if (!forceRefresh) {
+      const cached = loadMonthCache(_viewYear, _viewMonth);
+      if (cached?.plan?.ok) {
+        _calMonth = cached.plan;
+        await renderNorthStarCadence(false);
+        renderYoutubeStudioBanner(_calMonth);
+        renderMonth(_calMonth);
+        renderCalendarCacheBanner(cached.savedAt, true);
+        if (_selectedDate) {
+          const day = _calMonth.days.find((d) => d.date === _selectedDate);
+          renderDayPanel(day);
+        }
+        return;
+      }
+    } else {
+      bustMonthCache(_viewYear, _viewMonth);
+      try { localStorage.removeItem(CAL_NORTHSTAR_CACHE_KEY); } catch (_) { /* ignore */ }
     }
-    await renderNorthStarCadence();
-    if (!_calMonth?.ok) {
-      const grid = g('calendar-grid');
-      if (grid) grid.innerHTML = '<div style="padding:20px;color:#e74c3c;">Could not load calendar — is server running?</div>';
+
+    const grid = g('calendar-grid');
+    if (refreshBtn) {
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = 'REFRESHING…';
+    }
+    if (forceRefresh && grid) grid.style.opacity = '0.55';
+
+    let fetchError = null;
+    try {
+      const refreshParam = forceRefresh ? '&refreshYoutube=1&refresh=1' : '';
+      _calMonth = await calFetch(`/calendar/month?year=${_viewYear}&month=${_viewMonth}${refreshParam}`);
+    } catch (e) {
+      fetchError = e;
+      _calMonth = null;
+    } finally {
+      if (refreshBtn) {
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = 'REFRESH';
+      }
+      if (grid) grid.style.opacity = '';
+    }
+
+    if (fetchError) {
+      renderCalendarCacheBanner(null, false);
+      const banner = g('cal-cache-banner');
+      if (banner) {
+        banner.style.display = 'block';
+        banner.innerHTML = `<span style="color:#e74c3c;">Refresh failed: ${esc(fetchError.message)}</span>`;
+      }
+      if (grid) {
+        grid.innerHTML = '<div style="padding:20px;color:#e74c3c;">Could not refresh calendar — is server running?</div>';
+      }
       return;
     }
+
+    await renderNorthStarCadence(!!forceRefresh);
+    renderCalendarCacheBanner(null, false);
+    if (!_calMonth?.ok) {
+      const errGrid = g('calendar-grid');
+      if (errGrid) errGrid.innerHTML = '<div style="padding:20px;color:#e74c3c;">Could not load calendar — is server running?</div>';
+      return;
+    }
+    saveMonthCache(_viewYear, _viewMonth, _calMonth);
     renderYoutubeStudioBanner(_calMonth);
     renderMonth(_calMonth);
     if (_selectedDate) {
       const day = _calMonth.days.find((d) => d.date === _selectedDate);
       renderDayPanel(day);
     }
+    const banner = g('cal-cache-banner');
+    if (banner && forceRefresh) {
+      banner.style.display = 'block';
+      banner.innerHTML = `<span style="color:#2ecc71;">Synced ${formatCacheAge(new Date().toISOString())} — YouTube + Upload-Post</span>`;
+      setTimeout(() => { if (banner) banner.style.display = 'none'; }, 6000);
+    }
   };
 
-  async function renderNorthStarCadence() {
+  async function renderNorthStarCadence(forceRefresh) {
     const el = g('cal-northstar');
     const card = g('cal-northstar-card');
     if (!el) return;
+    if (!forceRefresh) {
+      try {
+        const cached = JSON.parse(localStorage.getItem(CAL_NORTHSTAR_CACHE_KEY) || 'null');
+        if (cached?.html) {
+          el.innerHTML = cached.html;
+          if (card) card.style.borderColor = cached.borderColor || '';
+          return;
+        }
+      } catch (_) { /* fetch below */ }
+    }
     try {
       const stats = await calFetch('/stats/channel');
       const ns = stats.northStar;
@@ -390,21 +547,37 @@
         <div style="margin-top:6px;font-size:16px;color:rgba(255,255,255,0.4);">$${ns.config?.dailyUsdTarget || 300}/day · ${ns.progress?.pctOfTarget || 0}% progress</div>
         ${alertHtml}
         <div style="margin-top:8px;"><a href="#" onclick="nav('stats');return false;" style="color:#c7af4f;font-size:13px;">→ Channel Stats</a></div>`;
-      if (card) card.style.borderColor = (ns.alerts || []).some((a) => a.level === 'warn') ? 'rgba(243,156,18,0.45)' : '';
+      const borderColor = (ns.alerts || []).some((a) => a.level === 'warn') ? 'rgba(243,156,18,0.45)' : '';
+      if (card) card.style.borderColor = borderColor;
+      try {
+        localStorage.setItem(CAL_NORTHSTAR_CACHE_KEY, JSON.stringify({ html: el.innerHTML, borderColor }));
+      } catch (_) { /* ignore */ }
+      return;
     } catch (_) {
       el.innerHTML = '<b style="color:#c7af4f;">North star</b><br>3–5 Shorts · 1–2 VOD · 0–2 Live/day';
     }
   }
 
   window.calendarPageInit = function () {
-    const now = new Date();
-    _viewYear = now.getFullYear();
-    _viewMonth = now.getMonth() + 1;
+    const prefs = loadViewPrefs();
+    if (prefs?.year && prefs?.month) {
+      _viewYear = prefs.year;
+      _viewMonth = prefs.month;
+      _selectedDate = prefs.selectedDate || null;
+    } else {
+      const now = new Date();
+      _viewYear = now.getFullYear();
+      _viewMonth = now.getMonth() + 1;
+      _selectedDate = null;
+    }
     initCalSidebarLayout();
-    calendarRefresh();
+    calendarRefresh(false);
   };
 
   const CAL_SIDEBAR_KEY = 'cwn_cal_sidebar';
+  const CAL_MONTH_CACHE_KEY = 'cwn_cal_month_cache_v1';
+  const CAL_VIEW_PREFS_KEY = 'cwn_cal_view_prefs';
+  const CAL_NORTHSTAR_CACHE_KEY = 'cwn_cal_northstar_cache_v1';
   const CAL_SIDEBAR_DEFAULT = 220;
   const CAL_SIDEBAR_MIN = 160;
   const CAL_SIDEBAR_MAX = 380;

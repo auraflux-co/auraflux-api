@@ -947,20 +947,26 @@
   };
 
   window.broadcastRefreshAll = async function () {
-    await Promise.all([
-      broadcastRefreshOps(),
-      broadcastRefreshProgram(),
-      broadcastRefreshScheduler(),
-      broadcastRefreshAllowlist(),
-      broadcastRefreshFiles(),
-    ]);
-    await broadcastRefreshDiscovery();
-    if (g('page-broadcast')?.classList.contains('active')) {
-      await broadcastRefreshAnalytics();
+    const btn = document.querySelector('#page-broadcast button[onclick="broadcastRefreshAll()"]');
+    if (btn) { btn.disabled = true; btn.textContent = '↻ REFRESHING…'; }
+    try {
+      await Promise.all([
+        broadcastRefreshOps(),
+        broadcastRefreshProgram(),
+        broadcastRefreshScheduler(),
+        broadcastRefreshAllowlist(),
+        broadcastRefreshFiles(),
+      ]);
+      await broadcastRefreshDiscovery();
+      if (g('page-broadcast')?.classList.contains('active')) {
+        await broadcastRefreshAnalytics();
+      }
+      renderVerticalLink();
+      renderWaiterLog();
+      renderEnvPanel();
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '↻ REFRESH ALL'; }
     }
-    renderVerticalLink();
-    renderWaiterLog();
-    renderEnvPanel();
   };
 
   function renderVerticalLink() {
@@ -1070,6 +1076,8 @@
   var _liveShowPackCache = null;
 
   function liveShowPackRefresh() {
+    var btn = document.querySelector('#bc-live-show-pack button[onclick="liveShowPackRefresh()"]');
+    if (btn) { btn.disabled = true; btn.textContent = '↻ REFRESHING…'; }
     var base = (typeof LG_BASE !== 'undefined' && LG_BASE) || (typeof CFG !== 'undefined' && CFG.ffmpegUrl) || 'http://localhost:3000';
     fetch(base + '/live-show/rundown')
       .then(function (r) { return r.json(); })
@@ -1093,6 +1101,9 @@
       .catch(function (e) {
         var el = g('lsp-summary');
         if (el) el.textContent = 'Pack load failed: ' + e.message;
+      })
+      .finally(function () {
+        if (btn) { btn.disabled = false; btn.textContent = '↻ REFRESH'; }
       });
   }
 

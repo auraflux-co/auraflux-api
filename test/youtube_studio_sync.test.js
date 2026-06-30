@@ -62,4 +62,44 @@ describe('youtube_studio_sync', () => {
     const dk = dateKeyFromIso('2026-07-01T03:30:00.000Z');
     assert.match(dk, /^\d{4}-\d{2}-\d{2}$/);
   });
+
+  it('videoEffectivePublishAt prefers future Studio schedule over upload receipt time', () => {
+    const { videoEffectivePublishAt, calendarStatusFromVideo } = require('../lib/calendar/youtube_studio_sync');
+    const video = {
+      id: 'qABi0SM3AnI',
+      status: { publishAt: '2099-06-30T18:00:00.000Z', privacyStatus: 'private' },
+      snippet: { publishedAt: '2026-06-30T00:33:50.000Z', title: 'Scheduled short' },
+    };
+    assert.equal(videoEffectivePublishAt(video), '2099-06-30T18:00:00.000Z');
+    assert.equal(calendarStatusFromVideo(video, videoEffectivePublishAt(video)), 'scheduled');
+  });
+
+  it('excludes active grid watch party from content calendar', () => {
+    const { videoToCalendarItem, isOperationalGridStream } = require('../lib/calendar/youtube_studio_sync');
+    const gridLive = {
+      id: '8B7KFJDYzjs',
+      snippet: {
+        title: '06.17.26: YouTube ClipzWorld Watch Party: #cinna',
+        publishedAt: '2026-06-30T15:21:03Z',
+        liveBroadcastContent: 'upcoming',
+      },
+      contentDetails: { duration: 'P0D' },
+      status: { privacyStatus: 'public' },
+      liveStreamingDetails: { activeLiveChatId: 'abc123' },
+    };
+    assert.equal(isOperationalGridStream(gridLive), true);
+    assert.equal(videoToCalendarItem(gridLive, '2026-06-01', '2026-06-30'), null);
+  });
+
+  it('classifies active live as live format, not longform', () => {
+    const { inferContentKind, calendarStatusFromVideo } = require('../lib/calendar/youtube_studio_sync');
+    const live = {
+      snippet: { liveBroadcastContent: 'live', title: 'Tonight stream' },
+      contentDetails: { duration: 'P0D' },
+      liveStreamingDetails: { activeLiveChatId: 'x', actualStartTime: '2026-06-30T20:00:00Z' },
+      status: { privacyStatus: 'public' },
+    };
+    assert.equal(inferContentKind(live.contentDetails, live.snippet, live.liveStreamingDetails), 'live');
+    assert.equal(calendarStatusFromVideo(live, '2026-06-30T20:00:00Z'), 'live');
+  });
 });

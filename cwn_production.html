@@ -1169,6 +1169,11 @@ input[type="url"], input[type="password"], select, textarea {
     <div class="page" id="page-broadcast">
       <div class="sec-title">BROADCAST CONTROL <span class="badge">LIVE GRID + CLIPZWORLD TV</span></div>
 
+      <div class="btn-row" style="margin-bottom:12px;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="broadcastRefreshAll()">↻ REFRESH ALL</button>
+        <span style="font-size:14px;color:rgba(255,255,255,0.4);align-self:center;">Ops bar · analytics · scheduler auto-poll every 15s when this tab is open</span>
+      </div>
+
       <div id="bc-cal-banner" class="bc-cal-banner" style="display:none;"></div>
       <div id="bc-live-show-pack" class="card" style="margin-bottom:16px;">
         <div class="card-header">
@@ -1492,7 +1497,7 @@ input[type="url"], input[type="password"], select, textarea {
           <strong>Long-form pipeline → short:</strong> Any published show that ran through HeyGen scaffolding already has <strong>scenes + timestamps</strong> on the job card (post-assembly rundown). Register → pick scenes (~30s) → CLIPS COMP. Same path for Talk Soup and future shows.
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-          <button class="btn btn-outline btn-sm" onclick="postLiveLoadPublishedJobs()">↻ Refresh episodes</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="postLiveLoadPublishedJobs()">↻ Refresh episodes</button>
         </div>
         <div class="sec-title">PUBLISHED LONG-FORM SHOWS <span class="badge" id="postlive-published-count">0</span></div>
         <div class="stats-table-wrap" style="margin-bottom:18px;">
@@ -1507,7 +1512,7 @@ input[type="url"], input[type="password"], select, textarea {
 
       <div id="postlive-panel-live" class="repurpose-tab-panel">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-          <button class="btn btn-outline btn-sm" onclick="postLiveLoadVods(true)">↻ Refresh lives</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="postLiveLoadVods(true)">↻ Refresh lives</button>
           <button class="btn btn-outline btn-sm" onclick="postLiveSyncSessions()">⇄ Sync to sessions</button>
           <a class="btn btn-outline btn-sm" href="/post-live/claims/template.csv" download style="text-decoration:none;line-height:1.6;">↓ Claims CSV template</a>
         </div>
@@ -1590,7 +1595,7 @@ input[type="url"], input[type="password"], select, textarea {
           <div id="stats-subtitle" style="font-size:15px;color:rgba(255,255,255,0.35);margin-top:4px;">Videos · Shorts · Lives — @clipzworldnews</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-outline btn-sm" onclick="loadChannelStats(true)">↻ Refresh</button>
+          <button type="button" class="btn btn-outline btn-sm" id="stats-refresh-btn" onclick="loadChannelStats(true)">↻ Refresh</button>
           <button class="btn btn-outline btn-sm" onclick="exportChannelStatsCsv()">↓ Export CSV</button>
           <a href="/connect/youtube" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;line-height:1.6;">YouTube OAuth</a>
         </div>
@@ -1941,7 +1946,7 @@ input[type="url"], input[type="password"], select, textarea {
       <div class="sec-title">JOB QUEUE <span class="badge" id="queue-count">0 JOBS</span></div>
       <div class="btn-row" style="margin-bottom:12px">
         <button class="btn btn-gold btn-sm" onclick="openFindJobModal()" style="font-weight:700;">+ ADD JOB FROM SERVER</button>
-        <button class="btn btn-outline btn-sm" onclick="refreshQueue()">REFRESH STATUS</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="refreshQueue()">REFRESH STATUS</button>
         <button class="btn btn-red btn-sm" onclick="clearDone()">CLEAR COMPLETED</button>
         <button class="btn btn-outline btn-sm" onclick="clearAllJobs()" title="Remove all cards from this browser queue — does not delete videos on server">CLEAR QUEUE VIEW</button>
         <button class="btn btn-outline btn-sm" onclick="toggleErrorLog()">SHOW ERROR LOG</button>
@@ -1975,10 +1980,11 @@ input[type="url"], input[type="password"], select, textarea {
     <div class="page" id="page-calendar">
       <div class="sec-title">CONTENT CALENDAR <span class="badge">MONTHLY PLAN</span></div>
       <div class="btn-row" style="margin-bottom:12px;">
-        <button class="btn btn-outline btn-sm" onclick="calendarRefresh()">REFRESH</button>
+        <button type="button" class="btn btn-outline btn-sm" id="cal-refresh-btn" onclick="calendarRefresh(true)">REFRESH</button>
         <button class="btn btn-gold btn-sm" onclick="calUnlockOwner()">OWNER UNLOCK</button>
         <span style="font-size:14px;color:rgba(255,255,255,0.4);align-self:center;">Plan the month · track jobs + YouTube · plan vs published</span>
       </div>
+      <div id="cal-cache-banner" style="display:none;font-size:14px;color:rgba(255,255,255,0.5);margin:-4px 0 8px;padding:8px 12px;border:1px solid rgba(199,175,79,0.25);border-radius:6px;background:rgba(199,175,79,0.06);"></div>
       <div id="cal-yt-studio-banner" style="display:none;font-size:14px;color:rgba(255,255,255,0.5);margin:-4px 0 12px;padding:8px 12px;border:1px solid rgba(255,0,0,0.25);border-radius:6px;background:rgba(255,0,0,0.06);"></div>
       <div class="cal-month-layout" id="cal-month-layout">
         <div class="cal-main-col">
@@ -3207,7 +3213,7 @@ function nav(page) {
   document.querySelectorAll('.sidebar-btn').forEach(function(b){
     if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'"+page+"'") > -1) b.classList.add('active');
   });
-  if (page === 'calendar') { if (typeof calendarPageInit === 'function') calendarPageInit(); else buildCalendar(); }
+  if (page === 'calendar' && typeof calendarPageInit === 'function') calendarPageInit();
   if (page === 'queue') refreshQueue();
   if (page === 'broadcast' && typeof broadcastPageInit === 'function') broadcastPageInit();
   if (page === 'publish') pubPopulateJobDropdown();
@@ -4004,6 +4010,7 @@ function switchTab(name) {
 window._channelStatsReport = null;
 var NORTHSTAR_RANGE_KEY = 'cwn_northstar_range';
 var CALENDAR_STATS_FILTER_KEY = 'cwn_calendar_stats_filter';
+var CHANNEL_STATS_CACHE_KEY = 'cwn_channel_stats_cache_v1';
 
 function getCalendarStatsFilter() {
   try {
@@ -4235,6 +4242,47 @@ function getNorthStarRangeQuery(refresh) {
   var q = 'days=' + encodeURIComponent(p.days) + '&endDate=' + encodeURIComponent(p.endDate);
   if (refresh) q += '&refresh=1';
   return q;
+}
+
+function channelStatsCacheId() {
+  var p = readNorthStarRangeFromUi();
+  return String(p.days) + '|' + String(p.endDate);
+}
+
+function loadChannelStatsFromCache() {
+  try {
+    var raw = localStorage.getItem(CHANNEL_STATS_CACHE_KEY);
+    if (!raw) return null;
+    var bucket = JSON.parse(raw);
+    return bucket[channelStatsCacheId()] || null;
+  } catch (e) { return null; }
+}
+
+function saveChannelStatsToCache(report) {
+  try {
+    var raw = localStorage.getItem(CHANNEL_STATS_CACHE_KEY);
+    var bucket = raw ? JSON.parse(raw) : {};
+    bucket[channelStatsCacheId()] = { report: report, savedAt: new Date().toISOString() };
+    localStorage.setItem(CHANNEL_STATS_CACHE_KEY, JSON.stringify(bucket));
+  } catch (e) { /* ignore */ }
+}
+
+function showStatsCacheHint(savedAt) {
+  var sub = g('stats-subtitle');
+  if (!sub || !savedAt) return;
+  try {
+    var when = new Date(savedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    var base = sub.getAttribute('data-base-subtitle') || sub.textContent.replace(/\s*·\s*saved[\s\S]*$/i, '');
+    sub.setAttribute('data-base-subtitle', base);
+    sub.textContent = base + ' · saved ' + when + ' — click Refresh for live data';
+  } catch (e) { /* ignore */ }
+}
+
+function clearStatsCacheHint() {
+  var sub = g('stats-subtitle');
+  if (!sub) return;
+  var base = sub.getAttribute('data-base-subtitle');
+  if (base) sub.textContent = base;
 }
 
 function applyNorthStarRange(refresh) {
@@ -4474,8 +4522,17 @@ function postLiveFmtDuration(sec) {
 }
 
 function postLiveLoadVods(refresh) {
+  var refreshBtn = document.querySelector('#page-postlive button[onclick="postLiveLoadVods(true)"]');
+  if (refresh && refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = '↻ Refreshing…'; }
   var tbody = g('postlive-vod-body');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">Loading YouTube lives…</td></tr>';
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">'
+      + (refresh ? 'Rebuilding YouTube catalog — may take 1–2 min…' : 'Loading YouTube lives…')
+      + '</td></tr>';
+  }
+  var slowTimer = refresh ? setTimeout(function() {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.45);">Still fetching from YouTube… large catalog refresh can take up to 2 minutes.</td></tr>';
+  }, 15000) : null;
   fetch(CFG.ffmpegUrl + '/post-live/vods?limit=40' + (refresh ? '&refresh=1' : ''))
     .then(function(r) {
       return r.text().then(function(t) {
@@ -4494,6 +4551,10 @@ function postLiveLoadVods(refresh) {
     })
     .catch(function(e) {
       if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="padding:16px;color:#e74c3c;">' + e.message + '</td></tr>';
+    })
+    .finally(function() {
+      if (slowTimer) clearTimeout(slowTimer);
+      if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ Refresh lives'; }
     });
 }
 
@@ -5172,6 +5233,26 @@ function postLiveDispatchComp() {
 }
 
 function loadChannelStats(refresh) {
+  if (!refresh) {
+    var cached = loadChannelStatsFromCache();
+    if (cached && cached.report && cached.report.ok) {
+      window._channelStatsReport = cached.report;
+      renderChannelStats(cached.report);
+      showStatsCacheHint(cached.savedAt);
+      return;
+    }
+  } else {
+    try {
+      var bucket = JSON.parse(localStorage.getItem(CHANNEL_STATS_CACHE_KEY) || '{}');
+      delete bucket[channelStatsCacheId()];
+      localStorage.setItem(CHANNEL_STATS_CACHE_KEY, JSON.stringify(bucket));
+    } catch (e) { /* ignore */ }
+  }
+  clearStatsCacheHint();
+
+  var refreshBtn = g('stats-refresh-btn');
+  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = '↻ Refreshing…'; }
+
   var cards = g('stats-cards');
   var tbody = g('stats-table-body');
   if (cards) cards.innerHTML = '<div class="stats-card"><div class="stats-card-label">Loading</div><div class="stats-card-value">…</div></div>';
@@ -5181,10 +5262,12 @@ function loadChannelStats(refresh) {
   xhr.open('GET', CFG.ffmpegUrl + '/stats/channel?' + getNorthStarRangeQuery(refresh), true);
   xhr.timeout = 300000;
   xhr.onload = function() {
+    if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ Refresh'; }
     try {
       var d = JSON.parse(xhr.responseText);
       if (!d.ok) throw new Error(d.error || 'Unknown error');
       window._channelStatsReport = d;
+      saveChannelStatsToCache(d);
       renderChannelStats(d);
     } catch (e) {
       var msg = e.message || 'Failed to load stats';
@@ -5198,6 +5281,7 @@ function loadChannelStats(refresh) {
     }
   };
   xhr.onerror = xhr.ontimeout = function() {
+    if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ Refresh'; }
     var msg = xhr.status === 0 ? 'Request timed out — catalog fetch can take 1–2 min on first load' : 'Server unreachable — is pm2 running?';
     if (cards) cards.innerHTML = '<div class="stats-card"><div class="stats-card-label">Error</div><div class="stats-card-value" style="font-size:14px;color:#e74c3c;">' + msg + '</div></div>';
     if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;color:#e74c3c;">' + msg + '</td></tr>';
@@ -9214,15 +9298,18 @@ function importJobToCanva(jobId) {
 }
 
 function refreshQueue() {
-  renderQueue();
-  JOBS.forEach(function(job) {
-    if (job.status === 'processing') {
-      pollVideo(job.id,
-        function(s,p){ job.status=s; job.pct=p; renderQueue(); },
-        function(err,data){ if(err){job.status='failed';}else{job.status='completed';job.url=data.video_url;job.thumb=data.thumbnail_url;} saveJobs(); renderQueue(); }
-      );
-    }
-  });
+  if (typeof restoreJobsFromServer === 'function') restoreJobsFromServer(false);
+  renderQueue(true);
+  if (typeof JOBS !== 'undefined') {
+    JOBS.forEach(function(job) {
+      if (job.status === 'processing') {
+        pollVideo(job.id,
+          function(s,p){ job.status=s; job.pct=p; renderQueue(); },
+          function(err,data){ if(err){job.status='failed';}else{job.status='completed';job.url=data.video_url;job.thumb=data.thumbnail_url;} saveJobs(); renderQueue(); }
+        );
+      }
+    });
+  }
 }
 
 function clearDone() {
@@ -11460,153 +11547,7 @@ function testHeyGen() {
 }
 
 // ── CALENDAR ──────────────────────────────────────────────────────
-// ── Content Calendar ─────────────────────────────────────────────────────────
-// Rules:
-//   Long form — News: every day. Twitch: Wed–Sun. NBA: day after games (from ESPN).
-//   Shorts — always 3/day: Twitch Short @ 5PM, News Short @ 6PM,
-//             NBA Short @ 7PM if there were games yesterday,
-//             else bonus News or Twitch short (alternates by day index).
-
-function buildCalendar() {
-  var grid = g('calendar-grid');
-  var schedule = g('schedule-list');
-  grid.innerHTML = '<div style="grid-column:1/-1;font-size:15px;color:rgba(255,255,255,0.4);font-family:monospace;padding:16px 4px;">Fetching NBA schedule from ESPN…</div>';
-  schedule.innerHTML = '';
-
-  // Monday of current week
-  var now = new Date();
-  var dow = now.getDay();
-  var daysToMon = dow === 0 ? -6 : 1 - dow;
-  var monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToMon);
-
-  var weekDates = [];
-  for (var i = 0; i < 7; i++) {
-    weekDates.push(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i));
-  }
-  // Also need previous Sunday to determine Monday's NBA slot
-  var prevSunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 1);
-  var datesNeeded = [prevSunday].concat(weekDates);
-
-  function _pad2(n) { return n < 10 ? '0' + n : '' + n; }
-  function _localFmt(date) {
-    return date.getFullYear() + '-' + _pad2(date.getMonth() + 1) + '-' + _pad2(date.getDate());
-  }
-  function _espnFmt(date) { return _localFmt(date).replace(/-/g, ''); }
-
-  var espnData = {};  // 'YYYY-MM-DD' -> [{name, completed}]
-  var pending = datesNeeded.length;
-
-  datesNeeded.forEach(function(date) {
-    var dateStr = _localFmt(date);
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=' + _espnFmt(date), true);
-    xhr.timeout = 8000;
-    xhr.onload = function() {
-      try {
-        var d = JSON.parse(xhr.responseText);
-        espnData[dateStr] = (d.events || []).map(function(ev) {
-          var comp = (ev.competitions || [])[0] || {};
-          var comps = comp.competitors || [];
-          var away = comps.find(function(c) { return c.homeAway === 'away'; }) || comps[0] || {};
-          var home = comps.find(function(c) { return c.homeAway === 'home'; }) || comps[1] || {};
-          var awayAbbr = (away.team && away.team.abbreviation) || '?';
-          var homeAbbr = (home.team && home.team.abbreviation) || '?';
-          return {
-            name: awayAbbr + ' @ ' + homeAbbr,
-            completed: !!(ev.status && ev.status.type && ev.status.type.completed)
-          };
-        });
-      } catch(e) { espnData[dateStr] = []; }
-      if (--pending === 0) _renderCalendar(weekDates, espnData);
-    };
-    xhr.onerror = xhr.ontimeout = function() {
-      espnData[dateStr] = [];
-      if (--pending === 0) _renderCalendar(weekDates, espnData);
-    };
-    xhr.send();
-  });
-}
-
-function _renderCalendar(weekDates, espnData) {
-  var DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-  var TWITCH_STREAMERS = ['jasontheween','adapt','marlon','extraemily','stableronaldo','maya','cinna','yonnajay','jaycinco','lacy','hasanabi','yourragegaming'];
-  var grid = g('calendar-grid');
-  var schedule = g('schedule-list');
-  grid.innerHTML = '';
-  var schedHtml = '';
-
-  function _pad2(n) { return n < 10 ? '0' + n : '' + n; }
-  function _localFmt(date) {
-    return date.getFullYear() + '-' + _pad2(date.getMonth() + 1) + '-' + _pad2(date.getDate());
-  }
-
-  weekDates.forEach(function(date, i) {
-    // Previous day's ESPN games determine NBA content today
-    var prevDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
-    var prevGames = espnData[_localFmt(prevDate)] || [];
-    var hasNBAGames = prevGames.length > 0;
-
-    // Twitch long form runs Wed–Sun (index 2–6 in Mon=0 week)
-    var hasTwitchLong = i >= 2;
-
-    // --- Build items list ---
-    var items = [];
-
-    // Long form
-    if (hasNBAGames) {
-      var gameLabel = prevGames.length === 1
-        ? prevGames[0].name
-        : prevGames.length + ' games';
-      items.push({ cls: 'nba', lbl: 'NBA: ' + gameLabel + ' 10:30AM' });
-    }
-    items.push({ cls: 'news', lbl: 'News Compilation 10:45AM' });
-    if (hasTwitchLong) {
-      items.push({ cls: 'twitch', lbl: 'Twitch Compilation 11:00AM' });
-    }
-
-    // Shorts — always 3
-    var streamer1 = TWITCH_STREAMERS[i % TWITCH_STREAMERS.length];
-    items.push({ cls: 'short', lbl: 'Twitch Short: ' + streamer1 + ' 5PM' });
-    items.push({ cls: 'short', lbl: 'News Short 6PM' });
-    if (hasNBAGames) {
-      items.push({ cls: 'short', lbl: 'NBA Short: ' + prevGames[0].name + ' 7PM' });
-    } else {
-      // Bonus short — alternate News / Twitch by day index
-      if (i % 2 === 0) {
-        items.push({ cls: 'short', lbl: 'News Short 7PM' });
-      } else {
-        var streamer2 = TWITCH_STREAMERS[(i + 6) % TWITCH_STREAMERS.length];
-        items.push({ cls: 'short', lbl: 'Twitch Short: ' + streamer2 + ' 7PM' });
-      }
-    }
-
-    // Calendar cell
-    var today = new Date();
-    var isToday = date.getFullYear() === today.getFullYear() &&
-                  date.getMonth() === today.getMonth() &&
-                  date.getDate() === today.getDate();
-
-    var div = document.createElement('div');
-    div.className = 'cal-day' + (isToday ? ' cal-day-today' : '');
-    div.innerHTML = '<div class="cal-day-name">' + DAYS[i]
-      + (isToday ? ' <span style="font-size:12px;color:#c7af4f;font-family:monospace;vertical-align:middle;">TODAY</span>' : '')
-      + '</div>'
-      + items.map(function(it) {
-          return '<div class="cal-item ' + it.cls + '">' + it.lbl + '</div>';
-        }).join('')
-      + '<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.05);">'
-      + '<button type="button" onclick="calendarRefresh()" '
-      + 'style="width:100%;background:rgba(199,175,79,0.08);border:1px dashed rgba(199,175,79,0.35);color:#c7af4f;font-size:13px;font-family:monospace;letter-spacing:1px;padding:4px;border-radius:3px;cursor:pointer;">↻ LOAD LIVE CALENDAR (server)</button>'
-      + '</div>';
-    grid.appendChild(div);
-
-    schedHtml += '<strong style="color:#c7af4f">' + DAYS[i] + (isToday ? ' <span style="font-size:14px;color:#c7af4f;">(TODAY)</span>' : '') + '</strong><br>';
-    items.forEach(function(it) { schedHtml += '&nbsp;&nbsp;' + it.lbl + '<br>'; });
-    schedHtml += '<br>';
-  });
-
-  schedule.innerHTML = schedHtml;
-}
+// Monthly calendar: assets/calendar_dashboard.js (calendarPageInit / calendarRefresh)
 
 // ── NBA short-form manual clip picker ────────────────────────────────────────
 // Shows ALL available clips from ESPN for each game so user picks exactly one.
@@ -21684,6 +21625,9 @@ setInterval(liveTvRefresh, 15000);
 (function () {
   var p = window.location.pathname.replace(/\/$/, '');
   if (p === '/broadcast') nav('broadcast');
+  // Boot runs before external scripts — re-init calendar after dashboard JS loads.
+  var bootPage = typeof readPersistedPage === 'function' ? readPersistedPage() : '';
+  if (bootPage === 'calendar' && typeof calendarPageInit === 'function') calendarPageInit();
 })();
 </script>
 </body>

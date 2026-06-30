@@ -193,5 +193,26 @@ module.exports = {
         JOB_MONITOR_LOG: 'logs/job_monitor_events.jsonl',
       },
     },
+    {
+      name: 'dashboard-cache-warm',
+      script: 'scripts/warm_dashboard_cache.js',
+      cwd: __dirname,
+      interpreter: 'node',
+      watch: false,
+      autorestart: false,
+      max_restarts: 0,
+      cron_restart: process.env.DASHBOARD_CACHE_WARM_CRON || '*/20 * * * *',
+      out_file: 'logs/dashboard_cache_warm.log',
+      error_file: 'logs/dashboard_cache_warm.log',
+      merge_logs: true,
+      env: {
+        NODE_ENV: 'development',
+        DASHBOARD_CACHE_WARM_ENABLED: process.env.DASHBOARD_CACHE_WARM_ENABLED || '1',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        DASHBOARD_CACHE_WARM_ENABLED: process.env.DASHBOARD_CACHE_WARM_ENABLED || '1',
+      },
+    },
   ],
 };
