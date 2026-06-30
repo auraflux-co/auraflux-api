@@ -3340,17 +3340,19 @@ app.get('/live-grid/files', (req, res) => {
   }
 });
 
-// GET /calendar/month — monthly plan vs actual (jobs + YouTube)
+// GET /calendar/month — monthly plan vs actual (jobs + YouTube + Upload-Post)
 app.get('/calendar/month', async (req, res) => {
   try {
     const { buildMonthPlan } = require('./lib/calendar/month_plan');
     const { getYoutubeCalendarItems } = require('./lib/calendar/youtube_studio_sync');
+    const { getUploadPostCalendarItems } = require('./lib/calendar/upload_post_sync');
     const year = Number(req.query.year) || new Date().getFullYear();
     const month = Number(req.query.month) || (new Date().getMonth() + 1);
     const refreshYoutube = req.query.refreshYoutube === '1' || req.query.refresh === '1';
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const endDate = `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`;
     let studio = { items: [] };
+    let uploadPost = { items: [] };
     try {
       studio = await getYoutubeCalendarItems({
         startDate,
@@ -3361,17 +3363,34 @@ app.get('/calendar/month', async (req, res) => {
     } catch (e) {
       console.warn('[calendar/month] YouTube sync failed:', e.message);
     }
+    try {
+      uploadPost = await getUploadPostCalendarItems({
+        startDate,
+        endDate,
+        refresh: refreshYoutube,
+        persistedJobs,
+      });
+    } catch (e) {
+      console.warn('[calendar/month] Upload-Post sync failed:', e.message);
+    }
     const plan = buildMonthPlan({
       year,
       month,
       persistedJobs,
       youtubeItems: studio.items || [],
+      uploadPostItems: uploadPost.items || [],
     });
     plan.youtubeStudio = {
       ok: studio.ok !== false,
       count: (studio.items || []).length,
       fetchedAt: studio.fetchedAt || null,
       stale: !!studio.stale,
+    };
+    plan.uploadPost = {
+      ok: uploadPost.ok !== false,
+      count: (uploadPost.items || []).length,
+      fetchedAt: uploadPost.fetchedAt || null,
+      stale: !!uploadPost.stale,
     };
     res.json(plan);
   } catch (e) {
@@ -3422,11 +3441,13 @@ app.get('/calendar/range', async (req, res) => {
   try {
     const { buildCalendarRangeReport } = require('./lib/calendar/month_plan');
     const { getYoutubeCalendarItems } = require('./lib/calendar/youtube_studio_sync');
+    const { getUploadPostCalendarItems } = require('./lib/calendar/upload_post_sync');
     const startDate = req.query.start || req.query.startDate;
     const endDate = req.query.end || req.query.endDate || startDate;
     if (!startDate) return res.status(400).json({ ok: false, error: 'start or startDate required (YYYY-MM-DD)' });
     const refreshYoutube = req.query.refreshYoutube === '1' || req.query.refresh === '1';
     let studio = { items: [] };
+    let uploadPost = { items: [] };
     try {
       studio = await getYoutubeCalendarItems({
         startDate,
@@ -3437,11 +3458,22 @@ app.get('/calendar/range', async (req, res) => {
     } catch (e) {
       console.warn('[calendar/range] YouTube sync failed:', e.message);
     }
+    try {
+      uploadPost = await getUploadPostCalendarItems({
+        startDate,
+        endDate,
+        refresh: refreshYoutube,
+        persistedJobs,
+      });
+    } catch (e) {
+      console.warn('[calendar/range] Upload-Post sync failed:', e.message);
+    }
     const report = buildCalendarRangeReport({
       startDate,
       endDate,
       persistedJobs,
       youtubeItems: studio.items || [],
+      uploadPostItems: uploadPost.items || [],
     });
     if (!report.ok) return res.status(400).json(report);
     res.json(report);

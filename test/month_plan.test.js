@@ -70,6 +70,61 @@ describe('month_plan', () => {
     expect(july4.planned.note).toBe('Holiday push');
   });
 
+  test('YouTube publish time wins over job Gate 5 timestamp', () => {
+    const plan = buildMonthPlan({
+      year: 2026,
+      month: 6,
+      persistedJobs: {
+        job_a: {
+          contentType: 'twitch-short',
+          clipsOnly: true,
+          stage: 'published',
+          publishedAt: '2026-06-30T14:00:00.000Z',
+          scheduledPublishAt: '2026-06-30T21:00:00.000Z',
+          youtubeVideoId: 'abc123vid01',
+          title: 'test short',
+        },
+      },
+      youtubeItems: [{
+        source: 'youtube_studio',
+        videoId: 'abc123vid01',
+        jobId: 'job_a',
+        title: 'test short',
+        publishAt: '2026-06-30T17:00:00.000Z',
+        dateKey: '2026-06-30',
+        timeEt: '1:00 PM',
+        kind: 'short',
+        status: 'published',
+      }],
+    });
+    const june30 = plan.days.find((d) => d.date === '2026-06-30');
+    expect(june30.actual.items.length).toBe(1);
+    expect(june30.actual.items[0].timeEt).toBe('1:00 PM');
+    expect(june30.actual.items[0].platform).toBe('youtube');
+  });
+
+  test('Upload-Post items appear with platform publish time', () => {
+    const plan = buildMonthPlan({
+      year: 2026,
+      month: 6,
+      persistedJobs: {},
+      youtubeItems: [],
+      uploadPostItems: [{
+        source: 'upload_post_tiktok',
+        platform: 'tiktok',
+        title: 'TikTok clip',
+        publishAt: '2026-06-26T19:15:56.331Z',
+        dateKey: '2026-06-26',
+        timeEt: '3:15 PM',
+        status: 'published',
+        format: 'short',
+      }],
+    });
+    const day = plan.days.find((d) => d.date === '2026-06-26');
+    expect(day.actual.items.some((it) => it.platform === 'tiktok')).toBe(true);
+    expect(day.actual.items[0].timeEt).toBe('3:15 PM');
+  });
+
   test('items sorted by YouTube time', () => {
     const plan = buildMonthPlan({
       year: 2026,

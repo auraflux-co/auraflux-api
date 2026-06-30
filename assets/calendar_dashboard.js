@@ -1,5 +1,5 @@
 /**
- * Content Calendar — monthly plan vs actual (jobs + YouTube Studio).
+ * Content Calendar — monthly plan vs actual (jobs + YouTube + Upload-Post).
  */
 (function () {
   const CAL_BASE = (typeof CFG !== 'undefined' && CFG.ffmpegUrl) || 'http://localhost:3000';
@@ -13,6 +13,15 @@
   function g(id) { return document.getElementById(id); }
   function esc(s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function calendarSourceLabel(it) {
+    if (it.platform === 'youtube' || (it.source || '').includes('youtube')) return 'YouTube';
+    if (it.platform === 'tiktok' || (it.source || '').includes('tiktok')) return 'TikTok';
+    if (it.platform === 'instagram' || (it.source || '').includes('instagram')) return 'Instagram';
+    if ((it.source || '').includes('upload_post')) return 'Upload-Post';
+    if (it.source === 'job') return 'Job queue';
+    return it.source || '';
   }
 
   async function calFetch(path, opts) {
@@ -131,7 +140,7 @@
         const icon = PILLAR_ICON[it.pillar] || FORMAT_ICON[it.format] || '·';
         const st = it.status === 'published' ? '✓ published' : (it.status === 'scheduled' ? '⏱ scheduled' : it.status);
         const timeLabel = it.timeEt ? `${it.timeEt} ET` : '';
-        const src = (it.source || '').includes('youtube') ? 'YouTube' : (it.source === 'job' ? 'Job queue' : it.source || '');
+        const src = calendarSourceLabel(it);
         const jobLink = it.jobId
           ? `<a href="#" onclick="nav('queue');setTimeout(function(){var el=document.getElementById('job-${esc(it.jobId)}');if(el)el.scrollIntoView({behavior:'smooth'});},400);return false;" style="color:#3498db;">${esc(it.jobId.slice(0, 28))}</a>`
           : '';
