@@ -5,6 +5,9 @@
 # (ClipzWorld TV + Live Grid ffmpeg) keeps running on pm2 process
 # broadcast-sidecar.
 #
+# PM2 restart counter (↺): increments on every deploy — high counts during
+# active dev sessions are expected, not necessarily instability.
+#
 # Usage:
 #   bash scripts/deploy_c0.sh
 #

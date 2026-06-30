@@ -2,52 +2,50 @@
 
 ### 1. Session Summary
 
-This session integrated major features and fixes for the C0 stack, focusing on the live grid (CPD-1005) and the clip compilation workflow (CPD-1049). Key changes include live grid brand overlays, a local rehearsal mode, and stream health monitoring, alongside significant improvements to the clip compilation SEO, reassembly UX, and short-form thumbnail generation. The session also integrated a creator registry (CPD-1027) and a channel stats dashboard (CPD-1026).
+This was a major feature and stabilization session for the C0 stack. Key deliverables included a complete overhaul of the dashboard's "Generate" page into a multi-pillar "Clip Library" and "Composer" workflow, introducing significant new capabilities for Twitch (Talk Soup), News (THE THREAD/wire), and Sports. The session also shipped major reliability fixes for the assembly pipeline, including self-healing mechanisms, improved stitching for long-form content, and a comprehensive operator creative guardrail system for hooks and titles. Numerous dashboard UX improvements, bug fixes, and new assets for OBS integration were also committed.
 
 ### 2. Server Health
 
-- **PM2 Status:** High restart counts for `auraflux` (218) and `broadcast-sidecar` (113) indicate persistent instability that needs investigation. Other services, including `job-monitor` and `stream-av-probe`, appear stable with low restart counts.
-- **Recent Errors:** Logs show critical pipeline failures at Gate 3a (Assembly QA hard fail) and Gate 3b (chrome re-burn failure). This suggests issues with video processing, quality checks, or the self-healing pipeline that need to be addressed.
+- **PM2 Status:** All processes are `online` with long uptimes. However, `auraflux` (225) and `broadcast-sidecar` (305) show very high restart counts. While currently stable, this points to past instability or frequent developer restarts that could mask underlying issues. The other processes are stable with 0 restarts.
+- **Recent Errors:** No errors were found in the recent log scan, indicating current server stability.
 
 ### 3. Pipeline Health
 
-- **Stuck Jobs:** There are no stuck jobs from the last 48 hours, which is a positive sign.
-- **Gate Failures:** The errors logged for Gate 3a and 3b point to significant problems in the assembly and post-processing stages. A `GATE3A_HARD_FAIL_SCORE` indicates assembled videos are failing quality checks, and the `GATE3B_REBURN_FAIL` shows that the automated fix for chrome/overlay issues is broken.
+- **Stuck Jobs:** No stuck jobs were reported in the last 48 hours, a positive sign of pipeline reliability.
+- **Gate Failures:** Previous session reviews noted Gate 3a and 3b failures. While no recent errors are logged, the high server restart count and numerous commits related to pipeline self-healing and assembly reliability suggest these areas have been fragile. The focus on fixing these issues in this session is a good sign.
 
 ### 4. Jira Consistency
 
-- Jira data could not be fetched. The status of development tickets relative to merged code is unknown.
+- Jira data was not provided for this review.
 
 ### 5. GitHub + Confluence Consistency
 
-- **Open PRs:** There are no open pull requests.
-- **CI Failures:** There are 5 CI failures on various branches, including a feature branch (`feat/cpd-1037-hub-staging`) and multiple Dependabot PRs. Failing CI checks block merges and must be resolved.
-- **Confluence:** Confluence data could not be fetched, so documentation currency is unknown.
+- **Open PRs:** Multiple Dependabot PRs are open, along with several feature branches.
+- **CI Failures:** There are 5 CI failures reported on various branches, including `feat/cpd-1065-kick-live-grid` and `staging`. These failing checks block merges and should be addressed.
+- **Confluence:** Confluence data was not provided for this review.
 
 ### 6. Route Integrity
 
-- The provided list of dashboard fetch calls is highly incomplete. A manual scan of `cwn_production.html` reveals dozens of API endpoints in use.
-- A full audit is needed to identify unused routes, but endpoints like `/generate-clip-comp` and `/creators/sync` are clearly used by the dashboard while others like `GET /publish/history` and `GET /publish/queue` do not appear to be, making them candidates for deprecation.
+- The list of registered backend routes is extensive, but the provided list of dashboard fetch calls is very short and noted as "highly incomplete." This large discrepancy suggests there may be numerous unused API endpoints, representing dead code that could be removed to simplify the application.
 
 ### 7. Codebase Structural Integrity
 
-- **Missing Tests:** A very large number of modules in the `lib/` directory lack any test files, creating a high risk of regressions and making maintenance difficult.
-- **Missing Env Vars:** Over 200 environment variables are used in the codebase but are not documented in `.env.example`. This is a major barrier to developer onboarding and consistent local setup.
-- **Dead Code:** Analysis from the previous session suggested dead code candidates like `geminiQACheck` and `geminiSegmentQA` in `server.js` may have been orphaned by refactoring. A code audit is needed to remove unused functions.
+- **Missing Tests:** The codebase has a critical lack of test coverage. A large number of modules, particularly within the core `lib/` directory, have no corresponding test files. This poses a significant risk for regressions and makes future maintenance and refactoring difficult and unsafe.
+- **Missing Env Vars:** Over 200 environment variables are used in the code but are not documented in `.env.example`. This is a major barrier to developer onboarding, local setup consistency, and deployment reliability.
+- **Dead Code:** Previous reviews suggested orphaned functions in `server.js` from refactoring. The large number of untested modules and un-audited routes suggests more dead code is likely present.
 
 ### 8. C0 / C1+ Boundary
 
-- The codebase continues to mix C0 (localhost) and C1+ (Render) concerns. While this session's work was C0-focused (live grid, clip comps), the architectural boundary remains blurred. The presence of C1+-specific logic and environment variables in the C0 stack complicates local development and maintenance.
+- The project's rules (`c0-operator-agent-boundaries.mdc`) clearly define the separation of concerns. However, the shared nature of key files like `server.js` and `lib/assembly.js` means this boundary relies heavily on developer discipline. The high number of undocumented environment variables further blurs the line between what is required for C0 versus a C1+ deployment.
 
 ### 9. Recommendations
 
-- **[BLOCKING]** Investigate and fix the root cause of the high restart counts for the `auraflux` and `broadcast-sidecar` PM2 processes.
-- **[BLOCKING]** Resolve all CI failures on GitHub to unblock dependency updates and future merges.
-- **[SHOULD FIX]** Debug the Gate 3a and 3b failures to ensure video assembly and quality checks are reliable.
-- **[SHOULD FIX]** Update `.env.example` with all missing environment variables. A script to automate this would be beneficial.
-- **[SHOULD FIX]** Add unit and integration tests for critical, untested modules, especially those in `lib/assembly.js`, `lib/job_spec.js`, and `lib/gates/`.
-- **[NICE TO HAVE]** Conduct a full audit of all backend routes to identify and remove unused endpoints.
-- **[NICE TO HAVE]** Refactor shared modules to better separate C0 and C1+ logic.
+- **[BLOCKING]** Document all missing environment variables in `.env.example`. This is critical for onboarding and deployment stability.
+- **[SHOULD FIX]** Address the 5 CI failures on GitHub to unblock dependency updates and feature merges.
+- **[SHOULD FIX]** Investigate the root cause of the high PM2 restart counts for `auraflux` and `broadcast-sidecar` to ensure long-term stability.
+- **[SHOULD FIX]** Prioritize adding test coverage for critical, untested modules, starting with `lib/assembly.js`, `lib/job_spec.js`, and the `lib/gates/` directory.
+- **[NICE TO HAVE]** Conduct a full audit of all backend routes to identify and deprecate unused endpoints.
+- **[NICE TO HAVE]** Refactor to better isolate C0-specific logic from the core pipeline to improve architectural clarity.
 
-<!-- last-reviewed-commit: 97ce9d14eb32c70ae3316d09ad2ea42220f711ce -->
-<!-- reviewed-at: 2026-06-19T15:35:43Z -->
+<!-- last-reviewed-commit: ed59ada5aac70d356992f3c44ddab5e2768a0c30 -->
+<!-- reviewed-at: 2026-06-30T14:50:08Z -->

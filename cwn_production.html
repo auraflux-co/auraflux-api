@@ -5,7 +5,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
-body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; min-height:100vh; }
+:root {
+  --ui-base: 16px;
+  --ui-sm: 14px;
+  --ui-xs: 13px;
+  --ui-2xs: 12px;
+  --ui-panel-border: rgba(199,175,79,0.28);
+  --ui-panel-bg: #0d1524;
+}
+body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans-serif; min-height:100vh; font-size:var(--ui-base); line-height:1.5; }
 
 .header { background:linear-gradient(90deg,#22304b,#1a2538); border-bottom:3px solid #c7af4f; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
 .header h1 { font-family:'Bebas Neue',sans-serif; font-size:26px; color:#c7af4f; letter-spacing:4px; }
@@ -37,7 +45,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .sidebar-btn .icon { font-size:16px; width:20px; text-align:center; }
 .sidebar-divider { height:1px; background:rgba(199,175,79,0.08); margin:12px 16px; }
 
-.main { padding:24px; overflow-y:auto; }
+.main { padding:24px; overflow-y:auto; font-size:var(--ui-base); }
 .page { display:none; }
 .page.active { display:block; }
 
@@ -706,6 +714,42 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .bc-tier-yellow { background:rgba(243,156,18,0.2); color:#f39c12; }
 .bc-bench-chip { display:inline-block; font-size:10px; padding:2px 8px; margin:2px; border-radius:10px; background:#0d1524; border:1px solid rgba(255,255,255,0.12); }
 .bc-log { font-family:monospace; font-size:10px; color:rgba(255,255,255,0.5); max-height:80px; overflow-y:auto; white-space:pre-wrap; background:#060a12; padding:8px; border-radius:4px; }
+
+/* CPD-1148 — Operator readability at 100% browser zoom (fonts + panel borders) */
+.sidebar-btn { font-size:15px; padding:11px 20px; }
+.sidebar-lbl { font-size:11px; }
+.credit-badge, .date-badge { font-size:13px; }
+.header h1 { font-size:30px; }
+.sec-title { font-size:24px; margin-bottom:18px; }
+.sec-title .badge { font-size:12px; padding:4px 12px; }
+.btn { font-size:14px; }
+.btn-sm { font-size:13px; padding:7px 14px; }
+.tag { font-size:13px; padding:5px 12px; }
+.job-row { padding:14px 18px; border-color:var(--ui-panel-border); border-width:1px; }
+.job-title { font-size:17px; margin-bottom:4px; }
+.job-meta { font-size:13px; color:rgba(255,255,255,0.55); }
+.card, .panel, .bc-ops-bar, .cal-month-shell, .cal-day-panel, .gen-picker-card {
+  border-color:var(--ui-panel-border) !important;
+}
+.cal-month-day { min-height:108px; padding:8px; border-color:rgba(199,175,79,0.2); }
+.cal-month-daynum { font-size:14px; }
+.cal-month-plan, .cal-month-actual { font-size:12px; line-height:1.5; }
+.cal-month-times { font-size:11px; max-height:40px; line-height:1.55; }
+.cal-chip { font-size:11px; padding:2px 6px; }
+.cal-kpi-label, .cal-kpi-sub, .cal-plan-form label { font-size:11px; }
+.cal-kpi-val { font-size:18px; }
+.cal-legend, .cal-month-summary, .cal-ns-compact { font-size:12px; }
+.cal-item, .cal-item-row { font-size:12px; }
+.cal-item-sub, .cal-item-row .cal-item-meta { font-size:11px; }
+.cal-day-panel h3 { font-size:15px; }
+.bc-cal-banner { font-size:13px; padding:12px 14px; }
+.alert { font-size:14px; padding:12px 16px; }
+/* Boost inline font-size styles inside main content (queue cards, hooks, calendar JS) */
+.main [style*="font-size:8px"] { font-size:11px !important; }
+.main [style*="font-size:9px"] { font-size:12px !important; }
+.main [style*="font-size:10px"] { font-size:13px !important; }
+.main [style*="font-size:11px"] { font-size:14px !important; }
+.main [style*="font-size:12px"] { font-size:15px !important; }
 </style>
 <script src="/assets/hook_emoji_picker.js"></script>
 </head>

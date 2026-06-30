@@ -85,7 +85,7 @@
       }).filter(Boolean).join('');
 
       div.innerHTML = `
-        <div class="cal-month-daynum">${day.day}${day.isToday ? ' <span style="font-size:8px;color:#c7af4f;">TODAY</span>' : ''}</div>
+        <div class="cal-month-daynum">${day.day}${day.isToday ? ' <span style="font-size:14px;color:#c7af4f;">TODAY</span>' : ''}</div>
         <div class="cal-month-plan">${planLine(day.planned)}</div>
         <div class="cal-month-actual">${actualLine(day.actual.counts) || (day.isPast ? 'Actual: —' : '')}</div>
         ${timesLine ? `<div class="cal-month-times">${timesLine}</div>` : ''}
@@ -123,7 +123,7 @@
     }
 
     const goalHtml = Object.entries(day.goals.detail || {}).map(([fmt, g]) =>
-      `<div style="font-size:10px;margin:2px 0;color:${g.met ? '#2ecc71' : (day.isPast ? '#e74c3c' : '#e67e22')};">`
+      `<div style="font-size:13px;margin:2px 0;color:${g.met ? '#2ecc71' : (day.isPast ? '#e74c3c' : '#e67e22')};">`
       + `${FORMAT_ICON[fmt] || fmt}: ${g.actual}/${g.planned} ${g.met ? '✓' : (day.isPast ? 'missed' : 'pending')}</div>`).join('');
 
     const itemsHtml = (day.actual.items || []).length
@@ -144,25 +144,25 @@
           <div class="cal-item-title">${esc(it.title)}<div class="cal-item-meta">${st}${timeLabel ? '' : ''} · ${it.format}${it.pillar ? ' · ' + it.pillar : ''} · ${src}${jobLink ? ' · ' + jobLink : ''}${ytLink}</div></div>
         </div>`;
       }).join('')
-      : '<div style="font-size:10px;color:rgba(255,255,255,0.4);">No jobs or YouTube items linked to this day yet.</div>';
+      : '<div style="font-size:13px;color:rgba(255,255,255,0.4);">No jobs or YouTube items linked to this day yet.</div>';
 
     body.innerHTML = `
-      <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:8px;">${planLine(day.planned)}${day.planned.note ? ' · ' + esc(day.planned.note) : ''}</div>
-      ${goalHtml || '<div style="font-size:10px;color:rgba(255,255,255,0.35);">No targets set for this day.</div>'}
-      <div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.6);letter-spacing:1px;margin:12px 0 6px;">EDIT PLAN</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">${planLine(day.planned)}${day.planned.note ? ' · ' + esc(day.planned.note) : ''}</div>
+      ${goalHtml || '<div style="font-size:13px;color:rgba(255,255,255,0.35);">No targets set for this day.</div>'}
+      <div style="font-size:12px;font-weight:900;color:rgba(199,175,79,0.6);letter-spacing:1px;margin:12px 0 6px;">EDIT PLAN</div>
       <div class="cal-plan-form">
         <div><label>Shorts</label><input type="number" id="cal-day-short" min="0" max="20" value="${day.planned.short}"></div>
         <div><label>Long-form</label><input type="number" id="cal-day-longform" min="0" max="10" value="${day.planned.longform}"></div>
         <div><label>Live</label><input type="number" id="cal-day-live" min="0" max="5" value="${day.planned.live}"></div>
       </div>
-      <div style="margin-bottom:8px;"><label style="font-size:9px;color:rgba(255,255,255,0.45);">Note</label>
-        <input type="text" id="cal-day-note" value="${esc(day.planned.note || '')}" style="width:100%;background:#0a1020;border:1px solid rgba(199,175,79,0.25);color:#fff;padding:6px;border-radius:4px;font-size:11px;margin-top:3px;"></div>
+      <div style="margin-bottom:8px;"><label style="font-size:12px;color:rgba(255,255,255,0.45);">Note</label>
+        <input type="text" id="cal-day-note" value="${esc(day.planned.note || '')}" style="width:100%;background:#0a1020;border:1px solid rgba(199,175,79,0.25);color:#fff;padding:6px;border-radius:4px;font-size:14px;margin-top:3px;"></div>
       <button class="btn btn-gold btn-sm" onclick="calSaveDayPlan('${day.date}')">SAVE DAY PLAN</button>
       <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
         <button type="button" class="btn btn-outline btn-sm" onclick="calOpenStatsForDay('${day.date}')">📊 Stats — this day</button>
         <button type="button" class="btn btn-outline btn-sm" onclick="calOpenStatsForWeek('${day.date}')">📊 Stats — 7d ending here</button>
       </div>
-      <div style="font-size:9px;font-weight:900;color:rgba(199,175,79,0.6);letter-spacing:1px;margin:14px 0 6px;">ACTUAL (${(day.actual.items || []).length})</div>
+      <div style="font-size:12px;font-weight:900;color:rgba(199,175,79,0.6);letter-spacing:1px;margin:14px 0 6px;">ACTUAL (${(day.actual.items || []).length})</div>
       ${itemsHtml}`;
 
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -304,18 +304,18 @@
     _scheduleCtx = { date, slotId, contentType };
     if (title) title.textContent = slotId.replace(/_/g, ' ');
     if (sub) sub.textContent = `${date} · pick assembled job`;
-    list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.5);">Loading jobs…</div>';
+    list.innerHTML = '<div style="font-size:14px;color:rgba(255,255,255,0.5);">Loading jobs…</div>';
     modal.classList.add('open');
 
     const data = await calFetch('/calendar/eligible-jobs?contentType=' + encodeURIComponent(contentType || ''));
     const jobs = data.jobs || [];
     if (!jobs.length) {
-      list.innerHTML = '<div style="font-size:11px;color:#e74c3c;">No assembled jobs for this slot yet.</div>';
+      list.innerHTML = '<div style="font-size:14px;color:#e74c3c;">No assembled jobs for this slot yet.</div>';
       return;
     }
     list.innerHTML = jobs.map((j) =>
       `<button type="button" class="cal-job-pick" onclick="calPickJob('${j.jobId}')">
-        <b>${esc(j.title)}</b><br><span style="font-size:9px;color:rgba(255,255,255,0.45);">${esc(j.jobId)} · ${j.stage}</span>
+        <b>${esc(j.title)}</b><br><span style="font-size:12px;color:rgba(255,255,255,0.45);">${esc(j.jobId)} · ${j.stage}</span>
       </button>`).join('');
   };
 
@@ -365,7 +365,7 @@
       const stats = await calFetch('/stats/channel');
       const ns = stats.northStar;
       if (!ns) {
-        el.innerHTML = '<b style="color:#c7af4f;">Targets</b><br>3–5 Shorts · 1–2 VOD · 0–2 Live/day<br><a href="#" onclick="nav(\'stats\');return false;" style="color:#c7af4f;font-size:10px;">→ Channel Stats</a>';
+        el.innerHTML = '<b style="color:#c7af4f;">Targets</b><br>3–5 Shorts · 1–2 VOD · 0–2 Live/day<br><a href="#" onclick="nav(\'stats\');return false;" style="color:#c7af4f;font-size:13px;">→ Channel Stats</a>';
         return;
       }
       const c = ns.cadence || {};
@@ -373,14 +373,14 @@
       const y = c.yesterday || {};
       const t = ns.config?.cadence || {};
       const alertHtml = (ns.alerts || []).slice(0, 2).map((a) =>
-        `<div style="margin-top:4px;color:${a.level === 'warn' ? '#e67e22' : '#8899aa'};font-size:9px;">⚠ ${esc(a.message)}</div>`).join('');
+        `<div style="margin-top:4px;color:${a.level === 'warn' ? '#e67e22' : '#8899aa'};font-size:12px;">⚠ ${esc(a.message)}</div>`).join('');
       el.innerHTML = `
         <div><b style="color:#c7af4f;">Target</b> · ${t.shorts?.min || 3}–${t.shorts?.max || 5} Shorts · ${t.videos?.min || 1}–${t.videos?.max || 2} VOD · ${t.streams?.min || 0}–${t.streams?.max || 2} Live</div>
         <div style="margin-top:6px;"><b style="color:#c7af4f;">Yesterday</b> · ${y.shorts || 0}▮ ${y.videos || 0}▬ ${y.streams || 0}●</div>
         <div style="margin-top:4px;"><b style="color:#c7af4f;">7d avg</b> · ${(avg.shorts || 0).toFixed(1)}▮ ${(avg.videos || 0).toFixed(1)}▬ ${(avg.streams || 0).toFixed(1)}●</div>
-        <div style="margin-top:6px;font-size:9px;color:rgba(255,255,255,0.4);">$${ns.config?.dailyUsdTarget || 300}/day · ${ns.progress?.pctOfTarget || 0}% progress</div>
+        <div style="margin-top:6px;font-size:12px;color:rgba(255,255,255,0.4);">$${ns.config?.dailyUsdTarget || 300}/day · ${ns.progress?.pctOfTarget || 0}% progress</div>
         ${alertHtml}
-        <div style="margin-top:8px;"><a href="#" onclick="nav('stats');return false;" style="color:#c7af4f;font-size:10px;">→ Channel Stats</a></div>`;
+        <div style="margin-top:8px;"><a href="#" onclick="nav('stats');return false;" style="color:#c7af4f;font-size:13px;">→ Channel Stats</a></div>`;
       if (card) card.style.borderColor = (ns.alerts || []).some((a) => a.level === 'warn') ? 'rgba(243,156,18,0.45)' : '';
     } catch (_) {
       el.innerHTML = '<b style="color:#c7af4f;">North star</b><br>3–5 Shorts · 1–2 VOD · 0–2 Live/day';
