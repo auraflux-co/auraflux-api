@@ -95,6 +95,51 @@ describe('resolveBrandContext — explicit X-Brand-Id header', () => {
   });
 });
 
+// ─── Operator cross-account list (CPD-1184) ───────────────────────────────────
+
+describe('resolveBrandContext — operator GET /jobs?all=true', () => {
+  it('bypasses brand header validation for superadmin operator list', async () => {
+    const req = makeReq({
+      user: { id: 'op_superadmin', role: 'superadmin' },
+      headers: { 'x-brand-id': 'customer-brand-not-owned' },
+    });
+    req.method = 'GET';
+    req.path = '/jobs';
+    req.query = { all: 'true' };
+    req.originalUrl = '/jobs?all=true';
+
+    const res = makeRes();
+    const next = jest.fn();
+
+    await resolveBrandContext(req, res, next);
+
+    expect(getBrand).not.toHaveBeenCalled();
+    expect(req.brandId).toBeNull();
+    expect(req.brandPlan).toBeNull();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it('still enforces brand ownership for superadmin on non-all list', async () => {
+    getBrand.mockResolvedValue(null);
+
+    const req = makeReq({
+      user: { id: 'op_superadmin', role: 'superadmin' },
+      headers: { 'x-brand-id': 'brand-other' },
+    });
+    req.method = 'GET';
+    req.path = '/jobs';
+    req.query = {};
+
+    const res = makeRes();
+    const next = jest.fn();
+
+    await resolveBrandContext(req, res, next);
+
+    expect(res._status).toBe(403);
+    expect(next).not.toHaveBeenCalled();
+  });
+});
+
 // ─── No header — fallback behaviour ──────────────────────────────────────────
 
 describe('resolveBrandContext — no header (fallback)', () => {
