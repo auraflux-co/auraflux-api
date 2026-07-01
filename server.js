@@ -291,6 +291,7 @@ const pipelineBus = require('./lib/pipeline_events');
 const { StageTimer, jobMetrics, initJobMetrics, addStageMetrics, finalizeJobMetrics } = require('./lib/metrics');
 const db = require('./lib/db');
 const { createJobSpec, getJobSpec } = require('./lib/job_spec');
+const { resolveRequestClipsPerStreamer } = require('./lib/clip_lineup');
 const {
   shouldUseManualCheckpoint,
   useC0ImmediateManualHold,
@@ -571,6 +572,47 @@ try {
 }
 global.persistedJobsRef = persistedJobs;
 
+function resumeStuckClipCompHookJobs() {
+  const STUCK_MS = 90 * 1000;
+  const { runClipCompHookGeneration } = require('./lib/clip_comp_dispatch_assembly');
+  for (const [jobId, card] of Object.entries(persistedJobs)) {
+    if (!card?.clipsOnly) continue;
+    const hasHooks = (card.clipHookCandidates || []).some((pool) => pool && pool.length);
+    if (card.stage === 'hooks_generating' && hasHooks) {
+      card.stage = 'hook_review';
+      card.status = 'completed';
+      card.hookReviewReadyAt = card.hookReviewReadyAt || new Date().toISOString();
+      saveJobCard(jobId, card);
+      console.log(`[clip-comp] ${jobId}: repaired stage hooks_generating → hook_review (hooks already on card)`);
+      continue;
+    }
+    if (card.stage !== 'hooks_generating') continue;
+    if (hasHooks) continue;
+    if (!(card.orderedClipUrls || []).length) continue;
+    const createdMs = Date.parse(card.createdAt || card.savedAt || 0);
+    if (!createdMs || Date.now() - createdMs < STUCK_MS) continue;
+    console.log(`[clip-comp] ${jobId}: resuming hook generation (lost during restart)`);
+    setImmediate(async () => {
+      try {
+        await runClipCompHookGeneration(jobId, persistedJobs[jobId], {
+          saveJobCard,
+          onPublished: typeof tvAutoEnqueue === 'function' ? tvAutoEnqueue : undefined,
+        });
+      } catch (err) {
+        console.error(`[clip-comp] ${jobId}: resume hook generation failed — ${err.message}`);
+        const failCard = persistedJobs[jobId];
+        if (failCard) {
+          failCard.stage = 'failed';
+          failCard.status = 'failed';
+          failCard.assemblyError = err.message || String(err);
+          saveJobCard(jobId, failCard);
+        }
+      }
+    });
+  }
+}
+setImmediate(resumeStuckClipCompHookJobs);
+
 // Infer job stage from card fields for legacy jobs that predate the explicit stage field.
 // Used by /jobs filter and startup resume logic.
 function inferJobStage(job) {
@@ -634,6 +676,13 @@ function saveJobCard(jobId, card) {
   if (persistedJobs[jobId].stage === 'metadata_review' || persistedJobs[jobId].stage === 'awaiting_review') {
     if (persistedJobs[jobId].status === 'assembling') persistedJobs[jobId].status = 'completed';
   }
+  // HeyGen held for operator review — never label as all_sent (Avatar VOD holdBeforeHeygen path).
+  if (persistedJobs[jobId].heygen?.held === true
+    && persistedJobs[jobId].stage === 'all_sent'
+    && !(persistedJobs[jobId].heygen?.videoJobs?.length)) {
+    persistedJobs[jobId].stage = 'script_ready';
+    persistedJobs[jobId].gate1Passed = true;
+  }
   // Keep global ref in sync so assembly.js Gate 2 bypass can read card state
   if (global.persistedJobsRef) global.persistedJobsRef[jobId] = persistedJobs[jobId];
   // Prune jobs older than 7 days to keep file small
@@ -660,6 +709,15 @@ function saveJobCard(jobId, card) {
     console.warn('[content-library] mark used failed:', e.message);
   }
 }
+
+// Unpin legacy gate1 failures that were auto-pinned before queue policy (CPD-1190).
+try {
+  const { sweepLegacyAutoPinnedFailures } = require('./lib/job_queue_policy');
+  const _unpinned = sweepLegacyAutoPinnedFailures(persistedJobs, { saveJobCard });
+  if (_unpinned > 0) {
+    console.log(`[jobs] Queue policy: unpinned ${_unpinned} gate1-failed/review job(s) not operator-approved`);
+  }
+} catch (_qp) { /* non-fatal at boot */ }
 
 // ── markJobStuck() — Mark a job as stuck and trigger auto-disable pattern check ──
 // Called when a job fails hard gates (Gate 0, Gate 1, Gate 3) after max retries.
@@ -2141,11 +2199,15 @@ app.get('/jobs', (req, res) => {
 
   const { getJobBySpec } = require('./lib/db');
   const { buildGateStatusSnapshot } = require('./lib/job_spec_contracts');
-  const { reconcileStuckAssemblingJob } = require('./lib/assembly_card_persist');
+  const { reconcileStuckAssemblingJob, reconcileOrphanAssemblyOutput, reconcileCreditsOutroFromDuration } = require('./lib/assembly_card_persist');
   const jobsWithGateStatus = actionableJobs.map((job) => {
     const jobKey = job.id || job.jobId;
     const beforeStatus = job.status;
-    const reconciled = reconcileStuckAssemblingJob({ ...job });
+    const beforePreview = job.localPreviewUrl;
+    const beforeCredits = job.creditsOutroAppended;
+    let reconciled = reconcileStuckAssemblingJob({ ...job });
+    reconciled = reconcileOrphanAssemblyOutput(reconciled);
+    reconciled = reconcileCreditsOutroFromDuration(reconciled);
     if (
       jobKey &&
       reconciled.compCreative?.preset &&
@@ -2161,6 +2223,10 @@ app.get('/jobs', (req, res) => {
       reconciled.gate3?.outcome === 'pass' &&
       (beforeStatus === 'assembling' || beforeStatus === 'gate3_failed')
     ) {
+      saveJobCard(jobKey, reconciled);
+    } else if (jobKey && reconciled.localPreviewUrl && !beforePreview) {
+      saveJobCard(jobKey, reconciled);
+    } else if (jobKey && reconciled.creditsOutroAppended && !beforeCredits) {
       saveJobCard(jobKey, reconciled);
     }
     const candidates = [job.jobSpecId, job.scriptJobId, job.id].filter(Boolean);
@@ -2194,9 +2260,19 @@ app.get('/job/:id', (req, res) => {
   let card = persistedJobs[jobId];
   if (!card) return res.status(404).json({ ok: false, error: 'Job not found: ' + jobId });
 
-  const { reconcileStuckAssemblingJob } = require('./lib/assembly_card_persist');
-  const reconciled = reconcileStuckAssemblingJob({ ...card });
-  if (reconciled !== card) {
+  if (card.heygen?.held === true && card.stage === 'all_sent' && !(card.heygen?.videoJobs?.length)) {
+    card = { ...card, stage: 'script_ready', gate1Passed: card.gate1Passed ?? true };
+    saveJobCard(jobId, card);
+  }
+
+  const { reconcileStuckAssemblingJob, reconcileOrphanAssemblyOutput, reconcileCreditsOutroFromDuration, reconcileLostAssemblyFailure } = require('./lib/assembly_card_persist');
+  const beforePreview = card.localPreviewUrl;
+  const beforeCredits = card.creditsOutroAppended;
+  let reconciled = reconcileStuckAssemblingJob({ ...card });
+  reconciled = reconcileOrphanAssemblyOutput(reconciled);
+  reconciled = reconcileCreditsOutroFromDuration(reconciled);
+  reconciled = reconcileLostAssemblyFailure(reconciled);
+  if (reconciled !== card || (reconciled.localPreviewUrl && !beforePreview) || (reconciled.creditsOutroAppended && !beforeCredits)) {
     saveJobCard(jobId, reconciled);
     card = reconciled;
   }
@@ -2319,6 +2395,66 @@ app.delete('/job/:id', (req, res) => {
 
   console.log(`[jobs] Deleted job: ${jobId}`);
   res.json({ ok: true, deleted: jobId });
+});
+
+// POST /jobs/:jobId/retry-avatar-vod — regenerate script from saved clip lineup (no Library re-pick)
+app.post('/jobs/:jobId/retry-avatar-vod', async (req, res) => {
+  const jobId = req.params.jobId;
+  const card = persistedJobs[jobId]
+    || Object.values(persistedJobs).find((j) => j && (j.jobId === jobId || j.scriptJobId === jobId));
+  if (!card) {
+    return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  }
+  const ct = String(card.contentType || '');
+  if (!ct.includes('twitch') || ct.includes('-short')) {
+    return res.status(400).json({ ok: false, error: 'Retry same clips is for twitch long-form Avatar VOD only' });
+  }
+  const { buildItemsFromJobClipLineup } = require('./lib/avatar_vod_retry');
+  const items = buildItemsFromJobClipLineup(card);
+  if (!items.length) {
+    return res.status(400).json({
+      ok: false,
+      error: 'No clip lineup on job card — orderedClipUrls missing (re-pick from Library once)',
+    });
+  }
+  console.log(`[/jobs/${jobId}/retry-avatar-vod] Reusing ${items.length} streamers, ${(card.orderedClipUrls || []).length} clips`);
+  const clipUrls = card.orderedClipUrls || [];
+  const { resolveUniformClipsPerStreamer } = require('./lib/clip_lineup');
+  const clipsPerStreamer = resolveUniformClipsPerStreamer({ orderedClipUrls: clipUrls, items });
+  req.body = {
+    type: 'twitch',
+    items,
+    clipsPerStreamer,
+    date: card.date || new Date().toLocaleDateString([], {
+      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+    }),
+    tone: req.body?.tone || 'deadpan',
+    holdBeforeHeygen: req.body?.holdBeforeHeygen !== false,
+    repurposedFrom: jobId,
+    platforms: req.body?.platforms || null,
+  };
+  const ajVideoPool = [];
+  try {
+    const { createJobSpec } = require('./lib/job_spec');
+    const sourceUrls = items
+      .map((it) => it.url || (it.clips && it.clips[0] && it.clips[0].url) || null)
+      .filter(Boolean);
+    req.jobSpec = createJobSpec({
+      customerId: card.customerId || 'c0',
+      contentType: 'twitch',
+      formType: 'long-form',
+      sourceType: 'url_list',
+      sourceUrls,
+      items,
+      itemCount: items.length,
+      clipsPerStreamer,
+      title: card.title || 'Avatar VOD retry',
+    });
+    req.jobSpecId = req.jobSpec.jobId;
+  } catch (specErr) {
+    console.warn(`[/jobs/${jobId}/retry-avatar-vod] Job spec (non-fatal): ${specErr.message}`);
+  }
+  return handleGenerateFullScript(req, res, saveJobCard, startHeyGenPoller, ajVideoPool);
 });
 
 // POST /jobs/prune — keep only listed job IDs (operator queue cleanup)
@@ -2666,7 +2802,7 @@ async function _runGate5ForCard(jobId) {
   const gate5Worker = require('./lib/gates/gate5');
   const { readAutoPublishPlatformsEnv } = require('./lib/auto_publish_env');
 
-  const card = persistedJobs[jobId];
+  let card = persistedJobs[jobId];
   if (!card) throw new Error(`Job not found: ${jobId}`);
 
   const { isClipCompPublishHeld } = require('./lib/clip_comp');
@@ -2686,7 +2822,34 @@ async function _runGate5ForCard(jobId) {
   }
 
   const savedOutputs = card.state?.savedOutputs || {};
-  const driveUrl = savedOutputs.driveUrl || card.driveUrl;
+  let driveUrl = savedOutputs.driveUrl || card.driveUrl;
+  const { ensurePublishDriveUrlMatchesLocal, uploadAssemblyMp4ToR2AndPersist } = require('./lib/assembly_r2_persist');
+  const syncedUrl = await ensurePublishDriveUrlMatchesLocal({
+    cardId: jobId,
+    card,
+    saveJobCard,
+    logFn: (m) => console.log(`[run-gate5] ${jobId}: ${m}`),
+  });
+  if (syncedUrl) {
+    driveUrl = syncedUrl;
+    card = persistedJobs[jobId] || card;
+  } else if (!driveUrl) {
+    const { findJobFinalOutputPath } = require('./lib/assembly_card_persist');
+    const localPath = card.outputPath || findJobFinalOutputPath(card);
+    if (localPath && fs.existsSync(localPath)) {
+      const outFile = path.basename(localPath);
+      driveUrl = await uploadAssemblyMp4ToR2AndPersist({
+        cardId: jobId,
+        outPath: localPath,
+        outFile,
+        saveJobCard,
+        logFn: (m) => console.log(`[run-gate5] ${jobId}: ${m}`),
+      });
+      if (driveUrl) {
+        card = persistedJobs[jobId] || card;
+      }
+    }
+  }
   if (!driveUrl) throw new Error(`driveUrl missing for ${jobId} — Drive upload may not have completed`);
 
   try {
@@ -2788,6 +2951,15 @@ async function _runGate5ForCard(jobId) {
   if (g5Result.passed) {
     card.stage = 'published';
     card.publishedAt = new Date().toISOString();
+    const epInc = g5Result.episodeIncrement;
+    if (epInc && !epInc.skipped) {
+      card.episodeCounterIncremented = true;
+      card.publishedEpisodeNumber = epInc.publishedNum;
+      card.state = card.state || {};
+      card.state.savedOutputs = card.state.savedOutputs || {};
+      card.state.savedOutputs.publishedEpisodeNumber = epInc.publishedNum;
+      console.log(`[run-gate5] ${jobId}: episode counter ${epInc.key} → next ${epInc.next}`);
+    }
     console.log(`[run-gate5] ${jobId}: Gate 5 PASS — marked published`);
     pipelineBus.emit('publish:complete', { jobId });
   } else {
@@ -3968,6 +4140,24 @@ app.get('/studio-laugh/library', (_req, res) => {
   }
 });
 
+// POST /job/:id/script — operator saves edited script on job card (no HeyGen send)
+app.post('/job/:id/script', (req, res) => {
+  const jobId = req.params.id;
+  let card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  const script = String(req.body?.script || '').trim();
+  if (!script) return res.status(400).json({ ok: false, error: 'Empty script' });
+  const contentType = card.contentType || card.type || 'twitch';
+  const scenes = parseScriptIntoScenes(script, { contentType });
+  card = {
+    ...card,
+    script: { ...(card.script || {}), raw: script, scenes },
+    stage: (card.heygen?.held && !(card.heygen?.videoJobs?.length)) ? 'script_ready' : (card.stage || 'script_ready'),
+  };
+  saveJobCard(jobId, card);
+  res.json({ ok: true, jobId, sceneCount: scenes.length });
+});
+
 // POST /job/:id/regen-script — send script back to Gemini for Talk Soup voice rewrite
 app.post('/job/:id/regen-script', async (req, res) => {
   const jobId = req.params.id;
@@ -4386,6 +4576,7 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
       } catch (credErr) {
         console.warn(`[regenerate-publish-copy] Credits outro append failed (non-fatal): ${credErr.message}`);
       }
+      if (card.creditsOutroAppended) saveJobCard(jobId, card);
     }
 
     res.json({
@@ -5043,6 +5234,7 @@ app.post('/job/:id/queue-pin', (req, res) => {
   const card = persistedJobs[jobId];
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
   card.queuePinned = true;
+  card.operatorQueuePin = true;
   card.queuePinnedAt = new Date().toISOString();
   saveJobCard(jobId, card);
   return res.json({ ok: true, jobId, queuePinned: true });
@@ -5327,10 +5519,11 @@ app.post('/job/:id/reassemble', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Job is already published — rollback first if you need to re-assemble.' });
   }
 
+  const episodeChromeReburnOnly = req.body?.episodeChromeReburnOnly === true;
   const partialSceneLabels = Array.isArray(req.body?.partialSceneLabels)
     ? req.body.partialSceneLabels.filter(Boolean)
     : null;
-  if (!partialSceneLabels?.length) {
+  if (!partialSceneLabels?.length && !episodeChromeReburnOnly) {
     const { countManualAvatarFilesOutsideSceneUpdates } = require('./lib/partial_scene_reassemble');
     const stray = countManualAvatarFilesOutsideSceneUpdates(jobId);
     if (stray > 0 && !req.body?.fullManualBatch) {
@@ -5478,6 +5671,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
   }
 
   // ── Reset assembly-related state so old stitch artefacts are gone ──────────
+  const priorAssemblyId = episodeChromeReburnOnly ? (card.assemblyId || null) : null;
   const retryNum  = (card._assemblyRetryCount || 0) + 1;
   const assemblyId = `asm_${jobId}_r${retryNum}`;
 
@@ -5601,6 +5795,8 @@ app.post('/job/:id/reassemble', async (req, res) => {
   // ── Fire /assemble (continued) ───
   const payload = {
     operatorReassemble: true,
+    episodeChromeReburnOnly: episodeChromeReburnOnly || null,
+    priorAssemblyId: priorAssemblyId || null,
     partialSceneLabels: partialSceneLabels?.length ? partialSceneLabels : null,
     segments:     segmentData.map(s => s.url),
     segmentData,
@@ -5649,7 +5845,9 @@ app.post('/job/:id/reassemble', async (req, res) => {
     jobId,
     assemblyId,
     retryNum,
-    message: partialSceneLabels?.length
+    message: episodeChromeReburnOnly
+      ? `Episode chrome reburn r${retryNum} started — reusing ${priorAssemblyId || 'prior'} segment cache, Episode 4 overlay only (no HeyGen).`
+      : partialSceneLabels?.length
       ? `Partial re-assembly r${retryNum} started — ${partialSceneLabels.length} scene update(s) from scene_updates/, rest from job card.`
       : `Re-assembly r${retryNum} started — files from manual_segments will be used. Watch the dashboard for Gate 3 result.`,
     segmentCount: segmentData.length,
@@ -5668,7 +5866,15 @@ app.post('/job/:id/reassemble', async (req, res) => {
       };
       await handleAssemble({ body: payload }, fakeRes, saveJobCard);
       if (ack?.status >= 400) {
+        const errMsg = ack.data?.error || ack.data?.hint || JSON.stringify(ack.data);
         console.error(`[reassemble] ${jobId} r${retryNum}: assemble rejected (${ack.status}) — ${JSON.stringify(ack.data)}`);
+        const failCard = persistedJobs[jobId];
+        if (failCard) {
+          failCard.stage = 'heygen_done';
+          failCard.status = 'all_sent';
+          failCard.assemblyError = errMsg;
+          saveJobCard(jobId, failCard);
+        }
         return;
       }
       if (!ack?.data?.ok) {
@@ -6053,54 +6259,14 @@ app.post('/generate-clip-comp', async (req, res) => {
 
   setImmediate(async () => {
     try {
-      const { generateClipCompCreativeBriefWithTimeout, buildRepurposeClipCompBrief, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
-      const { fireClipCompAssembly } = require('./lib/clip_comp_dispatch_assembly');
-      const hookItems = clips.map(c => ({
-        title: c.title || '',
-        headline: c.title || '',
-        displayName: c.displayName || c.streamer || '',
-        streamer: c.streamer || c.displayName || '',
-        clipTitle: c.title || '',
-        thumbnailUrl: c.thumbnailUrl || '',
-        game: c.game || '',
-        viewCount: c.views || c.viewCount || null,
-        sceneLabel: c.sceneLabel || '',
-        segmentKind: c.segmentKind || '',
-      }));
+      const { runClipCompHookGeneration } = require('./lib/clip_comp_dispatch_assembly');
       const repurposeFast = !!(req.body.repurposeFastHooks && req.body.repurposedFrom);
-      console.log(`[clip-comp] ${jobId}: generating ${repurposeFast ? 'repurpose scene' : 'Gemini creative'} brief for ${orderedClipUrls.length} clips...`);
-      const clipCompBrief = repurposeFast
-        ? await buildRepurposeClipCompBrief(orderedClipUrls, hookItems, {
-          log: (m) => console.log(`[clip-comp] ${jobId}${m}`),
-          compCreative: card.compCreative || null,
-        })
-        : await generateClipCompCreativeBriefWithTimeout(orderedClipUrls, hookItems, {
-          log: (m) => console.log(`[clip-comp] ${jobId}${m}`),
-          compCreative: card.compCreative || null,
-        });
-      if (clipCompBrief.fallbackBrief) {
-        console.warn(`[clip-comp] ${jobId}: using fallback brief (Gemini timeout or error)`);
-      }
-      const clipHookTitles = clipCompBrief.clips.map((c) => c.hook);
-      const clipHookCandidates = clipCompBrief.clips.map((c) => c.hookCandidates || []);
-      card.clipHookTitles = clipHookTitles;
-      card.clipHookCandidates = clipHookCandidates;
-      card.clipCompBrief = clipCompBrief;
-      card.hooksPendingReassemble = false;
-
-      if (req.body.autoConfirmHooks) {
-        card.hooksConfirmedAt = new Date().toISOString();
-        card.hooksOperatorLocked = true;
-        saveJobCard(jobId, card);
-        await fireClipCompAssembly(card, jobId, { saveJobCard });
-        console.log(`[clip-comp] ${jobId}: autoConfirmHooks — assembly started`);
-      } else {
-        card.stage = 'hook_review';
-        card.status = 'completed';
-        card.hookReviewReadyAt = new Date().toISOString();
-        saveJobCard(jobId, card);
-        console.log(`[clip-comp] ${jobId}: hook_review — ${clipHookCandidates[0]?.length || 0} candidates ready; waiting for operator hook pick`);
-      }
+      await runClipCompHookGeneration(jobId, card, {
+        saveJobCard,
+        autoConfirmHooks: !!req.body.autoConfirmHooks,
+        repurposeFast,
+        onPublished: tvAutoEnqueue,
+      });
     } catch (err) {
       console.error(`[clip-comp] ${jobId}: hook brief failed — ${err.message}`);
       card.stage = 'failed';
@@ -6181,8 +6347,15 @@ app.post('/job/:id/regenerate-hooks', async (req, res) => {
     card.clipHookTitles = clipHookTitles;
     card.clipHookCandidates = clipHookCandidates;
     card.clipCompBrief = clipCompBrief;
-    if (card.stage !== 'awaiting_review') card.stage = 'awaiting_review';
-    card.status = card.status === 'gate3_failed' ? 'completed' : (card.status || 'completed');
+    const preAssembly = !card.assembledAt && !card.driveUrl && !card.localPreviewUrl;
+    if (preAssembly) {
+      card.stage = 'hook_review';
+      card.status = 'completed';
+      card.hookReviewReadyAt = new Date().toISOString();
+    } else if (card.stage !== 'awaiting_review') {
+      card.stage = 'awaiting_review';
+      card.status = card.status === 'gate3_failed' ? 'completed' : (card.status || 'completed');
+    }
     saveJobCard(jobId, card);
 
     res.json({
@@ -9734,6 +9907,7 @@ app.post('/generate-full-script',
           ? { siteTarget: contentType }
           : { urls: sourceUrls },
         items: Array.isArray(items) ? items : [],
+        clipsPerStreamer: resolveRequestClipsPerStreamer(req.body, items),
         title: title || null
       });
     } catch (specErr) {

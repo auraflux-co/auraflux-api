@@ -103,6 +103,16 @@
       "fact": "Engaged to Maya"
     },
     {
+      "displayName": "Emiru",
+      "twitchUsername": "emiru",
+      "onAirName": "Emiru",
+      "phonetic": "Em-ih-roo",
+      "active": true,
+      "profileImage": "https://static-cdn.jtvnw.net/jtv_user_pictures/emiru-profile_image-300x300.png",
+      "origin": "Texas",
+      "fact": "Cheddar and Mozzarella co-hosts"
+    },
+    {
       "displayName": "Rage",
       "twitchUsername": "yourragegaming",
       "onAirName": "Rage",

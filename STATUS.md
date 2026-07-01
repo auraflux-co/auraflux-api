@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-02 (CPD-1201) — Twitch Soup preset hold fixes: Gate 3a expects sceneStructure streamer names (not Twitch clip titles); Emiru phonetic + cold open name dedupe; phonetics on all HeyGen scenes; scene-reset holds on streamer intro/outro; YouTube direct from local MP4; final R2 sync after credits. Tests 9/9. Deployed C0.
 **Last Updated:** 2026-06-30 (CPD-1190 Phases 2–5) — Intelligence loop wired: publish copy gets Content Memory + comp style at Gate 1; outcome reconcile + job backfill; thumbnail Gemini uses historical thumb text; Publish Prep hints panel; `scripts/intelligence_sync.js`. Tests 19/19. **Deploy held — Rob on Avatar VOD.** C0 local only.
 **Last Updated:** 2026-06-30 (CPD-1190) — ClipzWorld Intelligence Engine Phase 1: Content Memory SQLite (`content_memory_videos`, `content_memory_decisions`), `lib/intelligence/`, `lib/analytics/`, `lib/seo/`, gate5 publish hook, C0 routes + TOOLS→Intelligence dashboard page. Tests 14/14 pass. HOW Confluence 42762242. **C0 local only — not Render prod until Rob approves.**
 **Last Updated:** 2026-06-30 (CPD-1189b) — Gate 1 handoff review fix: normalize script before handoff header check (portal1 passed but handoff failed on inline raw). Truncated Gemini QA JSON salvage. Deployed C0.
