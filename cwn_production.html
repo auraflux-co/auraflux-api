@@ -1760,6 +1760,27 @@ input[type="url"], input[type="password"], select, textarea {
           <tbody id="intel-comp-body"><tr><td colspan="4" style="padding:16px;color:rgba(255,255,255,0.35);">No competitor snapshot yet — click Sync competitors (yt-dlp, ~1 min).</td></tr></tbody>
         </table>
       </div>
+      <div class="sec-title" style="margin-top:18px;">A/B TESTS <span class="badge" id="intel-ab-count">0</span>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-left:10px;" onclick="rotateAbTests()">Rotate due now</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+        <input type="text" id="intel-ab-video" placeholder="YouTube video ID" style="width:160px;">
+        <select id="intel-ab-kind" style="width:110px;">
+          <option value="title">Title</option>
+          <option value="thumbnail">Thumbnail</option>
+        </select>
+        <input type="text" id="intel-ab-variant-a" placeholder="Variant A (title text or thumb path)" style="flex:1;min-width:200px;">
+        <input type="text" id="intel-ab-variant-b" placeholder="Variant B (title text or thumb path)" style="flex:1;min-width:200px;">
+        <button type="button" class="btn btn-gold btn-sm" onclick="startAbTest()">Start test</button>
+      </div>
+      <div class="stats-table-wrap">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Video</th><th>Kind</th><th>A</th><th>B</th><th>Active</th><th>Periods</th><th>Status</th>
+          </tr></thead>
+          <tbody id="intel-ab-body"><tr><td colspan="7" style="padding:16px;color:rgba(255,255,255,0.35);">No A/B tests yet — variants rotate every 24h; winner applied at 95% significance.</td></tr></tbody>
+        </table>
+      </div>
       <div id="intel-status" style="margin-top:12px;font-size:14px;color:rgba(255,255,255,0.3);"></div>
     </div>
 
@@ -4420,6 +4441,7 @@ function loadIntelligencePage(forceRefresh) {
     })
     .then(function() { return loadIntelligenceRecommend(); })
     .then(function() { return loadIntelligenceCompetitors(base); })
+    .then(function() { return loadIntelligenceAbTests(base); })
     .then(function() {
       if (statusEl) statusEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
     })
@@ -4518,6 +4540,98 @@ function syncCompetitors() {
     })
     .catch(function(e) {
       if (statusEl) statusEl.textContent = 'Competitor sync failed: ' + (e.message || 'error');
+    });
+}
+
+function _abVariantLabel(test, key) {
+  var v = key === 'a' ? test.variantA : test.variantB;
+  if (!v) return '—';
+  var label = v.title || v.path || JSON.stringify(v);
+  return escHtml(String(label).slice(0, 45));
+}
+
+function loadIntelligenceAbTests(base) {
+  base = base || intelApiBase();
+  return fetch(base + '/intelligence/ab-tests')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var body = g('intel-ab-body');
+      if (!body) return;
+      var tests = d.tests || [];
+      if (g('intel-ab-count')) g('intel-ab-count').textContent = String(tests.length);
+      if (!tests.length) {
+        body.innerHTML = '<tr><td colspan="7" style="padding:16px;color:rgba(255,255,255,0.35);">No A/B tests yet — variants rotate every 24h; winner applied at 95% significance.</td></tr>';
+        return;
+      }
+      body.innerHTML = tests.map(function(t) {
+        var statusStr = t.status === 'complete'
+          ? 'complete → ' + (t.winner || '?').toUpperCase() + ' wins'
+          : t.status;
+        var statusColor = t.status === 'complete' ? '#2ecc71' : 'rgba(255,255,255,0.5)';
+        return '<tr>'
+          + '<td style="font-family:monospace;">' + escHtml(t.platformVideoId) + '</td>'
+          + '<td>' + escHtml(t.kind) + '</td>'
+          + '<td>' + _abVariantLabel(t, 'a') + '</td>'
+          + '<td>' + _abVariantLabel(t, 'b') + '</td>'
+          + '<td style="font-family:monospace;font-weight:700;">' + (t.activeVariant || '').toUpperCase() + '</td>'
+          + '<td>' + (t.periods || []).length + '</td>'
+          + '<td style="color:' + statusColor + ';">' + escHtml(statusStr) + '</td>'
+          + '</tr>';
+      }).join('');
+    })
+    .catch(function() {
+      if (g('intel-ab-body')) g('intel-ab-body').innerHTML = '<tr><td colspan="7" style="padding:16px;color:#e74c3c;">A/B tests fetch failed</td></tr>';
+    });
+}
+
+function startAbTest() {
+  var base = intelApiBase();
+  var statusEl = g('intel-status');
+  var videoId = (g('intel-ab-video').value || '').trim();
+  var kind = g('intel-ab-kind').value;
+  var a = (g('intel-ab-variant-a').value || '').trim();
+  var b = (g('intel-ab-variant-b').value || '').trim();
+  if (!videoId || !a || !b) {
+    if (statusEl) statusEl.textContent = 'A/B test needs video ID + both variants.';
+    return;
+  }
+  var wrap = kind === 'title'
+    ? function(v) { return { title: v }; }
+    : function(v) { return { path: v }; };
+  if (statusEl) statusEl.textContent = 'Starting A/B test…';
+  fetch(base + '/intelligence/ab-tests', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ platformVideoId: videoId, kind: kind, variantA: wrap(a), variantB: wrap(b) })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'start failed');
+      if (statusEl) statusEl.textContent = 'A/B test #' + d.test.id + ' started on ' + videoId + ' (variant A live).';
+      g('intel-ab-video').value = '';
+      g('intel-ab-variant-a').value = '';
+      g('intel-ab-variant-b').value = '';
+      return loadIntelligenceAbTests(base);
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'A/B test start failed: ' + (e.message || 'error');
+    });
+}
+
+function rotateAbTests() {
+  var base = intelApiBase();
+  var statusEl = g('intel-status');
+  if (statusEl) statusEl.textContent = 'Rotating due A/B tests…';
+  fetch(base + '/intelligence/ab-tests/rotate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'rotate failed');
+      var failed = (d.results || []).filter(function(r) { return !r.ok; }).length;
+      if (statusEl) statusEl.textContent = 'Rotate done — ' + (d.rotated || 0) + ' test(s) rotated/decided' + (failed ? ', ' + failed + ' failed' : '') + '.';
+      return loadIntelligenceAbTests(base);
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Rotate failed: ' + (e.message || 'error');
     });
 }
 
