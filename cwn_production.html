@@ -16825,6 +16825,7 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
         html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">'
           + '<span style="font-size:12px;color:rgba(255,255,255,0.3);">' + views + ' views</span>'
           + usedBadge
+          + '<span id="tpred-' + si + '-' + ci + '" style="font-size:11px;font-family:monospace;"></span>'
           + (durStr ? '<span class="picker-dur" style="color:' + durClr + ';">' + durStr + '</span>' : '')
           + '<span style="font-size:12px;color:' + rankColor + ';font-family:monospace;font-weight:700;">' + rankLabel + '</span>'
           + '</div></div>';
@@ -16839,6 +16840,49 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
   g('gen-twitch-empty').style.display = 'none';
   updateLibraryCountBadge();
   refreshCompLineupUI();
+  annotateClipPredictions();
+}
+
+// CPD-1210 — view prediction badges on library clip cards
+var PRED_BAND_STYLES = {
+  'Very High': 'background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.35);',
+  'High': 'background:rgba(199,175,79,0.15);color:#c7af4f;border:1px solid rgba(199,175,79,0.35);',
+  'Medium': 'background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.15);',
+  'Low': 'background:rgba(231,76,60,0.1);color:rgba(231,76,60,0.6);border:1px solid rgba(231,76,60,0.25);'
+};
+
+function annotateClipPredictions() {
+  var candidates = [];
+  (_twitchPickerStreamers || []).forEach(function(entry, si) {
+    (entry.clips || []).forEach(function(clip, ci) {
+      candidates.push({
+        _key: si + '-' + ci,
+        title: clip.title || '',
+        streamer: entry.name || clip.streamer || '',
+        views: clip.views || 0,
+        clipCreatedAt: clip.createdAt ? new Date(clip.createdAt).getTime() : 0
+      });
+    });
+  });
+  if (!candidates.length) return;
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/intelligence/predict', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ candidates: candidates })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) return;
+      (d.candidates || []).forEach(function(c) {
+        var el = g('tpred-' + c._key);
+        if (!el || !c.prediction) return;
+        var band = c.prediction.band;
+        el.setAttribute('style', 'font-size:11px;font-family:monospace;padding:1px 5px;border-radius:3px;' + (PRED_BAND_STYLES[band] || ''));
+        el.textContent = band.toUpperCase() + ' ' + c.prediction.score;
+        el.title = (c.prediction.reasons || []).join('\n');
+      });
+    })
+    .catch(function() { /* prediction badges are best-effort */ });
 }
 
 function _setTwitchClipSelected(si, ci, selected) {
