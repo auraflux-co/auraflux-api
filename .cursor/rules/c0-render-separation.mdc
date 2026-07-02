@@ -17,8 +17,17 @@ Read the **Worker Memory** block at the top of `STATUS.md` before any git merge 
 | **Render production** | `~/cwn-production` | `main` | Render `auraflux-api` + app · GitHub **auraflux-api** |
 | **Jira ticket IDs** | — | — | Git commit tags may be wrong (e.g. `cpd-1017` in commits ≠ Jira CPD-1017) |
 
+## Feature graduation — C0 is the proving ground
+
+**New/untested features live on C0 only until Rob declares them customer-ready.** Render prod
+(`cwn-production` / `main`) receives features only after they are validated on C0 with real jobs.
+Do not port, cherry-pick, or scaffold an unvalidated feature into prod "to get ahead" — the port
+happens via an explicit CPD port ticket after Rob approves graduation. (Example: the CPD-1190
+Intelligence Engine is C0-only until validated.)
+
 ## Never
 
+- Port an untested/unvalidated feature from C0 to prod — graduation requires Rob's approval + a port ticket
 - Merge `origin/main` into the C0 branch to "sync" — cherry-pick portable `lib/` fixes only (CPD ticket each)
 - Merge C0 branch → `main` without explicit port ticket (PR #637 class mistake)
 - Replace C0 `lib/gates/gate5.js` with a production `portal5.js` shim — C0 uses full gate5 + `/uploadposts/status`

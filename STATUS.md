@@ -2,6 +2,8 @@
 
 **Deploy Mode:** dev — CPD-1185/1186/1187 production fixes deploying to auraflux-api.
 
+**Last Updated:** 2026-07-01 (CPD-1190 policy) — Feature graduation policy codified: untested features stay on C0 until Rob declares customer-ready; prod port requires explicit CPD port ticket (`.cursor/rules/c0-render-separation.mdc` + HOW page 42762242). Docs-only — no deploy.
+
 **Last Updated:** 2026-06-21 (Sprint 7 close) — pricing sync, E2E Gemini UX gate, ops runbooks, C0 repo policy.
 **Last Updated:** 2026-06-21 (CPD-1013/1014/999/1026) — trusted domains, publish guard, worker rootCause, portal5 poll test.
 **Last Updated:** 2026-06-23 (CPD-1077) — fleetPaused operator hold; roster refresh API; mirror disclaimers; solo brand frame; fleet CPU monitor scripts.
@@ -209,7 +211,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(cpd-1185/1186/1187): brand_id + startup rescue + postprocess export** — createJobSpec brandId; restore rescueInterruptedJobs; applyPostProcessingEffects wrapper. | job_spec.js, startup, assembly_postprocess.js, server.js, tests, STATUS.md | pending | 2026-06-30 ET |
+| Cursor | **fix(cpd-1185/1186/1187): brand_id + startup rescue + postprocess export** — createJobSpec brandId; restore rescueInterruptedJobs; applyPostProcessingEffects wrapper. | job_spec.js, startup, assembly_postprocess.js, server.js, tests, STATUS.md | c6deb625 | 2026-06-30 ET |
 | Cursor | **fix(cpd-1184): operator jobs list brand bypass** — superadmin GET /jobs?all=true skips X-Brand-Id validation. | brand_access.js, brand_access.test.js, STATUS.md | aba1cfc7 | 2026-06-30 ET |
 | Cursor | **fix(cpd-869): My Jobs list empty** — legacy GET /jobs in server.js shadowed jobs_c1 Postgres list; include null brand_id in list filter. | server.js, postgres.js, jobs.js, cwn_production.html, STATUS.md | pending | 2026-06-30 ET |
 | Cursor | **fix(cpd-324): restore BullMQ pipeline worker** — #637 accidentally removed startPipelineWorker; all queued jobs stuck since June 13. | server.js, STATUS.md | 4e0a2682 | 2026-06-30 ET |
