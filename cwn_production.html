@@ -1968,6 +1968,7 @@ input[type="url"], input[type="password"], select, textarea {
                     <span class="library-sort-label">Sort</span>
                     <button type="button" class="library-window-pill active" data-sort="popular" onclick="setLibraryClipSort('popular')">Popular</button>
                     <button type="button" class="library-window-pill" data-sort="recent" onclick="setLibraryClipSort('recent')">Recent</button>
+                    <button type="button" class="library-window-pill" data-sort="score" onclick="setLibraryClipSort('score')" title="Order each streamer's clips by view-prediction score">Score</button>
                   </div>
                 </div>
                 <span class="gen-main-hint" id="twitch-main-hint">Check clips → COMPOSE → edit in Generate</span>
@@ -1976,7 +1977,7 @@ input[type="url"], input[type="password"], select, textarea {
                 <option value="last24h">Last 24H</option><option value="last7d" selected>Last 7D</option><option value="last30d">Last 30D</option><option value="7d">24H–7D</option><option value="30d">7D–30D</option><option value="all">30D+</option>
               </select>
               <select id="library-clip-sort" style="display:none" aria-hidden="true">
-                <option value="popular" selected>Popular</option><option value="recent">Recent</option>
+                <option value="popular" selected>Popular</option><option value="recent">Recent</option><option value="score">Score</option>
               </select>
               <div id="gen-twitch-empty" class="gen-main-empty">Select creators on the left, choose a time window above, then click <strong>Load library</strong>.</div>
               <div id="twitch-inline-picker" class="gen-picker-panel" style="display:none;"></div>
@@ -3464,7 +3465,7 @@ function libraryWindowToPubKey(win) {
 function getLibraryClipSort() {
   var el = g('library-clip-sort');
   var sort = el && el.value ? el.value : 'popular';
-  return sort === 'recent' ? 'recent' : 'popular';
+  return (sort === 'recent' || sort === 'score') ? sort : 'popular';
 }
 
 function syncLibraryClipSortPills() {
@@ -3475,7 +3476,7 @@ function syncLibraryClipSortPills() {
 }
 
 function setLibraryClipSort(sort) {
-  sort = sort === 'recent' ? 'recent' : 'popular';
+  sort = (sort === 'recent' || sort === 'score') ? sort : 'popular';
   var el = g('library-clip-sort');
   if (el) el.value = sort;
   syncLibraryClipSortPills();
@@ -17019,6 +17020,7 @@ function renderTwitchPickerWhenDone(btn, clipsPerStreamer, total) {
 function renderTwitchPicker(btn, clipsPerStreamer) {
   btn.textContent = 'Hide library'; btn.disabled = false;
   var filters = getPickerFilters('twitch');
+  var scoreSort = getLibraryClipSort() === 'score';
   _twitchPickerStreamers.forEach(function(entry) {
     if (entry.clipsRaw && entry.clipsRaw.length) {
       var selUrls = {};
@@ -17028,6 +17030,16 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
       });
       entry.clips.forEach(function(c) { c.selected = !!selUrls[c.url]; });
       entry._clipsBeforeFilter = entry.clipsRaw.length;
+    }
+    // CPD-1216 — Score sort orders each streamer's clips by prediction score.
+    // Clips without a prediction yet sink below scored ones; ties fall back to views.
+    if (scoreSort && (entry.clips || []).length > 1) {
+      entry.clips.sort(function(a, b) {
+        var as = a._pred ? a._pred.score : -1;
+        var bs = b._pred ? b._pred.score : -1;
+        if (bs !== as) return bs - as;
+        return (b.views || 0) - (a.views || 0);
+      });
     }
   });
   var ok = _twitchPickerStreamers.filter(function(e){ return !e.dropReason && e.clips.length > 0; }).length;
@@ -17173,12 +17185,30 @@ var PRED_BAND_STYLES = {
   'Low': 'background:rgba(231,76,60,0.1);color:rgba(231,76,60,0.6);border:1px solid rgba(231,76,60,0.25);'
 };
 
+function _paintClipPrediction(key, prediction) {
+  var el = g('tpred-' + key);
+  if (!el || !prediction) return;
+  var band = prediction.band;
+  el.setAttribute('style', 'font-size:11px;font-family:monospace;padding:1px 5px;border-radius:3px;' + (PRED_BAND_STYLES[band] || ''));
+  el.textContent = band.toUpperCase() + ' ' + prediction.score;
+  el.title = (prediction.reasons || []).join('\n');
+}
+
 function annotateClipPredictions() {
+  // CPD-1216 — predictions are cached on clip objects (clip._pred) so re-renders
+  // paint badges synchronously and only unscored clips hit /intelligence/predict.
   var candidates = [];
+  var refs = {};
   (_twitchPickerStreamers || []).forEach(function(entry, si) {
     (entry.clips || []).forEach(function(clip, ci) {
+      var key = si + '-' + ci;
+      if (clip._pred) {
+        _paintClipPrediction(key, clip._pred);
+        return;
+      }
+      refs[key] = clip;
       candidates.push({
-        _key: si + '-' + ci,
+        _key: key,
         title: clip.title || '',
         streamer: entry.name || clip.streamer || '',
         views: clip.views || 0,
@@ -17196,13 +17226,13 @@ function annotateClipPredictions() {
     .then(function(d) {
       if (!d.ok) return;
       (d.candidates || []).forEach(function(c) {
-        var el = g('tpred-' + c._key);
-        if (!el || !c.prediction) return;
-        var band = c.prediction.band;
-        el.setAttribute('style', 'font-size:11px;font-family:monospace;padding:1px 5px;border-radius:3px;' + (PRED_BAND_STYLES[band] || ''));
-        el.textContent = band.toUpperCase() + ' ' + c.prediction.score;
-        el.title = (c.prediction.reasons || []).join('\n');
+        if (!c.prediction) return;
+        if (refs[c._key]) refs[c._key]._pred = c.prediction;
+        _paintClipPrediction(c._key, c.prediction);
       });
+      // Fresh scores arrived — apply the score order. Safe from loops: the
+      // re-render's annotate pass finds every clip cached and never refetches.
+      if (getLibraryClipSort() === 'score') rerenderTwitchPicker();
     })
     .catch(function() { /* prediction badges are best-effort */ });
 }

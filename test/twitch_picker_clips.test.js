@@ -28,3 +28,17 @@ test('library clip fetch exposes popular/recent sort toggle', () => {
   assert.match(html, /clipSort=' \+ encodeURIComponent\(getLibraryClipSort\(\)\)/);
   assert.match(html, /id="library-clip-sort"/);
 });
+
+// CPD-1216 — Score sort pill orders clips by cached view-prediction score
+test('library clip picker exposes score sort backed by cached predictions', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../cwn_production.html'), 'utf8');
+  assert.match(html, /setLibraryClipSort\('score'\)/);
+  assert.match(html, /<option value="score">Score<\/option>/);
+  // getLibraryClipSort/setLibraryClipSort whitelist includes 'score'
+  assert.match(html, /sort === 'recent' \|\| sort === 'score'/);
+  // predictions cached on clip objects and used for ordering
+  assert.match(html, /_pred = c\.prediction/);
+  assert.match(html, /a\._pred \? a\._pred\.score : -1/);
+  // fresh predictions trigger exactly one re-render when score sort is active
+  assert.match(html, /getLibraryClipSort\(\) === 'score'\) rerenderTwitchPicker\(\)/);
+});
