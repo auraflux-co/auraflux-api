@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-01 (CPD-1206) — Analytics sync E2E live: fixed `analyticsReady()` token pass-through, set `YOUTUBE_CHANNEL_ID`, fixed report shape (`{videos:[]}` not rows), single-report batch sync, Data API fallback for <72h-old uploads (Analytics API lag). Verified: 4 videos synced real views, 14 decisions reconciled. Graduation item 2 ✅.
 **Last Updated:** 2026-07-01 (CPD-1195/1196) — Intelligence browser-test bug fixes: backfill + recordFromPublish now read `gate5Result.platforms.youtube.url` (real backfill works — 3 jobs seeded); Publish Prep hints show comp style when Content Memory empty; deduped avg-views text on Intelligence page. Tests 20/20. Committed after Rob's job pause lifted; deploy pending idle check.
 **Last Updated:** 2026-07-02 (CPD-1201) — Twitch Soup preset hold fixes: Gate 3a expects sceneStructure streamer names (not Twitch clip titles); Emiru phonetic + cold open name dedupe; phonetics on all HeyGen scenes; scene-reset holds on streamer intro/outro; YouTube direct from local MP4; final R2 sync after credits. Tests 9/9. Deployed C0.
 **Last Updated:** 2026-06-30 (CPD-1190 Phases 2–5) — Intelligence loop wired: publish copy gets Content Memory + comp style at Gate 1; outcome reconcile + job backfill; thumbnail Gemini uses historical thumb text; Publish Prep hints panel; `scripts/intelligence_sync.js`. Tests 19/19. **Deploy held — Rob on Avatar VOD.** C0 local only.
