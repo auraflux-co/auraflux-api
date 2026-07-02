@@ -184,7 +184,8 @@ A run is **green / successful** only when **all** of the following are true:
 
 ### Current focus (update every working session)
 
-- **Today:** Phase A mini re-run with **fixed gate-watch polling** (`scriptJobId` first) to tail real gate lines; continue **HeyGen → assembly → gates** on failing NBA script QA (fabrication vs facts). Latest batch transcript: `logs/phase_a_live_20260421_223306Z.log`.
+- **Today:** CPD-1209 shipped — productized competitor tracking: `competitor_videos` table, `lib/intelligence/competitors.js` (yt-dlp catalog sync, ≥3x-median outlier detection, prompt block into recommendContext), routes `POST/GET /intelligence/competitors[/sync]`, `--competitors` flag on `scripts/intelligence_sync.js`, Competitor Outliers section on Intelligence dashboard. Live-verified: 10 videos, 4 real outliers from rickclipit. Next: CPD-1210 view prediction.
+- **Previous:** Phase A mini re-run with **fixed gate-watch polling** (`scriptJobId` first) to tail real gate lines; continue **HeyGen → assembly → gates** on failing NBA script QA (fabrication vs facts). Latest batch transcript: `logs/phase_a_live_20260421_223306Z.log`.
 - **Blocked by:** _(secrets → `docs/ops/REQUIRED_API_KEYS.md`; paste keys only in env/Render, not in chat)_
 
 **Attribution:** Progress here may come from **Rob (product owner)** or from an **automation agent** (e.g. **Claude Code**, **Cursor**, Cline, Roo). Not every row is a manual operator run. Use the **Actor** column in the log so it is explicit who kicked off or recorded the run.

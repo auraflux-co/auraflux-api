@@ -1749,6 +1749,17 @@ input[type="url"], input[type="password"], select, textarea {
           <tbody id="intel-top-body"><tr><td colspan="5" style="padding:16px;color:rgba(255,255,255,0.35);">Loading…</td></tr></tbody>
         </table>
       </div>
+      <div class="sec-title" style="margin-top:18px;">COMPETITOR OUTLIERS <span class="badge" id="intel-comp-count">0</span>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-left:10px;" onclick="syncCompetitors()">Sync competitors</button>
+      </div>
+      <div class="stats-table-wrap">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Channel</th><th>Title</th><th>Views</th><th>vs median</th>
+          </tr></thead>
+          <tbody id="intel-comp-body"><tr><td colspan="4" style="padding:16px;color:rgba(255,255,255,0.35);">No competitor snapshot yet — click Sync competitors (yt-dlp, ~1 min).</td></tr></tbody>
+        </table>
+      </div>
       <div id="intel-status" style="margin-top:12px;font-size:14px;color:rgba(255,255,255,0.3);"></div>
     </div>
 
@@ -4408,6 +4419,7 @@ function loadIntelligencePage(forceRefresh) {
       return loadIntelligenceTop(base);
     })
     .then(function() { return loadIntelligenceRecommend(); })
+    .then(function() { return loadIntelligenceCompetitors(base); })
     .then(function() {
       if (statusEl) statusEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
     })
@@ -4467,6 +4479,45 @@ function loadIntelligenceRecommend() {
     })
     .catch(function(e) {
       if (g('intel-recommend-body')) g('intel-recommend-body').textContent = e.message || 'Recommend failed';
+    });
+}
+
+function loadIntelligenceCompetitors(base) {
+  base = base || intelApiBase();
+  return fetch(base + '/intelligence/competitors')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var body = g('intel-comp-body');
+      if (!body) return;
+      var outliers = (d.outliers || []);
+      if (g('intel-comp-count')) g('intel-comp-count').textContent = String(outliers.length);
+      if (!outliers.length) {
+        body.innerHTML = '<tr><td colspan="4" style="padding:16px;color:rgba(255,255,255,0.35);">No competitor snapshot yet — click Sync competitors (yt-dlp, ~1 min).</td></tr>';
+        return;
+      }
+      body.innerHTML = outliers.map(function(o) {
+        return '<tr><td>' + escHtml(o.channel) + '</td><td>' + escHtml(o.title) + '</td><td>' + fmtNum(o.views) + '</td><td>' + o.multiple + 'x</td></tr>';
+      }).join('');
+    })
+    .catch(function() {
+      if (g('intel-comp-body')) g('intel-comp-body').innerHTML = '<tr><td colspan="4" style="padding:16px;color:#e74c3c;">Competitor fetch failed</td></tr>';
+    });
+}
+
+function syncCompetitors() {
+  var base = intelApiBase();
+  var statusEl = g('intel-status');
+  if (statusEl) statusEl.textContent = 'Syncing competitor catalogs (yt-dlp)…';
+  fetch(base + '/intelligence/competitors/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'sync failed');
+      var newCount = (d.newVideos || []).length;
+      if (statusEl) statusEl.textContent = 'Competitor sync done — ' + newCount + ' new videos.';
+      return loadIntelligenceCompetitors(base);
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Competitor sync failed: ' + (e.message || 'error');
     });
 }
 

@@ -1,0 +1,9 @@
+{
+  "youtube": [
+    { "handle": "core_fx", "note": "Shorts-only, emoji drama titles, 943K avg Short views" },
+    { "handle": "stream.serpent", "note": "Shorts-only, curiosity templates" },
+    { "handle": "DahBluh", "note": "Shorts funnel + edited comp VODs — closest model to ours" },
+    { "handle": "rickclipit", "note": "Drama Shorts, streamer-name titles" }
+  ],
+  "limitPerChannel": 30
+}

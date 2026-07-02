@@ -20,6 +20,22 @@ async function main() {
       backfill.results.filter((r) => r.ok).length);
   }
 
+  // CPD-1209 — competitor catalog sync (yt-dlp, slow — opt-in flag)
+  if (args.includes('--competitors')) {
+    try {
+      const competitors = require('../lib/intelligence/competitors');
+      const comp = await competitors.syncCompetitors();
+      for (const r of comp.results) {
+        console.log('[intelligence_sync] competitor %s: %s', r.channel, r.ok ? `${r.fetched} fetched, ${r.new} new` : `FAIL ${r.error}`);
+      }
+      if (comp.newVideos.length) {
+        console.log('[intelligence_sync] competitor upload alerts: %s new videos', comp.newVideos.length);
+      }
+    } catch (e) {
+      console.error('[intelligence_sync] competitor sync failed:', e.message);
+    }
+  }
+
   const sync = await intelligence.syncPerformance('youtube', { days: 28, limit });
   const ok = (sync.results || []).filter((r) => r.ok).length;
   const fail = (sync.results || []).filter((r) => !r.ok).length;
