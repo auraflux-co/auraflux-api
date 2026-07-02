@@ -102,7 +102,9 @@ Goodnight and good luck.`;
   test('roster keeps phonetics for known hard-to-say streamers (CPD-1223)', () => {
     const roster = require('../data/streamers.json').roster;
     const byLogin = Object.fromEntries(roster.map((s) => [s.twitchUsername, s]));
-    expect(byLogin.emiru?.phonetic).toBe('EM-ih-roo');
+    // NOT all-caps "EM-ih-roo": eleven_v3 spells out leading cap sequences
+    // letter-by-letter ("E-M-I-H-R-O-O" on air). r18-approved casing.
+    expect(byLogin.emiru?.phonetic).toBe('Em-ih-roo');
     expect(byLogin.yonnajay?.phonetic).toBe('Yawn-uh');
     expect(byLogin.lacy?.phonetic).toBe('LAY-see');
   });
