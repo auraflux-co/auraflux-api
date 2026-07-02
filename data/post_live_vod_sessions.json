@@ -228,7 +228,7 @@
       "views": 79,
       "excludeRanges": [],
       "muteRanges": [],
-      "analyzeStatus": "ready",
+      "analyzeStatus": "scene_ready",
       "analyzeError": null,
       "analyzedAt": "2026-06-22T20:59:37.208Z",
       "candidates": [
@@ -253,7 +253,24 @@
           "previewCached": false
         }
       ],
-      "updatedAt": "2026-06-22T21:01:10.681Z",
+      "sceneCandidates": [
+        {
+          "sceneLabel": "Repurpose smoke test",
+          "title": "Repurpose smoke test",
+          "start_s": 10,
+          "end_s": 40,
+          "durationSec": 30,
+          "source": "manual_timestamp",
+          "selected": false
+        }
+      ],
+      "sourceJobId": null,
+      "contentType": null,
+      "showKey": null,
+      "showLabel": null,
+      "repurposeMode": "timestamp",
+      "sessionKind": "live_archive",
+      "updatedAt": "2026-06-28T23:39:46.482Z",
       "createdAt": "2026-06-22T20:01:11.612Z"
     },
     "Vab6umtRFyk": {
@@ -375,7 +392,7 @@
       "views": 35,
       "excludeRanges": [],
       "muteRanges": [],
-      "analyzeStatus": "ready",
+      "analyzeStatus": "running",
       "analyzeError": null,
       "analyzedAt": "2026-06-22T20:21:20.067Z",
       "candidates": [
@@ -400,7 +417,14 @@
           "previewCached": true
         }
       ],
-      "updatedAt": "2026-06-22T20:26:29.881Z",
+      "sceneCandidates": [],
+      "sourceJobId": null,
+      "contentType": null,
+      "showKey": null,
+      "showLabel": null,
+      "repurposeMode": null,
+      "sessionKind": "live_archive",
+      "updatedAt": "2026-06-29T14:23:39.698Z",
       "createdAt": "2026-06-22T20:01:11.616Z"
     },
     "jjEwncQoYQs": {
@@ -492,6 +516,275 @@
       "candidates": [],
       "updatedAt": "2026-06-22T20:01:11.620Z",
       "createdAt": "2026-06-22T20:01:11.620Z"
+    },
+    "1SpRdWOCVgI": {
+      "videoId": "1SpRdWOCVgI",
+      "title": "TWITCH SOUP: Jason's Spelling Bee, World Cup Fever & More! ⚽",
+      "url": "https://www.youtube.com/watch?v=1SpRdWOCVgI",
+      "streamer": {
+        "displayName": "Lacy",
+        "twitchUsername": "Lacy"
+      },
+      "durationSec": null,
+      "published": "2026-06-28",
+      "category": null,
+      "views": null,
+      "excludeRanges": [],
+      "muteRanges": [],
+      "analyzeStatus": "scene_ready",
+      "analyzeError": null,
+      "analyzedAt": null,
+      "candidates": [],
+      "sceneCandidates": [
+        {
+          "sceneLabel": "LACY_CLIP1_SETUP",
+          "title": "LACY CLIP1 SETUP",
+          "start_s": 31.534,
+          "end_s": 42.141999999999996,
+          "durationSec": 10.6,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "LACY_CLIP1_SETUP_CLIP",
+          "title": "Twitch clip — LACY_CLIP1_SETUP_CLIP",
+          "start_s": 42.141999999999996,
+          "end_s": 72.163,
+          "durationSec": 30,
+          "source": "job_rundown",
+          "segmentKind": "source_clip",
+          "selected": false
+        },
+        {
+          "sceneLabel": "LACY_CLIP1_REACTION",
+          "title": "LACY CLIP1 REACTION",
+          "start_s": 72.163,
+          "end_s": 77.40299999999999,
+          "durationSec": 5.2,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "LACY_CLIP2_SETUP",
+          "title": "LACY CLIP2 SETUP",
+          "start_s": 77.40299999999999,
+          "end_s": 86.663,
+          "durationSec": 9.3,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "LACY_CLIP2_SETUP_CLIP",
+          "title": "Twitch clip — LACY_CLIP2_SETUP_CLIP",
+          "start_s": 86.663,
+          "end_s": 123.44399999999999,
+          "durationSec": 36.8,
+          "source": "job_rundown",
+          "segmentKind": "source_clip",
+          "selected": false
+        },
+        {
+          "sceneLabel": "LACY_CLIP2_REACTION",
+          "title": "LACY CLIP2 REACTION",
+          "start_s": 123.44399999999999,
+          "end_s": 132.684,
+          "durationSec": 9.2,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "JASON_CLIP1_SETUP",
+          "title": "JASON CLIP1 SETUP",
+          "start_s": 142.404,
+          "end_s": 152.524,
+          "durationSec": 10.1,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "JASON_CLIP1_SETUP_CLIP",
+          "title": "Twitch clip — JASON_CLIP1_SETUP_CLIP",
+          "start_s": 152.524,
+          "end_s": 165.09,
+          "durationSec": 12.6,
+          "source": "job_rundown",
+          "segmentKind": "source_clip",
+          "selected": false
+        },
+        {
+          "sceneLabel": "JASON_CLIP1_REACTION",
+          "title": "JASON CLIP1 REACTION",
+          "start_s": 165.09,
+          "end_s": 170.788,
+          "durationSec": 5.7,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "JASON_CLIP2_SETUP",
+          "title": "JASON CLIP2 SETUP",
+          "start_s": 170.788,
+          "end_s": 180.048,
+          "durationSec": 9.3,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "JASON_CLIP2_SETUP_CLIP",
+          "title": "Twitch clip — JASON_CLIP2_SETUP_CLIP",
+          "start_s": 180.048,
+          "end_s": 200.4,
+          "durationSec": 20.4,
+          "source": "job_rundown",
+          "segmentKind": "source_clip",
+          "selected": false
+        },
+        {
+          "sceneLabel": "JASON_CLIP2_REACTION",
+          "title": "JASON CLIP2 REACTION",
+          "start_s": 200.4,
+          "end_s": 207.76000000000002,
+          "durationSec": 7.4,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "RON_CLIP1_SETUP",
+          "title": "RON CLIP1 SETUP",
+          "start_s": 217.02,
+          "end_s": 226.428,
+          "durationSec": 9.4,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "RON_CLIP1_SETUP_CLIP",
+          "title": "Twitch clip — RON_CLIP1_SETUP_CLIP",
+          "start_s": 226.428,
+          "end_s": 286.431,
+          "durationSec": 60,
+          "source": "job_rundown",
+          "segmentKind": "source_clip",
+          "selected": false
+        },
+        {
+          "sceneLabel": "RON_CLIP1_REACTION",
+          "title": "RON CLIP1 REACTION",
+          "start_s": 286.431,
+          "end_s": 291.71099999999996,
+          "durationSec": 5.3,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "RON_CLIP2_SETUP",
+          "title": "RON CLIP2 SETUP",
+          "start_s": 291.71099999999996,
+          "end_s": 301.431,
+          "durationSec": 9.7,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "RON_CLIP2_SETUP_CLIP",
+          "title": "Twitch clip — RON_CLIP2_SETUP_CLIP",
+          "start_s": 301.431,
+          "end_s": 331.447,
+          "durationSec": 30,
+          "source": "job_rundown",
+          "segmentKind": "source_clip",
+          "selected": false
+        },
+        {
+          "sceneLabel": "RON_CLIP2_REACTION",
+          "title": "RON CLIP2 REACTION",
+          "start_s": 331.447,
+          "end_s": 338.019,
+          "durationSec": 6.6,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "MARLON_CLIP1_SETUP",
+          "title": "MARLON CLIP1 SETUP",
+          "start_s": 347.355,
+          "end_s": 355.95500000000004,
+          "durationSec": 8.6,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "MARLON_CLIP1_SETUP_CLIP",
+          "title": "Twitch clip — MARLON_CLIP1_SETUP_CLIP",
+          "start_s": 355.95500000000004,
+          "end_s": 385.97600000000006,
+          "durationSec": 30,
+          "source": "job_rundown",
+          "segmentKind": "source_clip",
+          "selected": false
+        },
+        {
+          "sceneLabel": "MARLON_CLIP1_REACTION",
+          "title": "MARLON CLIP1 REACTION",
+          "start_s": 385.97600000000006,
+          "end_s": 392.17600000000004,
+          "durationSec": 6.2,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "MARLON_CLIP2_SETUP",
+          "title": "MARLON CLIP2 SETUP",
+          "start_s": 392.17600000000004,
+          "end_s": 400.93600000000004,
+          "durationSec": 8.8,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        },
+        {
+          "sceneLabel": "MARLON_CLIP2_SETUP_CLIP",
+          "title": "Twitch clip — MARLON_CLIP2_SETUP_CLIP",
+          "start_s": 400.93600000000004,
+          "end_s": 430.944,
+          "durationSec": 30,
+          "source": "job_rundown",
+          "segmentKind": "source_clip",
+          "selected": false
+        },
+        {
+          "sceneLabel": "MARLON_CLIP2_REACTION",
+          "title": "MARLON CLIP2 REACTION",
+          "start_s": 430.944,
+          "end_s": 438.86400000000003,
+          "durationSec": 7.9,
+          "source": "job_rundown",
+          "segmentKind": "avatar",
+          "selected": false
+        }
+      ],
+      "sourceJobId": "script_twitch_1782513992551",
+      "contentType": "twitch",
+      "showKey": null,
+      "showLabel": "Talk Soup",
+      "repurposeMode": "scene",
+      "sessionKind": "published_long_form",
+      "updatedAt": "2026-06-30T03:02:35.365Z",
+      "createdAt": "2026-06-30T01:07:51.877Z"
     }
   }
 }

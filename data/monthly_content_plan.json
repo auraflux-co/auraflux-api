@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "timezone": "America/New_York",
+  "defaultDailyTargets": {
+    "short": 3,
+    "longform": 1,
+    "live": 1
+  },
+  "months": {
+    "2026-06": {
+      "defaultDailyTargets": {
+        "short": 3,
+        "longform": 1,
+        "live": 0
+      },
+      "days": {
+        "2026-06-30": {
+          "short": 3,
+          "longform": 1,
+          "live": 0,
+          "note": "3 shorts + 1 long-form VOD",
+          "updatedAt": "2026-06-25T00:00:00.000Z"
+        }
+      }
+    },
+    "2026-07": {
+      "days": {
+        "2026-07-04": {
+          "short": 5,
+          "longform": 2,
+          "live": 1,
+          "note": "Holiday push",
+          "updatedAt": "2026-07-02T19:08:23.497Z"
+        }
+      }
+    }
+  }
+}

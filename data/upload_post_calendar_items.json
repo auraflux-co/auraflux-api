@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "items": [],
+  "fetchedAt": "2026-07-02T19:22:06.053Z",
+  "rangeStart": "2026-08-01",
+  "rangeEnd": "2026-08-31",
+  "scan": {
+    "fromHistory": 0,
+    "fromScheduled": 0,
+    "total": 0
+  }
+}

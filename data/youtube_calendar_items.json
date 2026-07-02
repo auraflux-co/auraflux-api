@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "items": [],
+  "channelTitle": "ClipzWorld News",
+  "channelId": "UCDTFPlg5-_DneemxRCDuBmQ",
+  "fetchedAt": "2026-07-02T08:22:02.192Z",
+  "rangeStart": "2026-08-01",
+  "rangeEnd": "2026-08-31",
+  "scan": {
+    "videoIds": 212,
+    "videosScanned": 211,
+    "fromVideos": 0,
+    "fromBroadcasts": 0,
+    "fromAurafluxJobs": 0
+  }
+}

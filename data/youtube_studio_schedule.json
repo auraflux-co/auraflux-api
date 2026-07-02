@@ -1,0 +1,30 @@
+{
+  "ok": true,
+  "items": [
+    {
+      "source": "youtube_studio",
+      "videoId": "qABi0SM3AnI",
+      "title": "Youngin's Priceless Reaction to #funnymike !",
+      "url": "https://www.youtube.com/watch?v=qABi0SM3AnI",
+      "thumbnailUrl": "https://i9.ytimg.com/vi/qABi0SM3AnI/mqdefault.jpg?sqp=COSnjNIG&rs=AOn4CLBjh-O4lGZOdRZKEDSffzi_lWbyaA",
+      "publishAt": "2026-06-30T17:00:00Z",
+      "dateKey": "2026-06-30",
+      "timeEt": "1:00 PM",
+      "privacyStatus": "private",
+      "kind": "short",
+      "status": "publish_scheduled",
+      "liveBroadcast": false
+    }
+  ],
+  "channelTitle": "ClipzWorld News",
+  "channelId": "UCDTFPlg5-_DneemxRCDuBmQ",
+  "fetchedAt": "2026-06-30T00:58:36.012Z",
+  "daysAhead": 90,
+  "scan": {
+    "videoIds": 207,
+    "videosScanned": 206,
+    "fromVideos": 1,
+    "fromBroadcasts": 0,
+    "fromAurafluxJobs": 0
+  }
+}
