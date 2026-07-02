@@ -6495,6 +6495,33 @@ app.post('/job/:id/custom-hook', (req, res) => {
   });
 });
 
+// CPD-1220: operator sets compCreative overrides (e.g. layout.sourceBottomCropPct to
+// crop a baked-in bottom strip off the source clip) ahead of the next assemble.
+app.post('/job/:id/comp-creative', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  if (card.stage === 'published') {
+    return res.status(400).json({ ok: false, error: 'Job is published — rollback first.' });
+  }
+  if (!card.clipsOnly) {
+    return res.status(400).json({ ok: false, error: 'compCreative overrides are for clip-comp / clip-short jobs only.' });
+  }
+  const overrides = req.body?.compCreative;
+  if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides)) {
+    return res.status(400).json({ ok: false, error: 'compCreative object is required.' });
+  }
+  const { mergeCompCreative, deepMergeCompCreative } = require('./lib/clip_comp_creative');
+  const baseline = mergeCompCreative({
+    preset: overrides.preset || card.compCreative?.preset || card.compCreativePreset,
+    overrides: card.compCreative || {},
+  });
+  card.compCreative = deepMergeCompCreative(baseline, overrides);
+  card.compCreativePreset = card.compCreative.preset;
+  saveJobCard(jobId, card);
+  return res.json({ ok: true, jobId, compCreative: card.compCreative });
+});
+
 function finishHookPickResponse(req, res, jobId, card, bodyExtra = {}) {
   const { needsHookBeforeAssembly, clipCompClipCount, fireClipCompAssembly } = require('./lib/clip_comp_dispatch_assembly');
   const clipCount = clipCompClipCount(card);

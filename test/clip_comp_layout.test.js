@@ -42,3 +42,13 @@ test('serpent ranked preset uses corner logo bottom-right', () => {
   const fc = buildClipCompLogoFilter(PRESET_DEFAULTS.serpent_ranked, '/tmp/logo.png');
   assert.ok(fc.includes('y=H-h-20'));
 });
+
+test('sourceBottomCropPct resolves, defaults to 0, clamps to 0.3 (CPD-1220)', () => {
+  const { resolveSourceBottomCropPct } = require('../lib/clip_comp_layout');
+  assert.equal(resolveSourceBottomCropPct(null), 0);
+  assert.equal(resolveSourceBottomCropPct(PRESET_DEFAULTS.classic_blur_pad), 0);
+  assert.equal(resolveSourceBottomCropPct({ layout: { sourceBottomCropPct: 0.12 } }), 0.12);
+  assert.equal(resolveSourceBottomCropPct({ layout: { sourceBottomCropPct: 0.9 } }), 0.3);
+  assert.equal(resolveSourceBottomCropPct({ layout: { sourceBottomCropPct: -1 } }), 0);
+  assert.equal(resolveSourceBottomCropPct({ layout: { sourceBottomCropPct: 'junk' } }), 0);
+});
