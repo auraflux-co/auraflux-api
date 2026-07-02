@@ -5795,6 +5795,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
   // ── Fire /assemble (continued) ───
   const payload = {
     operatorReassemble: true,
+    skipSceneOrderGate: !!req.body?.skipSceneOrderGate,
     episodeChromeReburnOnly: episodeChromeReburnOnly || null,
     priorAssemblyId: priorAssemblyId || null,
     partialSceneLabels: partialSceneLabels?.length ? partialSceneLabels : null,
@@ -6553,6 +6554,14 @@ function finishHookPickResponse(req, res, jobId, card, bodyExtra = {}) {
   if (autoBuild) {
     setImmediate(() => {
       try {
+        // Guard: don't fire a second concurrent assembly if one is already running for this job.
+        const alreadyRunning = Object.keys(assemblyJobs).some(
+          (id) => assemblyJobs[id]?.sourceJobId === jobId && assemblyJobs[id]?.status === 'running',
+        );
+        if (alreadyRunning) {
+          console.warn(`[hook→reassemble] ${jobId}: assembly already running — skipping auto-reassemble`);
+          return;
+        }
         const port = process.env.PORT || 3000;
         axios.post(`http://localhost:${port}/job/${jobId}/reassemble`, { fromHookSelect: true }, { timeout: 15000 })
           .catch((e) => console.warn(`[hook→reassemble] ${jobId}: ${e.message}`));
