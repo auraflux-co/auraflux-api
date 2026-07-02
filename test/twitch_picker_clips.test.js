@@ -29,6 +29,20 @@ test('library clip fetch exposes popular/recent sort toggle', () => {
   assert.match(html, /id="library-clip-sort"/);
 });
 
+// CPD-1219 — competitor echo badge on prediction pill + CPD-1218 accuracy panel
+test('dashboard wires competitor echo badge and prediction accuracy panel', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../cwn_production.html'), 'utf8');
+  // echo badge painted from prediction.competitorEcho with short view count
+  assert.match(html, /prediction\.competitorEcho/);
+  assert.match(html, /_fmtViewsShort\(echo\.views\)/);
+  // accuracy panel fetches the new endpoint and renders verdicts
+  assert.match(html, /\/intelligence\/prediction-accuracy/);
+  assert.match(html, /id="intel-acc-body"/);
+  assert.match(html, /UNDER — went bigger/);
+  // phase 2 button posts to streamer search
+  assert.match(html, /\/intelligence\/competitors\/search-streamers/);
+});
+
 // CPD-1216 — Score sort pill orders clips by cached view-prediction score
 test('library clip picker exposes score sort backed by cached predictions', () => {
   const html = fs.readFileSync(path.join(__dirname, '../cwn_production.html'), 'utf8');

@@ -12,10 +12,12 @@ describe('competitor tracking (CPD-1209)', () => {
   before(() => {
     db = require('../lib/db').initDb();
     db.prepare("DELETE FROM competitor_videos WHERE video_id LIKE 'comptest_%'").run();
+    db.prepare("DELETE FROM competitor_search_log WHERE streamer LIKE 'comptest_%'").run();
   });
 
   after(() => {
     db.prepare("DELETE FROM competitor_videos WHERE video_id LIKE 'comptest_%'").run();
+    db.prepare("DELETE FROM competitor_search_log WHERE streamer LIKE 'comptest_%'").run();
   });
 
   it('syncCompetitors upserts and reports new videos', async () => {
@@ -72,5 +74,76 @@ describe('competitor tracking (CPD-1209)', () => {
     const ctx = intelligence.recommendContext({ contentType: 'twitch', formFactor: 'short' });
     assert.ok(ctx.competitorPatterns, 'expected competitorPatterns present');
     assert.match(ctx.promptBlock, /Competitor outlier titles/);
+  });
+
+  // CPD-1219 — streamer tagging at sync + retag backfill
+  it('syncCompetitors tags roster streamers found in titles', async () => {
+    const competitors = require('../lib/intelligence/competitors');
+    await competitors.syncCompetitors({
+      handles: ['core_fx'],
+      fetchCatalog: async () => [
+        { videoId: 'comptest_tag1', title: 'ExtraEmily LOSES IT on stream', views: 500_000, durationSec: 30, isShort: true },
+        { videoId: 'comptest_tag2', title: 'random gameplay moment', views: 50_000, durationSec: 30, isShort: true },
+      ],
+    });
+    const tagged = db.prepare("SELECT streamers FROM competitor_videos WHERE video_id = 'comptest_tag1'").get();
+    assert.ok(JSON.parse(tagged.streamers).includes('extraemily'));
+    const untagged = db.prepare("SELECT streamers FROM competitor_videos WHERE video_id = 'comptest_tag2'").get();
+    assert.deepEqual(JSON.parse(untagged.streamers), []);
+  });
+
+  it('retagCompetitorVideos backfills rows with NULL streamers', () => {
+    const competitors = require('../lib/intelligence/competitors');
+    db.prepare(`
+      INSERT INTO competitor_videos (platform, channel_handle, video_id, title, views, duration_sec, is_short, first_seen_at, fetched_at, streamers)
+      VALUES ('youtube', 'core_fx', 'comptest_retag1', 'Jason cannot stop laughing', 200000, 30, 1, ?, ?, NULL)
+    `).run(Date.now(), Date.now());
+    const out = competitors.retagCompetitorVideos();
+    assert.ok(out.retagged >= 1);
+    const row = db.prepare("SELECT streamers FROM competitor_videos WHERE video_id = 'comptest_retag1'").get();
+    assert.ok(JSON.parse(row.streamers).includes('jasontheween'));
+  });
+
+  // CPD-1219 phase 2 — YouTube keyword search with daily cache
+  it('syncStreamerSearch stores results and serves the daily cache on rerun', async () => {
+    const competitors = require('../lib/intelligence/competitors');
+    const prevKey = process.env.YOUTUBE_API_KEY;
+    process.env.YOUTUBE_API_KEY = 'test-key';
+    try {
+      let calls = 0;
+      const searchVideos = async () => {
+        calls += 1;
+        return [{ id: 'comptest_yt1', title: 'ExtraEmily viral moment', channelTitle: 'SomeClipChannel', viewCount: 750_000, duration: 40, isShort: true }];
+      };
+      const first = await competitors.syncStreamerSearch({ streamers: ['comptest_streamer'], searchVideos });
+      assert.equal(first.ok, true);
+      assert.equal(first.results[0].stored, 1);
+      assert.equal(calls, 1);
+
+      const row = db.prepare("SELECT channel_handle, streamers FROM competitor_videos WHERE video_id = 'comptest_yt1'").get();
+      assert.equal(row.channel_handle, 'yt-search:SomeClipChannel');
+      const tags = JSON.parse(row.streamers);
+      assert.ok(tags.includes('comptest_streamer'), 'searched streamer tagged');
+      assert.ok(tags.includes('extraemily'), 'title-extracted streamer tagged');
+
+      const second = await competitors.syncStreamerSearch({ streamers: ['comptest_streamer'], searchVideos });
+      assert.equal(second.results[0].cached, true);
+      assert.equal(calls, 1, 'daily cache should prevent a second API call');
+    } finally {
+      if (prevKey === undefined) delete process.env.YOUTUBE_API_KEY;
+      else process.env.YOUTUBE_API_KEY = prevKey;
+    }
+  });
+
+  it('syncStreamerSearch skips cleanly without YOUTUBE_API_KEY', async () => {
+    const competitors = require('../lib/intelligence/competitors');
+    const prevKey = process.env.YOUTUBE_API_KEY;
+    delete process.env.YOUTUBE_API_KEY;
+    try {
+      const out = await competitors.syncStreamerSearch({ streamers: ['comptest_streamer'] });
+      assert.equal(out.skipped, true);
+    } finally {
+      if (prevKey !== undefined) process.env.YOUTUBE_API_KEY = prevKey;
+    }
   });
 });

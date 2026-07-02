@@ -1765,6 +1765,7 @@ input[type="url"], input[type="password"], select, textarea {
       </div>
       <div class="sec-title" style="margin-top:18px;">COMPETITOR OUTLIERS <span class="badge" id="intel-comp-count">0</span>
         <button type="button" class="btn btn-outline btn-sm" style="margin-left:10px;" onclick="syncCompetitors()">Sync competitors</button>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-left:6px;" onclick="searchCompetitorStreamers()" title="YouTube Data API search per roster streamer — cached one search per streamer per day">YT streamer search</button>
       </div>
       <div class="stats-table-wrap">
         <table class="stats-table">
@@ -1793,6 +1794,16 @@ input[type="url"], input[type="password"], select, textarea {
             <th>Video</th><th>Kind</th><th>A</th><th>B</th><th>Active</th><th>Periods</th><th>Status</th>
           </tr></thead>
           <tbody id="intel-ab-body"><tr><td colspan="7" style="padding:16px;color:rgba(255,255,255,0.35);">No A/B tests yet — variants rotate every 24h; winner applied at 95% significance.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="sec-title" style="margin-top:18px;">PREDICTION ACCURACY <span class="badge" id="intel-acc-count">0</span></div>
+      <div id="intel-acc-summary" style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:8px;">Loading…</div>
+      <div class="stats-table-wrap">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Job</th><th>Streamer</th><th>Predicted</th><th>Actual views</th><th>Actual band</th><th>Verdict</th>
+          </tr></thead>
+          <tbody id="intel-acc-body"><tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">No reconciled predictions yet — outcomes attach after analytics sync + reconcile.</td></tr></tbody>
         </table>
       </div>
       <div class="sec-title" style="margin-top:18px;">DECISION RECORDS</div>
@@ -4471,6 +4482,7 @@ function loadIntelligencePage(forceRefresh) {
     .then(function() { return loadIntelligenceRecommend(); })
     .then(function() { return loadIntelligenceCompetitors(base); })
     .then(function() { return loadIntelligenceAbTests(base); })
+    .then(function() { return loadIntelligencePredictionAccuracy(base); })
     .then(function() { populateIntelDecisionJobs(); })
     .then(function() {
       if (statusEl) statusEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
@@ -4570,6 +4582,76 @@ function syncCompetitors() {
     })
     .catch(function(e) {
       if (statusEl) statusEl.textContent = 'Competitor sync failed: ' + (e.message || 'error');
+    });
+}
+
+// CPD-1219 phase 2 — YouTube keyword search per roster streamer (daily cached)
+function searchCompetitorStreamers() {
+  var base = intelApiBase();
+  var statusEl = g('intel-status');
+  if (statusEl) statusEl.textContent = 'Searching YouTube per roster streamer (API, daily cached)…';
+  fetch(base + '/intelligence/competitors/search-streamers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.skipped) {
+        if (statusEl) statusEl.textContent = 'Streamer search skipped: ' + (d.reason || 'not configured');
+        return;
+      }
+      if (!d.ok) throw new Error(d.error || 'search failed');
+      var results = d.results || [];
+      var stored = 0, cached = 0;
+      results.forEach(function(x) { if (x.cached) cached += 1; else stored += x.stored || 0; });
+      if (statusEl) statusEl.textContent = 'Streamer search done — ' + stored + ' videos stored, ' + cached + ' streamer(s) served from daily cache.';
+      return loadIntelligenceCompetitors(base);
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Streamer search failed: ' + (e.message || 'error');
+    });
+}
+
+// CPD-1218 — model self-scoring panel: predicted band vs reconciled actual views
+function loadIntelligencePredictionAccuracy(base) {
+  base = base || intelApiBase();
+  return fetch(base + '/intelligence/prediction-accuracy?limit=100')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var body = g('intel-acc-body');
+      if (!body) return;
+      if (!d.ok) throw new Error(d.error || 'accuracy failed');
+      if (g('intel-acc-count')) g('intel-acc-count').textContent = String(d.n || 0);
+      var summary = g('intel-acc-summary');
+      if (summary) {
+        if (!d.n) {
+          summary.textContent = d.pending
+            ? d.pending + ' prediction(s) awaiting outcome reconcile — run Sync analytics, then Reconcile.'
+            : 'No predictions recorded yet — a view_prediction decision is written when a job is composed from library clips.';
+        } else {
+          summary.innerHTML = '<strong style="color:' + (d.hitRate >= 70 ? '#2ecc71' : d.hitRate >= 40 ? '#c7af4f' : '#e74c3c') + ';">'
+            + d.hitRate + '% hit rate</strong> over ' + d.n + ' reconciled prediction(s) · '
+            + (d.misses || []).length + ' miss(es) · ' + d.pending + ' pending'
+            + (d.lowSample ? ' · <em>low sample — verdicts activate at 4 reconciled rows</em>' : '');
+        }
+      }
+      var rows = d.rows || [];
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="6" style="padding:16px;color:rgba(255,255,255,0.35);">No reconciled predictions yet — outcomes attach after analytics sync + reconcile.</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(function(row) {
+        var vColor = row.verdict === 'hit' ? '#2ecc71' : row.verdict === 'under' ? '#e67e22' : '#e74c3c';
+        var vLabel = row.verdict === 'hit' ? 'HIT' : row.verdict === 'under' ? 'UNDER — went bigger' : 'OVER — overestimated';
+        return '<tr>'
+          + '<td style="font-family:monospace;font-size:12px;">' + escHtml(row.jobId || '—') + '</td>'
+          + '<td>' + escHtml(row.streamer || '—') + '</td>'
+          + '<td><span style="font-family:monospace;">' + escHtml(row.predictedBand).toUpperCase() + ' ' + row.predictedScore + '</span></td>'
+          + '<td>' + fmtNum(row.actualViews) + '</td>'
+          + '<td>' + (row.actualBand ? escHtml(row.actualBand).toUpperCase() : '—') + '</td>'
+          + '<td style="color:' + vColor + ';font-weight:600;">' + vLabel + '</td>'
+          + '</tr>';
+      }).join('');
+    })
+    .catch(function() {
+      if (g('intel-acc-body')) g('intel-acc-body').innerHTML = '<tr><td colspan="6" style="padding:16px;color:#e74c3c;">Prediction accuracy fetch failed</td></tr>';
     });
 }
 
@@ -17977,12 +18059,23 @@ var PRED_BAND_STYLES = {
   'Low': 'background:rgba(231,76,60,0.1);color:rgba(231,76,60,0.6);border:1px solid rgba(231,76,60,0.25);'
 };
 
+function _fmtViewsShort(n) {
+  n = Number(n) || 0;
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
+}
+
 function _paintClipPrediction(key, prediction) {
   var el = g('tpred-' + key);
   if (!el || !prediction) return;
   var band = prediction.band;
   el.setAttribute('style', 'font-size:11px;font-family:monospace;padding:1px 5px;border-radius:3px;' + (PRED_BAND_STYLES[band] || ''));
-  el.textContent = band.toUpperCase() + ' ' + prediction.score;
+  // CPD-1219 — competitor echo badge: this streamer already ran on a competitor
+  // channel; the ▲ marker shows where and how big. Match reason is in the tooltip.
+  var echo = prediction.competitorEcho;
+  el.textContent = band.toUpperCase() + ' ' + prediction.score
+    + (echo ? ' ▲' + echo.channel + ' ' + _fmtViewsShort(echo.views) : '');
   el.title = (prediction.reasons || []).join('\n');
 }
 

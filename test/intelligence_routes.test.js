@@ -83,6 +83,30 @@ describe('intelligence routes (CPD-1193)', () => {
     assert.ok(Array.isArray(res.body.hints));
   });
 
+  // CPD-1218 — model self-scoring endpoint
+  it('GET /intelligence/prediction-accuracy returns summary shape', async () => {
+    const res = await request(buildApp(), 'GET', '/intelligence/prediction-accuracy');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.ok, true);
+    assert.equal(typeof res.body.n, 'number');
+    assert.equal(typeof res.body.pending, 'number');
+    assert.ok(Array.isArray(res.body.rows));
+    assert.ok(Array.isArray(res.body.misses));
+  });
+
+  // CPD-1219 phase 2 — streamer search skips without API key
+  it('POST /intelligence/competitors/search-streamers skips without YOUTUBE_API_KEY', async () => {
+    const prevKey = process.env.YOUTUBE_API_KEY;
+    delete process.env.YOUTUBE_API_KEY;
+    try {
+      const res = await request(buildApp(), 'POST', '/intelligence/competitors/search-streamers', {});
+      assert.equal(res.status, 200);
+      assert.equal(res.body.skipped, true);
+    } finally {
+      if (prevKey !== undefined) process.env.YOUTUBE_API_KEY = prevKey;
+    }
+  });
+
   it('returns 404 when C0_LOCALHOST=0', async () => {
     process.env.C0_LOCALHOST = '0';
     const res = await request(buildApp(), 'GET', '/intelligence/stats');
