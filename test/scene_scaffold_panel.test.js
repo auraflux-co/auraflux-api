@@ -4,6 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const {
   buildScaffoldRows,
+  buildHeyGenSceneRows,
   buildRepurposeSceneCandidates,
 } = require('../lib/scene_scaffold_panel');
 
@@ -24,6 +25,24 @@ describe('scene_scaffold_panel', () => {
     assert.equal(s.rows.length, 4);
     assert.equal(s.rows[2].durationSec, 30);
     assert.equal(s.totalDurationSec, 60);
+  });
+
+  it('buildHeyGenSceneRows merges intro+clip1 and reaction+clip2', () => {
+    const mergedScript = [
+      '=== INTRO ===', 'hi',
+      '=== LACY_INTRO ===', 'a',
+      '=== LACY_CLIP1_SETUP ===', 'b',
+      '=== LACY_CLIP1 ===', 'clip',
+      '=== LACY_CLIP1_REACTION ===', 'r',
+      '=== LACY_CLIP2_SETUP ===', 's',
+      '=== OUTRO ===', 'o',
+    ].join('\n');
+    const h = buildHeyGenSceneRows({ script: mergedScript, contentType: 'twitch' });
+    assert.equal(h.scriptSceneCount, 7);
+    assert.equal(h.heygenSceneCount, 5);
+    assert.equal(h.mergeCount, 2);
+    assert.ok(h.rows.some((r) => r.name === 'LACY_INTRO + LACY_CLIP1_SETUP' && r.merged));
+    assert.ok(h.rows.some((r) => r.name === 'LACY_CLIP1_REACTION + LACY_CLIP2_SETUP' && r.merged));
   });
 
   it('buildRepurposeSceneCandidates picks clip scenes with timestamps', () => {

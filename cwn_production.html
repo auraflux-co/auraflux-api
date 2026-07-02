@@ -71,6 +71,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .scene-order-table th { color:rgba(199,175,79,0.8); font-size:14px; letter-spacing:1px; }
 .scene-order-confirmed { color:#2ecc71; font-size:15px; font-weight:600; }
 .scene-order-stale { color:#e67e22; font-size:15px; }
+.job-script-panel textarea.script-editor {
+  width:100%; min-height:240px; max-height:480px; font-family:monospace; font-size:15px;
+  background:rgba(0,0,0,0.35); color:#e8e8e8; border:1px solid rgba(199,175,79,0.25);
+  border-radius:6px; padding:12px; line-height:1.55; resize:vertical;
+}
 .gen-page-head { margin-bottom:20px; }
 .gen-page-title-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
 .gen-page-title { font-family:'Bebas Neue',sans-serif; font-size:28px; color:#c7af4f; letter-spacing:3px; margin:0; font-weight:400; }
@@ -2884,11 +2889,12 @@ maya: she/her</textarea>
         <div class="card"><div class="card-header"><div class="card-title">EPISODE NUMBERS</div></div>
           <div class="card-body">
             <div class="alert alert-info" style="margin-bottom:14px;font-size:15px;">
-              Set the <strong>next</strong> episode number for each show. This number appears in the top-right flag overlay and custom thumbnail. After each episode airs, the counter auto-increments. You can override here any time.
+              Set the <strong>current</strong> episode number for each show (what the next assembly will burn into the chrome overlay). After Gate 5 publish, the counter auto-increments. Override here any time.
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:480px;">
               <div>
                 <div style="font-size:13px;font-weight:900;color:#c7af4f;letter-spacing:2px;margin-bottom:6px;">TWITCH SOUP</div>
+                <div id="ep-twitch-v2-hint" style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:4px;"></div>
                 <input id="ep-twitch" type="number" min="1" step="1" value="1"
                   style="width:80px;background:#060a12;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 10px;font-size:18px;font-weight:700;text-align:center;border-radius:4px;">
               </div>
@@ -6485,6 +6491,127 @@ function pollCanvaImport(jobId, statusEl, cb) {
 }
 
 // ── FFMPEG ASSEMBLY ───────────────────────────────────────────────
+function ensureTwitchSoupPreAssembly(jobId, logFn, onDone) {
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  var ct = String((job && job.type) || 'twitch').toLowerCase();
+  if (ct.indexOf('twitch') < 0 || ct.indexOf('-short') >= 0 || (job && job.clipsOnly)) {
+    onDone(null);
+    return;
+  }
+  logFn('Preparing Twitch Soup chrome (cold-open VO + sidebar thumbnails)...');
+
+  function approveAllThumbs(onThumbDone) {
+    var syncXhr = new XMLHttpRequest();
+    syncXhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/sidebar-thumbs/sync', true);
+    syncXhr.setRequestHeader('Content-Type', 'application/json');
+    syncXhr.timeout = 180000;
+    syncXhr.onload = function() {
+      var syncResp;
+      try { syncResp = JSON.parse(syncXhr.responseText); } catch (_e) { onThumbDone(new Error('Sidebar thumb sync failed')); return; }
+      if (!syncResp.ok) { onThumbDone(new Error(syncResp.error || 'Sidebar thumb sync failed')); return; }
+      if (syncResp.allApproved) { onThumbDone(null); return; }
+      var manifest = syncResp.manifest || [];
+      var pending = manifest.filter(function(row) { return !row.approved && !row.rejected; });
+      if (!pending.length) { onThumbDone(null); return; }
+      logFn('Approving ' + pending.length + ' sidebar thumbnails...');
+      var pi = 0;
+      function approveNext() {
+        if (pi >= pending.length) { onThumbDone(null); return; }
+        var row = pending[pi++];
+        var ax = new XMLHttpRequest();
+        ax.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/sidebar-thumbs/approve', true);
+        ax.setRequestHeader('Content-Type', 'application/json');
+        ax.timeout = 60000;
+        ax.onload = function() {
+          try {
+            var ar = JSON.parse(ax.responseText);
+            if (!ar.ok) { onThumbDone(new Error(ar.error || ('Thumb approve failed: ' + row.key))); return; }
+          } catch (_e2) { onThumbDone(new Error('Thumb approve failed: ' + row.key)); return; }
+          approveNext();
+        };
+        ax.onerror = ax.ontimeout = function() { onThumbDone(new Error('Thumb approve failed: ' + row.key)); };
+        ax.send(JSON.stringify({ key: row.key, approved: true }));
+      }
+      approveNext();
+    };
+    syncXhr.onerror = syncXhr.ontimeout = function() { onThumbDone(new Error('Sidebar thumb sync unreachable')); };
+    syncXhr.send('{}');
+  }
+
+  fetchJobCard(jobId, function(err, card) {
+    if (err || !card) { onDone(err || new Error('Could not load job card')); return; }
+    var co = card.coldOpen || {};
+    var coldReady = co.approved === true && co.audioApproved === true && co.voPath;
+    if (coldReady) {
+      approveAllThumbs(onDone);
+      return;
+    }
+    logFn('Generating cold-open VO (ElevenLabs)...');
+    var genXhr = new XMLHttpRequest();
+    genXhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/cold-open/generate', true);
+    genXhr.setRequestHeader('Content-Type', 'application/json');
+    genXhr.timeout = 180000;
+    genXhr.onload = function() {
+      var genResp;
+      try { genResp = JSON.parse(genXhr.responseText); } catch (_e) { onDone(new Error('Cold-open generate failed')); return; }
+      if (!genResp.ok) { onDone(new Error(genResp.error || 'Cold-open generate failed')); return; }
+      logFn('Approving cold-open VO...');
+      var apprXhr = new XMLHttpRequest();
+      apprXhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/cold-open/approve', true);
+      apprXhr.setRequestHeader('Content-Type', 'application/json');
+      apprXhr.timeout = 30000;
+      apprXhr.onload = function() {
+        try {
+          var appr = JSON.parse(apprXhr.responseText);
+          if (!appr.ok) { onDone(new Error(appr.error || 'Cold-open approve failed')); return; }
+        } catch (_e3) { onDone(new Error('Cold-open approve failed')); return; }
+        approveAllThumbs(onDone);
+      };
+      apprXhr.onerror = apprXhr.ontimeout = function() { onDone(new Error('Cold-open approve unreachable')); };
+      apprXhr.send(JSON.stringify({ approved: true, audioApproved: true }));
+    };
+    genXhr.onerror = genXhr.ontimeout = function() { onDone(new Error('Cold-open generate unreachable')); };
+    genXhr.send('{}');
+  });
+}
+
+function _startServerAssembly(batchJobId, job, opts) {
+  opts = opts || {};
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(batchJobId) + '/reassemble', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 120000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || resp.code || 'Assembly failed to start');
+      if (job) {
+        job.status = 'assembling';
+        job.stage = 'assembling';
+        if (resp.assemblyId) {
+          job.assemblyId = resp.assemblyId;
+          job.asmId = resp.assemblyId;
+        }
+        if (resp.retryNum) job._assemblyRetryCount = resp.retryNum;
+        saveJobs();
+      }
+      logAssembly(batchJobId, '✅ Server assembly started — ' + (resp.segmentCount || '?') + ' segments (' + (resp.clipCount || '?') + ' clips)');
+      renderQueue();
+      if (resp.assemblyId) pollAssemblyProgress(batchJobId, resp.assemblyId);
+      else logAssembly(batchJobId, '⚠️ No assemblyId returned — check pm2 logs');
+    } catch (e) {
+      delete _assemblyFiredForJob[batchJobId];
+      logAssembly(batchJobId, '❌ Assembly failed: ' + e.message);
+      if (opts.alertOnError) alert('❌ Assembly failed:\n' + e.message);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    delete _assemblyFiredForJob[batchJobId];
+    logAssembly(batchJobId, '❌ Server unreachable — is auraflux running?');
+  };
+  xhr.send(JSON.stringify({}));
+}
+
 function assembleJob(batchJobId) {
   // Frontend dedup guard — prevents multiple /assemble calls for same jobId
   if (_assemblyFiredForJob[batchJobId]) {
@@ -6498,7 +6625,8 @@ function assembleJob(batchJobId) {
   var job = JOBS.find(function(j){ return j.id === batchJobId; });
   if (!job) return;
 
-  // Immediate visual feedback - show assembly panel
+  window._jobAsmPanelOpen = window._jobAsmPanelOpen || {};
+  window._jobAsmPanelOpen[batchJobId] = true;
   var panelId = 'asm-panel-' + batchJobId;
   var panel = document.getElementById(panelId);
   if (panel) {
@@ -6506,114 +6634,38 @@ function assembleJob(batchJobId) {
     panel.style.border = '2px solid rgba(230,126,34,0.8)';
   }
 
-  // Immediate log message
-  logAssembly(batchJobId, '⚙️  Starting assembly...');
+  logAssembly(batchJobId, '⚙️  Starting assembly on server (14 HeyGen + 8 clips from job card)...');
 
-  // Build the full ordered sequence: avatar segments (HeyGen URLs) + source_clip segments
-  // Source clips that have a URL are included in order — FFmpeg downloads everything
-  var allSegs = job.segments || [];
-  var readySegs = allSegs.filter(function(s){
-    if (s.type === 'source_clip') return !!(s.clipUrl || s.url);
-    return s.status === 'completed' && s.url;
-  });
-  if (!readySegs.length) {
-    logAssembly(batchJobId, '⚠️  No segments ready to assemble yet.');
+  function launchWithSegments() {
+    persistResolvedJobSegments(job);
+    saveJobs();
+    var allSegs = resolveJobSegments(job);
+    var avatarReady = allSegs.filter(function(s){ return s.type!=='source_clip' && s.status==='completed' && (s.url||s.videoId); }).length;
+    var clipReady   = allSegs.filter(function(s){ return s.type==='source_clip' && (s.clipUrl||s.url); }).length;
+    var clipsExpected = (job.orderedClipUrls || (job.meta && job.meta.orderedClipUrls) || []).length;
+    logAssembly(batchJobId, '📦 Local preview: ' + avatarReady + ' avatar + ' + clipReady + ' clips'
+      + (clipsExpected && clipReady < clipsExpected ? ' (server has ' + clipsExpected + ' — using server card)' : '') + ' → FFmpeg');
+    ensureTwitchSoupPreAssembly(batchJobId, function(msg) { logAssembly(batchJobId, msg); }, function(preErr) {
+      if (preErr) {
+        delete _assemblyFiredForJob[batchJobId];
+        logAssembly(batchJobId, '❌ Pre-assembly blocked: ' + preErr.message);
+        return;
+      }
+      _startServerAssembly(batchJobId, job);
+    });
+  }
+
+  var clipsExpected = (job.orderedClipUrls || (job.meta && job.meta.orderedClipUrls) || []).length;
+  var localClips = resolveJobSegments(job).filter(function(s){ return s.type==='source_clip' && (s.clipUrl||s.url); }).length;
+  if (clipsExpected >= 2 && localClips === 0 && !scriptScenesFromJobCard(job).length) {
+    logAssembly(batchJobId, '↻ Syncing scene order from server before assembly...');
+    fetchJobCard(batchJobId, function(err, serverJob) {
+      if (!err && serverJob) syncJobSegmentDataFromServer(job, serverJob);
+      launchWithSegments();
+    });
     return;
   }
-  var avatarReady = allSegs.filter(function(s){ return s.type!=='source_clip' && s.status==='completed' && s.url; }).length;
-  var clipReady   = allSegs.filter(function(s){ return s.type==='source_clip' && (s.clipUrl||s.url); }).length;
-  logAssembly(batchJobId, '📦 Building sequence: ' + avatarReady + ' avatar + ' + clipReady + ' source clips → FFmpeg...');
-
-  // Send all segments in order with type info
-  var segmentData = allSegs
-    .filter(function(s){
-      if (s.type === 'source_clip') return !!(s.clipUrl || s.url);
-      return s.status === 'completed' && s.url;
-    })
-    .map(function(s){
-      return {
-        url:     s.type === 'source_clip' ? (s.clipUrl || s.url) : s.url,
-        pageUrl: s.type === 'source_clip' ? (s.pageUrl || '') : '',
-        label:   s.label,
-        type:    s.type || 'avatar',
-        clipTimingTargets: s.type === 'source_clip' ? (s.clipTimingTargets || []) : [],
-        clipTimingFormat: s.type === 'source_clip' ? (s.clipTimingFormat || 'none') : 'none'
-      };
-    });
-
-  
-var isShortJob = (job.type || '').includes('-short');
-  var payload = {
-    segmentData: segmentData,
-    segments: segmentData.map(function(s){ return s.url; }),
-    labels:   segmentData.map(function(s){ return s.label; }),
-    transition: CFG.transition,
-    format: isShortJob ? 'portrait' : CFG.outputFmt,
-    outputDir: CFG.outputDir,
-    jobTitle: job.title,
-    contentType: job.type || 'twitch',
-    jobId: (window.CURRENT_META && window.CURRENT_META.scriptJobId) || job.scriptJobId || job.id || '',
-    captionText: job.captionText || null,
-    captionStyle: job.captionStyle || null
-  };
-
-  // Update segment status indicators
-  readySegs.forEach(function(s,i){
-    var el = document.getElementById('asm-seg-'+batchJobId+'-'+i);
-    if (el) el.className = 'asm-seg-status downloading';
-  });
-
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', CFG.ffmpegUrl + '/assemble', true);
-  xhr.setRequestHeader('Content-Type','application/json');
-  xhr.timeout = 300000; // 5 min
-  xhr.onload = function() {
-    try {
-      var resp = JSON.parse(xhr.responseText);
-      if (resp.error) throw new Error(resp.error);
-      logAssembly(batchJobId, '✅ Assembly complete!');
-      logAssembly(batchJobId, '📁 Output: ' + resp.outputPath);
-      if (resp.duration) logAssembly(batchJobId, '⏱  Duration: ' + resp.duration + 's');
-
-      // Store FFmpeg results back on job manifest
-      var rawFinalUrl = resp.downloadUrl || (resp.filename ? ('/download/' + resp.filename) : '');
-      job.finalUrl = rawFinalUrl ? (rawFinalUrl.startsWith('http') ? rawFinalUrl : (CFG.ffmpegUrl + rawFinalUrl)) : '';
-      job.outputPath = resp.outputPath;
-      job.assembledAt = new Date().toISOString();
-      // Store thumbnail frame URL for publish prep
-      if (resp.thumbFilename) {
-        job.thumbnailUrl = CFG.ffmpegUrl + '/download/' + resp.thumbFilename;
-        job.thumbFilename = resp.thumbFilename;
-      }
-      // Store probed segment durations for accurate chapter timestamps
-      if (resp.segmentDurations && resp.segmentDurations.length && job.segments) {
-        var durIdx = 0;
-        job.segments.forEach(function(seg) {
-          if (resp.segmentDurations[durIdx] !== undefined) {
-            seg.duration = resp.segmentDurations[durIdx];
-            durIdx++;
-          }
-        });
-      }
-      saveJobs();
-      renderQueue();
-    } catch(e) {
-      logAssembly(batchJobId, '❌ Assembly failed: ' + e.message);
-    }
-  };
-  xhr.onerror = xhr.ontimeout = function() {
-    logAssembly(batchJobId, '❌ Server unreachable. Is server.js running on ' + CFG.ffmpegUrl + '?');
-  };
-
-  // Use the script-gen jobId as the assembly ID so all files, logs, and metrics
-  // share one singular ID across every stage of the pipeline.
-  var assemblyId = batchJobId || ('asm_' + Date.now());
-  payload.assemblyId = assemblyId;
-  // Store assemblyId on job so RETRY ASSEMBLY button can reference it
-  job.asmId = assemblyId;
-  saveJobs();
-  xhr.send(JSON.stringify(payload));
-  pollAssemblyProgress(batchJobId, assemblyId);
+  launchWithSegments();
 }
 
 // ── RETRY ASSEMBLY ────────────────────────────────────────────────
@@ -6638,6 +6690,8 @@ function pollAssemblyProgress(batchJobId, assemblyId) {
   // Make the panel highly visible during assembly
   var panel = document.getElementById('asm-panel-'+batchJobId);
   if (panel) {
+    window._jobAsmPanelOpen = window._jobAsmPanelOpen || {};
+    window._jobAsmPanelOpen[batchJobId] = true;
     panel.classList.add('open');
     panel.style.border = '1px solid rgba(230,126,34,0.6)';
   }
@@ -6710,6 +6764,14 @@ function pollAssemblyProgress(batchJobId, assemblyId) {
           asmGate3Failed(batchJobId, resp);
         } else if (resp.status === 'failed') {
           asmFailed(batchJobId, resp.error || 'FFmpeg error');
+        } else if (attempts === 3 && resp.error === 'Job not found') {
+          fetchJobCard(batchJobId, function(err, serverJob) {
+            if (!err && serverJob && serverJob.assemblyError) {
+              asmFailed(batchJobId, serverJob.assemblyError);
+            } else if (attempts < 150) {
+              setTimeout(check, 2000);
+            }
+          });
         } else if (attempts < 150) {
           setTimeout(check, 2000);
         }
@@ -7240,6 +7302,13 @@ function renderFindJobList() {
     var reasmBtn = canReasm
       ? '<button type="button" class="btn btn-outline btn-sm" style="margin-left:6px;white-space:nowrap;color:#3498db;" onclick="addJobToQueueFromServer(\'' + jid.replace(/'/g, "\\'") + '\', true);setTimeout(function(){reassembleFromFiles(\'' + jid.replace(/'/g, "\\'") + '\');},800);">↻ RE-ASSEMBLE</button>'
       : '';
+    var clipCount = Array.isArray(j.orderedClipUrls) ? j.orderedClipUrls.length : 0;
+    var ct = String(j.contentType || j.type || '');
+    var isTwitchLong = ct.indexOf('twitch') >= 0 && ct.indexOf('-short') < 0;
+    var stg = j.stage || '';
+    var retryBtn = (isTwitchLong && clipCount > 0 && (stg === 'gate1_failed' || j.gate1Outcome === 'fail'))
+      ? '<button type="button" class="btn btn-gold btn-sm" style="margin-left:6px;white-space:nowrap;font-weight:700;" onclick="closeFindJobModal();retryAvatarVodFromJob(\'' + jid.replace(/'/g, "\\'") + '\');">🔄 RETRY SAME CLIPS (' + clipCount + ')</button>'
+      : '';
     return '<div class="' + rowCls + '">'
       + '<div style="flex:1;min-width:0;">'
       + '<div style="font-size:13px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:4px;">' + title + '</div>'
@@ -7248,7 +7317,7 @@ function renderFindJobList() {
       + '<span style="color:' + badge.color + ';">' + escHtml(badge.text) + '</span>'
       + '<span style="color:rgba(255,255,255,0.35);">' + escHtml(when) + '</span>'
       + '</div></div>'
-      + '<div style="flex-shrink:0;display:flex;align-items:center;gap:4px;">' + btn + reasmBtn + '</div>'
+      + '<div style="flex-shrink:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end;">' + retryBtn + btn + reasmBtn + '</div>'
       + '</div>';
   }).join('');
 }
@@ -7273,8 +7342,14 @@ function refreshQueuedJobFromServer(jobId, opts) {
       saveJobs();
       scheduleQueueRender();
     } else {
-      mergeServerJobIntoLocal(jobId, serverJob);
-      if (serverJob.heygen) existing.heygen = serverJob.heygen;
+      mergeServerJobIntoLocal(jobId, serverJob, { skipRender: true });
+      if (!opts.quiet) scheduleQueueRender();
+      else if (!isJobPreviewPlaying() && !window._queuePreviewLock) {
+        clearTimeout(_queueRenderTimer);
+        _queueRenderTimer = setTimeout(function() {
+          if (!isJobPreviewPlaying() && !window._queuePreviewLock) renderQueueNow();
+        }, 800);
+      }
     }
     if (shouldPin) {
       markJobQueued(jobId, true);
@@ -7355,52 +7430,201 @@ function hideUnpinnedRestored() {
   renderQueue();
 }
 
-function buildLocalJobFromServerCard(serverJob) {
-  var serverJobId = serverJob.jobId || serverJob.id;
-  var heygenData = serverJob.heygen || {};
+function mapVideoJobToSegmentStatus(vj) {
+  var url = vj.video_url || vj.url || null;
+  var st = String(vj.status || '').toLowerCase();
+  if (url || st === 'completed') return { status: 'completed', url: url };
+  if (st === 'failed' || st === 'error') return { status: 'failed', url: null };
+  if (st === 'waiting' || st === 'pending' || st === 'generating' || st === 'rendering' || st === 'processing') {
+    return { status: 'rendering', url: null };
+  }
+  if (vj.video_id) return { status: 'rendering', url: null };
+  return { status: 'queued', url: null };
+}
+
+function buildClipSegmentFromOrderedClip(clip, clipIdx, labelHint) {
+  var clipUrl = clip.clipUrl || clip.url || '';
+  return {
+    type: 'source_clip',
+    label: labelHint || clip.label || ('CLIP ' + clipIdx),
+    status: clipUrl ? 'ready' : 'queued',
+    clipUrl: clipUrl,
+    pageUrl: clip.pageUrl || '',
+    url: clipUrl,
+    clipTimingTargets: clip.clipTimingTargets || [],
+    clipTimingFormat: clip.clipTimingFormat || 'none',
+    clipDuration: null,
+    videoId: null
+  };
+}
+
+function scriptScenesFromJobCard(card) {
+  if (!card) return [];
+  if (Array.isArray(card.scriptScenes) && card.scriptScenes.length) return card.scriptScenes;
+  if (card.script && typeof card.script === 'object' && Array.isArray(card.script.scenes)) return card.script.scenes;
+  return [];
+}
+
+function scriptTextFromJobCard(card) {
+  if (!card) return '';
+  if (typeof card.script === 'string') return card.script;
+  if (card.script && typeof card.script === 'object') {
+    return card.script.raw || card.script.fullText || card.script.text || '';
+  }
+  return card.scriptText || '';
+}
+
+function jobCardViewForSegments(job) {
+  if (!job) return {};
+  var scenes = scriptScenesFromJobCard(job);
+  return {
+    heygen: job.heygen,
+    orderedClipUrls: job.orderedClipUrls || (job.meta && job.meta.orderedClipUrls) || [],
+    script: scenes.length ? { scenes: scenes } : (job.script && typeof job.script === 'object' ? job.script : null),
+    scriptScenes: scenes
+  };
+}
+
+function syncJobSegmentDataFromServer(job, serverJob) {
+  if (!job || !serverJob) return;
+  var scenes = scriptScenesFromJobCard(serverJob);
+  if (scenes.length) job.scriptScenes = scenes;
+  if (Array.isArray(serverJob.orderedClipUrls) && serverJob.orderedClipUrls.length) {
+    job.orderedClipUrls = serverJob.orderedClipUrls;
+    job.meta = job.meta || {};
+    job.meta.orderedClipUrls = serverJob.orderedClipUrls;
+  }
+  if (serverJob.heygen) job.heygen = serverJob.heygen;
+  job.segments = buildJobSegmentsFromServerJob({
+    heygen: job.heygen,
+    orderedClipUrls: job.orderedClipUrls,
+    script: scenes.length ? { scenes: scenes } : serverJob.script,
+    scriptScenes: scenes
+  });
+}
+
+/** Script-order segments for Queue — matches server heygen-poller interleaving (r45+ merged SETUP). */
+function buildJobSegmentsFromServerJob(serverJob) {
+  var heygenData = (serverJob && serverJob.heygen) || {};
   var videoJobs = heygenData.videoJobs || [];
-  var clipUrls = serverJob.orderedClipUrls || [];
+  var clipUrls = (serverJob && serverJob.orderedClipUrls) || [];
+  var scriptScenes = scriptScenesFromJobCard(serverJob);
   var segments = [];
-  var clipIdx = 0;
+
+  if (scriptScenes.length > 0 && videoJobs.length > 0) {
+    var avatarByName = {};
+    videoJobs.forEach(function(vj) {
+      if (vj.sceneName) avatarByName[String(vj.sceneName).toUpperCase()] = vj;
+    });
+    var clipIdx = 0;
+    scriptScenes.forEach(function(scene) {
+      if (scene.type === 'source_clip') {
+        var clipSc = clipUrls[clipIdx++];
+        if (clipSc) segments.push(buildClipSegmentFromOrderedClip(clipSc, clipIdx, scene.name || scene.id));
+        return;
+      }
+      var sceneKey = scene.name || scene.id || '';
+      var vj = avatarByName[String(sceneKey).toUpperCase()]
+        || videoJobs.find(function(v) { return v.sceneName === sceneKey; });
+      if (vj) {
+        var mapped = mapVideoJobToSegmentStatus(vj);
+        segments.push({
+          type: 'avatar',
+          label: (vj.sceneName || sceneKey).replace(/_/g, ' '),
+          status: mapped.status,
+          videoId: vj.video_id || null,
+          url: mapped.url,
+          truncated: false
+        });
+        if (scene.hasClipInsert) {
+          var clipAfter = clipUrls[clipIdx++];
+          if (clipAfter) segments.push(buildClipSegmentFromOrderedClip(clipAfter, clipIdx, sceneKey + '_CLIP'));
+        }
+      } else if (scene.hasClipInsert) {
+        // Merged SETUP scenes (CPD-1144 r45+) — no separate HeyGen render, clip still inserts here.
+        var clipMerged = clipUrls[clipIdx++];
+        if (clipMerged) segments.push(buildClipSegmentFromOrderedClip(clipMerged, clipIdx, sceneKey + '_CLIP'));
+      }
+    });
+    if (segments.length) return segments;
+  }
+
+  // Legacy fallback: one segment per videoJob + clip after SETUP-named scenes.
+  var legacyClipIdx = 0;
   videoJobs.forEach(function(vj) {
     var sceneName = vj.sceneName || ('Scene ' + (segments.length + 1));
-    var isSetup = sceneName.toUpperCase().indexOf('SETUP') > -1;
+    var mappedLegacy = mapVideoJobToSegmentStatus(vj);
     segments.push({
-      type: 'avatar', label: sceneName.replace(/_/g, ' '),
-      status: vj.url ? 'completed' : 'rendering',
-      videoId: vj.video_id || null, url: vj.url || null, truncated: false
+      type: 'avatar',
+      label: sceneName.replace(/_/g, ' '),
+      status: mappedLegacy.status,
+      videoId: vj.video_id || null,
+      url: mappedLegacy.url,
+      truncated: false
     });
-    if (isSetup && clipUrls[clipIdx]) {
-      var clip = clipUrls[clipIdx++];
-      segments.push({
-        type: 'source_clip', label: sceneName.replace(/_SETUP.*/i, '') + ' (CLIP ' + clipIdx + ')',
-        status: 'ready', clipUrl: clip.url || '', pageUrl: clip.pageUrl || '',
-        url: clip.url || '', clipTimingTargets: clip.clipTimingTargets || [],
-        clipTimingFormat: clip.clipTimingFormat || 'none', clipDuration: null, videoId: null
-      });
+    if (sceneName.toUpperCase().indexOf('SETUP') > -1 && clipUrls[legacyClipIdx]) {
+      segments.push(buildClipSegmentFromOrderedClip(clipUrls[legacyClipIdx++], legacyClipIdx, sceneName.replace(/_SETUP.*/i, '') + ' clip'));
     }
   });
   if (!segments.length && clipUrls.length) {
     clipUrls.forEach(function(c, ci) {
-      segments.push({
-        type: 'source_clip',
-        label: c.label || ('CLIP_' + (ci + 1)),
-        status: (c.url || c.clipUrl) ? 'completed' : 'queued',
-        clipUrl: c.url || c.clipUrl || '',
-        url: c.url || c.clipUrl || '',
-        pageUrl: c.pageUrl || ''
-      });
+      segments.push(buildClipSegmentFromOrderedClip(c, ci + 1));
     });
   }
-  var scriptText = (serverJob.script && (serverJob.script.raw || serverJob.script.fullText || serverJob.script.text)) || serverJob.scriptText || '';
+  return segments;
+}
+
+function resolveJobSegments(job) {
+  if (!job) return [];
+  if (job.heygen && job.heygen.videoJobs && job.heygen.videoJobs.length) {
+    return buildJobSegmentsFromServerJob(jobCardViewForSegments(job));
+  }
+  return job.segments || [];
+}
+
+function persistResolvedJobSegments(job) {
+  if (!job || !(job.heygen && job.heygen.videoJobs && job.heygen.videoJobs.length)) return false;
+  var built = resolveJobSegments(job);
+  if (!built.length) return false;
+  job.segments = built;
+  return true;
+}
+
+function repairLegacyJobSegmentsFromServer(job) {
+  if (!job || job._segmentRepairAttempted) return;
+  var clipUrls = job.orderedClipUrls || (job.meta && job.meta.orderedClipUrls) || [];
+  if (!clipUrls.length || scriptScenesFromJobCard(job).length) return;
+  if (!(job.heygen && job.heygen.videoJobs && job.heygen.videoJobs.length)) return;
+  job._segmentRepairAttempted = true;
+  fetchJobCard(job.id, function(err, serverJob) {
+    if (err || !serverJob) return;
+    syncJobSegmentDataFromServer(job, serverJob);
+    saveJobs();
+    scheduleQueueRender();
+  });
+}
+
+function buildLocalJobFromServerCard(serverJob) {
+  var serverJobId = serverJob.jobId || serverJob.id;
+  var heygenData = serverJob.heygen || {};
+  var clipUrls = serverJob.orderedClipUrls || [];
+  var segments = buildJobSegmentsFromServerJob(serverJob);
+  var scriptText = scriptTextFromJobCard(serverJob);
+  var scriptScenes = scriptScenesFromJobCard(serverJob);
   return {
     id: serverJobId, scriptJobId: serverJob.scriptJobId || serverJobId,
     type: serverJob.contentType || 'twitch',
     title: serverJob.title || serverJob.scriptTitle || serverJobId,
-    status: serverJob.status || 'heygen_done', stage: serverJob.stage || null,
+    status: serverJob.status || (serverJob.stage === 'all_sent' ? 'all_sent' : (serverJob.stage === 'heygen_done' ? 'all_sent' : 'heygen_done')), stage: serverJob.stage || null,
     clipsOnly: !!serverJob.clipsOnly,
-    segments: segments, script: scriptText, heygen: heygenData,
-    queuePinned: true, created: serverJob.savedAt || new Date().toISOString(),
+    segments: segments, script: scriptText, scriptScenes: scriptScenes, heygen: heygenData,
+    orderedClipUrls: clipUrls,
+    streamers: serverJob.streamers || [],
+    gate1Outcome: serverJob.gate1Outcome || null,
+    gate1Score: serverJob.gate1Score != null ? serverJob.gate1Score : null,
+    gate1Summary: serverJob.gate1Summary || null,
+    meta: { orderedClipUrls: clipUrls, streamers: serverJob.streamers || [] },
+    queuePinned: !!serverJob.queuePinned, created: serverJob.savedAt || new Date().toISOString(),
     driveUrl: serverJob.driveUrl || null, assembledAt: serverJob.assembledAt || null,
     assemblyId: serverJob.assemblyId || null, asmId: serverJob.assemblyId || serverJob.asmId || null,
     gate3: serverJob.gate3 || null,
@@ -7460,7 +7684,7 @@ function restoreJobsFromServer(showAlert, _retryCount) {
         if (!serverJobId) return;
         // Skip if already in dashboard queue (auto-restore only merges new jobs)
         if (!showAlert && existingIds[serverJobId]) {
-          mergeServerJobIntoLocal(serverJobId, serverJob);
+          mergeServerJobIntoLocal(serverJobId, serverJob, { skipRender: true });
           return;
         }
 
@@ -7470,59 +7694,17 @@ function restoreJobsFromServer(showAlert, _retryCount) {
         var videoJobs  = heygenData.videoJobs || [];
         var clipUrls   = serverJob.orderedClipUrls || [];
 
-        // Build segments array: interleave avatar + source_clip in script order
-        // videoJobs = [{sceneName, video_id}] — no URL yet (HeyGen renders async)
-        // clipUrls  = [{url, pageUrl, streamer, displayName}]
-        var segments = [];
-        var clipIdx = 0;
+        // Build segments from server truth (script order + heygen videoJobs + orderedClipUrls)
+        var segments = buildJobSegmentsFromServerJob(serverJob);
 
-        videoJobs.forEach(function(vj) {
-          var sceneName = vj.sceneName || ('Scene ' + (segments.length + 1));
-          // Insert clip AFTER SETUP scenes (matches server.js startHeyGenPoller logic)
-          // Script order: INTRO → STREAMER_INTRO → CLIP1_SETUP → [CLIP1] → CLIP1_REACTION → ...
-          // Do NOT use isReaction — CLIP_REACTION also contains "REACTION" and would insert clip in wrong place
-          var isSetup = sceneName.toUpperCase().indexOf('SETUP') > -1;
-
-          segments.push({
-            type:    'avatar',
-            label:   sceneName.replace(/_/g, ' '),
-            status:  'rendering',   // HeyGen is rendering — REFRESH IDs will populate URL
-            videoId: vj.video_id || null,
-            url:     null,
-            truncated: false
-          });
-
-          // Insert source clip AFTER SETUP scene (correct order: SETUP → [CLIP] → REACTION)
-          if (isSetup && clipUrls[clipIdx]) {
-            var clip = clipUrls[clipIdx++];
-            segments.push({
-              type:        'source_clip',
-              label:       sceneName.replace(/_SETUP.*/i, '') + ' (CLIP ' + clipIdx + ')',
-              status:      'ready',
-              clipUrl:     clip.url || '',
-              pageUrl:     clip.pageUrl || '',
-              url:         clip.url || '',
-              clipTimingTargets: clip.clipTimingTargets || [],
-              clipTimingFormat: clip.clipTimingFormat || 'none',
-              clipDuration: null,
-              videoId:     null
-            });
-          }
-        });
-
-        // Fix 2 Part B: Restore source_clip segments from card.sourceClipSegments
-        // If the server saved sourceClipSegments (Fix 2 Part A), use those instead of
-        // rebuilding from orderedClipUrls. This preserves the exact scene order and
-        // ensures source clips don't drop on restore.
-        if (serverJob.sourceClipSegments && serverJob.sourceClipSegments.length > 0) {
-          // Walk script.scenes to determine correct insertion positions
-          var scriptScenes = (serverJob.script && serverJob.script.scenes) || [];
-          if (scriptScenes.length > 0) {
-            // Rebuild segments array with correct interleaving
+        // Legacy sourceClipSegments path — only if shared builder returned nothing
+        if (!segments.length && serverJob.sourceClipSegments && serverJob.sourceClipSegments.length > 0) {
+          var scriptScenesLegacy = (serverJob.script && serverJob.script.scenes) || [];
+          var videoJobsLegacy = heygenData.videoJobs || [];
+          if (scriptScenesLegacy.length > 0) {
             var rebuiltSegments = [];
-            scriptScenes.forEach(function(scene, idx) {
+            scriptScenesLegacy.forEach(function(scene, idx) {
               if (scene.type === 'source_clip') {
-                // Find matching sourceClipSegment by sceneId
                 var clipSeg = serverJob.sourceClipSegments.find(function(s) {
                   return s.sceneId === scene.name || s.sceneId === scene.id;
                 });
@@ -7541,35 +7723,30 @@ function restoreJobsFromServer(showAlert, _retryCount) {
                   });
                 }
               } else {
-                // Avatar segment - find matching videoJob by scene index
-                var vj = videoJobs[idx] || null;
-                if (vj) {
+                var vjLegacy = videoJobsLegacy[idx] || null;
+                if (vjLegacy) {
+                  var mappedLegacy = mapVideoJobToSegmentStatus(vjLegacy);
                   rebuiltSegments.push({
                     type: 'avatar',
-                    label: vj.sceneName ? vj.sceneName.replace(/_/g, ' ') : scene.id,
-                    status: 'rendering',
-                    videoId: vj.video_id || null,
-                    url: null,
+                    label: vjLegacy.sceneName ? vjLegacy.sceneName.replace(/_/g, ' ') : scene.id,
+                    status: mappedLegacy.status,
+                    videoId: vjLegacy.video_id || null,
+                    url: mappedLegacy.url,
                     truncated: false
                   });
                 }
               }
             });
-            // Replace segments with rebuilt array if we got a full sequence
-            if (rebuiltSegments.length > 0) {
-              segments = rebuiltSegments;
-            }
+            if (rebuiltSegments.length) segments = rebuiltSegments;
           }
         }
 
-        // Second pass: fill source_clip segments that still have no URL from orderedClipUrls sequentially.
-        // This handles cases where clip.url was empty during the first pass (e.g. older job format
-        // where orderedClipUrls entries have the URL at a different key, or the object structure differs).
+        // Fill empty clip URLs from orderedClipUrls
         var fillIdx = 0;
         segments.forEach(function(seg) {
           if (seg.type !== 'source_clip') return;
           if (!seg.clipUrl && clipUrls[fillIdx]) {
-            seg.clipUrl = clipUrls[fillIdx].url || '';
+            seg.clipUrl = clipUrls[fillIdx].url || clipUrls[fillIdx].clipUrl || '';
             seg.url     = seg.clipUrl;
             seg.pageUrl = clipUrls[fillIdx].pageUrl || '';
           }
@@ -7581,9 +7758,8 @@ function restoreJobsFromServer(showAlert, _retryCount) {
         });
 
         // If no videoJobs (older format), create placeholder segments from script
-        // serverJob.script may be a string or an object {text,scenes} — guard before calling .match()
         var scriptText = typeof serverJob.script === 'string' ? serverJob.script
-                       : (serverJob.script && serverJob.script.text) || '';
+                       : (serverJob.script && (serverJob.script.raw || serverJob.script.fullText || serverJob.script.text)) || serverJob.scriptText || '';
         if (!segments.length && scriptText) {
           var sceneMatches = scriptText.match(/===\s*(.+?)\s*===/g) || [];
           sceneMatches.forEach(function(m) {
@@ -7693,11 +7869,13 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           created:     serverJob.savedAt || new Date().toISOString(),
           segments:    segments,
           script:      scriptText || '',
+          scriptScenes: scriptScenesFromJobCard(serverJob),
           state:       serverJob.state || null,
           meta:        {
             streamers:       (serverJob.streamers || []).map(function(s){ return (s && s.twitchUsername) ? s.twitchUsername : s; }),
             orderedClipUrls: clipUrls
           },
+          orderedClipUrls: clipUrls,
           url:         null,
           pct:         isAssembled ? 100 : 50,
           finalUrl:    serverJob.finalUrl || restoredDriveUrl || null,
@@ -7774,6 +7952,7 @@ function restoreJobsFromServer(showAlert, _retryCount) {
           alert('✅ Restored ' + added + ' job(s) from server.\n\nReview-ready jobs: check SEO preview on the card → 📋 REVIEW SEO or 🚀 APPROVE & PUBLISH.');
         }
       } else {
+        if (!showAlert) scheduleQueueRender();
         cwn_log('[restore] Server has ' + resp.jobs.length + ' job(s) — all already in queue', false);
         if (showAlert) alert('All server jobs are already in your queue (' + resp.jobs.length + ' found).');
       }
@@ -7811,6 +7990,31 @@ function cwn_log(msg, isError) {
   el.style.display = 'block';
   if (isError) console.error(msg);
   else console.log(msg);
+}
+
+function heygenAllComplete(job) {
+  if (!job) return false;
+  var videoJobs = (job.heygen && job.heygen.videoJobs) || [];
+  if (!videoJobs.length) return false;
+  return videoJobs.every(function(vj) {
+    return vj.status === 'completed' && (vj.video_url || vj.url);
+  });
+}
+
+/** HeyGen progress for UI — use videoJobs count (14 merged renders), not 22 script scenes. */
+function heygenRenderCounts(job) {
+  var videoJobs = (job.heygen && job.heygen.videoJobs) || [];
+  var expected = videoJobs.length;
+  var completed = videoJobs.filter(function(vj) {
+    return vj.status === 'completed' && (vj.video_url || vj.url);
+  }).length;
+  if (expected) {
+    return { expected: expected, completed: completed, allDone: completed >= expected };
+  }
+  var segs = resolveJobSegments(job).filter(function(s) { return s.type !== 'source_clip'; });
+  expected = segs.length;
+  completed = segs.filter(function(s) { return s.status === 'completed' && (s.url || s.videoId); }).length;
+  return { expected: expected, completed: completed, allDone: expected > 0 && completed >= expected };
 }
 
 function pipeStep(label, done, active, color) {
@@ -8027,10 +8231,77 @@ function restoreQueueMediaState(state) {
   });
 }
 
+function captureQueueScriptEditorState() {
+  var state = {};
+  document.querySelectorAll('[id^="job-script-editor-"]').forEach(function(ta) {
+    var jobId = ta.id.replace('job-script-editor-', '');
+    state[jobId] = {
+      value: ta.value,
+      selStart: ta.selectionStart,
+      selEnd: ta.selectionEnd,
+      scrollTop: ta.scrollTop,
+      hadFocus: document.activeElement === ta,
+      panelOpen: !window._jobScriptPanelOpen || window._jobScriptPanelOpen[jobId] !== false
+    };
+    _scriptInputDrafts[jobId] = ta.value;
+  });
+  return state;
+}
+
+function restoreQueueScriptEditorState(state) {
+  if (!state) return;
+  Object.keys(state).forEach(function(jobId) {
+    var s = state[jobId];
+    if (!s) return;
+    if (s.value != null) _scriptInputDrafts[jobId] = s.value;
+    if (s.panelOpen != null) {
+      window._jobScriptPanelOpen = window._jobScriptPanelOpen || {};
+      window._jobScriptPanelOpen[jobId] = s.panelOpen;
+    }
+    setTimeout(function() {
+      var ta = document.getElementById('job-script-editor-' + jobId);
+      if (!ta || s.value == null) return;
+      ta.value = s.value;
+      ta.scrollTop = s.scrollTop || 0;
+      if (s.hadFocus) {
+        try {
+          ta.focus({ preventScroll: true });
+          ta.setSelectionRange(s.selStart || 0, s.selEnd || 0);
+        } catch (_e) {}
+      }
+    }, 0);
+  });
+}
+
 var _hookInputDrafts = {};
 var _titleInputDrafts = {};
+var _scriptInputDrafts = {};
+var _scriptSceneDebounce = {};
+var _scriptPanelSceneLoaded = {};
 var _queueRenderTimer = null;
 var _queueRenderDeferred = false;
+window._jobSegsOpen = window._jobSegsOpen || {};
+window._jobAsmPanelOpen = window._jobAsmPanelOpen || {};
+
+function captureQueuePanelState() {
+  window._jobSegsOpen = window._jobSegsOpen || {};
+  window._jobAsmPanelOpen = window._jobAsmPanelOpen || {};
+  document.querySelectorAll('[id^="segs-"]').forEach(function(el) {
+    var jobId = el.id.replace(/^segs-/, '');
+    window._jobSegsOpen[jobId] = el.style.display === 'block';
+  });
+  document.querySelectorAll('.assembly-panel').forEach(function(el) {
+    var jobId = el.id.replace(/^asm-panel-/, '');
+    window._jobAsmPanelOpen[jobId] = el.classList.contains('open');
+  });
+}
+
+function isQueuePanelExpanded() {
+  var segs = window._jobSegsOpen || {};
+  var asm = window._jobAsmPanelOpen || {};
+  return Object.keys(segs).some(function(k) { return segs[k]; })
+    || Object.keys(asm).some(function(k) { return asm[k]; });
+}
 
 function saveHookInputDraft(jobId, clipIdx, value) {
   _hookInputDrafts[jobId + '-' + clipIdx] = value;
@@ -8069,6 +8340,7 @@ function isJobPreviewPlaying() {
 function isOperatorDraftInputFocused() {
   var ae = document.activeElement;
   if (!ae || !ae.id) return false;
+  if (ae.id.indexOf('job-script-editor-') === 0) return true;
   return ae.id.indexOf('custom-hook-input-') === 0 || ae.id.indexOf('custom-title-input-') === 0;
 }
 function scheduleQueueRender(force) {
@@ -8243,7 +8515,9 @@ function confirmClipHooksAndBuild(jobId) {
 
 function renderQueueNow() {
   try {
+  captureQueuePanelState();
   var queueMediaState = captureQueueMediaState();
+  var queueScriptState = captureQueueScriptEditorState();
   var visibleJobs = JOBS.filter(function(j) { return isJobQueued(j); });
   g('queue-count').textContent = visibleJobs.length + ' JOB' + (visibleJobs.length === 1 ? '' : 'S');
   var list = g('job-list');
@@ -8251,30 +8525,45 @@ function renderQueueNow() {
     list.innerHTML = '<div style="padding:28px 16px;text-align:center;">'
       + '<div style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:14px;">Your queue is empty.</div>'
       + '<button class="btn btn-gold" onclick="openFindJobModal()" style="font-weight:700;padding:10px 24px;">+ ADD JOB FROM SERVER</button>'
-      + '<div style="font-size:15px;color:rgba(255,255,255,0.35);margin-top:14px;line-height:1.6;">Pick by video title — e.g. <em>Twitch Soup: Jason\'s Spelling Bee…</em><br>Or generate a new video — it auto-adds here.</div>'
+      + '<div style="font-size:15px;color:rgba(255,255,255,0.35);margin-top:14px;line-height:1.6;">Pick by video title — e.g. <em>TWITCH SOUP — Cinna, ExtraEmily…</em><br>Gate 1 failed? Use <strong style="color:#c7af4f;">RETRY SAME CLIPS</strong> in the picker — no Library re-pick.<br>Or generate a new video — it auto-adds here.</div>'
       + '</div>';
     return;
   }
 
   list.innerHTML = visibleJobs.map(function(job, ji) {
     try {
-    var status = job.status || 'unknown';
-    var segments = job.segments || [];
-    var doneSegs = segments.filter(function(s){ return (s.type!=='source_clip')&&s.status==='completed'&&s.url; });
+    var status = job.status || job.stage || 'unknown';
+    var segments = resolveJobSegments(job);
+    var avatarSegs = segments.filter(function(s){ return s.type !== 'source_clip'; });
+    var doneSegs = avatarSegs.filter(function(s){ return s.status==='completed'&&(s.url||s.videoId); });
     var clipSlots = segments.filter(function(s){ return s.type==='source_clip'; });
     var totalSegs = segments.length;
-    var anyRendering = segments.some(function(s){ return s.status==='rendering'||s.status==='generating'; });
+    var avatarTotal = avatarSegs.length;
+    var heygenCounts = heygenRenderCounts(job);
+    var heygenReady = heygenCounts.allDone || heygenAllComplete(job);
+    var anyRendering = avatarSegs.some(function(s){ return s.status==='rendering'||s.status==='generating'||s.status==='queued'; })
+      || ((job.heygen && job.heygen.videoJobs) || []).some(function(vj) {
+        var st = String(vj.status || '').toLowerCase();
+        return st === 'waiting' || st === 'pending' || st === 'generating' || st === 'rendering' || st === 'processing';
+      });
 
     var jobStage = job.stage || '';
     var isClipCompJob = !!(job.clipsOnly || ((jobStage === 'hook_review' || jobStage === 'hooks_generating') && (job.type || '').indexOf('short') > -1));
     var previewUrlEarly = resolveJobPreviewUrl(job);
     var ffmpegDone = !!(job.assembledAt || job.driveUrl || previewUrlEarly);
-    var hooksReviewActive = isClipCompJob && jobStage === 'hook_review' && !job.hooksConfirmedAt;
+    var hasHookCandidates = !!(job.clipHookCandidates && job.clipHookCandidates.some(function(p) { return p && p.length; }));
+    var hooksReviewActive = isClipCompJob && !job.hooksConfirmedAt && !ffmpegDone && (
+      jobStage === 'hook_review'
+      || (hasHookCandidates && (jobStage === 'hooks_generating' || jobStage === 'awaiting_review'))
+    );
     var ffmpegActive = !ffmpegDone && !hooksReviewActive && (
       jobActivelyAssembling(job)
       || jobStage === 'assembling'
       || (isClipCompJob && (status === 'processing' || status === 'all_sent') && !!job.hooksConfirmedAt)
     );
+    var ffmpegReady = !ffmpegDone && !ffmpegActive && !hooksReviewActive && !isClipCompJob
+      && (heygenReady || (avatarTotal > 0 && doneSegs.length >= avatarTotal))
+      && (jobStage === 'heygen_done' || jobStage === 'all_sent' || status === 'all_sent' || status === 'completed');
 
     // PIPELINE STATUS BAR
     var pipe = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 10px;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);">';
@@ -8287,10 +8576,11 @@ function renderQueueNow() {
       }
     } else {
       pipe += pipeStep('SCRIPT', !!(job.script&&job.script.length>10), false, '#c7af4f');
-      var hgDone = doneSegs.length===totalSegs&&totalSegs>0;
-      pipe += pipeStep('HEYGEN '+doneSegs.length+'/'+totalSegs, hgDone, anyRendering, '#e74c3c');
+      var hgDone = heygenCounts.allDone;
+      var hgActive = anyRendering || ((jobStage === 'all_sent' || jobStage === 'heygen_done') && !hgDone);
+      pipe += pipeStep('HEYGEN '+heygenCounts.completed+'/'+heygenCounts.expected, hgDone, hgActive, '#e74c3c');
     }
-    pipe += pipeStep('FFMPEG', ffmpegDone, ffmpegActive, '#e67e22');
+    pipe += pipeStep('FFMPEG', ffmpegDone, ffmpegActive || ffmpegReady, '#e67e22');
     if (isClipCompJob) {
       var g3Pass = !!(job.gate3 && job.gate3.outcome !== 'fail' && job.gate3.score >= 60);
       var g3Fail = jobGate3Failed(job);
@@ -8342,8 +8632,11 @@ function renderQueueNow() {
         + '</div>';
     }
     if ((jobStage === 'failed' || job.assemblyError) && !job.driveUrl && !(job.finalUrl && job.finalUrl.indexOf('http') === 0)) {
+      var failRetry = job.clipsOnly
+        ? 'Dismiss and re-run CLIPS COMP.'
+        : 'HeyGen segments are cached — click <strong>⚙ OPEN ASSEMBLY</strong> → <strong>RUN FFMPEG ASSEMBLE</strong> to retry.';
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:15px;color:#e74c3c;">'
-        + '❌ ASSEMBLY FAILED — ' + escHtml(job.assemblyError || 'clip download failed') + '. Dismiss and re-run CLIPS COMP.'
+        + '❌ ASSEMBLY FAILED — ' + escHtml(job.assemblyError || 'clip download failed') + '. ' + failRetry
         + '</div>';
     } else if (jobGate3Failed(job) && resolveJobPreviewUrl(job)) {
       var g3Score = (job.gate3 && job.gate3.score != null) ? job.gate3.score + '/100' : 'FAIL';
@@ -8358,11 +8651,7 @@ function renderQueueNow() {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.12);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:15px;color:#3498db;">'
         + '⏳ <strong>Re-assembling now</strong> — old preview/SEO stays visible until FFmpeg finishes. Watch for <strong>✅ ASSEMBLY COMPLETE</strong> on the card (or ↩ RESTORE JOBS after ~5–10 min).'
         + '</div>';
-    } else if (isClipCompJob && jobStage === 'hooks_generating') {
-      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:15px;color:#3498db;">'
-        + '🤖 <strong>HOOKS GENERATING</strong> — Hook Machine is writing candidates (~1–3 min). The picker appears when ready.'
-        + '</div>';
-    } else if (isClipCompJob && jobStage === 'hook_review' && !job.hooksConfirmedAt) {
+    } else if (hooksReviewActive) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.1);border:1px solid rgba(199,175,79,0.45);border-radius:6px;font-size:15px;color:#c7af4f;">'
         + '🎣 <strong>HOOK REVIEW</strong> — pick AI candidates or type custom hooks for each clip. FFmpeg does not start until you click <strong>▶ BUILD VIDEO</strong>.'
         + '</div>';
@@ -8371,7 +8660,15 @@ function renderQueueNow() {
         + '<button type="button" id="confirm-hooks-btn-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;padding:8px 16px;">▶ BUILD VIDEO</button>'
         + '<button type="button" onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine (~1–3 min per clip)">🎣 REGEN HOOKS</button>'
         + '</div>';
-    } else if (isClipCompJob && !job.driveUrl && !resolveJobPreviewUrl(job) && jobStage !== 'failed' && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
+    } else if (isClipCompJob && jobStage === 'hooks_generating') {
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:15px;color:#3498db;">'
+        + '🤖 <strong>HOOKS GENERATING</strong> — Hook Machine is writing candidates (~1–3 min). The picker appears when ready.'
+        + '</div>'
+        + '<div style="margin:6px 0 4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+        + '<button type="button" onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Stuck? Rerun Hook Machine">🎣 REGEN HOOKS</button>'
+        + '<button type="button" onclick="fetchJobCard(\'' + job.id + '\',function(e,c){if(!e&&c)mergeServerJobIntoLocal(\'' + job.id + '\',c);renderQueue(true);})" class="btn btn-outline btn-sm">↻ REFRESH STATUS</button>'
+        + '</div>';
+    } else if (isClipCompJob && !job.driveUrl && !resolveJobPreviewUrl(job) && jobStage !== 'failed' && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && !hooksReviewActive && !(job.finalUrl && String(job.finalUrl).indexOf('http') === 0)) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:15px;color:#3498db;">'
         + '⏳ Assembling clip comp — preview + SEO will appear when FFmpeg finishes.'
         + '</div>';
@@ -8569,17 +8866,33 @@ function renderQueueNow() {
         }
       }
       metaStrip += '</div>';
-    } else if ((resolveJobPreviewUrl(job) || job.driveUrl) && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || job.assembledAt)) {
-      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:15px;color:#3498db;">'
-        + '⏳ <strong>Loading publish metadata</strong> from server — title, description, and tags will appear in a moment.'
-        + '</div>';
+    } else if ((resolveJobPreviewUrl(job) || job.driveUrl) && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || job.assembledAt) && !hasSeo) {
+      if (_publishCopyHydratePending[job.id]) {
+        metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:15px;color:#3498db;">'
+          + '⏳ <strong>Loading publish metadata</strong> from server…'
+          + '</div>';
+      } else {
+        metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.08);border:1px solid rgba(199,175,79,0.35);border-radius:6px;font-size:15px;color:#c7af4f;">'
+          + '⚠ <strong>No title / SEO yet</strong> — Gate 3 did not finish on this build. Click <strong>🔄 FIX SEO</strong> to generate title, description, and tags (no re-assembly needed).'
+          + '</div>';
+      }
     }
 
     // ACTION BUTTONS
+    var awaitingScriptApproval = jobAwaitingScriptApproval(job);
     var actions = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">';
-    if (doneSegs.length) {
+    var isTwitchLongJob = (job.type === 'twitch' || ((job.type || '').indexOf('twitch') >= 0 && (job.type || '').indexOf('-short') < 0));
+    var savedClipCount = (job.orderedClipUrls || (job.meta && job.meta.orderedClipUrls) || []).length;
+    if (isTwitchLongJob && awaitingScriptApproval) {
+      actions += '<button onclick="toggleJobScriptPanel(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Expand script editor on this card">📝 EDIT SCRIPT &amp; SCENES</button>';
+    }
+    if (isTwitchLongJob && (jobStage === 'gate1_failed' || jobStage === 'gate1_review' || (status === 'failed' && job.gate1Outcome === 'fail'))) {
+      var retryLbl = savedClipCount > 0 ? (' (' + savedClipCount + ')') : '';
+      actions += '<button onclick="retryAvatarVodFromJob(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Regenerate script + Gate 1 using saved clips — no Library re-pick">🔄 RETRY SAME CLIPS' + retryLbl + '</button>';
+    }
+    if (doneSegs.length || heygenReady) {
       var asmLabel = job.assembledAt ? '↻ OPEN ASSEMBLY PANEL' : '⚙ OPEN ASSEMBLY PANEL';
-      actions += '<button onclick="openAssemblyPanel(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" title="Opens FFmpeg panel — click RUN FFMPEG ASSEMBLE inside">'+asmLabel+'</button>';
+      actions += '<button onclick="openAssemblyPanel(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="'+(ffmpegReady?'font-weight:700;border:2px solid rgba(230,126,34,0.85);':'')+'" title="Opens FFmpeg panel — click RUN FFMPEG ASSEMBLE inside">'+asmLabel+'</button>';
     }
     var previewUrl = resolveJobPreviewUrl(job);
     if (previewUrl) {
@@ -8596,6 +8909,7 @@ function renderQueueNow() {
       actions += '<button onclick="previewJobVideo(\'' + job.id + '\')" class="btn btn-green btn-sm" style="font-weight:700;">▶ PREVIEW VIDEO</button>';
       actions += '<button onclick="previewJobVideo(\'' + job.id + '\', true)" class="btn btn-outline btn-sm">📥 MP4</button>';
     }
+    // Avatar VOD retry also available from full card (duplicate guard removed — button is at top of actions)
     if (doneSegs.length&&!job.canvaUrl) {
       var firstIdx = segments.indexOf(doneSegs[0]);
       actions += '<button onclick="importSegmentToCanva(\'' + job.id + '\',' + firstIdx + ')" class="btn btn-canva btn-sm">→ CANVA</button>';
@@ -8608,6 +8922,8 @@ function renderQueueNow() {
     actions += '<button onclick="navToPublishPrep(\'' + job.id + '\')" class="btn btn-outline btn-sm">📋 REVIEW SEO'+(job.publishPrep?' ✓':'')+'</button>';
     if (jobStage === 'metadata_review') {
       actions += '<button onclick="regeneratePublishCopy(\'' + job.id + '\')" class="btn btn-gold btn-sm" title="Regenerate YT/TT/IG metadata until SEO QA passes">🔄 FIX SEO</button>';
+    } else if ((jobStage === 'awaiting_review' || job.assembledAt) && (resolveJobPreviewUrl(job) || job.driveUrl) && !hasPublishMetadata(job)) {
+      actions += '<button onclick="regeneratePublishCopy(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Generate title, description, and tags from assembled video">🔄 FIX SEO</button>';
     }
     if ((jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'metadata_review' || jobStage === 'gate5_failed' || jobStage === 'publish_scheduled' || job.republishNeeded) && (job.driveUrl || job.finalUrl) && jobStage !== 'metadata_review' && !postLiveHeld) {
       var republishLabel = job.republishNeeded ? '🚀 REPUBLISH NEW CUT' : '🚀 APPROVE &amp; PUBLISH';
@@ -8642,9 +8958,11 @@ function renderQueueNow() {
     }
     // RE-ASSEMBLE FROM FILES — uses manual_segments folder overrides, skips Gate 2 (chrome burning).
     // Show for clip comps / post-HeyGen jobs including awaiting_review (operator re-burn after code fixes).
-    if (isClipCompJob && jobStage === 'hook_review' && !job.hooksConfirmedAt) {
+    if (isClipCompJob && hooksReviewActive) {
       actions += '<button type="button" id="confirm-hooks-btn-action-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;">▶ BUILD VIDEO</button>';
       actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine">🎣 REGEN HOOKS</button>';
+    } else if (isClipCompJob && jobStage === 'hooks_generating') {
+      actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Stuck on HOOKS GEN? Rerun Hook Machine">🎣 REGEN HOOKS</button>';
     }
     var pastHeygenStage = canReassembleJob(job)
       || ['all_sent','awaiting_manual_segments','heygen_done','assembled','assembling','gate3_failed',
@@ -8675,7 +8993,8 @@ function renderQueueNow() {
     }
 
     // SEGMENT TOGGLE
-    var segHtml = '<div id="segs-'+job.id+'" style="display:none;margin-top:8px;border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;">';
+    var segsOpen = !!(window._jobSegsOpen && window._jobSegsOpen[job.id]);
+    var segHtml = '<div id="segs-'+job.id+'" style="display:'+(segsOpen?'block':'none')+';margin-top:8px;border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;">';
     segments.forEach(function(seg, si) {
       if (seg.type === 'source_clip') {
         var hasUrl = seg.clipUrl||seg.url;
@@ -8698,33 +9017,98 @@ function renderQueueNow() {
         +'<span style="color:'+sCls+';">'+seg.status.toUpperCase()+'</span>'+dl+retryBtn+'</div>';
     });
     segHtml += '</div>';
+    var segToggleLabel = totalSegs+' segments ('+doneSegs.length+' HeyGen · '+clipSlots.length+' clips)';
     var segToggle = totalSegs>0
-      ?'<button onclick="toggleSegs(\'' + job.id + '\')" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:14px;font-family:monospace;cursor:pointer;padding:0;margin-top:4px;">▸ '+totalSegs+' segments ('+doneSegs.length+' done)</button>':'';
+      ?'<button id="seg-toggle-'+job.id+'" onclick="toggleSegs(\'' + job.id + '\')" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:14px;font-family:monospace;cursor:pointer;padding:0;margin-top:4px;">'+(segsOpen?'▾':'▸')+' '+segToggleLabel+'</button>':'';
 
     // ASSEMBLY PANEL
-    var asmDoneList = doneSegs.map(function(s){ return '<div style="font-size:14px;font-family:monospace;color:rgba(255,255,255,0.5);padding:1px 0;">✓ '+s.label+'</div>'; }).join('');
+    var asmOpen = !!(window._jobAsmPanelOpen && window._jobAsmPanelOpen[job.id]);
+    var asmReadySegs = segments.filter(function(s) {
+      if (s.type === 'source_clip') return !!(s.clipUrl || s.url);
+      return s.status === 'completed' && (s.url || s.videoId);
+    });
+    var asmDoneList = asmReadySegs.map(function(s) {
+      var icon = s.type === 'source_clip' ? '📹' : '✓';
+      var suffix = s.type === 'source_clip' ? ' (clip)' : '';
+      return '<div style="font-size:14px;font-family:monospace;color:rgba(255,255,255,0.5);padding:1px 0;">' + icon + ' ' + s.label + suffix + '</div>';
+    }).join('');
     var asmPanelBtns = '<button id="asm-btn-'+job.id+'" onclick="this.textContent=\'⚙️ ASSEMBLING...\';this.disabled=true;assembleJob(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm">RUN FFMPEG ASSEMBLE</button>';
     if (canSceneUpdates) {
       asmPanelBtns += '<button onclick="applySceneUpdates(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;border:1px solid rgba(199,175,79,0.6);" title="Partial redo: drop MP4s in scene_updates/ only">✏️ APPLY SCENE UPDATES</button>';
       asmPanelBtns += '<button onclick="syncHeygenSceneUpdates(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(199,175,79,0.5);color:#c7af4f;">↻ SYNC FROM HEYGEN</button>';
     }
-    var asmPanel = '<div class="assembly-panel" id="asm-panel-'+job.id+'">'
-      +'<div class="assembly-title">⚙ FFMPEG — '+doneSegs.length+' of '+totalSegs+' segments ready</div>'
+    var asmPanel = '<div class="assembly-panel'+(asmOpen?' open':'')+'" id="asm-panel-'+job.id+'">'
+      +'<div class="assembly-title">⚙ FFMPEG — '+asmReadySegs.filter(function(s){return s.type!=='source_clip';}).length+' HeyGen + '+asmReadySegs.filter(function(s){return s.type==='source_clip';}).length+' clips ready ('+totalSegs+' total)</div>'
       +'<div style="margin-bottom:8px;">'+asmDoneList+'</div>'
       +'<div class="progress-wrap"><div class="progress-bar ffmpeg-bar" id="asm-progress-'+job.id+'" style="width:0%"></div></div>'
       +'<div class="btn-row" style="margin-top:8px;">'+asmPanelBtns+'</div>'
       +'<div class="asm-log" id="asm-log-'+job.id+'"></div></div>';
 
-    var tagCls = status==='completed'||status==='all_sent'?'tag-done':(status==='failed'||status==='gate3_failed'||jobStage==='gate1_failed')?'tag-failed':'tag-processing';
+    var tagCls = status==='completed'||status==='all_sent'||jobStage==='all_sent'||jobStage==='heygen_done'?'tag-done':(status==='failed'||status==='gate3_failed'||jobStage==='gate1_failed')?'tag-failed':'tag-processing';
+    var heygenAllDone = heygenCounts.allDone;
     var tagLbl = (jobStage === 'gate1_failed' || (jobStage === 'failed' && job.gate1Outcome === 'fail')) ? 'GATE 1 FAIL'
-      : (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'hooks_generating') ? 'HOOKS GEN' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobStage === 'assembled' && (job.driveUrl || previewUrl)) ? 'REVIEW' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && jobStage !== 'awaiting_review' && jobStage !== 'assembled' && jobStage !== 'metadata_review')) ? 'ASSEMBLING' : status.toUpperCase().replace('_',' ');
+      : awaitingScriptApproval ? 'SCRIPT REVIEW'
+      : (jobStage === 'all_sent' || jobStage === 'heygen_done') ? (heygenAllDone ? 'HEYGEN DONE' : 'HEYGEN RENDERING')
+      : (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'hooks_generating') ? 'HOOKS GEN' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobStage === 'assembled' && (job.driveUrl || previewUrl)) ? 'REVIEW' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && jobStage !== 'awaiting_review' && jobStage !== 'assembled' && jobStage !== 'metadata_review')) ? 'ASSEMBLING' : String(status).toUpperCase().replace(/_/g,' ');
     var pctBar = (status==='processing'||anyRendering) && jobStage !== 'gate1_failed' ?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
     var gate1FailBanner = jobStage === 'gate1_failed'
       ? '<div style="margin:8px 0;padding:8px 10px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.45);border-radius:4px;font-size:14px;color:#e74c3c;">'
-        + '⚠ Gate 1 failed — script scene headers missing or malformed. Open script in Generate, fix <code>=== SCENE ===</code> lines, then re-run.'
+        + '⚠ Gate 1 did not pass'
         + (job.gate1Score != null ? ' (score ' + job.gate1Score + ')' : '')
+        + ' — click <button type="button" class="btn btn-gold btn-sm" style="margin-left:6px;font-weight:700;vertical-align:middle;" onclick="retryAvatarVodFromJob(\'' + job.id + '\')">🔄 RETRY SAME CLIPS</button>'
+        + (savedClipCount > 0 ? ' (' + savedClipCount + ' saved clips, no Library).' : ' (saved lineup on server, no Library).')
         + '</div>'
       : '';
+    var scriptReviewBanner = awaitingScriptApproval
+      ? '<div style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.12);border:1px solid rgba(199,175,79,0.45);border-radius:4px;font-size:14px;color:#c7af4f;">'
+        + '✏️ Gate 1 passed'
+        + (job.gate1Score != null ? ' (' + job.gate1Score + '/100)' : '')
+        + ' — expand script below, edit if needed, confirm scene order, then Send to HeyGen.'
+        + '</div>'
+      : '';
+    var heygenStatusBanner = '';
+    if (!isClipCompJob && (heygenCounts.expected > 0 || (job.heygen && job.heygen.videoJobs && job.heygen.videoJobs.length)) && (jobStage === 'all_sent' || jobStage === 'heygen_done' || (job.heygen && job.heygen.videoJobs && job.heygen.videoJobs.length))) {
+      var hgColor = heygenAllDone ? '#2ecc71' : '#e74c3c';
+      var hgBg = heygenAllDone ? 'rgba(46,204,113,0.12)' : 'rgba(231,76,60,0.1)';
+      heygenStatusBanner = '<div style="margin:8px 0;padding:10px 12px;background:' + hgBg + ';border:1px solid ' + hgColor + '55;border-radius:4px;font-size:14px;color:' + hgColor + ';">'
+        + (heygenAllDone ? '✅ HeyGen complete — ' + heygenCounts.completed + '/' + heygenCounts.expected + ' avatar renders ready (22 segments incl. 8 Twitch clips)'
+          : '⏳ HeyGen rendering — ' + heygenCounts.completed + '/' + heygenCounts.expected + ' done (' + clipSlots.length + ' source clips queued)')
+        + (job.heygen && job.heygen.simulated ? ' <span style="opacity:0.7;">(sim mode)</span>' : '')
+        + '</div>';
+    }
+    var clipsExpectedCount = (job.orderedClipUrls || (job.meta && job.meta.orderedClipUrls) || []).length;
+    if (!isClipCompJob && clipsExpectedCount >= 2 && clipSlots.length === 0 && avatarTotal > 0) {
+      heygenStatusBanner += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.45);border-radius:4px;font-size:14px;color:#e74c3c;">'
+        + '⚠ ' + clipsExpectedCount + ' Twitch clips on server but 0 in segment list — auto-syncing scene order. Do not assemble until you see <strong>' + clipsExpectedCount + ' clips</strong> in the segment footer.'
+        + '</div>';
+      repairLegacyJobSegmentsFromServer(job);
+    }
+    var jobScriptPanel = '';
+    if (awaitingScriptApproval) {
+      window._jobScriptPanelOpen = window._jobScriptPanelOpen || {};
+      var scriptPanelOpen = window._jobScriptPanelOpen[job.id] !== false;
+      var cardScriptText = Object.prototype.hasOwnProperty.call(_scriptInputDrafts, job.id)
+        ? _scriptInputDrafts[job.id]
+        : publishScriptFromJob(job, 50000);
+      var scriptPreview = escHtml(cardScriptText.slice(0, 140).replace(/\s+/g, ' '));
+      jobScriptPanel = '<div id="job-script-panel-' + job.id + '" class="job-script-panel" style="margin:8px 0;padding:12px;background:rgba(0,0,0,0.28);border:1px solid rgba(199,175,79,0.35);border-radius:6px;">'
+        + '<button type="button" onclick="toggleJobScriptPanel(\'' + job.id + '\')" style="background:none;border:none;color:#c7af4f;font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;padding:0;">'
+        + (scriptPanelOpen ? '▾' : '▸') + ' SCRIPT &amp; SCENE ORDER</button>'
+        + (scriptPanelOpen ? ''
+          : '<div style="font-size:14px;color:rgba(255,255,255,0.45);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + scriptPreview + '…</div>')
+        + '<div id="job-script-body-' + job.id + '" style="display:' + (scriptPanelOpen ? 'block' : 'none') + ';margin-top:10px;">'
+        + '<div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:8px;">Edit script headers below. HeyGen merges INTRO+CLIP1_SETUP and REACTION+CLIP2_SETUP per streamer (CPD-1144 r45+ — eliminates 009/055 flash). Scene list = actual HeyGen renders.</div>'
+        + '<textarea id="job-script-editor-' + job.id + '" class="script-editor" oninput="onJobScriptEditorInput(\'' + job.id + '\')">' + escTextarea(cardScriptText) + '</textarea>'
+        + '<div id="job-scene-order-' + job.id + '"></div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">'
+        + '<button type="button" class="btn btn-outline btn-sm" onclick="saveJobScriptFromCard(\'' + job.id + '\')">💾 SAVE SCRIPT</button>'
+        + '<button type="button" class="btn btn-outline btn-sm" onclick="refreshJobSceneOrderPanel(\'' + job.id + '\')">↻ SCENES</button>'
+        + '<button type="button" class="btn btn-outline btn-sm" onclick="confirmJobSceneOrder(\'' + job.id + '\')">✓ CONFIRM SCENE ORDER</button>'
+        + '<button type="button" class="btn btn-gold btn-sm" style="font-weight:700;" onclick="sendToHeyGenFromJobCard(\'' + job.id + '\')">APPROVE &amp; SEND TO HEYGEN →</button>'
+        + '<span id="job-script-save-status-' + job.id + '" style="font-size:14px;color:rgba(255,255,255,0.45);"></span>'
+        + '<span id="job-scene-status-' + job.id + '" style="font-size:14px;"></span>'
+        + '</div></div></div>';
+    }
 
     var mediaPanel = '';
     if (previewUrl || job.gate3) {
@@ -8760,7 +9144,7 @@ function renderQueueNow() {
       +'</div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+gate1FailBanner+pipe+creativeBar+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+mediaPanel+platBar+actions+segToggle+segHtml
+      +pctBar+gate1FailBanner+scriptReviewBanner+heygenStatusBanner+jobScriptPanel+pipe+creativeBar+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+mediaPanel+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -8769,6 +9153,21 @@ function renderQueueNow() {
     }
   }).join('');
   restoreQueueMediaState(queueMediaState);
+  restoreQueueScriptEditorState(queueScriptState);
+  JOBS.forEach(function(job) {
+    if (!jobAwaitingScriptApproval(job)) return;
+    var open = !window._jobScriptPanelOpen || window._jobScriptPanelOpen[job.id] !== false;
+    if (open && !_scriptPanelSceneLoaded[job.id]) {
+      _scriptPanelSceneLoaded[job.id] = true;
+      setTimeout(function(id) { refreshJobSceneOrderPanel(id); }, 0, job.id);
+    }
+  });
+  var segmentsDirty = false;
+  JOBS.filter(function(j) { return isJobQueued(j); }).forEach(function(job) {
+    if (persistResolvedJobSegments(job)) segmentsDirty = true;
+    repairLegacyJobSegmentsFromServer(job);
+  });
+  if (segmentsDirty) saveJobs();
   } catch(err) {
     cwn_log('renderQueue crashed: '+err.message, true);
     g('job-list').innerHTML = '<div style="color:#e74c3c;font-size:16px;padding:10px;">Queue render error — '+err.message+'</div>';
@@ -9304,7 +9703,7 @@ function regenerateClipHooks(jobId) {
     }
     job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
     job.clipHookCandidates = resp.clipHookCandidates || job.clipHookCandidates;
-    job.stage = resp.stage || 'hook_review';
+    job.stage = resp.stage || (job.assembledAt || job.driveUrl ? 'awaiting_review' : 'hook_review');
     saveJobs();
     renderQueue();
     var summary = (resp.clips || []).map(function(c, i) {
@@ -9818,8 +10217,15 @@ function triggerDriveCanva(jobId, filename, title) {
 }
 
 function toggleSegs(jobId) {
+  window._jobSegsOpen = window._jobSegsOpen || {};
+  window._jobSegsOpen[jobId] = !window._jobSegsOpen[jobId];
   var el = document.getElementById('segs-'+jobId);
-  if (el) el.style.display = el.style.display==='none'?'':'none';
+  if (el) el.style.display = window._jobSegsOpen[jobId] ? 'block' : 'none';
+  var btn = document.getElementById('seg-toggle-'+jobId);
+  if (btn) {
+    var label = btn.textContent.replace(/^[▸▾]\s*/, '');
+    btn.textContent = (window._jobSegsOpen[jobId] ? '▾ ' : '▸ ') + label;
+  }
 }
 
 function togglePlatform(jobId, platform) {
@@ -9915,16 +10321,42 @@ function navToPublishPrep(jobId) {
 
 
 function toggleAssembly(jobId) {
+  window._jobAsmPanelOpen = window._jobAsmPanelOpen || {};
   var panel = document.getElementById('asm-panel-'+jobId);
   if (!panel) return;
-  panel.classList.toggle('open');
+  var opening = !panel.classList.contains('open');
+  window._jobAsmPanelOpen[jobId] = opening;
+  panel.classList.toggle('open', opening);
 }
 
 function openAssemblyPanel(jobId) {
-  var panel = document.getElementById('asm-panel-'+jobId);
-  if (!panel) return;
-  if (!panel.classList.contains('open')) panel.classList.add('open');
-  alert('Assembly panel opened.\n\nClick RUN FFMPEG ASSEMBLE inside the panel to start (or use RE-ASSEMBLE FROM FILES on the job card).');
+  window._jobAsmPanelOpen = window._jobAsmPanelOpen || {};
+  window._jobAsmPanelOpen[jobId] = true;
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  var clipsExpected = job ? (job.orderedClipUrls || (job.meta && job.meta.orderedClipUrls) || []).length : 0;
+  var localClips = job ? resolveJobSegments(job).filter(function(s) { return s.type === 'source_clip' && (s.clipUrl || s.url); }).length : 0;
+  var needsSync = job && clipsExpected >= 2 && (localClips === 0 || !scriptScenesFromJobCard(job).length);
+
+  function showPanel() {
+    var panel = document.getElementById('asm-panel-'+jobId);
+    if (panel) {
+      panel.classList.add('open');
+      try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_e) {}
+      return;
+    }
+    scheduleQueueRender(true);
+  }
+
+  if (needsSync) {
+    fetchJobCard(jobId, function(err, serverJob) {
+      if (!err && serverJob && job) syncJobSegmentDataFromServer(job, serverJob);
+      saveJobs();
+      showPanel();
+      scheduleQueueRender(true);
+    });
+    return;
+  }
+  showPanel();
 }
 
 function importSegmentToCanva(jobId, segIndex) {
@@ -10313,6 +10745,17 @@ function setGenerateModeActive(type, form) {
   shortBtn.className = longOn ? 'btn btn-outline' : 'btn btn-gold';
 }
 
+function getTwitchClipsPerStreamerForPayload(items) {
+  var el = g('twitch-clips-per-main');
+  var ui = parseInt((el && el.value) || '2', 10);
+  if (!Array.isArray(items) || !items.length) return ui;
+  var counts = items.map(function(it) {
+    return (it.clips && it.clips.length) || it.clipsPerStreamer || it.targetClipsPerStreamer || 0;
+  }).filter(Boolean);
+  if (counts.length && counts.every(function(c) { return c === counts[0]; })) return counts[0];
+  return ui;
+}
+
 function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, extra) {
   var dateStr = new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   var xhr = new XMLHttpRequest();
@@ -10395,14 +10838,40 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
         console.log('[script] Stored scriptJobId for directive sidecar:', resp.metricsJobId);
         // Save scriptJobId on the correct job card — find by jobId match first,
         // then fall back to most recent non-failed job
-        // Always pull authoritative card from server (saved for pass + non-pass Gate 1).
-        refreshQueuedJobFromServer(resp.metricsJobId, {
-          quiet: true,
-          pin: true,
-          navQueue: isTwitchLongFormType(type),
-          scrollTo: false
-        });
-        var currentJob = JOBS.find(function(j){ return j.id === resp.metricsJobId; });
+        // Queue card only when Gate 1 passes (system approval). Failures stay in script editor.
+        if (resp.metricsJobId) {
+          var g1Pass = resp.scriptQA && resp.scriptQA.outcome === 'pass';
+          if (g1Pass) {
+            var heldForReview = resp.scriptQA && (resp.scriptQA.held || resp.scriptQA.outcome === 'manual_review');
+            refreshQueuedJobFromServer(resp.metricsJobId, {
+              quiet: true,
+              pin: true,
+              navQueue: isTwitchLongFormType(type) && !heldForReview,
+              scrollTo: false
+            });
+            if (isTwitchLongFormType(type) && heldForReview) {
+              window._jobScriptPanelOpen = window._jobScriptPanelOpen || {};
+              window._jobScriptPanelOpen[resp.metricsJobId] = true;
+              nav('queue');
+              setTimeout(function() {
+                var row = g('job-' + resp.metricsJobId);
+                if (row) row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                refreshJobSceneOrderPanel(resp.metricsJobId);
+              }, 300);
+              cwn_log('[gate1] Script ready — edit on Queue job card, confirm scenes, Send to HeyGen.', false);
+            }
+          } else {
+            syncQueuePinToServer(resp.metricsJobId, false);
+            var failIdx = JOBS.findIndex(function(j) { return j.id === resp.metricsJobId; });
+            if (failIdx >= 0) {
+              JOBS.splice(failIdx, 1);
+              saveJobs();
+              scheduleQueueRender();
+            }
+            cwn_log('[gate1] ' + (resp.scriptQA ? resp.scriptQA.outcome : 'no pass') + ' — script in editor only (no queue card). Edit below or Find Job → RETRY SAME CLIPS.', false);
+          }
+        }
+        var currentJob = resp.metricsJobId ? JOBS.find(function(j){ return j.id === resp.metricsJobId; }) : null;
         if (currentJob) {
           currentJob.scriptJobId = resp.metricsJobId;
           if (resp.orderedClipUrls && resp.orderedClipUrls.length > 0) {
@@ -10450,7 +10919,20 @@ function callFullScriptServer(type, items, statusElId, onDone, tone, platforms, 
   var isLongTwitch = isTwitchLongFormType(type);
   if (holdEl && isLongTwitch) holdEl.checked = true;
   var holdBeforeHeygen = isLongTwitch ? true : (holdEl ? holdEl.checked : false);
-  var payload = { type: type, items: items, date: dateStr, tone: tone || 'deadpan', referenceUrls: getReferenceUrls(type), clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {}, platforms: platforms || null, holdBeforeHeygen: holdBeforeHeygen };
+  var payload = {
+    type: type,
+    items: items,
+    date: dateStr,
+    tone: tone || 'deadpan',
+    referenceUrls: getReferenceUrls(type),
+    clipFailureReasons: (window.CURRENT_META && window.CURRENT_META.clipFailureReasons) || {},
+    platforms: platforms || null,
+    holdBeforeHeygen: holdBeforeHeygen,
+    itemCount: Array.isArray(items) ? items.length : 0
+  };
+  if (isTwitchLongFormType(type) || (type === 'twitch')) {
+    payload.clipsPerStreamer = getTwitchClipsPerStreamerForPayload(items);
+  }
   // CPD-997: extra fields (e.g. scriptVariant: 'top10') merged into the request
   if (extra && typeof extra === 'object') Object.keys(extra).forEach(function(k){ payload[k] = extra[k]; });
   xhr.send(JSON.stringify(payload));
@@ -11550,6 +12032,213 @@ function isTwitchLongFormType(type) {
   return type.indexOf('twitch') >= 0 && type.indexOf('-short') < 0 && type.indexOf('short') < 0;
 }
 
+/** Gate 1 passed but operator has not approved Send → HeyGen yet. */
+function jobAwaitingScriptApproval(job) {
+  if (!job) return false;
+  var stage = job.stage || '';
+  if (stage === 'script_ready' || stage === 'gate1_review') return true;
+  if (job.heygen && job.heygen.held === true) return true;
+  if (stage === 'all_sent' && !(job.heygen && job.heygen.videoJobs && job.heygen.videoJobs.length)) {
+    return !!(job.script || (job.gate1Score != null && job.gate1Score >= 70));
+  }
+  return false;
+}
+
+/** Expand inline script editor on Queue job card (default path — not Composer). */
+function openScriptReviewForJob(jobId) {
+  window._jobScriptPanelOpen = window._jobScriptPanelOpen || {};
+  window._jobScriptPanelOpen[jobId] = true;
+  nav('queue');
+  scheduleQueueRender(true);
+  setTimeout(function() {
+    hydrateJobScriptPanel(jobId);
+    var row = g('job-' + jobId);
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+window._jobScriptPanelOpen = window._jobScriptPanelOpen || {};
+window._jobSceneOrderConfirmed = window._jobSceneOrderConfirmed || {};
+
+function toggleJobScriptPanel(jobId) {
+  window._jobScriptPanelOpen = window._jobScriptPanelOpen || {};
+  var wasOpen = window._jobScriptPanelOpen[jobId] !== false;
+  window._jobScriptPanelOpen[jobId] = !wasOpen;
+  scheduleQueueRender(true);
+  if (window._jobScriptPanelOpen[jobId]) {
+    setTimeout(function() {
+      hydrateJobScriptPanel(jobId);
+      if (!_scriptPanelSceneLoaded[jobId]) {
+        _scriptPanelSceneLoaded[jobId] = true;
+        refreshJobSceneOrderPanel(jobId);
+      }
+    }, 100);
+  }
+}
+
+function hydrateJobScriptPanel(jobId, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId), true);
+  xhr.timeout = 20000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      var card = resp.job || resp;
+      var script = (card.script && (card.script.raw || card.script.fullText || card.script.text)) || card.scriptText || card.fullScript || '';
+      if (!script && card.script && typeof card.script === 'string') script = card.script;
+      var ed = g('job-script-editor-' + jobId);
+      if (ed && script) ed.value = script;
+      refreshJobSceneOrderPanel(jobId);
+      if (cb) cb(null, card);
+    } catch (e) { if (cb) cb(e); }
+  };
+  xhr.onerror = function() { if (cb) cb(new Error('network')); };
+  xhr.send();
+}
+
+function onJobScriptEditorInput(jobId) {
+  var ed = g('job-script-editor-' + jobId);
+  if (ed) _scriptInputDrafts[jobId] = ed.value;
+  window._jobSceneOrderConfirmed[jobId] = false;
+  var st = g('job-scene-status-' + jobId);
+  if (st) st.innerHTML = '<span class="scene-order-stale">Script changed — re-confirm scene order</span>';
+  clearTimeout(_scriptSceneDebounce[jobId]);
+  _scriptSceneDebounce[jobId] = setTimeout(function() {
+    var ta = g('job-script-editor-' + jobId);
+    if (!ta) return;
+    renderSceneOrderRowsInto(
+      g('job-scene-order-' + jobId),
+      parseSceneHeadersLocal(ta.value),
+      null,
+      null,
+      { title: 'SCRIPT HEADERS (local preview — click ↻ SCENES for HeyGen merge view)' }
+    );
+  }, 400);
+}
+
+function getJobScriptFromCard(jobId) {
+  var ed = g('job-script-editor-' + jobId);
+  return ed ? ed.value.trim() : '';
+}
+
+function saveJobScriptFromCard(jobId) {
+  var script = getJobScriptFromCard(jobId);
+  if (!script) { alert('Nothing to save'); return; }
+  var st = g('job-script-save-status-' + jobId);
+  if (st) st.textContent = 'Saving…';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/script', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Save failed');
+      var job = JOBS.find(function(j) { return j.id === jobId; });
+      if (job) { job.script = script; saveJobs(); }
+      if (st) st.textContent = '✓ Saved';
+      refreshJobSceneOrderPanel(jobId);
+    } catch (e) {
+      if (st) st.textContent = '❌ ' + e.message;
+      alert(e.message);
+    }
+  };
+  xhr.onerror = function() { if (st) st.textContent = '❌ Server unreachable'; };
+  xhr.send(JSON.stringify({ script: script }));
+}
+
+function confirmJobSceneOrder(jobId, cb) {
+  var script = getJobScriptFromCard(jobId);
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/scene-order-confirm', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) throw new Error(resp.error || 'Confirm failed');
+      window._jobSceneOrderConfirmed[jobId] = true;
+      var st = g('job-scene-status-' + jobId);
+      if (st) st.innerHTML = '<span class="scene-order-confirmed">✓ Scene order confirmed for HeyGen</span>';
+      if (cb) cb(null, resp);
+    } catch (e) {
+      alert(e.message);
+      if (cb) cb(e);
+    }
+  };
+  xhr.onerror = function() { alert('Server unreachable'); if (cb) cb(new Error('network')); };
+  xhr.send(JSON.stringify({ gate: 'heygen', script: script }));
+}
+
+function sendToHeyGenFromJobCard(jobId) {
+  var script = getJobScriptFromCard(jobId);
+  if (!script) { alert('No script to send'); return; }
+  function doSend() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/heygen/send-approved', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function() {
+      try {
+        var resp = JSON.parse(xhr.responseText);
+        if (!resp.ok) throw new Error(resp.error || 'HeyGen send failed');
+        cwn_log('[heygen] Send started for ' + jobId + ' — watch Queue for segments.', false);
+        if (typeof loadServerJobs === 'function') loadServerJobs();
+        refreshQueuedJobFromServer(jobId, { pin: true, navQueue: false, scrollTo: true, quiet: false });
+      } catch (e) { alert(e.message); }
+    };
+    xhr.onerror = function() { alert('Server unreachable'); };
+    xhr.send(JSON.stringify({ script: script }));
+  }
+  if (window._jobSceneOrderConfirmed[jobId]) {
+    doSend();
+    return;
+  }
+  confirmJobSceneOrder(jobId, function(err) {
+    if (!err) doSend();
+  });
+}
+
+function refreshJobSceneOrderPanel(jobId) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/scene-order-preflight', true);
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      var panel = g('job-scene-order-' + jobId);
+      if (resp.preflight) {
+        var rows = (resp.preflight.heygenRows && resp.preflight.heygenRows.length)
+          ? resp.preflight.heygenRows
+          : resp.preflight.rows;
+        var title = (resp.preflight.heygenRows && resp.preflight.heygenRows.length)
+          ? ('HEYGEN RENDERS (' + rows.length + ' — merged flash-safe path)')
+          : ('SCENE ORDER (' + rows.length + ')');
+        renderSceneOrderRowsInto(panel, rows, resp.preflight, resp.heygenShow, { title: title });
+        window._jobSceneOrderConfirmed[jobId] = !!(resp.preflight.heygenConfirmed);
+        var st = g('job-scene-status-' + jobId);
+        if (st && resp.preflight.heygenConfirmed) {
+          st.innerHTML = '<span class="scene-order-confirmed">✓ Scene order confirmed for HeyGen</span>';
+        }
+      }
+    } catch (_e) {
+      var ed = g('job-script-editor-' + jobId);
+      if (ed) {
+        renderSceneOrderRowsInto(
+          g('job-scene-order-' + jobId),
+          parseSceneHeadersLocal(ed.value),
+          null,
+          null,
+          { title: 'SCRIPT HEADERS (offline preview)' }
+        );
+      }
+    }
+  };
+  xhr.onerror = function() {
+    var ed = g('job-script-editor-' + jobId);
+    if (ed) {
+      renderSceneOrderRowsInto(g('job-scene-order-' + jobId), parseSceneHeadersLocal(ed.value));
+    }
+  };
+  xhr.send();
+}
+
 function showGenScriptReview(show) {
   var el = g('gen-script-review');
   if (el) el.classList.toggle('open', !!show);
@@ -11585,13 +12274,21 @@ function parseSceneHeadersLocal(script) {
 }
 
 function renderSceneOrderRows(rows, preflight, heygenShow) {
-  var panel = g('scene-order-panel');
+  renderSceneOrderRowsInto(g('scene-order-panel'), rows, preflight, heygenShow);
+}
+
+function renderSceneOrderRowsInto(panel, rows, preflight, heygenShow, opts) {
+  opts = opts || {};
   if (!panel) return;
   if (!rows || !rows.length) {
     panel.innerHTML = '<div style="font-size:15px;color:rgba(255,255,255,0.4);">No scenes — generate script first.</div>';
     return;
   }
-  var html = '<div style="font-size:14px;letter-spacing:2px;color:rgba(199,175,79,0.75);margin-bottom:6px;">SCENE ORDER (' + rows.length + ')</div>';
+  var title = opts.title || ('SCENE ORDER (' + rows.length + ')');
+  var html = '<div style="font-size:14px;letter-spacing:2px;color:rgba(199,175,79,0.75);margin-bottom:6px;">' + title + '</div>';
+  if (preflight && preflight.notes && preflight.notes.length) {
+    html += '<div style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:8px;">' + preflight.notes.map(function(n) { return escHtml(n); }).join('<br>') + '</div>';
+  }
   if (heygenShow && heygenShow.summary) {
     html += '<div style="font-size:15px;color:rgba(255,255,255,0.55);margin-bottom:8px;">HeyGen show: ' + heygenShow.summary + '</div>';
   } else if (heygenShow && heygenShow.blockers && heygenShow.blockers.length) {
@@ -11603,7 +12300,8 @@ function renderSceneOrderRows(rows, preflight, heygenShow) {
   html += '<table class="scene-order-table"><thead><tr><th>#</th><th>Scene</th><th>Type</th><th>Dur</th></tr></thead><tbody>';
   rows.forEach(function(r) {
     var dur = r.durationSec != null ? (Math.round(r.durationSec * 10) / 10) + 's' : '—';
-    html += '<tr><td>' + r.index + '</td><td>' + r.name + '</td><td>' + (r.type || 'avatar') + '</td><td>' + dur + '</td></tr>';
+    var mergeTag = r.merged ? ' <span style="color:#3498db;font-size:12px;">MERGED</span>' : '';
+    html += '<tr><td>' + r.index + '</td><td>' + escHtml(r.name) + mergeTag + '</td><td>' + (r.type || 'avatar') + '</td><td>' + dur + '</td></tr>';
   });
   html += '</tbody></table>';
   if (preflight && preflight.blockers && preflight.blockers.length) {
@@ -12120,6 +12818,96 @@ function regenScript() {
   else if (CURRENT_TYPE === 'twitch-short') generateShort('twitch');
 }
 
+/** Regenerate Avatar VOD from a job card's saved orderedClipUrls — no Library re-pick. */
+function retryAvatarVodFromJob(jobId) {
+  if (_activeGenerateBtn) {
+    alert('Generate already running — wait for it to finish.');
+    return;
+  }
+  function startRetry(clipCountHint) {
+    var n = clipCountHint > 0 ? clipCountHint : 'saved';
+    if (!confirm('Regenerate Avatar VOD using the same ' + n + ' clip(s)?\n\nNo re-picking from Library. Gate 1 will run again; you can edit the script before Send.')) return;
+    lockGenerateButton('btn-gen-twitch');
+    setGenerateModeActive('twitch', 'long');
+    CURRENT_TYPE = 'twitch';
+    CURRENT_META = { streamers: [], clipMp4Urls: {}, clipFailureReasons: {} };
+    setGeneratingState('twitch-gen-status', 'RETRY — same clips (' + n + ')…');
+    if (g('script-type-label')) g('script-type-label').textContent = 'AVATAR VOD RETRY — Gemini + Gate 1…';
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', CFG.ffmpegUrl + '/jobs/' + encodeURIComponent(jobId) + '/retry-avatar-vod', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.timeout = 480000;
+    xhr.onload = function() {
+      try {
+        var resp = JSON.parse(xhr.responseText);
+        if (resp.error) throw new Error(resp.error);
+        if (resp.errors && resp.errors.length) throw new Error(resp.errors[0].msg || JSON.stringify(resp.errors[0]));
+        g('main-script').value = resp.script;
+        updateScriptStats();
+        syncScriptViewFromPipeline();
+        showGenScriptReview(true);
+        if (g('gen-script-editor')) g('gen-script-editor').value = resp.script;
+        refreshSceneOrderPanel();
+        if (resp.scriptQA) displayScriptQA(resp.scriptQA);
+        if (resp.orderedClipUrls && resp.orderedClipUrls.length) {
+          window.CURRENT_META = window.CURRENT_META || {};
+          window.CURRENT_META.orderedClipUrls = resp.orderedClipUrls;
+        }
+        unlockGenerateButtons();
+        restoreJobsFromServer(false);
+        var focusId = resp.metricsJobId || jobId;
+        var g1Pass = resp.scriptQA && resp.scriptQA.outcome === 'pass';
+        if (g1Pass) {
+          refreshQueuedJobFromServer(focusId, { pin: true, navQueue: true, scrollTo: true, quiet: true });
+        } else {
+          syncQueuePinToServer(focusId, false);
+          var rIdx = JOBS.findIndex(function(j) { return j.id === focusId; });
+          if (rIdx >= 0) {
+            JOBS.splice(rIdx, 1);
+            saveJobs();
+            scheduleQueueRender();
+          }
+          cwn_log('[retry-avatar-vod] Gate 1 did not pass — script in editor (no queue card). Edit or retry again.', false);
+        }
+        cwn_log('[retry-avatar-vod] Done — ' + focusId + (g1Pass ? ' (queued)' : ' (editor only)'), false);
+      } catch (e) {
+        unlockGenerateButtons();
+        alert('Retry failed: ' + e.message);
+        cwn_log('[retry-avatar-vod] ' + e.message, true);
+      }
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+      unlockGenerateButtons();
+      alert('Server unreachable — is pm2 running on ' + CFG.ffmpegUrl + '?');
+    };
+    xhr.send(JSON.stringify({ holdBeforeHeygen: true }));
+  }
+  var cached = _findJobCache.find(function(j) { return (j.jobId || j.id) === jobId; });
+  if (cached && Array.isArray(cached.orderedClipUrls) && cached.orderedClipUrls.length) {
+    return startRetry(cached.orderedClipUrls.length);
+  }
+  var local = JOBS.find(function(j) { return j.id === jobId; });
+  var localClips = local && (local.orderedClipUrls || (local.meta && local.meta.orderedClipUrls) || []);
+  if (localClips && localClips.length) {
+    return startRetry(localClips.length);
+  }
+  var gx = new XMLHttpRequest();
+  gx.open('GET', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId), true);
+  gx.timeout = 15000;
+  gx.onload = function() {
+    try {
+      var data = JSON.parse(gx.responseText);
+      var card = data.job || data;
+      var clips = card.orderedClipUrls || [];
+      startRetry(clips.length);
+    } catch (e) {
+      alert('Could not load job: ' + e.message);
+    }
+  };
+  gx.onerror = function() { alert('Server unreachable'); };
+  gx.send();
+}
+
 // ── SETTINGS ──────────────────────────────────────────────────────
 function loadEpisodeCounters() {
   var xhr = new XMLHttpRequest();
@@ -12132,6 +12920,10 @@ function loadEpisodeCounters() {
         if (g('ep-twitch')) g('ep-twitch').value = r.counters.twitch || 1;
         if (g('ep-nba'))    g('ep-nba').value    = r.counters.nba    || 1;
         if (g('ep-news'))   g('ep-news').value   = r.counters.news   || 1;
+        var v2Hint = g('ep-twitch-v2-hint');
+        if (v2Hint && r.counters.twitch_v2) {
+          v2Hint.textContent = 'New format era: Ep ' + r.counters.twitch_v2;
+        } else if (v2Hint) { v2Hint.textContent = ''; }
       }
     } catch(e) {}
   };
@@ -17593,6 +18385,10 @@ function generateAB() {
 }
 
 // ── PUBLISH METADATA HELPERS (clip comps + review-hold) ─────────────
+function escTextarea(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -17618,14 +18414,23 @@ function hasPublishMetadata(job) {
 }
 
 var _publishCopyHydratePending = {};
+var _publishCopyHydrateMissing = {};
 function ensurePublishCopyHydrated(jobId) {
-  if (!jobId || _publishCopyHydratePending[jobId]) return;
+  if (!jobId || _publishCopyHydratePending[jobId] || _publishCopyHydrateMissing[jobId]) return;
   var job = JOBS.find(function(j) { return j.id === jobId; });
   if (!job || hasPublishMetadata(job)) return;
   _publishCopyHydratePending[jobId] = true;
   fetchJobCard(jobId, function(err, serverJob) {
     delete _publishCopyHydratePending[jobId];
-    if (!err && serverJob) mergeServerJobIntoLocal(jobId, serverJob);
+    if (!err && serverJob) {
+      mergeServerJobIntoLocal(jobId, serverJob, { skipRender: true });
+      if (hasPublishMetadata(JOBS.find(function(j) { return j.id === jobId; }))) {
+        scheduleQueueRender(true);
+        return;
+      }
+    }
+    _publishCopyHydrateMissing[jobId] = true;
+    scheduleQueueRender(true);
   });
 }
 
@@ -17805,7 +18610,8 @@ function previewJobVideo(jobId, downloadOnly) {
   xhr.send();
 }
 
-function mergeServerJobIntoLocal(jobId, serverJob) {
+function mergeServerJobIntoLocal(jobId, serverJob, opts) {
+  opts = opts || {};
   var job = JOBS.find(function(j) { return j.id === jobId; });
   if (!job || !serverJob) return job;
   if (serverJob.state) job.state = serverJob.state;
@@ -17815,6 +18621,19 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
     job.publishPrep = publishCopyToPrep(pc) || job.publishPrep;
   } else if (serverJob.publishCopy) {
     job.publishCopy = serverJob.publishCopy;
+  }
+  if (serverJob.assemblyError && !serverJob.driveUrl && !serverJob.assembledAt) {
+    job.assemblyError = serverJob.assemblyError;
+  } else if (serverJob.driveUrl || serverJob.assembledAt) {
+    delete job.assemblyError;
+  } else if (!serverJob.assemblyError) {
+    delete job.assemblyError;
+  }
+  if (serverJob.stage === 'heygen_done' || serverJob.stage === 'all_sent') {
+    if (job.status === 'failed' && !serverJob.assemblyError) {
+      job.status = serverJob.stage === 'all_sent' ? 'all_sent' : 'completed';
+      delete job.assemblyError;
+    }
   }
   if (serverJob.driveUrl) {
     var serverAsm = serverJob.assembledAt ? Date.parse(serverJob.assembledAt) : 0;
@@ -17843,6 +18662,9 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   } else if (serverJob.stage === 'gate1_review') {
     job.status = 'processing';
     job.stage = 'gate1_review';
+  } else if (serverJob.stage === 'script_ready' || (serverJob.heygen && serverJob.heygen.held === true)) {
+    job.status = 'processing';
+    job.stage = 'script_ready';
   } else if (serverJob.stage === 'hook_review') {
     job.status = 'processing';
     job.stage = 'hook_review';
@@ -17888,6 +18710,16 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.designSpec) job.designSpec = serverJob.designSpec;
   if (serverJob.designSpec && serverJob.designSpec.compCreative) job.compCreative = serverJob.designSpec.compCreative;
   if (serverJob.heygen) job.heygen = serverJob.heygen;
+  syncJobSegmentDataFromServer(job, serverJob);
+  if (!job.segments || !job.segments.length) {
+    job.segments = buildJobSegmentsFromServerJob(serverJob);
+  }
+  if (serverJob.stage === 'all_sent' || serverJob.stage === 'heygen_done') {
+    job.stage = serverJob.stage;
+    if (!job.driveUrl && !job.assembledAt) job.status = serverJob.stage === 'heygen_done' ? 'all_sent' : 'all_sent';
+  } else if (serverJob.stage && !job.driveUrl) {
+    job.stage = serverJob.stage;
+  }
   if (serverJob.assemblyId) { job.assemblyId = serverJob.assemblyId; job.asmId = serverJob.assemblyId; }
   if (serverJob.queuePinned === true || serverJob.queuePinned === false) job.queuePinned = !!serverJob.queuePinned;
   if (serverJob.publishHold) job.publishHold = serverJob.publishHold;
@@ -17897,11 +18729,17 @@ function mergeServerJobIntoLocal(jobId, serverJob) {
   if (serverJob.gate1Outcome) job.gate1Outcome = serverJob.gate1Outcome;
   if (serverJob.gate1Score != null) job.gate1Score = serverJob.gate1Score;
   if (serverJob.gate1Summary) job.gate1Summary = serverJob.gate1Summary;
+  if (Array.isArray(serverJob.orderedClipUrls) && serverJob.orderedClipUrls.length) {
+    job.orderedClipUrls = serverJob.orderedClipUrls;
+    job.meta = job.meta || {};
+    job.meta.orderedClipUrls = serverJob.orderedClipUrls;
+  }
+  if (Array.isArray(serverJob.streamers) && serverJob.streamers.length) job.streamers = serverJob.streamers;
   if (serverJob.stage === 'metadata_review' || serverJob.stage === 'awaiting_review') {
     job.status = 'completed';
   }
   saveJobs();
-  scheduleQueueRender();
+  if (!opts.skipRender) scheduleQueueRender();
   return job;
 }
 
@@ -18313,6 +19151,7 @@ function regeneratePublishCopy(jobId) {
         job.stage = resp.stage;
         job.metadataQaViolations = resp.passed ? null : resp.violations;
         if (resp.passed) job.status = 'completed';
+        delete _publishCopyHydrateMissing[jobId];
         saveJobs();
       }
       renderQueue();
@@ -18469,7 +19308,7 @@ function displayScriptQA(scriptQA) {
     }
     html.push('<button onclick="sendToHeyGenServer()" class="btn btn-gold btn-sm" style="margin-top:8px;">APPROVE & SEND TO HEYGEN →</button>');
   } else {
-    html.push('<div style="font-size:15px;color:#e74c3c;margin-bottom:8px;">❌ Hard fail — script returned to Claude. See why-doc for details.</div>');
+    html.push('<div style="font-size:15px;color:#e74c3c;margin-bottom:8px;">❌ Did not pass — edit script below or Find Job → RETRY SAME CLIPS. No queue card created until Gate 1 passes.</div>');
     if (scriptQA.deductions && scriptQA.deductions.length) {
       scriptQA.deductions.forEach(function(d) {
         html.push('<div style="font-size:15px;color:rgba(255,255,255,0.6);">  -' + d.points + '  ' + d.reason + '</div>');

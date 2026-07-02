@@ -9,5 +9,9 @@ node test/avatar_vod_gate1_structure.test.js
 node test/gate1_handoff_review.test.js
 node test/avatar_vod_e2e_chain.test.js
 node test/avatar_vod_gate1_content_scrub.test.js
+node test/portal1_twitch_fabrication_soft.test.js
+node test/avatar_vod_retry.test.js
+node test/job_queue_policy.test.js
+node test/clip_lineup.test.js
 echo "=== avatar_vod_gate1_smoke PASS ==="
 echo "Live full E2E: HEYGEN_SIM_MODE=true bash scripts/deploy_c0.sh && node scripts/avatar_vod_e2e.js"

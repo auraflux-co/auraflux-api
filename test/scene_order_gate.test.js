@@ -42,6 +42,12 @@ describe('scene_order_gate', () => {
     assert.equal(g.code, 'scene_order_not_confirmed');
   });
 
+  it('assertSceneOrderGate allows assembly when heygen confirm matches script hash', () => {
+    const card = confirmSceneOrder({ contentType: 'twitch', script: { raw: sampleScript } }, 'heygen', sampleScript).card;
+    const g = assertSceneOrderGate(card, 'assembly', sampleScript);
+    assert.equal(g.ok, true);
+  });
+
   it('invalidateSceneOrderConfirm clears gates', () => {
     const card = confirmSceneOrder({ contentType: 'twitch', script: { raw: sampleScript } }, 'heygen', sampleScript).card;
     const cleared = invalidateSceneOrderConfirm(card);

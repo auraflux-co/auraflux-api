@@ -1,4 +1,6 @@
 .env
+config/.env*
+/cwn.db
 *.log
 *.bak
 tmp/

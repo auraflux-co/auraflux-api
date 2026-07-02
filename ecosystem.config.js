@@ -97,6 +97,8 @@ module.exports = {
         GATE_TEST_MODE: 'false', // PRODUCTION RUN — intentional full pipeline test
         AUTO_PUBLISH_PLATFORMS: 'none', // Gate 5 off during assembly/editorial testing
         YOUTUBE_DIRECT_PUBLISH: 'false',
+        USE_LOCAL_FFMPEG: process.env.USE_LOCAL_FFMPEG || '1',
+        FFMPEG_FILTER_PATH: process.env.FFMPEG_FILTER_PATH || '/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg',
       },
 
       // Environment — production (Render or local production run)
@@ -111,6 +113,8 @@ module.exports = {
         GATE_TEST_MODE: 'false', // PRODUCTION RUN — intentional full pipeline test
         AUTO_PUBLISH_PLATFORMS: 'none', // Gate 5 off during assembly/editorial testing
         YOUTUBE_DIRECT_PUBLISH: 'false',
+        USE_LOCAL_FFMPEG: process.env.USE_LOCAL_FFMPEG || '1',
+        FFMPEG_FILTER_PATH: process.env.FFMPEG_FILTER_PATH || '/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg',
       },
 
       // Ignore watch dirs (mirrors nodemon.json)
