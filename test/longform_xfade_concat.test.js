@@ -33,12 +33,14 @@ test('soupJoinTransition: per-boundary streamer block policy', () => {
   assert.equal(reactionSetup.fadeReactionTail, true);
   assert.equal(reactionSetup.prepStableTail, true);
 
+  // CPD-1215: streamer handoffs are hard cuts — crossfading two different sidebar
+  // chrome overlays produced a ghost/double-exposure flash.
   const handoff = soupJoinTransition('avatar', 'avatar', 'LACY_CLIP2_REACTION', 'JASON_INTRO');
-  assert.equal(handoff.useXfade, true);
-  assert.equal(handoff.videoDur, 0.22);
+  assert.equal(handoff.useXfade, false);
+  assert.equal(handoff.videoDur, 0);
   assert.equal(handoff.streamerHandoff, true);
   assert.equal(handoff.fadeReactionTail, true);
-  assert.equal(handoff.prepStableTail, true);
+  assert.equal(handoff.transition, 'cut');
 });
 
 test('concatMediaWithTransition uses mixed path when hold_cut joins present', () => {
