@@ -4461,7 +4461,7 @@ function loadIntelligenceRecommend() {
       }
       var titles = (d.winningTitles || []).slice(0, 5).map(function(t) { return '<li>' + escHtml(t) + '</li>'; }).join('');
       var tags = (d.topTags || []).slice(0, 10).map(function(t) { return '<span class="tag tag-pending" style="margin:2px;">' + escHtml(t) + '</span>'; }).join('');
-      el.innerHTML = '<p style="margin:0 0 8px;">' + escHtml(d.hints[0] || '') + ' · avg views ' + fmtNum(d.avgViews) + '</p>' +
+      el.innerHTML = '<p style="margin:0 0 8px;">' + escHtml(d.hints[0] || '') + '</p>' +
         (titles ? '<div style="margin-bottom:8px;"><strong>Winning titles</strong><ul style="margin:4px 0 0 18px;">' + titles + '</ul></div>' : '') +
         (tags ? '<div><strong>Top tags</strong><div style="margin-top:6px;">' + tags + '</div></div>' : '');
     })
@@ -4534,6 +4534,13 @@ function loadPublishIntelHints(job) {
       if (!d.ok) throw new Error(d.error || 'failed');
       var ctx = d.intelligenceContext || {};
       if (!ctx.sampleSize) {
+        if (ctx.compStylePrompt) {
+          var compFirstLine = String(ctx.compStylePrompt).split('\n')[0];
+          el.innerHTML = '<strong>Intelligence:</strong> No published history yet — using operator comp style instead.<br>' +
+            '<span style="color:rgba(255,255,255,0.45);">' + escHtml(compFirstLine) + '</span> ' +
+            '<button type="button" class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="nav(\'intelligence\')">Open Intelligence</button>';
+          return;
+        }
         el.innerHTML = '<strong>Intelligence:</strong> No historical matches yet — publish + sync analytics to unlock winning title/tag patterns. <button type="button" class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="nav(\'intelligence\')">Open Intelligence</button>';
         return;
       }

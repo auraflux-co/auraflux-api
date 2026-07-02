@@ -97,4 +97,29 @@ describe('intelligence phases 2–4 (CPD-1194–1196)', () => {
     assert.equal(result.results[0].ok, true);
     fs.unlinkSync(jobsFile);
   });
+
+  it('backfillFromJobs reads YouTube URL from gate5Result.platforms', () => {
+    const intelligence = require('../lib/intelligence');
+    const jobsFile = path.join(__dirname, '../data/test_intel_backfill_gate5.json');
+    fs.writeFileSync(jobsFile, JSON.stringify({
+      'script_twitch-short_backfill_g5': {
+        stage: 'published',
+        contentType: 'twitch-short',
+        streamers: ['ron'],
+        gate5Result: {
+          platforms: {
+            youtube: { url: 'https://www.youtube.com/watch?v=g5backfill1', jobId: 'g5backfill1' },
+          },
+        },
+        finalUrl: 'http://localhost:3000/download/some_local_file.mp4',
+        title: 'Gate5 backfill test',
+        publishCopy: { youtube: { bestTitle: { title: 'Gate5 backfill test' }, tags: ['ron'] } },
+      },
+    }));
+    const result = intelligence.backfillFromJobs({ limit: 10, jobsFile });
+    assert.equal(result.scanned, 1);
+    assert.equal(result.results[0].ok, true);
+    assert.equal(result.results[0].platformVideoId, 'g5backfill1');
+    fs.unlinkSync(jobsFile);
+  });
 });
