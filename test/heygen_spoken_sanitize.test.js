@@ -95,4 +95,23 @@ Goodnight and good luck.`;
     expect(entry.phonetic).toBe('LAY-see');
     expect(entry.onAirName).toBe('Lacy');
   });
+
+  // CPD-1223: streamers.json phonetics were silently clobbered at runtime and
+  // EMIRU/YONNAJAY scenes re-rendered with plain names ("Emeru"/"Jana" on air).
+  // Pin the roster fields so the next clobber fails review instead of shipping.
+  test('roster keeps phonetics for known hard-to-say streamers (CPD-1223)', () => {
+    const roster = require('../data/streamers.json').roster;
+    const byLogin = Object.fromEntries(roster.map((s) => [s.twitchUsername, s]));
+    expect(byLogin.emiru?.phonetic).toBe('EM-ih-roo');
+    expect(byLogin.yonnajay?.phonetic).toBe('Yawn-uh');
+    expect(byLogin.lacy?.phonetic).toBe('LAY-see');
+  });
+
+  test('prepareHeyGenScript injects phonetics into HeyGen payload text (CPD-1223)', () => {
+    const { prepareHeyGenScript } = require('../lib/heygen_script');
+    expect(prepareHeyGenScript('Follow Emiru. Link in description.', { sceneName: 'EMIRU_CLIP2_REACTION' }))
+      .toMatch(/Follow EM-ih-roo/);
+    expect(prepareHeyGenScript('Finally, we have Yonna.', { sceneName: 'YONNAJAY_INTRO' }))
+      .toMatch(/Yawn-uh/);
+  });
 });
