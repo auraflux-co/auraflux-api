@@ -26,6 +26,21 @@ async function main() {
   console.log('[intelligence_sync] sync ok=%s fail=%s reconcile updated=%s',
     ok, fail, sync.reconcile?.updated || 0);
 
+  // CPD-1208 — rotate any due A/B tests (24h periods)
+  try {
+    const ab = require('../lib/intelligence/ab_rotation');
+    const rotation = await ab.rotateDue();
+    if (rotation.rotated > 0) {
+      console.log('[intelligence_sync] ab rotated=%s', rotation.rotated);
+      for (const r of rotation.results) {
+        console.log('  test %s → %s%s', r.testId, r.status || 'running',
+          r.winner ? ` winner=${r.winner}` : ` active=${r.activeVariant}`);
+      }
+    }
+  } catch (e) {
+    console.error('[intelligence_sync] ab rotation failed:', e.message);
+  }
+
   process.exit(0);
 }
 

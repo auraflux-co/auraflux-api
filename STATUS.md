@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-01 (CPD-1208) — Post-publish A/B rotation: `lib/intelligence/ab_rotation.js` — title/thumbnail variants rotate on 24h periods, views/hr two-rate z-test at 95% picks winner, auto-applies via `videos.update`/thumbnail API, records `ab_test_winner` decision. New `content_memory_ab_tests` table; routes `POST/GET /intelligence/ab-tests` + `/rotate`; wired into sync cron. 6 tests.
 **Last Updated:** 2026-07-01 (CPD-1207) — SEO demand adapters live: `lib/seo/adapters/youtube_autocomplete.js` (real search completions, no key) + `google_trends.js` (trending RSS — old dailytrends API is 404/deprecated). `buildDemandContext` ranks keywords by measured demand; `GET /seo/demand` route. 6 new tests. Verified live: 17 validated suggestions, 10 trending rows.
 **Last Updated:** 2026-07-01 (CPD-1206) — Analytics sync E2E live: fixed `analyticsReady()` token pass-through, set `YOUTUBE_CHANNEL_ID`, fixed report shape (`{videos:[]}` not rows), single-report batch sync, Data API fallback for <72h-old uploads (Analytics API lag). Verified: 4 videos synced real views, 14 decisions reconciled. Graduation item 2 ✅.
 **Last Updated:** 2026-07-01 (CPD-1195/1196) — Intelligence browser-test bug fixes: backfill + recordFromPublish now read `gate5Result.platforms.youtube.url` (real backfill works — 3 jobs seeded); Publish Prep hints show comp style when Content Memory empty; deduped avg-views text on Intelligence page. Tests 20/20. Committed after Rob's job pause lifted; deploy pending idle check.
