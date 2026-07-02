@@ -1497,6 +1497,15 @@ input[type="url"], input[type="password"], select, textarea {
         <div id="postlive-banner-soup" class="stats-banner stats-banner-warn" style="margin-bottom:12px;">
           <strong>Long-form pipeline → short:</strong> Any published show that ran through HeyGen scaffolding already has <strong>scenes + timestamps</strong> on the job card (post-assembly rundown). Register → pick scenes (~30s) → CLIPS COMP. Same path for Talk Soup and future shows.
         </div>
+        <div class="sec-title">QUICK SHORT CUTTER <span class="badge">FFMPEG</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">
+          <input type="text" id="rp-cut-path" placeholder="Long-form file (output/ filename or absolute path)" style="flex:2;min-width:260px;">
+          <input type="text" id="rp-cut-start" placeholder="Start (sec)" style="width:100px;">
+          <input type="text" id="rp-cut-end" placeholder="End (sec)" style="width:100px;">
+          <input type="text" id="rp-cut-name" placeholder="Output name (optional)" style="width:190px;">
+          <button type="button" class="btn btn-gold btn-sm" onclick="repurposeCutShort()">✂ CUT 9:16 SHORT</button>
+        </div>
+        <div id="rp-cut-status" style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:14px;">Cuts a time range from an assembled long-form MP4 and scales it to 9:16 for Shorts — no CapCut needed.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
           <button type="button" class="btn btn-outline btn-sm" onclick="postLiveLoadPublishedJobs()">↻ Refresh episodes</button>
         </div>
@@ -1781,6 +1790,12 @@ input[type="url"], input[type="password"], select, textarea {
           <tbody id="intel-ab-body"><tr><td colspan="7" style="padding:16px;color:rgba(255,255,255,0.35);">No A/B tests yet — variants rotate every 24h; winner applied at 95% significance.</td></tr></tbody>
         </table>
       </div>
+      <div class="sec-title" style="margin-top:18px;">DECISION RECORDS</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+        <select id="intel-dec-job" style="width:320px;"><option value="">-- Select a job --</option></select>
+        <button type="button" class="btn btn-outline btn-sm" onclick="loadIntelligenceDecisions()">Load decisions</button>
+      </div>
+      <div id="intel-dec-body" style="font-size:14px;line-height:1.7;color:rgba(255,255,255,0.55);">Pick a job to see recorded decisions (publish copy, view predictions, A/B winners) and their reconciled outcomes.</div>
       <div id="intel-status" style="margin-top:12px;font-size:14px;color:rgba(255,255,255,0.3);"></div>
     </div>
 
@@ -2192,6 +2207,13 @@ input[type="url"], input[type="password"], select, textarea {
           <div id="pub-status" style="margin-top:8px;font-size:15px;color:rgba(255,255,255,0.4);font-family:monospace;"></div>
           <div id="pub-seo-audit" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(52,152,219,0.06);border:1px solid rgba(52,152,219,0.2);border-radius:4px;font-size:14px;font-family:monospace;color:rgba(255,255,255,0.55);white-space:pre-wrap;"></div>
           <div id="pub-intel-hints" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(199,175,79,0.06);border:1px solid rgba(199,175,79,0.2);border-radius:4px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.6);"></div>
+          <div id="pub-seo-demand" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(46,204,113,0.05);border:1px solid rgba(46,204,113,0.18);border-radius:4px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.6);"></div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="runSafetyZoneCheck()" title="Validate avatar face position vs TikTok/Reels UI overlays (CPD-1212)">🛡 SAFE ZONES</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="loadPublishHistory()" title="Recent Upload-Post publish history (CPD-1212)">📜 PUBLISH HISTORY</button>
+          </div>
+          <div id="pub-safety-zone" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(231,76,60,0.05);border:1px solid rgba(231,76,60,0.18);border-radius:4px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.6);"></div>
+          <div id="pub-history" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);border-radius:4px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.6);"></div>
         </div>
       </div>
 
@@ -4442,6 +4464,7 @@ function loadIntelligencePage(forceRefresh) {
     .then(function() { return loadIntelligenceRecommend(); })
     .then(function() { return loadIntelligenceCompetitors(base); })
     .then(function() { return loadIntelligenceAbTests(base); })
+    .then(function() { populateIntelDecisionJobs(); })
     .then(function() {
       if (statusEl) statusEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
     })
@@ -4540,6 +4563,51 @@ function syncCompetitors() {
     })
     .catch(function(e) {
       if (statusEl) statusEl.textContent = 'Competitor sync failed: ' + (e.message || 'error');
+    });
+}
+
+// CPD-1212 — decision records viewer (wire for GET /intelligence/decisions/:jobId)
+function populateIntelDecisionJobs() {
+  var sel = g('intel-dec-job');
+  if (!sel || typeof JOBS === 'undefined') return;
+  var current = sel.value;
+  sel.innerHTML = '<option value="">-- Select a job --</option>' + (JOBS || []).map(function(j) {
+    var label = (j.customTitle || (j.publishCopy && j.publishCopy.youtube && j.publishCopy.youtube.title) || j.id);
+    return '<option value="' + escHtml(j.id) + '">' + escHtml(String(label).slice(0, 60)) + '</option>';
+  }).join('');
+  if (current) sel.value = current;
+}
+
+function loadIntelligenceDecisions() {
+  var el = g('intel-dec-body');
+  var sel = g('intel-dec-job');
+  if (!el || !sel || !sel.value) return;
+  var base = intelApiBase();
+  el.innerHTML = 'Loading decisions…';
+  fetch(base + '/intelligence/decisions/' + encodeURIComponent(sel.value))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'failed');
+      var decisions = d.decisions || [];
+      if (!decisions.length) {
+        el.innerHTML = 'No decisions recorded for this job yet — decisions are written at publish-copy generation, compose (view prediction), and A/B rotation.';
+        return;
+      }
+      el.innerHTML = decisions.map(function(dec) {
+        var when = dec.createdAt ? new Date(dec.createdAt).toLocaleString() : '';
+        var choice = dec.choice ? escHtml(JSON.stringify(dec.choice).slice(0, 140)) : '—';
+        var outcome = dec.outcome
+          ? '<span style="color:#2ecc71;">outcome: ' + escHtml(JSON.stringify(dec.outcome).slice(0, 100)) + '</span>'
+          : '<span style="color:rgba(255,255,255,0.3);">outcome pending reconcile</span>';
+        return '<div style="padding:8px 10px;margin-bottom:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:4px;">'
+          + '<strong style="color:rgba(199,175,79,0.9);">' + escHtml(dec.kind) + '</strong>'
+          + ' <span style="color:rgba(255,255,255,0.3);">' + when + '</span><br>'
+          + '<span style="font-family:monospace;font-size:13px;">' + choice + '</span><br>' + outcome
+          + '</div>';
+      }).join('');
+    })
+    .catch(function(e) {
+      el.innerHTML = 'Decisions fetch failed: ' + escHtml(e.message || 'error');
     });
 }
 
@@ -4721,6 +4789,118 @@ function loadPublishIntelHints(job) {
     });
 }
 
+// CPD-1212 — SEO demand panel (CPD-1207 adapters): autocomplete-validated keywords + trending overlap
+function loadPublishSeoDemand(job) {
+  var el = g('pub-seo-demand');
+  if (!el) return;
+  if (!job) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  var base = resolveApiBase();
+  var ct = (job.type || job.contentType || 'twitch').replace(/-short$/, '');
+  var streamer = '';
+  if (Array.isArray(job.streamers) && job.streamers.length) streamer = job.streamers[0];
+  else if (job.streamer) streamer = job.streamer;
+  var seeds = [];
+  var pc = job.publishCopy || job.publishPrep || {};
+  if (pc.youtube && Array.isArray(pc.youtube.tags)) seeds = pc.youtube.tags.slice(0, 5);
+  var qs = '?contentType=' + encodeURIComponent(ct)
+    + '&formFactor=' + (String(job.type || '').includes('short') ? 'short' : 'long')
+    + (streamer ? '&streamer=' + encodeURIComponent(streamer) : '')
+    + (seeds.length ? '&seeds=' + encodeURIComponent(seeds.join(',')) : '');
+  el.style.display = '';
+  el.innerHTML = 'Loading demand-validated keywords…';
+  fetch(base + '/seo/demand' + qs)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var demand = d.demand || {};
+      var validated = (demand.autocomplete || []).slice(0, 10);
+      var trending = demand.trending || [];
+      if (!validated.length && !trending.length) {
+        el.innerHTML = '<strong>SEO Demand:</strong> no autocomplete/trending signals for this job\u2019s keywords.';
+        return;
+      }
+      var html = '<strong>SEO Demand</strong> (' + (demand.validatedCount || 0) + ' autocomplete-validated)';
+      if (validated.length) {
+        html += '<div style="margin-top:6px;">' + validated.map(function(s) {
+          return '<span class="tag tag-pending" style="margin:2px;" title="seed: ' + escHtml(s.seed || '') + '">' + escHtml(s.keyword) + '</span>';
+        }).join('') + '</div>';
+      }
+      if (trending.length) {
+        html += '<div style="margin-top:6px;color:rgba(46,204,113,0.8);">🔥 Trending overlap: '
+          + trending.slice(0, 5).map(function(t) { return escHtml(t.keyword || t.topic || String(t)); }).join(' · ') + '</div>';
+      }
+      el.innerHTML = html;
+    })
+    .catch(function(e) {
+      el.innerHTML = '<strong>SEO Demand:</strong> ' + escHtml(e.message || 'unavailable');
+    });
+}
+
+// CPD-1212 — TikTok/Reels avatar safe-zone validation (wire for POST /safety-zone-check)
+function runSafetyZoneCheck() {
+  var el = g('pub-safety-zone');
+  if (!el) return;
+  var base = resolveApiBase();
+  var sel = g('pub-job-select');
+  var jobId = sel ? sel.value : '';
+  var job = jobId && typeof JOBS !== 'undefined' ? JOBS.find(function(j) { return j.id === jobId; }) : null;
+  var ct = job ? (job.type || 'twitch').replace(/-short$/, '') : 'twitch';
+  el.style.display = '';
+  el.innerHTML = 'Checking avatar safe zones…';
+  fetch(base + '/safety-zone-check', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId: jobId, contentType: ct })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error);
+      if (d.safe) {
+        el.innerHTML = '<strong style="color:#2ecc71;">✓ Safe zones clear</strong> — avatar face does not overlap TikTok buttons or Reels caption area (default position).';
+      } else {
+        el.innerHTML = '<strong style="color:#e74c3c;">⚠ Safe zone warnings:</strong><br>' +
+          (d.warnings || []).map(function(w) { return '• ' + escHtml(typeof w === 'string' ? w : (w.label || JSON.stringify(w))); }).join('<br>');
+      }
+    })
+    .catch(function(e) {
+      el.innerHTML = '<strong>Safe zones:</strong> ' + escHtml(e.message || 'check failed');
+    });
+}
+
+// CPD-1212 — Upload-Post publish history (wire for GET /publish/history)
+function loadPublishHistory() {
+  var el = g('pub-history');
+  if (!el) return;
+  var base = resolveApiBase();
+  el.style.display = '';
+  el.innerHTML = 'Loading publish history…';
+  fetch(base + '/publish/history')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error);
+      var items = d.history || d.items || d.uploads || [];
+      if (!items.length) {
+        el.innerHTML = '<strong>Publish history:</strong> no Upload-Post uploads recorded.';
+        return;
+      }
+      el.innerHTML = '<strong>Publish history</strong> (last ' + Math.min(items.length, 10) + ')<br>' +
+        items.slice(0, 10).map(function(it) {
+          var when = it.upload_timestamp || it.created_at || it.createdAt || it.date || '';
+          var title = String(it.post_title || it.title || it.filename || it.id || 'upload').split('\n')[0].slice(0, 70);
+          var status = it.success === false
+            ? ' <span style="color:#e74c3c;">✗ ' + escHtml(it.error_message || 'failed') + '</span>'
+            : ' <span style="color:#2ecc71;">✓</span>';
+          var link = it.post_url ? ' <a href="' + escHtml(it.post_url) + '" target="_blank" style="color:#a060ff;">↗</a>' : '';
+          return '• ' + escHtml(title) +
+            (it.platform ? ' <span style="color:rgba(199,175,79,0.7);">[' + escHtml(String(it.platform)) + ']</span>' : '') +
+            status + link +
+            (when ? ' <span style="color:rgba(255,255,255,0.3);">' + escHtml(String(when).slice(0, 10)) + '</span>' : '');
+        }).join('<br>');
+    })
+    .catch(function(e) {
+      el.innerHTML = '<strong>Publish history:</strong> ' + escHtml(e.message || 'unavailable') + ' <span style="color:rgba(255,255,255,0.35);">(C0 uses direct publish — Upload-Post history requires UPLOADPOST_API_KEY)</span>';
+    });
+}
+
 function fmtNum(n) {
   if (n == null || n === '' || isNaN(n)) return '—';
   return Number(n).toLocaleString();
@@ -4805,6 +4985,34 @@ window._postLiveActiveSession = null;
 window._postLiveCandidateSelection = {};
 window._postLiveViewVideoId = null;
 window._postLiveTab = 'soup';
+
+// CPD-1212 — quick Short cutter (wire for POST /shorts/cut-from-long)
+function repurposeCutShort() {
+  var statusEl = g('rp-cut-status');
+  var pathVal = (g('rp-cut-path').value || '').trim();
+  var start = parseFloat(g('rp-cut-start').value);
+  var end = parseFloat(g('rp-cut-end').value);
+  var name = (g('rp-cut-name').value || '').trim();
+  if (!pathVal || isNaN(start) || isNaN(end) || end <= start) {
+    if (statusEl) statusEl.textContent = 'Need a file path plus start/end seconds (end > start).';
+    return;
+  }
+  if (statusEl) statusEl.textContent = 'Cutting ' + (end - start) + 's short (ffmpeg)…';
+  fetch(resolveApiBase() + '/shorts/cut-from-long', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ longFormPath: pathVal, startTime: start, endTime: end, outputName: name || undefined })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error);
+      var out = d.outputPath || d.output || d.file || JSON.stringify(d).slice(0, 80);
+      if (statusEl) statusEl.innerHTML = '✓ Short cut: <span style="font-family:monospace;color:#2ecc71;">' + escHtml(String(out)) + '</span>';
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Cut failed: ' + (e.message || 'error');
+    });
+}
 
 function postLiveSwitchTab(tab) {
   window._postLiveTab = tab === 'live' ? 'live' : 'soup';
@@ -19858,6 +20066,7 @@ function pubJobSelected() {
     if (hlWrap0) hlWrap0.style.display = 'none';
     loadPubChecklist('');
     loadPublishIntelHints(null);
+    loadPublishSeoDemand(null);
     return;
   }
   var job = JOBS.find(function(j){ return j.id === jobId; });
@@ -19910,6 +20119,7 @@ function pubJobSelected() {
   hlWrap.style.display = (!isNba && job.type !== 'nba') ? '' : 'none';
   loadPubChecklist(jobId);
   loadPublishIntelHints(job);
+  loadPublishSeoDemand(job);
 
   var auditEl = g('pub-seo-audit');
   if (auditEl) {
