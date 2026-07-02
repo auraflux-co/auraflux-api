@@ -15,13 +15,17 @@ const PRE_OUTRO = path.join(ROOT, 'output/twitch_soup_jason_s_spelling_bee_world
 const BODY_TARGET_SEC = 448.433;
 
 describe('outro after stitch integration', { skip: !fs.existsSync(PRE_OUTRO) ? 'pre_outro backup missing' : false }, () => {
-  it('appends env outro to body-only MP4 → ~478s, not double-stacked', async () => {
+  it('appends env outro to body-only MP4 → ~478s, not double-stacked', async (t) => {
     const db = require('../lib/db');
     const { appendCreditsOutroToVideo, probeDurationSec } = require('../lib/twitch_bookends');
     const { ffmpegPath } = require('../lib/ffmpeg_utils');
 
     const jobId = 'script_twitch_1782513992551';
     const card = db.loadJob(jobId);
+    if (!card) {
+      t.skip('fixture job card no longer in SQLite — historical job purged');
+      return;
+    }
     const asmId = `test_outro_${Date.now()}`;
     const bodyOnly = path.join(ROOT, 'tmp', `${asmId}_body_only.mp4`);
 
