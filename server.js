@@ -1128,23 +1128,27 @@ async function startHeyGenPoller(jobId, card) {
                 label: avatarSeg.sceneName,
                 type:  'avatar'
               });
-              // SETUP scene: has clip insert after dialogue — insert source_clip from orderedClipUrls
-              if (scene.hasClipInsert) {
-                const clip = orderedClipUrls[clipIdx];
-                clipIdx++;
-                if (clip && (clip.url || clip.clipUrl)) {
-                  segmentData.push({
-                    url:             clip.clipUrl || clip.url || '',
-                    pageUrl:         clip.pageUrl || '',
-                    label:           clip.label || `${sceneKey}_CLIP`,
-                    type:            'source_clip',
-                    clipUrl:         clip.clipUrl || clip.url || '',
-                    pillarboxFilter: clip.pillarboxFilter || null,
-                    orientation:     clip.orientation || 'portrait',
-                    clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
-                    clipTimingFormat: clip.clipTimingFormat || 'none'
-                  });
-                }
+            }
+            // SETUP scene: has clip insert after dialogue — insert source_clip from orderedClipUrls.
+            // CPD-1223: must run even when this scene has no standalone render — HeyGen merges
+            // SETUP dialogue into the neighbor scene (INTRO+CLIP1_SETUP, REACTION+CLIP2_SETUP),
+            // so avatarByName has no entry here. Nesting this under the avatarSeg check dropped
+            // every clip and auto-assembly shipped avatar-only builds (r26/r28 0-clip bug).
+            if (scene.hasClipInsert) {
+              const clip = orderedClipUrls[clipIdx];
+              clipIdx++;
+              if (clip && (clip.url || clip.clipUrl)) {
+                segmentData.push({
+                  url:             clip.clipUrl || clip.url || '',
+                  pageUrl:         clip.pageUrl || '',
+                  label:           clip.label || `${sceneKey}_CLIP`,
+                  type:            'source_clip',
+                  clipUrl:         clip.clipUrl || clip.url || '',
+                  pillarboxFilter: clip.pillarboxFilter || null,
+                  orientation:     clip.orientation || 'portrait',
+                  clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
+                  clipTimingFormat: clip.clipTimingFormat || 'none'
+                });
               }
             }
           }
@@ -1586,26 +1590,28 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
               }
             }
             segmentData.push(seg);
+          }
 
-            // SETUP-style clip insert (NBA/Twitch long-form): avatar + source_clip
-            if (scene.hasClipInsert) {
-              const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
-              if (clip) {
-                segmentData.push({
-                  type:            'source_clip',
-                  url:             clip.clipUrl || clip.url || '',
-                  label:           clip.label || `${sceneKey}_CLIP`,
-                  pageUrl:         clip.pageUrl || '',
-                  pillarboxFilter: clip.pillarboxFilter || null,
-                  orientation:     clip.orientation || 'portrait',
-                  clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
-                  clipTimingFormat: clip.clipTimingFormat || 'none',
-                  storyIndex: clip.storyIndex ?? clipIdx,
-                  sceneId: scene.name || scene.id
-                });
-              }
-              clipIdx++;
+          // SETUP-style clip insert (NBA/Twitch long-form): avatar + source_clip.
+          // CPD-1223: outside the vj check — merged SETUP scenes have no standalone
+          // HeyGen render, and nesting dropped every clip (avatar-only rebuilds).
+          if (scene.hasClipInsert) {
+            const clip = sourceClips[clipIdx] || segCard.orderedClipUrls?.[clipIdx];
+            if (clip) {
+              segmentData.push({
+                type:            'source_clip',
+                url:             clip.clipUrl || clip.url || '',
+                label:           clip.label || `${sceneKey}_CLIP`,
+                pageUrl:         clip.pageUrl || '',
+                pillarboxFilter: clip.pillarboxFilter || null,
+                orientation:     clip.orientation || 'portrait',
+                clipTimingTargets: Array.isArray(clip.clipTimingTargets) ? clip.clipTimingTargets : [],
+                clipTimingFormat: clip.clipTimingFormat || 'none',
+                storyIndex: clip.storyIndex ?? clipIdx,
+                sceneId: scene.name || scene.id
+              });
             }
+            clipIdx++;
           }
         }
       }
