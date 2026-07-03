@@ -218,5 +218,30 @@ module.exports = {
         DASHBOARD_CACHE_WARM_ENABLED: process.env.DASHBOARD_CACHE_WARM_ENABLED || '1',
       },
     },
+    {
+      // CPD-1224 — daily seed run of our published Apify Twitch Clips Scraper.
+      // Store ranking weights run count + success rate; a small daily run keeps
+      // the actor warm. No-op unless APIFY_ACTOR_SEED_ENABLED=1. Does not touch
+      // the production clip path (that still uses Helix in twitch_clips_fetch.js).
+      name: 'apify-actor-seed',
+      script: 'scripts/apify_seed_twitch_actor.js',
+      cwd: __dirname,
+      interpreter: 'node',
+      watch: false,
+      autorestart: false,
+      max_restarts: 0,
+      cron_restart: process.env.APIFY_ACTOR_SEED_CRON || '17 9 * * *',
+      out_file: 'logs/apify_actor_seed.log',
+      error_file: 'logs/apify_actor_seed.log',
+      merge_logs: true,
+      env: {
+        NODE_ENV: 'development',
+        APIFY_ACTOR_SEED_ENABLED: process.env.APIFY_ACTOR_SEED_ENABLED || '0',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        APIFY_ACTOR_SEED_ENABLED: process.env.APIFY_ACTOR_SEED_ENABLED || '0',
+      },
+    },
   ],
 };
