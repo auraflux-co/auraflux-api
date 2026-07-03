@@ -103,8 +103,9 @@ Goodnight and good luck.`;
     const roster = require('../data/streamers.json').roster;
     const byLogin = Object.fromEntries(roster.map((s) => [s.twitchUsername, s]));
     // NOT all-caps "EM-ih-roo": eleven_v3 spells out leading cap sequences
-    // letter-by-letter ("E-M-I-H-R-O-O" on air). r18-approved casing.
-    expect(byLogin.emiru?.phonetic).toBe('Em-ih-roo');
+    // letter-by-letter ("E-M-I-H-R-O-O" on air). Double-m biases the voice
+    // away from the "Ee-miru" onset Rob flagged on the single-m takes.
+    expect(byLogin.emiru?.phonetic).toBe('Emm-ih-roo');
     expect(byLogin.yonnajay?.phonetic).toBe('Yawn-uh');
     expect(byLogin.lacy?.phonetic).toBe('LAY-see');
   });
@@ -112,7 +113,7 @@ Goodnight and good luck.`;
   test('prepareHeyGenScript injects phonetics into HeyGen payload text (CPD-1223)', () => {
     const { prepareHeyGenScript } = require('../lib/heygen_script');
     expect(prepareHeyGenScript('Follow Emiru. Link in description.', { sceneName: 'EMIRU_CLIP2_REACTION' }))
-      .toMatch(/Follow EM-ih-roo/);
+      .toMatch(/Follow Emm-ih-roo/);
     expect(prepareHeyGenScript('Finally, we have Yonna.', { sceneName: 'YONNAJAY_INTRO' }))
       .toMatch(/Yawn-uh/);
   });
