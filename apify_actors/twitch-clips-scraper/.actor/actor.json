@@ -4,6 +4,7 @@
   "title": "Twitch Clips Scraper",
   "description": "Top Twitch clips per streamer — views, duration, game, curator, VOD offset, thumbnails. No Twitch API key or login required.",
   "version": "1.0",
+  "categories": ["VIDEOS", "SOCIAL_MEDIA", "GAMES"],
   "meta": {
     "templateId": "js-empty"
   },
