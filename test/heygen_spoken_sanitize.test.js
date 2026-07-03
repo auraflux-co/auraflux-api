@@ -117,4 +117,16 @@ Goodnight and good luck.`;
     expect(prepareHeyGenScript('Finally, we have Yonna.', { sceneName: 'YONNAJAY_INTRO' }))
       .toMatch(/Yawn-uh/);
   });
+
+  // CPD-1223 r25 QA: group-opening intro scenes get a settle beat so the avatar
+  // idles before speaking — takes that open mid-gesture make hard cuts jerk.
+  test('streamer intro scenes get a leading settle break; other scenes do not', () => {
+    const { prepareHeyGenScript } = require('../lib/heygen_script');
+    expect(prepareHeyGenScript('Now Emiru.', { sceneName: 'EMIRU_INTRO' }))
+      .toMatch(/^<break time="1s"\/>/);
+    expect(prepareHeyGenScript('Welcome to the show.', { sceneName: 'INTRO' }))
+      .not.toMatch(/^<break/);
+    expect(prepareHeyGenScript('Wild.', { sceneName: 'EMIRU_CLIP1_REACTION' }))
+      .not.toMatch(/^<break/);
+  });
 });
