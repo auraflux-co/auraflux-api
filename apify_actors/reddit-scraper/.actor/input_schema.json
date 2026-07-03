@@ -21,6 +21,7 @@
     "sort": {
       "title": "Sort",
       "type": "string",
+      "description": "Listing order within each subreddit.",
       "enum": ["top", "new", "hot", "rising"],
       "enumTitles": ["Top", "New", "Hot", "Rising"],
       "default": "top"
@@ -28,6 +29,7 @@
     "timeFilter": {
       "title": "Time filter (top sort)",
       "type": "string",
+      "description": "Window for the top sort — ignored for new/hot/rising.",
       "enum": ["hour", "day", "week", "month", "year", "all"],
       "enumTitles": ["Past hour", "Past 24 hours", "Past week", "Past month", "Past year", "All time"],
       "default": "day"
@@ -35,6 +37,7 @@
     "maxResults": {
       "title": "Max posts per subreddit",
       "type": "integer",
+      "description": "Up to 100 posts per subreddit per run.",
       "minimum": 1,
       "maximum": 100,
       "default": 25
@@ -48,6 +51,7 @@
     "maxCommentsPerPost": {
       "title": "Max comments per post",
       "type": "integer",
+      "description": "Comment cap per thread (post_comments mode), sorted by score.",
       "minimum": 1,
       "maximum": 500,
       "default": 200

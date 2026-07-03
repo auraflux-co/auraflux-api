@@ -11,28 +11,42 @@
  */
 
 const { Actor, log } = require('apify');
-const { gotScraping } = require('got-scraping');
 const { fetchSubredditPosts, fetchPostWithComments } = require('./reddit_public');
 
 const PER_REQUEST_DELAY_MS = 700;
 
-/** fetch-compatible wrapper over got-scraping with Apify proxy. */
-function makeFetch(proxyUrl) {
+/**
+ * fetch-compatible wrapper over got-scraping (ESM-only, hence dynamic import).
+ * Tries each proxy URL in order (residential first when available, then
+ * datacenter, then direct) with a fresh attempt on 403/5xx — Reddit blocks
+ * some IP pools, so pool rotation is the retry that matters.
+ */
+function makeFetch(proxyUrls) {
+  const pools = (proxyUrls || []).filter(Boolean);
+  if (!pools.length) pools.push(undefined); // direct
   return async (url, init = {}) => {
-    const res = await gotScraping({
-      url,
-      method: 'GET',
-      headers: init.headers,
-      proxyUrl,
-      timeout: { request: 45000 },
-      responseType: 'text',
-      throwHttpErrors: false,
-    });
+    const { gotScraping } = await import('got-scraping');
+    let last = null;
+    for (const proxyUrl of pools) {
+      const res = await gotScraping({
+        url,
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        proxyUrl,
+        timeout: { request: 45000 },
+        responseType: 'text',
+        throwHttpErrors: false,
+        retry: { limit: 1 },
+      }).catch((e) => ({ statusCode: 0, body: String(e.message || e) }));
+      last = res;
+      if (res.statusCode >= 200 && res.statusCode < 300) break;
+      log.debug(`Pool ${proxyUrl ? 'proxy' : 'direct'} → ${res.statusCode} for ${url.split('?')[0]}`);
+    }
     return {
-      ok: res.statusCode >= 200 && res.statusCode < 300,
-      status: res.statusCode,
-      json: async () => JSON.parse(res.body),
-      text: async () => res.body,
+      ok: last.statusCode >= 200 && last.statusCode < 300,
+      status: last.statusCode,
+      json: async () => JSON.parse(last.body),
+      text: async () => last.body,
     };
   };
 }
@@ -41,12 +55,15 @@ async function run() {
   const input = (await Actor.getInput()) || {};
   const mode = input.mode === 'post_comments' ? 'post_comments' : 'subreddit_posts';
 
-  const proxyConfiguration = await Actor.createProxyConfiguration({
-    groups: ['RESIDENTIAL'],
-  }).catch(() => null);
-  const proxyUrl = proxyConfiguration ? await proxyConfiguration.newUrl() : undefined;
-  const fetchImpl = makeFetch(proxyUrl);
-  if (!proxyUrl) log.warning('No Apify proxy available — using direct connection (fine locally, will 403 from datacenters).');
+  const proxyUrls = [];
+  for (const groups of [['RESIDENTIAL'], undefined]) {
+    const cfg = await Actor.createProxyConfiguration(groups ? { groups } : {}).catch(() => null);
+    if (cfg) proxyUrls.push(await cfg.newUrl().catch(() => null));
+  }
+  const fetchImpl = makeFetch(proxyUrls);
+  if (!proxyUrls.filter(Boolean).length) {
+    log.warning('No Apify proxy available — using direct connection (fine locally, will 403 from datacenters).');
+  }
 
   let pushed = 0;
   const failures = [];
