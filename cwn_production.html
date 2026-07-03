@@ -8271,7 +8271,13 @@ function toggleJobMediaPanel(jobId) {
   if (!el) return;
   var opening = el.style.display === 'none' || !el.style.display;
   el.style.display = opening ? 'block' : 'none';
-  if (!opening) window._queuePreviewLock = 0;
+  if (!opening) {
+    window._queuePreviewLock = 0;
+    var vid = el.querySelector('video');
+    if (vid && !vid.paused) { try { vid.pause(); } catch (_e) {} }
+    // Flush queue updates that were deferred while the preview was open.
+    if (_queueRenderDeferred) scheduleQueueRender();
+  }
 }
 
 function captureQueueMediaState() {
@@ -8414,7 +8420,10 @@ function isJobPreviewPlaying() {
   for (var i = 0; i < panels.length; i++) {
     if (panels[i].style.display === 'none') continue;
     var vid = panels[i].querySelector('video');
-    if (vid && !vid.paused && vid.currentTime > 0 && !vid.ended) return true;
+    // CPD-1223: an open preview panel blocks queue rebuilds even while paused —
+    // rebuilding recreates the <video>, which stutters playback and closes the
+    // native settings menu mid-review. Deferred renders flush on panel close.
+    if (vid && vid.currentTime > 0) return true;
   }
   return false;
 }
@@ -9196,10 +9205,10 @@ function renderQueueNow() {
     if (previewUrl || job.gate3) {
       var g3PanelText = escHtml(formatGate3ReportText(job));
       mediaPanel = '<div id="job-media-' + job.id + '" style="display:none;margin:10px 0;padding:10px;background:rgba(0,0,0,0.35);border:1px solid rgba(199,175,79,0.25);border-radius:8px;">'
-        + (previewUrl ? '<video controls playsinline preload="auto" src="' + previewUrl + '" onplay="window._queuePreviewLock=1" onpause="if(window._queuePreviewLock){window._queuePreviewLock=0;if(window._queueRenderDeferred)scheduleQueueRender(true);}" onended="window._queuePreviewLock=0;if(window._queueRenderDeferred)scheduleQueueRender(true);" onerror="this.outerHTML=\'<div style=&quot;color:#e74c3c;font-size:15px;padding:8px;&quot;>Preview unavailable — click ↩ RESTORE JOBS or wait for reassemble to finish.</div>\'" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:6px;"></video>'
+        + (previewUrl ? '<video controls playsinline preload="auto" src="' + previewUrl + '" onplay="window._queuePreviewLock=1" onpause="window._queuePreviewLock=0" onended="window._queuePreviewLock=0" onerror="this.outerHTML=\'<div style=&quot;color:#e74c3c;font-size:15px;padding:8px;&quot;>Preview unavailable — click ↩ RESTORE JOBS or wait for reassemble to finish.</div>\'" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:6px;"></video>'
           + '<div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
           + '<a href="' + previewUrl + '" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:14px;text-decoration:none;">↗ OPEN FULL PREVIEW (new tab)</a>'
-          + '<span style="font-size:13px;color:rgba(255,255,255,0.4);font-family:monospace;">Queue refresh pauses while video plays</span>'
+          + '<span style="font-size:13px;color:rgba(255,255,255,0.4);font-family:monospace;">Queue refresh pauses while this preview is open</span>'
           + '</div>' : '')
         + (job.gate3 ? '<div style="font-size:13px;font-weight:900;color:rgba(199,175,79,0.75);letter-spacing:2px;margin-bottom:6px;">GATE 3 QA (GEMINI)</div>'
           + '<div style="font-size:14px;color:rgba(255,255,255,0.75);font-family:monospace;white-space:pre-wrap;max-height:220px;overflow:auto;">'
@@ -18518,7 +18527,9 @@ function ensurePublishCopyHydrated(jobId) {
     if (!err && serverJob) {
       mergeServerJobIntoLocal(jobId, serverJob, { skipRender: true });
       if (hasPublishMetadata(JOBS.find(function(j) { return j.id === jobId; }))) {
-        scheduleQueueRender(true);
+        // Non-forced: defers while a preview panel is open (CPD-1223 — a forced
+        // rebuild here recreated the <video> mid-playback).
+        scheduleQueueRender();
         return;
       }
     }
