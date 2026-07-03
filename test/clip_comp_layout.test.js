@@ -52,3 +52,32 @@ test('sourceBottomCropPct resolves, defaults to 0, clamps to 0.3 (CPD-1220)', ()
   assert.equal(resolveSourceBottomCropPct({ layout: { sourceBottomCropPct: -1 } }), 0);
   assert.equal(resolveSourceBottomCropPct({ layout: { sourceBottomCropPct: 'junk' } }), 0);
 });
+
+test('buildFullBleedFilter centres by default, offsets toward subject (CPD-1227)', () => {
+  const { buildFullBleedFilter } = require('../lib/clip_comp_layout');
+  assert.equal(buildFullBleedFilter(), FULL_BLEED_FILTER);
+  assert.equal(buildFullBleedFilter(null, null), FULL_BLEED_FILTER);
+  assert.equal(buildFullBleedFilter(0.5, 0.5), FULL_BLEED_FILTER);
+  assert.equal(buildFullBleedFilter('junk', undefined), FULL_BLEED_FILTER);
+
+  const left = buildFullBleedFilter(0.2, null);
+  assert.ok(left.includes('crop=1080:1920:trunc((iw-1080)*0.200/2)*2:(ih-1920)/2'));
+
+  const both = buildFullBleedFilter(0.8, 0.3);
+  assert.ok(both.includes('trunc((iw-1080)*0.800/2)*2'));
+  assert.ok(both.includes('trunc((ih-1920)*0.300/2)*2'));
+
+  const clamped = buildFullBleedFilter(2, -1);
+  assert.ok(clamped.includes('*1.000/2'));
+  assert.ok(clamped.includes('*0.000/2'));
+});
+
+test('resolveFullBleedSubject honours operator cropCx/cropCy override (CPD-1227)', async () => {
+  const { resolveFullBleedSubject } = require('../lib/clip_comp_layout');
+  const r = await resolveFullBleedSubject('/nonexistent.mp4', { layout: { cropCx: 0.72, cropCy: 0.4 } }, null);
+  assert.equal(r.subjectCx, 0.72);
+  assert.equal(r.subjectCy, 0.4);
+  const cxOnly = await resolveFullBleedSubject('/nonexistent.mp4', { layout: { cropCx: 0.72 } }, null);
+  assert.equal(cxOnly.subjectCx, 0.72);
+  assert.equal(cxOnly.subjectCy, null);
+});
