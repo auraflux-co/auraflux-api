@@ -1,0 +1,59 @@
+{
+  "actorSpecification": 1,
+  "fields": {
+    "type": "object",
+    "properties": {
+      "type": { "type": "string" },
+      "id": { "type": "string" },
+      "subreddit": { "type": ["string", "null"] },
+      "title": { "type": ["string", "null"] },
+      "selftext": { "type": ["string", "null"] },
+      "url": { "type": ["string", "null"] },
+      "externalUrl": { "type": ["string", "null"] },
+      "score": { "type": "integer" },
+      "upvoteRatio": { "type": ["number", "null"] },
+      "numComments": { "type": ["integer", "null"] },
+      "created": { "type": ["string", "null"] },
+      "isVideo": { "type": ["boolean", "null"] },
+      "videoUrl": { "type": ["string", "null"] },
+      "thumbnail": { "type": ["string", "null"] },
+      "author": { "type": ["string", "null"] },
+      "body": { "type": ["string", "null"] },
+      "depth": { "type": ["integer", "null"] },
+      "postId": { "type": ["string", "null"] }
+    }
+  },
+  "views": {
+    "overview": {
+      "title": "Posts & comments",
+      "description": "Reddit items — filter by the type field (post | comment).",
+      "transformation": {
+        "fields": [
+          "type",
+          "subreddit",
+          "title",
+          "score",
+          "numComments",
+          "isVideo",
+          "author",
+          "url",
+          "created"
+        ]
+      },
+      "display": {
+        "component": "table",
+        "properties": {
+          "type": { "label": "Type", "format": "text" },
+          "subreddit": { "label": "Subreddit", "format": "text" },
+          "title": { "label": "Title / body", "format": "text" },
+          "score": { "label": "Score", "format": "number" },
+          "numComments": { "label": "Comments", "format": "number" },
+          "isVideo": { "label": "Video", "format": "boolean" },
+          "author": { "label": "Author", "format": "text" },
+          "url": { "label": "URL", "format": "link" },
+          "created": { "label": "Created", "format": "date" }
+        }
+      }
+    }
+  }
+}

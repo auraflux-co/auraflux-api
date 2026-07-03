@@ -1,0 +1,58 @@
+{
+  "actorSpecification": 1,
+  "fields": {
+    "type": "object",
+    "properties": {
+      "slug": { "type": "string" },
+      "url": { "type": "string" },
+      "title": { "type": "string" },
+      "viewCount": { "type": "integer" },
+      "durationSeconds": { "type": "integer" },
+      "createdAt": { "type": "string" },
+      "game": { "type": ["string", "null"] },
+      "curator": { "type": ["string", "null"] },
+      "language": { "type": ["string", "null"] },
+      "isFeatured": { "type": "boolean" },
+      "thumbnailUrl": { "type": ["string", "null"] },
+      "sourceVodId": { "type": ["string", "null"] },
+      "vodOffsetSeconds": { "type": ["integer", "null"] },
+      "broadcaster": { "type": "object" },
+      "period": { "type": "string" },
+      "sort": { "type": "string" },
+      "scrapedAt": { "type": "string" }
+    }
+  },
+  "views": {
+    "overview": {
+      "title": "Clips",
+      "description": "Scraped Twitch clips, highest signal first.",
+      "transformation": {
+        "fields": [
+          "title",
+          "viewCount",
+          "durationSeconds",
+          "game",
+          "broadcaster.displayName",
+          "curator",
+          "createdAt",
+          "url",
+          "thumbnailUrl"
+        ]
+      },
+      "display": {
+        "component": "table",
+        "properties": {
+          "title": { "label": "Title", "format": "text" },
+          "viewCount": { "label": "Views", "format": "number" },
+          "durationSeconds": { "label": "Duration (s)", "format": "number" },
+          "game": { "label": "Game", "format": "text" },
+          "broadcaster.displayName": { "label": "Streamer", "format": "text" },
+          "curator": { "label": "Clipped by", "format": "text" },
+          "createdAt": { "label": "Created", "format": "date" },
+          "url": { "label": "Clip URL", "format": "link" },
+          "thumbnailUrl": { "label": "Thumbnail", "format": "image" }
+        }
+      }
+    }
+  }
+}
