@@ -18738,6 +18738,12 @@ function mergeServerJobIntoLocal(jobId, serverJob, opts) {
     }
   }
   if (serverJob.assembledAt) job.assembledAt = serverJob.assembledAt;
+  // CPD-1223: preview fields were never merged, so queue entries saved in
+  // localStorage kept serving a previous run's MP4 forever (stale/404 player).
+  if (serverJob.localPreviewUrl) job.localPreviewUrl = serverJob.localPreviewUrl;
+  if (serverJob.filename) job.filename = serverJob.filename;
+  if (serverJob.outputPath) job.outputPath = serverJob.outputPath;
+  if (serverJob.assemblyId) { job.assemblyId = serverJob.assemblyId; job.asmId = serverJob.assemblyId; }
   if (serverJob.scheduledPublishAt) job.scheduledPublishAt = serverJob.scheduledPublishAt;
   if (serverJob.stage) job.stage = serverJob.stage;
   if (serverJob.youtubeConfirmedPublished) job.youtubeConfirmedPublished = true;
