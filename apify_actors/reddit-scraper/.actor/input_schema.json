@@ -1,0 +1,57 @@
+{
+  "title": "Reddit Scraper Lite input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "mode": {
+      "title": "Mode",
+      "type": "string",
+      "description": "Scrape subreddit listings, or full comment threads for specific posts.",
+      "enum": ["subreddit_posts", "post_comments"],
+      "enumTitles": ["Subreddit posts", "Post + comments"],
+      "default": "subreddit_posts"
+    },
+    "subreddits": {
+      "title": "Subreddits",
+      "type": "array",
+      "description": "Subreddit names or URLs (subreddit_posts mode). e.g. `PublicFreakout` or `https://www.reddit.com/r/videos`.",
+      "editor": "stringList",
+      "prefill": ["PublicFreakout"]
+    },
+    "sort": {
+      "title": "Sort",
+      "type": "string",
+      "enum": ["top", "new", "hot", "rising"],
+      "enumTitles": ["Top", "New", "Hot", "Rising"],
+      "default": "top"
+    },
+    "timeFilter": {
+      "title": "Time filter (top sort)",
+      "type": "string",
+      "enum": ["hour", "day", "week", "month", "year", "all"],
+      "enumTitles": ["Past hour", "Past 24 hours", "Past week", "Past month", "Past year", "All time"],
+      "default": "day"
+    },
+    "maxResults": {
+      "title": "Max posts per subreddit",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 25
+    },
+    "postUrls": {
+      "title": "Post URLs",
+      "type": "array",
+      "description": "Full reddit.com permalink URLs (post_comments mode).",
+      "editor": "stringList"
+    },
+    "maxCommentsPerPost": {
+      "title": "Max comments per post",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500,
+      "default": 200
+    }
+  },
+  "required": ["mode"]
+}

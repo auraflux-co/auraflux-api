@@ -1,0 +1,12 @@
+{
+  "actorSpecification": 1,
+  "name": "twitch-clips-scraper",
+  "title": "Twitch Clips Scraper",
+  "description": "Top Twitch clips per streamer — views, duration, game, curator, VOD offset, thumbnails. No Twitch API key or login required.",
+  "version": "1.0",
+  "meta": {
+    "templateId": "js-empty"
+  },
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile"
+}

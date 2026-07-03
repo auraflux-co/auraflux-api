@@ -1,0 +1,15 @@
+{
+  "name": "twitch-clips-scraper",
+  "version": "1.0.0",
+  "description": "Scrape top Twitch clips per streamer — views, duration, game, curator, thumbnails. No Twitch API key needed.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test test/",
+    "smoke": "node scripts/live_smoke.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6"
+  },
+  "license": "ISC"
+}

@@ -1,0 +1,60 @@
+{
+  "title": "Twitch Clips Scraper input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "streamers": {
+      "title": "Streamers",
+      "type": "array",
+      "description": "Twitch channel logins or channel URLs (e.g. `caseoh_` or `https://www.twitch.tv/caseoh_`). One entry per streamer.",
+      "editor": "stringList",
+      "prefill": ["caseoh_", "jasontheween"]
+    },
+    "period": {
+      "title": "Time window",
+      "type": "string",
+      "description": "How far back to look for clips.",
+      "enum": ["24h", "7d", "30d", "all"],
+      "enumTitles": ["Last 24 hours", "Last 7 days", "Last 30 days", "All time"],
+      "default": "7d"
+    },
+    "sort": {
+      "title": "Sort",
+      "type": "string",
+      "description": "Clip ordering within the window.",
+      "enum": ["views", "recent", "trending"],
+      "enumTitles": ["Most viewed", "Most recent", "Trending"],
+      "default": "views"
+    },
+    "maxClipsPerStreamer": {
+      "title": "Max clips per streamer",
+      "type": "integer",
+      "description": "Up to 100 clips per streamer per run (Twitch page limit for anonymous access).",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 25
+    },
+    "minDurationSeconds": {
+      "title": "Min clip duration (s)",
+      "type": "integer",
+      "description": "Skip clips shorter than this. 0 = no minimum.",
+      "minimum": 0,
+      "default": 0
+    },
+    "maxDurationSeconds": {
+      "title": "Max clip duration (s)",
+      "type": "integer",
+      "description": "Skip clips longer than this. 0 = no maximum.",
+      "minimum": 0,
+      "default": 0
+    },
+    "minViews": {
+      "title": "Min view count",
+      "type": "integer",
+      "description": "Skip clips with fewer views than this. 0 = no minimum.",
+      "minimum": 0,
+      "default": 0
+    }
+  },
+  "required": ["streamers"]
+}

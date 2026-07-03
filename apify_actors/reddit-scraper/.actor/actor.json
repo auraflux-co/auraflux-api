@@ -1,0 +1,12 @@
+{
+  "actorSpecification": 1,
+  "name": "reddit-scraper-lite",
+  "title": "Reddit Scraper Lite — posts & comments",
+  "description": "Subreddit top/new/hot posts and full comment threads as clean JSON. No Reddit API credentials required.",
+  "version": "1.0",
+  "meta": {
+    "templateId": "js-empty"
+  },
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile"
+}
