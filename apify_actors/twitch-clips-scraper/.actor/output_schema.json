@@ -1,0 +1,19 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "Twitch Clips Scraper output",
+  "description": "Scraped Twitch clips in the default dataset, plus a per-run summary in the key-value store.",
+  "properties": {
+    "clips": {
+      "type": "string",
+      "title": "Clips",
+      "description": "One item per scraped clip — title, views, duration, game, curator, broadcaster (with follower count), source VOD id + offset, thumbnail.",
+      "template": "{{links.apiDefaultDatasetUrl}}/items?view=overview"
+    },
+    "runSummary": {
+      "type": "string",
+      "title": "Run summary",
+      "description": "Counts of streamers requested/failed and clips pushed for this run.",
+      "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/RUN_SUMMARY"
+    }
+  }
+}

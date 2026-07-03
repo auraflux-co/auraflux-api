@@ -1,0 +1,19 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "Reddit Scraper Lite output",
+  "description": "Scraped Reddit posts and comments in the default dataset, plus a per-run summary in the key-value store.",
+  "properties": {
+    "items": {
+      "type": "string",
+      "title": "Posts & comments",
+      "description": "Dataset items — filter by the type field (post | comment). Posts include score, comment count, video URL; comments include body, score, depth.",
+      "template": "{{links.apiDefaultDatasetUrl}}/items?view=overview"
+    },
+    "runSummary": {
+      "type": "string",
+      "title": "Run summary",
+      "description": "Mode, items pushed, and any per-target failures for this run.",
+      "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/RUN_SUMMARY"
+    }
+  }
+}
