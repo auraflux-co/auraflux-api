@@ -118,12 +118,14 @@ Goodnight and good luck.`;
       .toMatch(/Yawn-uh/);
   });
 
-  // CPD-1223 r25 QA: group-opening intro scenes get a settle beat so the avatar
-  // idles before speaking — takes that open mid-gesture make hard cuts jerk.
-  test('streamer intro scenes get a leading settle break; other scenes do not', () => {
+  // CPD-1223 r32 QA: NO scene gets an injected leading settle break. The r25 1s
+  // <break/> rendered as dead air after the handoff card swap; the approved
+  // reference (Cinna→ExtraEmily) opens with the avatar speaking ~0.1s after the
+  // cut. Existing settle-beat renders are head-trimmed in assembly instead.
+  test('no scene gets a leading settle break injected', () => {
     const { prepareHeyGenScript } = require('../lib/heygen_script');
     expect(prepareHeyGenScript('Now Emiru.', { sceneName: 'EMIRU_INTRO' }))
-      .toMatch(/^<break time="1s"\/>/);
+      .not.toMatch(/^<break/);
     expect(prepareHeyGenScript('Welcome to the show.', { sceneName: 'INTRO' }))
       .not.toMatch(/^<break/);
     expect(prepareHeyGenScript('Wild.', { sceneName: 'EMIRU_CLIP1_REACTION' }))

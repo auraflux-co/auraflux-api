@@ -36,7 +36,8 @@ describe('heygen_script', () => {
     });
     expect(out).toContain('<break time="4s"/>');
     expect(out).toMatch(/Subtle\./);
-    expect(out).toMatch(/Follow Lacy/);
+    // Phonetic roster (data/streamers.json) rewrites "Lacy" for TTS
+    expect(out).toMatch(/Follow (Lacy|LAY-see)/);
   });
 
   test('prepareHeyGenScript converts [studio laugh] on clip1 reaction', () => {
