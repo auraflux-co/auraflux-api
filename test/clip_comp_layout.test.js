@@ -81,3 +81,72 @@ test('resolveFullBleedSubject honours operator cropCx/cropCy override (CPD-1227)
   assert.equal(cxOnly.subjectCx, 0.72);
   assert.equal(cxOnly.subjectCy, null);
 });
+
+// ─── Facecam split (CPD-1228) ────────────────────────────────────────────────
+
+test('buildSplitScreenFilter builds vstack graph with even-aligned cam crop', () => {
+  const { buildSplitScreenFilter } = require('../lib/clip_comp_layout');
+  const f = buildSplitScreenFilter({ x: 0.7, y: 0.05, w: 0.25, h: 0.3 });
+  assert.ok(f.includes('split=2[camsrc][contentsrc]'));
+  assert.ok(f.includes('crop=trunc(iw*0.2500/2)*2:trunc(ih*0.3000/2)*2:trunc(iw*0.7000/2)*2:trunc(ih*0.0500/2)*2'));
+  assert.ok(f.includes('scale=1080:640:force_original_aspect_ratio=increase,crop=1080:640'));
+  assert.ok(f.includes('scale=1080:1280:force_original_aspect_ratio=increase,crop=1080:1280:(iw-1080)/2:(ih-1280)/2'));
+  assert.ok(f.includes('vstack=inputs=2,format=yuv420p[vout]'));
+});
+
+test('buildSplitScreenFilter rejects invalid rects', () => {
+  const { buildSplitScreenFilter } = require('../lib/clip_comp_layout');
+  assert.throws(() => buildSplitScreenFilter(null));
+  assert.throws(() => buildSplitScreenFilter({ x: 0.1, y: 0.1, w: 0.01, h: 0.3 }));
+  assert.throws(() => buildSplitScreenFilter({ x: 'a', y: 0, w: 0.2, h: 0.2 }));
+});
+
+test('buildSplitScreenFilter honours contentCx offset and bottom crop on content pane only', () => {
+  const { buildSplitScreenFilter } = require('../lib/clip_comp_layout');
+  const f = buildSplitScreenFilter({ x: 0, y: 0, w: 0.3, h: 0.3 }, { contentCx: 0.8, bottomCropPct: 0.1 });
+  assert.ok(f.includes('crop=1080:1280:trunc((iw-1080)*0.800/2)*2'));
+  const chains = f.split(';');
+  const contentChain = chains.find((c) => c.startsWith('[contentsrc]'));
+  const camChain = chains.find((c) => c.startsWith('[camsrc]'));
+  assert.ok(contentChain.includes('crop=iw:trunc(ih*0.900/2)*2:0:0'));
+  assert.ok(!camChain.includes('0.900'));
+});
+
+test('buildSplitScreenFilter topHeight is clamped and even-aligned', () => {
+  const { buildSplitScreenFilter } = require('../lib/clip_comp_layout');
+  const odd = buildSplitScreenFilter({ x: 0, y: 0, w: 0.3, h: 0.3 }, { topHeight: 641 });
+  assert.ok(odd.includes('crop=1080:640,') || odd.includes('crop=1080:642,'));
+  const low = buildSplitScreenFilter({ x: 0, y: 0, w: 0.3, h: 0.3 }, { topHeight: 100 });
+  assert.ok(low.includes('scale=1080:320:'));
+  assert.ok(low.includes('scale=1080:1600:'));
+});
+
+test('normalizeFacecamRect clamps out-of-range boxes', () => {
+  const { normalizeFacecamRect } = require('../lib/clip_comp_layout');
+  const r = normalizeFacecamRect({ x: 0.9, y: -0.1, w: 0.5, h: 0.5 });
+  assert.equal(r.x, 0.9);
+  assert.equal(r.y, 0);
+  assert.ok(Math.abs(r.w - 0.1) < 1e-9);
+  assert.equal(r.h, 0.5);
+  assert.equal(normalizeFacecamRect({ x: 0, y: 0, w: 0.02, h: 0.5 }), null);
+  assert.equal(normalizeFacecamRect(undefined), null);
+});
+
+test('facecam_split preset routes hook to seam and logo top-right (CPD-1228)', () => {
+  const { resolveHookPlacement, resolveHookMidY, resolveLogoCorner, resolveLayoutMode, SPLIT_TOP_HEIGHT } =
+    require('../lib/clip_comp_layout');
+  const preset = PRESET_DEFAULTS.facecam_split;
+  assert.equal(resolveLayoutMode(preset), 'split_screen');
+  assert.equal(resolveHookPlacement(preset), 'split_seam');
+  assert.equal(resolveHookMidY(preset), SPLIT_TOP_HEIGHT + 24);
+  assert.equal(resolveLogoCorner(preset), 'top_right');
+});
+
+test('resolveSplitScreenFacecam honours operator facecamRect override', async () => {
+  const { resolveSplitScreenFacecam } = require('../lib/clip_comp_layout');
+  const rect = await resolveSplitScreenFacecam('/nonexistent.mp4', {
+    layout: { facecamRect: { x: 0.65, y: 0.02, w: 0.3, h: 0.28 } },
+  }, null);
+  assert.equal(rect.x, 0.65);
+  assert.equal(rect.w, 0.3);
+});

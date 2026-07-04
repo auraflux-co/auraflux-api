@@ -135,3 +135,31 @@ test('VALID_PRESETS includes custom', () => {
   assert.ok(VALID_PRESETS.has('custom'));
   assert.ok(VALID_PRESETS.has('classic_blur_pad'));
 });
+
+// ─── Facecam split preset (CPD-1228) ─────────────────────────────────────────
+
+test('facecam_split preset merges with split_screen layout', () => {
+  const c = mergeCompCreative({ preset: 'facecam_split' });
+  assert.equal(c.preset, 'facecam_split');
+  assert.equal(c.layout.mode, 'split_screen');
+  assert.equal(c.layout.logoCorner, 'top_right');
+  assert.equal(c.captions.style, 'phrase_full_bleed');
+  assert.ok(VALID_PRESETS.has('facecam_split'));
+});
+
+test('facecam_split chips and assembly flags reflect split layout', () => {
+  const c = mergeCompCreative({ preset: 'facecam_split' });
+  assert.ok(compCreativeChips(c).includes('facecam split'));
+  assert.equal(compCreativeAssemblyFlags(c).layoutMode, 'split_screen');
+});
+
+test('facecam_split gate3 expectations describe the split panes', () => {
+  const { compCreativeGate3Expectations, getCompLineupTarget } = require('../lib/clip_comp_creative');
+  const c = mergeCompCreative({ preset: 'facecam_split' });
+  const exp = compCreativeGate3Expectations(c);
+  assert.equal(exp.clipCompLayoutMode, 'split_screen');
+  assert.equal(exp.logoPosition, 'top-right');
+  assert.ok(/facecam split/i.test(exp.formatDescription));
+  const target = getCompLineupTarget('facecam_split');
+  assert.equal(target.lineupSlots, 4);
+});
