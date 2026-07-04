@@ -142,7 +142,28 @@ test('facecam_split preset routes hook to seam and logo top-right (CPD-1228)', (
   assert.equal(resolveLogoCorner(preset), 'top_right');
 });
 
-test('resolveSplitScreenFacecam honours operator facecamRect override', async () => {
+test('defaultLandscapeFacecamRect returns top-right twitch box', () => {
+  const { defaultLandscapeFacecamRect } = require('../lib/clip_comp_layout');
+  const r = defaultLandscapeFacecamRect(null);
+  assert.ok(r.x > 0.5);
+  assert.ok(r.y < 0.1);
+  assert.ok(r.w >= 0.05);
+});
+
+ test('resolveEffectiveLayoutMode keeps blur_pad without probing', async () => {
+  const { resolveEffectiveLayoutMode } = require('../lib/clip_comp_layout');
+  const r = await resolveEffectiveLayoutMode('/nonexistent.mp4', PRESET_DEFAULTS.classic_blur_pad, null);
+  assert.equal(r.mode, 'blur_pad');
+  assert.equal(r.facecamRect, null);
+});
+
+ test('probeVideoDimensions returns null for missing file', async () => {
+  const { probeVideoDimensions } = require('../lib/clip_comp_layout');
+  const dims = await probeVideoDimensions('/nonexistent_clip.mp4');
+  assert.equal(dims, null);
+});
+
+ test('resolveSplitScreenFacecam honours operator facecamRect override', async () => {
   const { resolveSplitScreenFacecam } = require('../lib/clip_comp_layout');
   const rect = await resolveSplitScreenFacecam('/nonexistent.mp4', {
     layout: { facecamRect: { x: 0.65, y: 0.02, w: 0.3, h: 0.28 } },

@@ -1024,6 +1024,14 @@ input[type="url"], input[type="password"], select, textarea {
                   </select>
                   <div id="comp-creative-label" class="gen-comp-creative-label" style="margin:8px 0;padding:10px 12px;border-radius:6px;border:1px solid rgba(199,175,79,0.28);background:rgba(199,175,79,0.06);font-size:14px;line-height:1.55;color:rgba(255,255,255,0.78);white-space:pre-wrap;font-family:monospace;"></div>
                   <div id="comp-creative-chips" class="gen-comp-creative-chips"></div>
+                  <div id="comp-creative-landscape-split" style="display:none;margin-top:8px;padding:10px 12px;border-radius:6px;border:1px solid rgba(46,204,113,0.28);background:rgba(46,204,113,0.06);font-size:14px;line-height:1.5;color:rgba(255,255,255,0.78);">
+                    <div style="font-weight:700;color:rgba(46,204,113,0.95);margin-bottom:6px;">16:9 → portrait split (automatic)</div>
+                    <div style="margin-bottom:8px;color:rgba(255,255,255,0.55);">Landscape Twitch clips always split: cam crop on top, full desktop/action in the bottom pane. FFmpeg preview below matches assembly.</div>
+                    <label style="display:block;font-size:13px;color:rgba(255,255,255,0.65);">Bottom pane focus (left ← → right)
+                      <input type="range" id="comp-creative-content-cx" min="0" max="100" value="50" style="width:100%;margin-top:4px;accent-color:#2ecc71;" oninput="onCompCreativeContentCxChange(this.value)">
+                    </label>
+                    <div id="comp-creative-content-cx-val" style="font-family:monospace;font-size:13px;color:rgba(46,204,113,0.85);margin-top:4px;">Centre · 0.50</div>
+                  </div>
                   <div id="comp-creative-adv" class="gen-comp-creative-adv">
                     <div id="comp-creative-serpent-hint" style="display:none;padding:8px 10px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(199,175,79,0.25);background:rgba(199,175,79,0.08);color:rgba(255,255,255,0.72);line-height:1.45;font-size:14px;">
                       <strong style="color:rgba(199,175,79,0.95);">Ranked list Short:</strong> on-screen countdown matches lineup size (classic Top&nbsp;5 = pick <strong>5 clips</strong> in comp order). Clip #1 opens at the highest rank still in play. Use <strong>Comp</strong> (not Comp VOD).
@@ -1980,6 +1988,7 @@ input[type="url"], input[type="password"], select, textarea {
                     <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">7D–30D</button>
                     <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">30D+</button>
                   </div>
+                  <div id="library-window-hint" class="gen-status-line" style="margin:4px 0 0;font-size:13px;min-height:14px;color:rgba(255,255,255,0.42);"></div>
                   <div class="library-sort-pills" id="library-clip-sort-pills">
                     <span class="library-sort-label">Sort</span>
                     <button type="button" class="library-window-pill active" data-sort="popular" onclick="setLibraryClipSort('popular')">Popular</button>
@@ -2221,6 +2230,17 @@ input[type="url"], input[type="password"], select, textarea {
               <div id="pub-video-row" style="display:none;"><span style="color:rgba(199,175,79,0.5);letter-spacing:1px;">VIDEO</span> <a id="pub-video-link" href="#" target="_blank" style="color:#2ecc71;margin-left:6px;font-weight:700;">▶ Preview assembled MP4 ↗</a></div>
             </div>
           </div>
+          <!-- Long-form VOD: chapters live here — no scroll hunt -->
+          <div id="pub-chapters-panel" style="display:none;margin-top:12px;padding:12px 14px;background:rgba(46,204,113,0.04);border:1px solid rgba(46,204,113,0.22);border-radius:6px;">
+            <div style="font-size:13px;font-weight:900;color:rgba(46,204,113,0.9);letter-spacing:2px;margin-bottom:8px;">YOUTUBE CHAPTERS <span style="opacity:0.7;font-weight:600;">· ffprobe assembly groups · merged into description on save</span></div>
+            <textarea id="pub-chapters-input" rows="7" placeholder="0:00 Intro&#10;0:06 Cinna&#10;1:48 ExtraEmily" style="width:100%;box-sizing:border-box;font-size:15px;line-height:1.7;color:rgba(255,255,255,0.9);font-family:monospace;background:#0d1524;border:1px solid rgba(46,204,113,0.25);border-radius:6px;padding:10px;resize:vertical;"></textarea>
+            <div id="pub-chapters-status" style="font-size:14px;color:rgba(255,255,255,0.45);margin-top:6px;font-family:monospace;"></div>
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button onclick="probeChaptersFromAssembly(true)" class="btn btn-gold btn-sm" style="font-weight:700;">⏱ PROBE FROM ASSEMBLY</button>
+              <button onclick="saveManualChapters()" class="btn btn-gold btn-sm" style="font-weight:700;">💾 SAVE → DESCRIPTION</button>
+              <button onclick="pubCopy('pub-chapters-input',this)" class="btn btn-outline btn-sm">COPY</button>
+            </div>
+          </div>
           <div id="pub-status" style="margin-top:8px;font-size:15px;color:rgba(255,255,255,0.4);font-family:monospace;"></div>
           <div id="pub-seo-audit" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(52,152,219,0.06);border:1px solid rgba(52,152,219,0.2);border-radius:4px;font-size:14px;font-family:monospace;color:rgba(255,255,255,0.55);white-space:pre-wrap;"></div>
           <div id="pub-intel-hints" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(199,175,79,0.06);border:1px solid rgba(199,175,79,0.2);border-radius:4px;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.6);"></div>
@@ -2280,14 +2300,6 @@ input[type="url"], input[type="password"], select, textarea {
 
           <!-- Compilations only: end screen + cards -->
           <div id="pub-yt-longform-only">
-            <!-- YouTube Chapters -->
-            <div class="sec-title">YOUTUBE CHAPTERS <span class="badge">AUTO-GENERATED</span></div>
-            <div class="card" style="margin-bottom:12px;"><div class="card-body" style="padding:12px 16px;">
-              <div style="font-size:13px;font-weight:900;color:rgba(199,175,79,0.5);letter-spacing:3px;margin-bottom:8px;">PASTE INTO DESCRIPTION (first chapter must be 0:00)</div>
-              <div id="pub-chapters-out" style="font-size:16px;line-height:1.9;color:rgba(255,255,255,0.8);font-family:monospace;white-space:pre-wrap;">Generate script first to auto-populate chapters.</div>
-              <button onclick="copyEl('pub-chapters-out',this)" class="btn btn-outline btn-sm" style="margin-top:8px;">COPY CHAPTERS</button>
-            </div></div>
-
             <div class="sec-title">END SCREEN + CARDS</div>
             <div class="card" style="margin-bottom:12px;"><div class="card-body" style="padding:12px 16px;">
               <div style="font-size:13px;font-weight:900;color:rgba(199,175,79,0.5);letter-spacing:3px;margin-bottom:8px;">END SCREEN (add at -20 seconds in Studio)</div>
@@ -3373,6 +3385,7 @@ function libraryPageInit() {
     if (typeof loadStreamerList === 'function') loadStreamerList();
   });
   syncLibraryWindowToPicker();
+  refreshLibraryTimeWindowPills();
   renderRedditSubPickLists();
   var savedMode = 'streamers';
   try { savedMode = sessionStorage.getItem('cwn_library_source_mode') || savedMode; } catch (_e) {}
@@ -3407,6 +3420,7 @@ function setLibrarySourceMode(mode, skipPersist) {
     }
   }
   syncLibraryWindowToPicker();
+  if (mode === 'streamers') refreshLibraryTimeWindowPills();
 }
 
 function loadLibraryReddit(forceReload) {
@@ -8271,7 +8285,9 @@ function toggleJobMediaPanel(jobId) {
   if (!el) return;
   var opening = el.style.display === 'none' || !el.style.display;
   el.style.display = opening ? 'block' : 'none';
-  if (!opening) {
+  if (opening) {
+    window._queuePreviewLock = 1;
+  } else if (!opening) {
     window._queuePreviewLock = 0;
     var vid = el.querySelector('video');
     if (vid && !vid.paused) { try { vid.pause(); } catch (_e) {} }
@@ -8420,10 +8436,9 @@ function isJobPreviewPlaying() {
   for (var i = 0; i < panels.length; i++) {
     if (panels[i].style.display === 'none') continue;
     var vid = panels[i].querySelector('video');
-    // CPD-1223: an open preview panel blocks queue rebuilds even while paused —
-    // rebuilding recreates the <video>, which stutters playback and closes the
-    // native settings menu mid-review. Deferred renders flush on panel close.
-    if (vid && vid.currentTime > 0) return true;
+    // CPD-1223: block rebuilds while preview panel is open — recreating <video> at
+    // currentTime 0 prevents metadata load (black player); mid-playback rebuild stutters.
+    if (vid) return true;
   }
   return false;
 }
@@ -8766,7 +8781,7 @@ function renderQueueNow() {
     } else if (jobStage === 'metadata_review' && job.metadataQaViolations && job.metadataQaViolations.length) {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:15px;color:#e74c3c;">'
         + '⛔ METADATA QA — fix before publish: ' + escHtml(job.metadataQaViolations.slice(0, 3).join(' · '))
-        + '<div style="margin-top:6px;color:rgba(255,255,255,0.55);">Click 🔄 FIX SEO to auto-regenerate metadata, or ↩ RESTORE JOBS if copy looks stale.</div>'
+        + '<div style="margin-top:6px;color:rgba(255,255,255,0.55);">Click 🔄 FIX SEO below. When SEO passes, <strong style="color:#2ecc71;">🚀 APPROVE &amp; PUBLISH</strong> appears on this card (Job Queue — not the Publish tab).</div>'
         + '</div>';
     } else if ((resolveJobPreviewUrl(job) || job.driveUrl || resolvePublishCopy(job)) && hasSeo && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || jobStage === 'publish_scheduled' || job.assembledAt)) {
       var tagCount = (pubPayload.tags || []).length;
@@ -9205,7 +9220,7 @@ function renderQueueNow() {
     if (previewUrl || job.gate3) {
       var g3PanelText = escHtml(formatGate3ReportText(job));
       mediaPanel = '<div id="job-media-' + job.id + '" style="display:none;margin:10px 0;padding:10px;background:rgba(0,0,0,0.35);border:1px solid rgba(199,175,79,0.25);border-radius:8px;">'
-        + (previewUrl ? '<video controls playsinline preload="auto" src="' + previewUrl + '" onplay="window._queuePreviewLock=1" onpause="window._queuePreviewLock=0" onended="window._queuePreviewLock=0" onerror="this.outerHTML=\'<div style=&quot;color:#e74c3c;font-size:15px;padding:8px;&quot;>Preview unavailable — click ↩ RESTORE JOBS or wait for reassemble to finish.</div>\'" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:6px;"></video>'
+        + (previewUrl ? '<video controls playsinline preload="metadata" src="' + previewUrl + '" onplay="window._queuePreviewLock=1" onpause="window._queuePreviewLock=0" onended="window._queuePreviewLock=0" onerror="this.outerHTML=\'<div style=&quot;color:#e74c3c;font-size:15px;padding:8px;&quot;>Preview unavailable — click ↩ RESTORE JOBS or wait for reassemble to finish.</div>\'" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:6px;"></video>'
           + '<div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
           + '<a href="' + previewUrl + '" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:14px;text-decoration:none;">↗ OPEN FULL PREVIEW (new tab)</a>'
           + '<span style="font-size:13px;color:rgba(255,255,255,0.4);font-family:monospace;">Queue refresh pauses while this preview is open</span>'
@@ -15145,12 +15160,22 @@ function renderComposerPreviewMock(specBody, serverSpec) {
     main.style.display = thumb ? '' : 'none';
   }
   var preview = spec && spec.preview ? spec.preview : null;
-  var layoutMode = preview ? preview.layoutMode : (preset === 'facecam_split' ? 'split_screen' : (preset.indexOf('full') >= 0 || preset.indexOf('serpent') >= 0 ? 'full_bleed_crop' : 'blur_pad'));
-  if (bg) bg.style.display = layoutMode === 'blur_pad' ? '' : 'none';
+  var layoutMode = preview && preview.layoutMode ? preview.layoutMode : getEffectiveComposerLayoutMode({ preset: preset, layout: { mode: preset === 'facecam_split' ? 'split_screen' : (preset.indexOf('full') >= 0 || preset.indexOf('serpent') >= 0 ? 'full_bleed_crop' : 'blur_pad') } });
+  if (bg) {
+    if (layoutMode === 'split_screen') {
+      bg.style.display = '';
+      bg.style.clipPath = 'inset(0 0 67% 0)';
+      bg.style.filter = 'blur(8px) brightness(0.55)';
+    } else {
+      bg.style.clipPath = '';
+      bg.style.filter = layoutMode === 'blur_pad' ? 'blur(18px) brightness(0.45)' : 'blur(18px) brightness(0.45)';
+      bg.style.display = layoutMode === 'blur_pad' ? '' : 'none';
+    }
+  }
   if (main) {
-    if (layoutMode === 'full_bleed_crop') { main.style.inset = '0'; main.style.backgroundSize = 'cover'; }
-    else if (layoutMode === 'split_screen') { main.style.inset = ''; main.style.top = '33%'; main.style.bottom = '0'; main.style.backgroundSize = 'cover'; }
-    else { main.style.inset = ''; main.style.top = '18%'; main.style.bottom = '28%'; main.style.backgroundSize = 'contain'; }
+    if (layoutMode === 'full_bleed_crop') { main.style.inset = '0'; main.style.top = '0'; main.style.bottom = '0'; main.style.backgroundSize = 'cover'; }
+    else if (layoutMode === 'split_screen') { main.style.inset = ''; main.style.top = '33%'; main.style.bottom = '0'; main.style.left = '0'; main.style.right = '0'; main.style.backgroundSize = 'cover'; }
+    else { main.style.inset = ''; main.style.top = '18%'; main.style.bottom = '28%'; main.style.left = '5%'; main.style.right = '5%'; main.style.backgroundSize = 'contain'; }
   }
   if (hook) {
     hook.textContent = preview && preview.rankedList ? 'RANKED HOOK' : 'Moment Hook Preview';
@@ -16128,6 +16153,53 @@ var PICKER_PUB_WINDOW_BANDS = {
   'all': { minHours: 720, maxHours: null, label: '30d+' },
   'any': { minHours: 720, maxHours: null, label: '30d+' }
 };
+
+/** Age bands each platform can search reliably in Clip Library. Mixed = intersection. */
+var LIBRARY_TIME_WINDOWS_BY_PLATFORM = {
+  twitch: ['last24h', 'last7d', 'last30d', '7d', '30d', 'all'],
+  kick: ['last24h', 'last7d', 'last30d', '7d', '30d', 'all'],
+  youtube: ['last24h', 'last7d', 'last30d', 'all']
+};
+
+function getLibraryTimeWindowsForPlatforms(platforms) {
+  platforms = platforms || getSelectedStreamerPlatforms();
+  if (!platforms.length) platforms = ['twitch'];
+  var lists = platforms.map(function(p) {
+    return LIBRARY_TIME_WINDOWS_BY_PLATFORM[p] || LIBRARY_TIME_WINDOWS_BY_PLATFORM.twitch;
+  });
+  var allowed = lists[0].slice();
+  for (var i = 1; i < lists.length; i++) {
+    allowed = allowed.filter(function(w) { return lists[i].indexOf(w) >= 0; });
+  }
+  return allowed.length ? allowed : ['last7d'];
+}
+
+function refreshLibraryTimeWindowPills() {
+  var allowed = getLibraryTimeWindowsForPlatforms();
+  var current = (g('library-window') && g('library-window').value) || 'last7d';
+  document.querySelectorAll('#library-window-pills .library-window-pill[data-win]').forEach(function(btn) {
+    var win = btn.getAttribute('data-win');
+    var ok = allowed.indexOf(win) >= 0;
+    btn.style.display = ok ? '' : 'none';
+    btn.disabled = !ok;
+  });
+  var platforms = getSelectedStreamerPlatforms();
+  var ytOnly = platforms.length === 1 && platforms[0] === 'youtube';
+  var mixedYt = platforms.indexOf('youtube') >= 0 && platforms.length > 1;
+  document.querySelectorAll('#library-clip-sort-pills .library-window-pill[data-sort="recent"]').forEach(function(btn) {
+    btn.style.display = ytOnly ? 'none' : '';
+  });
+  var hint = g('library-window-hint');
+  if (hint) {
+    if (ytOnly) hint.textContent = 'YouTube — cumulative windows only (use Last 7D for daily Shorts channels like RickClipit)';
+    else if (mixedYt) hint.textContent = 'Twitch + YouTube — narrow age bands hidden (not reliable on YouTube uploads)';
+    else hint.textContent = platforms.indexOf('twitch') >= 0 && platforms.length === 1
+      ? 'Twitch — all age bands use Helix clip dates'
+      : '';
+  }
+  if (allowed.indexOf(current) < 0) setLibraryWindow(allowed.indexOf('last7d') >= 0 ? 'last7d' : allowed[0]);
+  else syncLibraryWindowToPicker();
+}
 var PICKER_PUB_WINDOW_HOURS = { any: null, '6h': 6, '24h': 24, '48h': 48, '3d': 72, '7d': 168, '30d': 720 };
 var LIBRARY_PICKER_ITEMS_PER = 50;
 
@@ -16305,6 +16377,7 @@ function refreshPickerIfOpen(kind) {
 
 function loadAllPickerFilters() {
   ['news', 'twitch', 'sports'].forEach(loadPickerFilters);
+  refreshLibraryTimeWindowPills();
 }
 
 var _nbaPickerLastDate = '';
@@ -16821,6 +16894,39 @@ function compCreativeDisplayName(preset) {
   return e ? (e.code + ' · ' + e.name) : (preset || 'Creative');
 }
 
+function composerLineupIsLandscape() {
+  var clips = collectCompPickedClips();
+  if (!clips.length) return true;
+  return clips.some(function(p) {
+    var o = (p.clip && p.clip.orientation) || p.orientation || 'landscape';
+    return o !== 'portrait' && o !== '9:16' && o !== 'vertical';
+  });
+}
+
+function getEffectiveComposerLayoutMode(pseudo) {
+  pseudo = pseudo || {};
+  var layout = (pseudo.layout && pseudo.layout.mode) || 'blur_pad';
+  if (pseudo.preset === 'facecam_split') return 'split_screen';
+  if (composerLineupIsLandscape()) return 'split_screen';
+  return layout;
+}
+
+function onCompCreativeContentCxChange(val) {
+  var n = Math.max(0, Math.min(100, parseInt(val, 10) || 50));
+  var lab = g('comp-creative-content-cx-val');
+  if (lab) {
+    var cx = (n / 100).toFixed(2);
+    var hint = n < 42 ? 'Left' : (n > 58 ? 'Right' : 'Centre');
+    lab.textContent = hint + ' · ' + cx;
+  }
+  try {
+    var stored = loadCompCreativePresetFromStorage();
+    stored.contentCx = n;
+    localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+  } catch (e) { /* ignore */ }
+  refreshGenerateComposer(false);
+}
+
 function compCreativeChipList(creative) {
   creative = creative || {};
   var preset = creative.preset || 'classic_blur_pad';
@@ -16840,8 +16946,9 @@ function compCreativeChipList(creative) {
     };
     chips.push(labels[preset] || preset);
   }
-  var layout = (creative.layout && creative.layout.mode) || 'blur_pad';
+  var layout = getEffectiveComposerLayoutMode(creative);
   chips.push(layout === 'full_bleed_crop' ? 'full bleed' : layout === 'split_screen' ? 'facecam split' : 'blur-pad');
+  if (composerLineupIsLandscape() && layout === 'split_screen') chips.push('16:9 → auto split');
   if (creative.hooks && creative.hooks.rankedList && creative.hooks.rankedList.enabled) chips.push('ranked list');
   if (!creative.hooks || creative.hooks.mode !== 'whisper_only') chips.push('hooks');
   if (creative.captions && creative.captions.whisper !== false) chips.push('whisper');
@@ -16956,7 +17063,8 @@ function saveCompCreativePresetToStorage() {
     hookMode: (g('comp-creative-hook-mode') && g('comp-creative-hook-mode').value) || 'both',
     musicBed: (g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'low_trap',
     logoCorner: (g('comp-creative-logo-corner') && g('comp-creative-logo-corner').value) || 'bottom_right',
-    relatedVideoParentId: (g('comp-creative-related-vod') && g('comp-creative-related-vod').value) || ''
+    relatedVideoParentId: (g('comp-creative-related-vod') && g('comp-creative-related-vod').value) || '',
+    contentCx: (g('comp-creative-content-cx') && parseInt(g('comp-creative-content-cx').value, 10)) || 50
   };
   try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   return data;
@@ -17008,6 +17116,12 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.editorial = { enabled: true, introCard: true, ttsBridges: true };
     if (overrides.hooks && overrides.hooks.rankedList) overrides.hooks.rankedList.enabled = true;
   }
+  if (composerLineupIsLandscape()) {
+    overrides = overrides || {};
+    overrides.layout = overrides.layout || {};
+    var cxPct = Number(stored.contentCx);
+    if (Number.isFinite(cxPct)) overrides.layout.contentCx = Math.max(0, Math.min(1, cxPct / 100));
+  }
   return {
     compCreativePreset: preset,
     compCreative: overrides
@@ -17036,11 +17150,18 @@ function refreshCompCreativeChips() {
   }
   var payload = buildCompCreativeRequestPayload('');
   var pseudo = { preset: stored.preset };
-  if (stored.preset === 'full_bleed' || isRankedPreset || stored.preset === 'dahbluh_clean' || stored.preset === 'twitch_comp_vod') {
+  if (stored.preset === 'facecam_split') {
+    pseudo.layout = { mode: 'split_screen' };
+  } else if (stored.preset === 'full_bleed' || isRankedPreset || stored.preset === 'dahbluh_clean' || stored.preset === 'twitch_comp_vod') {
     pseudo.layout = { mode: 'full_bleed_crop' };
   } else {
     pseudo.layout = { mode: 'blur_pad' };
   }
+  var landscapePanel = g('comp-creative-landscape-split');
+  if (landscapePanel) landscapePanel.style.display = composerLineupIsLandscape() ? 'block' : 'none';
+  var cxSlider = g('comp-creative-content-cx');
+  if (cxSlider && stored.contentCx != null && !cxSlider.dataset.userPicked) cxSlider.value = String(stored.contentCx);
+  if (cxSlider && composerLineupIsLandscape()) onCompCreativeContentCxChange(cxSlider.value);
   if (isRankedPreset) {
     pseudo.hooks = { mode: stored.hookMode || 'hook_only', rankedList: { enabled: true, streamer: stored.streamer, theme: stored.theme } };
     pseudo.captions = { whisper: (stored.hookMode || 'hook_only') !== 'hook_only' };
@@ -17096,6 +17217,10 @@ function initCompCreativePanel() {
     if (g('comp-creative-related-vod') && stored.relatedVideoParentId) g('comp-creative-related-vod').value = stored.relatedVideoParentId;
     if (g('comp-creative-logo-corner') && stored.logoCorner) g('comp-creative-logo-corner').value = stored.logoCorner;
     if (g('comp-creative-music-bed') && stored.musicBed) g('comp-creative-music-bed').value = stored.musicBed;
+    if (g('comp-creative-content-cx')) {
+      g('comp-creative-content-cx').value = String(stored.contentCx != null ? stored.contentCx : 50);
+      g('comp-creative-content-cx').oninput = function() { this.dataset.userPicked = '1'; onCompCreativeContentCxChange(this.value); };
+    }
     loadCompCreativeMusicBeds(stored.musicBed);
     refreshCompCreativeChips();
     refreshCompCreativeLabel();
@@ -17673,6 +17798,7 @@ function onStreamerPlatformFilterChange() {
     if (tw) tw.checked = true;
     return;
   }
+  refreshLibraryTimeWindowPills();
   renderStreamerChips();
   if (g('twitch-inline-picker') && g('twitch-inline-picker').style.display !== 'none' && (_twitchPickerStreamers || []).length) {
     previewTwitchClips(true);
@@ -18635,7 +18761,7 @@ function resolvePublishPayload(job) {
   }
   return {
     title: title,
-    description: (prep && prep.description) || yt.description || '',
+    description: yt.description || (prep && prep.description) || '',
     tags: tags,
     pinnedComment: (prep && prep.pinnedComment) || yt.pinnedComment || '',
     tiktokCaption: (prep && prep.tiktokCaption) || tt.caption || '',
@@ -19242,6 +19368,149 @@ function generateShortThumbnail(jobId) {
     if (statusEl) statusEl.textContent = '❌ Request failed / timed out';
   };
   xhr.send(JSON.stringify({ videoPath: videoPath, contentType: job.type || 'short', jobId: jobId }));
+}
+
+function pubIsLongFormJob(job) {
+  if (!job) return false;
+  return !((job.type || '').indexOf('short') > -1 || job.format === 'portrait' || !!job.clipsOnly);
+}
+
+function refreshPubChaptersPanel(job) {
+  var panel = g('pub-chapters-panel');
+  if (!panel) return;
+  if (!pubIsLongFormJob(job)) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = '';
+  var input = g('pub-chapters-input');
+  var status = g('pub-chapters-status');
+  if (!input || !job) return;
+  var saved = (job.publishCopy && job.publishCopy.youtube && job.publishCopy.youtube.chapters)
+    || job.manualChapters || '';
+  if (saved) input.value = String(saved).trim();
+  if (status) {
+    status.textContent = input.value
+      ? 'Loaded from job — PROBE refreshes from assembly MP4s · SAVE merges into YT description'
+      : 'Long-form VOD — click PROBE FROM ASSEMBLY (or paste chapters manually)';
+  }
+}
+
+function estimateChaptersFromSegments() {
+  var job = getCurrentPubJob();
+  var input = g('pub-chapters-input');
+  var status = g('pub-chapters-status');
+  if (!job || !input) return;
+  var est = generateYouTubeChapters(job);
+  input.value = est || '';
+  if (status) status.textContent = est
+    ? 'Rough estimate only — click ⏱ PROBE FROM ASSEMBLY for accurate timestamps, then SAVE'
+    : 'No segments on job — paste chapters manually';
+}
+
+function probeChaptersFromAssembly(autoSave) {
+  var jobId = g('pub-job-select') && g('pub-job-select').value;
+  var input = g('pub-chapters-input');
+  var status = g('pub-chapters-status');
+  if (!jobId) { if (status) status.textContent = '❌ Select a job first'; return; }
+  if (status) status.textContent = '⏳ Probing assembly group MP4s…';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/chapters/probe', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 60000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) {
+        if (status) status.textContent = '❌ ' + (resp.error || 'Probe failed');
+        return;
+      }
+      if (input) input.value = resp.chapters || '';
+      var job = JOBS.find(function(j){ return j.id === jobId; });
+      if (job && resp.saved && resp.publishCopy) {
+        job.manualChapters = resp.chapters;
+        job.publishCopy = resp.publishCopy;
+        saveJobs();
+        refreshPublishDescriptionFromJob(job);
+      } else if (resp.description) {
+        refreshPublishDescriptionFromJob(job, resp.description);
+      }
+      if (status) {
+        status.textContent = '✅ Probed ' + (resp.groupCount || '?') + ' groups'
+          + (resp.saved ? ' — saved to description' : ' — click SAVE to merge into description');
+      }
+      if (resp.saved) {
+        fetchJobCard(jobId, function(err, serverJob) {
+          if (!err && serverJob) mergeServerJobIntoLocal(jobId, serverJob);
+        });
+      }
+    } catch (e) {
+      if (status) status.textContent = '❌ ' + e.message;
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (status) status.textContent = '❌ Probe request failed';
+  };
+  xhr.send(JSON.stringify({ save: autoSave !== false }));
+}
+
+function refreshPublishDescriptionFromJob(job, overrideDesc) {
+  if (!job) return;
+  var pc = job.publishCopy || null;
+  var prep = pc ? publishCopyToPrep(pc) : (job.publishPrep || null);
+  if (!prep && !overrideDesc) return;
+  var desc = overrideDesc || (prep && prep.description) || '';
+  if (g('pub-desc-out')) g('pub-desc-out').textContent = desc;
+  if (g('pub-yt-desc-preview')) g('pub-yt-desc-preview').textContent = desc;
+  if (prep && g('pub-title-out')) {
+    var isShort = (job.type || '').indexOf('short') > -1 || job.format === 'portrait' || !!job.clipsOnly;
+    pubDisplay(prep.title, desc, prep.pinnedComment || '', prep.endscreen || '', prep.cards || '',
+      prep.twitchTitle || prep.title, prep.title, prep.tiktokCaption, prep.igCaption, prep.igAlt || '', isShort);
+  }
+}
+
+function saveManualChapters() {
+  var jobId = g('pub-job-select') && g('pub-job-select').value;
+  var input = g('pub-chapters-input');
+  var status = g('pub-chapters-status');
+  if (!jobId) { if (status) status.textContent = '❌ Select a job first'; return; }
+  if (!input) return;
+  var chapters = String(input.value || '').trim();
+  if (!chapters) { if (status) status.textContent = '❌ Paste at least one chapter line (0:00 Intro)'; return; }
+  if (status) status.textContent = '⏳ Saving chapters…';
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/chapters', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 30000;
+  xhr.onload = function() {
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      if (!resp.ok) {
+        if (status) status.textContent = '❌ ' + (resp.error || 'Save failed');
+        return;
+      }
+      var job = JOBS.find(function(j){ return j.id === jobId; });
+      if (job) {
+        job.manualChapters = resp.chapters;
+        job.publishCopy = resp.publishCopy;
+        saveJobs();
+        refreshPublishDescriptionFromJob(job, resp.description);
+      } else if (resp.description) {
+        if (g('pub-desc-out')) g('pub-desc-out').textContent = resp.description;
+        if (g('pub-yt-desc-preview')) g('pub-yt-desc-preview').textContent = resp.description;
+      }
+      if (status) status.textContent = '✅ Chapters saved — merged into YT description (Gate 5 will upload this)';
+      fetchJobCard(jobId, function(err, serverJob) {
+        if (!err && serverJob) mergeServerJobIntoLocal(jobId, serverJob);
+      });
+    } catch (e) {
+      if (status) status.textContent = '❌ ' + e.message;
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    if (status) status.textContent = '❌ Save request failed';
+  };
+  xhr.send(JSON.stringify({ chapters: chapters }));
 }
 
 function regeneratePublishCopy(jobId) {
@@ -20966,8 +21235,9 @@ function getCurrentPubJob() {
 function pubCopy(id, btn) {
   var el = document.getElementById(id);
   if (!el) return;
+  var text = el.value != null ? el.value : el.textContent;
   var ta = document.createElement('textarea');
-  ta.value = el.textContent;
+  ta.value = text;
   document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
   var orig = btn.textContent; btn.textContent = 'COPIED!';
   setTimeout(function(){ btn.textContent = orig; }, 1500);
@@ -20980,37 +21250,112 @@ function pubToggleDesc() {
   el.style.maxHeight = folded ? 'none' : '56px';
 }
 
+function resolveJobDisplayTitle(job) {
+  if (!job) return 'Untitled';
+  var payload = null;
+  try { payload = resolvePublishPayload(job); } catch (_e) { /* non-fatal */ }
+  if (payload && payload.title && String(payload.title).trim()) return String(payload.title).trim();
+  var custom = (job.titleCandidates || []).find(function(c) {
+    return c && c.operatorCustom && c.selected && String(c.text || '').trim();
+  });
+  if (custom) return String(custom.text).trim();
+  var pc = resolvePublishCopy(job);
+  if (pc) {
+    var prep = publishCopyToPrep(pc);
+    if (prep && prep.title && String(prep.title).trim()) return String(prep.title).trim();
+  }
+  if (job.title && String(job.title).trim() && job.title !== 'Untitled Job') return String(job.title).trim();
+  return jobTypeLabel(job) + ' job';
+}
+
+function publishJobTitleDedupeKey(job) {
+  var title = resolveJobDisplayTitle(job).toLowerCase().replace(/#\S+/g, '').replace(/\s+/g, ' ').trim();
+  if (title.length >= 12) return title;
+  return job.scriptJobId || job.id || title;
+}
+
+function jobPublishRecencyMs(job) {
+  var t = job.assembledAt || job.savedAt || job.queuePinnedAt || job.created;
+  return t ? Date.parse(t) : 0;
+}
+
+function isPublishReadyJob(job) {
+  if (!job || !job.id) return false;
+  return !!(job.driveUrl || job.finalUrl || job.localPreviewUrl || job.assembledAt
+    || resolvePublishCopy(job)
+    || job.stage === 'awaiting_review' || job.stage === 'metadata_review'
+    || job.stage === 'gate5_failed' || job.stage === 'published' || job.republishNeeded);
+}
+
+function dedupePublishJobsByTitle(jobs) {
+  var best = {};
+  (jobs || []).forEach(function(job) {
+    if (!job || !job.id) return;
+    var key = publishJobTitleDedupeKey(job);
+    if (!best[key] || jobPublishRecencyMs(job) > jobPublishRecencyMs(best[key])) best[key] = job;
+  });
+  return Object.keys(best).map(function(k) { return best[k]; })
+    .sort(function(a, b) { return jobPublishRecencyMs(b) - jobPublishRecencyMs(a); });
+}
+
 function pubPopulateJobDropdown() {
   var sel = g('pub-job-select');
   if (!sel) return;
-  // Keep placeholder option, rebuild the rest
-  while (sel.options.length > 1) sel.remove(1);
-  // Show all jobs ready for review or publish (clip comps + HeyGen batches)
-  var candidates = JOBS.filter(function(j) {
-    var hasDone = j.segments && j.segments.some(function(s){ return s.status === 'completed'; });
-    var reviewReady = j.stage === 'awaiting_review' || j.stage === 'assembled' || j.stage === 'metadata_review';
-    return hasDone || j.finalUrl || j.driveUrl || j.url || j.assembledAt || j.clipsOnly || reviewReady
-      || j.status === 'all_sent' || j.status === 'completed';
-  });
-  if (!candidates.length) {
-    var opt = document.createElement('option');
-    opt.value = ''; opt.disabled = true;
-    opt.textContent = 'No finished jobs yet — run a CLIPS COMP or complete a HeyGen batch first';
-    sel.appendChild(opt);
-    return;
+  var prev = sel.value;
+
+  function renderList(jobs) {
+    while (sel.options.length > 1) sel.remove(1);
+    var candidates = dedupePublishJobsByTitle(jobs.filter(isPublishReadyJob));
+    if (!candidates.length) {
+      var emptyOpt = document.createElement('option');
+      emptyOpt.value = '';
+      emptyOpt.disabled = true;
+      emptyOpt.textContent = 'No publish-ready jobs — pin a finished job in Job Queue first';
+      sel.appendChild(emptyOpt);
+      return;
+    }
+    candidates.forEach(function(job) {
+      var opt = document.createElement('option');
+      opt.value = job.id;
+      var title = resolveJobDisplayTitle(job);
+      var titleCut = title.length > 90 ? title.slice(0, 87) + '…' : title;
+      var typeShort = jobTypeLabel(job);
+      var stageHint = job.stage === 'published' ? ' · published'
+        : (job.republishNeeded ? ' · new cut'
+          : (job.stage === 'metadata_review' ? ' · fix SEO' : ''));
+      opt.textContent = titleCut + ' · ' + typeShort + stageHint;
+      sel.appendChild(opt);
+    });
+    if (prev && candidates.some(function(j) { return j.id === prev; })) sel.value = prev;
   }
-  candidates.forEach(function(job) {
-    var opt = document.createElement('option');
-    opt.value = job.id;
-    var typeLabel = (job.type||'video').toUpperCase().replace('-',' ');
-    var dateLabel = new Date(job.created).toLocaleDateString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    var canvaTag = job.canvaUrl ? ' ✓ Canva' : '';
-    var segCount = job.segments ? job.segments.filter(function(s){ return s.status==='completed'; }).length + '/' + job.segments.length + ' segs' : '';
-    var seoTag = (job.publishPrep || resolvePublishCopy(job)) ? ' ✓ SEO' : '';
-    var stageTag = job.stage === 'awaiting_review' ? ' ⏸ REVIEW' : '';
-    opt.textContent = typeLabel + ' — ' + dateLabel + ' (' + segCount + ')' + canvaTag + seoTag + stageTag;
-    sel.appendChild(opt);
-  });
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', CFG.ffmpegUrl + '/jobs?restore=1', true);
+  xhr.timeout = 20000;
+  xhr.onload = function() {
+    var serverJobs = [];
+    try {
+      var resp = JSON.parse(xhr.responseText);
+      serverJobs = resp.jobs || [];
+      serverJobs.forEach(function(sj) {
+        var id = sj.jobId || sj.id;
+        if (!id) return;
+        mergeServerJobIntoLocal(id, sj, { skipRender: true });
+      });
+    } catch (_e) { /* fall through */ }
+    var merged = serverJobs.map(function(sj) {
+      var id = sj.jobId || sj.id;
+      return JOBS.find(function(j) { return j.id === id; }) || buildLocalJobFromServerCard(sj);
+    }).filter(Boolean);
+    if (!merged.length) {
+      merged = JOBS.filter(function(j) { return isJobQueued(j) && isPublishReadyJob(j); });
+    }
+    renderList(merged);
+  };
+  xhr.onerror = xhr.ontimeout = function() {
+    renderList(JOBS.filter(function(j) { return isJobQueued(j) && isPublishReadyJob(j); }));
+  };
+  xhr.send();
 }
 
 // CPD-980: mute Content ID claimed ranges on the selected job's final video
@@ -21069,18 +21414,23 @@ function pubJobSelected() {
     g('pub-canva-link').href = job.canvaUrl;
   } else { canvaRow.style.display = 'none'; }
 
-  // Assembled video preview
-  var videoUrl = job.driveUrl || (job.finalUrl && job.finalUrl.indexOf('http') === 0 ? job.finalUrl : '');
+  // Assembled video preview — prefer local /download/ (R2 driveUrl can be stale pre-credits)
+  var videoUrl = resolveJobPreviewUrl(job);
+  if (!videoUrl) {
+    var legacyUrl = job.driveUrl || (job.finalUrl && job.finalUrl.indexOf('http') === 0 ? job.finalUrl : '');
+    if (legacyUrl) {
+      videoUrl = legacyUrl + (legacyUrl.indexOf('?') > -1 ? '&' : '?') + 'v=' + encodeURIComponent(String(job.previewRevision || job.assemblyId || (job.assembledAt ? Date.parse(job.assembledAt) : Date.now())));
+    }
+  }
   var videoRow = g('pub-video-row');
   var videoPreview = g('pub-video-preview');
   var videoPlayer = g('pub-video-player');
   if (videoUrl) {
-    var bustedVideoUrl = videoUrl + (videoUrl.indexOf('?') > -1 ? '&' : '?') + 'v=' + (job.assembledAt ? Date.parse(job.assembledAt) : Date.now());
-    if (videoRow) { videoRow.style.display = ''; g('pub-video-link').href = bustedVideoUrl; }
+    if (videoRow) { videoRow.style.display = ''; g('pub-video-link').href = videoUrl; }
     if (videoPreview && videoPlayer) {
       videoPreview.style.display = '';
-      if (videoPlayer.getAttribute('src') !== bustedVideoUrl) {
-        videoPlayer.src = bustedVideoUrl;
+      if (videoPlayer.getAttribute('src') !== videoUrl) {
+        videoPlayer.src = videoUrl;
         videoPlayer.load();
       }
     }
@@ -21102,6 +21452,7 @@ function pubJobSelected() {
   loadPubChecklist(jobId);
   loadPublishIntelHints(job);
   loadPublishSeoDemand(job);
+  refreshPubChaptersPanel(job);
 
   var auditEl = g('pub-seo-audit');
   if (auditEl) {
@@ -21475,6 +21826,8 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
   // Show/hide long-form-only elements
   var lfOnly = g('pub-yt-longform-only');
   if (lfOnly) lfOnly.style.display = isShort ? 'none' : '';
+  var chaptersPanel = g('pub-chapters-panel');
+  if (chaptersPanel) chaptersPanel.style.display = isShort ? 'none' : '';
   var descLabel = g('pub-desc-label');
   if (descLabel) descLabel.textContent = isShort ? 'YOUTUBE SHORTS DESCRIPTION + #SHORTS' : 'DESCRIPTION + TIMESTAMPS + HASHTAGS';
 
@@ -21488,12 +21841,22 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
   g('pub-yt-desc-preview').textContent = desc;
   g('pub-yt-desc-preview').style.maxHeight = '56px';
 
-  // Auto-generate YouTube chapters from segments
-  var chaptersEl = g('pub-chapters-out');
+  // YouTube chapters — panel lives in top card (pub-chapters-panel)
   var _pubJob = getCurrentPubJob();
-  if (chaptersEl && _pubJob && _pubJob.segments) {
-    var chapters = generateYouTubeChapters(_pubJob);
-    chaptersEl.textContent = chapters || 'No chapters available — assemble job first.';
+  if (_pubJob) refreshPubChaptersPanel(_pubJob);
+  var chaptersInput = g('pub-chapters-input');
+  var chaptersStatus = g('pub-chapters-status');
+  if (chaptersInput && _pubJob && !chaptersInput.value) {
+    var savedChapters = '';
+    var pcCh = _pubJob.publishCopy && _pubJob.publishCopy.youtube && _pubJob.publishCopy.youtube.chapters;
+    if (pcCh) savedChapters = String(pcCh).trim();
+    else if (_pubJob.manualChapters) savedChapters = String(_pubJob.manualChapters).trim();
+    chaptersInput.value = savedChapters || '';
+    if (chaptersStatus && savedChapters) {
+      chaptersStatus.textContent = 'Loaded from job — PROBE refreshes from assembly MP4s · SAVE merges into YT description';
+    }
+  } else if (chaptersStatus && chaptersInput && chaptersInput.value) {
+    chaptersStatus.textContent = 'Loaded from job — PROBE refreshes from assembly MP4s · SAVE merges into YT description';
   }
 
   // TikTok
@@ -21575,7 +21938,7 @@ function pubDisplay(title, desc, comment, endscreen, cards, twitchTitle, preview
     {label:'Title length', pass:tLen<=100, warn:tLen>60&&tLen<=100, msg:tLen+' chars '+(tLen<=60?'— ideal under 60':'— ok, shorter is better')},
     {label:'First line keyword-rich', pass:desc.split('\n')[0].length>30, msg:desc.split('\n')[0].slice(0,60)+'...'},
     {label:'Description word count', pass:wordCount>=125, warn:wordCount>=100&&wordCount<125, msg:wordCount+' words — aim 125-250+'},
-    {label:'Timestamps included', pass:desc.indexOf('00:00')>-1, msg:desc.indexOf('00:00')>-1?'YouTube surfaces timestamped videos higher':'Add timestamps to boost discoverability'},
+    {label:'Timestamps included', pass:desc.indexOf('00:00')>-1||desc.indexOf('0:00')>-1||desc.indexOf('CHAPTERS:')>-1, msg:(desc.indexOf('0:00')>-1||desc.indexOf('CHAPTERS:')>-1)?'YouTube surfaces timestamped videos higher':'Add chapters in Publish tab → SAVE CHAPTERS'},
     {label:'Hashtags in description', pass:hashInDesc>=3&&hashInDesc<=15, msg:hashInDesc+' hashtags in YT description'},
     {label:'Social profile links', pass:/tiktok\.com\/@clipzworldstreams/i.test(desc)&&/instagram\.com\/clipzworldnews/i.test(desc), msg:'TikTok + Instagram URLs in description'},
     {label:'Channel CTA', pass:desc.indexOf('Subscribe')>-1, msg:'Subscribe call to action present'},

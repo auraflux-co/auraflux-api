@@ -4476,6 +4476,107 @@ app.get('/job/:id/cold-open/preview', (req, res) => {
   res.sendFile(path.resolve(p));
 });
 
+// POST /job/:id/chapters/probe — ffprobe assembly group MP4s for accurate timestamps; optional auto-save
+app.post('/job/:id/chapters/probe', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const { computeChaptersForJobCard, applyChaptersToPublishCopy, normalizeChapterBlock } = require('./lib/youtube_chapters');
+  const autoSave = req.body?.save !== false;
+
+  try {
+    const result = computeChaptersForJobCard(card);
+    if (!result.chapters) {
+      return res.status(404).json({
+        ok: false,
+        error: card.assemblyId
+          ? `No group MP4s in tmp for ${card.assemblyId} — re-assemble or paste chapters manually`
+          : 'No assemblyId on job card',
+      });
+    }
+
+    let publishCopy = card.publishCopy || card.state?.savedOutputs?.publishCopy || null;
+    if (autoSave) {
+      const { normalizePublishCopyShape } = require('./lib/publish_copy_normalize');
+      publishCopy = normalizePublishCopyShape(publishCopy || {});
+      publishCopy = applyChaptersToPublishCopy(publishCopy, result.chapters);
+      card.manualChapters = normalizeChapterBlock(result.chapters);
+      card.publishCopy = publishCopy;
+      card.state = card.state || {};
+      card.state.savedOutputs = card.state.savedOutputs || {};
+      card.state.savedOutputs.publishCopy = publishCopy;
+      saveJobCard(jobId, card);
+      try {
+        const { saveOutput } = require('./lib/job_spec');
+        saveOutput(jobId, 'publishCopy', publishCopy).catch(() => {});
+      } catch (_) { /* non-fatal */ }
+    }
+
+    res.json({
+      ok: true,
+      chapters: result.chapters,
+      bodySec: result.bodySec,
+      source: result.source,
+      groupCount: result.groupCount,
+      saved: autoSave,
+      description: publishCopy?.youtube?.description || null,
+      publishCopy: autoSave ? publishCopy : undefined,
+    });
+  } catch (err) {
+    console.error(`[chapters/probe:${jobId}]`, err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /job/:id/chapters — operator manual YouTube chapters (long-form); merged into publishCopy description
+app.post('/job/:id/chapters', (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const raw = String(req.body?.chapters || '').trim();
+  const {
+    normalizeChapterBlock,
+    applyChaptersToPublishCopy,
+    mergeChaptersIntoYoutubeDescription,
+  } = require('./lib/youtube_chapters');
+
+  const chapters = normalizeChapterBlock(raw);
+  if (!chapters) {
+    return res.status(400).json({ ok: false, error: 'No valid chapter lines — use format "0:00 Intro" (first must start at 0:00)' });
+  }
+  if (!/^0:00\s/.test(chapters.split('\n')[0])) {
+    return res.status(400).json({ ok: false, error: 'First chapter must start at 0:00' });
+  }
+
+  try {
+    const { normalizePublishCopyShape } = require('./lib/publish_copy_normalize');
+    let publishCopy = normalizePublishCopyShape(card.publishCopy || card.state?.savedOutputs?.publishCopy || {});
+    publishCopy = applyChaptersToPublishCopy(publishCopy, chapters);
+    card.manualChapters = chapters;
+    card.publishCopy = publishCopy;
+    card.state = card.state || {};
+    card.state.savedOutputs = card.state.savedOutputs || {};
+    card.state.savedOutputs.publishCopy = publishCopy;
+    saveJobCard(jobId, card);
+    try {
+      const { saveOutput } = require('./lib/job_spec');
+      saveOutput(jobId, 'publishCopy', publishCopy).catch(() => {});
+    } catch (_) { /* non-fatal */ }
+
+    res.json({
+      ok: true,
+      chapters,
+      description: publishCopy.youtube?.description || mergeChaptersIntoYoutubeDescription('', chapters),
+      publishCopy,
+    });
+  } catch (err) {
+    console.error(`[chapters:${jobId}]`, err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // POST /job/:id/regenerate-publish-copy — rebuild SEO metadata and re-run metadata QA
 app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
   const jobId = req.params.id;
@@ -4496,6 +4597,9 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'No script context on job card — re-assemble or restore jobs first' });
     }
 
+    const { resolveChaptersForJob, applyChaptersToPublishCopy } = require('./lib/youtube_chapters');
+    const existingChapters = resolveChaptersForJob(card);
+
     const fakeReq = {
       body: {
         contentType,
@@ -4507,6 +4611,7 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
         platforms,
         clipCompBrief: card.clipCompBrief || null,
         compCreative: card.compCreative || null,
+        chapters: existingChapters || null,
       },
     };
     const fakeRes = {
@@ -4534,6 +4639,9 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
       contentType,
     });
     publishCopy = normalizePublishCopyShape(publishCopy);
+    if (!isShort && existingChapters) {
+      publishCopy = applyChaptersToPublishCopy(publishCopy, existingChapters);
+    }
 
     const jobSpec = { ...card, contentType, formType: isShort ? 'short' : 'compilation', streamers, items };
     const metaCheck = validatePublishMetadata(jobSpec, metadataFromPublishCopy(publishCopy));

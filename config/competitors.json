@@ -3,7 +3,13 @@
     { "handle": "core_fx", "note": "Shorts-only, emoji drama titles, 943K avg Short views" },
     { "handle": "stream.serpent", "note": "Shorts-only, curiosity templates" },
     { "handle": "DahBluh", "note": "Shorts funnel + edited comp VODs — closest model to ours" },
-    { "handle": "rickclipit", "note": "Drama Shorts, streamer-name titles" }
+    { "handle": "rickclipit", "note": "Drama Shorts, streamer-name titles" },
+    { "handle": "imgoochy", "note": "366K subs — Shorts + 17min comp VODs; JasonTheWeen focus, heavy hashtag SEO" },
+    { "handle": "UltronOnline", "note": "Unhinged Twitch streamer compilation Shorts — weekly drops, hype titles" },
+    { "handle": "ContentDelta", "note": "Streamer growth/editing meta — study titles + long-form packaging" },
+    { "handle": "StreamScheme", "note": "Clip-format strategy + Shorts — packaging patterns for streamer moments" },
+    { "handle": "PhoenixyClips", "note": "How-to + clip curation — viral clipping workflow reference" },
+    { "handle": "jaymoji", "note": "Kai Cenat / AMP Shorts — high-velocity streamer-name hooks" }
   ],
   "limitPerChannel": 30
 }

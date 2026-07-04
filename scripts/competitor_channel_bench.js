@@ -16,6 +16,11 @@ const HANDLES = [
   'stream.serpent',
   'core_fx',
   'DahBluh',
+  'UltronOnline',
+  'ContentDelta',
+  'StreamScheme',
+  'PhoenixyClips',
+  'jaymoji',
   'clipzworldnews',
 ];
 
