@@ -120,7 +120,7 @@ export default function JobsHubPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard href="/myjobs/active"  label="Active"           count={jobs === null ? null : active.length}   sub="queued + running" variant="active" />
+        <StatCard href="/myjobs/active"  label="In Progress"      count={jobs === null ? null : active.length}   sub="queued + running" variant="active" />
         <StatCard href="/myjobs/active"  label="Needs attention"  count={jobs === null ? null : held.length}     sub="held or failed"   variant="warn" />
         <StatCard href="/review"         label="Ready to review"  count={jobs === null ? null : staged.length}   sub="awaiting approval" variant="success" />
         <StatCard href="/myjobs/history" label="Completed"        count={jobs === null ? null : complete.length} sub="all time" />

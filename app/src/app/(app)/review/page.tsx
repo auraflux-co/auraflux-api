@@ -24,7 +24,7 @@ import { useRole } from '@/hooks/use-role';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { updateJobSchedule, getSchedulePrefs, type SchedulePrefs, type ScheduleSlot } from '@/lib/api';
+import { updateJobSchedule, getSchedulePrefs, type SchedulePrefs, type ScheduleSlot, requestJobRevision, operatorJobAction } from '@/lib/api';
 import { Separator } from '@/components/ui/separator';
 import { apiFetch, listJobs, type Job } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
@@ -32,6 +32,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { jobDisplayTitle, jobStatusLabel, portalStatusLabel, platformLabel, entryTypeLabel, formatUserError, isReviewQueueJob, addOnLabel, resolveTemplateDisplayName, createdByLabel, isDashboardOrder } from '@/lib/job-labels';
 import { labelForContentType } from '@/lib/content-types';
 import { useBrand } from '@/contexts/brand-context';
+import { cn } from '@/lib/utils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -483,6 +484,15 @@ function toDatetimeLocal(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+const REVISION_CATEGORIES = [
+  { id: 'script',     label: 'Script / voiceover' },
+  { id: 'thumbnail',  label: 'Thumbnail' },
+  { id: 'clips',      label: 'Clips / footage' },
+  { id: 'branding',   label: 'Branding / overlays' },
+  { id: 'audio',      label: 'Audio / mix' },
+  { id: 'other',      label: 'Other' },
+] as const;
+
 function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: string; platforms: string[]; getToken: () => Promise<string | null>; isSuperAdmin: boolean }) {
   const [assets, setAssets]     = useState<StagingAssets | null>(null);
   const [loading, setLoading]   = useState(true);
@@ -491,7 +501,11 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
   const [publishResult, setPublishResult] = useState<{ error?: string | null } | null>(null);
   const [showScript, setShowScript] = useState(false);
   const [redoing, setRedoing]   = useState(false);
-  const [redoResult, setRedoResult] = useState<{ ok?: boolean; error?: string } | null>(null);
+  const [redoResult, setRedoResult] = useState<{ ok?: boolean; error?: string; message?: string } | null>(null);
+  const [showSendBack, setShowSendBack] = useState(false);
+  const [revisionFeedback, setRevisionFeedback] = useState('');
+  const [revisionCategories, setRevisionCategories] = useState<string[]>([]);
+  const [sendingRevision, setSendingRevision] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduleAt, setScheduleAt]       = useState('');
   const [scheduling, setScheduling]       = useState(false);
@@ -556,14 +570,37 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
     }
   }, [scheduleAt, jobId, getToken]);
 
-  const handleRequestRedo = useCallback(async () => {
+  const handleRequestRevision = useCallback(async () => {
+    const text = revisionFeedback.trim();
+    if (!text) return;
+    setSendingRevision(true);
+    try {
+      const token = await getToken();
+      const res = await requestJobRevision(
+        jobId,
+        { feedback: text, categories: revisionCategories },
+        token ?? undefined,
+      );
+      setRedoResult({ ok: true, message: res.message });
+      setShowSendBack(false);
+      setRevisionFeedback('');
+      setRevisionCategories([]);
+    } catch (e: unknown) {
+      const msg = e && typeof e === 'object' && 'message' in e ? String((e as { message: string }).message) : 'Send-back failed. Please try again.';
+      setRedoResult({ error: formatUserError(msg) });
+    } finally {
+      setSendingRevision(false);
+    }
+  }, [jobId, getToken, revisionFeedback, revisionCategories]);
+
+  const handleOperatorRedo = useCallback(async () => {
     setRedoing(true);
     try {
       const token = await getToken();
-      await apiFetch(`/jobs/${jobId}/retry`, { method: 'POST', token: token ?? undefined });
-      setRedoResult({ ok: true });
+      await operatorJobAction(jobId, 'retry', token ?? undefined);
+      setRedoResult({ ok: true, message: 'Pipeline re-run started.' });
     } catch {
-      setRedoResult({ error: 'Redo request failed. Please try again.' });
+      setRedoResult({ error: 'Operator redo failed. Please try again.' });
     } finally {
       setRedoing(false);
     }
@@ -718,12 +755,54 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
           </div>
         )}
 
-        {/* Redo result */}
+        {/* Revision / redo result */}
         {redoResult && (
           <div className="rounded-md border p-3 text-xs">
             {redoResult.error
               ? <p className="text-red-600">{formatUserError(redoResult.error)}</p>
-              : <p className="text-blue-600">Redo requested — job re-queued for processing.</p>}
+              : <p className="text-green-600">{redoResult.message ?? 'Request submitted.'}</p>}
+          </div>
+        )}
+
+        {showSendBack && !redoResult?.ok && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-950/20 p-4 space-y-3">
+            <p className="text-xs font-semibold">What needs to change?</p>
+            <p className="text-[11px] text-muted-foreground">
+              Describe the issue — your team (or Collab on Guided/Managed plans) will revise and notify you when it&apos;s ready to review again.
+            </p>
+            <textarea
+              value={revisionFeedback}
+              onChange={(e) => setRevisionFeedback(e.target.value)}
+              rows={3}
+              placeholder="e.g. Wrong clip order, thumbnail text cut off, script tone too formal…"
+              className="w-full text-sm border rounded-md px-2.5 py-1.5 bg-background resize-none"
+            />
+            <div className="flex flex-wrap gap-1.5">
+              {REVISION_CATEGORIES.map((c) => {
+                const on = revisionCategories.includes(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setRevisionCategories((prev) =>
+                      on ? prev.filter((x) => x !== c.id) : [...prev, c.id]
+                    )}
+                    className={cn(
+                      'text-[10px] px-2 py-0.5 rounded-full border transition-colors',
+                      on ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground',
+                    )}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" disabled={!revisionFeedback.trim() || sendingRevision} onClick={handleRequestRevision}>
+                {sendingRevision ? 'Sending…' : 'Submit feedback'}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowSendBack(false)}>Cancel</Button>
+            </div>
           </div>
         )}
 
@@ -826,16 +905,28 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
             </a>
           )}
 
-          {/* Request Redo */}
-          {!redoResult && assets.status !== 'published' && !scheduleResult && (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={redoing}
-              onClick={handleRequestRedo}
-            >
-              {redoing ? 'Requesting…' : 'Request redo'}
-            </Button>
+          {/* Send back for changes (customer) / operator redo */}
+          {!redoResult?.ok && assets.status !== 'published' && !scheduleResult && !showSendBack && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowSendBack(true)}
+              >
+                Send back for changes
+              </Button>
+              {isSuperAdmin && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground"
+                  disabled={redoing}
+                  onClick={handleOperatorRedo}
+                >
+                  {redoing ? 'Re-running…' : 'Operator redo'}
+                </Button>
+              )}
+            </>
           )}
 
           {/* Status messages */}

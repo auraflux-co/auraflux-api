@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — CPD-1185/1186/1187 production fixes deploying to auraflux-api.
+**Deploy Mode:** dev — CPD-1200 customer review workflow + per-brand source channels shipping to auraflux-api + auraflux-app.
 
-**Last Updated:** 2026-07-01 (CPD-1190 policy) — Feature graduation policy codified: untested features stay on C0 until Rob declares customer-ready; prod port requires explicit CPD port ticket (`.cursor/rules/c0-render-separation.mdc` + HOW page 42762242). Docs-only — no deploy.
+**Last Updated:** 2026-07-06 (CPD-1200) — Default review-before-publish; customer send-back + revision notifications; saved Twitch username profile coins per sub-brand; In Progress vs Review Queue UX.
 
 **Last Updated:** 2026-06-21 (Sprint 7 close) — pricing sync, E2E Gemini UX gate, ops runbooks, C0 repo policy.
 **Last Updated:** 2026-06-21 (CPD-1013/1014/999/1026) — trusted domains, publish guard, worker rootCause, portal5 poll test.

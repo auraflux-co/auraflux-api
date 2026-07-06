@@ -15,11 +15,14 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useBrand } from '@/contexts/brand-context';
 import { cn } from '@/lib/utils';
 import {
   fetchSourceContent,
   fetchYouTubePlaylists,
   getSourceChannels,
+  saveSourceChannels,
+  resolveSourceChannel,
   type SourceChannels,
   type SourcePlatform,
   type SourceItem,
@@ -107,6 +110,30 @@ const DATE_RANGES: { value: SourceDateRange; label: string }[] = [
   { value: '7d',  label: 'Last 7d'   },
   { value: '30d', label: 'Last 30d'  },
 ];
+
+/** First saved handle for this brand — pre-fills the browse search box (no OAuth required). */
+function pickSavedChannel(channels: SourceChannels): { platform: SourcePlatform; username: string } | null {
+  const twitch = channels.twitchLogin?.trim();
+  if (twitch) return { platform: 'twitch', username: twitch };
+  const kick = channels.kickUsername?.trim();
+  if (kick) return { platform: 'kick', username: kick };
+  const yt = channels.youtubeHandle?.trim();
+  if (yt) return { platform: 'youtube', username: yt };
+  return null;
+}
+
+interface SavedChannelChip {
+  platform:    SourcePlatform;
+  username:    string;
+  displayName: string | null;
+  avatarUrl:   string | null;
+}
+
+const CHANNEL_KEY: Record<SourcePlatform, keyof SourceChannels> = {
+  twitch:  'twitchLogin',
+  kick:    'kickUsername',
+  youtube: 'youtubeHandle',
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -313,9 +340,12 @@ interface Props {
 
 export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilter, onClose, multiClipMode = false }: Props) {
   const { getToken, isLoaded }           = useAuth();
+  const { activeBrand }                  = useBrand();
+  const activeBrandId                    = activeBrand?.id;
   const [platform, setPlatform]         = useState<SourcePlatform | null>(null);
   const [username, setUsername]         = useState('');
   const [savedChannels, setSavedChannels] = useState<SourceChannels>({});
+  const [savedChips, setSavedChips]       = useState<SavedChannelChip[]>([]);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [items, setItems]               = useState<SourceItem[]>([]);
@@ -370,18 +400,61 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
     return list.filter((i) => i.title.toLowerCase().includes(q));
   }, [items, keyword, contentTypeFilter, platform]);
 
-  // Load saved source channel defaults once on mount
+  // Load per-brand saved handles, resolve avatars, pre-fill browse search box.
   useEffect(() => {
     let cancelled = false;
+    setPlatform(null);
+    setUsername('');
+    setItems([]);
+    setSelected(new Set());
+    setChannelName('');
+    setChannelAvatar(null);
+    setError(null);
+    setSavedChannels({});
+    setSavedChips([]);
     (async () => {
       try {
         const token = await getToken();
         const res   = await getSourceChannels(token ?? undefined);
-        if (!cancelled) setSavedChannels(res.sourceChannels ?? {});
+        if (cancelled) return;
+        const channels = res.sourceChannels ?? {};
+        setSavedChannels(channels);
+
+        const chipEntries: { platform: SourcePlatform; username: string }[] = [];
+        if (channels.twitchLogin?.trim()) chipEntries.push({ platform: 'twitch', username: channels.twitchLogin.trim() });
+        if (channels.kickUsername?.trim()) chipEntries.push({ platform: 'kick', username: channels.kickUsername.trim() });
+        if (channels.youtubeHandle?.trim()) chipEntries.push({ platform: 'youtube', username: channels.youtubeHandle.trim() });
+
+        const chips: SavedChannelChip[] = await Promise.all(
+          chipEntries.map(async ({ platform, username }) => {
+            try {
+              const resolved = await resolveSourceChannel(platform, username, token ?? undefined);
+              return {
+                platform,
+                username,
+                displayName: resolved.channel.displayName ?? resolved.channel.title ?? username,
+                avatarUrl:   resolved.channel.avatarUrl ?? resolved.channel.thumbnailUrl ?? null,
+              };
+            } catch {
+              return { platform, username, displayName: username, avatarUrl: null };
+            }
+          }),
+        );
+        if (cancelled) return;
+        setSavedChips(chips);
+
+        const saved = pickSavedChannel(channels);
+        if (saved) {
+          setPlatform(saved.platform);
+          setUsername(saved.username);
+          const match = chips.find((c) => c.platform === saved.platform);
+          if (match?.displayName) setChannelName(match.displayName);
+          if (match?.avatarUrl) setChannelAvatar(match.avatarUrl);
+        }
       } catch { /* non-blocking */ }
     })();
     return () => { cancelled = true; };
-  }, [getToken]);
+  }, [getToken, activeBrandId]);
 
   // Sync contentType when the parent changes the filter (e.g. user flips sourceIntent).
   // If a channel is already loaded, re-fetch immediately with the new type.
@@ -411,6 +484,24 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
     })();
     return () => { cancelled = true; };
   }, [platform, username, channelName, getToken]);
+
+  const selectSavedChip = useCallback((chip: SavedChannelChip) => {
+    setPlatform(chip.platform);
+    setUsername(chip.username);
+    setItems([]);
+    setSelected(new Set());
+    setError(null);
+    setChannelName(chip.displayName ?? chip.username);
+    setChannelAvatar(chip.avatarUrl);
+    setConfirmed(false);
+    setPlaylists([]);
+    setActivePlaylist(null);
+    setDateRange('all');
+    setContentType(contentTypeFilter ?? 'all');
+    setDurationPreset(0);
+    setKeyword('');
+    playlistLoadedFor.current = null;
+  }, [contentTypeFilter]);
 
   const handlePlatformSelect = useCallback((p: SourcePlatform) => {
     const prefill =
@@ -477,6 +568,12 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
       setItems(newItems);
       setChannelName(res.channel?.displayName || res.channel?.name || targetUsername);
       setChannelAvatar(res.channel?.avatarUrl || null);
+      // Persist browsed handle for this brand (username-only — no OAuth required)
+      const key = CHANNEL_KEY[targetPlatform];
+      if (key && targetUsername) {
+        saveSourceChannels({ [key]: targetUsername }, token ?? undefined).catch(() => {});
+        setSavedChannels((prev) => ({ ...prev, [key]: targetUsername }));
+      }
       if (isNewChannel) {
         setSelected(new Set());
       } else {
@@ -587,6 +684,42 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>
           </button>
+        </div>
+      )}
+
+      {/* Saved channel profile coins (per brand — username only, OAuth optional) */}
+      {savedChips.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Saved channels</p>
+          <div className="flex flex-wrap gap-2">
+            {savedChips.map((chip) => {
+              const pCfg = PLATFORMS.find((p) => p.id === chip.platform);
+              const active = platform === chip.platform && username === chip.username;
+              return (
+                <button
+                  key={`${chip.platform}:${chip.username}`}
+                  type="button"
+                  onClick={() => selectSavedChip(chip)}
+                  className={cn(
+                    'flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border text-xs transition-all',
+                    active
+                      ? `${pCfg?.activeBorder ?? 'border-primary'} ${pCfg?.accentBg ?? 'bg-primary/10'}`
+                      : 'border-border/60 hover:border-border bg-card',
+                  )}
+                >
+                  {chip.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={chip.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <span className={cn('w-7 h-7 rounded-full flex items-center justify-center shrink-0', pCfg?.accentBg)}>
+                      {pCfg?.icon}
+                    </span>
+                  )}
+                  <span className="font-medium truncate max-w-[120px]">{chip.displayName ?? chip.username}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

@@ -28,6 +28,8 @@ const POLL_MS = 30_000;
 
 const DOT_CLASS: Record<string, string> = {
   job_ready:             'bg-emerald-500',
+  job_revision_ready:    'bg-emerald-500',
+  job_revision_requested:'bg-amber-500',
   job_published:         'bg-emerald-500',
   job_failed:            'bg-destructive',
   credits_exhausted:     'bg-destructive',

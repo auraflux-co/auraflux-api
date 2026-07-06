@@ -965,6 +965,20 @@ export async function saveBulkMapping(
   });
 }
 
+// ─── Customer revision (send-back) ───────────────────────────────────────────
+
+export async function requestJobRevision(
+  jobId: string,
+  payload: { feedback: string; categories?: string[] },
+  token?: string,
+): Promise<{ ok: boolean; message?: string; status?: string }> {
+  return apiFetch(`/jobs/${jobId}/request-revision`, {
+    method: 'POST',
+    body:   JSON.stringify(payload),
+    token,
+  });
+}
+
 // ─── Operator job actions (CPD-104) ──────────────────────────────────────────
 
 export type OperatorAction = 'retry' | 'advance' | 'rollback';

@@ -616,7 +616,7 @@ function JobBuilderPageInner() {
   const [scheduledStart, setScheduledStart] = useState<'now' | 'scheduled'>('now');
   const [scheduledAt,    setScheduledAt]    = useState('');
   // CPD-511/513: publish mode + optional metadata override
-  const [publishMode,    setPublishMode]    = useState<'immediate' | 'review'>('immediate');
+  const [publishMode,    setPublishMode]    = useState<'immediate' | 'review'>('review');
   const [pubTitle,       setPubTitle]       = useState('');
   const [pubDescription, setPubDescription] = useState('');
   const [pubTags,           setPubTags]           = useState('');
@@ -901,7 +901,8 @@ function JobBuilderPageInner() {
       features:       Array.from(features),
       extensions:     [],
       durationMins,
-      publishMode:    'immediate',
+      // Review-before-publish uses staging (Portal 5 off); immediate skips to auto-publish path
+      ...(publishMode === 'immediate' ? { publishMode: 'immediate' as const } : {}),
       featureConfig:  Object.keys(mergedConfig).length ? mergedConfig : undefined,
       addOns:         Object.keys(addOns).length > 0 ? addOns : undefined,
       // Include the selected preset name so the backend can persist it as templateName

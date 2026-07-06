@@ -49,9 +49,9 @@ const PLATFORMS: {
   {
     key: 'twitchLogin', platform: 'twitch',
     label: 'Twitch', placeholder: 'hasanabi',
-    hint: 'Channel login name (lowercase, no @)',
+    hint: 'Channel login name (lowercase, no @) — saved for this brand; OAuth optional when available',
     color: 'bg-purple-600',
-    // oauthPlatform: 'twitch', // CPD-353b — enable once TWITCH_CLIENT_SECRET is set
+    // oauthPlatform: 'twitch', // CPD-353b — enable when TWITCH_CLIENT_SECRET is set (optional for users who can OAuth)
   },
   {
     key: 'kickUsername', platform: 'kick',

@@ -1,8 +1,9 @@
 'use client';
 /**
- * /myjobs/active — In-flight jobs (CPD-112)
+ * /myjobs/active — In-progress jobs (CPD-112)
  *
  * Shows jobs with status: queued | running | held | failed.
+ * Finished output ready for publish lives on Review Queue (/review).
  * Polls every 15s silently. Operators see inline actions.
  */
 
@@ -142,7 +143,8 @@ export default function ActiveJobsPage() {
   return (
     <PageShell maxWidth="4xl">
       <PageHeader
-        title="Active Jobs"
+        title="In Progress"
+        subtitle="Jobs still in the pipeline. When output is ready, they move to Review Queue."
         subtitle="Scheduled, in progress, and jobs that need your attention"
       >
         <button
