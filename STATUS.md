@@ -1,6 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — CPD-1231 revision directives + operator sendback/retry API on auraflux-api + auraflux-app.
+**Deploy Mode:** dev — portal5 Upload-Post spam loop fix deploying to auraflux-api.
+
+**Last Updated:** 2026-07-06 — fix(portal5): stop 15min duplicate upload loop (poll timeout re-submit bug); Render deploy triggered.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
