@@ -1329,7 +1329,7 @@ export async function getSourceChannels(
 
 export async function getChannelConnections(
   token?: string,
-): Promise<{ ok: boolean; connections: SourceChannelOAuthConnection[] }> {
+): Promise<{ ok: boolean; connections: SourceChannelOAuthConnection[]; oauthPlatforms?: string[] }> {
   return apiFetch('/channels/connections', { token });
 }
 

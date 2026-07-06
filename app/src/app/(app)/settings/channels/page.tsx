@@ -96,6 +96,7 @@ export default function SourceChannelsPage() {
   const [isPending, start]        = useTransition();
 
   const [connections, setConnections] = useState<Record<string, SourceConnection>>({});
+  const [oauthPlatforms, setOauthPlatforms] = useState<string[]>(['kick']);
   const [oauthError, setOauthError]   = useState<string | null>(null);
   const [oauthSuccess, setOauthSuccess] = useState<string | null>(null);
 
@@ -114,6 +115,7 @@ export default function SourceChannelsPage() {
     try {
       const data = await getChannelConnections(t);
       setConnections(connectionsMap(data.connections));
+      if (data.oauthPlatforms?.length) setOauthPlatforms(data.oauthPlatforms);
     } catch (e) {
       setOauthError(e instanceof Error ? e.message : 'Failed to load channel connections');
     }
@@ -268,7 +270,9 @@ export default function SourceChannelsPage() {
           const v = verify[p.key];
           const avatar = v.channel?.avatarUrl ?? v.channel?.thumbnailUrl ?? null;
           const displayName = v.channel?.displayName ?? v.channel?.title ?? null;
-          const oauthConn = p.oauthPlatform ? connections[p.oauthPlatform] : null;
+          const oauthPlatform = p.oauthPlatform
+            ?? (p.platform === 'twitch' && oauthPlatforms.includes('twitch') ? 'twitch' : undefined);
+          const oauthConn = oauthPlatform ? connections[oauthPlatform] : null;
           const isOauthConnected = !!oauthConn;
 
           return (
@@ -297,8 +301,8 @@ export default function SourceChannelsPage() {
                     <Label htmlFor={p.key} className="af-label font-medium">
                       {p.label}
                     </Label>
-                    {/* OAuth connect/disconnect button (Kick only for now) */}
-                    {p.oauthPlatform && (
+                    {/* OAuth connect/disconnect — Kick + Twitch when server exposes oauthPlatforms */}
+                    {oauthPlatform && (
                       isOauthConnected ? (
                         <div className="flex items-center gap-2">
                           <span className="af-caption text-green-600 dark:text-green-400 font-medium">
@@ -308,7 +312,7 @@ export default function SourceChannelsPage() {
                             variant="ghost"
                             size="sm"
                             className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive"
-                            onClick={() => handleDisconnect(p.oauthPlatform!)}
+                            onClick={() => handleDisconnect(oauthPlatform)}
                           >
                             Disconnect
                           </Button>
@@ -318,7 +322,7 @@ export default function SourceChannelsPage() {
                           variant="outline"
                           size="sm"
                           className="h-7 text-xs"
-                          onClick={() => handleConnect(p.oauthPlatform!)}
+                          onClick={() => handleConnect(oauthPlatform)}
                         >
                           Connect with {p.label}
                         </Button>
@@ -360,7 +364,7 @@ export default function SourceChannelsPage() {
                         <p className="af-caption text-destructive">{v.error ?? 'Channel not found'}</p>
                       )}
                       {v.state === 'idle' && (
-                        <p className="af-caption">{p.hint}{p.oauthPlatform ? ' — or use Connect above for a better experience.' : ''}</p>
+                        <p className="af-caption">{p.hint}{oauthPlatform ? ' — or use Connect above for OAuth.' : ''}</p>
                       )}
                       {v.state === 'loading' && (
                         <p className="af-caption">Verifying…</p>
