@@ -123,6 +123,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-source-map-bottom-crop { position:absolute; border:2px solid #c7af4f; box-shadow:0 0 0 9999px rgba(0,0,0,0.35); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
 .composer-source-map-bottom-crop span { margin-top:2px; font-size:10px; font-weight:800; letter-spacing:0.06em; color:#c7af4f; background:rgba(0,0,0,0.65); padding:2px 5px; border-radius:3px; pointer-events:none; }
 .composer-source-map-cx { position:absolute; top:0; bottom:0; width:2px; background:rgba(199,175,79,0.85); z-index:3; pointer-events:none; transform:translateX(-50%); display:none; }
+.composer-source-map-focus-crop { position:absolute; border:2px solid #3498db; box-shadow:0 0 0 9999px rgba(0,0,0,0.48); z-index:2; cursor:move; display:none; align-items:flex-start; justify-content:center; box-sizing:border-box; }
+.composer-source-map-focus-crop span { margin-top:2px; font-size:10px; font-weight:800; letter-spacing:0.06em; color:#3498db; background:rgba(0,0,0,0.65); padding:2px 5px; border-radius:3px; pointer-events:none; }
 .composer-source-map-hint { font-size:11px; line-height:1.4; color:rgba(255,255,255,0.45); text-align:center; max-width:340px; margin:0 auto; }
 .comp-creative-source-map { position:relative; width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; background:#000; border:1px solid rgba(46,204,113,0.35); margin:6px 0 8px; cursor:crosshair; touch-action:none; }
 .comp-creative-source-map-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
@@ -131,6 +133,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .comp-creative-source-map-bottom-crop { position:absolute; border:2px solid #c7af4f; box-shadow:0 0 0 9999px rgba(0,0,0,0.35); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
 .comp-creative-source-map-bottom-crop span { margin-top:2px; font-size:9px; font-weight:800; color:#c7af4f; background:rgba(0,0,0,0.65); padding:1px 4px; border-radius:2px; pointer-events:none; }
 .comp-creative-source-map-cx { position:absolute; top:0; bottom:0; width:2px; background:rgba(199,175,79,0.85); z-index:3; pointer-events:none; transform:translateX(-50%); display:none; }
+.comp-creative-source-map-focus-crop { position:absolute; border:2px solid #3498db; box-shadow:0 0 0 9999px rgba(0,0,0,0.48); z-index:2; cursor:move; display:none; align-items:flex-start; justify-content:center; box-sizing:border-box; }
+.comp-creative-source-map-focus-crop span { margin-top:2px; font-size:9px; font-weight:800; color:#3498db; background:rgba(0,0,0,0.65); padding:1px 4px; border-radius:2px; pointer-events:none; }
 .comp-split-how { margin-bottom:10px;padding:8px 10px;border-radius:6px;background:rgba(0,0,0,0.25);font-size:12px;line-height:1.55;color:rgba(255,255,255,0.62); }
 .comp-split-how strong { color:rgba(46,204,113,0.95); }
 .comp-split-how em { color:rgba(199,175,79,0.95); font-style:normal; }
@@ -1062,7 +1066,20 @@ input[type="url"], input[type="password"], select, textarea {
                       </select>
                     </label>
                     <div id="comp-creative-landscape-single-hint" style="display:none;margin-bottom:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(199,175,79,0.35);background:rgba(199,175,79,0.08);color:rgba(255,255,255,0.78);font-size:13px;line-height:1.45;">
-                      Uses your Creative preset as one portrait frame (<strong>full bleed</strong> or <strong>blur-pad</strong>) — not two copies of the same wide shot. Pick this when the clip has no separate facecam region.
+                      Uses your Creative preset as one portrait frame (<strong>full bleed</strong> or <strong>blur-pad</strong>) — not two copies of the same wide shot. Drag the <strong>cyan box</strong> below to place the portrait crop on the wide frame.
+                    </div>
+                    <div id="comp-creative-landscape-single-controls" style="display:none;">
+                      <div style="font-weight:700;color:rgba(52,152,219,0.95);margin-bottom:6px;">Portrait crop on wide clip</div>
+                      <div class="comp-split-how">
+                        Twitch clip = <strong>wide 16:9</strong>. Short = <strong>tall 9:16</strong>.<br>
+                        The <strong>cyan box</strong> is the portrait window assembly keeps — drag it or use sliders to centre on facecam / action.
+                      </div>
+                      <div id="comp-creative-fullbleed-sliders" style="margin:8px 0 4px;">
+                        <div style="font-size:12px;color:rgba(52,152,219,0.9);margin-bottom:4px;font-weight:700;">Cyan box — portrait focus</div>
+                        <label style="display:block;font-size:12px;">Horizontal <input type="range" id="comp-creative-fullbleed-cx" min="0" max="100" value="50" style="width:100%;accent-color:#3498db;" oninput="onCompCreativeFullBleedCropChange()"></label>
+                        <label style="display:block;font-size:12px;">Vertical <input type="range" id="comp-creative-fullbleed-cy" min="0" max="100" value="50" style="width:100%;accent-color:#3498db;" oninput="onCompCreativeFullBleedCropChange()"></label>
+                        <div id="comp-creative-fullbleed-val" style="font-family:monospace;font-size:12px;color:rgba(52,152,219,0.85);margin-top:4px;">Focus · cx0.50 cy0.50</div>
+                      </div>
                     </div>
                     <div id="comp-creative-landscape-split-controls">
                     <div style="font-weight:700;color:rgba(46,204,113,0.95);margin-bottom:6px;">Stack two pieces of the wide clip</div>
@@ -1073,15 +1090,6 @@ input[type="url"], input[type="password"], select, textarea {
                       <em>Gold</em> → bottom half of Short (body / scene / 2nd figure)<br>
                       The “zoom” feeling = a small region scaled up to fill half the phone screen.<br>
                       At <strong>50/50 split</strong>, green + gold boxes are the <strong>same shape</strong> (one per output half).
-                    </div>
-                    <div id="comp-creative-source-map-wrap" style="display:none;">
-                      <div style="font-size:11px;color:rgba(46,204,113,0.9);font-weight:700;letter-spacing:0.06em;margin-bottom:4px;">SOURCE CLIP — click/drag boxes</div>
-                      <div id="comp-creative-source-map" class="comp-creative-source-map">
-                        <div id="comp-creative-source-map-bg" class="comp-creative-source-map-bg"></div>
-                        <div id="comp-creative-source-map-crop" class="comp-creative-source-map-crop"><span>TOP</span></div>
-                        <div id="comp-creative-source-map-bottom-crop" class="comp-creative-source-map-bottom-crop"><span>BOTTOM</span></div>
-                        <div id="comp-creative-source-map-cx" class="comp-creative-source-map-cx"></div>
-                      </div>
                     </div>
                     <label style="display:block;font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:4px;">Quick layout
                       <select id="comp-creative-top-pane-subject" onchange="onCompCreativeTopPaneSubjectChange()" style="width:100%;margin-top:4px;background:#0d1524;color:#fff;border:1px solid rgba(46,204,113,0.35);padding:4px 6px;font-size:14px;border-radius:3px;">
@@ -1124,6 +1132,16 @@ input[type="url"], input[type="password"], select, textarea {
                     </label>
                     <div id="comp-creative-content-cx-val" style="font-family:monospace;font-size:13px;color:rgba(199,175,79,0.85);margin-top:4px;">Centre · 0.50</div>
                     </div>
+                    </div>
+                    <div id="comp-creative-source-map-wrap" style="display:none;">
+                      <div id="comp-creative-source-map-label" style="font-size:11px;color:rgba(46,204,113,0.9);font-weight:700;letter-spacing:0.06em;margin-bottom:4px;">SOURCE CLIP — click/drag boxes</div>
+                      <div id="comp-creative-source-map" class="comp-creative-source-map">
+                        <div id="comp-creative-source-map-bg" class="comp-creative-source-map-bg"></div>
+                        <div id="comp-creative-source-map-crop" class="comp-creative-source-map-crop"><span>TOP</span></div>
+                        <div id="comp-creative-source-map-bottom-crop" class="comp-creative-source-map-bottom-crop"><span>BOTTOM</span></div>
+                        <div id="comp-creative-source-map-focus-crop" class="comp-creative-source-map-focus-crop"><span>FOCUS</span></div>
+                        <div id="comp-creative-source-map-cx" class="comp-creative-source-map-cx"></div>
+                      </div>
                     </div>
                   </div>
                   <div id="comp-creative-adv" class="gen-comp-creative-adv">
@@ -1229,9 +1247,10 @@ input[type="url"], input[type="password"], select, textarea {
                           <div id="composer-source-map-bg" class="composer-source-map-bg"></div>
                           <div id="composer-source-map-crop" class="composer-source-map-crop"><span>TOP</span></div>
                           <div id="composer-source-map-bottom-crop" class="composer-source-map-bottom-crop"><span>BOTTOM</span></div>
+                          <div id="composer-source-map-focus-crop" class="composer-source-map-focus-crop"><span>FOCUS</span></div>
                           <div id="composer-source-map-cx" class="composer-source-map-cx"></div>
                         </div>
-                        <div class="composer-source-map-hint">Green = top figure · Gold = bottom figure · click empty area to move active box</div>
+                        <div id="composer-source-map-hint" class="composer-source-map-hint">Green = top figure · Gold = bottom figure · click empty area to move active box</div>
                       </div>
                       <div id="composer-features" class="composer-features"></div>
                     </div>
@@ -15303,6 +15322,12 @@ function formatComposerPreviewCaption(d, errMsg) {
     var r = ls.facecamRect;
     parts.push('crop x' + Number(r.x).toFixed(2) + ' y' + Number(r.y).toFixed(2));
   }
+  if (ls.cropCx != null && Number.isFinite(Number(ls.cropCx))) {
+    parts.push('focus cx ' + Number(ls.cropCx).toFixed(2));
+  }
+  if (ls.cropCy != null && Number.isFinite(Number(ls.cropCy))) {
+    parts.push('cy ' + Number(ls.cropCy).toFixed(2));
+  }
   if (ls.contentCx != null && Number.isFinite(Number(ls.contentCx))) {
     parts.push('action cx ' + Number(ls.contentCx).toFixed(2));
   }
@@ -15320,7 +15345,11 @@ function buildComposerReadyLine(spec) {
   if (composerLineupIsLandscape() && eff === 'split_screen') {
     line += ' · assembly layout: ' + effLabel.toUpperCase() + ' (16:9 clip)';
   } else if (composerLineupIsLandscape() && eff !== 'split_screen') {
+    var fb = readFullBleedCropFromDom();
     line += ' · assembly layout: ' + effLabel.toUpperCase() + ' single view (16:9 clip)';
+    if (fb.cropCx !== 0.5 || fb.cropCy !== 0.5) {
+      line += ' · focus cx' + fb.cropCx.toFixed(2) + ' cy' + fb.cropCy.toFixed(2);
+    }
   }
   return line;
 }
@@ -17454,16 +17483,105 @@ function clampFacecamRect(rect) {
   return { x: x, y: y, w: w, h: h };
 }
 
+/** Portrait window width on a 16:9 source (9:16 crop ÷ 16:9 frame). */
+var FULL_BLEED_PORTRAIT_W = (9 / 16) / (16 / 9);
+var FULL_BLEED_PORTRAIT_H = 1;
+
+function fullBleedFocusRect(cropCx, cropCy) {
+  var w = FULL_BLEED_PORTRAIT_W;
+  var h = FULL_BLEED_PORTRAIT_H;
+  var cx = Number.isFinite(Number(cropCx)) ? Number(cropCx) : 0.5;
+  var cy = Number.isFinite(Number(cropCy)) ? Number(cropCy) : 0.5;
+  return {
+    x: Math.max(0, Math.min(1 - w, cx - w / 2)),
+    y: Math.max(0, Math.min(1 - h, cy - h / 2)),
+    w: w,
+    h: h,
+  };
+}
+
+function readFullBleedCropFromDom() {
+  var cxPct = (g('comp-creative-fullbleed-cx') && g('comp-creative-fullbleed-cx').value) || 50;
+  var cyPct = (g('comp-creative-fullbleed-cy') && g('comp-creative-fullbleed-cy').value) || 50;
+  return {
+    cropCx: pctToNorm(cxPct),
+    cropCy: pctToNorm(cyPct),
+  };
+}
+
+function writeFullBleedCropToDom(cropCx, cropCy) {
+  var cx = Number.isFinite(Number(cropCx)) ? Math.max(0, Math.min(1, Number(cropCx))) : 0.5;
+  var cy = Number.isFinite(Number(cropCy)) ? Math.max(0, Math.min(1, Number(cropCy))) : 0.5;
+  var cxEl = g('comp-creative-fullbleed-cx');
+  var cyEl = g('comp-creative-fullbleed-cy');
+  if (cxEl) cxEl.value = String(Math.round(cx * 100));
+  if (cyEl) cyEl.value = String(Math.round(cy * 100));
+  var lab = g('comp-creative-fullbleed-val');
+  if (lab) lab.textContent = 'Focus · cx' + cx.toFixed(2) + ' cy' + cy.toFixed(2);
+}
+
+function applyFullBleedCropToDom(cropCx, cropCy, skipRefresh) {
+  writeFullBleedCropToDom(cropCx, cropCy);
+  renderCompCreativeSourceMap();
+  if (!skipRefresh) {
+    try {
+      var stored = loadCompCreativePresetFromStorage();
+      stored.cropCx = pctToNorm((g('comp-creative-fullbleed-cx') && g('comp-creative-fullbleed-cx').value) || 50);
+      stored.cropCy = pctToNorm((g('comp-creative-fullbleed-cy') && g('comp-creative-fullbleed-cy').value) || 50);
+      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+    } catch (err) { /* ignore */ }
+    refreshGenerateComposer(false);
+  }
+}
+
+function onCompCreativeFullBleedCropChange(skipSave) {
+  var crop = readFullBleedCropFromDom();
+  writeFullBleedCropToDom(crop.cropCx, crop.cropCy);
+  renderCompCreativeSourceMap();
+  if (!skipSave) {
+    try {
+      var stored = loadCompCreativePresetFromStorage();
+      stored.cropCx = crop.cropCx;
+      stored.cropCy = crop.cropCy;
+      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+    } catch (err) { /* ignore */ }
+    refreshGenerateComposer(false);
+  }
+}
+
+function composerLandscapeSingleViewEnabled(stored) {
+  return composerLineupIsLandscape() && !composerLandscapeSplitEnabled(stored);
+}
+
 function paintSourceMapOverlay(prefix, topRect, bottomRect) {
   var bg = g(prefix + '-bg');
   var crop = g(prefix + '-crop');
   var bottomCrop = g(prefix + '-bottom-crop');
+  var focusCrop = g(prefix + '-focus-crop');
   var cxLine = g(prefix + '-cx');
   var thumb = getLeadCompClipThumb();
-  var customBottom = isBottomPaneCustomCrop();
+  var singleMode = composerLandscapeSingleViewEnabled();
   if (bg) bg.style.backgroundImage = thumb ? ('url(' + thumb + ')') : 'none';
+  if (singleMode) {
+    if (crop) crop.style.display = 'none';
+    if (bottomCrop) bottomCrop.style.display = 'none';
+    if (cxLine) cxLine.style.display = 'none';
+    var fb = readFullBleedCropFromDom();
+    var focusRect = fullBleedFocusRect(fb.cropCx, fb.cropCy);
+    if (focusCrop) {
+      focusCrop.style.display = 'flex';
+      focusCrop.style.left = (focusRect.x * 100) + '%';
+      focusCrop.style.top = (focusRect.y * 100) + '%';
+      focusCrop.style.width = (focusRect.w * 100) + '%';
+      focusCrop.style.height = (focusRect.h * 100) + '%';
+    }
+    return;
+  }
+  if (focusCrop) focusCrop.style.display = 'none';
+  var customBottom = isBottomPaneCustomCrop();
   topRect = clampFacecamRect(topRect || readFacecamSlidersFromDom());
   if (crop) {
+    crop.style.display = 'flex';
     crop.style.left = (topRect.x * 100) + '%';
     crop.style.top = (topRect.y * 100) + '%';
     crop.style.width = (topRect.w * 100) + '%';
@@ -17491,10 +17609,24 @@ function renderCompCreativeSourceMap(overrideTopRect, overrideBottomRect) {
   var show = composerLineupIsLandscape() && (collectCompPickedClips().length > 0 || !!_composerVodSegment);
   var block = g('composer-source-map-block');
   var wrap = g('comp-creative-source-map-wrap');
+  var singleMode = composerLandscapeSingleViewEnabled();
   if (block) block.style.display = show ? 'block' : 'none';
   if (wrap) wrap.style.display = show ? 'block' : 'none';
+  var mapLabel = g('comp-creative-source-map-label');
+  if (mapLabel) {
+    mapLabel.textContent = singleMode
+      ? 'SOURCE CLIP — drag cyan portrait box'
+      : 'SOURCE CLIP — click/drag boxes';
+    mapLabel.style.color = singleMode ? 'rgba(52,152,219,0.95)' : 'rgba(46,204,113,0.9)';
+  }
+  var hint = g('composer-source-map-hint');
+  if (hint) {
+    hint.textContent = singleMode
+      ? 'Cyan = portrait window kept in Short · click empty area or drag box to move focus'
+      : 'Green = top figure · Gold = bottom figure · click empty area to move active box';
+  }
   if (!show) return;
-  refreshBottomPaneModeUI();
+  if (!singleMode) refreshBottomPaneModeUI();
   paintSourceMapOverlay('composer-source-map', overrideTopRect, overrideBottomRect);
   paintSourceMapOverlay('comp-creative-source-map', overrideTopRect, overrideBottomRect);
   if (!window._composerSourceMapBound) {
@@ -17525,6 +17657,23 @@ function sourceMapPointFromEvent(e, mapId) {
 }
 
 function onSourceMapPointerDown(e, mapId) {
+  var singleMode = composerLandscapeSingleViewEnabled();
+  if (singleMode) {
+    var pt = sourceMapPointFromEvent(e, mapId);
+    var focusCrop = g(mapId + '-focus-crop');
+    var onFocus = focusCrop && (e.target === focusCrop || (focusCrop.contains && focusCrop.contains(e.target)));
+    var fb = readFullBleedCropFromDom();
+    var rect = fullBleedFocusRect(fb.cropCx, fb.cropCy);
+    if (onFocus) {
+      _sourceMapActivePane = 'fullbleed';
+      _sourceMapDrag = { mapId: mapId, pane: 'fullbleed', startPt: pt, startRect: rect, startCrop: fb };
+      _sourceMapDragMoved = false;
+    } else {
+      applyFullBleedCropToDom(pt.x, pt.y, true);
+    }
+    e.preventDefault();
+    return;
+  }
   var topCrop = g(mapId + '-crop');
   var bottomCrop = g(mapId + '-bottom-crop');
   if (!topCrop) return;
@@ -17562,6 +17711,14 @@ function onSourceMapPointerMove(e) {
   var dx = pt.x - _sourceMapDrag.startPt.x;
   var dy = pt.y - _sourceMapDrag.startPt.y;
   if (Math.abs(dx) > 0.004 || Math.abs(dy) > 0.004) _sourceMapDragMoved = true;
+  if (_sourceMapDrag.pane === 'fullbleed') {
+    var sr = _sourceMapDrag.startRect;
+    var nx = Math.max(0, Math.min(1 - sr.w, sr.x + dx));
+    var ny = Math.max(0, Math.min(1 - sr.h, sr.y + dy));
+    applyFullBleedCropToDom(nx + sr.w / 2, ny + sr.h / 2, true);
+    e.preventDefault();
+    return;
+  }
   var sr = _sourceMapDrag.startRect;
   var next = {
     x: Math.max(0, Math.min(1 - sr.w, sr.x + dx)),
@@ -17579,13 +17736,19 @@ function onSourceMapPointerUp() {
   if (_sourceMapDragMoved) {
     try {
       var stored = loadCompCreativePresetFromStorage();
-      stored.facecamRect = readFacecamSlidersFromDom();
-      stored.bottomPaneRect = readBottomPaneSlidersFromDom();
-      stored.bottomPaneMode = readBottomPaneModeFromDom();
-      stored.topPaneSubject = 'custom';
+      if (_sourceMapDrag.pane === 'fullbleed') {
+        var crop = readFullBleedCropFromDom();
+        stored.cropCx = crop.cropCx;
+        stored.cropCy = crop.cropCy;
+      } else {
+        stored.facecamRect = readFacecamSlidersFromDom();
+        stored.bottomPaneRect = readBottomPaneSlidersFromDom();
+        stored.bottomPaneMode = readBottomPaneModeFromDom();
+        stored.topPaneSubject = 'custom';
+        var subj = g('comp-creative-top-pane-subject');
+        if (subj) subj.value = 'custom';
+      }
       localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
-      var subj = g('comp-creative-top-pane-subject');
-      if (subj) subj.value = 'custom';
     } catch (err) { /* ignore */ }
     refreshGenerateComposer(false);
   }
@@ -17734,7 +17897,19 @@ function applyOperatorLayoutFromJobCard(job) {
     } catch (e) { /* ignore */ }
     refreshLandscapeSplitUI();
   }
-  if (layout.landscapeSplit === false) return;
+  if (layout.landscapeSplit === false) {
+    if (layout.cropCx != null || layout.cropCy != null) {
+      writeFullBleedCropToDom(layout.cropCx, layout.cropCy);
+      try {
+        var storedSingle = loadCompCreativePresetFromStorage();
+        if (layout.cropCx != null) storedSingle.cropCx = Number(layout.cropCx);
+        if (layout.cropCy != null) storedSingle.cropCy = Number(layout.cropCy);
+        localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(storedSingle));
+      } catch (e) { /* ignore */ }
+    }
+    renderCompCreativeSourceMap();
+    return;
+  }
   var subj = g('comp-creative-top-pane-subject');
   if (subj) subj.value = layout.topPaneSubject || 'custom';
   if (layout.facecamRect) writeFacecamSlidersToDom(layout.facecamRect);
@@ -17785,12 +17960,15 @@ function readLayoutPayloadForAssembly(jobId) {
   if (jobId && editingJobId !== jobId) {
     var job = JOBS.find(function(j) { return j.id === jobId; });
     var cardLayout = job && job.compCreative && job.compCreative.layout;
-    if (cardLayout && (cardLayout.facecamRect || cardLayout.bottomPaneRect || cardLayout.operatorLocked)) {
+    if (cardLayout && (cardLayout.facecamRect || cardLayout.bottomPaneRect
+      || cardLayout.cropCx != null || cardLayout.cropCy != null || cardLayout.operatorLocked)) {
       return {
         mode: cardLayout.mode || 'split_screen',
         landscapeSplit: cardLayout.landscapeSplit !== false,
         facecamRect: cardLayout.facecamRect || null,
         contentCx: cardLayout.contentCx != null ? cardLayout.contentCx : null,
+        cropCx: cardLayout.cropCx != null ? cardLayout.cropCx : null,
+        cropCy: cardLayout.cropCy != null ? cardLayout.cropCy : null,
         topHeight: cardLayout.topHeight || null,
         topPaneSubject: cardLayout.topPaneSubject || 'custom',
         bottomPaneMode: cardLayout.bottomPaneMode || 'custom_crop',
@@ -17803,10 +17981,16 @@ function readLayoutPayloadForAssembly(jobId) {
   var preset = stored.preset || 'classic_blur_pad';
   var splitOn = composerLandscapeSplitEnabled(stored);
   if (!splitOn) {
-    return {
+    var crop = readFullBleedCropFromDom();
+    var layoutOut = {
       mode: presetLayoutModeForCompose(preset),
       landscapeSplit: false,
     };
+    if (stored.cropCx != null || stored.cropCy != null || crop.cropCx !== 0.5 || crop.cropCy !== 0.5) {
+      layoutOut.cropCx = stored.cropCx != null ? stored.cropCx : crop.cropCx;
+      layoutOut.cropCy = stored.cropCy != null ? stored.cropCy : crop.cropCy;
+    }
+    return layoutOut;
   }
   var subject = stored.topPaneSubject || 'stacked_figures';
   var layoutPreset = COMP_CREATIVE_LAYOUT_PRESETS[subject];
@@ -17925,7 +18109,7 @@ function renderLayoutEditHandoffSummary(jobId) {
   var el = g('composer-handoff-summary');
   if (!el) return;
   el.innerHTML = '<div style="font-size:14px;color:rgba(46,204,113,0.95);letter-spacing:1px;margin-bottom:6px;">LAYOUT EDIT · ' + escapeHtml(jobId) + '</div>'
-    + '<div style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:8px;">Adjust crops in Creative Mode (green panel). Then click <strong>↩ SAVE LAYOUT · RE-ASSEMBLE</strong> below — <em>not</em> EXECUTE (EXECUTE creates a new job).</div>'
+    + '<div style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:8px;">Adjust crops in Creative Mode — <strong>green/gold</strong> for split, <strong>cyan box</strong> for single view. Then click <strong>↩ SAVE LAYOUT · RE-ASSEMBLE</strong> below — <em>not</em> EXECUTE (EXECUTE creates a new job).</div>'
     + '<button type="button" class="btn btn-gold btn-sm" onclick="sendJobBackLayout(window._editingLayoutJobId)">↩ SAVE LAYOUT · RE-ASSEMBLE</button>'
     + ' <button type="button" class="btn btn-outline btn-sm" onclick="clearLayoutEditorHandoff(); nav(\'queue\')">← Job Queue (cancel)</button>';
   syncComposerExecuteButtonForLayoutMode();
@@ -18034,7 +18218,7 @@ function refreshCompCreativeLabel() {
   if (composerLineupIsLandscape() && preset === 'full_bleed' && composerLandscapeSplitEnabled()) {
     el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(46,204,113,0.35);background:rgba(46,204,113,0.08);color:rgba(46,204,113,0.95);font-size:13px;">16:9 clip · <strong>split screen</strong> — tune green/gold boxes below. Switch to <em>Single view</em> above for one full frame.</div>';
   } else if (composerLineupIsLandscape() && preset === 'full_bleed' && !composerLandscapeSplitEnabled()) {
-    el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(199,175,79,0.35);background:rgba(199,175,79,0.08);color:rgba(199,175,79,0.95);font-size:13px;">16:9 clip · <strong>single view</strong> — full bleed portrait (no split panes).</div>';
+    el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(52,152,219,0.35);background:rgba(52,152,219,0.08);color:rgba(52,152,219,0.95);font-size:13px;">16:9 clip · <strong>single view</strong> — drag the cyan portrait box below to place the crop (same control as split, one frame).</div>';
   }
 }
 
@@ -18075,19 +18259,27 @@ function onCompCreativeLandscapeLayoutChange() {
   try {
     var stored = loadCompCreativePresetFromStorage();
     stored.landscapeLayout = sel.value === 'single' ? 'single' : 'split_screen';
+    if (sel.value === 'single' && stored.cropCx == null && stored.facecamRect) {
+      stored.cropCx = stored.facecamRect.x + stored.facecamRect.w / 2;
+      stored.cropCy = stored.facecamRect.y + stored.facecamRect.h / 2;
+      writeFullBleedCropToDom(stored.cropCx, stored.cropCy);
+    }
     localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
   } catch (e) { /* ignore */ }
   refreshLandscapeSplitUI();
+  renderCompCreativeSourceMap();
   refreshCompCreativeChips();
 }
 
 function refreshLandscapeSplitUI() {
   var splitOn = composerLandscapeSplitEnabled();
   var controls = g('comp-creative-landscape-split-controls');
+  var singleControls = g('comp-creative-landscape-single-controls');
   var singleHint = g('comp-creative-landscape-single-hint');
   var sel = g('comp-creative-landscape-layout');
   if (sel) sel.value = splitOn ? 'split_screen' : 'single';
   if (controls) controls.style.display = splitOn ? '' : 'none';
+  if (singleControls) singleControls.style.display = splitOn ? 'none' : 'block';
   if (singleHint) singleHint.style.display = splitOn ? 'none' : 'block';
 }
 
@@ -18264,6 +18456,8 @@ function saveCompCreativePresetToStorage() {
     bottomPaneMode: readBottomPaneModeFromDom(),
     bottomPaneRect: readBottomPaneSlidersFromDom(),
     landscapeLayout: (g('comp-creative-landscape-layout') && g('comp-creative-landscape-layout').value) || 'split_screen',
+    cropCx: readFullBleedCropFromDom().cropCx,
+    cropCy: readFullBleedCropFromDom().cropCy,
   };
   try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   return data;
@@ -18348,6 +18542,11 @@ function buildCompCreativeRequestPayload(streamerHint) {
     delete overrides.layout.topPaneSubject;
     delete overrides.layout.topHeight;
     delete overrides.layout.contentCx;
+    var fbCrop = readFullBleedCropFromDom();
+    var cx = stored.cropCx != null ? Number(stored.cropCx) : fbCrop.cropCx;
+    var cy = stored.cropCy != null ? Number(stored.cropCy) : fbCrop.cropCy;
+    if (Number.isFinite(cx) && Math.abs(cx - 0.5) > 0.01) overrides.layout.cropCx = Math.max(0, Math.min(1, cx));
+    if (Number.isFinite(cy) && Math.abs(cy - 0.5) > 0.01) overrides.layout.cropCy = Math.max(0, Math.min(1, cy));
   }
   return {
     compCreativePreset: preset,
@@ -18399,6 +18598,13 @@ function refreshCompCreativeChips() {
   if (stored.facecamRect && composerLineupIsLandscape()) writeFacecamSlidersToDom(stored.facecamRect);
   else if (composerLineupIsLandscape()) applyLayoutPreset(topSubj ? topSubj.value : 'stacked_figures');
   if (stored.bottomPaneRect && composerLineupIsLandscape()) writeBottomPaneSlidersToDom(stored.bottomPaneRect);
+  if (composerLineupIsLandscape()) {
+    if (stored.cropCx != null || stored.cropCy != null) {
+      writeFullBleedCropToDom(stored.cropCx, stored.cropCy);
+    } else {
+      onCompCreativeFullBleedCropChange(true);
+    }
+  }
   var cxSlider = g('comp-creative-content-cx');
   if (cxSlider && stored.contentCx != null && !cxSlider.dataset.userPicked) cxSlider.value = String(stored.contentCx);
   if (cxSlider && composerLineupIsLandscape()) onCompCreativeContentCxChange(cxSlider.value);

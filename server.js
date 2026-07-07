@@ -5676,12 +5676,30 @@ app.post('/job/:id/operator-creative', async (req, res) => {
   const bottomPaneMode = layoutIn.bottomPaneMode ? String(layoutIn.bottomPaneMode) : null;
   const layoutModeIn = layoutIn.mode ? String(layoutIn.mode) : null;
   const landscapeSplit = layoutIn.landscapeSplit === false ? false : (layoutIn.landscapeSplit === true ? true : null);
+  const cropCxRaw = layoutIn.cropCx;
+  const cropCyRaw = layoutIn.cropCy;
+  const cropCx = cropCxRaw != null && Number.isFinite(Number(cropCxRaw))
+    ? Math.max(0, Math.min(1, Number(cropCxRaw)))
+    : null;
+  const cropCy = cropCyRaw != null && Number.isFinite(Number(cropCyRaw))
+    ? Math.max(0, Math.min(1, Number(cropCyRaw)))
+    : null;
 
   card.compCreative = card.compCreative || { preset: card.compCreativePreset || 'facecam_split' };
   card.compCreative.layout = card.compCreative.layout || { mode: 'split_screen' };
   if (landscapeSplit === false) {
     card.compCreative.layout.landscapeSplit = false;
     if (layoutModeIn) card.compCreative.layout.mode = layoutModeIn;
+    delete card.compCreative.layout.facecamRect;
+    delete card.compCreative.layout.bottomPaneRect;
+    delete card.compCreative.layout.bottomPaneMode;
+    delete card.compCreative.layout.topPaneSubject;
+    delete card.compCreative.layout.topHeight;
+    delete card.compCreative.layout.contentCx;
+    if (cropCx != null) card.compCreative.layout.cropCx = cropCx;
+    else delete card.compCreative.layout.cropCx;
+    if (cropCy != null) card.compCreative.layout.cropCy = cropCy;
+    else delete card.compCreative.layout.cropCy;
   } else if (landscapeSplit === true) {
     card.compCreative.layout.landscapeSplit = true;
   }
@@ -5712,6 +5730,8 @@ app.post('/job/:id/operator-creative', async (req, res) => {
     layout: {
       facecamRect: card.compCreative.layout.facecamRect || null,
       contentCx: card.compCreative.layout.contentCx ?? null,
+      cropCx: card.compCreative.layout.cropCx ?? null,
+      cropCy: card.compCreative.layout.cropCy ?? null,
       topHeight: card.compCreative.layout.topHeight ?? null,
       topPaneSubject: card.compCreative.layout.topPaneSubject || null,
       bottomPaneRect: card.compCreative.layout.bottomPaneRect || null,

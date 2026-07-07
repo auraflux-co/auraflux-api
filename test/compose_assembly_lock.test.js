@@ -59,6 +59,27 @@ describe('compose → assembly creative lock', () => {
     assert.equal(finalized.operatorLocked, true);
   });
 
+  it('single view preserves operator cropCx/cropCy through finalize', () => {
+    const finalized = finalizeCompCreativeForAssembly(
+      mergeCompCreative({
+        preset: 'dahbluh_clean',
+        overrides: {
+          layout: {
+            landscapeSplit: false,
+            mode: 'full_bleed_crop',
+            cropCx: 0.72,
+            cropCy: 0.38,
+          },
+        },
+      }),
+      { clipOrientations: ['landscape'], operatorLocked: true },
+    );
+    assert.equal(finalized.layout.landscapeSplit, false);
+    assert.equal(finalized.layout.cropCx, 0.72);
+    assert.equal(finalized.layout.cropCy, 0.38);
+    assert.equal(finalized.layout.facecamRect, undefined);
+  });
+
   it('split view keeps operator crop rects', () => {
     const finalized = finalizeCompCreativeForAssembly(
       mergeCompCreative({
