@@ -112,10 +112,35 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .generate-composer.is-open { display:block; }
 .generate-composer-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
 .generate-composer-head h4 { margin:0; font-family:'Bebas Neue',sans-serif; letter-spacing:2px; color:#c7af4f; font-size:16px; }
-.composer-body { display:grid; grid-template-columns:minmax(140px,200px) 1fr; gap:16px; align-items:start; }
+.composer-body { display:grid; grid-template-columns:minmax(200px,340px) 1fr; gap:16px; align-items:start; }
 @media (max-width:900px) { .composer-body { grid-template-columns:1fr; } }
-.composer-preview-frame { position:relative; width:100%; max-width:200px; aspect-ratio:9/16; margin:0 auto; border-radius:8px; overflow:hidden; background:#000; border:1px solid rgba(255,255,255,0.12); }
+.composer-preview-stack { display:flex; flex-direction:column; gap:10px; }
+.composer-source-map-label { font-size:11px; letter-spacing:0.08em; color:rgba(46,204,113,0.95); font-weight:700; text-transform:uppercase; }
+.composer-source-map { position:relative; width:100%; max-width:340px; margin:0 auto; aspect-ratio:16/9; border-radius:6px; overflow:hidden; background:#000; border:1px solid rgba(46,204,113,0.4); cursor:crosshair; touch-action:none; }
+.composer-source-map-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
+.composer-source-map-crop { position:absolute; border:2px solid #2ecc71; box-shadow:0 0 0 9999px rgba(0,0,0,0.52); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
+.composer-source-map-crop span { margin-top:2px; font-size:10px; font-weight:800; letter-spacing:0.06em; color:#2ecc71; background:rgba(0,0,0,0.65); padding:2px 5px; border-radius:3px; pointer-events:none; }
+.composer-source-map-bottom-crop { position:absolute; border:2px solid #c7af4f; box-shadow:0 0 0 9999px rgba(0,0,0,0.35); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
+.composer-source-map-bottom-crop span { margin-top:2px; font-size:10px; font-weight:800; letter-spacing:0.06em; color:#c7af4f; background:rgba(0,0,0,0.65); padding:2px 5px; border-radius:3px; pointer-events:none; }
+.composer-source-map-cx { position:absolute; top:0; bottom:0; width:2px; background:rgba(199,175,79,0.85); z-index:3; pointer-events:none; transform:translateX(-50%); display:none; }
+.composer-source-map-hint { font-size:11px; line-height:1.4; color:rgba(255,255,255,0.45); text-align:center; max-width:340px; margin:0 auto; }
+.comp-creative-source-map { position:relative; width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; background:#000; border:1px solid rgba(46,204,113,0.35); margin:6px 0 8px; cursor:crosshair; touch-action:none; }
+.comp-creative-source-map-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
+.comp-creative-source-map-crop { position:absolute; border:2px solid #2ecc71; box-shadow:0 0 0 9999px rgba(0,0,0,0.52); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
+.comp-creative-source-map-crop span { margin-top:2px; font-size:9px; font-weight:800; color:#2ecc71; background:rgba(0,0,0,0.65); padding:1px 4px; border-radius:2px; pointer-events:none; }
+.comp-creative-source-map-bottom-crop { position:absolute; border:2px solid #c7af4f; box-shadow:0 0 0 9999px rgba(0,0,0,0.35); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
+.comp-creative-source-map-bottom-crop span { margin-top:2px; font-size:9px; font-weight:800; color:#c7af4f; background:rgba(0,0,0,0.65); padding:1px 4px; border-radius:2px; pointer-events:none; }
+.comp-creative-source-map-cx { position:absolute; top:0; bottom:0; width:2px; background:rgba(199,175,79,0.85); z-index:3; pointer-events:none; transform:translateX(-50%); display:none; }
+.comp-split-how { margin-bottom:10px;padding:8px 10px;border-radius:6px;background:rgba(0,0,0,0.25);font-size:12px;line-height:1.55;color:rgba(255,255,255,0.62); }
+.comp-split-how strong { color:rgba(46,204,113,0.95); }
+.comp-split-how em { color:rgba(199,175,79,0.95); font-style:normal; }
+.composer-preview-frame { position:relative; width:100%; max-width:300px; aspect-ratio:9/16; margin:0 auto; border-radius:8px; overflow:hidden; background:#000; border:1px solid rgba(255,255,255,0.12); }
+.composer-preview-caption { margin-top:8px; font-size:12px; line-height:1.45; color:rgba(255,255,255,0.55); text-align:center; font-family:monospace; min-height:2.8em; }
+.composer-preview-caption.ok { color:rgba(46,204,113,0.9); }
+.composer-preview-caption.err { color:rgba(231,76,60,0.95); }
+.composer-preview-caption.pending { color:rgba(199,175,79,0.85); }
 .composer-preview-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:5; display:none; }
+.composer-preview-video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:5; display:none; background:#000; }
 .composer-preview-loading { position:absolute; inset:0; z-index:6; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.65); font-size:13px; color:#c7af4f; letter-spacing:1px; }
 .composer-preview-mock { position:absolute; inset:0; z-index:1; }
 .composer-vod-timeline { margin-bottom:10px; padding:10px; background:rgba(145,70,255,0.08); border:1px solid rgba(145,70,255,0.25); border-radius:6px; display:none; }
@@ -288,6 +313,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 }
 .creator-chip input[type="checkbox"] { width:18px; height:18px; min-width:18px; flex-shrink:0; margin:0; accent-color:#9146ff; cursor:pointer; }
 .creator-row-grid { display:flex; flex-direction:column; gap:3px; padding:4px 6px 8px; }
+.competitor-study-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.competitor-study-row .creator-row { flex:1; min-width:180px; }
+.competitor-study-note { flex:1 1 100%; font-size:12px; color:rgba(255,255,255,0.35); padding:0 4px 4px 28px; line-height:1.35; }
+.competitor-study-self { margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid rgba(199,175,79,0.2); }
 .creator-row {
   display:grid; grid-template-columns:22px 36px minmax(0,1fr) auto; align-items:center; gap:8px;
   padding:6px 8px; border:1px solid rgba(255,255,255,0.06); border-radius:6px;
@@ -829,6 +858,7 @@ input[type="url"], input[type="password"], select, textarea {
           <span class="gen-workflow-step"><span class="gen-workflow-num">2</span> Creative Mode + preview</span>
           <span class="gen-workflow-step"><span class="gen-workflow-num">3</span> EXECUTE → assembly</span>
         </div>
+        <div id="streamer-focus-banner" style="display:none;margin-top:12px;padding:10px 14px;border-radius:6px;border:1px solid rgba(46,204,113,0.35);background:rgba(46,204,113,0.08);font-size:14px;line-height:1.55;color:rgba(255,255,255,0.82);"></div>
       </div>
       <details class="dash-details" style="margin-bottom:16px;"><summary>Production schedule <span class="dash-readonly-note">reference</span></summary>
       <div class="alert alert-info" style="margin-top:8px;">Target: all videos by 10AM ET. Long form 10–11AM, shorts late afternoon.</div></details>
@@ -1025,12 +1055,76 @@ input[type="url"], input[type="password"], select, textarea {
                   <div id="comp-creative-label" class="gen-comp-creative-label" style="margin:8px 0;padding:10px 12px;border-radius:6px;border:1px solid rgba(199,175,79,0.28);background:rgba(199,175,79,0.06);font-size:14px;line-height:1.55;color:rgba(255,255,255,0.78);white-space:pre-wrap;font-family:monospace;"></div>
                   <div id="comp-creative-chips" class="gen-comp-creative-chips"></div>
                   <div id="comp-creative-landscape-split" style="display:none;margin-top:8px;padding:10px 12px;border-radius:6px;border:1px solid rgba(46,204,113,0.28);background:rgba(46,204,113,0.06);font-size:14px;line-height:1.5;color:rgba(255,255,255,0.78);">
-                    <div style="font-weight:700;color:rgba(46,204,113,0.95);margin-bottom:6px;">16:9 → portrait split (automatic)</div>
-                    <div style="margin-bottom:8px;color:rgba(255,255,255,0.55);">Landscape Twitch clips always split: cam crop on top, full desktop/action in the bottom pane. FFmpeg preview below matches assembly.</div>
-                    <label style="display:block;font-size:13px;color:rgba(255,255,255,0.65);">Bottom pane focus (left ← → right)
-                      <input type="range" id="comp-creative-content-cx" min="0" max="100" value="50" style="width:100%;margin-top:4px;accent-color:#2ecc71;" oninput="onCompCreativeContentCxChange(this.value)">
+                    <label style="display:block;font-size:13px;color:rgba(255,255,255,0.72);margin-bottom:8px;">Wide 16:9 clip layout
+                      <select id="comp-creative-landscape-layout" onchange="onCompCreativeLandscapeLayoutChange()" style="width:100%;margin-top:4px;background:#0d1524;color:#fff;border:1px solid rgba(46,204,113,0.45);padding:6px 8px;font-size:14px;border-radius:3px;">
+                        <option value="split_screen">Split screen — face/scene stacked (two crops)</option>
+                        <option value="single">Single view — one full frame (no top/bottom duplicate)</option>
+                      </select>
                     </label>
-                    <div id="comp-creative-content-cx-val" style="font-family:monospace;font-size:13px;color:rgba(46,204,113,0.85);margin-top:4px;">Centre · 0.50</div>
+                    <div id="comp-creative-landscape-single-hint" style="display:none;margin-bottom:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(199,175,79,0.35);background:rgba(199,175,79,0.08);color:rgba(255,255,255,0.78);font-size:13px;line-height:1.45;">
+                      Uses your Creative preset as one portrait frame (<strong>full bleed</strong> or <strong>blur-pad</strong>) — not two copies of the same wide shot. Pick this when the clip has no separate facecam region.
+                    </div>
+                    <div id="comp-creative-landscape-split-controls">
+                    <div style="font-weight:700;color:rgba(46,204,113,0.95);margin-bottom:6px;">Stack two pieces of the wide clip</div>
+                    <div class="comp-split-how">
+                      Twitch clip = <strong>wide 16:9</strong>. Short = <strong>tall 9:16</strong>.<br>
+                      We cut <strong>two rectangles</strong> from the wide frame and stack them:<br>
+                      <strong>Green</strong> → top half of Short (face / close-up)<br>
+                      <em>Gold</em> → bottom half of Short (body / scene / 2nd figure)<br>
+                      The “zoom” feeling = a small region scaled up to fill half the phone screen.<br>
+                      At <strong>50/50 split</strong>, green + gold boxes are the <strong>same shape</strong> (one per output half).
+                    </div>
+                    <div id="comp-creative-source-map-wrap" style="display:none;">
+                      <div style="font-size:11px;color:rgba(46,204,113,0.9);font-weight:700;letter-spacing:0.06em;margin-bottom:4px;">SOURCE CLIP — click/drag boxes</div>
+                      <div id="comp-creative-source-map" class="comp-creative-source-map">
+                        <div id="comp-creative-source-map-bg" class="comp-creative-source-map-bg"></div>
+                        <div id="comp-creative-source-map-crop" class="comp-creative-source-map-crop"><span>TOP</span></div>
+                        <div id="comp-creative-source-map-bottom-crop" class="comp-creative-source-map-bottom-crop"><span>BOTTOM</span></div>
+                        <div id="comp-creative-source-map-cx" class="comp-creative-source-map-cx"></div>
+                      </div>
+                    </div>
+                    <label style="display:block;font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:4px;">Quick layout
+                      <select id="comp-creative-top-pane-subject" onchange="onCompCreativeTopPaneSubjectChange()" style="width:100%;margin-top:4px;background:#0d1524;color:#fff;border:1px solid rgba(46,204,113,0.35);padding:4px 6px;font-size:14px;border-radius:3px;">
+                        <option value="stacked_figures">Stack two figures (face top · body/scene bottom)</option>
+                        <option value="streamer_center">IRL streamer (face top · wide scene bottom)</option>
+                        <option value="auto">Auto-detect corner cam + wide bottom</option>
+                        <option value="guest_right_studio">Studio guest on right + wide bottom</option>
+                        <option value="custom">Custom — I placed the boxes</option>
+                      </select>
+                    </label>
+                    <label style="display:block;font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:4px;">Bottom pane mode
+                      <select id="comp-creative-bottom-pane-mode" onchange="onCompCreativeBottomPaneModeChange()" style="width:100%;margin-top:4px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.35);padding:4px 6px;font-size:14px;border-radius:3px;">
+                        <option value="custom_crop">Custom crop — gold box (isolate a region)</option>
+                        <option value="wide_pan">Full wide shot — pan left/right only (no gold box)</option>
+                      </select>
+                    </label>
+                    <label style="display:block;font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:4px;">Top pane share (output split · not source crop)
+                      <input type="range" id="comp-creative-top-share" min="25" max="50" value="33" style="width:100%;margin-top:4px;accent-color:#2ecc71;" oninput="onCompCreativeTopShareChange(this.value)">
+                    </label>
+                    <div id="comp-creative-top-share-val" style="font-family:monospace;font-size:12px;color:rgba(46,204,113,0.85);margin-bottom:8px;">Split · top 33% / bottom 67% (640px)</div>
+                    <div id="comp-creative-facecam-sliders" style="margin:8px 0 4px;">
+                      <div style="font-size:12px;color:rgba(46,204,113,0.85);margin-bottom:4px;font-weight:700;">Green box — TOP of Short</div>
+                      <label style="display:block;font-size:12px;">Left <input type="range" id="comp-creative-facecam-x" min="0" max="90" value="32" style="width:100%;accent-color:#2ecc71;" oninput="onCompCreativeFacecamSliderChange()"></label>
+                      <label style="display:block;font-size:12px;">Top <input type="range" id="comp-creative-facecam-y" min="0" max="40" value="2" style="width:100%;accent-color:#2ecc71;" oninput="onCompCreativeFacecamSliderChange()"></label>
+                      <label style="display:block;font-size:12px;">Width <input type="range" id="comp-creative-facecam-w" min="15" max="70" value="36" style="width:100%;accent-color:#2ecc71;" oninput="onCompCreativeFacecamSliderChange()"></label>
+                      <label style="display:block;font-size:12px;">Height <input type="range" id="comp-creative-facecam-h" min="20" max="70" value="42" style="width:100%;accent-color:#2ecc71;" oninput="onCompCreativeFacecamSliderChange()"></label>
+                      <div id="comp-creative-facecam-val" style="font-family:monospace;font-size:12px;color:rgba(46,204,113,0.85);margin-top:4px;">Top · x0.32 y0.02 w0.36 h0.42</div>
+                    </div>
+                    <div id="comp-creative-bottom-crop-sliders" style="margin:8px 0 4px;">
+                      <div style="font-size:12px;color:rgba(199,175,79,0.9);margin-bottom:4px;font-weight:700;">Gold box — BOTTOM of Short</div>
+                      <label style="display:block;font-size:12px;">Left <input type="range" id="comp-creative-bottom-x" min="0" max="90" value="10" style="width:100%;accent-color:#c7af4f;" oninput="onCompCreativeBottomSliderChange()"></label>
+                      <label style="display:block;font-size:12px;">Top <input type="range" id="comp-creative-bottom-y" min="0" max="80" value="40" style="width:100%;accent-color:#c7af4f;" oninput="onCompCreativeBottomSliderChange()"></label>
+                      <label style="display:block;font-size:12px;">Width <input type="range" id="comp-creative-bottom-w" min="15" max="95" value="80" style="width:100%;accent-color:#c7af4f;" oninput="onCompCreativeBottomSliderChange()"></label>
+                      <label style="display:block;font-size:12px;">Height <input type="range" id="comp-creative-bottom-h" min="20" max="80" value="55" style="width:100%;accent-color:#c7af4f;" oninput="onCompCreativeBottomSliderChange()"></label>
+                      <div id="comp-creative-bottom-val" style="font-family:monospace;font-size:12px;color:rgba(199,175,79,0.85);margin-top:4px;">Bottom · x0.10 y0.40 w0.80 h0.55</div>
+                    </div>
+                    <div id="comp-creative-wide-pan-wrap" style="display:none;">
+                    <label style="display:block;font-size:13px;color:rgba(255,255,255,0.65);">Wide bottom pan (full wide shot mode only)
+                      <input type="range" id="comp-creative-content-cx" min="0" max="100" value="50" style="width:100%;margin-top:4px;accent-color:#c7af4f;" oninput="onCompCreativeContentCxChange(this.value)">
+                    </label>
+                    <div id="comp-creative-content-cx-val" style="font-family:monospace;font-size:13px;color:rgba(199,175,79,0.85);margin-top:4px;">Centre · 0.50</div>
+                    </div>
+                    </div>
                   </div>
                   <div id="comp-creative-adv" class="gen-comp-creative-adv">
                     <div id="comp-creative-serpent-hint" style="display:none;padding:8px 10px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(199,175,79,0.25);background:rgba(199,175,79,0.08);color:rgba(255,255,255,0.72);line-height:1.45;font-size:14px;">
@@ -1113,8 +1207,10 @@ input[type="url"], input[type="password"], select, textarea {
                     <button type="button" class="btn btn-outline btn-sm" onclick="saveCompositionTemplate()">Save template</button>
                   </div>
                   <div class="composer-body">
-                    <div>
+                    <div class="composer-preview-stack">
+                      <div style="font-size:11px;letter-spacing:0.08em;color:rgba(199,175,79,0.85);font-weight:700;text-align:center;">OUTPUT (9:16)</div>
                       <div id="composer-preview-frame" class="composer-preview-frame">
+                        <video id="composer-preview-video" class="composer-preview-video" autoplay loop muted playsinline></video>
                         <img id="composer-preview-img" class="composer-preview-img" alt="FFmpeg preview">
                         <div id="composer-preview-loading" class="composer-preview-loading">FFmpeg…</div>
                         <div id="composer-preview-mock" class="composer-preview-mock">
@@ -1125,6 +1221,17 @@ input[type="url"], input[type="password"], select, textarea {
                           <div id="composer-preview-captions" class="composer-preview-captions">Whisper captions zone</div>
                           <div id="composer-preview-logo" class="composer-preview-logo pos-fold">LOGO</div>
                         </div>
+                      </div>
+                      <div id="composer-preview-caption" class="composer-preview-caption pending">Loading assembly preview…</div>
+                      <div id="composer-source-map-block" style="display:none;">
+                        <div class="composer-source-map-label">Source clip · what you're cropping</div>
+                        <div id="composer-source-map" class="composer-source-map">
+                          <div id="composer-source-map-bg" class="composer-source-map-bg"></div>
+                          <div id="composer-source-map-crop" class="composer-source-map-crop"><span>TOP</span></div>
+                          <div id="composer-source-map-bottom-crop" class="composer-source-map-bottom-crop"><span>BOTTOM</span></div>
+                          <div id="composer-source-map-cx" class="composer-source-map-cx"></div>
+                        </div>
+                        <div class="composer-source-map-hint">Green = top figure · Gold = bottom figure · click empty area to move active box</div>
                       </div>
                       <div id="composer-features" class="composer-features"></div>
                     </div>
@@ -1875,6 +1982,11 @@ input[type="url"], input[type="password"], select, textarea {
                   <summary><label class="section-select-check" onclick="event.stopPropagation();"><input type="checkbox" id="section-check-following" onchange="toggleStreamerSectionAll('following', this.checked)"></label><span>Following · Twitch &amp; YouTube</span><span class="streamer-section-count" id="streamer-count-following">0</span></summary>
                   <div id="streamer-section-following" class="creator-chip-grid is-section"></div>
                 </details>
+                <details open class="streamer-roster-section" id="streamer-section-competitors-wrap">
+                  <summary><span>Competitors · study</span><span class="streamer-section-count" id="streamer-count-competitors">0</span></summary>
+                  <div class="clip-group-editor-hint" style="padding:0 8px 6px;">Peer-scale Shorts vs <strong>ClipzWorld</strong> — click <strong>Compare</strong> to load both channels in the library grid.</div>
+                  <div id="streamer-section-competitors" class="creator-row-grid is-section"><span style="color:rgba(255,255,255,0.35);font-size:13px;">Loading study roster…</span></div>
+                </details>
                 <details class="streamer-roster-section" id="streamer-section-bench-wrap">
                   <summary><label class="section-select-check" onclick="event.stopPropagation();"><input type="checkbox" id="section-check-bench" onchange="toggleStreamerSectionAll('bench', this.checked)"></label><span>Bench · backup</span><span class="streamer-section-count" id="streamer-count-bench">0</span></summary>
                   <div id="streamer-section-bench" class="creator-chip-grid is-section"></div>
@@ -2122,6 +2234,7 @@ input[type="url"], input[type="password"], select, textarea {
         <span style="font-size:14px;color:rgba(255,255,255,0.4);align-self:center;">Plan the month · track jobs + YouTube · plan vs published</span>
       </div>
       <div id="cal-cache-banner" style="display:none;font-size:14px;color:rgba(255,255,255,0.5);margin:-4px 0 8px;padding:8px 12px;border:1px solid rgba(199,175,79,0.25);border-radius:6px;background:rgba(199,175,79,0.06);"></div>
+      <div id="cal-focus-banner" style="display:none;font-size:14px;line-height:1.55;color:rgba(255,255,255,0.78);margin:0 0 12px;padding:10px 14px;border:1px solid rgba(46,204,113,0.35);border-radius:6px;background:rgba(46,204,113,0.08);"></div>
       <div id="cal-yt-studio-banner" style="display:none;font-size:14px;color:rgba(255,255,255,0.5);margin:-4px 0 12px;padding:8px 12px;border:1px solid rgba(255,0,0,0.25);border-radius:6px;background:rgba(255,0,0,0.06);"></div>
       <div class="cal-month-layout" id="cal-month-layout">
         <div class="cal-main-col">
@@ -3344,6 +3457,34 @@ function persistActivePage(page) {
   }
 }
 
+var _streamerFocusCache = null;
+function renderStreamerFocusBanner(page) {
+  var genEl = document.getElementById('streamer-focus-banner');
+  var calEl = document.getElementById('cal-focus-banner');
+  function paint(data) {
+    if (!data || !data.ok || !data.summary) return;
+    var s = data.summary;
+    var html = '<strong style="color:rgba(46,204,113,0.95);">FOCUS · ' + escHtml(s.primary) + '</strong>'
+      + ' — ' + escHtml(s.cadence || '3 of 4 posts')
+      + '. Titles lead with <strong>' + escHtml(s.titleLead) + '</strong>.'
+      + ' Reach only: ' + escHtml(s.reach || 'FunnyMike, ExtraEmily') + '.'
+      + (s.reviewAfter ? ' Locked until ' + escHtml(s.reviewAfter) + '.' : '');
+    if (genEl && (page === 'generate' || page === 'library')) {
+      genEl.style.display = 'block';
+      genEl.innerHTML = html;
+    } else if (genEl) genEl.style.display = 'none';
+    if (calEl && page === 'calendar') {
+      calEl.style.display = 'block';
+      calEl.innerHTML = html + (data.focus && data.focus.strategy ? '<div style="margin-top:6px;color:rgba(255,255,255,0.55);">' + escHtml(data.focus.strategy) + '</div>' : '');
+    } else if (calEl) calEl.style.display = 'none';
+  }
+  if (_streamerFocusCache) { paint(_streamerFocusCache); return; }
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/streamer-focus')
+    .then(function(r) { return r.json(); })
+    .then(function(d) { _streamerFocusCache = d; paint(d); })
+    .catch(function() { /* non-fatal */ });
+}
+
 function readPersistedPage() {
   try {
     var fromUrl = new URL(window.location.href).searchParams.get('page');
@@ -3364,6 +3505,7 @@ function nav(page) {
   });
   if (page === 'calendar' && typeof calendarPageInit === 'function') calendarPageInit();
   if (page === 'queue') refreshQueue();
+  if (typeof renderStreamerFocusBanner === 'function') renderStreamerFocusBanner(page);
   if (page === 'broadcast' && typeof broadcastPageInit === 'function') broadcastPageInit();
   if (page === 'publish') pubPopulateJobDropdown();
   if (page === 'abtest') thumbPopulateDropdown();
@@ -6894,7 +7036,7 @@ function asmComplete(batchJobId, resp) {
   }
 
   // Always use port 3000 (server.js) not 8765 (Python file server)
-  var rawUrl = resp.downloadUrl || (resp.filename ? ('/download/' + resp.filename) : '');
+  var rawUrl = resp.downloadUrl || resp.localPreviewUrl || (resp.filename ? ('/download/' + resp.filename) : '');
   var downloadUrl = rawUrl ? (rawUrl.startsWith('http') ? rawUrl : (CFG.ffmpegUrl + rawUrl)) : '';
   if (downloadUrl) {
     var logEl = document.getElementById('asm-log-'+batchJobId);
@@ -6932,7 +7074,12 @@ function asmComplete(batchJobId, resp) {
   // Update job in manifest — then sync server card (driveUrl, stage, gate3)
   var job = JOBS.find(function(j){ return j.id === batchJobId; });
   if (job) {
-    if (downloadUrl) job.finalUrl = downloadUrl;
+    if (downloadUrl) {
+      job.finalUrl = downloadUrl;
+      job.localPreviewUrl = downloadUrl;
+      if (resp.filename) job.filename = resp.filename;
+      if (resp.assemblyId) job.assemblyId = resp.assemblyId;
+    }
     job.assembledAt = job.assembledAt || new Date().toISOString();
     saveJobs();
     renderQueue();
@@ -8280,6 +8427,45 @@ function jobWhisperCaptionsExpected(job) {
   return true;
 }
 
+function reloadJobMediaPreview(jobId, opts) {
+  opts = opts || {};
+  var panel = document.getElementById('job-media-' + jobId);
+  if (!panel) return;
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  var url = resolveJobPreviewUrl(job);
+  if (!url) {
+    if (opts.alertIfMissing) alert('No preview URL yet — wait for assembly to finish, then click ↩ RESTORE JOBS.');
+    return;
+  }
+  var errEl = panel.querySelector('.job-preview-err');
+  if (errEl) errEl.remove();
+  var vid = panel.querySelector('video');
+  if (!vid) {
+    var wrap = document.createElement('div');
+    wrap.className = 'job-preview-wrap';
+    wrap.innerHTML = '<video controls playsinline preload="metadata" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:6px;"></video>'
+      + '<div class="job-preview-err" style="display:none;color:#e74c3c;font-size:15px;padding:8px;"></div>';
+    panel.insertBefore(wrap, panel.firstChild);
+    vid = wrap.querySelector('video');
+    vid.onplay = function() { window._queuePreviewLock = 1; };
+    vid.onpause = vid.onended = function() { window._queuePreviewLock = 0; };
+    vid.onerror = function() {
+      var err = panel.querySelector('.job-preview-err');
+      if (err) {
+        err.style.display = 'block';
+        err.innerHTML = 'Preview failed to load — '
+          + '<button type="button" class="btn btn-outline btn-sm" style="font-size:13px;margin-left:4px;" onclick="reloadJobMediaPreview(\'' + jobId + '\', { forceRefresh: true })">↻ Retry</button>'
+          + ' <a href="' + url + '" target="_blank" rel="noopener" style="color:#c7af4f;margin-left:6px;">Open MP4</a>';
+      }
+    };
+  }
+  if (opts.forceRefresh) url = url.replace(/([?&])v=[^&]*/, '$1v=' + Date.now());
+  if (vid.src !== url) {
+    vid.src = url;
+    vid.load();
+  }
+}
+
 function toggleJobMediaPanel(jobId) {
   var el = document.getElementById('job-media-' + jobId);
   if (!el) return;
@@ -8287,11 +8473,17 @@ function toggleJobMediaPanel(jobId) {
   el.style.display = opening ? 'block' : 'none';
   if (opening) {
     window._queuePreviewLock = 1;
-  } else if (!opening) {
+    fetchJobCard(jobId, function(err, serverJob) {
+      if (!err && serverJob) {
+        mergeServerJobIntoLocal(jobId, serverJob, { skipRender: true });
+        saveJobs();
+      }
+      reloadJobMediaPreview(jobId, { forceRefresh: true });
+    });
+  } else {
     window._queuePreviewLock = 0;
     var vid = el.querySelector('video');
     if (vid && !vid.paused) { try { vid.pause(); } catch (_e) {} }
-    // Flush queue updates that were deferred while the preview was open.
     if (_queueRenderDeferred) scheduleQueueRender();
   }
 }
@@ -8410,6 +8602,12 @@ function isQueuePanelExpanded() {
 function saveHookInputDraft(jobId, clipIdx, value) {
   _hookInputDrafts[jobId + '-' + clipIdx] = value;
 }
+function cleanHookDisplay(text) {
+  var s = String(text || '').trim();
+  var i = s.search(/["']\s*,\s*"(?:formula|psychologyTrigger|visualCue|payoffTease|rank|tensionScore)"\s*:/i);
+  if (i > 0) s = s.slice(0, i).trim();
+  return s.replace(/^["']|["']$/g, '').replace(/["'],?\s*$/g, '').trim();
+}
 function insertHookEmoji(jobId, clipIdx, emoji) {
   if (!emoji) return;
   var input = document.getElementById('custom-hook-input-' + jobId + '-' + clipIdx);
@@ -8468,10 +8666,31 @@ function renderQueue(force) {
   scheduleQueueRender(!!force);
 }
 
+var GENERIC_FALLBACK_HOOKS = ['that escalated fast', 'wait for the beat', 'something went wrong', 'the look says it all'];
+
+function isGenericFallbackHookText(text) {
+  var t = String(text || '').trim().toLowerCase();
+  return !!t && GENERIC_FALLBACK_HOOKS.indexOf(t) >= 0;
+}
+
+function hooksMatchBurnedClient(job) {
+  if (!job || !job.clipsOnly) return true;
+  var burned = job.burnedHookTitles || [];
+  var selected = job.clipHookTitles || [];
+  if (!burned.length || !selected.length) return true;
+  var n = Math.max(burned.length, selected.length);
+  for (var i = 0; i < n; i++) {
+    var b = String(burned[i] || '').trim().toLowerCase();
+    var s = String(selected[i] || '').trim().toLowerCase();
+    if (b && s && b !== s) return false;
+  }
+  return true;
+}
+
 /** Warn when burned MP4 hooks differ from operator selection (server publish guard). */
 function burnedHooksMismatchBanner(job) {
   if (!job || !job.clipsOnly) return '';
-  if (job.hooksPendingReassemble) {
+  if (job.hooksPendingReassemble && !hooksMatchBurnedClient(job)) {
     return '<div style="margin-top:6px;padding:6px 10px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.45);border-radius:4px;font-size:14px;color:#e74c3c;font-weight:700;">'
       + '⚠ Hooks changed — RE-ASSEMBLE FROM FILES before publish</div>';
   }
@@ -8506,7 +8725,7 @@ function renderBurnedHookPickerMarkup(job, preAssembly) {
     : 'Saved on server — next: 📁 RE-ASSEMBLE FROM FILES to burn into MP4';
   for (var clipIdx = 0; clipIdx < hookClipCount; clipIdx++) {
     var pool = (job.clipHookCandidates && job.clipHookCandidates[clipIdx]) ? job.clipHookCandidates[clipIdx] : [];
-    var activeHook = (job.clipHookTitles && job.clipHookTitles[clipIdx]) ? String(job.clipHookTitles[clipIdx]).trim() : '';
+    var activeHook = cleanHookDisplay((job.clipHookTitles && job.clipHookTitles[clipIdx]) ? String(job.clipHookTitles[clipIdx]).trim() : '');
     var inputId = 'custom-hook-input-' + job.id + '-' + clipIdx;
     var statusId = 'custom-hook-status-' + job.id + '-' + clipIdx;
     var isCustomActive = pool.some(function(c) {
@@ -8516,27 +8735,33 @@ function renderBurnedHookPickerMarkup(job, preAssembly) {
     var panelBorder = isCustomActive
       ? 'border:1px solid rgba(46,204,113,0.55);'
       : 'border:1px solid rgba(199,175,79,0.15);';
+    var aiCount = pool.filter(function(c){ return c && !c.operatorCustom && String(c.text||'').trim(); }).length;
+    var panelLabel = preAssembly ? 'HOOK PICKER' : 'BURNED HOOK';
+    var hookFailed = !!(job.hookMachineFailed || (preAssembly && isGenericFallbackHookText(activeHook) && !aiCount));
     html += '<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,0.25);' + panelBorder + 'border-radius:6px;">'
       + '<div style="font-size:13px;font-weight:900;color:rgba(199,175,79,0.6);letter-spacing:1.5px;margin-bottom:6px;">'
-      + 'BURNED HOOK · CLIP ' + (clipIdx + 1)
+      + panelLabel + ' · CLIP ' + (clipIdx + 1)
       + '</div>';
-    if (isCustomActive) {
+    if (hookFailed) {
+      html += '<div style="font-size:14px;color:#e74c3c;font-weight:700;margin-bottom:8px;padding:6px 8px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.35);border-radius:4px;">'
+        + '⚠ Hook Machine failed — no AI candidates. Click <strong>🎣 REGEN HOOKS</strong> or type your own below.'
+        + '</div>';
+    } else if (isCustomActive) {
       html += '<div style="font-size:14px;color:#2ecc71;font-weight:700;margin-bottom:8px;padding:6px 8px;background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.35);border-radius:4px;">'
         + '● CUSTOM HOOK SELECTED · "' + escHtml(activeHook.slice(0, 56)) + '"'
         + '<div style="font-size:13px;font-weight:500;color:rgba(46,204,113,0.85);margin-top:3px;">' + customSavedHint + '</div>'
         + '</div>';
-    } else if (activeHook) {
+    } else if (activeHook && !hookFailed) {
       html += '<div style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:6px;">'
-        + 'Active hook: "' + escHtml(activeHook.slice(0, 56)) + '"'
+        + 'Selected hook: "' + escHtml(activeHook.slice(0, 56)) + '"'
         + '</div>';
     }
-    var aiCount = pool.filter(function(c){ return c && !c.operatorCustom && String(c.text||'').trim(); }).length;
     if (aiCount) {
       html += '<div style="font-size:12px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:4px;">AI CANDIDATES (optional)</div>';
       for (var candIdx = 0; candIdx < pool.length && candIdx < 6; candIdx++) {
         var cand = pool[candIdx];
         if (!cand || cand.operatorCustom) continue;
-        var hookText = String(cand.text || '').trim();
+        var hookText = cleanHookDisplay(String(cand.text || '').trim());
         if (!hookText) continue;
         var isActive = !isCustomActive && activeHook && hookText.toLowerCase() === activeHook.toLowerCase();
         var qaTag = cand.qaPassed ? (' ✓' + (cand.qaScore != null ? ' ' + cand.qaScore : '')) : (cand.qaScore != null ? ' · QA ' + cand.qaScore : '');
@@ -8588,35 +8813,42 @@ function renderBurnedHookPickerMarkup(job, preAssembly) {
 
 function confirmClipHooksAndBuild(jobId) {
   var job = JOBS.find(function(j){ return j.id === jobId; });
-  var btn = document.getElementById('confirm-hooks-btn-' + jobId);
+  var btn = document.getElementById('confirm-hooks-btn-' + jobId)
+    || document.getElementById('confirm-hooks-btn-action-' + jobId);
   if (btn) { btn.disabled = true; btn.textContent = '⚙ BUILDING…'; }
-  cwn_log('[hook] ' + jobId + ' — confirm hooks + start FFmpeg', false);
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/confirm-hooks', true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 120000;
-  xhr.onload = function() {
-    var resp = null;
-    try { resp = JSON.parse(xhr.responseText); } catch(e) { resp = { ok: false, error: e.message }; }
-    if (!resp.ok) {
+  var layoutStep = (window._editingLayoutJobId === jobId)
+    ? snapshotLayoutToJobCard(jobId, 'Pre-build — layout from Creative Mode')
+    : Promise.resolve({ ok: true, skipped: true });
+  cwn_log('[hook] ' + jobId + ' — ' + (window._editingLayoutJobId === jobId ? 'snapshot layout + ' : '') + 'build', false);
+  layoutStep
+    .then(function(layoutResp) {
+      if (layoutResp && !layoutResp.ok) throw new Error(layoutResp.error || 'Layout snapshot failed');
+      return saveCustomHookFromInput(jobId, 0);
+    })
+    .then(function(hookResp) {
+      if (hookResp && !hookResp.ok) throw new Error(hookResp.error || 'Custom hook save failed');
+      return fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/job/' + encodeURIComponent(jobId) + '/confirm-hooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(resp) {
+      if (!resp.ok) throw new Error(resp.error || 'Build failed');
+      if (job) {
+        job.stage = 'assembling';
+        job.status = 'assembling';
+        job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
+        saveJobs();
+      }
+      renderQueue();
+      startClipCompReviewPoll(jobId, null);
+    })
+    .catch(function(e) {
       if (btn) { btn.disabled = false; btn.textContent = '▶ BUILD VIDEO'; }
-      alert('Build failed: ' + (resp.error || xhr.status));
-      return;
-    }
-    if (job) {
-      job.stage = 'assembling';
-      job.status = 'assembling';
-      job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
-      saveJobs();
-    }
-    renderQueue();
-    startClipCompReviewPoll(jobId, null);
-  };
-  xhr.onerror = xhr.ontimeout = function() {
-    if (btn) { btn.disabled = false; btn.textContent = '▶ BUILD VIDEO'; }
-    alert('Build request failed — check pm2 logs; server may still be assembling.');
-  };
-  xhr.send(JSON.stringify({}));
+      alert('Build failed: ' + (e.message || e));
+    });
 }
 
 function renderQueueNow() {
@@ -8660,6 +8892,7 @@ function renderQueueNow() {
     var hasHookCandidates = !!(job.clipHookCandidates && job.clipHookCandidates.some(function(p) { return p && p.length; }));
     var hooksReviewActive = isClipCompJob && !job.hooksConfirmedAt && !ffmpegDone && (
       jobStage === 'hook_review'
+      || job.hookMachineFailed
       || (hasHookCandidates && (jobStage === 'hooks_generating' || jobStage === 'awaiting_review'))
     );
     var ffmpegActive = !ffmpegDone && !hooksReviewActive && (
@@ -8823,7 +9056,7 @@ function renderQueueNow() {
             + hookPreview + '</div>';
         }
       }
-      if (job.clipsOnly && jobStage === 'awaiting_review') {
+      if (job.clipsOnly && (jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'gate3_failed' || jobStage === 'metadata_review')) {
         metaStrip += burnedHooksMismatchBanner(job);
         metaStrip += renderBurnedHookPickerMarkup(job, false);
       } else if (job.clipHookCandidates && job.clipHookCandidates.length) {
@@ -9074,8 +9307,12 @@ function renderQueueNow() {
       || ['all_sent','awaiting_manual_segments','heygen_done','assembled','assembling','gate3_failed',
         'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1;
     if (canReassembleJob(job)) {
-      if (job.clipsOnly && jobStage === 'awaiting_review') {
+      if (job.clipsOnly && (jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'gate3_failed' || jobStage === 'metadata_review')) {
         actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Rerun Hook Machine + Claude QA (CPD-1106) — does not burn video until you RE-ASSEMBLE">🎣 REGEN HOOKS</button>';
+      }
+      if (job.clipsOnly) {
+        actions += '<button onclick="openJobLayoutEditor(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(46,204,113,0.55);color:#2ecc71;" title="Edit top/bottom pane crops in Compose, then send back to assembly">✎ EDIT LAYOUT</button>';
+        actions += '<button onclick="sendJobBackLayout(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Save pane crops from Creative Mode sliders and re-assemble">↩ SEND BACK · LAYOUT</button>';
       }
       actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Rebuild from HeyGen cache + manifest — no new credits">↻ RE-ASSEMBLE</button>';
     } else if (pastHeygenStage && jobActivelyAssembling(job)) {
@@ -9220,7 +9457,7 @@ function renderQueueNow() {
     if (previewUrl || job.gate3) {
       var g3PanelText = escHtml(formatGate3ReportText(job));
       mediaPanel = '<div id="job-media-' + job.id + '" style="display:none;margin:10px 0;padding:10px;background:rgba(0,0,0,0.35);border:1px solid rgba(199,175,79,0.25);border-radius:8px;">'
-        + (previewUrl ? '<video controls playsinline preload="metadata" src="' + previewUrl + '" onplay="window._queuePreviewLock=1" onpause="window._queuePreviewLock=0" onended="window._queuePreviewLock=0" onerror="this.outerHTML=\'<div style=&quot;color:#e74c3c;font-size:15px;padding:8px;&quot;>Preview unavailable — click ↩ RESTORE JOBS or wait for reassemble to finish.</div>\'" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:6px;"></video>'
+        + (previewUrl ? '<div class="job-preview-wrap"><video controls playsinline preload="metadata" src="' + previewUrl + '" onplay="window._queuePreviewLock=1" onpause="window._queuePreviewLock=0" onended="window._queuePreviewLock=0" onerror="var p=this.closest(\'#job-media-' + job.id + '\');var e=p&&p.querySelector(\'.job-preview-err\');if(e){e.style.display=\'block\';e.innerHTML=\'Preview failed — <button type=&quot;button&quot; class=&quot;btn btn-outline btn-sm&quot; style=&quot;font-size:13px;&quot; onclick=&quot;reloadJobMediaPreview(\\\'' + job.id + '\\\',{forceRefresh:true})&quot;>↻ Retry</button> <a href=&quot;' + previewUrl + '&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot; style=&quot;color:#c7af4f;&quot;>Open MP4</a>\';}" style="width:100%;max-height:420px;border-radius:6px;background:#000;margin-bottom:6px;"></video><div class="job-preview-err" style="display:none;color:#e74c3c;font-size:15px;padding:8px;margin-bottom:6px;"></div></div>'
           + '<div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
           + '<a href="' + previewUrl + '" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="font-size:14px;text-decoration:none;">↗ OPEN FULL PREVIEW (new tab)</a>'
           + '<span style="font-size:13px;color:rgba(255,255,255,0.4);font-family:monospace;">Queue refresh pauses while this preview is open</span>'
@@ -9793,8 +10030,8 @@ function _doResumeConfirmed(jobId, job) {
 function regenerateClipHooks(jobId) {
   var job = JOBS.find(function(j){ return j.id === jobId; });
   if (!job) return;
-  if (!confirm('Regenerate burned hooks with Hook Machine + Claude QA?\\n\\nThis takes ~1–3 min per clip. After it finishes, use HOOK PICKER then RE-ASSEMBLE FROM FILES to burn the new line into the MP4.')) return;
-  cwn_log('[hook] ' + jobId + ' — regenerating hooks (CPD-1106)...', false);
+  if (!confirm('Regenerate hooks with Hook Machine + Claude QA?\n\nThis overwrites your current hook pick and takes ~1–3 min per clip. After it finishes, pick a hook (or type custom), then RE-ASSEMBLE.')) return;
+  cwn_log('[hook] ' + jobId + ' — regenerating hooks (force overwrite)...', false);
   var xhr = new XMLHttpRequest();
   xhr.open('POST', CFG.ffmpegUrl + '/job/' + jobId + '/regenerate-hooks', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
@@ -9809,6 +10046,9 @@ function regenerateClipHooks(jobId) {
     }
     job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
     job.clipHookCandidates = resp.clipHookCandidates || job.clipHookCandidates;
+    job.hooksOperatorLocked = false;
+    job.hooksConfirmedAt = null;
+    job.hooksPendingReassemble = !!(job.assembledAt || job.localPreviewUrl || job.driveUrl);
     job.stage = resp.stage || (job.assembledAt || job.driveUrl ? 'awaiting_review' : 'hook_review');
     saveJobs();
     renderQueue();
@@ -9821,7 +10061,7 @@ function regenerateClipHooks(jobId) {
   xhr.onerror = xhr.ontimeout = function() {
     alert('Hook regen timed out or failed — check pm2 logs; server may still be running Gemini.');
   };
-  xhr.send(JSON.stringify({}));
+  xhr.send(JSON.stringify({ force: true }));
 }
 
 function applyCustomPublishTitle(jobId) {
@@ -9931,15 +10171,21 @@ function applyCustomClipHook(jobId, clipIndex) {
     if (job) {
       job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
       job.clipHookCandidates = resp.clipHookCandidates || job.clipHookCandidates;
-      if (job.stage !== 'hook_review') job.stage = 'awaiting_review';
+      if (resp.stage) job.stage = resp.stage;
+      if (resp.assemblyStarted) {
+        job.stage = 'assembling';
+        job.status = 'assembling';
+      }
       saveJobs();
     }
     clearHookInputDraft(jobId, clipIndex);
     cwn_log('[hook] custom saved: "' + resp.hook + '"', false);
     renderQueue(true);
-    var nextMsg = (job && job.stage === 'hook_review')
-      ? '✅ Custom hook saved!\n\n"' + resp.hook + '"\n\nClick ▶ BUILD VIDEO when all clips are set.'
-      : '✅ Custom hook saved!\n\n"' + resp.hook + '"\n\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.';
+    var nextMsg = (resp.assemblyStarted)
+      ? '✅ Custom hook saved — building video now.'
+      : ((job && job.stage === 'hook_review')
+        ? '✅ Custom hook saved!\n\n"' + resp.hook + '"\n\nClick ▶ BUILD VIDEO when all clips are set.'
+        : '✅ Custom hook saved!\n\n"' + resp.hook + '"\n\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.');
     alert(nextMsg);
   };
   xhr.onerror = xhr.ontimeout = function() {
@@ -9947,7 +10193,7 @@ function applyCustomClipHook(jobId, clipIndex) {
     if (statusEl) { statusEl.style.color = '#e74c3c'; statusEl.textContent = 'Request failed — is the server running?'; }
     alert('Custom hook request failed — is the server running?');
   };
-  xhr.send(JSON.stringify({ clipIndex: clipIndex, hookText: text }));
+  xhr.send(JSON.stringify({ clipIndex: clipIndex, hookText: text, autoBuild: false, autoReassemble: false }));
 }
 
 function selectClipHook(jobId, clipIndex, candidateIndex) {
@@ -9967,19 +10213,26 @@ function selectClipHook(jobId, clipIndex, candidateIndex) {
     }
     job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
     job.clipHookCandidates = resp.clipHookCandidates || job.clipHookCandidates;
+    if (resp.stage) job.stage = resp.stage;
+    if (resp.assemblyStarted) {
+      job.stage = 'assembling';
+      job.status = 'assembling';
+    }
     clearHookInputDraft(jobId, clipIndex);
     cwn_log('[hook] selected: "' + resp.hook + '"', false);
     saveJobs();
     renderQueue(true);
-    var nextHookMsg = (job.stage === 'hook_review')
-      ? '✅ Hook selected!\n\n"' + resp.hook + '"\n\nClick ▶ BUILD VIDEO when ready.'
-      : '✅ Hook selected!\n\n"' + resp.hook + '"\n\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.';
+    var nextHookMsg = (resp.assemblyStarted)
+      ? '✅ Hook selected — building video now.'
+      : ((job.stage === 'hook_review')
+        ? '✅ Hook selected!\n\n"' + resp.hook + '"\n\nClick ▶ BUILD VIDEO when ready.'
+        : '✅ Hook selected!\n\n"' + resp.hook + '"\n\nNext: 📁 RE-ASSEMBLE FROM FILES to burn it into the MP4.');
     alert(nextHookMsg);
   };
   xhr.onerror = xhr.ontimeout = function() {
     alert('Hook select request failed — is the server running?');
   };
-  xhr.send(JSON.stringify({ clipIndex: clipIndex, candidateIndex: candidateIndex }));
+  xhr.send(JSON.stringify({ clipIndex: clipIndex, candidateIndex: candidateIndex, autoBuild: false, autoReassemble: false }));
 }
 
 // POST /job/:id/heygen/capture-baseline — lock timestamps after good assembly
@@ -10273,9 +10526,11 @@ function _doReassemblePost(jobId, job) {
         job.assemblyId = resp.assemblyId;
         delete job.assembledAt;
         delete job.finalUrl;
+        delete job.localPreviewUrl;
         delete job.driveUrl;
         delete job.publishCopy;
         delete job.publishPrep;
+        job.previewStale = true;
         saveJobs();
       }
       renderQueue();
@@ -15027,37 +15282,151 @@ function setComposerVodTrim(which, val) {
   refreshGenerateComposer(false);
 }
 
+var _composerPreviewDebounce = null;
+
+function setComposerPreviewCaption(text, kind) {
+  var cap = g('composer-preview-caption');
+  if (!cap) return;
+  cap.textContent = text || '';
+  cap.className = 'composer-preview-caption' + (kind ? (' ' + kind) : '');
+}
+
+function formatComposerPreviewCaption(d, errMsg) {
+  if (errMsg) return 'Preview failed: ' + errMsg + ' · thumbnail mock below is approximate only';
+  if (!d || !d.ok || !d.base64) return 'Preview unavailable · click ↻ Refresh preview (needs clip MP4 + FFmpeg)';
+  var ls = d.layoutSummary || {};
+  var parts = ['ASSEMBLY PREVIEW · layout + logo (matches EXECUTE)'];
+  if (ls.landscapeAutoSplit) parts.push('16:9 → split overrides preset');
+  else parts.push(String(ls.effectiveMode || d.mode || 'layout'));
+  if (ls.topHeight) parts.push('top ' + ls.topHeight + 'px');
+  if (ls.facecamRect) {
+    var r = ls.facecamRect;
+    parts.push('crop x' + Number(r.x).toFixed(2) + ' y' + Number(r.y).toFixed(2));
+  }
+  if (ls.contentCx != null && Number.isFinite(Number(ls.contentCx))) {
+    parts.push('action cx ' + Number(ls.contentCx).toFixed(2));
+  }
+  parts.push('hooks/captions added at assembly');
+  if (d.previewVideoUrl) parts.push('~6s loop');
+  return parts.join(' · ');
+}
+
+function buildComposerReadyLine(spec) {
+  if (!spec) return '';
+  var preset = (spec.features && spec.features.presetLabel) || '';
+  var eff = getEffectiveComposerLayoutMode({ preset: spec.compCreativePreset, layout: (spec.compCreative && spec.compCreative.layout) || {} });
+  var effLabel = eff === 'split_screen' ? 'split facecam' : (eff === 'full_bleed_crop' ? 'full bleed' : 'blur-pad');
+  var line = 'Ready — ' + spec.totalDurationSec + 's footage · ' + preset;
+  if (composerLineupIsLandscape() && eff === 'split_screen') {
+    line += ' · assembly layout: ' + effLabel.toUpperCase() + ' (16:9 clip)';
+  } else if (composerLineupIsLandscape() && eff !== 'split_screen') {
+    line += ' · assembly layout: ' + effLabel.toUpperCase() + ' single view (16:9 clip)';
+  }
+  return line;
+}
+
 function fetchFfmpegComposerPreview(body) {
+  if (_composerPreviewDebounce) clearTimeout(_composerPreviewDebounce);
+  _composerPreviewDebounce = setTimeout(function() {
+    _composerPreviewDebounce = null;
+    fetchFfmpegComposerPreviewNow(body);
+  }, 350);
+}
+
+function showAssembledComposerPreview(jobId) {
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  if (!job) return false;
+  var url = resolveJobPreviewUrl(job);
+  if (!url) return false;
+  var loading = g('composer-preview-loading');
+  var img = g('composer-preview-img');
+  var video = g('composer-preview-video');
+  var mock = g('composer-preview-mock');
+  if (loading) loading.style.display = 'none';
+  if (mock) mock.style.display = 'none';
+  if (img) img.style.display = 'none';
+  if (video) {
+    video.src = url + (url.indexOf('?') > -1 ? '&' : '?') + 't=' + Date.now();
+    video.style.display = 'block';
+    video.load();
+    video.play().catch(function() {});
+    video.onerror = function() {
+      setComposerPreviewCaption('Assembled preview failed — use ▶ PREVIEW MP4 on job card', 'err');
+    };
+  }
+  setComposerPreviewCaption('Assembled output · ' + (job.assemblyId || 'local MP4'), 'ok');
+  return true;
+}
+
+function fetchFfmpegComposerPreviewNow(body) {
   var seq = ++_composerPreviewSeq;
   var loading = g('composer-preview-loading');
   var img = g('composer-preview-img');
+  var video = g('composer-preview-video');
   var mock = g('composer-preview-mock');
+  if (window._editingLayoutJobId && body && body.clips && body.clips[0]) {
+    body.clips[0].jobId = window._editingLayoutJobId;
+    body.clips[0].assemblyId = (JOBS.find(function(j) { return j.id === window._editingLayoutJobId; }) || {}).assemblyId || body.clips[0].assemblyId;
+  }
   if (loading) loading.style.display = 'flex';
+  setComposerPreviewCaption('Rendering assembly preview…', 'pending');
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/preview', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
+    .then(function(r) { return r.json().then(function(d) { return { httpOk: r.ok, d: d }; }); })
+    .then(function(res) {
+      var d = res.d || {};
+      if (loading && seq === _composerPreviewSeq) loading.style.display = 'none';
       if (seq !== _composerPreviewSeq) return;
-      if (loading) loading.style.display = 'none';
-      if (!d.ok || !d.base64) {
+      if (!d.ok || (!d.previewVideoUrl && !d.base64)) {
+        if (window._editingLayoutJobId && showAssembledComposerPreview(window._editingLayoutJobId)) {
+          setComposerPreviewCaption('Live preview unavailable (CDN expired) — showing last assembled MP4', 'ok');
+          return;
+        }
         if (mock) mock.style.display = '';
         if (img) img.style.display = 'none';
+        if (video) { video.style.display = 'none'; video.removeAttribute('src'); }
+        setComposerPreviewCaption(formatComposerPreviewCaption(null, d.error || 'no preview returned'), 'err');
         return;
       }
-      if (img) {
+      if (d.previewVideoUrl && video) {
+        video.src = (CFG.ffmpegUrl || 'http://localhost:3000') + d.previewVideoUrl + '?t=' + Date.now();
+        video.style.display = 'block';
+        video.load();
+        video.play().catch(function() {});
+        if (img) img.style.display = 'none';
+      } else if (img && d.base64) {
         img.src = 'data:image/jpeg;base64,' + d.base64;
         img.style.display = 'block';
+        if (video) { video.style.display = 'none'; video.removeAttribute('src'); }
       }
       if (mock) mock.style.display = 'none';
+      setComposerPreviewCaption(formatComposerPreviewCaption(d), 'ok');
+      if (d.layoutSummary && d.layoutSummary.facecamRect) {
+        var subjEl = g('comp-creative-top-pane-subject');
+        if (subjEl && subjEl.value === 'auto') {
+          writeFacecamSlidersToDom(d.layoutSummary.facecamRect);
+          subjEl.value = 'custom';
+        }
+        renderCompCreativeSourceMap(d.layoutSummary.facecamRect);
+      } else {
+        renderCompCreativeSourceMap();
+      }
     })
-    .catch(function() {
+    .catch(function(e) {
+      if (loading && seq === _composerPreviewSeq) loading.style.display = 'none';
       if (seq !== _composerPreviewSeq) return;
-      if (loading) loading.style.display = 'none';
+      if (window._editingLayoutJobId && showAssembledComposerPreview(window._editingLayoutJobId)) {
+        setComposerPreviewCaption('Live preview unavailable — showing last assembled MP4', 'ok');
+        return;
+      }
       if (mock) mock.style.display = '';
       if (img) img.style.display = 'none';
+      var video = g('composer-preview-video');
+      if (video) { video.style.display = 'none'; video.removeAttribute('src'); }
+      setComposerPreviewCaption(formatComposerPreviewCaption(null, (e && e.message) || 'network error'), 'err');
     });
 }
 
@@ -15160,11 +15529,15 @@ function renderComposerPreviewMock(specBody, serverSpec) {
     main.style.display = thumb ? '' : 'none';
   }
   var preview = spec && spec.preview ? spec.preview : null;
-  var layoutMode = preview && preview.layoutMode ? preview.layoutMode : getEffectiveComposerLayoutMode({ preset: preset, layout: { mode: preset === 'facecam_split' ? 'split_screen' : (preset.indexOf('full') >= 0 || preset.indexOf('serpent') >= 0 ? 'full_bleed_crop' : 'blur_pad') } });
+  var layoutMode = getEffectiveComposerLayoutMode({
+    preset: (spec && spec.compCreativePreset) || preset,
+    layout: (spec && spec.compCreative && spec.compCreative.layout) || (preview ? { mode: preview.layoutMode } : { mode: preset === 'facecam_split' ? 'split_screen' : (preset.indexOf('full') >= 0 || preset.indexOf('serpent') >= 0 ? 'full_bleed_crop' : 'blur_pad') })
+  });
+  var splitTopPct = layoutMode === 'split_screen' ? Math.round(readTopShareFromDom() / SPLIT_OUTPUT_HEIGHT * 100) : 33;
   if (bg) {
     if (layoutMode === 'split_screen') {
       bg.style.display = '';
-      bg.style.clipPath = 'inset(0 0 67% 0)';
+      bg.style.clipPath = 'inset(0 0 ' + (100 - splitTopPct) + '% 0)';
       bg.style.filter = 'blur(8px) brightness(0.55)';
     } else {
       bg.style.clipPath = '';
@@ -15174,7 +15547,14 @@ function renderComposerPreviewMock(specBody, serverSpec) {
   }
   if (main) {
     if (layoutMode === 'full_bleed_crop') { main.style.inset = '0'; main.style.top = '0'; main.style.bottom = '0'; main.style.backgroundSize = 'cover'; }
-    else if (layoutMode === 'split_screen') { main.style.inset = ''; main.style.top = '33%'; main.style.bottom = '0'; main.style.left = '0'; main.style.right = '0'; main.style.backgroundSize = 'cover'; }
+    else if (layoutMode === 'split_screen') {
+      main.style.inset = '';
+      main.style.top = splitTopPct + '%';
+      main.style.bottom = '0';
+      main.style.left = '0';
+      main.style.right = '0';
+      main.style.backgroundSize = 'cover';
+    }
     else { main.style.inset = ''; main.style.top = '18%'; main.style.bottom = '28%'; main.style.left = '5%'; main.style.right = '5%'; main.style.backgroundSize = 'contain'; }
   }
   if (hook) {
@@ -15269,6 +15649,7 @@ function refreshGenerateComposer(callValidate) {
   var body = buildCompositionSpecFromUI();
   refreshCompCreativeLabel();
   renderComposerPreviewMock(body, null);
+  renderCompCreativeSourceMap();
   fetchFfmpegComposerPreview(body);
   if (callValidate !== false) {
     fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
@@ -15291,7 +15672,7 @@ function refreshGenerateComposer(callValidate) {
         var parts = [];
         if (v.errors && v.errors.length) parts.push('BLOCK: ' + v.errors.join(' · '));
         if (v.warnings && v.warnings.length) parts.push('Note: ' + v.warnings.join(' · '));
-        if (v.ok && d.spec) parts.push('Ready — ' + d.spec.totalDurationSec + 's footage · ' + (d.spec.features && d.spec.features.presetLabel || ''));
+        if (v.ok && d.spec) parts.push(buildComposerReadyLine(d.spec));
         valEl.textContent = parts.join('\n') || 'Validating…';
         var execBtn = g('btn-composer-execute');
         if (execBtn) execBtn.disabled = !v.ok;
@@ -15362,6 +15743,14 @@ function saveCompositionTemplate() {
 }
 
 function executeFromComposer() {
+  if (window._editingLayoutJobId) {
+    applyJobOperatorCreative(window._editingLayoutJobId, {
+      reassemble: true,
+      note: 'Layout send-back from composer',
+      fromLayoutEditor: true,
+    });
+    return;
+  }
   var body = buildCompositionSpecFromUI();
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
@@ -15377,6 +15766,29 @@ function executeFromComposer() {
       return executeComposerComp(d.spec);
     })
     .catch(function(e) { alert('Execute blocked: ' + e.message); });
+}
+
+function compCreativeDispatchFromValidatedSpec(spec) {
+  if (!spec || !spec.compCreative) {
+    return {
+      compCreativePreset: spec && spec.compCreativePreset,
+      compCreative: undefined,
+      compositionSpec: spec || null,
+      editorSignedOff: false,
+      editorSignedOffAt: null
+    };
+  }
+  var preset = spec.compCreativePreset || spec.compCreative.preset;
+  var copy = JSON.parse(JSON.stringify(spec.compCreative));
+  delete copy.preset;
+  delete copy.presetVersion;
+  return {
+    compCreativePreset: preset,
+    compCreative: copy,
+    compositionSpec: spec,
+    editorSignedOff: true,
+    editorSignedOffAt: new Date().toISOString()
+  };
 }
 
 function executeComposerShorts(spec) {
@@ -15427,12 +15839,16 @@ function executeComposerShorts(spec) {
           next();
         };
         xhr.onerror = function() { next(); };
+        var locked = compCreativeDispatchFromValidatedSpec(spec);
         xhr.send(JSON.stringify({
           clips: [payload],
           platforms: pub.platforms,
           contentType: contentType,
-          compCreativePreset: spec.compCreativePreset,
-          compCreative: (spec.compCreative && spec.compCreative.preset !== spec.compCreativePreset) ? spec.compCreative : undefined
+          compCreativePreset: locked.compCreativePreset,
+          compCreative: locked.compCreative,
+          compositionSpec: locked.compositionSpec,
+          editorSignedOff: locked.editorSignedOff,
+          editorSignedOffAt: locked.editorSignedOffAt
         }));
       }
       if (isNews) {
@@ -15490,7 +15906,7 @@ function executeComposerComp(spec) {
         title: repurposeCtx.title,
         repurposeFastHooks: !!repurposeCtx.repurposeFastHooks
       } : {};
-      _dispatchClipCompFromPicker(clips, contentType, pub.platforms, statusTag, g(isNews ? 'news-status' : 'twitch-fetch-status'), pub.scheduledAt, postLiveOpts);
+      _dispatchClipCompFromPicker(clips, contentType, pub.platforms, statusTag, g(isNews ? 'news-status' : 'twitch-fetch-status'), pub.scheduledAt, postLiveOpts, spec);
       if (repurposeCtx.postLiveVodSessionId) window._composerRepurposeContext = null;
     }
     var allClips = spec.clips.map(function(c) {
@@ -15537,7 +15953,7 @@ function executeComposerVodComp(spec) {
         };
       });
       markClipsUsed(allClips.map(function(c){ return c.url; }).filter(Boolean));
-      _dispatchClipCompFromPicker(clips, 'twitch-vod-comp', pub.platforms, 'twitch-gen-status', g('twitch-fetch-status'), pub.scheduledAt, {});
+      _dispatchClipCompFromPicker(clips, 'twitch-vod-comp', pub.platforms, 'twitch-gen-status', g('twitch-fetch-status'), pub.scheduledAt, {}, spec);
     });
   });
 }
@@ -16831,6 +17247,734 @@ function startClipCompReviewPoll(jobId, statusElId) {
 }
 
 var COMP_CREATIVE_STORAGE_KEY = 'cwn.compCreative.v1';
+var SPLIT_OUTPUT_HEIGHT = 1920;
+var SPLIT_OUTPUT_WIDTH = 1080;
+var SOURCE_LANDSCAPE_ASPECT = 16 / 9;
+var SPLIT_TOP_HEIGHT_DEFAULT = 640;
+var COMP_CREATIVE_LAYOUT_PRESETS = {
+  auto: { bottomPaneMode: 'wide_pan' },
+  stacked_figures: {
+    top: { x: 0.32, y: 0.02, w: 0.36, h: 0.42 },
+    bottom: { x: 0.10, y: 0.40, w: 0.80, h: 0.55 },
+    bottomPaneMode: 'custom_crop',
+  },
+  streamer_center: {
+    top: { x: 0.28, y: 0.04, w: 0.44, h: 0.40 },
+    bottom: { x: 0.08, y: 0.38, w: 0.84, h: 0.58 },
+    bottomPaneMode: 'custom_crop',
+  },
+  guest_right_studio: {
+    top: { x: 0.40, y: 0.06, w: 0.42, h: 0.58 },
+    bottomPaneMode: 'wide_pan',
+    contentCx: 15,
+  },
+  custom: null,
+};
+/** @deprecated alias */
+var COMP_CREATIVE_TOP_PANE_PRESETS = COMP_CREATIVE_LAYOUT_PRESETS;
+var _sourceMapDrag = null;
+var _sourceMapDragMoved = false;
+var _sourceMapActivePane = 'top';
+
+function readBottomPaneModeFromDom() {
+  var el = g('comp-creative-bottom-pane-mode');
+  return (el && el.value) || 'custom_crop';
+}
+
+function isBottomPaneCustomCrop() {
+  return readBottomPaneModeFromDom() === 'custom_crop';
+}
+
+function readBottomPaneSlidersFromDom() {
+  return clampFacecamRect({
+    x: pctToNorm((g('comp-creative-bottom-x') && g('comp-creative-bottom-x').value) || 10),
+    y: pctToNorm((g('comp-creative-bottom-y') && g('comp-creative-bottom-y').value) || 40),
+    w: pctToNorm((g('comp-creative-bottom-w') && g('comp-creative-bottom-w').value) || 80),
+    h: pctToNorm((g('comp-creative-bottom-h') && g('comp-creative-bottom-h').value) || 55),
+  });
+}
+
+function writeBottomPaneSlidersToDom(rect) {
+  if (!rect) return;
+  syncBottomSlidersFromRect(lockRectToPaneAspect(rect, 'bottom'));
+}
+
+function refreshBottomPaneModeUI() {
+  var custom = isBottomPaneCustomCrop();
+  var bottomSliders = g('comp-creative-bottom-crop-sliders');
+  var wideWrap = g('comp-creative-wide-pan-wrap');
+  if (bottomSliders) bottomSliders.style.display = custom ? 'block' : 'none';
+  if (wideWrap) wideWrap.style.display = custom ? 'none' : 'block';
+  ['composer-source-map', 'comp-creative-source-map'].forEach(function(prefix) {
+    var bottomCrop = g(prefix + '-bottom-crop');
+    var cxLine = g(prefix + '-cx');
+    if (bottomCrop) bottomCrop.style.display = custom ? 'flex' : 'none';
+    if (cxLine) cxLine.style.display = custom ? 'none' : 'block';
+  });
+}
+
+function onCompCreativeBottomPaneModeChange() {
+  var mode = readBottomPaneModeFromDom();
+  refreshBottomPaneModeUI();
+  try {
+    var stored = loadCompCreativePresetFromStorage();
+    stored.bottomPaneMode = mode;
+    if (mode === 'custom_crop' && !stored.bottomPaneRect) {
+      stored.bottomPaneRect = readBottomPaneSlidersFromDom();
+    }
+    localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+  } catch (e) { /* ignore */ }
+  renderCompCreativeSourceMap();
+  refreshGenerateComposer(false);
+}
+
+function onCompCreativeBottomSliderChange(skipSave) {
+  var rect = lockRectToPaneAspect(readBottomPaneSlidersFromDom(), 'bottom');
+  syncBottomSlidersFromRect(rect);
+  renderCompCreativeSourceMap(null, rect);
+  if (!skipSave) {
+    try {
+      var stored = loadCompCreativePresetFromStorage();
+      stored.bottomPaneRect = rect;
+      stored.bottomPaneMode = 'custom_crop';
+      stored.topPaneSubject = 'custom';
+      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+      var modeEl = g('comp-creative-bottom-pane-mode');
+      if (modeEl) modeEl.value = 'custom_crop';
+      var subj = g('comp-creative-top-pane-subject');
+      if (subj) subj.value = 'custom';
+    } catch (e) { /* ignore */ }
+    refreshBottomPaneModeUI();
+    refreshGenerateComposer(false);
+  }
+}
+
+function applyLayoutPreset(key) {
+  var preset = COMP_CREATIVE_LAYOUT_PRESETS[key];
+  if (!preset) return;
+  if (preset.top) writeFacecamSlidersToDom(preset.top);
+  if (preset.bottom) writeBottomPaneSlidersToDom(preset.bottom);
+  if (preset.bottomPaneMode) {
+    var modeEl = g('comp-creative-bottom-pane-mode');
+    if (modeEl) modeEl.value = preset.bottomPaneMode;
+    refreshBottomPaneModeUI();
+  }
+  if (preset.contentCx != null && g('comp-creative-content-cx')) {
+    g('comp-creative-content-cx').value = String(preset.contentCx);
+    onCompCreativeContentCxChange(preset.contentCx);
+  }
+  renderCompCreativeSourceMap();
+  relLockCropRectsToPaneAspect();
+}
+
+function getLeadCompClipThumb() {
+  var picked = collectCompPickedClips();
+  var lead = picked[0] && picked[0].clip;
+  if (!lead) return '';
+  return (lead.thumbnailUrl || '').replace('{width}', '640').replace('{height}', '360');
+}
+
+function splitPaneNormAspect() {
+  var topH = readTopShareFromDom();
+  var botH = SPLIT_OUTPUT_HEIGHT - topH;
+  return {
+    topHeight: topH,
+    bottomHeight: botH,
+    topNormWH: (SPLIT_OUTPUT_WIDTH / topH) / SOURCE_LANDSCAPE_ASPECT,
+    bottomNormWH: (SPLIT_OUTPUT_WIDTH / botH) / SOURCE_LANDSCAPE_ASPECT,
+  };
+}
+
+function lockRectToPaneAspect(rect, pane) {
+  var asp = splitPaneNormAspect();
+  var targetWH = pane === 'top' ? asp.topNormWH : asp.bottomNormWH;
+  rect = clampFacecamRect(rect);
+  if (!rect) return { x: 0.1, y: 0.05, w: 0.35, h: 0.35 / targetWH };
+  var cx = rect.x + rect.w / 2;
+  var cy = rect.y + rect.h / 2;
+  var w = rect.w;
+  var h = w / targetWH;
+  if (h > 0.92) { h = 0.92; w = h * targetWH; }
+  if (w > 0.95) { w = 0.95; h = w / targetWH; }
+  if (h < 0.12) { h = 0.12; w = h * targetWH; }
+  var x = Math.max(0, Math.min(1 - w, cx - w / 2));
+  var y = Math.max(0, Math.min(1 - h, cy - h / 2));
+  return clampFacecamRect({ x: x, y: y, w: w, h: h });
+}
+
+function relLockCropRectsToPaneAspect() {
+  var top = lockRectToPaneAspect(readFacecamSlidersFromDom(), 'top');
+  syncFacecamSlidersFromRect(top);
+  if (isBottomPaneCustomCrop()) {
+    var bot = lockRectToPaneAspect(readBottomPaneSlidersFromDom(), 'bottom');
+    syncBottomSlidersFromRect(bot);
+  }
+  renderCompCreativeSourceMap(top, isBottomPaneCustomCrop() ? readBottomPaneSlidersFromDom() : null);
+}
+
+function syncFacecamSlidersFromRect(rect) {
+  var sx = g('comp-creative-facecam-x');
+  var sy = g('comp-creative-facecam-y');
+  var sw = g('comp-creative-facecam-w');
+  var sh = g('comp-creative-facecam-h');
+  if (sx) sx.value = String(normToPct(rect.x));
+  if (sy) sy.value = String(normToPct(rect.y));
+  if (sw) sw.value = String(normToPct(rect.w));
+  if (sh) sh.value = String(normToPct(rect.h));
+  var lab = g('comp-creative-facecam-val');
+  if (lab) {
+    lab.textContent = 'Top · x' + rect.x.toFixed(2) + ' y' + rect.y.toFixed(2)
+      + ' w' + rect.w.toFixed(2) + ' h' + rect.h.toFixed(2)
+      + ' · shape locked to output top half';
+  }
+}
+
+function syncBottomSlidersFromRect(rect) {
+  var sx = g('comp-creative-bottom-x');
+  var sy = g('comp-creative-bottom-y');
+  var sw = g('comp-creative-bottom-w');
+  var sh = g('comp-creative-bottom-h');
+  if (sx) sx.value = String(normToPct(rect.x));
+  if (sy) sy.value = String(normToPct(rect.y));
+  if (sw) sw.value = String(normToPct(rect.w));
+  if (sh) sh.value = String(normToPct(rect.h));
+  var lab = g('comp-creative-bottom-val');
+  if (lab) {
+    lab.textContent = 'Bottom · x' + rect.x.toFixed(2) + ' y' + rect.y.toFixed(2)
+      + ' w' + rect.w.toFixed(2) + ' h' + rect.h.toFixed(2)
+      + ' · shape locked to output bottom half';
+  }
+}
+
+function clampFacecamRect(rect) {
+  var w = Math.max(0.12, Math.min(0.85, Number(rect.w) || 0.42));
+  var h = Math.max(0.15, Math.min(0.85, Number(rect.h) || 0.58));
+  var x = Math.max(0, Math.min(1 - w, Number(rect.x) || 0));
+  var y = Math.max(0, Math.min(1 - h, Number(rect.y) || 0));
+  return { x: x, y: y, w: w, h: h };
+}
+
+function paintSourceMapOverlay(prefix, topRect, bottomRect) {
+  var bg = g(prefix + '-bg');
+  var crop = g(prefix + '-crop');
+  var bottomCrop = g(prefix + '-bottom-crop');
+  var cxLine = g(prefix + '-cx');
+  var thumb = getLeadCompClipThumb();
+  var customBottom = isBottomPaneCustomCrop();
+  if (bg) bg.style.backgroundImage = thumb ? ('url(' + thumb + ')') : 'none';
+  topRect = clampFacecamRect(topRect || readFacecamSlidersFromDom());
+  if (crop) {
+    crop.style.left = (topRect.x * 100) + '%';
+    crop.style.top = (topRect.y * 100) + '%';
+    crop.style.width = (topRect.w * 100) + '%';
+    crop.style.height = (topRect.h * 100) + '%';
+  }
+  bottomRect = clampFacecamRect(bottomRect || readBottomPaneSlidersFromDom());
+  if (bottomCrop) {
+    bottomCrop.style.display = customBottom ? 'flex' : 'none';
+    if (customBottom) {
+      bottomCrop.style.left = (bottomRect.x * 100) + '%';
+      bottomCrop.style.top = (bottomRect.y * 100) + '%';
+      bottomCrop.style.width = (bottomRect.w * 100) + '%';
+      bottomCrop.style.height = (bottomRect.h * 100) + '%';
+    }
+  }
+  if (cxLine) {
+    cxLine.style.display = customBottom ? 'none' : 'block';
+    if (!customBottom) {
+      cxLine.style.left = (pctToNorm((g('comp-creative-content-cx') && g('comp-creative-content-cx').value) || 50) * 100) + '%';
+    }
+  }
+}
+
+function renderCompCreativeSourceMap(overrideTopRect, overrideBottomRect) {
+  var show = composerLineupIsLandscape() && (collectCompPickedClips().length > 0 || !!_composerVodSegment);
+  var block = g('composer-source-map-block');
+  var wrap = g('comp-creative-source-map-wrap');
+  if (block) block.style.display = show ? 'block' : 'none';
+  if (wrap) wrap.style.display = show ? 'block' : 'none';
+  if (!show) return;
+  refreshBottomPaneModeUI();
+  paintSourceMapOverlay('composer-source-map', overrideTopRect, overrideBottomRect);
+  paintSourceMapOverlay('comp-creative-source-map', overrideTopRect, overrideBottomRect);
+  if (!window._composerSourceMapBound) {
+    window._composerSourceMapBound = true;
+    bindSourceMapInteraction('composer-source-map');
+    bindSourceMapInteraction('comp-creative-source-map');
+  }
+}
+
+function bindSourceMapInteraction(mapId) {
+  var map = g(mapId);
+  if (!map || map.dataset.bound) return;
+  map.dataset.bound = '1';
+  map.addEventListener('mousedown', function(e) { onSourceMapPointerDown(e, mapId); });
+  map.addEventListener('touchstart', function(e) { onSourceMapPointerDown(e, mapId); }, { passive: false });
+}
+
+function sourceMapPointFromEvent(e, mapId) {
+  var map = g(mapId);
+  if (!map) return { x: 0.5, y: 0.5 };
+  var rect = map.getBoundingClientRect();
+  var clientX = e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX;
+  var clientY = e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY;
+  return {
+    x: Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)),
+    y: Math.max(0, Math.min(1, (clientY - rect.top) / rect.height))
+  };
+}
+
+function onSourceMapPointerDown(e, mapId) {
+  var topCrop = g(mapId + '-crop');
+  var bottomCrop = g(mapId + '-bottom-crop');
+  if (!topCrop) return;
+  var pt = sourceMapPointFromEvent(e, mapId);
+  var topRect = readFacecamSlidersFromDom();
+  var bottomRect = readBottomPaneSlidersFromDom();
+  var onTop = e.target === topCrop || (topCrop.contains && topCrop.contains(e.target));
+  var onBottom = bottomCrop && (e.target === bottomCrop || (bottomCrop.contains && bottomCrop.contains(e.target)));
+  if (onTop) {
+    _sourceMapActivePane = 'top';
+    _sourceMapDrag = { mapId: mapId, pane: 'top', startPt: pt, startRect: topRect };
+    _sourceMapDragMoved = false;
+    e.preventDefault();
+    return;
+  }
+  if (onBottom && isBottomPaneCustomCrop()) {
+    _sourceMapActivePane = 'bottom';
+    _sourceMapDrag = { mapId: mapId, pane: 'bottom', startPt: pt, startRect: bottomRect };
+    _sourceMapDragMoved = false;
+    e.preventDefault();
+    return;
+  }
+  var active = (_sourceMapActivePane === 'bottom' && isBottomPaneCustomCrop()) ? 'bottom' : 'top';
+  var r = active === 'bottom' ? bottomRect : topRect;
+  var nx = Math.max(0, Math.min(1 - r.w, pt.x - r.w / 2));
+  var ny = Math.max(0, Math.min(1 - r.h, pt.y - r.h / 2));
+  if (active === 'bottom') applyBottomPaneRectToDom({ x: nx, y: ny, w: r.w, h: r.h });
+  else applyFacecamRectToDom({ x: nx, y: ny, w: r.w, h: r.h });
+  e.preventDefault();
+}
+
+function onSourceMapPointerMove(e) {
+  if (!_sourceMapDrag) return;
+  var pt = sourceMapPointFromEvent(e, _sourceMapDrag.mapId);
+  var dx = pt.x - _sourceMapDrag.startPt.x;
+  var dy = pt.y - _sourceMapDrag.startPt.y;
+  if (Math.abs(dx) > 0.004 || Math.abs(dy) > 0.004) _sourceMapDragMoved = true;
+  var sr = _sourceMapDrag.startRect;
+  var next = {
+    x: Math.max(0, Math.min(1 - sr.w, sr.x + dx)),
+    y: Math.max(0, Math.min(1 - sr.h, sr.y + dy)),
+    w: sr.w,
+    h: sr.h,
+  };
+  if (_sourceMapDrag.pane === 'bottom') applyBottomPaneRectToDom(next, true);
+  else applyFacecamRectToDom(next, true);
+  e.preventDefault();
+}
+
+function onSourceMapPointerUp() {
+  if (!_sourceMapDrag) return;
+  if (_sourceMapDragMoved) {
+    try {
+      var stored = loadCompCreativePresetFromStorage();
+      stored.facecamRect = readFacecamSlidersFromDom();
+      stored.bottomPaneRect = readBottomPaneSlidersFromDom();
+      stored.bottomPaneMode = readBottomPaneModeFromDom();
+      stored.topPaneSubject = 'custom';
+      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+      var subj = g('comp-creative-top-pane-subject');
+      if (subj) subj.value = 'custom';
+    } catch (err) { /* ignore */ }
+    refreshGenerateComposer(false);
+  }
+  _sourceMapDrag = null;
+  _sourceMapDragMoved = false;
+}
+
+function applyBottomPaneRectToDom(rect, skipRefresh) {
+  rect = clampFacecamRect(rect);
+  writeBottomPaneSlidersToDom(rect);
+  renderCompCreativeSourceMap(null, rect);
+  if (!skipRefresh) {
+    try {
+      var stored = loadCompCreativePresetFromStorage();
+      stored.bottomPaneRect = rect;
+      stored.bottomPaneMode = 'custom_crop';
+      stored.topPaneSubject = 'custom';
+      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+      var modeEl = g('comp-creative-bottom-pane-mode');
+      if (modeEl) modeEl.value = 'custom_crop';
+      refreshBottomPaneModeUI();
+    } catch (err) { /* ignore */ }
+    refreshGenerateComposer(false);
+  }
+}
+
+if (!window._composerSourceMapDocBound) {
+  window._composerSourceMapDocBound = true;
+  document.addEventListener('mousemove', onSourceMapPointerMove);
+  document.addEventListener('mouseup', onSourceMapPointerUp);
+  document.addEventListener('touchmove', onSourceMapPointerMove, { passive: false });
+  document.addEventListener('touchend', onSourceMapPointerUp);
+}
+
+function applyFacecamRectToDom(rect, skipRefresh) {
+  rect = clampFacecamRect(rect);
+  writeFacecamSlidersToDom(rect);
+  renderCompCreativeSourceMap(rect);
+  if (!skipRefresh) {
+    try {
+      var stored = loadCompCreativePresetFromStorage();
+      stored.facecamRect = rect;
+      stored.topPaneSubject = 'custom';
+      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+      var subj = g('comp-creative-top-pane-subject');
+      if (subj) subj.value = 'custom';
+    } catch (err) { /* ignore */ }
+    refreshGenerateComposer(false);
+  }
+}
+
+function pctToNorm(n) { return Math.max(0, Math.min(1, (Number(n) || 0) / 100)); }
+function normToPct(n) { return Math.round(Math.max(0, Math.min(100, (Number(n) || 0) * 100))); }
+
+function topSharePctToHeight(pct) {
+  var h = Math.round((Number(pct) || 33) / 100 * SPLIT_OUTPUT_HEIGHT / 2) * 2;
+  return Math.max(320, Math.min(960, h));
+}
+function topHeightToSharePct(h) {
+  return Math.round(Math.max(320, Math.min(960, Number(h) || SPLIT_TOP_HEIGHT_DEFAULT)) / SPLIT_OUTPUT_HEIGHT * 100);
+}
+function readTopShareFromDom() {
+  var el = g('comp-creative-top-share');
+  return topSharePctToHeight(el ? el.value : 33);
+}
+function writeTopShareToDom(topHeight) {
+  var el = g('comp-creative-top-share');
+  var pct = topHeightToSharePct(topHeight);
+  if (el) el.value = String(pct);
+  onCompCreativeTopShareChange(pct, true);
+}
+function onCompCreativeTopShareChange(val, skipSave) {
+  var pct = Math.max(25, Math.min(50, parseInt(val, 10) || 33));
+  var h = topSharePctToHeight(pct);
+  var topPct = Math.round(h / SPLIT_OUTPUT_HEIGHT * 100);
+  var botPct = 100 - topPct;
+  var lab = g('comp-creative-top-share-val');
+  if (lab) lab.textContent = 'Split · top ' + topPct + '% / bottom ' + botPct + '% (' + h + 'px) · boxes reshape to match';
+  relLockCropRectsToPaneAspect();
+  if (!skipSave) {
+    try {
+      var stored = loadCompCreativePresetFromStorage();
+      stored.topSharePct = pct;
+      stored.topHeight = h;
+      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+    } catch (e) { /* ignore */ }
+    refreshGenerateComposer(false);
+  }
+}
+
+function readFacecamSlidersFromDom() {
+  return {
+    x: pctToNorm((g('comp-creative-facecam-x') && g('comp-creative-facecam-x').value) || 40),
+    y: pctToNorm((g('comp-creative-facecam-y') && g('comp-creative-facecam-y').value) || 6),
+    w: pctToNorm((g('comp-creative-facecam-w') && g('comp-creative-facecam-w').value) || 42),
+    h: pctToNorm((g('comp-creative-facecam-h') && g('comp-creative-facecam-h').value) || 58),
+  };
+}
+
+function writeFacecamSlidersToDom(rect) {
+  if (!rect) return;
+  syncFacecamSlidersFromRect(lockRectToPaneAspect(rect, 'top'));
+}
+
+function onCompCreativeTopPaneSubjectChange() {
+  var sel = g('comp-creative-top-pane-subject');
+  var key = sel ? sel.value : 'stacked_figures';
+  if (key !== 'custom' && key !== 'auto') applyLayoutPreset(key);
+  try {
+    var stored = loadCompCreativePresetFromStorage();
+    stored.topPaneSubject = key;
+    localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+  } catch (e) { /* ignore */ }
+  refreshGenerateComposer(false);
+}
+
+function onCompCreativeFacecamSliderChange(skipSave) {
+  var rect = lockRectToPaneAspect(readFacecamSlidersFromDom(), 'top');
+  syncFacecamSlidersFromRect(rect);
+  renderCompCreativeSourceMap(rect);
+  if (!skipSave) {
+    try {
+      var stored = loadCompCreativePresetFromStorage();
+      stored.facecamRect = rect;
+      stored.topPaneSubject = (g('comp-creative-top-pane-subject') && g('comp-creative-top-pane-subject').value) || 'custom';
+      if (stored.topPaneSubject !== 'custom') {
+        var subj = g('comp-creative-top-pane-subject');
+        if (subj) subj.value = 'custom';
+      }
+      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+    } catch (e) { /* ignore */ }
+    refreshGenerateComposer(false);
+  }
+}
+
+function applyOperatorLayoutFromJobCard(job) {
+  if (!job) return;
+  var layout = (job.compCreative && job.compCreative.layout) || {};
+  var landscapeSel = g('comp-creative-landscape-layout');
+  if (landscapeSel) {
+    landscapeSel.value = layout.landscapeSplit === false ? 'single' : 'split_screen';
+    try {
+      var stored = loadCompCreativePresetFromStorage();
+      stored.landscapeLayout = landscapeSel.value;
+      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+    } catch (e) { /* ignore */ }
+    refreshLandscapeSplitUI();
+  }
+  if (layout.landscapeSplit === false) return;
+  var subj = g('comp-creative-top-pane-subject');
+  if (subj) subj.value = layout.topPaneSubject || 'custom';
+  if (layout.facecamRect) writeFacecamSlidersToDom(layout.facecamRect);
+  if (layout.contentCx != null && g('comp-creative-content-cx')) {
+    g('comp-creative-content-cx').value = String(Math.round(Number(layout.contentCx) * 100));
+    onCompCreativeContentCxChange(g('comp-creative-content-cx').value);
+  }
+  if (layout.topHeight != null) writeTopShareToDom(layout.topHeight);
+  if (layout.bottomPaneMode && g('comp-creative-bottom-pane-mode')) {
+    g('comp-creative-bottom-pane-mode').value = layout.bottomPaneMode;
+    refreshBottomPaneModeUI();
+  }
+  if (layout.bottomPaneRect) writeBottomPaneSlidersToDom(layout.bottomPaneRect);
+}
+
+function sendJobBackLayout(jobId) {
+  if (!jobId) jobId = window._editingLayoutJobId;
+  if (!jobId) { alert('No job selected for layout send-back.'); return; }
+  applyJobOperatorCreative(jobId, {
+    reassemble: true,
+    note: 'Send back — layout fix from operator',
+    fromLayoutEditor: !!window._editingLayoutJobId,
+  });
+}
+
+function syncComposerExecuteButtonForLayoutMode() {
+  var btn = g('btn-composer-execute');
+  if (!btn) return;
+  if (window._editingLayoutJobId) {
+    btn.textContent = '↩ SAVE LAYOUT · RE-ASSEMBLE';
+    btn.title = 'Updates job ' + window._editingLayoutJobId + ' — does not create a new job ID';
+  } else {
+    btn.textContent = 'EXECUTE → ASSEMBLY';
+    btn.title = '';
+  }
+}
+
+function clearLayoutEditorHandoff() {
+  window._editingLayoutJobId = null;
+  syncComposerExecuteButtonForLayoutMode();
+  var handoff = g('composer-handoff-summary');
+  if (handoff) handoff.innerHTML = '';
+}
+
+/** Layout for assembly — job card when queue builds; live compose sliders only in layout-editor handoff. */
+function readLayoutPayloadForAssembly(jobId) {
+  var editingJobId = window._editingLayoutJobId || null;
+  if (jobId && editingJobId !== jobId) {
+    var job = JOBS.find(function(j) { return j.id === jobId; });
+    var cardLayout = job && job.compCreative && job.compCreative.layout;
+    if (cardLayout && (cardLayout.facecamRect || cardLayout.bottomPaneRect || cardLayout.operatorLocked)) {
+      return {
+        mode: cardLayout.mode || 'split_screen',
+        landscapeSplit: cardLayout.landscapeSplit !== false,
+        facecamRect: cardLayout.facecamRect || null,
+        contentCx: cardLayout.contentCx != null ? cardLayout.contentCx : null,
+        topHeight: cardLayout.topHeight || null,
+        topPaneSubject: cardLayout.topPaneSubject || 'custom',
+        bottomPaneMode: cardLayout.bottomPaneMode || 'custom_crop',
+        bottomPaneRect: cardLayout.bottomPaneRect || null,
+      };
+    }
+  }
+  saveCompCreativePresetToStorage();
+  var stored = loadCompCreativePresetFromStorage();
+  var preset = stored.preset || 'classic_blur_pad';
+  var splitOn = composerLandscapeSplitEnabled(stored);
+  if (!splitOn) {
+    return {
+      mode: presetLayoutModeForCompose(preset),
+      landscapeSplit: false,
+    };
+  }
+  var subject = stored.topPaneSubject || 'stacked_figures';
+  var layoutPreset = COMP_CREATIVE_LAYOUT_PRESETS[subject];
+  var bottomMode = stored.bottomPaneMode || readBottomPaneModeFromDom();
+  var facecamRect = readFacecamSlidersFromDom() || stored.facecamRect
+    || (layoutPreset && layoutPreset.top ? layoutPreset.top : null);
+  var bottomPaneRect = bottomMode === 'custom_crop'
+    ? (readBottomPaneSlidersFromDom() || stored.bottomPaneRect || (layoutPreset && layoutPreset.bottom ? layoutPreset.bottom : null))
+    : null;
+  if (facecamRect || bottomPaneRect) subject = 'custom';
+  return {
+    mode: 'split_screen',
+    landscapeSplit: true,
+    facecamRect: facecamRect,
+    contentCx: pctToNorm(stored.contentCx != null ? stored.contentCx : ((g('comp-creative-content-cx') && g('comp-creative-content-cx').value) || 50)),
+    topHeight: stored.topHeight || readTopShareFromDom(),
+    topPaneSubject: subject,
+    bottomPaneMode: bottomMode,
+    bottomPaneRect: bottomPaneRect,
+  };
+}
+
+function snapshotLayoutToJobCard(jobId, note) {
+  var layout = readLayoutPayloadForAssembly(jobId);
+  return fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/job/' + encodeURIComponent(jobId) + '/operator-creative', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ layout: layout, note: note || 'Layout snapshot before assembly', reassemble: false })
+  }).then(function(r) { return r.json(); });
+}
+
+function saveCustomHookFromInput(jobId, clipIndex) {
+  var input = document.getElementById('custom-hook-input-' + jobId + '-' + clipIndex);
+  var text = input ? String(input.value || '').trim() : '';
+  if (!text) return Promise.resolve({ ok: true, skipped: true });
+  return fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/job/' + encodeURIComponent(jobId) + '/custom-hook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clipIndex: clipIndex, hookText: text, autoReassemble: false, autoBuild: false })
+  }).then(function(r) { return r.json(); });
+}
+
+function applyJobOperatorCreative(jobId, opts) {
+  opts = opts || {};
+  var layout = readLayoutPayloadForAssembly(jobId);
+  var note = opts.note;
+  if (note == null) {
+    note = prompt('Creative note for assembly (what you changed):');
+    if (note === null) return;
+  }
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/job/' + encodeURIComponent(jobId) + '/operator-creative', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ layout: layout, note: note, reassemble: opts.reassemble !== false })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'Save failed');
+      var layoutJobId = jobId;
+      var fromEditor = opts.fromLayoutEditor && window._editingLayoutJobId === layoutJobId;
+      if (fromEditor) {
+        clearLayoutEditorHandoff();
+        nav('queue');
+        if (opts.reassemble !== false && typeof startClipCompReviewPoll === 'function') {
+          startClipCompReviewPoll(layoutJobId, null);
+        }
+        alert('Layout saved on ' + layoutJobId + ' — re-assembling now. Preview from the job queue when done.');
+      } else {
+        alert(d.message || 'Operator creative saved.');
+      }
+      if (typeof refreshJobQueue === 'function') refreshJobQueue();
+    })
+    .catch(function(e) { alert('Operator creative failed: ' + e.message); });
+}
+
+function hydrateComposerFromJobCard(job) {
+  if (!job) return;
+  _composerContentSource = 'twitch';
+  _composerVodSegment = null;
+  _composerRepurposeContext = null;
+  var clips = job.orderedClipUrls || [];
+  if (!clips.length) return;
+  _twitchPickerStreamers = [{
+    name: clips[0].streamer || clips[0].displayName || 'clip',
+    displayName: clips[0].displayName || clips[0].streamer || 'Clip',
+    platform: 'twitch',
+    selected: true,
+    collapsed: false,
+    clips: clips.map(function(c) {
+      return {
+        title: c.title || '',
+        url: c.pageUrl || c.url || c.clipUrl || '',
+        pageUrl: c.pageUrl || c.url || '',
+        mp4Url: c.clipUrl || c.url || '',
+        stagedUrl: c.stagedUrl || c.r2Url || '',
+        views: c.views || 0,
+        game: c.game || '',
+        thumbnailUrl: c.thumbnailUrl || '',
+        duration: (c.trimEnd != null && c.trimStart != null) ? (c.trimEnd - c.trimStart) : (c.duration || 30),
+        orientation: c.orientation || 'landscape',
+        selected: true,
+        composerTrimStart: c.trimStart != null ? c.trimStart : 0,
+        composerTrimEnd: c.trimEnd != null ? c.trimEnd : (c.duration || 30),
+      };
+    }),
+    clipsRaw: null,
+    dropReason: null,
+  }];
+  if (job.compCreativePreset && g('comp-creative-preset')) {
+    g('comp-creative-preset').value = job.compCreativePreset;
+  }
+  if (typeof refreshCompLineupUI === 'function') refreshCompLineupUI();
+}
+
+function renderLayoutEditHandoffSummary(jobId) {
+  var el = g('composer-handoff-summary');
+  if (!el) return;
+  el.innerHTML = '<div style="font-size:14px;color:rgba(46,204,113,0.95);letter-spacing:1px;margin-bottom:6px;">LAYOUT EDIT · ' + escapeHtml(jobId) + '</div>'
+    + '<div style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:8px;">Adjust crops in Creative Mode (green panel). Then click <strong>↩ SAVE LAYOUT · RE-ASSEMBLE</strong> below — <em>not</em> EXECUTE (EXECUTE creates a new job).</div>'
+    + '<button type="button" class="btn btn-gold btn-sm" onclick="sendJobBackLayout(window._editingLayoutJobId)">↩ SAVE LAYOUT · RE-ASSEMBLE</button>'
+    + ' <button type="button" class="btn btn-outline btn-sm" onclick="clearLayoutEditorHandoff(); nav(\'queue\')">← Job Queue (cancel)</button>';
+  syncComposerExecuteButtonForLayoutMode();
+}
+
+function finishJobLayoutEditor(job, jobId) {
+  window._editingLayoutJobId = jobId;
+  var openComposer = function(card) {
+    if (card) {
+      mergeServerJobIntoLocal(jobId, card, { skipRender: true });
+      saveJobs();
+      job = JOBS.find(function(j) { return j.id === jobId; }) || card;
+    }
+    hydrateComposerFromJobCard(job);
+    applyOperatorLayoutFromJobCard(job);
+    nav('generate');
+    switchGeneratePillar('twitch');
+    renderLayoutEditHandoffSummary(jobId);
+    refreshCompCreativeChips();
+    refreshGenerateComposer(true);
+    var panel = g('generate-composer');
+    if (panel) {
+      panel.classList.add('is-open');
+      setTimeout(function() { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 120);
+    }
+  };
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/job/' + encodeURIComponent(jobId))
+    .then(function(r) { return r.json(); })
+    .then(function(d) { openComposer(d.ok && d.job ? d.job : job); })
+    .catch(function() { openComposer(job); });
+}
+
+function openJobLayoutEditor(jobId) {
+  var job = null;
+  if (typeof JOBS !== 'undefined') {
+    job = JOBS.find(function(j) { return j.id === jobId; });
+  }
+  if (job && job.orderedClipUrls && job.orderedClipUrls.length) {
+    finishJobLayoutEditor(job, jobId);
+    return;
+  }
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/job/' + encodeURIComponent(jobId))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !d.job) throw new Error(d.error || 'Job not found');
+      finishJobLayoutEditor(d.job, jobId);
+    })
+    .catch(function(e) { alert('Could not open layout editor: ' + e.message); });
+}
 var _compCreativeCatalog = [];
 var _compCreativeCatalogById = {};
 
@@ -16887,6 +18031,11 @@ function refreshCompCreativeLabel() {
     + '<div><span style="color:rgba(199,175,79,0.75);">Features</span> '
     + escHtml(e.layout + ' · ' + e.hooks + ' · ' + whisperNote + ' · ' + e.audio) + '</div>'
     + '<div style="margin-top:4px;"><span style="color:rgba(199,175,79,0.75);">Outcome</span> ' + escHtml(e.outcome) + '</div>';
+  if (composerLineupIsLandscape() && preset === 'full_bleed' && composerLandscapeSplitEnabled()) {
+    el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(46,204,113,0.35);background:rgba(46,204,113,0.08);color:rgba(46,204,113,0.95);font-size:13px;">16:9 clip · <strong>split screen</strong> — tune green/gold boxes below. Switch to <em>Single view</em> above for one full frame.</div>';
+  } else if (composerLineupIsLandscape() && preset === 'full_bleed' && !composerLandscapeSplitEnabled()) {
+    el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(199,175,79,0.35);background:rgba(199,175,79,0.08);color:rgba(199,175,79,0.95);font-size:13px;">16:9 clip · <strong>single view</strong> — full bleed portrait (no split panes).</div>';
+  }
 }
 
 function compCreativeDisplayName(preset) {
@@ -16903,11 +18052,51 @@ function composerLineupIsLandscape() {
   });
 }
 
+function composerLandscapeSplitEnabled(stored) {
+  stored = stored || loadCompCreativePresetFromStorage();
+  var preset = stored.preset || 'classic_blur_pad';
+  if (preset === 'facecam_split') return true;
+  if (!composerLineupIsLandscape()) return false;
+  return (stored.landscapeLayout || 'split_screen') !== 'single';
+}
+
+function presetLayoutModeForCompose(preset) {
+  preset = preset || 'classic_blur_pad';
+  if (preset === 'facecam_split') return 'split_screen';
+  if (preset === 'full_bleed' || preset.indexOf('serpent') >= 0 || preset === 'dahbluh_clean' || preset === 'twitch_comp_vod') {
+    return 'full_bleed_crop';
+  }
+  return 'blur_pad';
+}
+
+function onCompCreativeLandscapeLayoutChange() {
+  var sel = g('comp-creative-landscape-layout');
+  if (!sel) return;
+  try {
+    var stored = loadCompCreativePresetFromStorage();
+    stored.landscapeLayout = sel.value === 'single' ? 'single' : 'split_screen';
+    localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+  } catch (e) { /* ignore */ }
+  refreshLandscapeSplitUI();
+  refreshCompCreativeChips();
+}
+
+function refreshLandscapeSplitUI() {
+  var splitOn = composerLandscapeSplitEnabled();
+  var controls = g('comp-creative-landscape-split-controls');
+  var singleHint = g('comp-creative-landscape-single-hint');
+  var sel = g('comp-creative-landscape-layout');
+  if (sel) sel.value = splitOn ? 'split_screen' : 'single';
+  if (controls) controls.style.display = splitOn ? '' : 'none';
+  if (singleHint) singleHint.style.display = splitOn ? 'none' : 'block';
+}
+
 function getEffectiveComposerLayoutMode(pseudo) {
   pseudo = pseudo || {};
   var layout = (pseudo.layout && pseudo.layout.mode) || 'blur_pad';
   if (pseudo.preset === 'facecam_split') return 'split_screen';
-  if (composerLineupIsLandscape()) return 'split_screen';
+  if (pseudo.layout && pseudo.layout.landscapeSplit === false) return layout;
+  if (composerLineupIsLandscape() && composerLandscapeSplitEnabled()) return 'split_screen';
   return layout;
 }
 
@@ -16919,6 +18108,7 @@ function onCompCreativeContentCxChange(val) {
     var hint = n < 42 ? 'Left' : (n > 58 ? 'Right' : 'Centre');
     lab.textContent = hint + ' · ' + cx;
   }
+  renderCompCreativeSourceMap();
   try {
     var stored = loadCompCreativePresetFromStorage();
     stored.contentCx = n;
@@ -16948,7 +18138,9 @@ function compCreativeChipList(creative) {
   }
   var layout = getEffectiveComposerLayoutMode(creative);
   chips.push(layout === 'full_bleed_crop' ? 'full bleed' : layout === 'split_screen' ? 'facecam split' : 'blur-pad');
-  if (composerLineupIsLandscape() && layout === 'split_screen') chips.push('16:9 → auto split');
+  if (composerLineupIsLandscape()) {
+    chips.push(composerLandscapeSplitEnabled() ? '16:9 → split' : '16:9 → single view');
+  }
   if (creative.hooks && creative.hooks.rankedList && creative.hooks.rankedList.enabled) chips.push('ranked list');
   if (!creative.hooks || creative.hooks.mode !== 'whisper_only') chips.push('hooks');
   if (creative.captions && creative.captions.whisper !== false) chips.push('whisper');
@@ -17064,7 +18256,14 @@ function saveCompCreativePresetToStorage() {
     musicBed: (g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'low_trap',
     logoCorner: (g('comp-creative-logo-corner') && g('comp-creative-logo-corner').value) || 'bottom_right',
     relatedVideoParentId: (g('comp-creative-related-vod') && g('comp-creative-related-vod').value) || '',
-    contentCx: (g('comp-creative-content-cx') && parseInt(g('comp-creative-content-cx').value, 10)) || 50
+    contentCx: (g('comp-creative-content-cx') && parseInt(g('comp-creative-content-cx').value, 10)) || 50,
+    topSharePct: (g('comp-creative-top-share') && parseInt(g('comp-creative-top-share').value, 10)) || 33,
+    topHeight: readTopShareFromDom(),
+    topPaneSubject: (g('comp-creative-top-pane-subject') && g('comp-creative-top-pane-subject').value) || 'stacked_figures',
+    facecamRect: readFacecamSlidersFromDom(),
+    bottomPaneMode: readBottomPaneModeFromDom(),
+    bottomPaneRect: readBottomPaneSlidersFromDom(),
+    landscapeLayout: (g('comp-creative-landscape-layout') && g('comp-creative-landscape-layout').value) || 'split_screen',
   };
   try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   return data;
@@ -17116,11 +18315,39 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.editorial = { enabled: true, introCard: true, ttsBridges: true };
     if (overrides.hooks && overrides.hooks.rankedList) overrides.hooks.rankedList.enabled = true;
   }
-  if (composerLineupIsLandscape()) {
+  if (composerLineupIsLandscape() && composerLandscapeSplitEnabled(stored)) {
     overrides = overrides || {};
     overrides.layout = overrides.layout || {};
     var cxPct = Number(stored.contentCx);
     if (Number.isFinite(cxPct)) overrides.layout.contentCx = Math.max(0, Math.min(1, cxPct / 100));
+    var subject = stored.topPaneSubject || 'stacked_figures';
+    var layoutPreset = COMP_CREATIVE_LAYOUT_PRESETS[subject];
+    var rect = readFacecamSlidersFromDom() || stored.facecamRect || (layoutPreset && layoutPreset.top ? layoutPreset.top : null);
+    var bottomMode = stored.bottomPaneMode || readBottomPaneModeFromDom();
+    overrides.layout.bottomPaneMode = bottomMode;
+    overrides.layout.landscapeSplit = true;
+    if (rect && subject !== 'auto') {
+      overrides.layout.facecamRect = rect;
+      overrides.layout.topPaneSubject = subject;
+      overrides.layout.mode = 'split_screen';
+    }
+    if (bottomMode === 'custom_crop') {
+      var bottomRect = stored.bottomPaneRect || readBottomPaneSlidersFromDom()
+        || (layoutPreset && layoutPreset.bottom ? layoutPreset.bottom : null);
+      if (bottomRect) overrides.layout.bottomPaneRect = bottomRect;
+    }
+    overrides.layout.topHeight = stored.topHeight || readTopShareFromDom();
+  } else if (composerLineupIsLandscape()) {
+    overrides = overrides || {};
+    overrides.layout = overrides.layout || {};
+    overrides.layout.landscapeSplit = false;
+    overrides.layout.mode = presetLayoutModeForCompose(preset);
+    delete overrides.layout.facecamRect;
+    delete overrides.layout.bottomPaneRect;
+    delete overrides.layout.bottomPaneMode;
+    delete overrides.layout.topPaneSubject;
+    delete overrides.layout.topHeight;
+    delete overrides.layout.contentCx;
   }
   return {
     compCreativePreset: preset,
@@ -17157,11 +18384,28 @@ function refreshCompCreativeChips() {
   } else {
     pseudo.layout = { mode: 'blur_pad' };
   }
+  if (composerLineupIsLandscape()) {
+    pseudo.layout = pseudo.layout || {};
+    pseudo.layout.landscapeSplit = composerLandscapeSplitEnabled(stored);
+  }
   var landscapePanel = g('comp-creative-landscape-split');
   if (landscapePanel) landscapePanel.style.display = composerLineupIsLandscape() ? 'block' : 'none';
+  refreshLandscapeSplitUI();
+  var topSubj = g('comp-creative-top-pane-subject');
+  if (topSubj && stored.topPaneSubject && !topSubj.dataset.userPicked) topSubj.value = stored.topPaneSubject;
+  var bottomModeEl = g('comp-creative-bottom-pane-mode');
+  if (bottomModeEl) bottomModeEl.value = stored.bottomPaneMode || 'custom_crop';
+  refreshBottomPaneModeUI();
+  if (stored.facecamRect && composerLineupIsLandscape()) writeFacecamSlidersToDom(stored.facecamRect);
+  else if (composerLineupIsLandscape()) applyLayoutPreset(topSubj ? topSubj.value : 'stacked_figures');
+  if (stored.bottomPaneRect && composerLineupIsLandscape()) writeBottomPaneSlidersToDom(stored.bottomPaneRect);
   var cxSlider = g('comp-creative-content-cx');
   if (cxSlider && stored.contentCx != null && !cxSlider.dataset.userPicked) cxSlider.value = String(stored.contentCx);
   if (cxSlider && composerLineupIsLandscape()) onCompCreativeContentCxChange(cxSlider.value);
+  if (composerLineupIsLandscape()) {
+    if (stored.topHeight != null) writeTopShareToDom(stored.topHeight);
+    else onCompCreativeTopShareChange((g('comp-creative-top-share') && g('comp-creative-top-share').value) || 33, true);
+  }
   if (isRankedPreset) {
     pseudo.hooks = { mode: stored.hookMode || 'hook_only', rankedList: { enabled: true, streamer: stored.streamer, theme: stored.theme } };
     pseudo.captions = { whisper: (stored.hookMode || 'hook_only') !== 'hook_only' };
@@ -17275,7 +18519,7 @@ function triggerClipCompVod() {
   if (st) st.textContent = 'Review COMPOSER (VOD comp) — trim + preview, then EXECUTE → ASSEMBLY.';
 }
 
-function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, statusEl, scheduledAt, postLiveOpts) {
+function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, statusEl, scheduledAt, postLiveOpts, validatedSpec) {
   postLiveOpts = postLiveOpts || {};
   var xhr = new XMLHttpRequest();
   xhr.open('POST', (CFG.ffmpegUrl || 'http://localhost:3000') + '/generate-clip-comp', true);
@@ -17289,7 +18533,6 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
         cwn_log('[repurpose] ✅ Job created: ' + d.jobId, false);
         if (scheduledAt) applyJobPublishSchedule(d.jobId, platforms, scheduledAt);
         var streamerNames = clips.map(function(c) { return c.displayName || c.streamer || ''; }).filter(Boolean);
-        var creativePayload = buildCompCreativeRequestPayload(streamerNames[0] || '');
         var localJob = {
           id: d.jobId,
           type: contentType,
@@ -17298,8 +18541,8 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
           status: 'processing',
           stage: 'hooks_generating',
           clipsOnly: true,
-          compCreativePreset: creativePayload.compCreativePreset,
-          compCreative: d.compCreative || null,
+          compCreativePreset: (d.compCreative && d.compCreative.preset) || (validatedSpec && validatedSpec.compCreativePreset),
+          compCreative: d.compCreative || (validatedSpec && validatedSpec.compCreative) || null,
           created: new Date().toISOString(),
           segments: clips.map(function(c, i) {
             return {
@@ -17345,9 +18588,18 @@ function _dispatchClipCompFromPicker(clips, contentType, platforms, statusId, st
     unlockGenerateButtons();
   };
   var body = { clips: clips, platforms: platforms, contentType: contentType };
-  var creativePayload = buildCompCreativeRequestPayload((clips[0] && (clips[0].displayName || clips[0].streamer)) || '');
-  body.compCreativePreset = creativePayload.compCreativePreset;
-  if (creativePayload.compCreative) body.compCreative = creativePayload.compCreative;
+  if (validatedSpec && validatedSpec.compCreative) {
+    var locked = compCreativeDispatchFromValidatedSpec(validatedSpec);
+    body.compCreativePreset = locked.compCreativePreset;
+    body.compCreative = locked.compCreative;
+    body.compositionSpec = locked.compositionSpec;
+    body.editorSignedOff = locked.editorSignedOff;
+    body.editorSignedOffAt = locked.editorSignedOffAt;
+  } else {
+    var creativePayload = buildCompCreativeRequestPayload((clips[0] && (clips[0].displayName || clips[0].streamer)) || '');
+    body.compCreativePreset = creativePayload.compCreativePreset;
+    if (creativePayload.compCreative) body.compCreative = creativePayload.compCreative;
+  }
   if (scheduledAt) body.scheduledAt = scheduledAt;
   if (postLiveOpts.postLiveVodSessionId) body.postLiveVodSessionId = postLiveOpts.postLiveVodSessionId;
   if (postLiveOpts.postLiveMuteRanges) body.postLiveMuteRanges = postLiveOpts.postLiveMuteRanges;
@@ -18031,6 +19283,7 @@ function renderTwitchPickerWhenDone(btn, clipsPerStreamer, total) {
 
 function renderTwitchPicker(btn, clipsPerStreamer) {
   btn.textContent = 'Hide library'; btn.disabled = false;
+  sortStudyPickerStreamers();
   var filters = getPickerFilters('twitch');
   var scoreSort = getLibraryClipSort() === 'score';
   _twitchPickerStreamers.forEach(function(entry) {
@@ -18087,6 +19340,7 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
       html += '<div class="gen-picker-streamer-head">'
         + '<span style="font-weight:700;font-family:Barlow Condensed,sans-serif;font-size:14px;color:' + nameColor + ';">'
         + entry.displayName + '</span>'
+        + pickerStudyRoleBadge(entry)
         + '<span style="font-size:13px;color:rgba(255,255,255,0.35);font-family:monospace;">@' + postLiveEsc(entry.name || '') + '</span>'
         + '<span style="font-size:14px;color:rgba(46,204,113,0.8);font-family:monospace;">✓ ' + clipCount + ' picked</span>'
         + '<button type="button" class="btn btn-outline btn-sm gen-picker-collapse-btn" onclick="event.stopPropagation();toggleStreamerPickerCollapsed(' + si + ', false)">Expand</button>'
@@ -18104,6 +19358,7 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
       + ' onchange="_twitchPickerStreamers[' + si + '].selected=this.checked;scheduleAutoSaveLibraryPicks()" style="width:14px;height:14px;flex-shrink:0;">'
       + '<span style="font-weight:700;font-family:Barlow Condensed,sans-serif;font-size:14px;color:' + nameColor + ';min-width:90px;">'
       + entry.displayName + '</span>'
+      + pickerStudyRoleBadge(entry)
       + '<span style="font-size:13px;color:rgba(255,255,255,0.35);font-family:monospace;">@' + postLiveEsc(entry.name || '') + '</span>'
       + '<span style="font-size:13px;text-transform:uppercase;letter-spacing:0.5px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);">'
       + (entry.platform || 'twitch') + '</span>';
@@ -18165,7 +19420,7 @@ function renderTwitchPicker(btn, clipsPerStreamer) {
         } else {
           html += '<div class="picker-thumb-placeholder" style="height:55px;">NO THUMB</div>';
         }
-        if (clip.stageError) html += '<div class="picker-staging-badge">STAGE FAILED — click to retry</div>';
+        if (clip.stageError) html += '<div class="picker-staging-badge" title="' + escapeHtml(clip.stageError) + '">STAGE FAILED — ' + escapeHtml(String(clip.stageError).slice(0, 48)) + ' · click to retry</div>';
         html += '<div class="picker-title">' + (clip.title || '').slice(0, 60) + '</div>';
         if (clipWhen) html += '<div class="picker-when">' + clipWhen + '</div>';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">'
@@ -18884,6 +20139,7 @@ function mergeServerJobIntoLocal(jobId, serverJob, opts) {
   if (serverJob.filename) job.filename = serverJob.filename;
   if (serverJob.outputPath) job.outputPath = serverJob.outputPath;
   if (serverJob.assemblyId) { job.assemblyId = serverJob.assemblyId; job.asmId = serverJob.assemblyId; }
+  if (serverJob.localPreviewUrl || serverJob.assembledAt) delete job.previewStale;
   if (serverJob.scheduledPublishAt) job.scheduledPublishAt = serverJob.scheduledPublishAt;
   if (serverJob.stage) job.stage = serverJob.stage;
   if (serverJob.youtubeConfirmedPublished) job.youtubeConfirmedPublished = true;
@@ -18918,9 +20174,12 @@ function mergeServerJobIntoLocal(jobId, serverJob, opts) {
   if (serverJob.gate3) job.gate3 = serverJob.gate3;
   if (serverJob.qaOutcome) job.qaOutcome = serverJob.qaOutcome;
   if (serverJob.metadataQaViolations) job.metadataQaViolations = serverJob.metadataQaViolations;
-  if (serverJob.clipHookTitles && serverJob.clipHookTitles.length) job.clipHookTitles = serverJob.clipHookTitles;
-  if (serverJob.clipHookCandidates && serverJob.clipHookCandidates.length) job.clipHookCandidates = serverJob.clipHookCandidates;
-  if (serverJob.burnedHookTitles && serverJob.burnedHookTitles.length) job.burnedHookTitles = serverJob.burnedHookTitles;
+  if (Array.isArray(serverJob.clipHookTitles)) job.clipHookTitles = serverJob.clipHookTitles;
+  if (Array.isArray(serverJob.clipHookCandidates)) job.clipHookCandidates = serverJob.clipHookCandidates;
+  if (Array.isArray(serverJob.burnedHookTitles)) job.burnedHookTitles = serverJob.burnedHookTitles;
+  if (serverJob.hookMachineFailed === true || serverJob.hookMachineFailed === false) {
+    job.hookMachineFailed = !!serverJob.hookMachineFailed;
+  }
   if (serverJob.hooksOperatorLocked === true || serverJob.hooksOperatorLocked === false) {
     job.hooksOperatorLocked = !!serverJob.hooksOperatorLocked;
   }
@@ -20622,6 +21881,160 @@ function renderClipPickerGroupsList() {
   refreshLibraryPicksIdleHint();
 }
 
+var _competitorStudyRoster = null;
+var _studyCompareActive = false;
+var COMPETITOR_SELF_HANDLE = 'clipzworldnews';
+
+function getCompetitorSelfHandle() {
+  return (_competitorStudyRoster && _competitorStudyRoster.self) || COMPETITOR_SELF_HANDLE;
+}
+
+function loadCompetitorStudyRoster(cb) {
+  if (_competitorStudyRoster) { if (cb) cb(_competitorStudyRoster); return; }
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/intelligence/competitors/roster')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) _competitorStudyRoster = d;
+      if (cb) cb(_competitorStudyRoster);
+    })
+    .catch(function() { if (cb) cb(null); });
+}
+
+function isCompetitorStudyHandle(h) {
+  if (!h || !_competitorStudyRoster) return false;
+  var hk = normalizeStreamerHandle(h);
+  if (hk === getCompetitorSelfHandle()) return true;
+  var all = (_competitorStudyRoster.peer || []).concat(_competitorStudyRoster.aspirational || []);
+  return all.some(function(c) { return normalizeStreamerHandle(c.handle || c) === hk; });
+}
+
+function ensureStudyHandlesResolved(handles, cb) {
+  var pending = handles.map(normalizeStreamerHandle).filter(Boolean);
+  var seen = {};
+  pending = pending.filter(function(h) { if (seen[h]) return false; seen[h] = true; return true; });
+  var base = CFG.ffmpegUrl || 'http://localhost:3000';
+  function next() {
+    if (!pending.length) {
+      loadCreatorRegistryFromServer(cb);
+      return;
+    }
+    var hk = pending.shift();
+    if (window._creatorRegistryMap && window._creatorRegistryMap[hk]) { next(); return; }
+    fetch(base + '/creators/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input: '@' + hk, kind: 'streamer', save: true })
+    }).then(function() { next(); }).catch(function() { next(); });
+  }
+  next();
+}
+
+function setStudyCompareYoutubeOnly() {
+  var tw = g('streamer-plat-twitch');
+  var kick = g('streamer-plat-kick');
+  var yt = g('streamer-plat-youtube');
+  if (tw) tw.checked = false;
+  if (kick) kick.checked = false;
+  if (yt) yt.checked = true;
+}
+
+function compareCompetitorWithSelf(rivalHandle) {
+  rivalHandle = normalizeStreamerHandle(rivalHandle);
+  var selfH = getCompetitorSelfHandle();
+  _studyCompareActive = true;
+  loadCompetitorStudyRoster(function() {
+    ensureStudyHandlesResolved([rivalHandle, selfH], function() {
+      var roster = getStreamerRoster();
+      [rivalHandle, selfH].forEach(function(h) {
+        if (roster.indexOf(h) === -1) roster.push(h);
+      });
+      saveStreamerRoster(roster);
+      setSelectedStreamers([rivalHandle, selfH]);
+      setStudyCompareYoutubeOnly();
+      renderStreamerChips();
+      previewTwitchClips(true);
+    });
+  });
+}
+
+function addClipzWorldToLibraryGrid() {
+  var selfH = getCompetitorSelfHandle();
+  _studyCompareActive = true;
+  loadCompetitorStudyRoster(function() {
+    ensureStudyHandlesResolved([selfH], function() {
+      var sel = getSelectedStreamers();
+      if (sel.indexOf(selfH) < 0) sel.push(selfH);
+      var roster = getStreamerRoster();
+      if (roster.indexOf(selfH) === -1) { roster.push(selfH); saveStreamerRoster(roster); }
+      setSelectedStreamers(sel);
+      setStudyCompareYoutubeOnly();
+      renderStreamerChips();
+      previewTwitchClips(true);
+    });
+  });
+}
+
+function sortStudyPickerStreamers() {
+  if (!_studyCompareActive || !(_twitchPickerStreamers || []).length) return;
+  var selfH = getCompetitorSelfHandle();
+  _twitchPickerStreamers.sort(function(a, b) {
+    if (a.name === selfH) return 1;
+    if (b.name === selfH) return -1;
+    var av = (a.clips && a.clips[0]) ? (a.clips[0].views || 0) : 0;
+    var bv = (b.clips && b.clips[0]) ? (b.clips[0].views || 0) : 0;
+    return bv - av;
+  });
+}
+
+function pickerStudyRoleBadge(entry) {
+  if (!_studyCompareActive || !entry) return '';
+  var selfH = getCompetitorSelfHandle();
+  if (entry.name === selfH) {
+    return '<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(199,175,79,0.18);color:#c7af4f;border:1px solid rgba(199,175,79,0.35);margin-left:6px;">YOU</span>';
+  }
+  if (isCompetitorStudyHandle(entry.name)) {
+    return '<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:4px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.12);margin-left:6px;">STUDY</span>';
+  }
+  return '';
+}
+
+function renderCompetitorStudySection(selSet) {
+  var el = g('streamer-section-competitors');
+  if (!el) return;
+  selSet = selSet || {};
+  if (!_competitorStudyRoster) {
+    loadCompetitorStudyRoster(function() { renderCompetitorStudySection(selSet); });
+    return;
+  }
+  var selfH = getCompetitorSelfHandle();
+  var peer = _competitorStudyRoster.peer || [];
+  var aspirational = _competitorStudyRoster.aspirational || [];
+  var html = '';
+  html += '<div class="competitor-study-self">'
+    + creatorRowHtml(selfH, !!selSet[selfH], { badge: 'YOU', badgeColor: '#c7af4f' })
+    + '<div class="streamer-section-actions" style="padding:0 4px 4px 28px;">'
+    + '<button type="button" class="btn btn-outline btn-sm" onclick="addClipzWorldToLibraryGrid()">Show in library grid</button>'
+    + '</div></div>';
+  function studyRow(c, tierLabel) {
+    var h = normalizeStreamerHandle(c.handle || c);
+    var note = c.note || '';
+    var jq = jsQuote(h);
+    html += '<div class="competitor-study-row">'
+      + creatorRowHtml(h, !!selSet[h], { badge: tierLabel })
+      + '<button type="button" class="btn btn-gold btn-sm" onclick="compareCompetitorWithSelf(' + jq + ')">Compare</button>'
+      + (note ? '<div class="competitor-study-note">' + escapeHtml(note) + '</div>' : '')
+      + '</div>';
+  }
+  peer.forEach(function(c) { studyRow(c, 'PEER'); });
+  aspirational.forEach(function(c) { studyRow(c, 'REF'); });
+  el.innerHTML = html;
+  var total = 1 + peer.length + aspirational.length;
+  updateStreamerSectionCount('streamer-count-competitors', total, countSelectedIn([selfH].concat(
+    peer.map(function(c) { return normalizeStreamerHandle(c.handle || c); }),
+    aspirational.map(function(c) { return normalizeStreamerHandle(c.handle || c); })
+  ), selSet));
+}
+
 function classifyStreamerSections(roster) {
   var templates = {};
   getStreamerTemplateHandles().forEach(function(h) { templates[h] = true; });
@@ -20707,11 +22120,16 @@ function creatorRowHtml(h, isSelected, opts) {
   var metaLine = opts.topViews != null && opts.topViews > 0
     ? formatBenchViewCount(opts.topViews) + ' views'
     : '@' + hk;
+  var badgeHtml = '';
+  if (opts.badge) {
+    var bc = opts.badgeColor || 'rgba(255,255,255,0.55)';
+    badgeHtml = '<span style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:' + bc + ';margin-left:6px;">' + escapeHtml(opts.badge) + '</span>';
+  }
   return '<div class="' + cls + '" onclick="setStreamerChipChecked(\'' + jq + '\', ' + (!isSelected) + ')">'
     + '<input type="checkbox"' + (isSelected ? ' checked' : '')
     + ' onclick="event.stopPropagation();setStreamerChipChecked(\'' + jq + '\', this.checked)">'
     + '<span class="creator-chip-plat" style="color:' + ps.color + ';background:' + ps.bg + ';">' + ps.badge + '</span>'
-    + '<div style="min-width:0;"><div class="creator-row-name">' + escapeHtml(label) + '</div>'
+    + '<div style="min-width:0;"><div class="creator-row-name">' + escapeHtml(label) + badgeHtml + '</div>'
     + '<div class="creator-row-meta">' + escapeHtml(metaLine) + '</div></div>'
     + '</div>';
 }
@@ -20828,7 +22246,7 @@ function countSelectedIn(handles, selSet) {
 }
 
 function setStreamerSectionsExpanded(open) {
-  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap', 'streamer-section-clip-groups-wrap'].forEach(function(id) {
+  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-competitors-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap', 'streamer-section-clip-groups-wrap'].forEach(function(id) {
     var d = g(id);
     if (d) {
       d.open = !!open;
@@ -20844,7 +22262,7 @@ function setStreamerSectionsExpanded(open) {
 function initStreamerSectionAccordion() {
   if (window._streamerSectionsInited) return;
   window._streamerSectionsInited = true;
-  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap', 'streamer-section-clip-groups-wrap'].forEach(function(id) {
+  ['streamer-section-selected-wrap', 'streamer-section-templates-wrap', 'streamer-section-following-wrap', 'streamer-section-competitors-wrap', 'streamer-section-bench-wrap', 'streamer-section-kick-wrap', 'streamer-section-clip-groups-wrap'].forEach(function(id) {
     var d = g(id);
     if (!d) return;
     d.addEventListener('toggle', function() { d.dataset.userToggled = '1'; });
@@ -21030,6 +22448,7 @@ function renderStreamerChips() {
     renderStreamerSectionGrid('streamer-section-following', buckets.following, selSet, 'Sync Twitch/YouTube follows.');
     renderStreamerSectionGrid('streamer-section-bench', buckets.bench, selSet, 'Loading top clip views…');
     renderStreamerSectionGrid('streamer-section-kick', buckets.kick, selSet, 'Add Kick creators with + Kick URL.');
+    renderCompetitorStudySection(selSet);
     updateStreamerSectionCount('streamer-count-selected', sel.length, sel.length);
     updateStreamerSectionCount('streamer-count-templates', buckets.templates.length, countSelectedIn(buckets.templates, selSet));
     updateStreamerSectionCount('streamer-count-following', buckets.following.length, countSelectedIn(buckets.following, selSet));
@@ -23678,6 +25097,7 @@ setInterval(liveTvRefresh, 15000);
   // Boot runs before external scripts — re-init calendar after dashboard JS loads.
   var bootPage = typeof readPersistedPage === 'function' ? readPersistedPage() : '';
   if (bootPage === 'calendar' && typeof calendarPageInit === 'function') calendarPageInit();
+  if (typeof renderStreamerFocusBanner === 'function') renderStreamerFocusBanner(bootPage || readPersistedPage() || 'generate');
 })();
 </script>
 </body>

@@ -6,6 +6,7 @@ const {
   hooksMatchBurned,
   markHookSelection,
   recordBurnedHooksOnCard,
+  reconcileHooksPendingReassemble,
   assertReadyToPublish,
   resolveGate5PublishCopy,
 } = require('../lib/operator_creative_guard');
@@ -25,6 +26,16 @@ test('markHookSelection sets pending reassemble', () => {
   markHookSelection(card, 0, 'New hook');
   assert.equal(card.hooksPendingReassemble, true);
   assert.equal(card.clipCompBrief.clips[0].hook, 'New hook');
+});
+
+test('markHookSelection — no pending when re-selecting same burned hook', () => {
+  const card = {
+    clipCompBrief: { clips: [{ hook: 'Same hook' }] },
+    driveUrl: 'https://example.com/v.mp4',
+    burnedHookTitles: ['Same hook'],
+  };
+  markHookSelection(card, 0, 'Same hook');
+  assert.equal(card.hooksPendingReassemble, false);
 });
 
 test('markHookSelection — no pending before first assembly', () => {
@@ -57,6 +68,17 @@ test('assertReadyToPublish blocks when burned hooks stale', () => {
   const r = assertReadyToPublish(card);
   assert.equal(r.ok, false);
   assert.equal(r.code, 'hooks_stale');
+});
+
+test('reconcileHooksPendingReassemble clears stale flag when hooks match', () => {
+  const card = {
+    clipsOnly: true,
+    hooksPendingReassemble: true,
+    burnedHookTitles: ['Same'],
+    clipHookTitles: ['Same'],
+  };
+  assert.equal(reconcileHooksPendingReassemble(card), true);
+  assert.equal(card.hooksPendingReassemble, false);
 });
 
 test('resolveGate5PublishCopy prefers operator-locked card publishCopy', () => {

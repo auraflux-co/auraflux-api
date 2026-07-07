@@ -655,6 +655,11 @@ function saveJobCard(jobId, card) {
     }
   }
 
+  try {
+    const { reconcileHooksPendingReassemble } = require('./lib/operator_creative_guard');
+    reconcileHooksPendingReassemble(card);
+  } catch (_hookRecon) { /* non-fatal */ }
+
   if (card?.heygen?.videoJobs?.length) {
     try {
       const { applyNormalizedHeygenVideoJobs } = require('./lib/heygen_video_jobs');
@@ -2807,6 +2812,8 @@ app.post('/job/:id/advance', (req, res) => {
 async function _runGate5ForCard(jobId) {
   const gate5Worker = require('./lib/gates/gate5');
   const { readAutoPublishPlatformsEnv } = require('./lib/auto_publish_env');
+  const { assertPublishAllowed } = require('./lib/publish_hold');
+  assertPublishAllowed(jobId);
 
   let card = persistedJobs[jobId];
   if (!card) throw new Error(`Job not found: ${jobId}`);
@@ -3516,6 +3523,18 @@ app.get('/live-grid/files', (req, res) => {
     const { listEligibleGridFiles } = require('./lib/broadcast/ops');
     const files = listEligibleGridFiles();
     res.json({ ok: true, count: files.length, files });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /streamer-focus — operator primary + reach rotation (RickClipIt-style)
+app.get('/streamer-focus', (req, res) => {
+  try {
+    const { loadStreamerFocus, focusSummary } = require('./lib/streamer_focus');
+    const focus = loadStreamerFocus();
+    if (!focus) return res.status(404).json({ ok: false, error: 'streamer_focus.json not found' });
+    res.json({ ok: true, focus, summary: focusSummary(focus) });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
@@ -5618,6 +5637,117 @@ app.post('/job/:id/scene-updates/apply', async (req, res) => {
   }
 });
 
+// POST /job/:id/operator-creative — operator locks layout/creative on the job card (WHAT for assembly)
+app.post('/job/:id/operator-creative', async (req, res) => {
+  const jobId = req.params.id;
+  const card = persistedJobs[jobId];
+  if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+
+  const layoutIn = req.body?.layout || {};
+  const note = String(req.body?.note || req.body?.operatorNote || '').trim();
+  const reassemble = req.body?.reassemble === true;
+
+  function normRect(r) {
+    if (!r || typeof r !== 'object') return null;
+    const x = Number(r.x);
+    const y = Number(r.y);
+    const w = Number(r.w);
+    const h = Number(r.h);
+    if ([x, y, w, h].some((v) => !Number.isFinite(v))) return null;
+    return {
+      x: Math.max(0, Math.min(1, x)),
+      y: Math.max(0, Math.min(1, y)),
+      w: Math.max(0.05, Math.min(1 - x, w)),
+      h: Math.max(0.05, Math.min(1 - y, h)),
+    };
+  }
+
+  const facecamRect = normRect(layoutIn.facecamRect);
+  const contentCxRaw = layoutIn.contentCx;
+  const contentCx = contentCxRaw != null && Number.isFinite(Number(contentCxRaw))
+    ? Math.max(0, Math.min(1, Number(contentCxRaw)))
+    : null;
+  const topPaneSubject = layoutIn.topPaneSubject ? String(layoutIn.topPaneSubject) : null;
+  const topHeightRaw = layoutIn.topHeight;
+  const topHeight = topHeightRaw != null && Number.isFinite(Number(topHeightRaw))
+    ? Math.max(320, Math.min(960, Math.round(Number(topHeightRaw) / 2) * 2))
+    : null;
+  const bottomPaneRect = normRect(layoutIn.bottomPaneRect);
+  const bottomPaneMode = layoutIn.bottomPaneMode ? String(layoutIn.bottomPaneMode) : null;
+  const layoutModeIn = layoutIn.mode ? String(layoutIn.mode) : null;
+  const landscapeSplit = layoutIn.landscapeSplit === false ? false : (layoutIn.landscapeSplit === true ? true : null);
+
+  card.compCreative = card.compCreative || { preset: card.compCreativePreset || 'facecam_split' };
+  card.compCreative.layout = card.compCreative.layout || { mode: 'split_screen' };
+  if (landscapeSplit === false) {
+    card.compCreative.layout.landscapeSplit = false;
+    if (layoutModeIn) card.compCreative.layout.mode = layoutModeIn;
+  } else if (landscapeSplit === true) {
+    card.compCreative.layout.landscapeSplit = true;
+  }
+  if (facecamRect) card.compCreative.layout.facecamRect = facecamRect;
+  if (facecamRect || bottomPaneRect) card.compCreative.layout.topPaneSubject = 'custom';
+  if (contentCx != null) card.compCreative.layout.contentCx = contentCx;
+  if (topHeight != null) card.compCreative.layout.topHeight = topHeight;
+  if (topPaneSubject && !(facecamRect || bottomPaneRect)) card.compCreative.layout.topPaneSubject = topPaneSubject;
+  if (bottomPaneRect) card.compCreative.layout.bottomPaneRect = bottomPaneRect;
+  if (bottomPaneMode) card.compCreative.layout.bottomPaneMode = bottomPaneMode;
+  if (layoutModeIn && landscapeSplit !== false) card.compCreative.layout.mode = layoutModeIn;
+  else if (!card.compCreative.layout.mode) card.compCreative.layout.mode = 'split_screen';
+  card.compCreative.operatorLocked = true;
+  card.compCreativePreset = card.compCreative.preset || card.compCreativePreset;
+
+  if (card.designSpec) {
+    card.designSpec.compCreative = {
+      ...(card.designSpec.compCreative || {}),
+      ...card.compCreative,
+      layout: { ...(card.designSpec.compCreative?.layout || {}), ...card.compCreative.layout },
+    };
+  }
+
+  card.operatorCreativeAudit = Array.isArray(card.operatorCreativeAudit) ? card.operatorCreativeAudit : [];
+  card.operatorCreativeAudit.push({
+    at: new Date().toISOString(),
+    note: note || 'Operator layout update',
+    layout: {
+      facecamRect: card.compCreative.layout.facecamRect || null,
+      contentCx: card.compCreative.layout.contentCx ?? null,
+      topHeight: card.compCreative.layout.topHeight ?? null,
+      topPaneSubject: card.compCreative.layout.topPaneSubject || null,
+      bottomPaneRect: card.compCreative.layout.bottomPaneRect || null,
+      bottomPaneMode: card.compCreative.layout.bottomPaneMode || null,
+    },
+    reassembleRequested: reassemble,
+  });
+
+  saveJobCard(jobId, card);
+
+  if (!reassemble) {
+    return res.json({
+      ok: true,
+      jobId,
+      compCreative: card.compCreative,
+      message: 'Operator creative saved on job card.',
+    });
+  }
+
+  const port = process.env.PORT || 3000;
+  setImmediate(() => {
+    const axios = require('axios');
+    axios.post(`http://127.0.0.1:${port}/job/${encodeURIComponent(jobId)}/reassemble`, { operatorCreative: true })
+      .then((r) => console.log(`[operator-creative] ${jobId} reassemble dispatched — ${r.data?.assemblyId || 'ok'}`))
+      .catch((e) => console.error(`[operator-creative] ${jobId} reassemble failed: ${e.response?.data?.error || e.message}`));
+  });
+
+  return res.json({
+    ok: true,
+    jobId,
+    compCreative: card.compCreative,
+    reassemble: 'started',
+    message: 'Operator creative saved — re-assemble started.',
+  });
+});
+
 // POST /job/:id/reassemble — skip Gate 2, build segmentData from the card's heygen.videoJobs
 // and orderedClipUrls, then fire /assemble directly.  Any files the operator dropped into
 // tmp/manual_segments/<jobId>/ are picked up automatically by applyManualOverrides inside
@@ -6042,13 +6172,28 @@ app.post('/generate-clip-comp', async (req, res) => {
   let clips = Array.isArray(req.body.clips) ? req.body.clips.filter(c => c && (c.url || c.clipUrl)) : [];
   if (!clips.length) return res.status(400).json({ error: 'clips[] required — each needs a resolved mp4 url' });
 
-  const { mergeCompCreative, validateCompLineupDuration, getCompLineupTarget } = require('./lib/clip_comp_creative');
+  const { mergeCompCreative, validateCompLineupDuration, getCompLineupTarget, finalizeCompCreativeForAssembly } = require('./lib/clip_comp_creative');
   const streamersEarly = [...new Set(clips.map(c => c.displayName || c.streamer).filter(Boolean))];
-  const compCreative = mergeCompCreative({
-    preset: req.body.compCreativePreset || req.body.compCreative?.preset,
-    overrides: req.body.compCreative,
-    streamerHint: streamersEarly[0] || null,
-  });
+  const compositionSpec = req.body.compositionSpec || null;
+  const editorSignedOff = req.body.editorSignedOff === true || !!req.body.editorSignedOffAt;
+  const lockedFromCompose = !!(compositionSpec?.compCreative && editorSignedOff);
+  const presetIn = lockedFromCompose
+    ? (compositionSpec.compCreativePreset || compositionSpec.compCreative?.preset)
+    : (req.body.compCreativePreset || req.body.compCreative?.preset);
+  const overridesIn = lockedFromCompose
+    ? compositionSpec.compCreative
+    : req.body.compCreative;
+  const compCreative = finalizeCompCreativeForAssembly(
+    mergeCompCreative({
+      preset: presetIn,
+      overrides: overridesIn,
+      streamerHint: streamersEarly[0] || null,
+    }),
+    {
+      clipOrientations: clips.map((c) => c.orientation || 'landscape'),
+      operatorLocked: lockedFromCompose,
+    },
+  );
   const lineupTarget = getCompLineupTarget(compCreative.preset);
   if (compCreative.hooks?.rankedList?.enabled && clips.length < 2) {
     return res.status(400).json({
@@ -6169,10 +6314,10 @@ app.post('/generate-clip-comp', async (req, res) => {
     (clips.length === 1 ? `Clip Short — ${streamers[0] || 'Twitch'}`
                         : `Clips Comp — ${streamers.join(', ') || 'Twitch'}`);
   const jobId     = `script_${contentType}_${Date.now()}`;
-  const compositionSpec = req.body.compositionSpec || null;
+  const compositionSpecIn = compositionSpec || req.body.compositionSpec || null;
   const editorSignedOffAt = req.body.editorSignedOff
     ? (req.body.editorSignedOffAt || new Date().toISOString())
-    : null;
+    : (lockedFromCompose ? (compositionSpecIn?.editorSignedOffAt || new Date().toISOString()) : null);
 
   // Job spec — same contract as the script flow so all gates read normally.
   // contentType twitch-short inherits the CPD-932 short-form gate handling.
@@ -6213,8 +6358,8 @@ app.post('/generate-clip-comp', async (req, res) => {
       },
       designSpec: clipCompDesignSpec,
     });
-    if (compositionSpec) {
-      jobSpec = updateJobSpec(jobSpec.jobId, { compositionSpec, editorSignedOffAt });
+    if (compositionSpecIn) {
+      jobSpec = updateJobSpec(jobSpec.jobId, { compositionSpec: compositionSpecIn, editorSignedOffAt });
     }
   } catch (specErr) {
     console.warn('[/generate-clip-comp] Job Spec creation failed (non-fatal):', specErr.message);
@@ -6291,7 +6436,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     }),
     compCreative,
     compCreativePreset: compCreative.preset || req.body.compCreativePreset || null,
-    compositionSpec,
+    compositionSpec: compositionSpecIn,
     editorSignedOffAt,
     clipCompProfile: 'streamer',
     postLiveVodSessionId: postLiveVodSessionId || null,
@@ -6462,6 +6607,10 @@ app.post('/job/:id/regenerate-hooks', async (req, res) => {
     card.clipHookTitles = clipHookTitles;
     card.clipHookCandidates = clipHookCandidates;
     card.clipCompBrief = clipCompBrief;
+    if (req.body.force === true) {
+      card.hooksOperatorLocked = false;
+      card.hooksConfirmedAt = null;
+    }
     const preAssembly = !card.assembledAt && !card.driveUrl && !card.localPreviewUrl;
     if (preAssembly) {
       card.stage = 'hook_review';
@@ -6637,13 +6786,13 @@ app.post('/job/:id/comp-creative', (req, res) => {
 });
 
 function finishHookPickResponse(req, res, jobId, card, bodyExtra = {}) {
-  const { needsHookBeforeAssembly, clipCompClipCount, fireClipCompAssembly } = require('./lib/clip_comp_dispatch_assembly');
+  const { needsHookBeforeAssembly, clipCompClipCount } = require('./lib/clip_comp_dispatch_assembly');
   const clipCount = clipCompClipCount(card);
   const firstBuild = needsHookBeforeAssembly(card);
-  const confirmBuild = req.body.confirmBuild === true;
-  const autoBuild = req.body.autoReassemble !== false && req.body.autoBuild !== false;
+  const autoReassemble = req.body.autoReassemble === true;
 
-  if (firstBuild && clipCount > 1 && !confirmBuild) {
+  // First build: save hook only — operator must click BUILD VIDEO (confirm-hooks).
+  if (firstBuild) {
     if (card.stage !== 'hook_review') card.stage = 'hook_review';
     card.status = 'completed';
     saveJobCard(jobId, card);
@@ -6654,30 +6803,10 @@ function finishHookPickResponse(req, res, jobId, card, bodyExtra = {}) {
       assemblyStarted: false,
       hooksPendingReassemble: false,
       ...bodyExtra,
-      message: 'Hook saved — pick hooks for other clips if needed, then BUILD VIDEO.',
+      message: clipCount > 1
+        ? 'Hook saved — pick hooks for other clips if needed, then BUILD VIDEO.'
+        : 'Hook saved — click BUILD VIDEO when ready.',
     });
-  }
-
-  if (firstBuild && autoBuild) {
-    card.hooksConfirmedAt = new Date().toISOString();
-    card.hooksOperatorLocked = true;
-    card.hooksPendingReassemble = false;
-    saveJobCard(jobId, card);
-    res.json({
-      ok: true,
-      jobId,
-      stage: 'assembling',
-      assemblyStarted: true,
-      hooksPendingReassemble: false,
-      ...bodyExtra,
-      message: 'Building video with your hook.',
-    });
-    setImmediate(() => {
-      fireClipCompAssembly(card, jobId, { saveJobCard }).catch((e) => {
-        console.warn(`[hook→assembly] ${jobId}: first build failed — ${e.message}`);
-      });
-    });
-    return undefined;
   }
 
   if (card.stage !== 'awaiting_review') card.stage = 'awaiting_review';
@@ -6690,12 +6819,11 @@ function finishHookPickResponse(req, res, jobId, card, bodyExtra = {}) {
     assemblyStarted: false,
     hooksPendingReassemble: true,
     ...bodyExtra,
-    message: 'Hook updated — re-assembling to burn into the MP4.',
+    message: 'Hook updated — RE-ASSEMBLE FROM FILES to burn into the MP4.',
   });
-  if (autoBuild) {
+  if (autoReassemble) {
     setImmediate(() => {
       try {
-        // Guard: don't fire a second concurrent assembly if one is already running for this job.
         const alreadyRunning = Object.keys(assemblyJobs).some(
           (id) => assemblyJobs[id]?.sourceJobId === jobId && assemblyJobs[id]?.status === 'running',
         );
@@ -6722,11 +6850,19 @@ app.post('/job/:id/confirm-hooks', (req, res) => {
   }
   const { needsHookBeforeAssembly, fireClipCompAssembly } = require('./lib/clip_comp_dispatch_assembly');
   if (!needsHookBeforeAssembly(card)) {
-    return res.status(400).json({ ok: false, error: 'Video already built — use hook picker + re-assemble to change burned hooks.' });
+    return res.status(400).json({ ok: false, error: 'Video already built — pick your hook, then RE-ASSEMBLE FROM FILES to burn it.' });
   }
   if (!(card.clipHookTitles || []).some((h) => String(h || '').trim())) {
     return res.status(400).json({ ok: false, error: 'Pick at least one hook before building.' });
   }
+  const { normalizeHookLine } = require('./lib/clip_comp_hooks');
+  const clips = card.orderedClipUrls || [];
+  card.clipHookTitles = (card.clipHookTitles || []).map((h, i) => {
+    const clip = clips[i] || {};
+    const streamer = clip.streamer || clip.broadcaster_name || clip.broadcaster || '';
+    const title = clip.title || clip.clipTitle || '';
+    return normalizeHookLine(streamer, String(h || ''), title) || String(h || '').trim();
+  });
   const { recordOperatorCreativeEdit } = require('./lib/operator_creative_audit');
   recordOperatorCreativeEdit(card, {
     kind: 'hooks_confirm_build',

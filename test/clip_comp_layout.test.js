@@ -112,6 +112,25 @@ test('buildSplitScreenFilter honours contentCx offset and bottom crop on content
   assert.ok(!camChain.includes('0.900'));
 });
 
+test('buildSplitScreenFilter bottomPaneRect isolates bottom pane crop (dual figure stack)', () => {
+  const { buildSplitScreenFilter } = require('../lib/clip_comp_layout');
+  const f = buildSplitScreenFilter(
+    { x: 0.3, y: 0.05, w: 0.35, h: 0.4 },
+    { bottomPaneRect: { x: 0.1, y: 0.45, w: 0.8, h: 0.5 } },
+  );
+  assert.ok(f.includes('crop=trunc(iw*0.3500/2)*2:trunc(ih*0.4000/2)*2:trunc(iw*0.3000/2)*2:trunc(ih*0.0500/2)*2'));
+  assert.ok(f.includes('crop=trunc(iw*0.8000/2)*2:trunc(ih*0.5000/2)*2:trunc(iw*0.1000/2)*2:trunc(ih*0.4500/2)*2'));
+  assert.ok(!f.includes('(iw-1080)/2'));
+});
+
+test('splitPaneNormAspect matches top and bottom shape at 50/50 split', () => {
+  const { splitPaneNormAspect } = require('../lib/clip_comp_layout');
+  const a = splitPaneNormAspect(960);
+  assert.equal(a.topHeight, 960);
+  assert.equal(a.bottomHeight, 960);
+  assert.ok(Math.abs(a.topNormWH - a.bottomNormWH) < 1e-9);
+});
+
 test('buildSplitScreenFilter topHeight is clamped and even-aligned', () => {
   const { buildSplitScreenFilter } = require('../lib/clip_comp_layout');
   const odd = buildSplitScreenFilter({ x: 0, y: 0, w: 0.3, h: 0.3 }, { topHeight: 641 });
@@ -130,6 +149,14 @@ test('normalizeFacecamRect clamps out-of-range boxes', () => {
   assert.equal(r.h, 0.5);
   assert.equal(normalizeFacecamRect({ x: 0, y: 0, w: 0.02, h: 0.5 }), null);
   assert.equal(normalizeFacecamRect(undefined), null);
+});
+
+test('resolveSplitTopHeight honours operator layout.topHeight', () => {
+  const { resolveSplitTopHeight, resolveHookMidY, SPLIT_TOP_HEIGHT } = require('../lib/clip_comp_layout');
+  assert.equal(resolveSplitTopHeight(null), SPLIT_TOP_HEIGHT);
+  assert.equal(resolveSplitTopHeight({ layout: { topHeight: 960 } }), 960);
+  assert.equal(resolveSplitTopHeight({ layout: { topHeight: 639 } }), 640);
+  assert.equal(resolveHookMidY({ layout: { topHeight: 960 }, preset: 'facecam_split' }, 'split_screen'), 984);
 });
 
 test('facecam_split preset routes hook to seam and logo top-right (CPD-1228)', () => {
@@ -154,6 +181,17 @@ test('defaultLandscapeFacecamRect returns top-right twitch box', () => {
   const { resolveEffectiveLayoutMode } = require('../lib/clip_comp_layout');
   const r = await resolveEffectiveLayoutMode('/nonexistent.mp4', PRESET_DEFAULTS.classic_blur_pad, null);
   assert.equal(r.mode, 'blur_pad');
+  assert.equal(r.facecamRect, null);
+});
+
+test('resolveEffectiveLayoutMode honours landscapeSplit false (single view)', async () => {
+  const { resolveEffectiveLayoutMode } = require('../lib/clip_comp_layout');
+  const creative = {
+    preset: 'dahbluh_clean',
+    layout: { mode: 'full_bleed_crop', landscapeSplit: false },
+  };
+  const r = await resolveEffectiveLayoutMode('/nonexistent.mp4', creative, null);
+  assert.equal(r.mode, 'full_bleed_crop');
   assert.equal(r.facecamRect, null);
 });
 
