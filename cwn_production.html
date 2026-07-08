@@ -164,6 +164,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-feature-chip { font-size:13px; padding:2px 8px; border-radius:10px; background:rgba(199,175,79,0.12); color:rgba(255,255,255,0.75); border:1px solid rgba(199,175,79,0.25); }
 .composer-trim-row { display:flex; align-items:center; gap:8px; margin-top:4px; font-size:13px; color:rgba(255,255,255,0.45); }
 .composer-trim-row input[type=range] { flex:1; min-width:60px; }
+.composer-source-review-wrap { display:none; margin-bottom:12px; padding:10px 12px; border-radius:8px; border:1px solid rgba(52,152,219,0.35); background:rgba(52,152,219,0.06); }
+.composer-source-review-wrap.is-active { display:block; }
+.composer-source-review-label { font-size:11px; letter-spacing:0.08em; color:rgba(52,152,219,0.95); font-weight:700; text-transform:uppercase; margin-bottom:6px; }
+.composer-source-review-frame { position:relative; width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; background:#000; border:1px solid rgba(52,152,219,0.35); }
+.composer-source-review-video { width:100%; height:100%; display:block; background:#000; object-fit:contain; }
+.composer-source-review-loading { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.65); font-size:13px; color:#3498db; letter-spacing:1px; z-index:2; }
+.composer-source-review-transport { display:flex; align-items:center; gap:10px; margin-top:8px; flex-wrap:wrap; }
+.composer-source-review-time { font-family:monospace; font-size:13px; color:rgba(52,152,219,0.9); min-width:9em; }
+.composer-source-review-scrub { width:100%; margin-top:6px; accent-color:#3498db; }
+.composer-source-review-hint { font-size:12px; line-height:1.45; color:rgba(255,255,255,0.45); margin-top:6px; }
+.composer-source-review-meta { font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:6px; line-height:1.4; }
 .composer-exec-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center; }
 .composer-validation { font-size:14px; font-family:monospace; margin-top:8px; line-height:1.5; }
 .composer-validation.err { color:rgba(255,80,80,0.85); }
@@ -1255,6 +1266,22 @@ input[type="url"], input[type="password"], select, textarea {
                       <div id="composer-features" class="composer-features"></div>
                     </div>
                     <div>
+                      <div id="composer-source-review-wrap" class="composer-source-review-wrap">
+                        <div class="composer-source-review-label">Source clip review · full trim window</div>
+                        <div id="composer-source-review-meta" class="composer-source-review-meta"></div>
+                        <div class="composer-source-review-frame">
+                          <video id="composer-source-review-video" class="composer-source-review-video" playsinline preload="metadata"></video>
+                          <div id="composer-source-review-loading" class="composer-source-review-loading">Loading source…</div>
+                        </div>
+                        <div class="composer-source-review-transport">
+                          <button type="button" id="composer-source-review-play" class="btn btn-outline btn-sm" onclick="toggleComposerSourceReviewPlay()">▶ Play</button>
+                          <button type="button" class="btn btn-outline btn-sm" onclick="markComposerSourceReviewTime('in')" title="Phase B — save playhead as segment in">Mark In</button>
+                          <button type="button" class="btn btn-outline btn-sm" onclick="markComposerSourceReviewTime('out')" title="Phase B — save playhead as segment out">Mark Out</button>
+                          <span id="composer-source-review-time" class="composer-source-review-time">0:00 / 0:00</span>
+                        </div>
+                        <input type="range" id="composer-source-review-scrub" class="composer-source-review-scrub" min="0" max="1000" value="0" oninput="onComposerSourceReviewScrub(this.value)">
+                        <div id="composer-source-review-hint" class="composer-source-review-hint">Watch the full source clip (trim window) to decide when layout should change. Output preview (left) stays ~6s — this player is the full review. Phase B adds split/full segment saves from Mark In/Out.</div>
+                      </div>
                       <div id="composer-vod-timeline" class="composer-vod-timeline"></div>
                       <div id="composer-lineup-trim"></div>
                       <div id="composer-validation" class="composer-validation"></div>
@@ -15287,6 +15314,162 @@ function fmtSecToMin(sec) {
   return Math.floor(s / 60) + 'm' + (s % 60) + 's';
 }
 
+function fmtSecToClock(sec) {
+  var s = Math.max(0, Math.floor(Number(sec) || 0));
+  var m = Math.floor(s / 60);
+  var r = s % 60;
+  return m + ':' + String(r).padStart(2, '0');
+}
+
+var _composerSourceReviewSeq = 0;
+var _composerSourceReviewDebounce = null;
+var _composerSourceReviewDuration = 0;
+var _composerSourceReviewTrimStart = 0;
+var _composerSourceReviewScrubbing = false;
+
+function buildComposerSourceReviewBody() {
+  var body = buildCompositionSpecFromUI();
+  if (!body) return null;
+  if (body.vodSegment && body.vodSegment.vodUrl) {
+    return {
+      deliveryFormat: 'vod_segment',
+      vodSegment: body.vodSegment,
+    };
+  }
+  var clips = body.clips || [];
+  if (!clips.length) return null;
+  return { clip: clips[0], clips: [clips[0]] };
+}
+
+function fetchComposerSourceReview(body) {
+  if (_composerSourceReviewDebounce) clearTimeout(_composerSourceReviewDebounce);
+  _composerSourceReviewDebounce = setTimeout(function() {
+    _composerSourceReviewDebounce = null;
+    fetchComposerSourceReviewNow(body);
+  }, 400);
+}
+
+function fetchComposerSourceReviewNow(body) {
+  var wrap = g('composer-source-review-wrap');
+  var loading = g('composer-source-review-loading');
+  var video = g('composer-source-review-video');
+  var meta = g('composer-source-review-meta');
+  if (!wrap || !body) {
+    if (wrap) wrap.classList.remove('is-active');
+    return;
+  }
+  var seq = ++_composerSourceReviewSeq;
+  wrap.classList.add('is-active');
+  if (loading) loading.style.display = 'flex';
+  if (meta) meta.textContent = 'Preparing source clip…';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/source-review', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (seq !== _composerSourceReviewSeq) return;
+      if (loading) loading.style.display = 'none';
+      if (!d.ok || !d.reviewUrl) {
+        if (meta) meta.textContent = 'Source review failed: ' + (d.error || 'unknown');
+        if (video) { video.removeAttribute('src'); video.load(); }
+        return;
+      }
+      _composerSourceReviewDuration = Number(d.durationSec) || 0;
+      _composerSourceReviewTrimStart = Number(d.trimStart) || 0;
+      window._composerSourceReviewPlayhead = 0;
+      if (meta) {
+        var title = (d.clipTitle || '').slice(0, 72);
+        var abs = 'Clip time ' + fmtSecToClock(d.trimStart) + '–' + fmtSecToClock(d.trimEnd);
+        if (d.capped) abs += ' (first ' + d.durationSec + 's of trim — max review length)';
+        meta.textContent = (title ? (title + ' · ') : '') + abs;
+      }
+      if (video) {
+        video.src = (CFG.ffmpegUrl || 'http://localhost:3000') + d.reviewUrl + '?t=' + Date.now();
+        video.load();
+        bindComposerSourceReviewVideo();
+        video.onloadedmetadata = function() {
+          if (seq !== _composerSourceReviewSeq) return;
+          updateComposerSourceReviewTransport(0);
+        };
+      }
+    })
+    .catch(function(e) {
+      if (seq !== _composerSourceReviewSeq) return;
+      if (loading) loading.style.display = 'none';
+      if (meta) meta.textContent = 'Source review error: ' + ((e && e.message) || 'network');
+    });
+}
+
+function bindComposerSourceReviewVideo() {
+  var video = g('composer-source-review-video');
+  if (!video || video.dataset.reviewBound) return;
+  video.dataset.reviewBound = '1';
+  video.addEventListener('timeupdate', function() {
+    if (_composerSourceReviewScrubbing) return;
+    updateComposerSourceReviewTransport(video.currentTime || 0);
+  });
+  video.addEventListener('play', function() {
+    var btn = g('composer-source-review-play');
+    if (btn) btn.textContent = '⏸ Pause';
+  });
+  video.addEventListener('pause', function() {
+    var btn = g('composer-source-review-play');
+    if (btn) btn.textContent = '▶ Play';
+  });
+  video.addEventListener('ended', function() {
+    var btn = g('composer-source-review-play');
+    if (btn) btn.textContent = '▶ Play';
+  });
+}
+
+function updateComposerSourceReviewTransport(currentSec) {
+  var dur = _composerSourceReviewDuration;
+  if (!dur && g('composer-source-review-video')) {
+    dur = g('composer-source-review-video').duration || 0;
+    if (dur) _composerSourceReviewDuration = dur;
+  }
+  currentSec = Math.max(0, Math.min(dur || 0, Number(currentSec) || 0));
+  window._composerSourceReviewPlayhead = currentSec;
+  var absSec = _composerSourceReviewTrimStart + currentSec;
+  var timeEl = g('composer-source-review-time');
+  if (timeEl) {
+    timeEl.textContent = fmtSecToClock(currentSec) + ' / ' + fmtSecToClock(dur)
+      + ' · clip ' + fmtSecToClock(absSec);
+  }
+  var scrub = g('composer-source-review-scrub');
+  if (scrub && dur > 0 && !_composerSourceReviewScrubbing) {
+    scrub.value = String(Math.round((currentSec / dur) * 1000));
+  }
+}
+
+function onComposerSourceReviewScrub(val) {
+  var video = g('composer-source-review-video');
+  var dur = _composerSourceReviewDuration || (video && video.duration) || 0;
+  if (!video || !dur) return;
+  _composerSourceReviewScrubbing = true;
+  var pct = Math.max(0, Math.min(1000, parseInt(val, 10) || 0)) / 1000;
+  var t = pct * dur;
+  try { video.currentTime = t; } catch (e) { /* ignore */ }
+  updateComposerSourceReviewTransport(t);
+  _composerSourceReviewScrubbing = false;
+}
+
+function toggleComposerSourceReviewPlay() {
+  var video = g('composer-source-review-video');
+  if (!video || !video.src) return;
+  if (video.paused) video.play().catch(function() {});
+  else video.pause();
+}
+
+function markComposerSourceReviewTime(kind) {
+  var t = window._composerSourceReviewPlayhead || 0;
+  var abs = _composerSourceReviewTrimStart + t;
+  alert('Phase B — ' + (kind === 'in' ? 'Mark In' : 'Mark Out') + ' at clip ' + fmtSecToClock(abs)
+    + ' (' + fmtSecToClock(t) + ' in review). Segment timeline saves coming next.');
+}
+
 function setComposerVodTrim(which, val) {
   if (!_composerVodSegment) return;
   var dur = Math.max(60, Math.round(Number(_composerVodSegment.duration_sec) || 3600));
@@ -15680,6 +15863,7 @@ function refreshGenerateComposer(callValidate) {
   renderComposerPreviewMock(body, null);
   renderCompCreativeSourceMap();
   fetchFfmpegComposerPreview(body);
+  fetchComposerSourceReview(buildComposerSourceReviewBody());
   if (callValidate !== false) {
     fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
       method: 'POST',
