@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-09 (CPD-1237/1238) — Competitive P1+P2 on localhost: moment finder API + co-pilot panel + virality grid, caption/aspect/keyword on compositionSpec, CapCut handoff for clip comps (`/capcut/clip-comp`), optimize score + feed (`/intelligence/optimize-score`, `/intelligence/optimize-feed`). Tests moment_finder + publish_optimize + composition gates. Jira CPD-1237/1238; Confluence child HOW 47382529. Deploy + push pending.
 **Last Updated:** 2026-07-09 (CPD-1236) — Competitive P0 on localhost: order summary panel from validate `preflight`, EXECUTE blocked on mock-only preview, Sports/News Comp routed through Composer, sports `contentType`, hook title fallback. Tests `composition_execute_gate`. Pushed `c0/main` c4054eb2; deployed localhost.
 **Last Updated:** 2026-07-08 (CPD-1234) — Compose **source clip review** player: full trim window (up to 180s) with play/pause + scrub timeline; `POST /composition/source-review`. Mark In/Out placeholders for Phase B. Pushed `c0/main`; deployed localhost.
 **Last Updated:** 2026-07-07 (CPD-1233) — Compose single-view placement: cyan FOCUS source map + `cropCx`/`cropCy` sliders (same control model as split green/gold boxes). Validated `compositionSpec` locks through EXECUTE; `finalizeCompCreativeForAssembly` preserves focus crops on single view. Operator-creative persists `cropCx`/`cropCy`. Tests `compose_assembly_lock`. Pushed `c0/main`; deployed localhost. Regression jobs `…1339` / `…9394` published.

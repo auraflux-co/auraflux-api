@@ -152,6 +152,22 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-order-panel { margin-bottom:12px; padding:10px 14px; border:1px solid rgba(28,232,255,0.22); border-radius:8px; background:rgba(0,0,0,0.22); font-size:14px; }
 .composer-order-panel .order-head { font-size:13px; letter-spacing:0.08em; color:rgba(28,232,255,0.85); font-weight:700; margin-bottom:8px; }
 .composer-order-panel .order-step { padding:3px 0; color:rgba(255,255,255,0.72); border-bottom:1px solid rgba(255,255,255,0.04); }
+.composer-copilot-panel { margin-bottom:12px; padding:12px 14px; border:1px solid rgba(145,70,255,0.28); border-radius:8px; background:rgba(145,70,255,0.06); }
+.composer-copilot-head { font-size:13px; letter-spacing:0.08em; color:rgba(145,70,255,0.9); font-weight:700; margin-bottom:8px; }
+.composer-copilot-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; align-items:center; }
+.composer-copilot-row input, .composer-copilot-row select, .composer-copilot-row textarea { background:#0d1524; color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:6px 8px; font-size:14px; }
+.composer-copilot-row textarea { width:100%; min-height:48px; resize:vertical; }
+.moment-finder-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; margin-top:10px; }
+.moment-finder-card { padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); cursor:pointer; }
+.moment-finder-card:hover { border-color:rgba(28,232,255,0.45); }
+.moment-finder-card.is-picked { border-color:rgba(46,204,113,0.65); box-shadow:0 0 0 1px rgba(46,204,113,0.35); }
+.moment-virality-score { font-size:22px; font-weight:800; color:#2ecc71; font-family:Bebas Neue,sans-serif; letter-spacing:1px; }
+.moment-subscores { font-size:11px; color:rgba(255,255,255,0.45); font-family:monospace; margin-top:4px; }
+.optimize-score-badge { display:inline-block; font-size:13px; font-weight:700; padding:2px 8px; border-radius:4px; margin-left:6px; font-family:monospace; }
+.optimize-score-strong { background:rgba(46,204,113,0.15); color:#2ecc71; border:1px solid rgba(46,204,113,0.35); }
+.optimize-score-good { background:rgba(52,152,219,0.12); color:#3498db; border:1px solid rgba(52,152,219,0.35); }
+.optimize-score-weak { background:rgba(231,76,60,0.1); color:#e74c3c; border:1px solid rgba(231,76,60,0.35); }
+.optimize-feed-panel { margin-bottom:12px; padding:10px 12px; border:1px solid rgba(199,175,79,0.22); border-radius:6px; background:rgba(0,0,0,0.2); }
 .composer-preview-mock-watermark { position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center; pointer-events:none; font-size:11px; font-weight:800; letter-spacing:0.12em; color:rgba(255,80,80,0.92); text-shadow:0 0 8px #000; transform:rotate(-18deg); }
 .library-workspace { min-height:calc(100vh - 200px); }
 .gen-compose-workspace .gen-sidebar { min-width:260px; max-width:320px; }
@@ -1224,6 +1240,25 @@ input[type="url"], input[type="password"], select, textarea {
                 </div>
                 <div id="composer-handoff-summary" class="composer-handoff-summary"></div>
                 <div id="composer-order-panel" class="composer-order-panel" style="display:none;"></div>
+                <div id="composer-copilot-panel" class="composer-copilot-panel">
+                  <div class="composer-copilot-head">MOMENT FINDER · Opus-style co-pilot</div>
+                  <div class="composer-copilot-row">
+                    <input type="url" id="copilot-vod-url" placeholder="YouTube or Twitch VOD URL" style="flex:1;min-width:200px;">
+                    <input type="text" id="composer-primary-keyword" placeholder="Primary keyword (SEO)" style="width:160px;" title="Flows to publishCopy at assembly">
+                  </div>
+                  <div class="composer-copilot-row">
+                    <textarea id="copilot-prompt" placeholder="Co-pilot prompt — e.g. funniest rage moments, clutch plays…"></textarea>
+                  </div>
+                  <div class="composer-copilot-row">
+                    <label style="font-size:12px;color:rgba(255,255,255,0.5);">Range start <input type="number" id="copilot-range-start" min="0" value="0" style="width:72px;margin-left:4px;"></label>
+                    <label style="font-size:12px;color:rgba(255,255,255,0.5);">Range end <input type="number" id="copilot-range-end" min="0" placeholder="full" style="width:72px;margin-left:4px;"></label>
+                    <label style="font-size:12px;color:rgba(255,255,255,0.5);">Clip <input type="number" id="copilot-min-dur" min="15" max="120" value="30" style="width:48px;margin-left:4px;">–<input type="number" id="copilot-max-dur" min="20" max="180" value="60" style="width:48px;">s</label>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="runMomentFinder(false)">🔍 FIND MOMENTS</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="runMomentFinder(true)" title="Same URL, new candidates">↻ REPROMPT</button>
+                  </div>
+                  <div id="moment-finder-status" style="font-size:13px;color:rgba(255,255,255,0.45);"></div>
+                  <div id="moment-finder-grid" class="moment-finder-grid"></div>
+                </div>
                 <div id="twitch-comp-lineup" class="gen-comp-lineup" style="display:none;"></div>
                 <div id="generate-composer" class="generate-composer">
                   <div class="generate-composer-head">
@@ -1234,6 +1269,15 @@ input[type="url"], input[type="password"], select, textarea {
                       <option value="comp">Comp (multi-clip Short)</option>
                       <option value="vod_comp">Comp VOD (long-form)</option>
                       <option value="vod_segment">VOD segment (highlight)</option>
+                    </select>
+                    <select id="composer-delivery-aspect" onchange="refreshGenerateComposer(false)" title="Delivery aspect — 1:1 uses square safe zone" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
+                      <option value="9:16">9:16 portrait</option>
+                      <option value="1:1">1:1 square</option>
+                    </select>
+                    <select id="composer-caption-style" onchange="refreshGenerateComposer(false)" title="Caption ASS template" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
+                      <option value="phrase_bottom_blur">Captions · blur fold</option>
+                      <option value="phrase_full_bleed">Captions · full bleed</option>
+                      <option value="word_karaoke">Captions · karaoke</option>
                     </select>
                     <select id="composer-template-select" onchange="applyCompositionTemplate(this.value)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;max-width:160px;">
                       <option value="">Templates…</option>
@@ -2253,6 +2297,10 @@ input[type="url"], input[type="password"], select, textarea {
         <button class="btn btn-outline btn-sm" onclick="toggleErrorLog()">SHOW ERROR LOG</button>
       </div>
       <div style="font-size:14px;color:rgba(255,255,255,0.4);margin:-4px 0 12px;line-height:1.5;">Your queue shows only jobs you add here or start from Generate. Pick by <strong style="color:rgba(199,175,79,0.8);">title</strong> — no IDs to memorize.</div>
+      <details id="optimize-feed-wrap" class="optimize-feed-panel" ontoggle="if(this.open)refreshOptimizeFeed()">
+        <summary style="font-size:14px;color:rgba(199,175,79,0.85);cursor:pointer;font-weight:700;letter-spacing:1px;">OPTIMIZE FEED · publish metadata scores</summary>
+        <div id="optimize-feed-body" style="margin-top:8px;font-size:14px;color:rgba(255,255,255,0.55);">Open to load vidIQ-style scores from recent jobs…</div>
+      </details>
       <div id="cwn-error-log" style="display:none;background:#0a0a0a;border:1px solid rgba(231,76,60,0.3);border-radius:4px;padding:10px 14px;margin-bottom:12px;font-family:monospace;font-size:15px;max-height:180px;overflow-y:auto;"></div>
       <div class="job-list" id="job-list">
         <div style="color:rgba(255,255,255,0.3);font-size:13px;padding:20px 0;">No jobs yet. Generate a video to get started.</div>
@@ -9083,6 +9131,18 @@ function renderQueueNow() {
         + 'YT desc '+(pubPayload.description||'').length+' chars · '+tagCount+' tags · '+hashCount+' # · '
         + 'TT '+(pubPayload.tiktokCaption||'').length+' chars · IG '+(pubPayload.igCaption||'').length+' chars'
         + '</div>';
+      var optMeta = {
+        title: pubPayload.title,
+        description: pubPayload.description,
+        tags: pubPayload.tags,
+        primaryKeyword: (job.compositionSpec && job.compositionSpec.primaryKeyword) || job.primaryKeyword,
+        hasThumbnail: !!(job.thumbnail || job.thumbnailUrl),
+      };
+      var opt = scorePublishMetadataClient(optMeta);
+      var optCls = opt.score >= 80 ? 'optimize-score-strong' : opt.score >= 60 ? 'optimize-score-good' : 'optimize-score-weak';
+      metaStrip += '<div style="margin-top:6px;"><span class="optimize-score-badge ' + optCls + '">OPTIMIZE ' + opt.score + ' · ' + escapeHtml(opt.label) + '</span>'
+        + (opt.fixes.length ? '<span style="font-size:13px;color:rgba(255,255,255,0.4);margin-left:8px;">' + escapeHtml(opt.fixes.join(' · ')) + '</span>' : '')
+        + '</div>';
       if (job.publishSeoAudit && job.publishSeoAudit.snapshots && job.publishSeoAudit.snapshots.length > 1) {
         metaStrip += '<div style="font-size:14px;color:rgba(255,255,255,0.5);margin-top:6px;font-family:monospace;white-space:pre-wrap;">'
           + '<span style="color:rgba(199,175,79,0.75);font-weight:700;letter-spacing:1px;">SEO AUDIT</span>\n'
@@ -9323,10 +9383,13 @@ function renderQueueNow() {
     if (postLiveHeld && (job.driveUrl || job.finalUrl)) {
       actions += '<button onclick="releasePostLivePublish(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Clear copyright hold after live — optional Twitch-cut Drive URL">🔓 RELEASE POST-LIVE PUBLISH</button>';
     }
-    // Short-form only: portrait thumbnail + CapCut draft buttons
+    // Short-form + clip comp: portrait thumbnail + CapCut draft buttons
     var isShortJob = (job.type||'').indexOf('short') > -1 || job.format === 'portrait';
+    var canCapCut = isShortJob || (isClipCompJob && (resolveJobPreviewUrl(job) || job.driveUrl || job.finalUrl));
     if (isShortJob) {
       actions += '<button onclick="generateShortThumbnail(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(199,175,79,0.4);color:#c7af4f;">📸 SHORT THUMB</button>';
+    }
+    if (canCapCut) {
       actions += '<button onclick="sendToCapCut(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(145,70,255,0.4);color:#9146ff;">✂️ CAPCUT DRAFT</button>';
     }
     if (totalSegs > 0) {
@@ -15260,6 +15323,144 @@ var _composerDeliveryFormat = 'short';
 var _composerVodSegment = null;
 var _composerRepurposeContext = null;
 var _composerPreviewSeq = 0;
+var _momentFinderState = { moments: [], version: 0, vodUrl: '', mode: '' };
+
+function readMomentFinderPrefsFromUI() {
+  var rangeEndEl = g('copilot-range-end');
+  var rangeEndRaw = rangeEndEl && rangeEndEl.value !== '' ? Number(rangeEndEl.value) : null;
+  return {
+    vodUrl: (g('copilot-vod-url') && g('copilot-vod-url').value.trim()) || '',
+    prompt: (g('copilot-prompt') && g('copilot-prompt').value.trim()) || '',
+    rangeStart: Number(g('copilot-range-start') && g('copilot-range-start').value) || 0,
+    rangeEnd: rangeEndRaw,
+    minDurationSec: Number(g('copilot-min-dur') && g('copilot-min-dur').value) || 30,
+    maxDurationSec: Number(g('copilot-max-dur') && g('copilot-max-dur').value) || 60,
+    maxCandidates: 8,
+  };
+}
+
+function runMomentFinder(reprompt) {
+  var prefs = readMomentFinderPrefsFromUI();
+  if (!prefs.vodUrl) { alert('Paste a YouTube or Twitch VOD URL first.'); return; }
+  var statusEl = g('moment-finder-status');
+  if (statusEl) statusEl.textContent = reprompt ? '↻ Reprompting…' : '🔍 Finding moments…';
+  var url = (CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/moment-finder' + (reprompt ? '/reprompt' : '');
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({}, prefs, { version: _momentFinderState.version, streamer: '' }))
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'Moment finder failed');
+      _momentFinderState = {
+        moments: d.moments || [],
+        version: d.version || 1,
+        vodUrl: d.vodUrl || prefs.vodUrl,
+        mode: d.mode || '',
+      };
+      renderMomentFinderGrid(d);
+      if (statusEl) {
+        statusEl.textContent = (d.moments || []).length + ' candidates · mode ' + (d.mode || '?')
+          + (d.error ? ' · fallback: ' + d.error : '');
+      }
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = '❌ ' + e.message;
+    });
+}
+
+function renderMomentFinderGrid(data) {
+  var grid = g('moment-finder-grid');
+  if (!grid) return;
+  var moments = (data && data.moments) || [];
+  if (!moments.length) { grid.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.4);">No moments — widen range or add GEMINI_API_KEY.</div>'; return; }
+  grid.innerHTML = moments.map(function(m, i) {
+    var subs = 'H' + (m.hook_score || '?') + ' · C' + (m.coherence_score || '?')
+      + ' · V' + (m.connection_score || '?') + ' · T' + (m.trend_score || '?');
+    return '<div class="moment-finder-card" onclick="pickMomentCandidate(' + i + ')">'
+      + '<div class="moment-virality-score">' + (m.score || '?') + '</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#fff;margin:4px 0;">' + escapeHtml((m.title || 'Moment').slice(0, 48)) + '</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.5);">' + Math.round(m.start_sec) + 's–' + Math.round(m.end_sec) + 's · ' + (m.duration_sec || '') + 's</div>'
+      + '<div class="moment-subscores">' + subs + '</div>'
+      + '<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;">' + escapeHtml((m.summary || '').slice(0, 80)) + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function pickMomentCandidate(idx) {
+  var m = _momentFinderState.moments[idx];
+  if (!m) return;
+  _composerVodSegment = {
+    vodUrl: _momentFinderState.vodUrl,
+    title: m.title || 'VOD moment',
+    streamer: '',
+    duration_sec: Math.max(m.end_sec + 60, 3600),
+    start_sec: m.start_sec,
+    end_sec: m.end_sec,
+    summary: m.summary || '',
+    viralityScore: m.score,
+    momentId: m.id || ('moment-' + idx),
+  };
+  var delSel = g('composer-delivery');
+  if (delSel) { delSel.value = 'vod_segment'; delSel.dataset.userSet = '1'; }
+  var grid = g('moment-finder-grid');
+  if (grid) {
+    var cards = grid.querySelectorAll('.moment-finder-card');
+    cards.forEach(function(c, i) { c.classList.toggle('is-picked', i === idx); });
+  }
+  sendPickerToComposer();
+  refreshGenerateComposer(true);
+}
+
+function scorePublishMetadataClient(meta) {
+  var title = String((meta && meta.title) || '').trim();
+  var description = String((meta && meta.description) || '').trim();
+  var tags = Array.isArray(meta && meta.tags) ? meta.tags : [];
+  var keyword = String((meta && meta.primaryKeyword) || '').trim().toLowerCase();
+  var score = 40;
+  var fixes = [];
+  if (title.length >= 40 && title.length <= 70) score += 15;
+  else if (title.length > 0) { score += 8; fixes.push(title.length < 40 ? 'Title short' : 'Title long'); }
+  else fixes.push('Title missing');
+  if (keyword && title.toLowerCase().indexOf(keyword) >= 0) score += 12;
+  else if (keyword) fixes.push('Keyword not in title');
+  if (description.length >= 120) score += 10;
+  else if (description.length > 0) score += 4;
+  if (tags.length >= 5) score += 10;
+  else if (tags.length > 0) score += 4;
+  if (meta && (meta.thumbnailUrl || meta.hasThumbnail)) score += 8;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  return {
+    score: score,
+    label: score >= 80 ? 'Strong' : score >= 60 ? 'Good' : score >= 40 ? 'Needs work' : 'Weak',
+    fixes: fixes.slice(0, 3),
+  };
+}
+
+function refreshOptimizeFeed() {
+  var body = g('optimize-feed-body');
+  if (!body) return;
+  body.textContent = 'Loading…';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/intelligence/optimize-feed?limit=12')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !d.items || !d.items.length) {
+        body.innerHTML = '<div style="color:rgba(255,255,255,0.4);">No recent jobs with metadata yet.</div>';
+        return;
+      }
+      body.innerHTML = d.items.map(function(item) {
+        var o = item.optimize || {};
+        var cls = o.score >= 80 ? 'optimize-score-strong' : o.score >= 60 ? 'optimize-score-good' : 'optimize-score-weak';
+        return '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
+          + '<span class="optimize-score-badge ' + cls + '">' + (o.score || '?') + ' · ' + escapeHtml(o.label || '') + '</span>'
+          + '<span style="flex:1;min-width:120px;">' + escapeHtml((item.title || item.jobId || '').slice(0, 60)) + '</span>'
+          + '<button type="button" class="btn btn-outline btn-sm" onclick="navToPublishPrep(\'' + escapeHtml(item.jobId) + '\')">SEO</button>'
+          + '</div>';
+      }).join('');
+    })
+    .catch(function(e) { body.textContent = '❌ ' + e.message; });
+}
 
 function clearComposerVodSegment() {
   _composerVodSegment = null;
@@ -15745,7 +15946,11 @@ function buildCompositionSpecFromUI() {
       compCreative: creativePayload.compCreative,
       clips: [],
       vodSegment: _composerVodSegment,
-      platforms: ['youtube', 'tiktok', 'instagram']
+      platforms: ['youtube', 'tiktok', 'instagram'],
+      momentFinderPrefs: readMomentFinderPrefsFromUI(),
+      primaryKeyword: (g('composer-primary-keyword') && g('composer-primary-keyword').value.trim()) || null,
+      deliveryAspect: (g('composer-delivery-aspect') && g('composer-delivery-aspect').value) || '9:16',
+      momentCandidatesVersion: _momentFinderState.version || 0,
     };
   }
   var spec = getCompLineupSpec();
@@ -15796,7 +16001,11 @@ function buildCompositionSpecFromUI() {
     compCreativePreset: creativePayload.compCreativePreset,
     compCreative: creativePayload.compCreative,
     clips: clips,
-    platforms: ['youtube', 'tiktok', 'instagram']
+    platforms: ['youtube', 'tiktok', 'instagram'],
+    momentFinderPrefs: readMomentFinderPrefsFromUI(),
+    primaryKeyword: (g('composer-primary-keyword') && g('composer-primary-keyword').value.trim()) || null,
+    deliveryAspect: (g('composer-delivery-aspect') && g('composer-delivery-aspect').value) || '9:16',
+    momentCandidatesVersion: _momentFinderState.version || 0,
   };
 }
 
@@ -18838,6 +19047,12 @@ function buildCompCreativeRequestPayload(streamerHint) {
     if (Number.isFinite(cx) && Math.abs(cx - 0.5) > 0.01) overrides.layout.cropCx = Math.max(0, Math.min(1, cx));
     if (Number.isFinite(cy) && Math.abs(cy - 0.5) > 0.01) overrides.layout.cropCy = Math.max(0, Math.min(1, cy));
   }
+  var capStyle = g('composer-caption-style') && g('composer-caption-style').value;
+  if (capStyle) {
+    overrides = overrides || {};
+    overrides.captions = overrides.captions || {};
+    overrides.captions.style = capStyle;
+  }
   return {
     compCreativePreset: preset,
     compCreative: overrides
@@ -21289,12 +21504,36 @@ function regeneratePublishCopy(jobId) {
 }
 
 // ── Phase 2: Send Short-Form Job to CapCut Draft ─────────────────────────────
+function sendClipCompToCapCut(jobId) {
+  var statusEl = g('short-status-' + jobId);
+  if (statusEl) statusEl.textContent = '⏳ Creating CapCut draft from assembled clip comp…';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/capcut/clip-comp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId: jobId })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok && d.error) throw new Error(d.error);
+      if (statusEl) {
+        statusEl.innerHTML = '✅ CapCut draft ready!'
+          + (d.draftUrl ? ' <a href="' + escapeHtml(d.draftUrl) + '" target="_blank" style="color:#9146ff;">Open draft</a>' : '');
+      }
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = '❌ ' + (e.message || e);
+    });
+}
+
 function sendToCapCut(jobId) {
   var job = JOBS.find(function(j){ return j.id === jobId; });
   var statusEl = g('short-status-' + jobId);
   if (!job) {
     if (statusEl) statusEl.textContent = '❌ Job not found: ' + jobId;
     return;
+  }
+  if (job.clipsOnly) {
+    return sendClipCompToCapCut(jobId);
   }
   if (statusEl) statusEl.textContent = '⏳ Initialising CapCut draft…';
 
