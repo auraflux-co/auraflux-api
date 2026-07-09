@@ -2015,6 +2015,23 @@ input[type="url"], input[type="password"], select, textarea {
           <tbody id="intel-ab-body"><tr><td colspan="7" style="padding:16px;color:rgba(255,255,255,0.35);">No A/B tests yet — variants rotate every 24h; winner applied at 95% significance.</td></tr></tbody>
         </table>
       </div>
+      <div class="sec-title" style="margin-top:18px;">vidIQ vs C0 BENCHMARK <span class="badge" id="intel-vidiq-status-badge">—</span></div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:8px;line-height:1.5;">
+        Side-by-side: ClipzWorld Content Memory (C0) vs vidIQ MCP platform intelligence (135M+ channels). Requires <code>VIDIQ_MCP_API_KEY</code> in server <code>.env</code>.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+        <select id="intel-vidiq-scenario" style="min-width:200px;">
+          <option value="optimize_title">Title optimize score</option>
+          <option value="keyword_research">Keyword research</option>
+          <option value="outliers_shorts">Shorts outliers</option>
+          <option value="channel_analytics">Channel analytics</option>
+          <option value="__all__">Full suite (4 scenarios)</option>
+        </select>
+        <input type="text" id="intel-vidiq-title" placeholder="Title to score" style="flex:1;min-width:220px;" value="Twitch Soup Ep5 - Cinna Goes Off">
+        <input type="text" id="intel-vidiq-keyword" placeholder="Keyword seed" style="width:160px;" value="twitch clips">
+        <button type="button" class="btn btn-gold btn-sm" onclick="runVidiqC0Benchmark()">Run compare</button>
+      </div>
+      <pre id="intel-vidiq-compare-out" style="max-height:320px;overflow:auto;font-size:12px;line-height:1.45;color:rgba(255,255,255,0.6);background:rgba(0,0,0,0.25);padding:10px 12px;border-radius:6px;border:1px solid rgba(199,175,79,0.15);">Open Intelligence to check vidIQ MCP status…</pre>
       <div class="sec-title" style="margin-top:18px;">PREDICTION ACCURACY <span class="badge" id="intel-acc-count">0</span></div>
       <div id="intel-acc-summary" style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:8px;">Loading…</div>
       <div class="stats-table-wrap">
@@ -4752,6 +4769,7 @@ function loadIntelligencePage(forceRefresh) {
     .then(function() { return loadIntelligenceAbTests(base); })
     .then(function() { return loadIntelligencePredictionAccuracy(base); })
     .then(function() { populateIntelDecisionJobs(); })
+    .then(function() { loadVidiqBenchmarkStatus(); })
     .then(function() {
       if (statusEl) statusEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
     })
@@ -5057,6 +5075,54 @@ function rotateAbTests() {
     })
     .catch(function(e) {
       if (statusEl) statusEl.textContent = 'Rotate failed: ' + (e.message || 'error');
+    });
+}
+
+function loadVidiqBenchmarkStatus() {
+  var badge = g('intel-vidiq-status-badge');
+  var out = g('intel-vidiq-compare-out');
+  fetch(intelApiBase() + '/intelligence/vidiq/status')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'status failed');
+      if (badge) badge.textContent = d.configured ? 'MCP on' : 'no key';
+      if (out && !out.dataset.hasRun) {
+        var cred = d.credits && d.credits.totalCredits != null ? (' · ' + d.credits.totalCredits + ' vidIQ credits') : '';
+        out.textContent = (d.configured ? 'vidIQ MCP connected' : 'Set VIDIQ_MCP_API_KEY in .env') + cred
+          + '\nC0: ' + d.c0Scope + '\nvidIQ: ' + d.vidiqScope
+          + '\nScenarios: ' + (d.scenarios || []).map(function(s) { return s.id; }).join(', ');
+      }
+    })
+    .catch(function(e) {
+      if (badge) badge.textContent = 'err';
+      if (out && !out.dataset.hasRun) out.textContent = 'vidIQ status failed: ' + e.message;
+    });
+}
+
+function runVidiqC0Benchmark() {
+  var out = g('intel-vidiq-compare-out');
+  var scenario = (g('intel-vidiq-scenario') && g('intel-vidiq-scenario').value) || 'optimize_title';
+  var body = {
+    input: {
+      title: (g('intel-vidiq-title') && g('intel-vidiq-title').value) || '',
+      keyword: (g('intel-vidiq-keyword') && g('intel-vidiq-keyword').value) || 'twitch clips',
+      type: 'short',
+    },
+  };
+  if (scenario !== '__all__') body.scenario = scenario;
+  if (out) { out.textContent = 'Running benchmark…'; out.dataset.hasRun = '1'; }
+  fetch(intelApiBase() + '/intelligence/vidiq/compare', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'compare failed');
+      if (out) out.textContent = JSON.stringify(d.result || d, null, 2);
+    })
+    .catch(function(e) {
+      if (out) out.textContent = 'Benchmark failed: ' + e.message;
     });
 }
 
