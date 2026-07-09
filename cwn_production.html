@@ -1094,6 +1094,13 @@ input[type="url"], input[type="password"], select, textarea {
                   </select>
                   <div id="comp-creative-label" class="gen-comp-creative-label" style="margin:8px 0;padding:10px 12px;border-radius:6px;border:1px solid rgba(199,175,79,0.28);background:rgba(199,175,79,0.06);font-size:14px;line-height:1.55;color:rgba(255,255,255,0.78);white-space:pre-wrap;font-family:monospace;"></div>
                   <div id="comp-creative-chips" class="gen-comp-creative-chips"></div>
+                  <div id="comp-creative-source-cleanup" style="margin-top:8px;padding:10px 12px;border-radius:6px;border:1px solid rgba(231,76,60,0.28);background:rgba(231,76,60,0.06);font-size:13px;line-height:1.5;color:rgba(255,255,255,0.82);">
+                    <div style="font-weight:700;color:rgba(231,76,60,0.95);margin-bottom:6px;">Source UI cleanup · before layout crop</div>
+                    <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:8px;">Blurs Twitch chat / bars on the wide frame so your portrait crop can stay wide without losing action quality. Does not remove text in the middle of the scene.</div>
+                    <label style="display:block;margin-bottom:4px;"><input type="checkbox" id="comp-creative-hide-chat" onchange="onSourceCleanupChange()"> Hide Twitch chat (right rail)</label>
+                    <label style="display:block;margin-bottom:4px;"><input type="checkbox" id="comp-creative-hide-bottom-ui" onchange="onSourceCleanupChange()"> Hide bottom bar (subs / goals / alerts)</label>
+                    <label style="display:block;"><input type="checkbox" id="comp-creative-hide-top-ui" onchange="onSourceCleanupChange()"> Hide top overlay strip</label>
+                  </div>
                   <div id="comp-creative-landscape-split" style="display:none;margin-top:8px;padding:10px 12px;border-radius:6px;border:1px solid rgba(46,204,113,0.28);background:rgba(46,204,113,0.06);font-size:14px;line-height:1.5;color:rgba(255,255,255,0.78);">
                     <label style="display:block;font-size:13px;color:rgba(255,255,255,0.72);margin-bottom:8px;">Wide 16:9 clip layout
                       <select id="comp-creative-landscape-layout" onchange="onCompCreativeLandscapeLayoutChange()" style="width:100%;margin-top:4px;background:#0d1524;color:#fff;border:1px solid rgba(46,204,113,0.45);padding:6px 8px;font-size:14px;border-radius:3px;">
@@ -1114,7 +1121,8 @@ input[type="url"], input[type="password"], select, textarea {
                         <div style="font-size:12px;color:rgba(52,152,219,0.9);margin-bottom:4px;font-weight:700;">Cyan box — portrait focus</div>
                         <label style="display:block;font-size:12px;">Horizontal <input type="range" id="comp-creative-fullbleed-cx" min="0" max="100" value="50" style="width:100%;accent-color:#3498db;" oninput="onCompCreativeFullBleedCropChange()"></label>
                         <label style="display:block;font-size:12px;">Vertical <input type="range" id="comp-creative-fullbleed-cy" min="0" max="100" value="50" style="width:100%;accent-color:#3498db;" oninput="onCompCreativeFullBleedCropChange()"></label>
-                        <div id="comp-creative-fullbleed-val" style="font-family:monospace;font-size:12px;color:rgba(52,152,219,0.85);margin-top:4px;">Focus · cx0.50 cy0.50</div>
+                        <label style="display:block;font-size:12px;margin-top:6px;">Zoom <input type="range" id="comp-creative-fullbleed-zoom" min="25" max="200" value="100" style="width:100%;accent-color:#3498db;" oninput="onCompCreativeFullBleedCropChange()" title="100 = default · lower zooms out · higher zooms in"></label>
+                        <div id="comp-creative-fullbleed-val" style="font-family:monospace;font-size:12px;color:rgba(52,152,219,0.85);margin-top:4px;">Focus · cx0.50 cy0.50 · zoom 100%</div>
                       </div>
                     </div>
                     <div id="comp-creative-landscape-split-controls">
@@ -1333,11 +1341,14 @@ input[type="url"], input[type="password"], select, textarea {
                           <button type="button" id="composer-source-review-play" class="btn btn-outline btn-sm" onclick="toggleComposerSourceReviewPlay()">▶ Play</button>
                           <button type="button" class="btn btn-outline btn-sm" onclick="markComposerSourceReviewTime('in')" title="Save playhead as trim in">Mark In</button>
                           <button type="button" class="btn btn-outline btn-sm" onclick="markComposerSourceReviewTime('out')" title="Save playhead as trim out">Mark Out</button>
+                          <button type="button" class="btn btn-gold btn-sm" onclick="markComposerLayoutSegment()" title="Save layout change at playhead (split ↔ full)">Mark layout</button>
+                          <button type="button" class="btn btn-outline btn-sm" onclick="clearComposerLayoutSegments()" title="Remove all layout breakpoints">Clear layout</button>
                           <button type="button" class="btn btn-outline btn-sm" onclick="detectComposerSilence()" title="Find silence regions on source review clip">🔇 SILENCE</button>
                           <span id="composer-source-review-time" class="composer-source-review-time">0:00 / 0:00</span>
                         </div>
                         <input type="range" id="composer-source-review-scrub" class="composer-source-review-scrub" min="0" max="1000" value="0" oninput="onComposerSourceReviewScrub(this.value)">
-                        <div id="composer-source-review-hint" class="composer-source-review-hint">Watch the full source clip (trim window) to decide when layout should change. Output preview (left) stays ~6s — this player is the full review. Phase B adds split/full segment saves from Mark In/Out.</div>
+                        <div id="composer-source-review-hint" class="composer-source-review-hint">Split view + crop boxes first. Switch to <strong>Single view</strong> (locks opening split). Scrub to the switch point (e.g. 11s into the trimmed clip), then <strong>Mark layout</strong>. Trim In/Out sets the clip window. LAYOUT PLAN confirms before EXECUTE.</div>
+                        <div id="composer-layout-segments" class="composer-layout-segments" style="display:none;margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(199,175,79,0.35);background:rgba(199,175,79,0.06);font-size:13px;line-height:1.5;color:rgba(255,255,255,0.82);"></div>
                       </div>
                       <div id="composer-vod-timeline" class="composer-vod-timeline"></div>
                       <div id="composer-lineup-trim"></div>
@@ -3574,6 +3585,9 @@ var _assemblyFiredForJob = {}; // dedup lock to prevent multiple /assemble calls
 
 // ── NAVIGATION ────────────────────────────────────────────────────
 var CWN_ACTIVE_PAGE_KEY = 'cwn_active_page';
+var CWN_COMPOSER_SESSION_KEY = 'cwn_composer_session';
+var COMPOSER_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+var _composerSessionPersistDebounce = null;
 var CWN_GENERATE_PILLAR_KEY = 'cwn_generate_pillar';
 
 function persistActivePage(page) {
@@ -3644,9 +3658,11 @@ function nav(page) {
   if (page === 'library') libraryPageInit();
   if (page === 'generate') {
     if (!applyComposerHandoff()) {
-      applyLibraryHandoff();
-      renderComposerHandoffSummary();
-      loadGeneratePillarPref();
+      if (!restoreComposerSession()) {
+        applyLibraryHandoff();
+        renderComposerHandoffSummary();
+        loadGeneratePillarPref();
+      }
     }
   }
 }
@@ -3944,11 +3960,57 @@ function stagePendingSelectedClips(onDone) {
   })(0);
 }
 
+function clipHasStagedPlayback(clip) {
+  return !!(clip && (clip.stagedUrl || clip.playbackUrl || clip.r2Url));
+}
+
+function parseStageApiResponse(d, need) {
+  if (!d) return [];
+  if (Array.isArray(d.results)) return d.results;
+  if (d.clip && need && need.length === 1) {
+    var c = d.clip;
+    return [{
+      ok: !!d.ok && !!(c.playbackUrl || c.r2Url || c.stagedUrl),
+      url: need[0].clip.url,
+      error: d.error || c.error,
+      playbackUrl: c.playbackUrl,
+      r2Url: c.r2Url,
+      stagedUrl: c.stagedUrl,
+      mp4Url: c.mp4Url,
+    }];
+  }
+  return [];
+}
+
+function fetchJsonWithRetry(url, opts, retriesLeft, onRetry) {
+  return fetch(url, opts).then(function(r) {
+    return r.json().then(function(d) {
+      if ((!r.ok || d.ok === false) && retriesLeft > 0 && (r.status >= 502 || r.status === 0)) {
+        if (onRetry) onRetry(retriesLeft);
+        return new Promise(function(res) { setTimeout(res, 1200); }).then(function() {
+          return fetchJsonWithRetry(url, opts, retriesLeft - 1, onRetry);
+        });
+      }
+      if (!r.ok && d && d.error) throw new Error(d.error);
+      return d;
+    });
+  }).catch(function(e) {
+    var msg = (e && e.message) || String(e);
+    if (retriesLeft > 0 && (msg === 'Failed to fetch' || msg.indexOf('NetworkError') >= 0 || msg.indexOf('Load failed') >= 0)) {
+      if (onRetry) onRetry(retriesLeft);
+      return new Promise(function(res) { setTimeout(res, 1200); }).then(function() {
+        return fetchJsonWithRetry(url, opts, retriesLeft - 1, onRetry);
+      });
+    }
+    throw e;
+  });
+}
+
 function ensureSelectedClipsStaged(callback) {
   var picked = collectCompPickedClips();
   var need = [];
   picked.forEach(function(p) {
-    if (p.clip && p.clip.url && !p.clip.stagedUrl) need.push(p);
+    if (p.clip && p.clip.url && !clipHasStagedPlayback(p.clip)) need.push(p);
   });
   if (!need.length) { callback(null); return; }
   var statusEl = g('twitch-fetch-status');
@@ -3956,7 +4018,8 @@ function ensureSelectedClipsStaged(callback) {
   if (statusEl) statusEl.textContent = 'Downloading ' + need.length + ' clip(s) to R2 for editing…';
   if (composeBtn) composeBtn.disabled = true;
   need.forEach(function(p) { p.clip.staging = true; });
-  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage', {
+  var apiBase = CFG.ffmpegUrl || 'http://localhost:3000';
+  fetchJsonWithRetry(apiBase + '/content-library/stage', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -3971,14 +4034,15 @@ function ensureSelectedClipsStaged(callback) {
         };
       })
     })
+  }, 3, function(retriesLeft) {
+    if (statusEl) statusEl.textContent = 'Server busy — retrying clip download (' + retriesLeft + ' left)…';
   })
-    .then(function(r) { return r.json(); })
     .then(function(d) {
       var failed = [];
-      (d.results || []).forEach(function(r) {
+      parseStageApiResponse(d, need).forEach(function(r) {
         var pick = need.find(function(p) { return p.clip.url === r.url; });
         if (!pick) return;
-        if (r.ok && (r.playbackUrl || r.r2Url)) applyStagedClipFields(pick.clip, r);
+        if (r.ok && (r.playbackUrl || r.r2Url || r.stagedUrl)) applyStagedClipFields(pick.clip, r);
         else {
           pick.clip.staging = false;
           pick.clip.stageError = r.error || 'stage failed';
@@ -3990,12 +4054,17 @@ function ensureSelectedClipsStaged(callback) {
     })
     .catch(function(e) {
       need.forEach(function(p) {
-        if (p.clip && !p.clip.stagedUrl) {
+        if (p.clip && !clipHasStagedPlayback(p.clip)) {
           p.clip.staging = false;
           p.clip._stageInflight = false;
         }
       });
-      callback(e.message || String(e));
+      var msg = (e && e.message) || String(e);
+      if (msg === 'Failed to fetch' || msg.indexOf('NetworkError') >= 0) {
+        msg = 'Could not reach ' + (CFG.ffmpegUrl || 'http://localhost:3000')
+          + ' — wait a few seconds after deploy, then try COMPOSE again. (Settings → SERVER URL should be http://localhost:3000)';
+      }
+      callback(msg);
     })
     .finally(function() {
       if (composeBtn) composeBtn.disabled = false;
@@ -4253,6 +4322,190 @@ function routeNewsPickerToLibrary(mode) {
   alert('Clip Library → pick stories → COMPOSE → → set delivery to ' + (mode === 'comp' ? 'Comp' : 'Short') + ' → EXECUTE.');
 }
 
+function snapshotClipForSession(c) {
+  if (!c) return null;
+  return {
+    url: c.url || '',
+    pageUrl: c.pageUrl || c.url || '',
+    mp4Url: c.mp4Url || c.stagedUrl || c.r2Url || '',
+    stagedUrl: c.stagedUrl || c.r2Url || '',
+    r2Url: c.r2Url || '',
+    playbackUrl: c.playbackUrl || '',
+    title: c.title || '',
+    streamer: c.streamer || '',
+    thumbnailUrl: c.thumbnailUrl || '',
+    duration: c.duration || c.clipDuration || 60,
+    selected: !!c.selected,
+    composerTrimStart: c.composerTrimStart,
+    composerTrimEnd: c.composerTrimEnd,
+    layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],
+    openingLayout: c.openingLayout || null,
+    cropZoom: c.cropZoom,
+    trimStart: c.trimStart,
+    trimEnd: c.trimEnd,
+    postLiveVod: !!c.postLiveVod,
+    platform: c.platform || 'twitch',
+    game: c.game || '',
+    views: c.views || 0,
+  };
+}
+
+function serializeStreamersForSession(streamers) {
+  return (streamers || []).map(function(entry) {
+    return {
+      name: entry.name,
+      displayName: entry.displayName,
+      selected: entry.selected,
+      dropReason: entry.dropReason || null,
+      clips: (entry.clips || []).map(snapshotClipForSession).filter(Boolean),
+    };
+  }).filter(function(e) {
+    return !e.dropReason && (e.clips || []).some(function(c) { return c.selected; });
+  });
+}
+
+function serializeRedditForSession(threads) {
+  return (threads || []).filter(function(t) { return t.selected && t.videoUrl; }).map(function(t) {
+    return {
+      selected: true,
+      videoUrl: t.videoUrl || '',
+      stagedUrl: t.stagedUrl || t.playbackUrl || '',
+      playbackUrl: t.playbackUrl || '',
+      title: t.title || '',
+      subreddit: t.subreddit || '',
+      thumbnailUrl: t.thumbnailUrl || '',
+      redditPermalink: t.redditPermalink || t.link || '',
+      link: t.link || '',
+      composerTrimStart: t.composerTrimStart,
+      composerTrimEnd: t.composerTrimEnd,
+      layoutSegments: Array.isArray(t.layoutSegments) ? t.layoutSegments.slice() : [],
+      openingLayout: t.openingLayout || null,
+    };
+  });
+}
+
+function serializeWireForSession(stories) {
+  return (stories || []).filter(function(s) { return s.selected && (s.hlsUrl || s.stagedUrl || s.playbackUrl); }).map(function(s) {
+    return {
+      selected: true,
+      hlsUrl: s.hlsUrl || '',
+      stagedUrl: s.stagedUrl || s.playbackUrl || '',
+      playbackUrl: s.playbackUrl || '',
+      title: s.title || '',
+      source: s.source || '',
+      thumbnailUrl: s.thumbnailUrl || '',
+      composerTrimStart: s.composerTrimStart,
+      composerTrimEnd: s.composerTrimEnd,
+      layoutSegments: Array.isArray(s.layoutSegments) ? s.layoutSegments.slice() : [],
+      openingLayout: s.openingLayout || null,
+    };
+  });
+}
+
+function persistComposerSession() {
+  if (_composerSessionPersistDebounce) clearTimeout(_composerSessionPersistDebounce);
+  _composerSessionPersistDebounce = setTimeout(function() {
+    _composerSessionPersistDebounce = null;
+    persistComposerSessionNow();
+  }, 250);
+}
+
+function persistComposerSessionNow() {
+  var picked = collectCompPickedClips();
+  if (!picked.length && !_composerVodSegment) {
+    try { sessionStorage.removeItem(CWN_COMPOSER_SESSION_KEY); } catch (_e) {}
+    return;
+  }
+  var payload = {
+    version: 1,
+    savedAt: Date.now(),
+    contentSource: _composerContentSource || 'twitch',
+    streamers: serializeStreamersForSession(_twitchPickerStreamers),
+    redditThreads: serializeRedditForSession(_redditPickerThreads),
+    wireStories: serializeWireForSession(_newsPickerStories),
+    vodSegment: _composerVodSegment || null,
+    compLineupUrls: (_compLineup || []).map(function(s) {
+      return (s.clip && (s.clip.url || s.clip.pageUrl)) || '';
+    }).filter(Boolean),
+    deliveryFormat: (g('composer-delivery') && g('composer-delivery').value) || _composerDeliveryFormat || 'short',
+    deliveryAspect: (g('composer-delivery-aspect') && g('composer-delivery-aspect').value) || '9:16',
+    captionStyle: (g('composer-caption-style') && g('composer-caption-style').value) || '',
+    editingLayoutJobId: window._editingLayoutJobId || null,
+  };
+  try { sessionStorage.setItem(CWN_COMPOSER_SESSION_KEY, JSON.stringify(payload)); } catch (_e) {}
+}
+
+function restoreCompLineupOrder(urls) {
+  var picked = collectCompPickedClips();
+  var byUrl = {};
+  picked.forEach(function(p) {
+    var u = (p.clip && (p.clip.url || p.clip.pageUrl)) || '';
+    if (u) byUrl[u] = p;
+  });
+  var ordered = [];
+  (urls || []).forEach(function(u) {
+    if (byUrl[u]) { ordered.push(byUrl[u]); delete byUrl[u]; }
+  });
+  Object.keys(byUrl).forEach(function(u) { ordered.push(byUrl[u]); });
+  if (ordered.length) _compLineup = ordered;
+}
+
+function restoreComposerSession() {
+  var raw;
+  try { raw = sessionStorage.getItem(CWN_COMPOSER_SESSION_KEY); } catch (_e) { return false; }
+  if (!raw) return false;
+  var data;
+  try { data = JSON.parse(raw); } catch (_e) { return false; }
+  if (!data || data.version !== 1) return false;
+  if (data.savedAt && (Date.now() - Number(data.savedAt)) > COMPOSER_SESSION_TTL_MS) {
+    try { sessionStorage.removeItem(CWN_COMPOSER_SESSION_KEY); } catch (_e) {}
+    return false;
+  }
+  var hasContent = (data.streamers && data.streamers.length)
+    || (data.redditThreads && data.redditThreads.length)
+    || (data.wireStories && data.wireStories.length)
+    || data.vodSegment;
+  if (!hasContent) return false;
+
+  if (data.streamers && data.streamers.length) {
+    _twitchPickerStreamers = data.streamers;
+    _composerContentSource = 'twitch';
+    switchGeneratePillar('twitch');
+  } else if (data.redditThreads && data.redditThreads.length) {
+    setNewsDeskMode('reddit');
+    _redditPickerThreads = data.redditThreads;
+    _composerContentSource = 'reddit';
+    switchGeneratePillar('news');
+  } else if (data.wireStories && data.wireStories.length) {
+    setNewsDeskMode('wire');
+    _newsPickerStories = data.wireStories;
+    _composerContentSource = 'wire';
+    switchGeneratePillar('news');
+  } else {
+    _composerContentSource = data.contentSource || 'twitch';
+  }
+  _composerVodSegment = data.vodSegment || null;
+  if (data.deliveryFormat && g('composer-delivery')) {
+    g('composer-delivery').value = data.deliveryFormat;
+    g('composer-delivery').dataset.userSet = '1';
+    _composerDeliveryFormat = data.deliveryFormat;
+  }
+  if (data.deliveryAspect && g('composer-delivery-aspect')) g('composer-delivery-aspect').value = data.deliveryAspect;
+  if (data.captionStyle && g('composer-caption-style')) g('composer-caption-style').value = data.captionStyle;
+  window._editingLayoutJobId = data.editingLayoutJobId || null;
+  reconcileCompLineup(collectCompPickedClips());
+  restoreCompLineupOrder(data.compLineupUrls || []);
+  renderComposerHandoffSummary();
+  if (typeof refreshCompLineupUI === 'function') refreshCompLineupUI();
+  refreshGenerateComposer(true);
+  var panel = g('generate-composer');
+  if (panel) {
+    panel.classList.add('is-open');
+    setTimeout(function() { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 120);
+  }
+  return true;
+}
+
 function applyComposerHandoff() {
   var raw;
   try { raw = sessionStorage.getItem('cwn_composer_handoff'); } catch (e) { return false; }
@@ -4288,6 +4541,7 @@ function applyComposerHandoff() {
     panel.classList.add('is-open');
     setTimeout(function() { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 120);
   }
+  persistComposerSessionNow();
   return true;
 }
 
@@ -8497,17 +8751,33 @@ function releasePostLivePublish(jobId) {
   xhr.send(JSON.stringify({ driveUrl: (driveUrl && driveUrl.trim()) ? driveUrl.trim() : undefined }));
 }
 
+function normalizeJobPreviewUrl(url) {
+  if (!url) return '';
+  var apiBase = (CFG.ffmpegUrl || window.location.origin || 'http://localhost:3000').replace(/\/$/, '');
+  if (url.indexOf('http') !== 0) {
+    return apiBase + (url.charAt(0) === '/' ? url : '/' + url);
+  }
+  try {
+    var parsed = new URL(url);
+    var base = new URL(apiBase);
+    if (parsed.pathname.indexOf('/download/') === 0
+      && (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1')
+      && (base.hostname === 'localhost' || base.hostname === '127.0.0.1' || base.hostname === parsed.hostname)) {
+      return base.origin + parsed.pathname + parsed.search;
+    }
+  } catch (_e) { /* use raw url */ }
+  return url;
+}
+
 function resolveJobPreviewUrl(job) {
   if (!job) return '';
   var base = '';
   // Prefer local /download/ — driveUrl (R2) can be stale when reassemble overwrites same filename (r3 vs r4).
   if (job.localPreviewUrl) {
-    base = job.localPreviewUrl.indexOf('http') === 0
-      ? job.localPreviewUrl
-      : (CFG.ffmpegUrl + job.localPreviewUrl);
+    base = normalizeJobPreviewUrl(job.localPreviewUrl);
   } else if (job.finalUrl && String(job.finalUrl).indexOf('/download/') > -1) {
-    base = job.finalUrl.indexOf('http') === 0 ? job.finalUrl : (CFG.ffmpegUrl + job.finalUrl);
-  } else if (job.filename) base = CFG.ffmpegUrl + '/download/' + job.filename;
+    base = normalizeJobPreviewUrl(job.finalUrl);
+  } else if (job.filename) base = normalizeJobPreviewUrl('/download/' + job.filename);
   else if (job.driveUrl && String(job.driveUrl).indexOf('http') === 0) base = job.driveUrl;
   if (!base) return '';
   var bust = job.previewRevision || job.assemblyId || (job.assembledAt ? Date.parse(job.assembledAt) : (job.id || Date.now()));
@@ -8638,10 +8908,29 @@ function reloadJobMediaPreview(jobId, opts) {
     };
   }
   if (opts.forceRefresh) url = url.replace(/([?&])v=[^&]*/, '$1v=' + Date.now());
+  url = normalizeJobPreviewUrl(url);
+  if (vid) vid.preload = 'auto';
   if (vid.src !== url) {
     vid.src = url;
     vid.load();
   }
+  clearTimeout(vid._previewLoadTimer);
+  vid._previewLoadTimer = setTimeout(function() {
+    if (!vid || vid.readyState >= 2) return;
+    var err = panel.querySelector('.job-preview-err');
+    if (err) {
+      err.style.display = 'block';
+      err.innerHTML = 'Preview slow or blocked — '
+        + '<button type="button" class="btn btn-outline btn-sm" style="font-size:13px;margin-left:4px;" onclick="reloadJobMediaPreview(\'' + jobId + '\', { forceRefresh: true })">↻ Retry</button>'
+        + ' <a href="' + url + '" target="_blank" rel="noopener" style="color:#c7af4f;margin-left:6px;">Open MP4 in new tab</a>'
+        + ' <span style="display:block;margin-top:6px;color:rgba(255,255,255,0.45);">Use the same host as Settings → SERVER URL (localhost vs 127.0.0.1).</span>';
+    }
+  }, 20000);
+  vid.onloadeddata = function() {
+    clearTimeout(vid._previewLoadTimer);
+    var err = panel.querySelector('.job-preview-err');
+    if (err) err.style.display = 'none';
+  };
 }
 
 function toggleJobMediaPanel(jobId) {
@@ -15693,12 +15982,24 @@ function fetchComposerSourceReviewNow(body) {
         meta.textContent = (title ? (title + ' · ') : '') + abs;
       }
       if (video) {
+        var leadClip = (body && body.clip) || (body && body.clips && body.clips[0]) || {};
+        var thumbUrl = leadClip.thumbnailUrl || '';
+        video.poster = thumbUrl ? String(thumbUrl).replace('{width}', '640').replace('{height}', '360') : '';
         video.src = (CFG.ffmpegUrl || 'http://localhost:3000') + d.reviewUrl + '?t=' + Date.now();
         video.load();
         bindComposerSourceReviewVideo();
         video.onloadedmetadata = function() {
           if (seq !== _composerSourceReviewSeq) return;
+          paintComposerVideoFirstFrame(video, 0.25);
           updateComposerSourceReviewTransport(0);
+        };
+        video.onseeked = function() {
+          if (seq !== _composerSourceReviewSeq) return;
+          updateComposerSourceReviewTransport(video.currentTime || 0);
+        };
+        video.onerror = function() {
+          if (seq !== _composerSourceReviewSeq) return;
+          if (meta) meta.textContent = (meta.textContent || '') + ' · video failed to load — click ↻ Refresh preview or stage clip to R2';
         };
       }
     })
@@ -15707,6 +16008,14 @@ function fetchComposerSourceReviewNow(body) {
       if (loading) loading.style.display = 'none';
       if (meta) meta.textContent = 'Source review error: ' + ((e && e.message) || 'network');
     });
+}
+
+function paintComposerVideoFirstFrame(video, atSec) {
+  if (!video || !video.duration) return;
+  var t = Math.max(0.05, Math.min((video.duration || 1) - 0.05, Number(atSec) || 0.25));
+  try {
+    video.currentTime = t;
+  } catch (_) { /* noop */ }
 }
 
 function bindComposerSourceReviewVideo() {
@@ -15791,6 +16100,171 @@ function markComposerSourceReviewTime(kind) {
   if (kind === 'in') slot.clip.composerTrimStart = Math.floor(abs);
   else slot.clip.composerTrimEnd = Math.max(Math.floor(abs), (slot.clip.composerTrimStart || 0) + 1);
   renderComposerTrimControls();
+  renderComposerLayoutSegments();
+  refreshGenerateComposer(false);
+}
+
+function clipLayoutPlanFields(c) {
+  if (!c) return { layoutSegments: [], openingLayout: null };
+  return {
+    layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],
+    openingLayout: c.openingLayout || null,
+  };
+}
+
+function splitLayoutSnapshotFromDom() {
+  var payload = buildCompCreativeRequestPayload('');
+  var layout = (payload.compCreative && payload.compCreative.layout) || {};
+  var bottomMode = readBottomPaneModeFromDom();
+  var facecamRect = readFacecamSlidersFromDom() || layout.facecamRect || null;
+  var bottomPaneRect = bottomMode === 'custom_crop'
+    ? (readBottomPaneSlidersFromDom() || layout.bottomPaneRect || null)
+    : null;
+  return {
+    mode: 'split_screen',
+    cropCx: layout.cropCx,
+    cropCy: layout.cropCy,
+    cropZoom: layout.cropZoom,
+    facecamRect: facecamRect,
+    bottomPaneRect: bottomPaneRect,
+    contentCx: pctToNorm((g('comp-creative-content-cx') && g('comp-creative-content-cx').value) || 50),
+    topHeight: readTopShareFromDom(),
+    bottomPaneMode: bottomMode,
+  };
+}
+
+function ensureComposerOpeningLayoutOnClip() {
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
+  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
+  var slot = lineup[0];
+  if (!slot || !slot.clip || slot.clip.openingLayout) return;
+  slot.clip.openingLayout = splitLayoutSnapshotFromDom();
+  renderComposerLayoutSegments();
+}
+
+function snapshotOpeningLayoutFromUI() {
+  var stored = loadCompCreativePresetFromStorage();
+  var payload = buildCompCreativeRequestPayload('');
+  var layout = (payload.compCreative && payload.compCreative.layout) || {};
+  var splitOn = composerLandscapeSplitEnabled(stored);
+  var mode = splitOn ? 'split_screen' : presetLayoutModeForCompose(stored.preset || payload.compCreativePreset);
+  return {
+    mode: mode,
+    cropCx: layout.cropCx,
+    cropCy: layout.cropCy,
+    cropZoom: layout.cropZoom != null ? layout.cropZoom : readFullBleedCropFromDom().cropZoom,
+    facecamRect: layout.facecamRect || null,
+    bottomPaneRect: layout.bottomPaneRect || null,
+    contentCx: layout.contentCx,
+    topHeight: layout.topHeight,
+    bottomPaneMode: layout.bottomPaneMode || null,
+  };
+}
+
+function currentComposerLayoutSnapshotForMark() {
+  var opening = snapshotOpeningLayoutFromUI();
+  var fb = readFullBleedCropFromDom();
+  if (opening.mode === 'full_bleed_crop') {
+    opening.cropCx = fb.cropCx;
+    opening.cropCy = fb.cropCy;
+    opening.cropZoom = fb.cropZoom;
+  }
+  if (opening.mode === 'split_screen') {
+    opening.facecamRect = readFacecamSlidersFromDom() || opening.facecamRect;
+    opening.bottomPaneRect = readBottomPaneSlidersFromDom() || opening.bottomPaneRect;
+    opening.topHeight = readTopShareFromDom();
+    opening.bottomPaneMode = readBottomPaneModeFromDom();
+    var cxPct = storedContentCxFromDom();
+    if (Number.isFinite(cxPct)) opening.contentCx = cxPct / 100;
+  }
+  return opening;
+}
+
+function storedContentCxFromDom() {
+  var el = g('comp-creative-content-cx');
+  return el ? Number(el.value) : NaN;
+}
+
+function renderComposerLayoutSegments() {
+  var el = g('composer-layout-segments');
+  if (!el) return;
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
+  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
+  var slot = lineup[0];
+  var c = slot && slot.clip;
+  if (!c || !(c.layoutSegments && c.layoutSegments.length)) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  ensureComposerTrimDefaults(c);
+  var trimStart = c.composerTrimStart != null ? c.composerTrimStart : 0;
+  var opening = c.openingLayout || snapshotOpeningLayoutFromUI();
+  var openLabel = opening.mode === 'split_screen' ? 'split' : (opening.mode === 'full_bleed_crop' ? 'full bleed' : 'blur-pad');
+  var html = '<div style="font-weight:700;color:rgba(199,175,79,0.95);margin-bottom:4px;">LAYOUT PLAN · sent to assembly</div>';
+  html += '<div>Opens <strong>' + escHtml(openLabel) + '</strong> from trim in (' + escHtml(fmtSecToClock(trimStart)) + ')';
+  c.layoutSegments.slice().sort(function(a, b) { return a.atSec - b.atSec; }).forEach(function(seg) {
+    var modeLabel = seg.mode === 'split_screen' ? 'split' : (seg.mode === 'full_bleed_crop' ? 'full bleed' : 'blur-pad');
+    var relSec = Math.max(0, Math.round(seg.atSec - trimStart));
+    html += ' → switches to <strong>' + escHtml(modeLabel) + '</strong> at ' + escHtml(fmtSecToClock(seg.atSec))
+      + ' (' + relSec + 's into clip)';
+  });
+  html += ' → trim out (' + escHtml(fmtSecToClock(c.composerTrimEnd)) + ')</div>';
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+function markComposerLayoutSegment() {
+  var t = window._composerSourceReviewPlayhead || 0;
+  var abs = _composerSourceReviewTrimStart + t;
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
+  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
+  var slot = lineup[0];
+  if (!slot || !slot.clip) {
+    alert('Pick a clip first.');
+    return;
+  }
+  ensureComposerTrimDefaults(slot.clip);
+  var trimStart = slot.clip.composerTrimStart != null ? slot.clip.composerTrimStart : 0;
+  var trimEnd = slot.clip.composerTrimEnd != null ? slot.clip.composerTrimEnd : 60;
+  if (abs <= trimStart || abs >= trimEnd) {
+    alert('Layout mark must be inside trim window (' + fmtSecToClock(trimStart) + '–' + fmtSecToClock(trimEnd) + '). Current: ' + fmtSecToClock(abs));
+    return;
+  }
+  if (!slot.clip.openingLayout) {
+    alert('Opening split layout not saved yet. Configure green/gold split boxes, switch to Single view (that locks the opening layout), scrub to the switch point, then Mark layout again.');
+    return;
+  }
+  if (!slot.clip.layoutSegments) slot.clip.layoutSegments = [];
+  var snap = currentComposerLayoutSnapshotForMark();
+  var atSec = Math.floor(abs);
+  slot.clip.layoutSegments = slot.clip.layoutSegments.filter(function(s) { return s.atSec !== atSec; });
+  slot.clip.layoutSegments.push({
+    atSec: atSec,
+    mode: snap.mode,
+    cropCx: snap.cropCx,
+    cropCy: snap.cropCy,
+    cropZoom: snap.cropZoom,
+    facecamRect: snap.facecamRect,
+    bottomPaneRect: snap.bottomPaneRect,
+    contentCx: snap.contentCx,
+    topHeight: snap.topHeight,
+    bottomPaneMode: snap.bottomPaneMode,
+  });
+  slot.clip.layoutSegments.sort(function(a, b) { return a.atSec - b.atSec; });
+  renderComposerLayoutSegments();
+  renderComposerTrimControls();
+  refreshGenerateComposer(false);
+}
+
+function clearComposerLayoutSegments() {
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
+  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
+  var slot = lineup[0];
+  if (!slot || !slot.clip) return;
+  delete slot.clip.layoutSegments;
+  delete slot.clip.openingLayout;
+  renderComposerLayoutSegments();
   refreshGenerateComposer(false);
 }
 
@@ -15930,7 +16404,10 @@ function renderComposerOrderPanel(preflight, spec) {
   if (preflight.clips && preflight.clips.length) {
     preflight.clips.slice(0, 6).forEach(function(c) {
       html += '<div class="order-step">' + c.slot + '. ' + escapeHtml(c.streamer) + ' — '
-        + escapeHtml(c.title) + ' <span style="opacity:0.55;">(' + escapeHtml(c.footageLabel) + ')</span></div>';
+        + escapeHtml(c.title) + ' <span style="opacity:0.55;">(' + escapeHtml(c.footageLabel)
+        + (c.trimLabel ? ' · trim ' + escapeHtml(c.trimLabel) : '')
+        + (c.layoutPlanLabel ? ' · layout: ' + escapeHtml(c.layoutPlanLabel) : '')
+        + ')</span></div>';
     });
     if (preflight.clips.length > 6) {
       html += '<div class="order-step" style="opacity:0.5;">+' + (preflight.clips.length - 6) + ' more…</div>';
@@ -15965,11 +16442,23 @@ function formatComposerPreviewCaption(d, errMsg) {
   if (ls.cropCy != null && Number.isFinite(Number(ls.cropCy))) {
     parts.push('cy ' + Number(ls.cropCy).toFixed(2));
   }
+  if (ls.cropZoom != null && Number.isFinite(Number(ls.cropZoom))) {
+    parts.push('zoom ' + Math.round(Number(ls.cropZoom) * 100) + '%');
+  }
+  if (ls.appliedSourceRect && ls.appliedSourceRect.w != null) {
+    var ar = ls.appliedSourceRect;
+    parts.push('crop ' + Math.round(Number(ar.w) * 100) + '×' + Math.round(Number(ar.h) * 100) + '% of source');
+  }
   if (ls.contentCx != null && Number.isFinite(Number(ls.contentCx))) {
     parts.push('action cx ' + Number(ls.contentCx).toFixed(2));
   }
+  if (ls.sourceCleanup) parts.push('UI mask: ' + ls.sourceCleanup);
+  if (ls.timedLayout || d.timedLayoutPreview) parts.push('timed layout preview');
   parts.push('hooks/captions added at assembly');
-  if (d.previewVideoUrl) parts.push('~6s loop · lead clip only for multi-clip comps');
+  if (d.previewVideoUrl) {
+    var dur = d.previewDurationSec || 6;
+    parts.push('~' + Math.round(dur) + 's loop · lead clip only for multi-clip comps');
+  }
   return parts.join(' · ');
 }
 
@@ -15984,9 +16473,11 @@ function buildComposerReadyLine(spec) {
   } else if (composerLineupIsLandscape() && eff !== 'split_screen') {
     var fb = readFullBleedCropFromDom();
     line += ' · assembly layout: ' + effLabel.toUpperCase() + ' single view (16:9 clip)';
-    if (fb.cropCx !== 0.5 || fb.cropCy !== 0.5) {
-      line += ' · focus cx' + fb.cropCx.toFixed(2) + ' cy' + fb.cropCy.toFixed(2);
-    }
+    line += ' · focus cx' + fb.cropCx.toFixed(2) + ' cy' + fb.cropCy.toFixed(2) + ' zoom ' + Math.round((fb.cropZoom || 1) * 100) + '%';
+  } else if (eff === 'full_bleed_crop' && composerFullBleedSingleViewActive()) {
+    var fbP = readFullBleedCropFromDom();
+    line += ' · assembly layout: ' + effLabel.toUpperCase() + ' single view';
+    line += ' · focus cx' + fbP.cropCx.toFixed(2) + ' cy' + fbP.cropCy.toFixed(2) + ' zoom ' + Math.round((fbP.cropZoom || 1) * 100) + '%';
   }
   return line;
 }
@@ -16061,11 +16552,25 @@ function fetchFfmpegComposerPreviewNow(body) {
         return;
       }
       if (d.previewVideoUrl && video) {
+        if (mock) mock.style.display = 'none';
+        if (img) img.style.display = 'none';
+        if (d.base64) video.poster = 'data:image/jpeg;base64,' + d.base64;
+        else video.removeAttribute('poster');
         video.src = (CFG.ffmpegUrl || 'http://localhost:3000') + d.previewVideoUrl + '?t=' + Date.now();
         video.style.display = 'block';
         video.load();
-        video.play().catch(function() {});
-        if (img) img.style.display = 'none';
+        video.onerror = function() {
+          if (seq !== _composerPreviewSeq) return;
+          if (d.base64 && img) {
+            img.src = 'data:image/jpeg;base64,' + d.base64;
+            img.style.display = 'block';
+          } else if (mock) mock.style.display = '';
+          video.style.display = 'none';
+          setComposerPreviewCaption(formatComposerPreviewCaption(d, 'preview video failed — showing still frame'), 'err');
+        };
+        video.play().catch(function() {
+          paintComposerVideoFirstFrame(video, 0.5);
+        });
       } else if (img && d.base64) {
         img.src = 'data:image/jpeg;base64,' + d.base64;
         img.style.display = 'block';
@@ -16155,6 +16660,8 @@ function buildCompositionSpecFromUI() {
       postLiveVod: !!c.postLiveVod,
       sceneLabel: c.sceneLabel || '',
       segmentKind: c.segmentKind || '',
+      layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],
+      openingLayout: c.openingLayout || null,
       thumbnailUrl: c.thumbnailUrl || '',
       order: idx,
       orientation: 'landscape',
@@ -16170,6 +16677,8 @@ function buildCompositionSpecFromUI() {
         url: c.url, pageUrl: c.pageUrl || c.url, mp4Url: c.stagedUrl || c.r2Url || c.mp4Url || '',
         stagedUrl: c.stagedUrl || c.r2Url || '', title: c.title || '', streamer: p.name, displayName: p.displayName,
         duration: c.duration || 60, trimStart: c.composerTrimStart, trimEnd: c.composerTrimEnd,
+        layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],
+        openingLayout: c.openingLayout || null,
         thumbnailUrl: c.thumbnailUrl || '', order: idx, orientation: 'landscape', game: c.game || '', views: c.views || 0,
         postId: c.postId, redditSource: c.redditSource, selftext: c.selftext, topComments: c.topComments, permalink: c.permalink,
         wireSource: c.wireSource
@@ -16191,6 +16700,7 @@ function buildCompositionSpecFromUI() {
 }
 
 function renderComposerPreviewMock(specBody, serverSpec) {
+  if (_composerPreviewMode === 'ffmpeg' || _composerPreviewMode === 'assembled') return;
   var spec = serverSpec || null;
   var stored = loadCompCreativePresetFromStorage();
   var preset = stored.preset || 'classic_blur_pad';
@@ -16225,8 +16735,23 @@ function renderComposerPreviewMock(specBody, serverSpec) {
     }
   }
   if (main) {
-    if (layoutMode === 'full_bleed_crop') { main.style.inset = '0'; main.style.top = '0'; main.style.bottom = '0'; main.style.backgroundSize = 'cover'; }
-    else if (layoutMode === 'split_screen') {
+    if (layoutMode === 'full_bleed_crop') {
+      main.style.inset = '0';
+      main.style.top = '0';
+      main.style.bottom = '0';
+      main.style.left = '0';
+      main.style.right = '0';
+      if (composerLandscapeSingleViewEnabled()) {
+        var fbMock = readFullBleedCropFromDom();
+        var frMock = fullBleedFocusRect(fbMock.cropCx, fbMock.cropCy, fbMock.cropZoom);
+        var zoomScale = Math.max(100, Math.round(100 / frMock.w));
+        main.style.backgroundSize = zoomScale + '% auto';
+        main.style.backgroundPosition = ((frMock.x + frMock.w / 2) * 100) + '% ' + ((frMock.y + frMock.h / 2) * 100) + '%';
+      } else {
+        main.style.backgroundSize = 'cover';
+        main.style.backgroundPosition = 'center center';
+      }
+    } else if (layoutMode === 'split_screen') {
       main.style.inset = '';
       main.style.top = splitTopPct + '%';
       main.style.bottom = '0';
@@ -16308,6 +16833,7 @@ function setComposerTrim(lineupIdx, which, val) {
 }
 
 function refreshGenerateComposer(callValidate) {
+  hydrateSourceCleanupFromStorage();
   var panel = g('generate-composer');
   var picked = collectCompPickedClips();
   var vodActive = !!_composerVodSegment;
@@ -16326,12 +16852,14 @@ function refreshGenerateComposer(callValidate) {
     var trimWrap = g('composer-lineup-trim');
     if (trimWrap) trimWrap.innerHTML = '<div style="font-size:14px;color:rgba(255,255,255,0.4);">VOD segment mode — adjust timeline above.</div>';
   }
+  renderComposerLayoutSegments();
   var body = buildCompositionSpecFromUI();
   refreshCompCreativeLabel();
   renderComposerPreviewMock(body, null);
   renderCompCreativeSourceMap();
   fetchFfmpegComposerPreview(body);
   fetchComposerSourceReview(buildComposerSourceReviewBody());
+  persistComposerSession();
   if (callValidate !== false) {
     fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
       method: 'POST',
@@ -16541,7 +17069,7 @@ function executeComposerShorts(spec) {
       var c = clips[idx++];
       function dispatchShort() {
         var playUrl = c.mp4Url || c.stagedUrl || c.url;
-        var payload = {
+        var payload = Object.assign({
           url: playUrl,
           pageUrl: c.pageUrl || c.url,
           title: c.title,
@@ -16550,7 +17078,7 @@ function executeComposerShorts(spec) {
           orientation: 'landscape',
           trimStart: c.trimStart,
           trimEnd: c.trimEnd
-        };
+        }, clipLayoutPlanFields(c));
         if (c.postId || c.redditSource) {
           payload.postId = c.postId;
           payload.redditSource = true;
@@ -16611,7 +17139,7 @@ function executeComposerComp(spec) {
       var repurposeCtx = window._composerRepurposeContext || {};
       var clips = resolvedClips.map(function(c, i) {
         var src = spec.clips[i] || {};
-        return {
+        return Object.assign({
           url: c.mp4Url || c.url,
           pageUrl: src.pageUrl || c.pageUrl || c.url,
           clipUrl: src.pageUrl || c.pageUrl || c.url,
@@ -16631,7 +17159,7 @@ function executeComposerComp(spec) {
           selftext: src.selftext,
           topComments: src.topComments,
           subreddit: src.streamer
-        };
+        }, clipLayoutPlanFields(src));
       });
       if (!isNews) markClipsUsed(resolvedClips.map(function(c){ return c.url; }).filter(Boolean));
       var postLiveOpts = repurposeCtx.postLiveVodSessionId ? {
@@ -16675,7 +17203,7 @@ function executeComposerVodComp(spec) {
     resolveTwitchClipUrls(allClips, function() {
       var clips = allClips.map(function(c, i) {
         var src = spec.clips[i] || {};
-        return {
+        return Object.assign({
           url: c.mp4Url || c.url,
           pageUrl: src.pageUrl || c.url,
           title: c.title,
@@ -16685,7 +17213,7 @@ function executeComposerVodComp(spec) {
           trimStart: src.trimStart,
           trimEnd: src.trimEnd,
           duration: src.durationHint
-        };
+        }, clipLayoutPlanFields(src));
       });
       markClipsUsed(allClips.map(function(c){ return c.url; }).filter(Boolean));
       _dispatchClipCompFromPicker(clips, 'twitch-vod-comp', pub.platforms, 'twitch-gen-status', g('twitch-fetch-status'), pub.scheduledAt, {}, spec);
@@ -18129,6 +18657,18 @@ function getLeadCompClipThumb() {
   return (lead.thumbnailUrl || '').replace('{width}', '640').replace('{height}', '360');
 }
 
+function getLeadCompClipSourceAspect() {
+  var picked = collectCompPickedClips();
+  var clip = picked[0] && picked[0].clip;
+  if (!clip) return 16 / 9;
+  var w = Number(clip.width || clip.sourceWidth);
+  var h = Number(clip.height || clip.sourceHeight);
+  if (Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0) return w / h;
+  var o = String(clip.orientation || picked[0].orientation || '').toLowerCase();
+  if (o === 'portrait' || o === '9:16' || o === 'vertical') return 9 / 16;
+  return 16 / 9;
+}
+
 function splitPaneNormAspect() {
   var topH = readTopShareFromDom();
   var botH = SPLIT_OUTPUT_HEIGHT - topH;
@@ -18209,13 +18749,24 @@ function clampFacecamRect(rect) {
   return { x: x, y: y, w: w, h: h };
 }
 
-/** Portrait window width on a 16:9 source (9:16 crop ÷ 16:9 frame). */
+/** Portrait window on 16:9 source — keep in sync with lib/clip_comp_layout.js */
 var FULL_BLEED_PORTRAIT_W = (9 / 16) / (16 / 9);
-var FULL_BLEED_PORTRAIT_H = 1;
 
-function fullBleedFocusRect(cropCx, cropCy) {
-  var w = FULL_BLEED_PORTRAIT_W;
-  var h = FULL_BLEED_PORTRAIT_H;
+function normCropZoomFromSlider(val) {
+  var pct = Math.max(25, Math.min(200, Number(val) || 100));
+  return pct / 100;
+}
+
+function cropZoomToSlider(zoom) {
+  return String(Math.round(Math.max(0.25, Math.min(4, Number(zoom) || 1)) * 100));
+}
+
+function fullBleedFocusRect(cropCx, cropCy, cropZoom, sourceAspect) {
+  sourceAspect = sourceAspect || getLeadCompClipSourceAspect();
+  var zoom = Math.max(0.25, Math.min(4, Number(cropZoom) || 1));
+  var isPortrait = sourceAspect < 1.05;
+  var w = isPortrait ? Math.min(1, 1 / zoom) : Math.min(1, FULL_BLEED_PORTRAIT_W / zoom);
+  var h = Math.min(1, 1 / zoom);
   var cx = Number.isFinite(Number(cropCx)) ? Number(cropCx) : 0.5;
   var cy = Number.isFinite(Number(cropCy)) ? Number(cropCy) : 0.5;
   return {
@@ -18229,31 +18780,39 @@ function fullBleedFocusRect(cropCx, cropCy) {
 function readFullBleedCropFromDom() {
   var cxPct = (g('comp-creative-fullbleed-cx') && g('comp-creative-fullbleed-cx').value) || 50;
   var cyPct = (g('comp-creative-fullbleed-cy') && g('comp-creative-fullbleed-cy').value) || 50;
+  var zoomPct = (g('comp-creative-fullbleed-zoom') && g('comp-creative-fullbleed-zoom').value) || 100;
   return {
     cropCx: pctToNorm(cxPct),
     cropCy: pctToNorm(cyPct),
+    cropZoom: normCropZoomFromSlider(zoomPct),
   };
 }
 
-function writeFullBleedCropToDom(cropCx, cropCy) {
+function writeFullBleedCropToDom(cropCx, cropCy, cropZoom) {
   var cx = Number.isFinite(Number(cropCx)) ? Math.max(0, Math.min(1, Number(cropCx))) : 0.5;
   var cy = Number.isFinite(Number(cropCy)) ? Math.max(0, Math.min(1, Number(cropCy))) : 0.5;
+  var zoom = Number.isFinite(Number(cropZoom)) ? Math.max(0.25, Math.min(4, Number(cropZoom))) : 1;
   var cxEl = g('comp-creative-fullbleed-cx');
   var cyEl = g('comp-creative-fullbleed-cy');
+  var zoomEl = g('comp-creative-fullbleed-zoom');
   if (cxEl) cxEl.value = String(Math.round(cx * 100));
   if (cyEl) cyEl.value = String(Math.round(cy * 100));
+  if (zoomEl) zoomEl.value = cropZoomToSlider(zoom);
   var lab = g('comp-creative-fullbleed-val');
-  if (lab) lab.textContent = 'Focus · cx' + cx.toFixed(2) + ' cy' + cy.toFixed(2);
+  if (lab) {
+    lab.textContent = 'Focus · cx' + cx.toFixed(2) + ' cy' + cy.toFixed(2) + ' · zoom ' + Math.round(zoom * 100) + '%';
+  }
 }
 
-function applyFullBleedCropToDom(cropCx, cropCy, skipRefresh) {
-  writeFullBleedCropToDom(cropCx, cropCy);
+function applyFullBleedCropToDom(cropCx, cropCy, cropZoom, skipRefresh) {
+  writeFullBleedCropToDom(cropCx, cropCy, cropZoom);
   renderCompCreativeSourceMap();
   if (!skipRefresh) {
     try {
       var stored = loadCompCreativePresetFromStorage();
       stored.cropCx = pctToNorm((g('comp-creative-fullbleed-cx') && g('comp-creative-fullbleed-cx').value) || 50);
       stored.cropCy = pctToNorm((g('comp-creative-fullbleed-cy') && g('comp-creative-fullbleed-cy').value) || 50);
+      stored.cropZoom = normCropZoomFromSlider((g('comp-creative-fullbleed-zoom') && g('comp-creative-fullbleed-zoom').value) || 100);
       localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
     } catch (err) { /* ignore */ }
     refreshGenerateComposer(false);
@@ -18262,21 +18821,33 @@ function applyFullBleedCropToDom(cropCx, cropCy, skipRefresh) {
 
 function onCompCreativeFullBleedCropChange(skipSave) {
   var crop = readFullBleedCropFromDom();
-  writeFullBleedCropToDom(crop.cropCx, crop.cropCy);
+  writeFullBleedCropToDom(crop.cropCx, crop.cropCy, crop.cropZoom);
   renderCompCreativeSourceMap();
+  var mock = g('composer-preview-mock');
+  var img = g('composer-preview-img');
+  if (mock) mock.style.display = 'none';
+  if (img) img.style.display = 'none';
   if (!skipSave) {
     try {
       var stored = loadCompCreativePresetFromStorage();
       stored.cropCx = crop.cropCx;
       stored.cropCy = crop.cropCy;
+      stored.cropZoom = crop.cropZoom;
       localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
     } catch (err) { /* ignore */ }
-    refreshGenerateComposer(false);
+    if (_composerPreviewDebounce) clearTimeout(_composerPreviewDebounce);
+    fetchFfmpegComposerPreviewNow(buildCompositionSpecFromUI());
   }
 }
 
+function composerFullBleedSingleViewActive(stored) {
+  stored = stored || loadCompCreativePresetFromStorage();
+  if (composerLandscapeSplitEnabled(stored)) return false;
+  return presetLayoutModeForCompose(stored.preset || 'classic_blur_pad') === 'full_bleed_crop';
+}
+
 function composerLandscapeSingleViewEnabled(stored) {
-  return composerLineupIsLandscape() && !composerLandscapeSplitEnabled(stored);
+  return composerFullBleedSingleViewActive(stored);
 }
 
 function paintSourceMapOverlay(prefix, topRect, bottomRect) {
@@ -18293,7 +18864,7 @@ function paintSourceMapOverlay(prefix, topRect, bottomRect) {
     if (bottomCrop) bottomCrop.style.display = 'none';
     if (cxLine) cxLine.style.display = 'none';
     var fb = readFullBleedCropFromDom();
-    var focusRect = fullBleedFocusRect(fb.cropCx, fb.cropCy);
+    var focusRect = fullBleedFocusRect(fb.cropCx, fb.cropCy, fb.cropZoom);
     if (focusCrop) {
       focusCrop.style.display = 'flex';
       focusCrop.style.left = (focusRect.x * 100) + '%';
@@ -18332,12 +18903,18 @@ function paintSourceMapOverlay(prefix, topRect, bottomRect) {
 }
 
 function renderCompCreativeSourceMap(overrideTopRect, overrideBottomRect) {
-  var show = composerLineupIsLandscape() && (collectCompPickedClips().length > 0 || !!_composerVodSegment);
+  var singleMode = composerLandscapeSingleViewEnabled();
+  var show = (composerLineupIsLandscape() || singleMode) && (collectCompPickedClips().length > 0 || !!_composerVodSegment);
   var block = g('composer-source-map-block');
   var wrap = g('comp-creative-source-map-wrap');
-  var singleMode = composerLandscapeSingleViewEnabled();
+  var sourceAspect = getLeadCompClipSourceAspect();
   if (block) block.style.display = show ? 'block' : 'none';
   if (wrap) wrap.style.display = show ? 'block' : 'none';
+  var mapEls = [g('composer-source-map'), g('comp-creative-source-map')];
+  mapEls.forEach(function(mapEl) {
+    if (!mapEl) return;
+    mapEl.style.aspectRatio = sourceAspect < 1.05 ? '9 / 16' : '16 / 9';
+  });
   var mapLabel = g('comp-creative-source-map-label');
   if (mapLabel) {
     mapLabel.textContent = singleMode
@@ -18389,13 +18966,13 @@ function onSourceMapPointerDown(e, mapId) {
     var focusCrop = g(mapId + '-focus-crop');
     var onFocus = focusCrop && (e.target === focusCrop || (focusCrop.contains && focusCrop.contains(e.target)));
     var fb = readFullBleedCropFromDom();
-    var rect = fullBleedFocusRect(fb.cropCx, fb.cropCy);
+    var rect = fullBleedFocusRect(fb.cropCx, fb.cropCy, fb.cropZoom);
     if (onFocus) {
       _sourceMapActivePane = 'fullbleed';
       _sourceMapDrag = { mapId: mapId, pane: 'fullbleed', startPt: pt, startRect: rect, startCrop: fb };
       _sourceMapDragMoved = false;
     } else {
-      applyFullBleedCropToDom(pt.x, pt.y, true);
+      applyFullBleedCropToDom(pt.x, pt.y, fb.cropZoom, true);
     }
     e.preventDefault();
     return;
@@ -18441,7 +19018,7 @@ function onSourceMapPointerMove(e) {
     var sr = _sourceMapDrag.startRect;
     var nx = Math.max(0, Math.min(1 - sr.w, sr.x + dx));
     var ny = Math.max(0, Math.min(1 - sr.h, sr.y + dy));
-    applyFullBleedCropToDom(nx + sr.w / 2, ny + sr.h / 2, true);
+    applyFullBleedCropToDom(nx + sr.w / 2, ny + sr.h / 2, readFullBleedCropFromDom().cropZoom, true);
     e.preventDefault();
     return;
   }
@@ -18466,6 +19043,7 @@ function onSourceMapPointerUp() {
         var crop = readFullBleedCropFromDom();
         stored.cropCx = crop.cropCx;
         stored.cropCy = crop.cropCy;
+        stored.cropZoom = crop.cropZoom;
       } else {
         stored.facecamRect = readFacecamSlidersFromDom();
         stored.bottomPaneRect = readBottomPaneSlidersFromDom();
@@ -18624,12 +19202,13 @@ function applyOperatorLayoutFromJobCard(job) {
     refreshLandscapeSplitUI();
   }
   if (layout.landscapeSplit === false) {
-    if (layout.cropCx != null || layout.cropCy != null) {
-      writeFullBleedCropToDom(layout.cropCx, layout.cropCy);
+    if (layout.cropCx != null || layout.cropCy != null || layout.cropZoom != null) {
+      writeFullBleedCropToDom(layout.cropCx, layout.cropCy, layout.cropZoom);
       try {
         var storedSingle = loadCompCreativePresetFromStorage();
         if (layout.cropCx != null) storedSingle.cropCx = Number(layout.cropCx);
         if (layout.cropCy != null) storedSingle.cropCy = Number(layout.cropCy);
+        if (layout.cropZoom != null) storedSingle.cropZoom = Number(layout.cropZoom);
         localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(storedSingle));
       } catch (e) { /* ignore */ }
     }
@@ -18695,6 +19274,7 @@ function readLayoutPayloadForAssembly(jobId) {
         contentCx: cardLayout.contentCx != null ? cardLayout.contentCx : null,
         cropCx: cardLayout.cropCx != null ? cardLayout.cropCx : null,
         cropCy: cardLayout.cropCy != null ? cardLayout.cropCy : null,
+        cropZoom: cardLayout.cropZoom != null ? cardLayout.cropZoom : null,
         topHeight: cardLayout.topHeight || null,
         topPaneSubject: cardLayout.topPaneSubject || 'custom',
         bottomPaneMode: cardLayout.bottomPaneMode || 'custom_crop',
@@ -18712,9 +19292,12 @@ function readLayoutPayloadForAssembly(jobId) {
       mode: presetLayoutModeForCompose(preset),
       landscapeSplit: false,
     };
-    if (stored.cropCx != null || stored.cropCy != null || crop.cropCx !== 0.5 || crop.cropCy !== 0.5) {
+    if (stored.cropCx != null || stored.cropCy != null || stored.cropZoom != null || crop.cropCx !== 0.5 || crop.cropCy !== 0.5 || Math.abs((crop.cropZoom || 1) - 1) > 0.02) {
       layoutOut.cropCx = stored.cropCx != null ? stored.cropCx : crop.cropCx;
       layoutOut.cropCy = stored.cropCy != null ? stored.cropCy : crop.cropCy;
+      if (stored.cropZoom != null || Math.abs((crop.cropZoom || 1) - 1) > 0.02) {
+        layoutOut.cropZoom = stored.cropZoom != null ? stored.cropZoom : crop.cropZoom;
+      }
     }
     return layoutOut;
   }
@@ -18767,10 +19350,19 @@ function applyJobOperatorCreative(jobId, opts) {
     note = prompt('Creative note for assembly (what you changed):');
     if (note === null) return;
   }
+  var creativeBody = { layout: layout, note: note, reassemble: opts.reassemble !== false };
+  try {
+    var specBody = buildCompositionSpecFromUI();
+    var leadClip = specBody.clips && specBody.clips[0];
+    if (leadClip && (leadClip.layoutSegments || []).length) {
+      creativeBody.layoutSegments = leadClip.layoutSegments.slice();
+      creativeBody.openingLayout = leadClip.openingLayout || null;
+    }
+  } catch (_layoutPlanErr) { /* non-fatal */ }
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/job/' + encodeURIComponent(jobId) + '/operator-creative', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ layout: layout, note: note, reassemble: opts.reassemble !== false })
+    body: JSON.stringify(creativeBody)
   })
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -18820,6 +19412,8 @@ function hydrateComposerFromJobCard(job) {
         selected: true,
         composerTrimStart: c.trimStart != null ? c.trimStart : 0,
         composerTrimEnd: c.trimEnd != null ? c.trimEnd : (c.duration || 30),
+        layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],
+        openingLayout: c.openingLayout || null,
       };
     }),
     clipsRaw: null,
@@ -18979,11 +19573,30 @@ function presetLayoutModeForCompose(preset) {
   return 'blur_pad';
 }
 
+function onSourceCleanupChange() {
+  saveCompCreativePresetToStorage();
+  refreshCompCreativeChips();
+  refreshGenerateComposer(false);
+}
+
+function hydrateSourceCleanupFromStorage() {
+  var stored = loadCompCreativePresetFromStorage();
+  var chat = g('comp-creative-hide-chat');
+  var bottom = g('comp-creative-hide-bottom-ui');
+  var top = g('comp-creative-hide-top-ui');
+  if (chat) chat.checked = !!stored.hideChatRail;
+  if (bottom) bottom.checked = !!stored.hideBottomBar;
+  if (top) top.checked = !!stored.hideTopBar;
+}
+
 function onCompCreativeLandscapeLayoutChange() {
   var sel = g('comp-creative-landscape-layout');
   if (!sel) return;
   try {
     var stored = loadCompCreativePresetFromStorage();
+    var wasSplit = composerLandscapeSplitEnabled(stored);
+    var goingSingle = sel.value === 'single';
+    if (wasSplit && goingSingle) ensureComposerOpeningLayoutOnClip();
     stored.landscapeLayout = sel.value === 'single' ? 'single' : 'split_screen';
     if (sel.value === 'single' && stored.cropCx == null && stored.facecamRect) {
       stored.cropCx = stored.facecamRect.x + stored.facecamRect.w / 2;
@@ -18998,15 +19611,31 @@ function onCompCreativeLandscapeLayoutChange() {
 }
 
 function refreshLandscapeSplitUI() {
-  var splitOn = composerLandscapeSplitEnabled();
+  var stored = loadCompCreativePresetFromStorage();
+  var fullBleedSingle = composerFullBleedSingleViewActive(stored);
+  var splitOn = composerLandscapeSplitEnabled(stored);
+  var isLandscape = composerLineupIsLandscape();
   var controls = g('comp-creative-landscape-split-controls');
   var singleControls = g('comp-creative-landscape-single-controls');
   var singleHint = g('comp-creative-landscape-single-hint');
   var sel = g('comp-creative-landscape-layout');
-  if (sel) sel.value = splitOn ? 'split_screen' : 'single';
-  if (controls) controls.style.display = splitOn ? '' : 'none';
-  if (singleControls) singleControls.style.display = splitOn ? 'none' : 'block';
-  if (singleHint) singleHint.style.display = splitOn ? 'none' : 'block';
+  var landscapePanel = g('comp-creative-landscape-split');
+  if (landscapePanel) landscapePanel.style.display = (isLandscape || fullBleedSingle) ? 'block' : 'none';
+  if (sel) {
+    sel.value = splitOn ? 'split_screen' : 'single';
+    var layoutRow = sel.closest('label');
+    if (layoutRow) layoutRow.style.display = isLandscape ? '' : 'none';
+  }
+  if (controls) controls.style.display = (isLandscape && splitOn) ? '' : 'none';
+  if (singleControls) singleControls.style.display = fullBleedSingle ? 'block' : 'none';
+  if (singleHint) {
+    singleHint.style.display = fullBleedSingle ? 'block' : 'none';
+    if (fullBleedSingle && !isLandscape) {
+      singleHint.innerHTML = 'Portrait clip → <strong>9:16 Short</strong>. Drag the <strong>cyan box</strong> or use sliders to zoom / reframe before EXECUTE.';
+    } else if (fullBleedSingle) {
+      singleHint.innerHTML = 'Uses your Creative preset as one portrait frame (<strong>full bleed</strong>) — drag the <strong>cyan box</strong> on the wide frame to place the crop.';
+    }
+  }
 }
 
 function getEffectiveComposerLayoutMode(pseudo) {
@@ -19014,6 +19643,9 @@ function getEffectiveComposerLayoutMode(pseudo) {
   var layout = (pseudo.layout && pseudo.layout.mode) || 'blur_pad';
   if (pseudo.preset === 'facecam_split') return 'split_screen';
   if (pseudo.layout && pseudo.layout.landscapeSplit === false) return layout;
+  if (pseudo.layout && (pseudo.layout.cropZoom != null || pseudo.layout.cropCx != null || pseudo.layout.cropCy != null) && layout !== 'split_screen') {
+    return layout;
+  }
   if (composerLineupIsLandscape() && composerLandscapeSplitEnabled()) return 'split_screen';
   return layout;
 }
@@ -19184,6 +19816,10 @@ function saveCompCreativePresetToStorage() {
     landscapeLayout: (g('comp-creative-landscape-layout') && g('comp-creative-landscape-layout').value) || 'split_screen',
     cropCx: readFullBleedCropFromDom().cropCx,
     cropCy: readFullBleedCropFromDom().cropCy,
+    cropZoom: readFullBleedCropFromDom().cropZoom,
+    hideChatRail: !!(g('comp-creative-hide-chat') && g('comp-creative-hide-chat').checked),
+    hideBottomBar: !!(g('comp-creative-hide-bottom-ui') && g('comp-creative-hide-bottom-ui').checked),
+    hideTopBar: !!(g('comp-creative-hide-top-ui') && g('comp-creative-hide-top-ui').checked),
   };
   try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   return data;
@@ -19235,7 +19871,7 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.editorial = { enabled: true, introCard: true, ttsBridges: true };
     if (overrides.hooks && overrides.hooks.rankedList) overrides.hooks.rankedList.enabled = true;
   }
-  if (composerLineupIsLandscape() && composerLandscapeSplitEnabled(stored)) {
+  if (composerLandscapeSplitEnabled(stored) && composerLineupIsLandscape()) {
     overrides = overrides || {};
     overrides.layout = overrides.layout || {};
     var cxPct = Number(stored.contentCx);
@@ -19257,6 +19893,21 @@ function buildCompCreativeRequestPayload(streamerHint) {
       if (bottomRect) overrides.layout.bottomPaneRect = bottomRect;
     }
     overrides.layout.topHeight = stored.topHeight || readTopShareFromDom();
+  } else if (composerFullBleedSingleViewActive(stored)) {
+    overrides = overrides || {};
+    overrides.layout = overrides.layout || {};
+    overrides.layout.landscapeSplit = false;
+    overrides.layout.mode = 'full_bleed_crop';
+    delete overrides.layout.facecamRect;
+    delete overrides.layout.bottomPaneRect;
+    delete overrides.layout.bottomPaneMode;
+    delete overrides.layout.topPaneSubject;
+    delete overrides.layout.topHeight;
+    delete overrides.layout.contentCx;
+    var fbCropSingle = readFullBleedCropFromDom();
+    overrides.layout.cropCx = fbCropSingle.cropCx;
+    overrides.layout.cropCy = fbCropSingle.cropCy;
+    overrides.layout.cropZoom = fbCropSingle.cropZoom;
   } else if (composerLineupIsLandscape()) {
     overrides = overrides || {};
     overrides.layout = overrides.layout || {};
@@ -19269,16 +19920,23 @@ function buildCompCreativeRequestPayload(streamerHint) {
     delete overrides.layout.topHeight;
     delete overrides.layout.contentCx;
     var fbCrop = readFullBleedCropFromDom();
-    var cx = stored.cropCx != null ? Number(stored.cropCx) : fbCrop.cropCx;
-    var cy = stored.cropCy != null ? Number(stored.cropCy) : fbCrop.cropCy;
-    if (Number.isFinite(cx) && Math.abs(cx - 0.5) > 0.01) overrides.layout.cropCx = Math.max(0, Math.min(1, cx));
-    if (Number.isFinite(cy) && Math.abs(cy - 0.5) > 0.01) overrides.layout.cropCy = Math.max(0, Math.min(1, cy));
+    overrides.layout.cropCx = fbCrop.cropCx;
+    overrides.layout.cropCy = fbCrop.cropCy;
+    overrides.layout.cropZoom = fbCrop.cropZoom;
   }
   var capStyle = g('composer-caption-style') && g('composer-caption-style').value;
   if (capStyle) {
     overrides = overrides || {};
     overrides.captions = overrides.captions || {};
     overrides.captions.style = capStyle;
+  }
+  if (stored.hideChatRail || stored.hideBottomBar || stored.hideTopBar) {
+    overrides = overrides || {};
+    overrides.sourceCleanup = {
+      hideChatRail: !!stored.hideChatRail,
+      hideBottomBar: !!stored.hideBottomBar,
+      hideTopBar: !!stored.hideTopBar,
+    };
   }
   return {
     compCreativePreset: preset,
@@ -19289,6 +19947,7 @@ function buildCompCreativeRequestPayload(streamerHint) {
 function onCompCreativePresetChange() {
   var hm = g('comp-creative-hook-mode');
   if (hm) delete hm.dataset.userPicked;
+  hydrateSourceCleanupFromStorage();
   refreshCompCreativeChips();
   refreshTwitchActionBar();
 }
@@ -19320,7 +19979,6 @@ function refreshCompCreativeChips() {
     pseudo.layout.landscapeSplit = composerLandscapeSplitEnabled(stored);
   }
   var landscapePanel = g('comp-creative-landscape-split');
-  if (landscapePanel) landscapePanel.style.display = composerLineupIsLandscape() ? 'block' : 'none';
   refreshLandscapeSplitUI();
   var topSubj = g('comp-creative-top-pane-subject');
   if (topSubj && stored.topPaneSubject && !topSubj.dataset.userPicked) topSubj.value = stored.topPaneSubject;
@@ -19330,9 +19988,9 @@ function refreshCompCreativeChips() {
   if (stored.facecamRect && composerLineupIsLandscape()) writeFacecamSlidersToDom(stored.facecamRect);
   else if (composerLineupIsLandscape()) applyLayoutPreset(topSubj ? topSubj.value : 'stacked_figures');
   if (stored.bottomPaneRect && composerLineupIsLandscape()) writeBottomPaneSlidersToDom(stored.bottomPaneRect);
-  if (composerLineupIsLandscape()) {
-    if (stored.cropCx != null || stored.cropCy != null) {
-      writeFullBleedCropToDom(stored.cropCx, stored.cropCy);
+  if (composerFullBleedSingleViewActive(stored)) {
+    if (stored.cropCx != null || stored.cropCy != null || stored.cropZoom != null) {
+      writeFullBleedCropToDom(stored.cropCx, stored.cropCy, stored.cropZoom);
     } else {
       onCompCreativeFullBleedCropChange(true);
     }

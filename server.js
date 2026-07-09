@@ -2276,7 +2276,7 @@ app.get('/job/:id', (req, res) => {
     saveJobCard(jobId, card);
   }
 
-  const { reconcileStuckAssemblingJob, reconcileOrphanAssemblyOutput, reconcileCreditsOutroFromDuration, reconcileLostAssemblyFailure } = require('./lib/assembly_card_persist');
+  const { reconcileStuckAssemblingJob, reconcileOrphanAssemblyOutput, reconcileCreditsOutroFromDuration, reconcileLostAssemblyFailure, normalizeStoredPreviewUrl } = require('./lib/assembly_card_persist');
   const beforePreview = card.localPreviewUrl;
   const beforeCredits = card.creditsOutroAppended;
   let reconciled = reconcileStuckAssemblingJob({ ...card });
@@ -2319,6 +2319,8 @@ app.get('/job/:id', (req, res) => {
       const { needsRepublish, lastPublishedDriveUrl } = require('./lib/publish_dedupe');
       const driveUrl = card.driveUrl || savedOutputs.driveUrl || null;
       const enriched = { jobId, ...card, driveUrl, publishCopy: publishCopy || null };
+      if (enriched.localPreviewUrl) enriched.localPreviewUrl = normalizeStoredPreviewUrl(enriched.localPreviewUrl);
+      if (enriched.finalUrl) enriched.finalUrl = normalizeStoredPreviewUrl(enriched.finalUrl);
       enriched.republishNeeded = needsRepublish(enriched, jobId);
       enriched.lastPublishedDriveUrl = lastPublishedDriveUrl(jobId);
       return enriched;
@@ -5684,6 +5686,10 @@ app.post('/job/:id/operator-creative', async (req, res) => {
   const cropCy = cropCyRaw != null && Number.isFinite(Number(cropCyRaw))
     ? Math.max(0, Math.min(1, Number(cropCyRaw)))
     : null;
+  const cropZoomRaw = layoutIn.cropZoom;
+  const cropZoom = cropZoomRaw != null && Number.isFinite(Number(cropZoomRaw))
+    ? Math.max(0.25, Math.min(4, Number(cropZoomRaw)))
+    : null;
 
   card.compCreative = card.compCreative || { preset: card.compCreativePreset || 'facecam_split' };
   card.compCreative.layout = card.compCreative.layout || { mode: 'split_screen' };
@@ -5700,6 +5706,8 @@ app.post('/job/:id/operator-creative', async (req, res) => {
     else delete card.compCreative.layout.cropCx;
     if (cropCy != null) card.compCreative.layout.cropCy = cropCy;
     else delete card.compCreative.layout.cropCy;
+    if (cropZoom != null) card.compCreative.layout.cropZoom = cropZoom;
+    else delete card.compCreative.layout.cropZoom;
   } else if (landscapeSplit === true) {
     card.compCreative.layout.landscapeSplit = true;
   }
@@ -5714,6 +5722,19 @@ app.post('/job/:id/operator-creative', async (req, res) => {
   else if (!card.compCreative.layout.mode) card.compCreative.layout.mode = 'split_screen';
   card.compCreative.operatorLocked = true;
   card.compCreativePreset = card.compCreative.preset || card.compCreativePreset;
+
+  const layoutSegmentsIn = Array.isArray(req.body?.layoutSegments) ? req.body.layoutSegments : null;
+  const openingLayoutIn = req.body?.openingLayout && typeof req.body.openingLayout === 'object'
+    ? req.body.openingLayout
+    : null;
+  if (layoutSegmentsIn?.length && Array.isArray(card.orderedClipUrls) && card.orderedClipUrls.length) {
+    card.orderedClipUrls[0].layoutSegments = layoutSegmentsIn;
+    card.orderedClipUrls[0].openingLayout = openingLayoutIn;
+    if (card.compositionSpec?.clips?.[0]) {
+      card.compositionSpec.clips[0].layoutSegments = layoutSegmentsIn;
+      card.compositionSpec.clips[0].openingLayout = openingLayoutIn;
+    }
+  }
 
   if (card.designSpec) {
     card.designSpec.compCreative = {
@@ -5732,6 +5753,7 @@ app.post('/job/:id/operator-creative', async (req, res) => {
       contentCx: card.compCreative.layout.contentCx ?? null,
       cropCx: card.compCreative.layout.cropCx ?? null,
       cropCy: card.compCreative.layout.cropCy ?? null,
+      cropZoom: card.compCreative.layout.cropZoom ?? null,
       topHeight: card.compCreative.layout.topHeight ?? null,
       topPaneSubject: card.compCreative.layout.topPaneSubject || null,
       bottomPaneRect: card.compCreative.layout.bottomPaneRect || null,
@@ -5846,6 +5868,8 @@ app.post('/job/:id/reassemble', async (req, res) => {
       trimStart:         c.trimStart != null ? Number(c.trimStart) : undefined,
       trimEnd:           c.trimEnd != null ? Number(c.trimEnd) : undefined,
       postLiveVod:       !!c.postLiveVod,
+      layoutSegments:    Array.isArray(c.layoutSegments) ? c.layoutSegments : [],
+      openingLayout:     c.openingLayout && typeof c.openingLayout === 'object' ? c.openingLayout : null,
     }));
     clipIdx = orderedClips.length;
     console.log(`[reassemble] ${jobId}: clips-only rebuild (${segmentData.length} clips)`);
@@ -6339,6 +6363,20 @@ app.post('/generate-clip-comp', async (req, res) => {
     ? (req.body.editorSignedOffAt || new Date().toISOString())
     : (lockedFromCompose ? (compositionSpecIn?.editorSignedOffAt || new Date().toISOString()) : null);
 
+  // Compose Phase B: layout plan may live only on compositionSpec.clips — merge onto request clips.
+  if (compositionSpecIn?.clips?.length) {
+    clips = clips.map((c, i) => {
+      const sc = compositionSpecIn.clips[i] || {};
+      const fromSpec = Array.isArray(sc.layoutSegments) ? sc.layoutSegments : [];
+      const fromBody = Array.isArray(c.layoutSegments) ? c.layoutSegments : [];
+      return {
+        ...c,
+        layoutSegments: fromBody.length ? fromBody : fromSpec,
+        openingLayout: c.openingLayout || sc.openingLayout || null,
+      };
+    });
+  }
+
   // Job spec — same contract as the script flow so all gates read normally.
   // contentType twitch-short inherits the CPD-932 short-form gate handling.
   let jobSpec = null;
@@ -6416,6 +6454,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     postLiveVod: !!c.postLiveVod,
     sceneLabel:  c.sceneLabel || '',
     segmentKind: c.segmentKind || '',
+    layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments : [],
+    openingLayout: c.openingLayout && typeof c.openingLayout === 'object' ? c.openingLayout : null,
   }));
 
   const compDeliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType, compCreative });
@@ -6498,6 +6538,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     trimStart:       c.trimStart,
     trimEnd:         c.trimEnd,
     postLiveVod:     c.postLiveVod,
+    layoutSegments:  Array.isArray(c.layoutSegments) ? c.layoutSegments : [],
+    openingLayout:   c.openingLayout && typeof c.openingLayout === 'object' ? c.openingLayout : null,
     clipTimingTargets: [],
     clipTimingFormat: 'none'
   }));
@@ -7621,7 +7663,7 @@ app.get('/assemble-progress/:id', (req, res) => {
     gate3Concerns:    job.gate3aResult?.concerns || null,
     gate3Deductions:  (job.gate3aResult?.deductions || []).map((d) => d.reason).filter(Boolean),
     downloadUrl:      job.filename ? `/download/${job.filename}` : null,
-    localPreviewUrl:  job.localUrl || (job.filename ? `http://localhost:${process.env.PORT || 3000}/download/${job.filename}` : null),
+    localPreviewUrl:  job.localUrl || (job.filename ? `/download/${job.filename}` : null),
     thumbFilename:    job.thumbFilename || null
   });
 });
