@@ -149,6 +149,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-preview-mock { position:absolute; inset:0; z-index:1; }
 .composer-vod-timeline { margin-bottom:10px; padding:10px; background:rgba(145,70,255,0.08); border:1px solid rgba(145,70,255,0.25); border-radius:6px; display:none; }
 .composer-handoff-summary { margin-bottom:12px; padding:10px 14px; border:1px solid rgba(199,175,79,0.22); border-radius:8px; background:rgba(0,0,0,0.28); }
+.composer-order-panel { margin-bottom:12px; padding:10px 14px; border:1px solid rgba(28,232,255,0.22); border-radius:8px; background:rgba(0,0,0,0.22); font-size:14px; }
+.composer-order-panel .order-head { font-size:13px; letter-spacing:0.08em; color:rgba(28,232,255,0.85); font-weight:700; margin-bottom:8px; }
+.composer-order-panel .order-step { padding:3px 0; color:rgba(255,255,255,0.72); border-bottom:1px solid rgba(255,255,255,0.04); }
+.composer-preview-mock-watermark { position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center; pointer-events:none; font-size:11px; font-weight:800; letter-spacing:0.12em; color:rgba(255,80,80,0.92); text-shadow:0 0 8px #000; transform:rotate(-18deg); }
 .library-workspace { min-height:calc(100vh - 200px); }
 .gen-compose-workspace .gen-sidebar { min-width:260px; max-width:320px; }
 .composer-preview-bg { position:absolute; inset:0; background-size:cover; background-position:center; filter:blur(18px) brightness(0.45); transform:scale(1.15); }
@@ -1219,6 +1223,7 @@ input[type="url"], input[type="password"], select, textarea {
                   <span class="gen-main-hint">Edit trim, preview layout, then EXECUTE — clips sent from Library</span>
                 </div>
                 <div id="composer-handoff-summary" class="composer-handoff-summary"></div>
+                <div id="composer-order-panel" class="composer-order-panel" style="display:none;"></div>
                 <div id="twitch-comp-lineup" class="gen-comp-lineup" style="display:none;"></div>
                 <div id="generate-composer" class="generate-composer">
                   <div class="generate-composer-head">
@@ -1243,6 +1248,7 @@ input[type="url"], input[type="password"], select, textarea {
                         <img id="composer-preview-img" class="composer-preview-img" alt="FFmpeg preview">
                         <div id="composer-preview-loading" class="composer-preview-loading">FFmpeg…</div>
                         <div id="composer-preview-mock" class="composer-preview-mock">
+                          <div id="composer-preview-mock-watermark" class="composer-preview-mock-watermark" style="display:none;">APPROX ONLY · NOT FINAL</div>
                           <div id="composer-preview-bg" class="composer-preview-bg"></div>
                           <div id="composer-preview-main" class="composer-preview-main"></div>
                           <div id="composer-preview-ranked" class="composer-preview-ranked" style="display:none;">TOP 5 → #1</div>
@@ -15493,6 +15499,72 @@ function setComposerPreviewCaption(text, kind) {
   cap.className = 'composer-preview-caption' + (kind ? (' ' + kind) : '');
 }
 
+var _composerPreviewMode = 'loading';
+var _composerValidationOk = false;
+var _composerLastPreflight = null;
+var _composerLastValidatedSpec = null;
+
+function setComposerPreviewMode(mode) {
+  _composerPreviewMode = mode || 'loading';
+  var wm = g('composer-preview-mock-watermark');
+  if (wm) wm.style.display = (mode === 'mock') ? 'flex' : 'none';
+  syncComposerExecuteGate();
+}
+
+function syncComposerExecuteGate() {
+  var execBtn = g('btn-composer-execute');
+  if (!execBtn || window._editingLayoutJobId) return;
+  var gateOk = _composerValidationOk && (_composerPreviewMode === 'ffmpeg' || _composerPreviewMode === 'assembled');
+  if (!_composerValidationOk) {
+    execBtn.disabled = true;
+    execBtn.title = 'Fix validation errors before EXECUTE';
+  } else if (!gateOk) {
+    execBtn.disabled = true;
+    execBtn.title = _composerPreviewMode === 'mock'
+      ? 'Assembly preview unavailable — mock layout only (stage MP4 or refresh preview)'
+      : 'Wait for assembly preview before EXECUTE';
+  } else {
+    execBtn.disabled = false;
+    execBtn.title = 'Dispatch locked compositionSpec to assembly';
+  }
+}
+
+function renderComposerOrderPanel(preflight, spec) {
+  var el = g('composer-order-panel');
+  if (!el) return;
+  if (!preflight || !spec) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  _composerLastPreflight = preflight;
+  _composerLastValidatedSpec = spec;
+  var html = '<div class="order-head">ORDER SUMMARY · assembly will run exactly this</div>';
+  html += '<div style="margin-bottom:6px;color:rgba(255,255,255,0.85);">'
+    + escapeHtml(preflight.presetLabel || preflight.preset || '')
+    + ' · ' + escapeHtml(String(preflight.deliveryFormat || '').toUpperCase())
+    + ' · ~' + escapeHtml(preflight.estimatedOutputLabel || preflight.footageLabel || '')
+    + ' · ' + (preflight.clipCount || 0) + ' clip(s)</div>';
+  if (preflight.clips && preflight.clips.length) {
+    preflight.clips.slice(0, 6).forEach(function(c) {
+      html += '<div class="order-step">' + c.slot + '. ' + escapeHtml(c.streamer) + ' — '
+        + escapeHtml(c.title) + ' <span style="opacity:0.55;">(' + escapeHtml(c.footageLabel) + ')</span></div>';
+    });
+    if (preflight.clips.length > 6) {
+      html += '<div class="order-step" style="opacity:0.5;">+' + (preflight.clips.length - 6) + ' more…</div>';
+    }
+  }
+  if (preflight.assemblySteps && preflight.assemblySteps.length) {
+    html += '<div style="margin-top:8px;font-size:12px;color:rgba(199,175,79,0.75);">Assembly steps</div>';
+    preflight.assemblySteps.slice(0, 5).forEach(function(s) {
+      html += '<div class="order-step" style="font-size:13px;">▸ ' + escapeHtml(s.label) + '</div>';
+    });
+  }
+  html += '<div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.45);">Hooks: chosen after EXECUTE unless you override on queue card · Preview ≠ final if mock watermark shows</div>';
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
 function formatComposerPreviewCaption(d, errMsg) {
   if (errMsg) return 'Preview failed: ' + errMsg + ' · thumbnail mock below is approximate only';
   if (!d || !d.ok || !d.base64) return 'Preview unavailable · click ↻ Refresh preview (needs clip MP4 + FFmpeg)';
@@ -15515,7 +15587,7 @@ function formatComposerPreviewCaption(d, errMsg) {
     parts.push('action cx ' + Number(ls.contentCx).toFixed(2));
   }
   parts.push('hooks/captions added at assembly');
-  if (d.previewVideoUrl) parts.push('~6s loop');
+  if (d.previewVideoUrl) parts.push('~6s loop · lead clip only for multi-clip comps');
   return parts.join(' · ');
 }
 
@@ -15567,6 +15639,7 @@ function showAssembledComposerPreview(jobId) {
     };
   }
   setComposerPreviewCaption('Assembled output · ' + (job.assemblyId || 'local MP4'), 'ok');
+  setComposerPreviewMode('assembled');
   return true;
 }
 
@@ -15581,6 +15654,7 @@ function fetchFfmpegComposerPreviewNow(body) {
     body.clips[0].assemblyId = (JOBS.find(function(j) { return j.id === window._editingLayoutJobId; }) || {}).assemblyId || body.clips[0].assemblyId;
   }
   if (loading) loading.style.display = 'flex';
+  setComposerPreviewMode('loading');
   setComposerPreviewCaption('Rendering assembly preview…', 'pending');
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/preview', {
     method: 'POST',
@@ -15600,6 +15674,7 @@ function fetchFfmpegComposerPreviewNow(body) {
         if (mock) mock.style.display = '';
         if (img) img.style.display = 'none';
         if (video) { video.style.display = 'none'; video.removeAttribute('src'); }
+        setComposerPreviewMode('mock');
         setComposerPreviewCaption(formatComposerPreviewCaption(null, d.error || 'no preview returned'), 'err');
         return;
       }
@@ -15615,6 +15690,7 @@ function fetchFfmpegComposerPreviewNow(body) {
         if (video) { video.style.display = 'none'; video.removeAttribute('src'); }
       }
       if (mock) mock.style.display = 'none';
+      setComposerPreviewMode('ffmpeg');
       setComposerPreviewCaption(formatComposerPreviewCaption(d), 'ok');
       if (d.layoutSummary && d.layoutSummary.facecamRect) {
         var subjEl = g('comp-creative-top-pane-subject');
@@ -15638,6 +15714,7 @@ function fetchFfmpegComposerPreviewNow(body) {
       if (img) img.style.display = 'none';
       var video = g('composer-preview-video');
       if (video) { video.style.display = 'none'; video.removeAttribute('src'); }
+      setComposerPreviewMode('mock');
       setComposerPreviewCaption(formatComposerPreviewCaption(null, (e && e.message) || 'network error'), 'err');
     });
 }
@@ -15887,8 +15964,9 @@ function refreshGenerateComposer(callValidate) {
         if (v.warnings && v.warnings.length) parts.push('Note: ' + v.warnings.join(' · '));
         if (v.ok && d.spec) parts.push(buildComposerReadyLine(d.spec));
         valEl.textContent = parts.join('\n') || 'Validating…';
-        var execBtn = g('btn-composer-execute');
-        if (execBtn) execBtn.disabled = !v.ok;
+        _composerValidationOk = !!v.ok;
+        renderComposerOrderPanel(d.preflight, d.spec);
+        syncComposerExecuteGate();
       })
       .catch(function(e) {
         var valEl = g('composer-validation');
@@ -15962,6 +16040,14 @@ function executeFromComposer() {
       note: 'Layout send-back from composer',
       fromLayoutEditor: true,
     });
+    return;
+  }
+  if (!_composerValidationOk) {
+    alert('Execute blocked: fix composition validation errors first.');
+    return;
+  }
+  if (_composerPreviewMode !== 'ffmpeg' && _composerPreviewMode !== 'assembled') {
+    alert('Execute blocked: assembly preview required — mock layout is approximate only. Stage clip MP4 or click refresh preview.');
     return;
   }
   var body = buildCompositionSpecFromUI();
@@ -16277,6 +16363,26 @@ function collectCompPickedClips() {
           thumbnailUrl: s.thumbnailUrl || '',
           selected: true,
           wireSource: true
+        }
+      };
+    });
+  }
+  if (_composerContentSource === 'sports') {
+    return (typeof getSelectedSportsExplorerClips === 'function' ? getSelectedSportsExplorerClips() : []).map(function(c, idx) {
+      var d = _sportsClipToDispatch(c);
+      return {
+        si: idx, ci: 0, name: d.streamer || 'sports', displayName: d.displayName || 'Sports',
+        clip: {
+          url: d.url,
+          pageUrl: d.pageUrl || d.url,
+          mp4Url: d.url,
+          title: d.title || '',
+          streamer: d.streamer || 'sports',
+          displayName: d.displayName || 'Sports',
+          duration: c.duration || 120,
+          thumbnailUrl: c.thumbnailUrl || '',
+          orientation: d.orientation || 'landscape',
+          selected: true
         }
       };
     });
@@ -19006,7 +19112,7 @@ function triggerSportsClipComp() {
       previewSportsHighlights();
     }
     var st = g('nba-fetch-status');
-    if (st) st.textContent = 'Pick ' + PICKER_COMP_CLIP_COUNT + ' clips in EXPLORE CLIPS, then CLIPS COMP.';
+    if (st) st.textContent = 'Pick ' + PICKER_COMP_CLIP_COUNT + ' clips in EXPLORE CLIPS, then CLIPS COMP → Composer.';
     return;
   }
   if (picked.length < PICKER_COMP_CLIP_COUNT) {
@@ -19014,23 +19120,14 @@ function triggerSportsClipComp() {
     return;
   }
   if (picked.length > PICKER_COMP_CLIP_COUNT && !confirm('Using first ' + PICKER_COMP_CLIP_COUNT + ' selected clips for comp. Continue?')) return;
-  picked = picked.slice(0, PICKER_COMP_CLIP_COUNT);
-
-  showPlatformModal(function(sel) {
-    var pub = parsePlatformModalSelection(sel);
-    lockGenerateButton('btn-gen-sports-comp');
-    var statusEl = g('nba-fetch-status');
-    if (statusEl) statusEl.textContent = 'SPORTS CLIPS COMP — dispatching ' + picked.length + ' clips...';
-    if (g('script-type-label')) g('script-type-label').textContent = 'SPORTS CLIPS COMP — ' + picked.length + ' clips, no avatar';
-    _dispatchClipCompFromPicker(
-      picked.map(_sportsClipToDispatch),
-      'sports-short',
-      pub.platforms,
-      'nba-status',
-      statusEl,
-      pub.scheduledAt
-    );
-  });
+  _composerContentSource = 'sports';
+  switchGeneratePillar('nba');
+  if (g('composer-delivery')) { g('composer-delivery').value = 'comp'; g('composer-delivery').dataset.userSet = '1'; }
+  refreshGenerateComposer(true);
+  scrollToComposer();
+  var st2 = g('nba-fetch-status');
+  if (st2) st2.textContent = 'Review COMPOSER (sports comp) — trim + preview, then EXECUTE → ASSEMBLY.';
+  if (g('script-type-label')) g('script-type-label').textContent = 'SPORTS CLIPS COMP — ' + PICKER_COMP_CLIP_COUNT + ' clips via Composer';
 }
 
 function triggerNewsClipComp() {
@@ -19039,13 +19136,13 @@ function triggerNewsClipComp() {
   if (!picked.length) {
     if (redditMode) {
       previewRedditThreads();
-      alert('Pick ' + PICKER_COMP_CLIP_COUNT + ' threads in THE THREAD, then CLIPS COMP.');
+      alert('Pick ' + PICKER_COMP_CLIP_COUNT + ' threads in THE THREAD, then CLIPS COMP → Composer.');
       return;
     }
     if (!g('news-inline-picker') || g('news-inline-picker').style.display === 'none' || !_newsPickerStories.length) {
       previewNewsStories();
     }
-    alert('Pick ' + PICKER_COMP_CLIP_COUNT + ' stories in PICK STORIES, then CLIPS COMP.');
+    alert('Pick ' + PICKER_COMP_CLIP_COUNT + ' stories in PICK STORIES, then CLIPS COMP → Composer.');
     return;
   }
   if (picked.length < PICKER_COMP_CLIP_COUNT) {
@@ -19053,22 +19150,15 @@ function triggerNewsClipComp() {
     return;
   }
   if (picked.length > PICKER_COMP_CLIP_COUNT && !confirm('Using first ' + PICKER_COMP_CLIP_COUNT + ' selected stories. Continue?')) return;
-  picked = picked.slice(0, PICKER_COMP_CLIP_COUNT);
-
-  showPlatformModal(function(sel) {
-    var pub = parsePlatformModalSelection(sel);
-    lockGenerateButton('btn-gen-news-comp');
-    setGenerateModeActive('news', 'comp');
-    if (g('script-type-label')) g('script-type-label').textContent = 'NEWS CLIPS COMP — ' + picked.length + ' stories, no avatar';
-    _dispatchClipCompFromPicker(
-      picked.map(_newsStoryToDispatch),
-      'news-short',
-      pub.platforms,
-      'news-status',
-      null,
-      pub.scheduledAt
-    );
-  });
+  _composerContentSource = redditMode ? 'reddit' : 'wire';
+  switchGeneratePillar('news');
+  setGenerateModeActive('news', 'comp');
+  if (g('composer-delivery')) { g('composer-delivery').value = 'comp'; g('composer-delivery').dataset.userSet = '1'; }
+  refreshGenerateComposer(true);
+  scrollToComposer();
+  if (g('script-type-label')) g('script-type-label').textContent = 'NEWS CLIPS COMP — ' + PICKER_COMP_CLIP_COUNT + ' stories via Composer';
+  var st = g('news-status');
+  if (st) st.textContent = 'Review COMPOSER (news comp) — trim + preview, then EXECUTE → ASSEMBLY.';
 }
 
 function triggerNbaShort() {

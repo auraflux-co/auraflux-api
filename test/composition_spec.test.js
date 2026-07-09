@@ -59,6 +59,16 @@ describe('composition_spec', () => {
     assert.equal(body.compositionSpec.version, 1);
   });
 
+  it('maps sports wire to sports-short', () => {
+    const { spec } = buildCompositionSpec({
+      deliveryFormat: 'short',
+      compCreativePreset: 'full_bleed',
+      contentSource: 'sports',
+      clips: [{ url: 'https://x.mp4', pageUrl: 'https://x', title: 'X', duration: 60 }],
+    });
+    assert.equal(spec.contentType, 'sports-short');
+  });
+
   it('builds vod segment spec from vodSegment body', () => {
     const { spec, validation } = buildCompositionSpec({
       deliveryFormat: 'vod_segment',
