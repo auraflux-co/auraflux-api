@@ -6509,7 +6509,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     segmentData,
     labels:        segmentData.map(s => s.label),
     transition:    'crossfade',
-    format:        'portrait',
+    format:        (compositionSpecIn?.deliveryAspect === '1:1' ? 'square' : 'portrait'),
     assemblyId,
     contentType,
     clipCompProfile: 'streamer',

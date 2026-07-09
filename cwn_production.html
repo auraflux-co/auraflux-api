@@ -168,6 +168,11 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .optimize-score-good { background:rgba(52,152,219,0.12); color:#3498db; border:1px solid rgba(52,152,219,0.35); }
 .optimize-score-weak { background:rgba(231,76,60,0.1); color:#e74c3c; border:1px solid rgba(231,76,60,0.35); }
 .optimize-feed-panel { margin-bottom:12px; padding:10px 12px; border:1px solid rgba(199,175,79,0.22); border-radius:6px; background:rgba(0,0,0,0.2); }
+.cal-schedule-heatmap { margin:0 0 12px; padding:10px 12px; border:1px solid rgba(52,152,219,0.25); border-radius:6px; background:rgba(52,152,219,0.06); }
+.cal-heatmap-grid { display:grid; grid-template-columns:32px repeat(24,minmax(0,1fr)); gap:2px; font-size:10px; margin-top:8px; }
+.cal-heatmap-cell { height:14px; border-radius:2px; background:rgba(255,255,255,0.06); }
+.competitor-hint-chips { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+.competitor-hint-chip { font-size:12px; padding:4px 8px; border-radius:4px; background:rgba(199,175,79,0.1); border:1px solid rgba(199,175,79,0.3); color:rgba(255,255,255,0.75); max-width:100%; }
 .composer-preview-mock-watermark { position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center; pointer-events:none; font-size:11px; font-weight:800; letter-spacing:0.12em; color:rgba(255,80,80,0.92); text-shadow:0 0 8px #000; transform:rotate(-18deg); }
 .library-workspace { min-height:calc(100vh - 200px); }
 .gen-compose-workspace .gen-sidebar { min-width:260px; max-width:320px; }
@@ -1257,6 +1262,7 @@ input[type="url"], input[type="password"], select, textarea {
                     <button type="button" class="btn btn-outline btn-sm" onclick="runMomentFinder(true)" title="Same URL, new candidates">↻ REPROMPT</button>
                   </div>
                   <div id="moment-finder-status" style="font-size:13px;color:rgba(255,255,255,0.45);"></div>
+                  <div id="competitor-hint-chips" class="competitor-hint-chips"></div>
                   <div id="moment-finder-grid" class="moment-finder-grid"></div>
                 </div>
                 <div id="twitch-comp-lineup" class="gen-comp-lineup" style="display:none;"></div>
@@ -1286,7 +1292,7 @@ input[type="url"], input[type="password"], select, textarea {
                   </div>
                   <div class="composer-body">
                     <div class="composer-preview-stack">
-                      <div style="font-size:11px;letter-spacing:0.08em;color:rgba(199,175,79,0.85);font-weight:700;text-align:center;">OUTPUT (9:16)</div>
+                      <div style="font-size:11px;letter-spacing:0.08em;color:rgba(199,175,79,0.85);font-weight:700;text-align:center;" id="composer-output-aspect-label">OUTPUT (9:16)</div>
                       <div id="composer-preview-frame" class="composer-preview-frame">
                         <video id="composer-preview-video" class="composer-preview-video" autoplay loop muted playsinline></video>
                         <img id="composer-preview-img" class="composer-preview-img" alt="FFmpeg preview">
@@ -1325,8 +1331,9 @@ input[type="url"], input[type="password"], select, textarea {
                         </div>
                         <div class="composer-source-review-transport">
                           <button type="button" id="composer-source-review-play" class="btn btn-outline btn-sm" onclick="toggleComposerSourceReviewPlay()">▶ Play</button>
-                          <button type="button" class="btn btn-outline btn-sm" onclick="markComposerSourceReviewTime('in')" title="Phase B — save playhead as segment in">Mark In</button>
-                          <button type="button" class="btn btn-outline btn-sm" onclick="markComposerSourceReviewTime('out')" title="Phase B — save playhead as segment out">Mark Out</button>
+                          <button type="button" class="btn btn-outline btn-sm" onclick="markComposerSourceReviewTime('in')" title="Save playhead as trim in">Mark In</button>
+                          <button type="button" class="btn btn-outline btn-sm" onclick="markComposerSourceReviewTime('out')" title="Save playhead as trim out">Mark Out</button>
+                          <button type="button" class="btn btn-outline btn-sm" onclick="detectComposerSilence()" title="Find silence regions on source review clip">🔇 SILENCE</button>
                           <span id="composer-source-review-time" class="composer-source-review-time">0:00 / 0:00</span>
                         </div>
                         <input type="range" id="composer-source-review-scrub" class="composer-source-review-scrub" min="0" max="1000" value="0" oninput="onComposerSourceReviewScrub(this.value)">
@@ -1337,6 +1344,7 @@ input[type="url"], input[type="password"], select, textarea {
                       <div id="composer-validation" class="composer-validation"></div>
                       <div class="composer-exec-row">
                         <button type="button" id="btn-composer-execute" class="btn btn-gold" onclick="executeFromComposer()">EXECUTE → ASSEMBLY</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="exportComposerFcpxml()">⬇ FCPXML</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="refreshGenerateComposer(true)">↻ Refresh preview</button>
                       </div>
                     </div>
@@ -2335,6 +2343,10 @@ input[type="url"], input[type="password"], select, textarea {
       </div>
       <div id="cal-cache-banner" style="display:none;font-size:14px;color:rgba(255,255,255,0.5);margin:-4px 0 8px;padding:8px 12px;border:1px solid rgba(199,175,79,0.25);border-radius:6px;background:rgba(199,175,79,0.06);"></div>
       <div id="cal-focus-banner" style="display:none;font-size:14px;line-height:1.55;color:rgba(255,255,255,0.78);margin:0 0 12px;padding:10px 14px;border:1px solid rgba(46,204,113,0.35);border-radius:6px;background:rgba(46,204,113,0.08);"></div>
+      <details id="cal-schedule-heatmap-wrap" class="cal-schedule-heatmap" ontoggle="if(this.open&&window.renderCalendarScheduleHeatmap)renderCalendarScheduleHeatmap()">
+        <summary style="font-size:14px;color:rgba(52,152,219,0.9);cursor:pointer;font-weight:700;letter-spacing:1px;">BEST TIME TO PUBLISH · watch-time heatmap (ET)</summary>
+        <div id="cal-schedule-heatmap-body" style="margin-top:8px;font-size:13px;color:rgba(255,255,255,0.55);">Open to load YouTube day×hour analytics…</div>
+      </details>
       <div id="cal-yt-studio-banner" style="display:none;font-size:14px;color:rgba(255,255,255,0.5);margin:-4px 0 12px;padding:8px 12px;border:1px solid rgba(255,0,0,0.25);border-radius:6px;background:rgba(255,0,0,0.06);"></div>
       <div class="cal-month-layout" id="cal-month-layout">
         <div class="cal-main-col">
@@ -9143,6 +9155,10 @@ function renderQueueNow() {
       metaStrip += '<div style="margin-top:6px;"><span class="optimize-score-badge ' + optCls + '">OPTIMIZE ' + opt.score + ' · ' + escapeHtml(opt.label) + '</span>'
         + (opt.fixes.length ? '<span style="font-size:13px;color:rgba(255,255,255,0.4);margin-left:8px;">' + escapeHtml(opt.fixes.join(' · ')) + '</span>' : '')
         + '</div>';
+      var ytVid = resolveJobYoutubeVideoId(job);
+      if (ytVid && (job.publishedAt || job.finalUrl || (job.gate5Result && job.gate5Result.platforms))) {
+        metaStrip += '<div style="margin-top:6px;"><button type="button" class="btn btn-outline btn-sm" onclick="queueAbTestShortcut(\'' + escapeHtml(job.id) + '\')" title="Pre-fill A/B title test on Intelligence page">A/B title test</button></div>';
+      }
       if (job.publishSeoAudit && job.publishSeoAudit.snapshots && job.publishSeoAudit.snapshots.length > 1) {
         metaStrip += '<div style="font-size:14px;color:rgba(255,255,255,0.5);margin-top:6px;font-family:monospace;white-space:pre-wrap;">'
           + '<span style="color:rgba(199,175,79,0.75);font-weight:700;letter-spacing:1px;">SEO AUDIT</span>\n'
@@ -15372,6 +15388,14 @@ function runMomentFinder(reprompt) {
 
 function renderMomentFinderGrid(data) {
   var grid = g('moment-finder-grid');
+  var hintsEl = g('competitor-hint-chips');
+  if (hintsEl && data && data.competitorHints && data.competitorHints.outliers) {
+    hintsEl.innerHTML = data.competitorHints.outliers.slice(0, 5).map(function(o) {
+      return '<span class="competitor-hint-chip" title="' + escapeHtml(o.title) + '">'
+        + escapeHtml(o.channel) + ' · ' + (o.multiple || '?') + '× · '
+        + escapeHtml((o.title || '').slice(0, 42)) + '</span>';
+    }).join('');
+  } else if (hintsEl) hintsEl.innerHTML = '';
   if (!grid) return;
   var moments = (data && data.moments) || [];
   if (!moments.length) { grid.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.4);">No moments — widen range or add GEMINI_API_KEY.</div>'; return; }
@@ -15452,10 +15476,15 @@ function refreshOptimizeFeed() {
       body.innerHTML = d.items.map(function(item) {
         var o = item.optimize || {};
         var cls = o.score >= 80 ? 'optimize-score-strong' : o.score >= 60 ? 'optimize-score-good' : 'optimize-score-weak';
-        return '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
+        var fixes = (o.fixes || []).slice(0, 2).join(' · ');
+        return '<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">'
+          + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
           + '<span class="optimize-score-badge ' + cls + '">' + (o.score || '?') + ' · ' + escapeHtml(o.label || '') + '</span>'
-          + '<span style="flex:1;min-width:120px;">' + escapeHtml((item.title || item.jobId || '').slice(0, 60)) + '</span>'
+          + '<span style="flex:1;min-width:120px;font-weight:600;">' + escapeHtml((item.title || item.jobId || '').slice(0, 60)) + '</span>'
           + '<button type="button" class="btn btn-outline btn-sm" onclick="navToPublishPrep(\'' + escapeHtml(item.jobId) + '\')">SEO</button>'
+          + '</div>'
+          + (fixes ? '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;">' + escapeHtml(fixes) + '</div>' : '')
+          + (item.primaryKeyword ? '<div style="font-size:12px;color:rgba(199,175,79,0.65);margin-top:2px;">Keyword: ' + escapeHtml(item.primaryKeyword) + '</div>' : '')
           + '</div>';
       }).join('');
     })
@@ -15512,6 +15541,10 @@ function renderComposerVodTimeline() {
     + '<input type="range" min="0" max="' + Math.max(1, dur - 60) + '" value="' + start + '" oninput="setComposerVodTrim(\'start\',this.value)">'
     + '<span>Out ' + fmtSecToMin(end) + '</span>'
     + '<input type="range" min="60" max="' + dur + '" value="' + end + '" oninput="setComposerVodTrim(\'end\',this.value)"></div>'
+    + '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">'
+    + '<button type="button" class="btn btn-outline btn-sm" onclick="extendComposerVodSegment(30)">Extend ±30s</button>'
+    + '<button type="button" class="btn btn-outline btn-sm" onclick="extendComposerVodSegment(60)">Extend ±60s</button>'
+    + '</div>'
     + '<div style="font-size:13px;color:rgba(46,204,113,0.85);">Segment ' + Math.round(end - start) + 's · ' + escapeHtml((v.summary || '').slice(0, 100)) + '</div>'
     + '<button type="button" class="btn btn-outline btn-sm" style="margin-top:6px;font-size:13px;" onclick="clearComposerVodSegment();refreshGenerateComposer(true);">Clear VOD segment</button>';
 }
@@ -15585,6 +15618,7 @@ function fetchComposerSourceReviewNow(body) {
       }
       _composerSourceReviewDuration = Number(d.durationSec) || 0;
       _composerSourceReviewTrimStart = Number(d.trimStart) || 0;
+      window._composerSourceReviewPath = d.filePath || null;
       window._composerSourceReviewPlayhead = 0;
       if (meta) {
         var title = (d.clipTitle || '').slice(0, 72);
@@ -15673,8 +15707,89 @@ function toggleComposerSourceReviewPlay() {
 function markComposerSourceReviewTime(kind) {
   var t = window._composerSourceReviewPlayhead || 0;
   var abs = _composerSourceReviewTrimStart + t;
-  alert('Phase B — ' + (kind === 'in' ? 'Mark In' : 'Mark Out') + ' at clip ' + fmtSecToClock(abs)
-    + ' (' + fmtSecToClock(t) + ' in review). Segment timeline saves coming next.');
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
+  if (_composerVodSegment) {
+    if (kind === 'in') _composerVodSegment.start_sec = Math.floor(abs);
+    else _composerVodSegment.end_sec = Math.max(Math.floor(abs), (_composerVodSegment.start_sec || 0) + 15);
+    renderComposerVodTimeline();
+    refreshGenerateComposer(false);
+    return;
+  }
+  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
+  var slot = lineup[0];
+  if (!slot || !slot.clip) {
+    alert('Mark In/Out saved at ' + fmtSecToClock(abs) + ' — pick a clip to apply trim.');
+    return;
+  }
+  ensureComposerTrimDefaults(slot.clip);
+  if (kind === 'in') slot.clip.composerTrimStart = Math.floor(abs);
+  else slot.clip.composerTrimEnd = Math.max(Math.floor(abs), (slot.clip.composerTrimStart || 0) + 1);
+  renderComposerTrimControls();
+  refreshGenerateComposer(false);
+}
+
+function extendComposerVodSegment(deltaSec) {
+  if (!_composerVodSegment) return;
+  var dur = Math.max(60, Math.round(Number(_composerVodSegment.duration_sec) || 3600));
+  var n = Math.max(0, Math.min(dur, Number(deltaSec) || 0));
+  _composerVodSegment.start_sec = Math.max(0, (_composerVodSegment.start_sec || 0) - n);
+  _composerVodSegment.end_sec = Math.min(dur, (_composerVodSegment.end_sec || 0) + n);
+  renderComposerVodTimeline();
+  refreshGenerateComposer(false);
+}
+
+function detectComposerSilence() {
+  var path = window._composerSourceReviewPath;
+  if (!path) { alert('Load source review first.'); return; }
+  var status = g('composer-source-review-meta');
+  if (status) status.textContent = 'Detecting silence…';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/detect-silence', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filePath: path, trimStart: _composerSourceReviewTrimStart || 0 })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'detect failed');
+      var speech = (d.speech || [])[0];
+      if (status) {
+        status.textContent = (d.silence || []).length + ' silence regions · '
+          + (speech ? ('first speech ' + speech.start_sec + '–' + speech.end_sec + 's') : 'no speech windows');
+      }
+      if (speech && _composerVodSegment) {
+        _composerVodSegment.start_sec = Math.floor(speech.start_sec);
+        _composerVodSegment.end_sec = Math.ceil(speech.end_sec);
+        renderComposerVodTimeline();
+        refreshGenerateComposer(false);
+      }
+    })
+    .catch(function(e) { if (status) status.textContent = '❌ ' + e.message; });
+}
+
+function exportComposerFcpxml() {
+  var body = buildCompositionSpecFromUI();
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/export/fcpxml', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+    .then(function(r) { return r.text(); })
+    .then(function(xml) {
+      var blob = new Blob([xml], { type: 'application/xml' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'auraflux-export.fcpxml';
+      a.click();
+    })
+    .catch(function(e) { alert('FCPXML export failed: ' + e.message); });
+}
+
+function syncComposerAspectLabel() {
+  var el = g('composer-output-aspect-label');
+  var frame = g('composer-preview-frame');
+  var aspect = (g('composer-delivery-aspect') && g('composer-delivery-aspect').value) || '9:16';
+  if (el) el.textContent = 'OUTPUT (' + aspect + ')';
+  if (frame) frame.style.aspectRatio = aspect === '1:1' ? '1/1' : '9/16';
 }
 
 function setComposerVodTrim(which, val) {
@@ -16136,6 +16251,7 @@ function refreshGenerateComposer(callValidate) {
     return;
   }
   panel.classList.add('is-open');
+  syncComposerAspectLabel();
   var delSel = g('composer-delivery');
   if (delSel && !delSel.dataset.userSet && !vodActive) delSel.value = inferComposerDeliveryFromPreset();
   renderComposerVodTimeline();
@@ -16204,6 +16320,7 @@ function applyCompositionTemplate(id) {
   if (!id || !window._compositionTemplates) return;
   var tpl = window._compositionTemplates.find(function(t) { return t.id === id; });
   if (!tpl) return;
+  var spec = tpl.compositionSpec || {};
   if (tpl.compCreativePreset) {
     var data = loadCompCreativePresetFromStorage();
     data.preset = tpl.compCreativePreset;
@@ -16214,7 +16331,45 @@ function applyCompositionTemplate(id) {
     g('composer-delivery').value = tpl.deliveryFormat;
     g('composer-delivery').dataset.userSet = '1';
   }
+  var aspect = spec.deliveryAspect || (spec.brandKit && spec.brandKit.deliveryAspect);
+  if (aspect && g('composer-delivery-aspect')) g('composer-delivery-aspect').value = aspect;
+  var kw = spec.primaryKeyword || (spec.brandKit && spec.brandKit.primaryKeyword);
+  if (kw && g('composer-primary-keyword')) g('composer-primary-keyword').value = kw;
+  var capStyle = (spec.compCreative && spec.compCreative.captions && spec.compCreative.captions.style)
+    || (spec.brandKit && spec.brandKit.captionStyle);
+  if (capStyle && g('composer-caption-style')) g('composer-caption-style').value = capStyle;
   refreshGenerateComposer(true);
+}
+
+function resolveJobYoutubeVideoId(job) {
+  if (!job) return '';
+  if (job.youtubeVideoId) return String(job.youtubeVideoId);
+  var yt = job.gate5Result && job.gate5Result.platforms && job.gate5Result.platforms.youtube;
+  if (yt && yt.jobId) return String(yt.jobId);
+  if (yt && yt.url) {
+    var m = String(yt.url).match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+    if (m) return m[1];
+  }
+  return '';
+}
+
+function queueAbTestShortcut(jobId) {
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  if (!job) return;
+  var vid = resolveJobYoutubeVideoId(job);
+  if (!vid) { alert('No YouTube video ID on this job yet — publish first.'); return; }
+  var pub = resolvePublishCopy(job) || {};
+  var title = pub.title || job.title || '';
+  nav('intelligence');
+  setTimeout(function() {
+    if (g('intel-ab-video')) g('intel-ab-video').value = vid;
+    if (g('intel-ab-kind')) g('intel-ab-kind').value = 'title';
+    if (g('intel-ab-variant-a')) g('intel-ab-variant-a').value = title;
+    if (g('intel-ab-variant-b')) g('intel-ab-variant-b').value = title ? title + ' (alt)' : '';
+    var st = g('intel-status');
+    if (st) st.textContent = 'A/B pre-filled from ' + jobId + ' — edit variant B, then Start test.';
+    document.getElementById('intel-ab-video') && document.getElementById('intel-ab-video').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 350);
 }
 
 function saveCompositionTemplate() {
@@ -16227,6 +16382,12 @@ function saveCompositionTemplate() {
     .then(function(r) { return r.json(); })
     .then(function(d) {
       if (!d.spec) throw new Error(d.error || 'validate failed');
+      d.spec.brandKit = {
+        deliveryAspect: d.spec.deliveryAspect || '9:16',
+        primaryKeyword: d.spec.primaryKeyword || null,
+        captionStyle: (d.spec.compCreative && d.spec.compCreative.captions && d.spec.compCreative.captions.style) || null,
+        compCreativePreset: d.spec.compCreativePreset || null,
+      };
       return fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

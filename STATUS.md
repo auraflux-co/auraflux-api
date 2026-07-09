@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-09 (CPD-1239/1240) — Competitive P2 completion + P3 editor depth on localhost: schedule heatmap (`/intelligence/schedule-heatmap` + Calendar panel), optimize feed cards + queue A/B shortcut, competitor hints on moment-finder, 1:1 square preview/assembly path, source-review `filePath` for silence detect, VOD extend ±30/60s, FCPXML export, brandKit on composition templates. Tests 22/22 competitive suite. Deploy + push pending.
 **Last Updated:** 2026-07-09 (CPD-1237/1238) — Competitive P1+P2 on localhost: moment finder API + co-pilot panel + virality grid, caption/aspect/keyword on compositionSpec, CapCut handoff for clip comps (`/capcut/clip-comp`), optimize score + feed (`/intelligence/optimize-score`, `/intelligence/optimize-feed`). Tests moment_finder + publish_optimize + composition gates. Jira CPD-1237/1238; Confluence child HOW 47382529. Deploy + push pending.
 **Last Updated:** 2026-07-09 (CPD-1236) — Competitive P0 on localhost: order summary panel from validate `preflight`, EXECUTE blocked on mock-only preview, Sports/News Comp routed through Composer, sports `contentType`, hook title fallback. Tests `composition_execute_gate`. Pushed `c0/main` c4054eb2; deployed localhost.
 **Last Updated:** 2026-07-08 (CPD-1234) — Compose **source clip review** player: full trim window (up to 180s) with play/pause + scrub timeline; `POST /composition/source-review`. Mark In/Out placeholders for Phase B. Pushed `c0/main`; deployed localhost.

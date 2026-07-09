@@ -134,11 +134,27 @@
     return '';
   }
 
+  function renderStreamerFocusBanner(plan) {
+    const el = g('cal-focus-banner');
+    if (!el) return;
+    const sf = plan?.streamerFocus;
+    if (!sf?.primary) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = 'block';
+    const reach = sf.reach ? ` Reach only: ${sf.reach}.` : '';
+    const note = plan.focusNote ? `<div style="margin-top:6px;color:rgba(255,255,255,0.55);">${esc(plan.focusNote)}</div>` : '';
+    el.innerHTML = `<strong style="color:rgba(46,204,113,0.95);">FOCUS · ${esc(sf.primary)}</strong> — ${esc(sf.cadence || '3 of 4 posts')}. Titles lead with <strong>${esc(sf.titleLead || sf.primary)}</strong>.${reach}${sf.reviewAfter ? ` Locked until ${esc(sf.reviewAfter)}.` : ''}${note}`;
+  }
+
   function renderMonth(plan) {
     const grid = g('calendar-grid');
     const titleEl = g('cal-month-title');
     const summaryEl = g('cal-month-summary');
     if (!grid || !plan?.days) return;
+
+    renderStreamerFocusBanner(plan);
 
     if (titleEl) titleEl.textContent = plan.monthLabel || `${plan.year}-${plan.month}`;
     grid.innerHTML = '';
@@ -667,5 +683,43 @@
       return null;
     }
   };
+
+  async function renderCalendarScheduleHeatmap() {
+    const body = g('cal-schedule-heatmap-body');
+    if (!body) return;
+    body.textContent = 'Loading heatmap…';
+    try {
+      const d = await calFetch('/intelligence/schedule-heatmap?days=28&limit=8');
+      if (!d.ok || !d.grid || !d.grid.length) {
+        body.textContent = 'No analytics data yet — sync Intelligence analytics first.';
+        return;
+      }
+      const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      let html = '<div style="display:grid;grid-template-columns:34px repeat(24,minmax(8px,1fr));gap:2px;font-size:10px;max-width:100%;overflow-x:auto;">';
+      html += '<div></div>';
+      for (let h = 0; h < 24; h++) {
+        html += '<div style="text-align:center;color:rgba(255,255,255,0.35);">' + h + '</div>';
+      }
+      for (let dIdx = 0; dIdx < 7; dIdx++) {
+        html += '<div style="color:rgba(255,255,255,0.55);padding-top:2px;">' + dayLabels[dIdx] + '</div>';
+        const row = d.grid[dIdx] || [];
+        for (let h = 0; h < 24; h++) {
+          const cell = row[h] || { intensity: 0, score: 0 };
+          const alpha = 0.06 + Math.min(0.92, (cell.intensity || 0) * 0.009);
+          html += '<div title="' + esc(dayLabels[dIdx] + ' ' + h + ':00 ET · watch ' + (cell.score || 0)) + '" style="height:14px;border-radius:2px;background:rgba(52,152,219,' + alpha.toFixed(2) + ');"></div>';
+        }
+      }
+      html += '</div>';
+      if (d.topSlots && d.topSlots.length) {
+        html += '<div style="margin-top:8px;font-size:12px;color:rgba(255,255,255,0.55);">Best publish slots: '
+          + d.topSlots.map((s) => esc(s.label)).join(' · ') + '</div>';
+      }
+      body.innerHTML = html;
+    } catch (e) {
+      body.textContent = '❌ ' + (e.message || 'heatmap failed');
+    }
+  }
+
+  window.renderCalendarScheduleHeatmap = renderCalendarScheduleHeatmap;
 
 })();
