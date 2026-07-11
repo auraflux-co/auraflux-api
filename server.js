@@ -1674,7 +1674,11 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(require('express').json({ limit: '50mb' }));
+app.use(require('express').json({
+  limit: '50mb',
+  // CPD-1231: preserve raw body for Telnyx/Stripe webhook signature verification
+  verify: (req, _res, buf) => { req.rawBody = buf; },
+}));
 app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
 
 
