@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-12 (CPD-1253) — Multi-clip Compose lineup fidelity: ORDER SUMMARY mirrors COMP LINEUP (↑↓ stitch order); per-slot layout hydrate (no bleed); removed 1ST/Lead button; `composition_spec` preserves client clip order. Jobs `…5423333` + `…1488075` published. CPD-1252 master trim still open. Deploy localhost.
 **Last Updated:** 2026-07-12 (CPD-1021) — Channel Stats page stale-while-revalidates (`refresh=1` on every visit). Shared Twitch Helix rate limit across all clients (`TWITCH_HELIX_MAX_PER_MIN`). `deploy_c0.sh` trims oversized pm2 logs. ExtraEmily r10 navy brand-pad reassembled. Deploy localhost.
 **Last Updated:** 2026-07-09 (CPD-1242) — Compose **one sync**: `syncComposerEditSurfaces` keeps right-panel timestamps + preview + dropdown aligned; Discard/Clear looks refresh the rundown; ban same-second OPEN+LAYOUT (sanitize drops `atSec <= trimIn`). Deploy localhost.
 **Last Updated:** 2026-07-09 (CPD-1242) — Compose live preview **switches split ↔ full bleed at saved marks** while scrubbing (was stuck on last dropdown). Mode change locks prior look as opening; Save look here applies from playhead. Draft vs saved + Review edit. Deploy localhost.

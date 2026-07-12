@@ -346,7 +346,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .clip-group-editor { border:1px dashed rgba(199,175,79,0.35); border-radius:8px; padding:10px; margin:0 4px 8px; background:#0a1018; }
 .clip-group-editor-slots { display:flex; flex-direction:column; gap:6px; margin:8px 0; }
 .clip-group-editor-hint { font-size:13px; color:rgba(255,255,255,0.35); line-height:1.4; margin-bottom:6px; }
-.gen-comp-slot { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid rgba(255,255,255,0.08); border-radius:6px; background:rgba(0,0,0,0.25); }
+.gen-comp-slot { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid rgba(255,255,255,0.08); border-radius:6px; background:rgba(0,0,0,0.25); cursor:pointer; }
+.gen-comp-slot.is-active { border-color:rgba(145,70,255,0.7); box-shadow:0 0 0 1px rgba(145,70,255,0.35); background:rgba(145,70,255,0.08); }
+.gen-comp-slot.is-active .gen-comp-slot-num { color:#bf94ff; }
 .gen-comp-slot-num { font-size:15px; font-weight:700; color:#9146ff; min-width:18px; font-family:monospace; }
 .gen-comp-slot-thumb { width:48px; height:27px; object-fit:cover; border-radius:3px; background:#1a2035; flex-shrink:0; }
 .gen-comp-slot-meta { flex:1; min-width:0; }
@@ -4562,6 +4564,10 @@ function persistComposerSessionNow() {
     compLineupUrls: (_compLineup || []).map(function(s) {
       return (s.clip && (s.clip.url || s.clip.pageUrl)) || '';
     }).filter(Boolean),
+    compLineupIds: (_compLineup || []).map(function(s) {
+      return compClipIdentity(s.clip) || compLineupKey(s);
+    }).filter(Boolean),
+    activeLineupIdx: _composerActiveLineupIdx || 0,
     deliveryFormat: (g('composer-delivery') && g('composer-delivery').value) || _composerDeliveryFormat || 'short',
     deliveryAspect: (g('composer-delivery-aspect') && g('composer-delivery-aspect').value) || '9:16',
     captionStyle: (g('composer-caption-style') && g('composer-caption-style').value) || '',
@@ -4570,18 +4576,38 @@ function persistComposerSessionNow() {
   try { sessionStorage.setItem(CWN_COMPOSER_SESSION_KEY, JSON.stringify(payload)); } catch (_e) {}
 }
 
-function restoreCompLineupOrder(urls) {
+function restoreCompLineupOrder(urlsOrIds) {
   var picked = collectCompPickedClips();
-  var byUrl = {};
+  if (!picked.length) return;
+  var byKey = {};
   picked.forEach(function(p) {
+    var id = compClipIdentity(p.clip) || compLineupKey(p);
+    byKey[id] = p;
     var u = (p.clip && (p.clip.url || p.clip.pageUrl)) || '';
-    if (u) byUrl[u] = p;
+    if (u) byKey['legacy:' + u] = p;
   });
   var ordered = [];
-  (urls || []).forEach(function(u) {
-    if (byUrl[u]) { ordered.push(byUrl[u]); delete byUrl[u]; }
+  (urlsOrIds || []).forEach(function(token) {
+    var t = String(token || '');
+    if (!t) return;
+    if (byKey[t]) {
+      ordered.push(byKey[t]);
+      delete byKey[t];
+      if (t.indexOf('legacy:') === 0) delete byKey[t.slice(7)];
+      return;
+    }
+    if (byKey['legacy:' + t]) {
+      var legacyPick = byKey['legacy:' + t];
+      ordered.push(legacyPick);
+      delete byKey['legacy:' + t];
+      var legacyId = compClipIdentity(legacyPick.clip);
+      if (legacyId) delete byKey[legacyId];
+    }
   });
-  Object.keys(byUrl).forEach(function(u) { ordered.push(byUrl[u]); });
+  Object.keys(byKey).forEach(function(k) {
+    if (k.indexOf('legacy:') === 0) return;
+    ordered.push(byKey[k]);
+  });
   if (ordered.length) _compLineup = ordered;
 }
 
@@ -4628,8 +4654,9 @@ function restoreComposerSession() {
   if (data.deliveryAspect && g('composer-delivery-aspect')) g('composer-delivery-aspect').value = data.deliveryAspect;
   if (data.captionStyle && g('composer-caption-style')) g('composer-caption-style').value = data.captionStyle;
   window._editingLayoutJobId = data.editingLayoutJobId || null;
-  reconcileCompLineup(collectCompPickedClips());
-  restoreCompLineupOrder(data.compLineupUrls || []);
+  pruneCompLineupToPicked(collectCompPickedClips());
+  restoreCompLineupOrder(data.compLineupIds || data.compLineupUrls || []);
+  if (data.activeLineupIdx != null) _composerActiveLineupIdx = Math.max(0, parseInt(data.activeLineupIdx, 10) || 0);
   renderComposerHandoffSummary();
   if (typeof refreshCompLineupUI === 'function') refreshCompLineupUI();
   refreshGenerateComposer(true, true);
@@ -9593,6 +9620,29 @@ function renderBurnedHookPickerMarkup(job, preAssembly) {
   return html;
 }
 
+function saveAllCustomHooksFromInputs(jobId, job) {
+  var clipCount = Math.max(
+    (job && job.orderedClipUrls && job.orderedClipUrls.length) || 0,
+    (job && job.clipHookCandidates && job.clipHookCandidates.length) || 0,
+    (job && job.clipHookTitles && job.clipHookTitles.length) || 0,
+    1
+  );
+  var chain = Promise.resolve({ ok: true });
+  for (var ci = 0; ci < clipCount; ci++) {
+    (function(clipIndex) {
+      chain = chain.then(function() {
+        return saveCustomHookFromInput(jobId, clipIndex).then(function(hookResp) {
+          if (hookResp && !hookResp.ok) {
+            throw new Error(hookResp.error || 'Custom hook save failed (clip ' + (clipIndex + 1) + ')');
+          }
+          return hookResp;
+        });
+      });
+    })(ci);
+  }
+  return chain;
+}
+
 function confirmClipHooksAndBuild(jobId) {
   var job = JOBS.find(function(j){ return j.id === jobId; });
   var btn = document.getElementById('confirm-hooks-btn-' + jobId)
@@ -9605,10 +9655,9 @@ function confirmClipHooksAndBuild(jobId) {
   layoutStep
     .then(function(layoutResp) {
       if (layoutResp && !layoutResp.ok) throw new Error(layoutResp.error || 'Layout snapshot failed');
-      return saveCustomHookFromInput(jobId, 0);
+      return saveAllCustomHooksFromInputs(jobId, job);
     })
-    .then(function(hookResp) {
-      if (hookResp && !hookResp.ok) throw new Error(hookResp.error || 'Custom hook save failed');
+    .then(function() {
       return fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/job/' + encodeURIComponent(jobId) + '/confirm-hooks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -9621,6 +9670,7 @@ function confirmClipHooksAndBuild(jobId) {
       if (job) {
         job.stage = 'assembling';
         job.status = 'assembling';
+        job.hooksConfirmedAt = new Date().toISOString();
         job.clipHookTitles = resp.clipHookTitles || job.clipHookTitles;
         saveJobs();
       }
@@ -16620,19 +16670,7 @@ function resolveComposerSavedLookAt(absSec) {
   var t = Math.max(trimStart, Math.min(trimEnd - 0.001, Number(absSec) || trimStart));
   var opening = clip.openingLayout ? Object.assign({}, clip.openingLayout) : null;
   if (!opening) {
-    var stored = loadCompCreativePresetFromStorage();
-    var splitOn = composerLandscapeSplitEnabled(stored);
-    opening = {
-      mode: splitOn ? 'split_screen' : (composerFullBleedSingleViewActive(stored) ? 'full_bleed_crop' : presetLayoutModeForCompose(stored.preset || 'classic_blur_pad')),
-      cropCx: stored.cropCx,
-      cropCy: stored.cropCy,
-      cropZoom: stored.cropZoom,
-      facecamRect: stored.facecamRect || null,
-      bottomPaneRect: stored.bottomPaneRect || null,
-      contentCx: Number.isFinite(Number(stored.contentCx)) ? Number(stored.contentCx) / 100 : undefined,
-      topHeight: stored.topHeight || readTopShareFromDom(),
-      bottomPaneMode: stored.bottomPaneMode || null,
-    };
+    opening = composerPresetDefaultLook();
   }
   var active = Object.assign({}, opening);
   var segs = Array.isArray(clip.layoutSegments) ? clip.layoutSegments.slice() : [];
@@ -16664,37 +16702,28 @@ var _composerLastPreviewMode = null;
 /** Sync dropdown/source-map to a look without marking draft dirty (scrub honesty). */
 function syncComposerUiToSavedLook(look, force) {
   if (!look || !look.mode) return;
-  if (!force && look.mode === _composerLastPreviewMode) return;
-  _composerLastPreviewMode = look.mode;
+  var sig = look.mode + '|' + JSON.stringify(look.facecamRect || look.cropCx);
+  if (!force && sig === _composerLastPreviewMode) return;
+  _composerLastPreviewMode = sig;
   var sel = g('comp-creative-landscape-layout');
   var wantSingle = look.mode !== 'split_screen';
   if (sel) {
     var next = wantSingle ? 'single' : 'split_screen';
     if (sel.value !== next) sel.value = next;
   }
-  try {
-    var stored = loadCompCreativePresetFromStorage();
-    stored.landscapeLayout = wantSingle ? 'single' : 'split_screen';
-    if (look.mode === 'split_screen') {
-      if (look.facecamRect) stored.facecamRect = look.facecamRect;
-      if (look.bottomPaneRect) stored.bottomPaneRect = look.bottomPaneRect;
-      if (look.topHeight != null) stored.topHeight = look.topHeight;
-      if (look.bottomPaneMode) stored.bottomPaneMode = look.bottomPaneMode;
-      if (look.facecamRect) writeFacecamSlidersToDom(look.facecamRect);
-      if (look.bottomPaneRect) writeBottomPaneSlidersToDom(look.bottomPaneRect);
-      if (look.topHeight != null) writeTopShareToDom(look.topHeight);
-    } else {
-      if (look.cropCx != null) stored.cropCx = look.cropCx;
-      if (look.cropCy != null) stored.cropCy = look.cropCy;
-      if (look.cropZoom != null) stored.cropZoom = look.cropZoom;
-      writeFullBleedCropToDom(
-        look.cropCx != null ? look.cropCx : 0.5,
-        look.cropCy != null ? look.cropCy : 0.5,
-        look.cropZoom != null ? look.cropZoom : 1
-      );
-    }
-    localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
-  } catch (e) { /* ignore */ }
+  if (look.mode === 'split_screen') {
+    if (look.facecamRect) writeFacecamSlidersToDom(look.facecamRect);
+    if (look.bottomPaneRect) writeBottomPaneSlidersToDom(look.bottomPaneRect);
+    if (look.topHeight != null) writeTopShareToDom(look.topHeight);
+    var modeEl = g('comp-creative-bottom-pane-mode');
+    if (modeEl && look.bottomPaneMode) modeEl.value = look.bottomPaneMode;
+  } else {
+    writeFullBleedCropToDom(
+      look.cropCx != null ? look.cropCx : 0.5,
+      look.cropCy != null ? look.cropCy : 0.5,
+      look.cropZoom != null ? look.cropZoom : 1
+    );
+  }
   refreshLandscapeSplitUI();
   // Paint source map without ensureComposerLiveEditPreview recursion
   var show = (composerLineupIsLandscape() || composerFullBleedSingleViewActive()) && (collectCompPickedClips().length > 0 || !!_composerVodSegment);
@@ -17260,11 +17289,65 @@ function getComposerScrubVideo() {
   return preview;
 }
 
+function getComposerLineupMaxSlots() {
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
+  if (delivery === 'short') return Math.max(1, collectCompPickedClips().length);
+  return getCompLineupSpec().lineupSlots;
+}
+
+function getComposerLineupSlots() {
+  return getCompLineupForDispatch(getComposerLineupMaxSlots());
+}
+
+function normalizeComposerActiveLineupIdx(lineup) {
+  var n = (lineup || []).length;
+  if (!n) { _composerActiveLineupIdx = 0; return 0; }
+  if (_composerActiveLineupIdx == null || _composerActiveLineupIdx < 0) _composerActiveLineupIdx = 0;
+  if (_composerActiveLineupIdx >= n) _composerActiveLineupIdx = n - 1;
+  return _composerActiveLineupIdx;
+}
+
+function composerActiveLineupSlot() {
+  if (_composerVodSegment) return null;
+  var lineup = getComposerLineupSlots();
+  var idx = normalizeComposerActiveLineupIdx(lineup);
+  return lineup[idx] || null;
+}
+
+function hydrateComposerUiForActiveClip() {
+  _composerLastPreviewMode = null;
+  var clip = composerLeadClipForEdit();
+  if (!clip) return;
+  ensureComposerTrimDefaults(clip);
+  var look = resolveComposerSavedLookAt(
+    clip.composerTrimStart != null ? Number(clip.composerTrimStart) : 0
+  );
+  if (look) syncComposerUiToSavedLook(look, true);
+  syncComposerEditSurfaces({ syncDropdown: false, validate: false });
+}
+
+function setComposerActiveLineupSlot(idx) {
+  _composerActiveLineupIdx = Math.max(0, parseInt(idx, 10) || 0);
+  _composerEditDone = false;
+  _composerEditReviewed = false;
+  clearComposerLookDraftDirty();
+  _composerLastPreviewMode = null;
+  renderCompLineupPanel();
+  renderComposerSpecRundown();
+  initComposerTimelineFromClip();
+  hydrateComposerUiForActiveClip();
+  var reviewBody = buildComposerSourceReviewBody();
+  if (reviewBody) fetchComposerSourceReviewNow(reviewBody);
+  else refreshGenerateComposer(false, true);
+  debouncedComposerValidate();
+  updateComposerEditStatus();
+  persistComposerSessionNow();
+}
+
 function composerLeadClipForEdit() {
   if (_composerVodSegment) return null;
-  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
-  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
-  return lineup[0] && lineup[0].clip ? lineup[0].clip : null;
+  var slot = composerActiveLineupSlot();
+  return slot && slot.clip ? slot.clip : null;
 }
 
 function layoutModeLabelForSpec(mode) {
@@ -17395,6 +17478,14 @@ function renderComposerSpecRundown(flashKind) {
     syncComposerClipSourceDuration(clip);
     var outputSec = composerAssemblyOutputSec(clip);
     var rawSpan = compClipDurationSec(clip);
+    var lineupCount = getComposerLineupSlots().length;
+    if (lineupCount > 1) {
+      var activeSlot = composerActiveLineupSlot();
+      html += '<div style="font-size:12px;color:rgba(199,175,79,0.9);margin-bottom:6px;">Editing clip '
+        + (normalizeComposerActiveLineupIdx(getComposerLineupSlots()) + 1) + '/' + lineupCount
+        + ': <strong>' + escapeHtml((activeSlot && activeSlot.clip && activeSlot.clip.title || '').slice(0, 72)) + '</strong>'
+        + ' — click another slot in COMP LINEUP to switch</div>';
+    }
     html += '<div class="composer-spec-rundown-meta">'
       + '<strong>' + outputSec + 's Short</strong> (timeline 0:00–' + fmtSecToClock(outputSec) + ')'
       + ' · uses source ' + fmtSecToClock(clip.composerTrimStart) + '–' + fmtSecToClock(clip.composerTrimEnd);
@@ -17503,8 +17594,8 @@ function renderComposerTimelineMarkers() {
     return;
   }
   var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
-  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
-  var slot = lineup[0];
+  var lineup = getComposerLineupSlots();
+  var slot = composerActiveLineupSlot();
   var c = slot && slot.clip;
   var html = '';
   // Short timeline: IN always at 0%, OUT always at 100% (that's the whole scrub range).
@@ -17532,7 +17623,8 @@ function buildComposerSourceReviewBody() {
   }
   var clips = body.clips || [];
   if (!clips.length) return null;
-  var c = clips[0];
+  var idx = normalizeComposerActiveLineupIdx(clips);
+  var c = clips[idx] || clips[0];
   var clipDur = Math.max(60, Math.round(Number(c.duration) || 60));
   var reviewClip = Object.assign({}, c, {
     trimStart: 0,
@@ -17707,8 +17799,8 @@ function markComposerSourceReviewTime(kind) {
     refreshGenerateComposer(false);
     return;
   }
-  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
-  var slot = lineup[0];
+  var lineup = getComposerLineupSlots();
+  var slot = composerActiveLineupSlot();
   if (!slot || !slot.clip) {
     alert('Mark In/Out saved at ' + fmtSecToClock(abs) + ' — pick a clip to apply trim.');
     return;
@@ -17731,6 +17823,21 @@ function markComposerSourceReviewTime(kind) {
 }
 
 var _composerValidateDebounce = null;
+var _composerValidateSeq = 0;
+
+function mergeComposerValidateIntoOrderPanel(d) {
+  if (d && d.preflight) {
+    if (!_composerLastPreflight) _composerLastPreflight = {};
+    _composerLastPreflight.assemblySteps = d.preflight.assemblySteps || _composerLastPreflight.assemblySteps;
+    _composerLastPreflight.estimatedOutputLabel = d.preflight.estimatedOutputLabel || _composerLastPreflight.estimatedOutputLabel;
+    _composerLastPreflight.estimatedOutputSec = d.preflight.estimatedOutputSec;
+    _composerLastPreflight.presetLabel = d.preflight.presetLabel || d.preflight.preset;
+    _composerLastPreflight.deliveryFormat = d.preflight.deliveryFormat;
+    _composerLastPreflight.clipCount = d.preflight.clipCount;
+  }
+  if (d && d.spec) _composerLastValidatedSpec = d.spec;
+  renderComposerOrderPanelFromLineup();
+}
 function debouncedComposerValidate() {
   if (_composerValidateDebounce) clearTimeout(_composerValidateDebounce);
   _composerValidateDebounce = setTimeout(function() {
@@ -17740,6 +17847,7 @@ function debouncedComposerValidate() {
 }
 
 function composerValidateOnly() {
+  var seq = ++_composerValidateSeq;
   var body = buildCompositionSpecFromUI();
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
     method: 'POST',
@@ -17748,6 +17856,7 @@ function composerValidateOnly() {
   })
     .then(function(r) { return r.json(); })
     .then(function(d) {
+      if (seq !== _composerValidateSeq) return;
       var valEl = g('composer-validation');
       if (!valEl) return;
       if (!d.ok && d.error) {
@@ -17767,7 +17876,7 @@ function composerValidateOnly() {
       }
       valEl.textContent = parts.join('\n') || 'Validating…';
       _composerValidationOk = !!v.ok;
-      renderComposerOrderPanel(d.preflight, d.spec);
+      mergeComposerValidateIntoOrderPanel(d);
       syncComposerExecuteGate();
     })
     .catch(function(e) {
@@ -17806,9 +17915,7 @@ function splitLayoutSnapshotFromDom() {
 }
 
 function ensureComposerOpeningLayoutOnClip() {
-  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
-  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
-  var slot = lineup[0];
+  var slot = composerActiveLineupSlot();
   if (!slot || !slot.clip || slot.clip.openingLayout) return;
   slot.clip.openingLayout = currentComposerLayoutSnapshotForMark();
   renderComposerLayoutSegments();
@@ -17816,9 +17923,7 @@ function ensureComposerOpeningLayoutOnClip() {
 }
 
 function ensureComposerOpeningLayoutForced(snap) {
-  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
-  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
-  var slot = lineup[0];
+  var slot = composerActiveLineupSlot();
   if (!slot || !slot.clip) return;
   if (!slot.clip.openingLayout) {
     // Prefer frozen baseline (look before this draft), not the draft itself.
@@ -17831,9 +17936,7 @@ function ensureComposerOpeningLayoutForced(snap) {
 
 /** Lock current on-screen look as opening before a mode switch (split ↔ full). */
 function lockComposerOpeningBeforeModeSwitch() {
-  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
-  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
-  var slot = lineup[0];
+  var slot = composerActiveLineupSlot();
   if (!slot || !slot.clip || slot.clip.openingLayout) return;
   var prior = _composerLookBaseline || resolveComposerSavedLookAt(
     slot.clip.composerTrimStart != null ? slot.clip.composerTrimStart : 0
@@ -17901,8 +18004,8 @@ function saveComposerLookHere() {
   pauseComposerForMark();
   var abs = getComposerAbsolutePlayheadSec();
   var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
-  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
-  var slot = lineup[0];
+  var lineup = getComposerLineupSlots();
+  var slot = composerActiveLineupSlot();
   if (!slot || !slot.clip) {
     alert('Pick a clip first.');
     return;
@@ -17916,24 +18019,6 @@ function saveComposerLookHere() {
   }
   var snap = currentComposerLayoutSnapshotForMark();
   var atSec = Math.floor(abs);
-  function persistLookSnapToCreativeStorage(look) {
-    try {
-      var stored = loadCompCreativePresetFromStorage();
-      if (look.mode === 'split_screen') {
-        stored.landscapeLayout = 'split_screen';
-        if (look.facecamRect) stored.facecamRect = look.facecamRect;
-        if (look.bottomPaneRect) stored.bottomPaneRect = look.bottomPaneRect;
-        if (look.topHeight != null) stored.topHeight = look.topHeight;
-        if (look.bottomPaneMode) stored.bottomPaneMode = look.bottomPaneMode;
-      } else {
-        stored.landscapeLayout = 'single';
-        if (look.cropCx != null) stored.cropCx = look.cropCx;
-        if (look.cropCy != null) stored.cropCy = look.cropCy;
-        if (look.cropZoom != null) stored.cropZoom = look.cropZoom;
-      }
-      localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
-    } catch (e) { /* ignore */ }
-  }
   // At/near trim-in: OPEN only — never also insert a LAYOUT switch at the same second.
   if (atSec <= trimStart + 0.5) {
     slot.clip.openingLayout = Object.assign({}, snap);
@@ -17943,7 +18028,6 @@ function saveComposerLookHere() {
       });
       if (!slot.clip.layoutSegments.length) delete slot.clip.layoutSegments;
     }
-    persistLookSnapToCreativeStorage(snap);
     clearComposerLookDraftDirty();
     _composerEditDone = false;
     _composerEditReviewed = false;
@@ -17976,7 +18060,6 @@ function saveComposerLookHere() {
     bottomPaneMode: snap.bottomPaneMode,
   });
   slot.clip.layoutSegments.sort(function(a, b) { return a.atSec - b.atSec; });
-  persistLookSnapToCreativeStorage(snap);
   clearComposerLookDraftDirty();
   _composerEditDone = false;
   _composerEditReviewed = false;
@@ -18071,9 +18154,7 @@ function resetComposerReviewEditButton() {
 }
 
 function clearComposerLayoutSegments() {
-  var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
-  var lineup = getCompLineupForDispatch(delivery === 'short' ? 1 : getCompLineupSpec().lineupSlots);
-  var slot = lineup[0];
+  var slot = composerActiveLineupSlot();
   if (!slot || !slot.clip) return;
   delete slot.clip.layoutSegments;
   delete slot.clip.openingLayout;
@@ -18219,6 +18300,72 @@ function syncComposerExecuteGate() {
   }
 }
 
+function layoutPlanLabelForClip(c) {
+  if (!c) return 'preset default';
+  var trimStart = c.composerTrimStart != null ? Number(c.composerTrimStart) : (c.trimStart != null ? Number(c.trimStart) : 0);
+  var trimEnd = c.composerTrimEnd != null ? Number(c.composerTrimEnd) : (c.trimEnd != null ? Number(c.trimEnd) : trimStart + 60);
+  var open = c.openingLayout || {};
+  var mode = open.mode || '';
+  if (mode === 'split_screen') {
+    return fmtSecToClock(trimStart) + '–' + fmtSecToClock(trimEnd) + ' split';
+  }
+  if (mode === 'full_bleed_crop') {
+    return fmtSecToClock(trimStart) + '–' + fmtSecToClock(trimEnd) + ' full bleed';
+  }
+  if (mode === 'blur_pad') {
+    return fmtSecToClock(trimStart) + '–' + fmtSecToClock(trimEnd) + ' blur-pad';
+  }
+  if (c.layoutSegments && c.layoutSegments.length) {
+    return fmtSecToClock(trimStart) + '–' + fmtSecToClock(trimEnd) + ' timed looks';
+  }
+  return 'preset default';
+}
+
+/** Instant ORDER SUMMARY — clip rows mirror _compLineup stitch order (↑ ↓ only). */
+function renderComposerOrderPanelFromLineup() {
+  var delivery = (g('composer-delivery') && g('composer-delivery').value) || _composerDeliveryFormat || inferComposerDeliveryFromPreset();
+  var spec = getCompLineupSpec();
+  var pickedCount = collectCompPickedClips().length;
+  var maxCount = delivery === 'short'
+    ? Math.max(1, pickedCount)
+    : (delivery === 'vod_comp' ? spec.maxClips : spec.lineupSlots);
+  pruneCompLineupToPicked(collectCompPickedClips());
+  var lineup = (_compLineup || []).slice(0, maxCount);
+  if (!lineup.length) return;
+  var stored = loadCompCreativePresetFromStorage();
+  var body = buildCompositionSpecFromUI();
+  var totalSec = 0;
+  var clipRows = lineup.map(function(slot, i) {
+    var c = slot.clip || {};
+    ensureComposerTrimDefaults(c);
+    syncComposerClipSourceDuration(c);
+    var trimStart = c.composerTrimStart != null ? Number(c.composerTrimStart) : 0;
+    var trimEnd = c.composerTrimEnd != null ? Number(c.composerTrimEnd) : trimStart + 60;
+    var footageSec = Math.max(0, Math.round(trimEnd - trimStart));
+    totalSec += footageSec;
+    return {
+      slot: i + 1,
+      streamer: slot.displayName || c.displayName || c.streamer || '?',
+      title: (c.title || '').slice(0, 80),
+      footageLabel: footageSec >= 60 ? (Math.floor(footageSec / 60) + 'm' + (footageSec % 60 ? ' ' + (footageSec % 60) + 's' : '')) : (footageSec + 's'),
+      trimLabel: fmtSecToClock(trimStart) + '–' + fmtSecToClock(trimEnd) + ' on source',
+      layoutPlanLabel: layoutPlanLabelForClip(c)
+    };
+  });
+  var preflight = {
+    presetLabel: (_composerLastPreflight && _composerLastPreflight.presetLabel) || stored.preset || (body && body.compCreativePreset) || 'classic_blur_pad',
+    deliveryFormat: delivery,
+    clipCount: clipRows.length,
+    estimatedOutputLabel: (_composerLastPreflight && _composerLastPreflight.estimatedOutputLabel)
+      || (totalSec >= 60
+        ? (Math.floor(totalSec / 60) + 'm' + (totalSec % 60 ? ' ' + (totalSec % 60) + 's' : ''))
+        : (totalSec + 's')),
+    clips: clipRows,
+    assemblySteps: (_composerLastPreflight && _composerLastPreflight.assemblySteps) || []
+  };
+  renderComposerOrderPanel(preflight, { clips: (body && body.clips) || [], deliveryFormat: delivery });
+}
+
 function renderComposerOrderPanel(preflight, spec) {
   var el = g('composer-order-panel');
   if (!el) return;
@@ -18229,7 +18376,7 @@ function renderComposerOrderPanel(preflight, spec) {
   }
   _composerLastPreflight = preflight;
   _composerLastValidatedSpec = spec;
-  var html = '<div class="order-head">ORDER SUMMARY · assembly will run exactly this</div>';
+  var html = '<div class="order-head">ORDER SUMMARY · matches COMP LINEUP stitch order (↑ ↓)</div>';
   html += '<div style="margin-bottom:6px;color:rgba(255,255,255,0.85);">'
     + escapeHtml(preflight.presetLabel || preflight.preset || '')
     + ' · ' + escapeHtml(String(preflight.deliveryFormat || '').toUpperCase())
@@ -18292,7 +18439,7 @@ function formatComposerPreviewCaption(d, errMsg) {
   if (d.previewVideoUrl) {
     var dur = d.previewDurationSec || 6;
     if (d.fullTrimWindow) parts.push('full trim ' + Math.round(dur) + 's · matches EXECUTE');
-    else parts.push('~' + Math.round(dur) + 's · lead clip only for multi-clip comps');
+    else parts.push('~' + Math.round(dur) + 's · active lineup clip only (click COMP LINEUP to switch)');
   }
   return parts.join(' · ');
 }
@@ -18547,7 +18694,7 @@ function buildCompositionSpecFromUI() {
   var spec = getCompLineupSpec();
   var maxCount = delivery === 'short' ? 1 : (delivery === 'vod_comp' ? spec.maxClips : spec.lineupSlots);
   var lineup = getCompLineupForDispatch(maxCount);
-  var creativePayload = buildCompCreativeRequestPayload((lineup[0] && lineup[0].displayName) || '');
+  var creativePayload = buildCompCreativeRequestPayload((composerActiveLineupSlot() && composerActiveLineupSlot().displayName) || (lineup[0] && lineup[0].displayName) || '');
   var clips = lineup.map(function(slot, idx) {
     var c = slot.clip || {};
     ensureComposerTrimDefaults(c);
@@ -18578,14 +18725,15 @@ function buildCompositionSpecFromUI() {
     };
   });
   if (delivery === 'short') {
-    clips = collectCompPickedClips().map(function(p, idx) {
-      var c = p.clip || {};
+    var shortLineup = getCompLineupForDispatch(Math.max(1, collectCompPickedClips().length));
+    clips = shortLineup.map(function(slot, idx) {
+      var c = slot.clip || {};
       ensureComposerTrimDefaults(c);
       syncComposerClipSourceDuration(c);
       var sourceDur = composerClipSourceDuration(c);
       return {
         url: c.url, pageUrl: c.pageUrl || c.url, mp4Url: c.stagedUrl || c.r2Url || c.mp4Url || '',
-        stagedUrl: c.stagedUrl || c.r2Url || '', title: c.title || '', streamer: p.name, displayName: p.displayName,
+        stagedUrl: c.stagedUrl || c.r2Url || '', title: c.title || '', streamer: slot.name, displayName: slot.displayName,
         duration: sourceDur, durationHint: sourceDur,
         trimStart: c.composerTrimStart, trimEnd: c.composerTrimEnd,
         layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],
@@ -18833,6 +18981,7 @@ function refreshGenerateComposer(callValidate, immediatePreview) {
   }
   persistComposerSession();
   if (callValidate !== false) {
+    var validateSeq = ++_composerValidateSeq;
     fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -18840,6 +18989,7 @@ function refreshGenerateComposer(callValidate, immediatePreview) {
     })
       .then(function(r) { return r.json(); })
       .then(function(d) {
+        if (validateSeq !== _composerValidateSeq) return;
         var valEl = g('composer-validation');
         if (!valEl) return;
         if (!d.ok && d.error) {
@@ -18859,7 +19009,7 @@ function refreshGenerateComposer(callValidate, immediatePreview) {
         }
         valEl.textContent = parts.join('\n') || 'Validating…';
         _composerValidationOk = !!v.ok;
-        renderComposerOrderPanel(d.preflight, d.spec);
+        mergeComposerValidateIntoOrderPanel(d);
         syncComposerExecuteGate();
       })
       .catch(function(e) {
@@ -19261,10 +19411,60 @@ var _nbaPickerGames = [];   // [{gameId, away, home, awayAbbr, homeAbbr, awaySco
 var _newsPickerStories = []; // [{title, link, videoUrl, hlsUrl, thumbnailUrl, orientation, pillarboxFilter, pubDate, selected}]
 var _twitchPickerStreamers = []; // [{name, displayName, selected, clips:[{title,url,views,game,thumbnailUrl,mp4Url,isBackup}], dropReason}]
 var _compLineup = []; // comp order: [{ si, ci, name, displayName, clip }]
+var _composerActiveLineupIdx = 0; // which COMP LINEUP slot is being trimmed/laid out in Compose
 var _composerContentSource = 'twitch'; // twitch | reddit | wire — drives collectCompPickedClips + contentType
 
+function compClipIdentity(clip) {
+  if (!clip) return '';
+  var fields = [clip.url, clip.pageUrl, clip.mp4Url, clip.stagedUrl, clip.r2Url, clip.playbackUrl];
+  for (var i = 0; i < fields.length; i++) {
+    var u = String(fields[i] || '').trim();
+    if (!u) continue;
+    var twitch = u.match(/clips\.twitch\.tv\/([A-Za-z0-9_-]+)/i) || u.match(/\/clip\/([A-Za-z0-9_-]+)/i);
+    if (twitch) return 'twitch:' + twitch[1].toLowerCase();
+  }
+  for (var j = 0; j < fields.length; j++) {
+    var raw = String(fields[j] || '').trim().split('?')[0].split('#')[0];
+    if (raw) return 'url:' + raw;
+  }
+  return '';
+}
+
 function compLineupKey(p) {
-  return String(p.si) + ':' + String(p.ci);
+  var id = compClipIdentity(p && p.clip);
+  if (id) return id;
+  return 'si:' + String(p.si) + ':' + String(p.ci);
+}
+
+/** Keep user stitch order; drop deselected; append new picks at end. */
+function pruneCompLineupToPicked(picked) {
+  picked = picked || collectCompPickedClips();
+  if (!picked.length) {
+    _compLineup = [];
+    return;
+  }
+  var map = {};
+  picked.forEach(function(p) { map[compLineupKey(p)] = p; });
+  var kept = [];
+  (_compLineup || []).forEach(function(slot) {
+    var k = compLineupKey(slot);
+    if (map[k]) {
+      kept.push(map[k]);
+      delete map[k];
+    }
+  });
+  picked.forEach(function(p) {
+    var k = compLineupKey(p);
+    if (map[k]) {
+      kept.push(map[k]);
+      delete map[k];
+    }
+  });
+  _compLineup = kept;
+}
+
+function reconcileCompLineup(picked) {
+  pruneCompLineupToPicked(picked);
 }
 
 function collectCompPickedClips() {
@@ -19344,22 +19544,8 @@ function collectCompPickedClips() {
   return picked;
 }
 
-function reconcileCompLineup(picked) {
-  var map = {};
-  picked.forEach(function(p) { map[compLineupKey(p)] = p; });
-  var kept = [];
-  (_compLineup || []).forEach(function(slot) {
-    var k = compLineupKey(slot);
-    if (map[k]) {
-      kept.push(map[k]);
-      delete map[k];
-    }
-  });
-  Object.keys(map).forEach(function(k) { kept.push(map[k]); });
-  _compLineup = kept;
-}
-
-function renderCompLineupPanel() {
+function renderCompLineupPanel(opts) {
+  opts = opts || {};
   var el = g('twitch-comp-lineup');
   if (!el) return;
   var picked = collectCompPickedClips();
@@ -19369,7 +19555,7 @@ function renderCompLineupPanel() {
     _compLineup = [];
     return;
   }
-  reconcileCompLineup(picked);
+  if (!opts.skipPrune) pruneCompLineupToPicked(picked);
   var spec = getCompLineupSpec();
   var stored = loadCompCreativePresetFromStorage();
   var COMP_CLIP_COUNT = spec.lineupSlots;
@@ -19383,7 +19569,7 @@ function renderCompLineupPanel() {
   });
   var head = stored.preset === 'serpent_ranked_vod'
     ? 'RANKED VOD LINEUP (Top ' + COMP_CLIP_COUNT + ') — countdown + editorial'
-    : 'COMP LINEUP (1–' + COMP_CLIP_COUNT + ') — Comp uses this order for hooks + title';
+    : 'COMP LINEUP (1–' + COMP_CLIP_COUNT + ') — stitch order · ↑ ↓ to reorder · click a clip to edit trim/layout';
   if (stored.preset === 'serpent_ranked_vod' && spec.minDurationSec) {
     head += ' · target 8+ min clip footage';
   }
@@ -19403,6 +19589,7 @@ function renderCompLineupPanel() {
   var html = '<div class="gen-comp-lineup-head"><span>' + head + '</span>'
     + (totalLabel ? '<span class="gen-comp-lineup-total" title="Sum of clip lengths in lineup (hooks/cards add more)">TOTAL ' + totalLabel + '</span>' : '')
     + '</div><div class="gen-comp-lineup-grid">';
+  var activeIdx = normalizeComposerActiveLineupIdx(show);
   show.forEach(function(slot, idx) {
     var c = slot.clip || {};
     var clipDur = compClipDurationSec(c);
@@ -19410,8 +19597,9 @@ function renderCompLineupPanel() {
     var thumb = c.thumbnailUrl
       ? c.thumbnailUrl.replace('{width}', '96').replace('{height}', '54')
       : '';
-    html += '<div class="gen-comp-slot">'
-      + '<span class="gen-comp-slot-num">' + (idx + 1) + '</span>';
+    var isActive = idx === activeIdx;
+    html += '<div class="gen-comp-slot' + (isActive ? ' is-active' : '') + '" role="button" tabindex="0" onclick="setComposerActiveLineupSlot(' + idx + ')" title="Edit trim & layout for clip ' + (idx + 1) + '">'
+      + '<span class="gen-comp-slot-num">' + (idx + 1) + (isActive ? ' ✎' : '') + '</span>';
     if (thumb) {
       html += '<img src="' + thumb + '" class="gen-comp-slot-thumb" onerror="this.style.display=\'none\'">';
     } else {
@@ -19424,14 +19612,14 @@ function renderCompLineupPanel() {
       + '<div class="gen-comp-slot-title">' + escapeHtml((c.title || '').slice(0, 72)) + '</div>'
       + '</div>'
       + '<div class="gen-comp-slot-actions">'
-      + (idx > 0 ? '<button type="button" class="btn btn-outline btn-sm" onclick="moveCompLineupSlot(' + idx + ',-1)" title="Move up">↑</button>' : '')
-      + (idx < show.length - 1 ? '<button type="button" class="btn btn-outline btn-sm" onclick="moveCompLineupSlot(' + idx + ',1)" title="Move down">↓</button>' : '')
-      + (idx > 0 ? '<button type="button" class="btn btn-outline btn-sm" onclick="setCompLineupLead(' + idx + ')" title="Lead comp with this clip" style="color:#9146ff;border-color:rgba(145,70,255,0.45);">Lead</button>' : '')
+      + (idx > 0 ? '<button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();moveCompLineupSlot(' + idx + ',-1)" title="Stitch earlier">↑</button>' : '')
+      + (idx < show.length - 1 ? '<button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();moveCompLineupSlot(' + idx + ',1)" title="Stitch later">↓</button>' : '')
       + '</div></div>';
   });
   html += '</div>';
   el.innerHTML = html;
   el.style.display = '';
+  renderComposerOrderPanelFromLineup();
 }
 
 function refreshCompLineupUI() {
@@ -19446,19 +19634,16 @@ function moveCompLineupSlot(idx, delta) {
   var tmp = _compLineup[idx];
   _compLineup[idx] = _compLineup[j];
   _compLineup[j] = tmp;
-  renderCompLineupPanel();
-}
-
-function setCompLineupLead(idx) {
-  if (idx <= 0 || idx >= _compLineup.length) return;
-  var item = _compLineup.splice(idx, 1)[0];
-  _compLineup.unshift(item);
-  renderCompLineupPanel();
+  if (_composerActiveLineupIdx === idx) _composerActiveLineupIdx = j;
+  else if (_composerActiveLineupIdx === j) _composerActiveLineupIdx = idx;
+  persistComposerSessionNow();
+  renderCompLineupPanel({ skipPrune: true });
+  renderComposerOrderPanelFromLineup();
+  composerValidateOnly();
 }
 
 function getCompLineupForDispatch(maxCount) {
-  var picked = collectCompPickedClips();
-  reconcileCompLineup(picked);
+  pruneCompLineupToPicked(collectCompPickedClips());
   return (_compLineup || []).slice(0, maxCount);
 }
 
@@ -21512,6 +21697,38 @@ function presetLayoutModeForCompose(preset) {
   return 'blur_pad';
 }
 
+/** Preset baseline for a clip with no saved openingLayout — never reuse another clip's saved rects. */
+function composerPresetDefaultLook(stored) {
+  stored = stored || loadCompCreativePresetFromStorage();
+  var splitOn = composerLandscapeSplitEnabled(stored);
+  var mode = splitOn
+    ? 'split_screen'
+    : (composerFullBleedSingleViewActive(stored) ? 'full_bleed_crop' : presetLayoutModeForCompose(stored.preset || 'classic_blur_pad'));
+  var look = {
+    mode: mode,
+    cropCx: 0.5,
+    cropCy: 0.5,
+    cropZoom: 1,
+    facecamRect: null,
+    bottomPaneRect: null,
+    contentCx: undefined,
+    topHeight: SPLIT_TOP_HEIGHT_DEFAULT,
+    bottomPaneMode: null,
+  };
+  if (mode === 'split_screen') {
+    var subject = stored.topPaneSubject || 'stacked_figures';
+    var layoutPreset = COMP_CREATIVE_LAYOUT_PRESETS[subject] || COMP_CREATIVE_LAYOUT_PRESETS.stacked_figures;
+    if (layoutPreset) {
+      if (layoutPreset.top) look.facecamRect = Object.assign({}, layoutPreset.top);
+      if (layoutPreset.bottom) look.bottomPaneRect = Object.assign({}, layoutPreset.bottom);
+      look.bottomPaneMode = layoutPreset.bottomPaneMode || 'custom_crop';
+      if (layoutPreset.contentCx != null) look.contentCx = layoutPreset.contentCx / 100;
+    }
+    if (Number.isFinite(Number(stored.contentCx))) look.contentCx = Number(stored.contentCx) / 100;
+  }
+  return look;
+}
+
 function onSourceCleanupChange() {
   saveCompCreativePresetToStorage();
   refreshCompCreativeChips();
@@ -23146,6 +23363,7 @@ function _toggleTwitchClip(si, ci) {
     }
   }
   entry.selected = entry.clips.some(function(c){ return c.selected; });
+  pruneCompLineupToPicked(collectCompPickedClips());
   renderTwitchPicker(g('btn-preview-twitch'), clipsPerStreamer);
   if (swapMsg) {
     var statusEl = g('twitch-fetch-status');
