@@ -18,6 +18,18 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Trim oversized pm2 logs (keeps last 50k lines) — prevents grep/I/O stalls
+PM2_LOG_MAX_BYTES="${PM2_LOG_MAX_BYTES:-104857600}"
+for log in "${HOME}/.pm2/logs/auraflux-out.log" "${HOME}/.pm2/logs/auraflux-error.log"; do
+  if [ -f "$log" ]; then
+    sz=$(stat -f%z "$log" 2>/dev/null || stat -c%s "$log" 2>/dev/null || echo 0)
+    if [ "$sz" -gt "$PM2_LOG_MAX_BYTES" ]; then
+      echo "🧹 Trimming $(basename "$log") (${sz} bytes → last 50000 lines)…"
+      tail -n 50000 "$log" > "${log}.trim" && mv "${log}.trim" "$log"
+    fi
+  fi
+done
+
 SIDECAR_PORT="${LIVE_SIDECAR_PORT:-3001}"
 SIDECAR_URL="${LIVE_SIDECAR_URL:-http://127.0.0.1:${SIDECAR_PORT}}"
 
