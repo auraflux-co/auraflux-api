@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — Slack /call slash command → Telnyx outbound dial deploying to auraflux-api.
 
-**Last Updated:** 2026-07-13 — Click-to-call: /call rings operator phone then bridges; inbound PSTN → operator.
+**Last Updated:** 2026-07-13 — Slash command renamed to /dial (/call reserved in Slack).
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
