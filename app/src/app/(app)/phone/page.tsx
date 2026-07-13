@@ -207,14 +207,18 @@ function PhonePageInner() {
         if (!call) return;
         if (notification.type === 'callUpdate') {
           setCallState(call.state || '');
-          if (call.state === 'ringing' && call.direction === 'inbound') {
+          const direction = String(call.direction || '').toLowerCase();
+          const isInbound = direction === 'inbound' || direction === 'incoming';
+          // Inbound invite from Call Control → SIP
+          if (isInbound && (call.state === 'ringing' || call.state === 'new' || call.state === 'requesting')) {
             setIncomingCall(call);
+            setLastError('');
           }
-          if (call.state === 'active' || call.state === 'trying' || call.state === 'new' || call.state === 'ringing') {
-            if (call.direction !== 'inbound' || call.state === 'active') {
-              setActiveCall(call);
-            }
-            if (call.state === 'active') setIncomingCall(null);
+          if (call.state === 'active') {
+            setActiveCall(call);
+            setIncomingCall(null);
+          } else if (!isInbound && (call.state === 'trying' || call.state === 'new' || call.state === 'ringing')) {
+            setActiveCall(call);
           }
           if (call.state === 'hangup' || call.state === 'destroy') {
             const reason = callEndReason(call);
