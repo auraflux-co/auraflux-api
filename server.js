@@ -1681,9 +1681,8 @@ app.use(require('express').json({
 }));
 app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
 
-// Slack Events API URL verification must respond within ~3s — handle immediately
-// after body parsing, before Clerk and the rest of the route stack (cold-start safe).
-app.post('/support/slack-events', (req, res, next) => {
+// Slack Events API — challenge + thread replies → outbound SMS (before Clerk stack).
+app.post('/support/slack-events', async (req, res) => {
   let challenge = null;
   if (req.body?.type === 'url_verification' && req.body.challenge) {
     challenge = req.body.challenge;
@@ -1698,7 +1697,28 @@ app.post('/support/slack-events', (req, res, next) => {
   if (challenge) {
     return res.status(200).type('application/json').send(JSON.stringify({ challenge }));
   }
-  next();
+
+  const { verifySlackRequest } = require('./lib/services/slack_bot');
+  const { handleSlackMessageEvent } = require('./lib/services/slack_sms_reply');
+  const { logError } = require('./lib/error_logger');
+
+  if (process.env.NODE_ENV === 'production' && !verifySlackRequest(req)) {
+    return res.status(403).send('Forbidden');
+  }
+
+  const event = req.body?.event;
+  if (event) {
+    try {
+      const result = await handleSlackMessageEvent(event);
+      if (!result?.handled) {
+        console.log('[slack-events] skipped', result);
+      }
+    } catch (err) {
+      logError('SLACK_EVENTS_HANDLER_FAIL', err);
+    }
+  }
+
+  return res.sendStatus(200);
 });
 
 

@@ -57,6 +57,11 @@ test('verifySlackRequest rejects tampered body', () => {
   }
 });
 
+test('extractEventText reads plain message text', () => {
+  const { extractEventText } = require('../lib/services/slack_sms_reply');
+  assert.equal(extractEventText({ text: 'hello there' }), 'hello there');
+});
+
 test('verifySlackRequest rejects stale timestamps', () => {
   const secret = 'test-signing-secret';
   const timestamp = String(Math.floor(Date.now() / 1000) - 3600);
