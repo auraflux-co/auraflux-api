@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — CPD-1231 Telnyx SMS webhook fix deploying to auraflux-api.
+**Deploy Mode:** dev — Telnyx → Slack relay (SMS + voice) deploying to auraflux-api.
 
-**Last Updated:** 2026-07-11 (CPD-1231) — Fix inbound SMS 403: preserve raw body for Telnyx webhook verification; SMS Inbox receives new codes again.
+**Last Updated:** 2026-07-13 — Fix Slack 400 (invalid link button style); brand SMS + support SMS + voice events → Slack webhook; SLACK_TELNYX_NUMBERS filter for 2-line setups.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
