@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — Two-way Telnyx SMS ↔ Slack (thread replies) deploying to auraflux-api.
 
-**Last Updated:** 2026-07-13 — Slack reply fallback for channel-level messages; await SMS send before ack.
+**Last Updated:** 2026-07-13 — Telnyx SDK v6 uses messages.send (not .create) for outbound SMS replies.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
