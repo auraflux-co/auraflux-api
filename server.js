@@ -1681,6 +1681,25 @@ app.use(require('express').json({
 }));
 app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
 
+// Slack Events API URL verification must respond within ~3s — handle immediately
+// after body parsing, before Clerk and the rest of the route stack (cold-start safe).
+app.post('/support/slack-events', (req, res, next) => {
+  let challenge = null;
+  if (req.body?.type === 'url_verification' && req.body.challenge) {
+    challenge = req.body.challenge;
+  } else if (req.rawBody) {
+    try {
+      const parsed = JSON.parse(
+        Buffer.isBuffer(req.rawBody) ? req.rawBody.toString('utf8') : String(req.rawBody),
+      );
+      if (parsed?.type === 'url_verification' && parsed.challenge) challenge = parsed.challenge;
+    } catch { /* fall through */ }
+  }
+  if (challenge) {
+    return res.status(200).type('application/json').send(JSON.stringify({ challenge }));
+  }
+  next();
+});
 
 
 const PORT = process.env.PORT || 3000;

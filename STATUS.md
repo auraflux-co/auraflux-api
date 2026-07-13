@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — Two-way Telnyx SMS ↔ Slack (thread replies) deploying to auraflux-api.
 
-**Last Updated:** 2026-07-13 — Slack bot + Events API for reply-in-thread SMS; migration 032 slack_sms_threads; POST /support/slack-events.
+**Last Updated:** 2026-07-13 — Early Slack url_verification handler (cold-start safe) for /support/slack-events.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
