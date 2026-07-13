@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev — Slack /call slash command → Telnyx outbound dial deploying to auraflux-api.
 
-**Last Updated:** 2026-07-13 — Default slash command is /calling (Slack reserved /call).
+**Last Updated:** 2026-07-13 — Cross-line routing CA↔US; no cell required for /calling dial-out.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
