@@ -191,7 +191,8 @@ function PhonePageInner() {
   }, [lines]);
 
   const connectPhone = useCallback(async () => {
-    if (clientRef.current) return;
+    if (connectLockRef.current || clientRef.current) return;
+    connectLockRef.current = true;
     setStatus('connecting');
     setStatusDetail('Fetching token…');
 
@@ -211,6 +212,7 @@ function PhonePageInner() {
       client.localElement = 'telnyx-local-audio';
 
       client.on('telnyx.ready', () => {
+        writePreferOnline(true);
         setStatus('ready');
         setStatusDetail('Connected — you will receive inbound calls');
         sendPresence(true);
@@ -218,6 +220,7 @@ function PhonePageInner() {
 
       client.on('telnyx.error', (err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
+        connectLockRef.current = false;
         setStatus('error');
         setStatusDetail(msg);
       });
@@ -260,6 +263,7 @@ function PhonePageInner() {
       clientRef.current = client;
       client.connect();
     } catch (err) {
+      connectLockRef.current = false;
       setStatus('error');
       setStatusDetail(err instanceof Error ? err.message : 'Connect failed');
     }
@@ -267,6 +271,7 @@ function PhonePageInner() {
 
   const disconnectPhone = useCallback(() => {
     writePreferOnline(false);
+    connectLockRef.current = false;
     const client = clientRef.current;
     if (client) {
       client.disconnect();
