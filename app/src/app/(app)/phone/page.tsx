@@ -137,7 +137,7 @@ function PhonePageInner() {
     }).catch(() => {});
   }, [authFetch]);
 
-  const placeCall = useCallback((destination: string, lineKey: string) => {
+  const placeCall = useCallback(async (destination: string, lineKey: string) => {
     const client = clientRef.current;
     const line = lines.find((l) => l.key === lineKey) || lines[0];
     if (!client || !line) return;
@@ -149,6 +149,8 @@ function PhonePageInner() {
     setLastError('');
     setCallState('dialing');
     try {
+      // Ensure mic before INVITE — getUserMedia failure often drops the call instantly
+      await navigator.mediaDevices.getUserMedia({ audio: true });
       const call = client.newCall({
         destinationNumber: to,
         callerNumber: line.number,
@@ -158,7 +160,10 @@ function PhonePageInner() {
       setActiveCall(call);
       setIncomingCall(null);
     } catch (err) {
-      setLastError(err instanceof Error ? err.message : 'Dial failed');
+      const msg = err instanceof Error ? err.message : 'Dial failed';
+      setLastError(msg.includes('Permission') || msg.includes('NotAllowed')
+        ? 'Microphone permission denied — allow mic for this site and try again'
+        : msg);
       setCallState('');
       setActiveCall(null);
     }
@@ -280,14 +285,17 @@ function PhonePageInner() {
 
   useEffect(() => {
     const onUnload = () => {
-      if (clientRef.current) clientRef.current.disconnect();
+      try { clientRef.current?.disconnect(); } catch { /* ignore */ }
     };
     window.addEventListener('beforeunload', onUnload);
+    // Only disconnect on true page unmount — NOT when callback identities change.
+    // Re-running this effect mid-call was hanging up after a few seconds.
     return () => {
       window.removeEventListener('beforeunload', onUnload);
-      disconnectPhone();
+      onUnload();
+      clientRef.current = null;
     };
-  }, [disconnectPhone]);
+  }, []);
 
   if (!isLoaded || !isSuperAdmin) return null;
 
@@ -297,7 +305,7 @@ function PhonePageInner() {
     <PageShell>
       <PageHeader
         title="Phone"
-        subtitle="WebRTC desk phone — inbound rings here when you are online. Use 437 or 571 caller ID for outbound."
+        subtitle="Go online, pick 437 or 571, dial. No Slack /calling needed — that command is optional."
       />
 
       <div className="grid gap-6 lg:grid-cols-2">

@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — WebRTC outbound fix: new credential connection with outbound voice profile.
+**Deploy Mode:** dev — phone UI hangup fix (React teardown) + WebRTC outbound connection.
 
-**Last Updated:** 2026-07-13 — Fix phone Call hangup: WebRTC was on Forward Only (no outbound profile).
+**Last Updated:** 2026-07-13 — Phone Call hung up because effect re-ran and disconnected WebRTC mid-call; /calling optional when using UI.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
