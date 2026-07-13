@@ -1679,7 +1679,11 @@ app.use(require('express').json({
   // CPD-1231: preserve raw body for Telnyx/Stripe webhook signature verification
   verify: (req, _res, buf) => { req.rawBody = buf; },
 }));
-app.use(require('express').urlencoded({ extended: true, limit: '50mb' }));
+app.use(require('express').urlencoded({
+  extended: true,
+  limit: '50mb',
+  verify: (req, _res, buf) => { req.rawBody = buf; },
+}));
 
 // Slack Events API — challenge + thread replies → outbound SMS (before Clerk stack).
 app.post('/support/slack-events', async (req, res) => {
@@ -1719,6 +1723,30 @@ app.post('/support/slack-events', async (req, res) => {
   }
 
   return res.sendStatus(200);
+});
+
+// Slack slash command /call [number] → Telnyx outbound dial.
+// Slack App → Slash Commands → Request URL:
+//   https://auraflux-api.onrender.com/support/slack-call
+app.post('/support/slack-call', async (req, res) => {
+  const { verifySlackRequest } = require('./lib/services/slack_bot');
+  const { handleSlackCallCommand } = require('./lib/services/slack_slash_call');
+
+  if (process.env.NODE_ENV === 'production' && !verifySlackRequest(req)) {
+    return res.status(403).send('Forbidden');
+  }
+
+  try {
+    const payload = await handleSlackCallCommand(req.body || {});
+    return res.status(200).json(payload);
+  } catch (err) {
+    const { logError } = require('./lib/error_logger');
+    logError('SLACK_CALL_COMMAND_FAIL', err);
+    return res.status(200).json({
+      response_type: 'ephemeral',
+      text: `❌ Call failed: ${err.message}`,
+    });
+  }
 });
 
 

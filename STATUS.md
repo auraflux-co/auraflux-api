@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — Two-way Telnyx SMS ↔ Slack (thread replies) deploying to auraflux-api.
+**Deploy Mode:** dev — Slack /call slash command → Telnyx outbound dial deploying to auraflux-api.
 
-**Last Updated:** 2026-07-13 — Telnyx SDK v6 uses messages.send (not .create) for outbound SMS replies.
+**Last Updated:** 2026-07-13 — /call slash command + Telnyx Call Control dial (lib/voice adapter).
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
