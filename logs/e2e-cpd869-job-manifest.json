@@ -1,0 +1,12 @@
+{
+  "test": "CPD-869 Sub-brand E2E — 20 brands × 5 templates",
+  "submitted": "2026-06-11",
+  "templates": ["tiktok_clutch","youtube_deep_dive","montage_hype_reel","reaction_cut","quick_guide"],
+  "gemini_rationale": "Maximum pipeline coverage: diverse video lengths, multi-track editing, unique audio/visual effects, varied text overlay features across gaming, tutorial, and reaction content styles",
+  "total": 100,
+  "source_notes": {
+    "patterrz": "Twitch highlight (no recent VODs) — /videos/1262403188",
+    "supermcgamer": "No Twitch VODs — using natashaughey fallback /videos/2792741696",
+    "wanderbot": "Only 15-25s clips on Twitch — using natashaughey fallback /videos/2792741696"
+  }
+}

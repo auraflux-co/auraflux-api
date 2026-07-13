@@ -1,0 +1,15 @@
+{"ts":"2026-06-21T02:31:27.223Z","label":"MAIN","broadcastId":"UxG_UoTgbL4","error":"YouTube OAuth client credentials missing","alert":"api_error"}
+{"ts":"2026-06-21T02:31:27.224Z","label":"Q1","broadcastId":"m6d6qpP0vYU","error":"YouTube OAuth client credentials missing","alert":"api_error"}
+{"ts":"2026-06-21T02:31:27.225Z","label":"Q2","broadcastId":"9_YqpIYrUTM","error":"YouTube OAuth client credentials missing","alert":"api_error"}
+{"ts":"2026-06-21T02:31:27.225Z","label":"Q3","broadcastId":"9PcdOag2WyA","error":"YouTube OAuth client credentials missing","alert":"api_error"}
+{"ts":"2026-06-21T02:31:27.225Z","label":"Q4","broadcastId":"damkiUux4F0","error":"YouTube OAuth client credentials missing","alert":"api_error"}
+{"ts":"2026-06-21T02:31:40.878Z","label":"MAIN","broadcastId":"UxG_UoTgbL4","concurrentViewers":null,"viewCount":32,"alert":null}
+{"ts":"2026-06-21T02:31:41.098Z","label":"Q1","broadcastId":"m6d6qpP0vYU","concurrentViewers":2,"viewCount":19,"alert":null}
+{"ts":"2026-06-21T02:31:41.246Z","label":"Q2","broadcastId":"9_YqpIYrUTM","concurrentViewers":null,"viewCount":4,"alert":null}
+{"ts":"2026-06-21T02:31:41.442Z","label":"Q3","broadcastId":"9PcdOag2WyA","concurrentViewers":null,"viewCount":11,"alert":null}
+{"ts":"2026-06-21T02:31:41.589Z","label":"Q4","broadcastId":"damkiUux4F0","concurrentViewers":31,"viewCount":140,"alert":null}
+{"ts":"2026-06-21T02:32:08.473Z","label":"MAIN","broadcastId":"UxG_UoTgbL4","concurrentViewers":1,"viewCount":32,"alert":null}
+{"ts":"2026-06-21T02:32:08.671Z","label":"Q1","broadcastId":"m6d6qpP0vYU","concurrentViewers":3,"viewCount":20,"alert":null}
+{"ts":"2026-06-21T02:32:08.872Z","label":"Q2","broadcastId":"9_YqpIYrUTM","concurrentViewers":null,"viewCount":4,"alert":null}
+{"ts":"2026-06-21T02:32:09.090Z","label":"Q3","broadcastId":"9PcdOag2WyA","concurrentViewers":null,"viewCount":11,"alert":null}
+{"ts":"2026-06-21T02:32:09.318Z","label":"Q4","broadcastId":"damkiUux4F0","concurrentViewers":23,"viewCount":140,"alert":null}

@@ -1,0 +1,140 @@
+{
+  "ticket": "CPD-1056",
+  "epic": "CPD-1037",
+  "phase": "post-deploy",
+  "runAt": "2026-06-16T20:54:56.168Z",
+  "apiBase": "https://api.auraflux.co",
+  "expectCommit": null,
+  "liveVersion": "1.0.175",
+  "liveGitHash": "unknown",
+  "deployedAt": "2026-06-16T20:53:59.932Z",
+  "summary": {
+    "total": 15,
+    "pass": 13,
+    "skip": 2,
+    "fail": 0
+  },
+  "rows": [
+    {
+      "id": "M-01",
+      "layer": "static",
+      "check": "pipeline_parity_review.js",
+      "result": "PASS",
+      "detail": "GREEN",
+      "at": "2026-06-16T20:54:53.819Z"
+    },
+    {
+      "id": "M-02",
+      "layer": "static",
+      "check": "hub_live_qa_render.js",
+      "result": "PASS",
+      "detail": "",
+      "at": "2026-06-16T20:54:53.925Z"
+    },
+    {
+      "id": "M-03",
+      "layer": "static",
+      "check": "hub jest suite (26 tests)",
+      "result": "PASS",
+      "detail": "",
+      "at": "2026-06-16T20:54:55.004Z"
+    },
+    {
+      "id": "M-04",
+      "layer": "api",
+      "check": "smoke_test_render https://api.auraflux.co",
+      "result": "PASS",
+      "detail": "",
+      "at": "2026-06-16T20:54:55.824Z"
+    },
+    {
+      "id": "M-05",
+      "layer": "api",
+      "check": "GET /health version",
+      "result": "PASS",
+      "detail": "v1.0.175 commit unknown",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-06",
+      "layer": "deploy",
+      "check": "live commit probe",
+      "result": "PASS",
+      "detail": "unknown",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-B-R-B0",
+      "layer": "browse",
+      "check": "/sign-in → /home",
+      "result": "PASS",
+      "detail": "Signed in; landed on /home as Robert",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-B-R-B1",
+      "layer": "browse",
+      "check": "/review",
+      "result": "PASS",
+      "detail": "Queue is clear — empty state renders correctly (0 staged jobs on AuraFlux brand)",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-B-R-B2",
+      "layer": "browse",
+      "check": "/myjobs/new",
+      "result": "PASS",
+      "detail": "TikTok Clutch template; Publish settings shows Review before publishing; visibility Public/Unlisted/Private",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-B-R-B3",
+      "layer": "browse",
+      "check": "job detail (staged)",
+      "result": "SKIP",
+      "detail": "No active/history/review jobs on AuraFlux brand — cannot open staged job detail",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-B-R-B4",
+      "layer": "browse",
+      "check": "approve-publish",
+      "result": "SKIP",
+      "detail": "Blocked by empty queue — run after staging test job completes",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-B-R-HUB",
+      "layer": "browse",
+      "check": "hub delta (1043–1047, 1046, 1053)",
+      "result": "PASS",
+      "detail": "API v1.0.175 live; staging test job submitted (hubWiring portal4 on, portal5 off). R-B3/R-B4 when job reaches review queue.",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-07",
+      "layer": "e2e",
+      "check": "hub staging test job submit",
+      "result": "PASS",
+      "detail": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1781643273061",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-08",
+      "layer": "e2e",
+      "check": "hub resolveActivePortals portal4",
+      "result": "PASS",
+      "detail": "portal0,portal3a,portal3b,portal4",
+      "at": "2026-06-16T20:54:56.168Z"
+    },
+    {
+      "id": "M-09",
+      "layer": "e2e",
+      "check": "staging portal5 inactive",
+      "result": "PASS",
+      "detail": "",
+      "at": "2026-06-16T20:54:56.168Z"
+    }
+  ],
+  "verdict": "PASS"
+}

@@ -1,0 +1,137 @@
+{
+  "base": "https://auraflux-broadcast-staging.onrender.com",
+  "local": false,
+  "at": "2026-06-20T17:19:30.547Z",
+  "results": [
+    {
+      "name": "sidecar health",
+      "method": "GET",
+      "path": "/live-broadcast/health",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "grid status",
+      "method": "GET",
+      "path": "/live-grid/status",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "program status",
+      "method": "GET",
+      "path": "/live-grid/program/status",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "followed bench",
+      "method": "GET",
+      "path": "/live-grid/followed-bench",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "discovery bench",
+      "method": "GET",
+      "path": "/live-grid/discovery/bench",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "allowlist",
+      "method": "GET",
+      "path": "/live-grid/allowlist",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "files",
+      "method": "GET",
+      "path": "/live-grid/files",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "event feed preview",
+      "method": "GET",
+      "path": "/live-grid/event-feed/preview",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "delivery QA",
+      "method": "GET",
+      "path": "/live-grid/delivery",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "solo listings",
+      "method": "GET",
+      "path": "/live-grid/solo-listings",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "youtube listing",
+      "method": "GET",
+      "path": "/live-grid/youtube-listing",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "tv status",
+      "method": "GET",
+      "path": "/live-tv/status",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "tv playlist",
+      "method": "GET",
+      "path": "/live-tv/playlist",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "preflight",
+      "method": "GET",
+      "path": "/live-grid/preflight?skipTests=1",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "lifecycle start",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "lifecycle rtmpHeld",
+      "pass": true,
+      "status": 200,
+      "error": null
+    },
+    {
+      "name": "lifecycle stop",
+      "pass": true,
+      "status": 200,
+      "error": null
+    }
+  ]
+}

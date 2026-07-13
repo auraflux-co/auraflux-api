@@ -1,0 +1,105 @@
+{
+  "run_id": "20260612_011301",
+  "results": [
+    {
+      "brand": "natashaughey",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226782284', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "martinezofwonkru",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226782886', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "thevarietygurl",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226783396', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "millkberry",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226783928', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "lettucek",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226784465', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "fuzzyness",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226785192', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "hana",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226785882', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "wanderbot",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226786307', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "somarcus",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226786881', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "rockleesmile",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226787497', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "clintus",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226788159', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "ninuschk",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226788682', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "alluux",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226789222', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "patterrz",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226789684', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "supermcgamer",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226790348', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "t10nat",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226790872', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "guhrl",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226791361', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "tenshi",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226791967', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "bogur",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226792477', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    },
+    {
+      "brand": "nixstah",
+      "status": "FAIL",
+      "reason": "submission HTTP 202: {'ok': True, 'jobId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q_COMPACT_FETCH_clips_1781226793118', 'entry': 'fetch', 'sourceType': 'url_list', 'contentType': 'clips', 'customerId': 'user_3DeZESHSt4pqQtkDuYJoGDicm2q', 'templateId': None, 'status': 'accepted', 'message': 'Job accepted. Pipeline is running asynchronously.', 'warnings': [{'code': 'BRANDING_NO_LOGO', 'message': 'Upload a logo to enable branding.'}]}"
+    }
+  ]
+}

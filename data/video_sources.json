@@ -134,6 +134,15 @@
       "referer": "https://www.reddit.com/",
       "proxy": null
     },
+    "streamable.com": {
+      "name": "Streamable",
+      "contentTypes": ["news"],
+      "downloadMethod": "ytdlp",
+      "impersonate": "Chrome-136",
+      "cookieEnvVars": {},
+      "referer": "https://streamable.com/",
+      "proxy": null
+    },
     "instagram.com": {
       "name": "Instagram",
       "contentTypes": ["news"],

@@ -1,0 +1,1 @@
+Usage: node scripts/gemini_live_watcher.js <LABEL> <BROADCAST_ID> <main|solo> [expectedHint]

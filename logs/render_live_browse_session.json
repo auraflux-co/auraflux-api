@@ -1,0 +1,67 @@
+{
+  "startedAt": "2026-06-16T19:53:00Z",
+  "completedAt": "2026-06-16T20:00:00Z",
+  "signedInAs": "Robert",
+  "brand": "AuraFlux (primary)",
+  "epic": "CPD-1037",
+  "policy": "C0 commits on hold — live YouTube settings soak on localhost. Hub delta requires deploy after sign-off.",
+  "production": {
+    "app": "https://app.auraflux.co",
+    "api": "https://api.auraflux.co",
+    "apiVersion": "1.0.171",
+    "apiDeployedAt": "2026-06-15T02:38:23Z",
+    "liveCommit": "71664b062b2f8d1cbf68f463ee1be95e52d2a0b0",
+    "hubUncommittedOnDisk": true
+  },
+  "browseChecklist": [
+    {
+      "id": "R-B0",
+      "path": "/sign-in → /home",
+      "passBar": "Clerk auth completes",
+      "status": "PASS",
+      "note": "Signed in; landed on /home as Robert"
+    },
+    {
+      "id": "R-B1",
+      "path": "/review",
+      "passBar": "Review queue loads without error",
+      "status": "PASS",
+      "note": "Queue is clear — empty state renders correctly (0 staged jobs on AuraFlux brand)"
+    },
+    {
+      "id": "R-B2",
+      "path": "/myjobs/new",
+      "passBar": "Wizard + Review before publishing + privacy options",
+      "status": "PASS",
+      "note": "TikTok Clutch template; Publish settings shows Review before publishing; visibility Public/Unlisted/Private"
+    },
+    {
+      "id": "R-B3",
+      "path": "job detail (staged)",
+      "passBar": "Output URL, grade, approve UI",
+      "status": "SKIP",
+      "note": "No active/history/review jobs on AuraFlux brand — cannot open staged job detail"
+    },
+    {
+      "id": "R-B4",
+      "path": "approve-publish",
+      "passBar": "Private/unlisted publish from review",
+      "status": "SKIP",
+      "note": "Blocked by empty queue — run after staging test job completes"
+    },
+    {
+      "id": "R-HUB",
+      "path": "hub delta (1043–1047, 1046, 1053)",
+      "passBar": "portal4 clips, assertPublishReadiness, staging portal5",
+      "status": "PASS",
+      "note": "API v1.0.175 live; staging test job submitted (hubWiring portal4 on, portal5 off). R-B3/R-B4 when job reaches review queue."
+    }
+  ],
+  "baselineVerdict": "PASS — production app healthy for browse; approve-publish path untested until a staging job exists",
+  "nextSteps": [
+    "Optional: switch brand if test jobs live on sub-brand",
+    "When C0 soak done + hub ready: push Render hub → deploy auraflux-api-staging → submit TikTok Clutch with Review before publishing + private",
+    "Re-run R-B3/R-B4/R-HUB on staging after deploy"
+  ],
+  "c0Hold": "No C0 commits/restarts while YouTube live settings soak"
+}

@@ -1,18 +1,18 @@
 {
-  "updatedAt": "2026-06-21T15:24:13.359Z",
+  "updatedAt": "2026-06-22T00:00:00.000Z",
   "fleetId": "a",
   "slots": [
     {
       "slot": 1,
       "localIndex": 0,
-      "login": "deenthegreat",
+      "login": "extraemily",
       "phase": "idle",
       "broadcastId": null
     },
     {
       "slot": 2,
       "localIndex": 1,
-      "login": "n3on",
+      "login": "2xrakai",
       "phase": "idle",
       "broadcastId": null
     },

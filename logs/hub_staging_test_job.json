@@ -1,0 +1,28 @@
+{
+  "ticket": "CPD-1037",
+  "submittedAt": "2026-06-16T23:16:44.720Z",
+  "apiBase": "https://api.auraflux.co",
+  "jobId": "user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1781651804524",
+  "httpStatus": 202,
+  "staging": true,
+  "portals": [],
+  "templateName": "TikTok Clutch",
+  "publishMeta": {
+    "privacyStatus": "private",
+    "title": "Hub QA staging (private)"
+  },
+  "clipUrl": "https://www.twitch.tv/hasanabi/clip/FrozenFancyArtichokeBuddhaBar-lo8oBZNUuim1IuDQ",
+  "hubWiring": {
+    "activePortals": [
+      "portal0",
+      "portal3a",
+      "portal3b",
+      "portal4"
+    ],
+    "portal4": true,
+    "portal5": false
+  },
+  "finalStatus": "complete",
+  "grade": 100,
+  "outputUrl": "https://assets.auraflux.co/outputs/user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1781651804524/1781651941804_assembled_user_3DeZEr79TWcmvEvCMlu8lmM1FdU_EXTRACT_FETCH_clips_1781651804524_9x16.mp4"
+}

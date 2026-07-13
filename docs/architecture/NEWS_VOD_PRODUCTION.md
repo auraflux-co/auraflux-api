@@ -2,9 +2,11 @@
 
 **Show:** Because the Light Was On (C0 localhost).
 
-**Sources:** Al Jazeera scrape (primary); avoid AP/Reuters/BBC (Content ID). Prefer live-host desk lane for daily cadence.
+**Sources:** Al Jazeera scrape (primary); avoid AP/Reuters/BBC (Content ID). Daily cadence = **live host** (Rob on camera), not HeyGen.
 
-**Credit-safe test:** Dashboard → Hold before HeyGen → review → approve.
+**HeyGen:** Backup only — when a scheduled **Twitch show** cannot run live, pipeline can fall back to avatar render. Not the default for news VOD or daily Twitch Soup.
+
+**Credit-safe test (HeyGen fallback path):** Dashboard → Hold before HeyGen → review → approve.
 
 **Smoke:** `curl -s "http://localhost:3000/news/us-canada-videos?limit=3"`
 

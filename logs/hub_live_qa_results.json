@@ -1,0 +1,43 @@
+{
+  "runAt": "2026-06-16T20:05:00Z",
+  "epic": "CPD-1037",
+  "commitPolicy": "Commit only after live sign-off. C0: no pm2 restart of broadcast-sidecar or auraflux while YouTube live soak. Render hub: uncommitted until staging deploy + R-B3/R-B4.",
+  "streamSafeWork": {
+    "allowed": [
+      "cwn-production file edits + local jest/scripts (no Render deploy unless Rob asks)",
+      "app.auraflux.co browse QA (read-only UI)",
+      "api.auraflux.co GET smoke tests",
+      "stream-av-probe / stream-health pm2 restart on C0 (read-only workers only)"
+    ],
+    "blocked": [
+      "pm2 restart auraflux or broadcast-sidecar on C0",
+      "pm2 restart auraflux with uncommitted C0 gate code",
+      "Render prod deploy without explicit ask",
+      "C0 commits that imply restart before soak complete"
+    ]
+  },
+  "commitEligibility": {
+    "eligibleNow": [],
+    "render_baselineBrowse": "PASS (R-B0–B2); R-B3/R-B4 SKIP empty queue; R-HUB blocked until deploy",
+    "c0_afterLiveE2E": ["CPD-1048–1051 + assembly fixes"],
+    "render_requiresStagingDeploy": ["CPD-1042–1047", "CPD-1046", "CPD-1053", "CPD-1057 static checks landed"]
+  },
+  "resumeAfterQa": {
+    "nextTickets": ["CPD-1038", "staging deploy + test job for R-HUB"],
+    "completedUncommitted": {
+      "cwn-production": [
+        "CPD-1043", "CPD-1044", "CPD-1045", "CPD-1047", "CPD-1042",
+        "CPD-1046 portal4 clip QA", "CPD-1053 production_cron",
+        "CPD-1057 GREEN disclaimer + hub publish gate checks + hub_live_qa_render expanded"
+      ],
+      "cwn-c0": ["CPD-1048–1051", "ecosystem all-quads av-probe (local pm2 only)"]
+    }
+  },
+  "liveResults": {
+    "renderBrowse": "logs/render_live_browse_session.json — baseline PASS",
+    "renderModuleQA": "scripts/hub_live_qa_render.js — 13/13 PASS",
+    "renderJestHub": "26/26 PASS",
+    "renderSmokeProd": "9/9 PASS vs api.auraflux.co"
+  },
+  "verdict": "NOT COMMIT READY — hub needs staging deploy + staged test job; C0 on hold for stream soak"
+}
