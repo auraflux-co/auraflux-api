@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — auraflux-app build fix redeploying (TypeScript errors in phone + myjobs/active).
+**Deploy Mode:** dev — WebRTC outbound fix: new credential connection with outbound voice profile.
 
-**Last Updated:** 2026-07-13 — Fix app build: duplicate subtitle in myjobs/active; phone page TS types.
+**Last Updated:** 2026-07-13 — Fix phone Call hangup: WebRTC was on Forward Only (no outbound profile).
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 

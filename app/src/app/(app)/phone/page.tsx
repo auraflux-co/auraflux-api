@@ -29,11 +29,39 @@ type TelnyxCall = {
   direction?: string;
   remoteCallerNumber?: string;
   remoteCallerName?: string;
+  cause?: string;
+  causeCode?: number | string;
+  sipCode?: number | string;
+  sipReason?: string;
   answer: () => void;
   hangup: () => void;
   muteAudio: () => void;
   unmuteAudio: () => void;
 };
+
+function normalizeDialNumber(input: string): string {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  if (raw.startsWith('+')) {
+    const digits = raw.replace(/\D/g, '');
+    return digits ? `+${digits}` : '';
+  }
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  if (digits.length >= 8) return `+${digits}`;
+  return raw;
+}
+
+function callEndReason(call: TelnyxCall): string {
+  const parts = [
+    call.cause,
+    call.sipReason,
+    call.sipCode != null ? `SIP ${call.sipCode}` : null,
+    call.causeCode != null ? `code ${call.causeCode}` : null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(' · ') : 'Call ended';
+}
 
 type TelnyxClient = {
   connect: () => void;
@@ -68,6 +96,8 @@ function PhonePageInner() {
   const [incomingCall, setIncomingCall] = useState<TelnyxCall | null>(null);
   const [muted, setMuted] = useState(false);
   const [callLog, setCallLog] = useState<CallLogRow[]>([]);
+  const [callState, setCallState] = useState('');
+  const [lastError, setLastError] = useState('');
   const clientRef = useRef<TelnyxClient | null>(null);
   const pendingDialRef = useRef<{ dial: string; line: string } | null>(null);
   const autoDialDone = useRef(false);
@@ -111,14 +141,27 @@ function PhonePageInner() {
     const client = clientRef.current;
     const line = lines.find((l) => l.key === lineKey) || lines[0];
     if (!client || !line) return;
-    const call = client.newCall({
-      destinationNumber: destination,
-      callerNumber: line.number,
-      audio: true,
-      video: false,
-    });
-    setActiveCall(call);
-    setIncomingCall(null);
+    const to = normalizeDialNumber(destination);
+    if (!to) {
+      setLastError('Enter a valid phone number');
+      return;
+    }
+    setLastError('');
+    setCallState('dialing');
+    try {
+      const call = client.newCall({
+        destinationNumber: to,
+        callerNumber: line.number,
+        audio: true,
+        video: false,
+      });
+      setActiveCall(call);
+      setIncomingCall(null);
+    } catch (err) {
+      setLastError(err instanceof Error ? err.message : 'Dial failed');
+      setCallState('');
+      setActiveCall(null);
+    }
   }, [lines]);
 
   const connectPhone = useCallback(async () => {
@@ -158,17 +201,27 @@ function PhonePageInner() {
         const call = notification.call;
         if (!call) return;
         if (notification.type === 'callUpdate') {
+          setCallState(call.state || '');
           if (call.state === 'ringing' && call.direction === 'inbound') {
             setIncomingCall(call);
           }
-          if (call.state === 'active') {
-            setActiveCall(call);
-            setIncomingCall(null);
+          if (call.state === 'active' || call.state === 'trying' || call.state === 'new' || call.state === 'ringing') {
+            if (call.direction !== 'inbound' || call.state === 'active') {
+              setActiveCall(call);
+            }
+            if (call.state === 'active') setIncomingCall(null);
           }
           if (call.state === 'hangup' || call.state === 'destroy') {
+            const reason = callEndReason(call);
+            if (reason && reason !== 'NORMAL_CLEARING' && reason !== 'normal' && reason !== 'Call ended') {
+              setLastError(reason);
+            } else if (call.cause && String(call.cause).toLowerCase() !== 'normal_clearing') {
+              setLastError(String(call.cause));
+            }
             setActiveCall(null);
             setIncomingCall(null);
             setMuted(false);
+            setCallState('');
             loadCallLog();
           }
         }
@@ -266,6 +319,17 @@ function PhonePageInner() {
               </Button>
             )}
           </div>
+
+          {(callState || lastError) && (
+            <div className="text-sm space-y-1">
+              {callState && (
+                <p className="text-muted-foreground">Call status: <span className="text-foreground">{callState}</span></p>
+              )}
+              {lastError && (
+                <p className="text-destructive">{lastError}</p>
+              )}
+            </div>
+          )}
 
           <audio id="telnyx-remote-audio" autoPlay />
           <audio id="telnyx-local-audio" autoPlay muted />
