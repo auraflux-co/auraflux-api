@@ -145,7 +145,6 @@ export default function ActiveJobsPage() {
       <PageHeader
         title="In Progress"
         subtitle="Jobs still in the pipeline. When output is ready, they move to Review Queue."
-        subtitle="Scheduled, in progress, and jobs that need your attention"
       >
         <button
           onClick={fetchJobs}

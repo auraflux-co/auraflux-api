@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — WebRTC phone Phase 2 deploying to auraflux-api + auraflux-app.
+**Deploy Mode:** dev — auraflux-app build fix redeploying (TypeScript errors in phone + myjobs/active).
 
-**Last Updated:** 2026-07-13 — WebRTC phone at /phone; inbound rings online agents; /calling links to phone page; voice_call_log + missed-call Slack.
+**Last Updated:** 2026-07-13 — Fix app build: duplicate subtitle in myjobs/active; phone page TS types.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 

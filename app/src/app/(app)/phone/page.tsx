@@ -153,7 +153,8 @@ function PhonePageInner() {
         setStatusDetail(msg);
       });
 
-      client.on('telnyx.notification', (notification: { type?: string; call?: TelnyxCall }) => {
+      client.on('telnyx.notification', (...args: unknown[]) => {
+        const notification = args[0] as { type?: string; call?: TelnyxCall };
         const call = notification.call;
         if (!call) return;
         if (notification.type === 'callUpdate') {
@@ -243,7 +244,7 @@ function PhonePageInner() {
     <PageShell>
       <PageHeader
         title="Phone"
-        description="WebRTC desk phone — inbound rings here when you are online. Use 437 or 571 caller ID for outbound."
+        subtitle="WebRTC desk phone — inbound rings here when you are online. Use 437 or 571 caller ID for outbound."
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
