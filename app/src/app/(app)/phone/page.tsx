@@ -11,6 +11,26 @@ import { Phone, PhoneOff, PhoneIncoming, Mic, MicOff } from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
 const HEARTBEAT_MS = 15_000;
+const PREFER_ONLINE_KEY = 'auraflux.phone.preferOnline';
+
+function readPreferOnline(): boolean {
+  try {
+    const v = localStorage.getItem(PREFER_ONLINE_KEY);
+    // Default true — landing on /phone should go online unless user explicitly went offline
+    if (v === null) return true;
+    return v === '1';
+  } catch {
+    return true;
+  }
+}
+
+function writePreferOnline(online: boolean) {
+  try {
+    localStorage.setItem(PREFER_ONLINE_KEY, online ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+}
 
 type Line = { key: string; label: string; number: string };
 type CallLogRow = {
@@ -99,6 +119,7 @@ function PhonePageInner() {
   const [callState, setCallState] = useState('');
   const [lastError, setLastError] = useState('');
   const clientRef = useRef<TelnyxClient | null>(null);
+  const connectLockRef = useRef(false);
   const pendingDialRef = useRef<{ dial: string; line: string } | null>(null);
   const autoDialDone = useRef(false);
 
@@ -245,6 +266,7 @@ function PhonePageInner() {
   }, [authFetch, loadCallLog, sendPresence]);
 
   const disconnectPhone = useCallback(() => {
+    writePreferOnline(false);
     const client = clientRef.current;
     if (client) {
       client.disconnect();
@@ -252,15 +274,29 @@ function PhonePageInner() {
     }
     sendPresence(false);
     setStatus('offline');
-    setStatusDetail('');
+    setStatusDetail('Offline — click Go online to take calls');
     setActiveCall(null);
     setIncomingCall(null);
   }, [sendPresence]);
+
+  const goOnline = useCallback(() => {
+    writePreferOnline(true);
+    return connectPhone();
+  }, [connectPhone]);
 
   useEffect(() => {
     loadLines();
     loadCallLog();
   }, [loadLines, loadCallLog]);
+
+  // Auto-reconnect on refresh / first visit when user prefers online
+  useEffect(() => {
+    if (!isLoaded || !isSuperAdmin) return;
+    if (!readPreferOnline()) return;
+    if (clientRef.current) return;
+    if (status !== 'offline') return;
+    void connectPhone();
+  }, [isLoaded, isSuperAdmin, status, connectPhone]);
 
   useEffect(() => {
     const dial = searchParams.get('dial');
@@ -298,6 +334,7 @@ function PhonePageInner() {
       window.removeEventListener('beforeunload', onUnload);
       onUnload();
       clientRef.current = null;
+      connectLockRef.current = false;
     };
   }, []);
 
@@ -309,7 +346,7 @@ function PhonePageInner() {
     <PageShell>
       <PageHeader
         title="Phone"
-        subtitle="Go online, pick 437 or 571, dial. No Slack /calling needed — that command is optional."
+        subtitle="Stays online across refresh. Go offline only when you want to stop receiving calls."
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -326,7 +363,7 @@ function PhonePageInner() {
             {status === 'ready' ? (
               <Button variant="outline" size="sm" onClick={disconnectPhone}>Go offline</Button>
             ) : (
-              <Button size="sm" onClick={connectPhone} disabled={status === 'connecting'}>
+              <Button size="sm" onClick={goOnline} disabled={status === 'connecting'}>
                 <Phone className="w-4 h-4 mr-1" /> Go online
               </Button>
             )}
