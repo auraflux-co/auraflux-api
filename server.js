@@ -9058,6 +9058,9 @@ app.use(adminChatRoutes);
 const adminSeedRoutes = require('./lib/routes/admin_seed');
 app.use(adminSeedRoutes);
 
+const voicePhoneRoutes = require('./lib/routes/voice_phone');
+app.use(voicePhoneRoutes);
+
 // ── Dashboard API routes (CPD-177 / frontend api.ts surface) ─────
 const planRouter      = require('./lib/routes/plan');
 const creditsRouter        = require('./lib/routes/credits');

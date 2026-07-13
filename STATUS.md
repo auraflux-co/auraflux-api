@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — Slack /call slash command → Telnyx outbound dial deploying to auraflux-api.
+**Deploy Mode:** dev — WebRTC phone Phase 2 deploying to auraflux-api + auraflux-app.
 
-**Last Updated:** 2026-07-13 — SMS same-line reply; /calling 437|571 user picks outbound line.
+**Last Updated:** 2026-07-13 — WebRTC phone at /phone; inbound rings online agents; /calling links to phone page; voice_call_log + missed-call Slack.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 

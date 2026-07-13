@@ -193,6 +193,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/users',        label: 'All Users'       },
   { href: '/admin/support',      label: 'Support Inbox'   },
   { href: '/admin/sms-inbox',    label: 'SMS Inbox'       },
+  { href: '/phone',              label: 'Phone'           },
   { href: '/admin/chat',         label: 'Chat Inbox'      },
   { href: '/admin/crm',          label: 'CRM'             },
   { href: '/admin/permissions',  label: 'Permissions'     },
