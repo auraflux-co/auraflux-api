@@ -83,6 +83,33 @@ function callEndReason(call: TelnyxCall): string {
   return parts.length ? parts.join(' · ') : 'Call ended';
 }
 
+function formatUnknownError(err: unknown): string {
+  if (err == null) return 'Unknown error';
+  if (typeof err === 'string') return err;
+  if (err instanceof Error) return err.message || err.name || 'Error';
+  if (typeof err === 'object') {
+    const o = err as Record<string, unknown>;
+    const nested = o.error;
+    if (typeof nested === 'string') return nested;
+    if (nested && typeof nested === 'object') {
+      const n = nested as Record<string, unknown>;
+      if (typeof n.message === 'string') return n.message;
+      if (typeof n.error === 'string') return n.error;
+    }
+    if (typeof o.message === 'string') return o.message;
+    if (typeof o.reason === 'string') return o.reason;
+    if (typeof o.code === 'string' || typeof o.code === 'number') {
+      const base = typeof o.message === 'string' ? o.message : 'Telnyx error';
+      return `${base} (${o.code})`;
+    }
+    try {
+      const json = JSON.stringify(err);
+      if (json && json !== '{}') return json.slice(0, 300);
+    } catch { /* ignore */ }
+  }
+  return 'Connection error';
+}
+
 type TelnyxClient = {
   connect: () => void;
   disconnect: () => void;
@@ -218,9 +245,12 @@ function PhonePageInner() {
         sendPresence(true);
       });
 
-      client.on('telnyx.error', (err: unknown) => {
-        const msg = err instanceof Error ? err.message : String(err);
+      client.on('telnyx.error', (...args: unknown[]) => {
+        const msg = formatUnknownError(args[0] ?? args);
         connectLockRef.current = false;
+        // Soft error — stay able to reconnect; don't leave client half-dead
+        try { client.disconnect(); } catch { /* ignore */ }
+        clientRef.current = null;
         setStatus('error');
         setStatusDetail(msg);
       });
@@ -265,7 +295,7 @@ function PhonePageInner() {
     } catch (err) {
       connectLockRef.current = false;
       setStatus('error');
-      setStatusDetail(err instanceof Error ? err.message : 'Connect failed');
+      setStatusDetail(formatUnknownError(err));
     }
   }, [authFetch, loadCallLog, sendPresence]);
 
