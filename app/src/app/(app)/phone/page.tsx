@@ -149,6 +149,7 @@ function PhonePageInner() {
   const connectLockRef = useRef(false);
   const pendingDialRef = useRef<{ dial: string; line: string } | null>(null);
   const autoDialDone = useRef(false);
+  const urlDialHandledRef = useRef(false);
 
   useEffect(() => {
     if (isLoaded && !isSuperAdmin) router.replace('/home');
@@ -334,22 +335,26 @@ function PhonePageInner() {
   }, [isLoaded, isSuperAdmin, status, connectPhone]);
 
   useEffect(() => {
+    // Slack /calling deep-link: ?dial=&line= — consume once, then strip URL so refresh
+    // does not keep the number and auto-call again.
+    if (urlDialHandledRef.current) return;
     const dial = searchParams.get('dial');
+    if (!dial) return;
+    urlDialHandledRef.current = true;
     const line = searchParams.get('line') || '437';
-    if (dial) {
-      setDialInput(dial);
-      setSelectedLine(line);
-      pendingDialRef.current = { dial, line };
-    }
-  }, [searchParams]);
+    setDialInput(dial);
+    setSelectedLine(line);
+    pendingDialRef.current = { dial, line };
+    router.replace('/phone');
+  }, [searchParams, router]);
 
   useEffect(() => {
     if (status !== 'ready' || !pendingDialRef.current || autoDialDone.current) return;
     if (!lines.length) return;
     autoDialDone.current = true;
     const { dial, line } = pendingDialRef.current;
-    placeCall(dial, line);
     pendingDialRef.current = null;
+    void placeCall(dial, line);
   }, [status, lines, placeCall]);
 
   useEffect(() => {

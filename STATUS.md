@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — phone error message fix deploying to auraflux-app.
+**Deploy Mode:** dev — stop phone auto-dial on refresh deploying to auraflux-app.
 
-**Last Updated:** 2026-07-15 — Fix phone UI showing [object Object] on Telnyx errors; stringify error payload properly.
+**Last Updated:** 2026-07-15 — Strip ?dial= from /phone URL after one auto-dial so refresh does not redial.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
