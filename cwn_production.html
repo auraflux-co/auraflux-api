@@ -2382,7 +2382,13 @@ input[type="url"], input[type="password"], select, textarea {
               <div class="gen-action-bar">
                 <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchMedia()">Load library</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="saveLibraryClipPicks(true)" title="Save checked clips to this browser">Save picks</button>
-                <button type="button" class="btn btn-gold" onclick="sendPickerToComposer()">COMPOSE →</button>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0;">
+                <input type="url" id="library-paste-url" placeholder="Paste YouTube/Twitch VOD URL → moments" style="flex:1;min-width:220px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.35);padding:6px 8px;font-size:13px;" />
+                <button type="button" class="btn btn-outline btn-sm" onclick="pasteUrlAnalyzeAndCompose()" title="CPD-1278 — analyze peaks and open best in Composer">Paste URL → Peaks</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="extendComposerPeakWindow(30)" title="Re-stage peak ±30s">Peak ±30s</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="extendComposerPeakWindow(60)" title="Re-stage peak ±60s">Peak ±60s</button>
+              </div>
+              <button type="button" class="btn btn-gold" onclick="sendPickerToComposer()">COMPOSE →</button>
               </div>
               <div id="library-picks-hint" class="library-picks-hint"></div>
               <details class="gen-advanced" style="margin-top:6px;">
@@ -16424,6 +16430,47 @@ function clearComposerVodSegment() {
   if (tl) { tl.classList.remove('is-active'); tl.innerHTML = ''; }
 }
 
+function pasteUrlAnalyzeAndCompose() {
+  var input = g('library-paste-url');
+  var url = (input && input.value || '').trim();
+  if (!url) { alert('Paste a YouTube or Twitch VOD URL first.'); return; }
+  var statusEl = g('twitch-fetch-status');
+  if (statusEl) statusEl.textContent = 'Analyzing pasted URL for peak moments…';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/analyze-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: url, targetSec: 45, maxPeaks: 8 })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !(d.segments && d.segments.length)) throw new Error(d.error || 'No moments found');
+      var platform = d.platform || (/twitch\.tv/i.test(url) ? 'twitch' : 'youtube');
+      var streamer = 'paste';
+      _twitchPickerVods = [{
+        name: streamer,
+        displayName: 'Pasted VOD',
+        platform: platform,
+        vods: [{
+          url: d.vodUrl || url,
+          vodId: d.vodId,
+          title: 'Pasted VOD',
+          streamer: streamer,
+          platform: platform,
+          duration: d.heatmapMeta && d.heatmapMeta.durationSec || 7200,
+          segments: d.segments,
+          analyzeMode: d.mode
+        }]
+      }];
+      if (statusEl) statusEl.textContent = (d.mode || 'analyze') + ': ' + d.segments.length + ' peaks — opening best in Composer…';
+      // Open best (first) peak via existing handoff
+      sendVodSegmentToComposer(0, 0, 0);
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Paste URL analyze failed: ' + e.message;
+      alert('Analyze failed: ' + e.message);
+    });
+}
+
 function buildVodPeakPickerClip(vod, entry, seg, staged) {
   var startSec = Math.max(0, Math.floor(Number(seg.start_sec) || 0));
   var endSec = Math.max(startSec + 1, Math.floor(Number(seg.end_sec) || (startSec + 45)));
@@ -18768,6 +18815,61 @@ function clearComposerLayoutSegments() {
   setComposerPreviewCaption('All timed looks cleared — right panel shows trim only until you Save look here', 'ok');
 }
 
+function extendComposerPeakWindow(deltaSec) {
+  var clip = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+  if (!clip || !clip.vodOrigin || !clip.vodOrigin.vodUrl) {
+    alert('Extend needs a staged VOD peak with origin timestamps.');
+    return;
+  }
+  var d = Math.max(5, Math.round(Number(deltaSec) || 30));
+  var origin = clip.vodOrigin;
+  var start = Math.max(0, Math.floor(Number(origin.start_sec) || 0) - d);
+  var end = Math.floor(Number(origin.end_sec) || 0) + d;
+  if (end - start > 120) end = start + 120;
+  var statusEl = g('twitch-fetch-status') || g('composer-preview-caption');
+  if (statusEl) statusEl.textContent = 'Re-staging extended peak (' + start + '–' + end + 's)…';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage-vod-window', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      vodUrl: origin.vodUrl,
+      vodId: origin.vodId,
+      startSec: start,
+      endSec: end,
+      streamer: clip.streamer,
+      title: clip.title,
+      platform: clip.platform || 'youtube',
+      force: true
+    })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'restage failed');
+      var play = d.r2Url || d.r2_url || d.playbackUrl;
+      var dur = Math.max(1, end - start);
+      clip.url = d.url || clip.url;
+      clip.pageUrl = d.url || clip.pageUrl;
+      clip.stagedUrl = play;
+      clip.playbackUrl = play;
+      clip.r2Url = play;
+      clip.mp4Url = play;
+      clip.duration = dur;
+      clip.composerTrimStart = 0;
+      clip.composerTrimEnd = dur;
+      clip.trimStart = 0;
+      clip.trimEnd = dur;
+      clip.vodOrigin = Object.assign({}, origin, { start_sec: start, end_sec: end });
+      if (statusEl) statusEl.textContent = 'Extended peak re-staged (' + dur + 's) — scrub again';
+      initComposerTimelineFromClip();
+      refreshGenerateComposer(true);
+      setTimeout(function() { startComposerReviewPlayback(); }, 80);
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Extend re-stage failed: ' + e.message;
+      alert('Could not re-stage extended peak: ' + e.message);
+    });
+}
+
 function extendComposerVodSegment(deltaSec) {
   if (!_composerVodSegment) return;
   var dur = Math.max(60, Math.round(Number(_composerVodSegment.duration_sec) || 3600));
@@ -18796,11 +18898,23 @@ function detectComposerSilence() {
         status.textContent = (d.silence || []).length + ' silence regions · '
           + (speech ? ('first speech ' + speech.start_sec + '–' + speech.end_sec + 's') : 'no speech windows');
       }
-      if (speech && _composerVodSegment) {
-        _composerVodSegment.start_sec = Math.floor(speech.start_sec);
-        _composerVodSegment.end_sec = Math.ceil(speech.end_sec);
-        renderComposerVodTimeline();
-        refreshGenerateComposer(false);
+      if (speech) {
+        var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+        if (lead) {
+          lead.composerTrimStart = Math.floor(Number(speech.start_sec) || 0);
+          lead.composerTrimEnd = Math.max(lead.composerTrimStart + 1, Math.ceil(Number(speech.end_sec) || (lead.composerTrimStart + 15)));
+          lead.trimStart = lead.composerTrimStart;
+          lead.trimEnd = lead.composerTrimEnd;
+          if (typeof ensureComposerCutsOnClip === 'function') ensureComposerCutsOnClip(lead);
+          if (typeof applyActiveCutToTrim === 'function') applyActiveCutToTrim(lead);
+          initComposerTimelineFromClip();
+          refreshGenerateComposer(false);
+        } else if (_composerVodSegment) {
+          _composerVodSegment.start_sec = Math.floor(speech.start_sec);
+          _composerVodSegment.end_sec = Math.ceil(speech.end_sec);
+          renderComposerVodTimeline();
+          refreshGenerateComposer(false);
+        }
       }
     })
     .catch(function(e) { if (status) status.textContent = '❌ ' + e.message; });
@@ -19315,7 +19429,9 @@ function buildCompositionSpecFromUI() {
       durationHint: sourceDur,
       trimStart: c.postLiveVod ? (c.composerTrimStart != null ? c.composerTrimStart : c.trimStart) : c.composerTrimStart,
       trimEnd: c.postLiveVod ? (c.composerTrimEnd != null ? c.composerTrimEnd : c.trimEnd) : c.composerTrimEnd,
-      postLiveVod: !!c.postLiveVod,
+      postLiveVod: !!c.postLiveVod && !c.vodPeakWindow,
+      vodPeakWindow: !!c.vodPeakWindow,
+      vodOrigin: c.vodOrigin || null,
       sceneLabel: c.sceneLabel || '',
       segmentKind: c.segmentKind || '',
       layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],

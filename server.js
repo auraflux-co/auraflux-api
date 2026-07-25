@@ -505,6 +505,8 @@ function mergeJsonAssemblyOutputs(intoJobs, jsonJobs) {
     const memSaved = new Date(mem.savedAt || 0).getTime();
     const jsonHasAssembly = !!(jsonCard.driveUrl || jsonCard.assembledAt || jsonCard.state?.savedOutputs?.driveUrl);
     if (!jsonHasAssembly && jsonSaved <= memSaved) continue;
+    // Only merge when jobs.json is strictly newer — avoid clobbering CLI ingest (SQLite-first).
+    if (jsonSaved <= memSaved) continue;
     intoJobs[id] = {
       ...mem,
       ...jsonCard,
@@ -627,6 +629,22 @@ function inferJobStage(job) {
   }
   if (job.script) return 'script_ready';
   return '';
+}
+
+function resolveJobCard(jobId) {
+  if (!jobId) return null;
+  if (persistedJobs[jobId]) return persistedJobs[jobId];
+  try {
+    const card = db.loadJob(jobId);
+    if (!card) return null;
+    const key = card.jobId || card.id || jobId;
+    persistedJobs[key] = card;
+    if (global.persistedJobsRef) global.persistedJobsRef[key] = card;
+    return card;
+  } catch (err) {
+    console.warn(`[jobs] resolveJobCard(${jobId}) failed: ${err.message}`);
+    return null;
+  }
 }
 
 function saveJobCard(jobId, card) {
@@ -1756,13 +1774,20 @@ const twitchClient = new TwitchClient({
 // Security headers via helmet
 app.use(helmet({
   contentSecurityPolicy: false, // Disabled for local dashboard with inline scripts
-  crossOriginEmbedderPolicy: false // Disabled for embedded videos/images
+  crossOriginEmbedderPolicy: false, // Disabled for embedded videos/images
+  // localhost vs 127.0.0.1 are different origins — same-origin CORP blacks out <video> PREVIEW MP4.
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 // CORS configuration with origin whitelist
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:8765', 'http://localhost:3000'];
+  : [
+    'http://localhost:8765',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8765',
+  ];
 
 // Request ID middleware for tracing
 app.use((req, res, next) => {
@@ -2188,7 +2213,10 @@ function listDashboardJobs({ restore = false, pinnedOnly = false } = {}) {
       const ts = new Date(job.savedAt || job.publishedAt || job.assembledAt || 0).getTime();
       return ts >= publishedCutoff;
     }
-    if (stage === 'published') return false;
+    if (stage === 'published') {
+      if (job.operatorPublishRollback) return true;
+      return false;
+    }
 
     if (status === 'dismissed') {
       return REVIEW_QUEUE_STAGES.has(stage) || status === 'gate3_failed';
@@ -2268,7 +2296,7 @@ app.get('/jobs', (req, res) => {
 // GET /job/:id — full card for Publish Prep hydration (publishCopy + driveUrl)
 app.get('/job/:id', (req, res) => {
   const jobId = req.params.id;
-  let card = persistedJobs[jobId];
+  let card = resolveJobCard(jobId);
   if (!card) return res.status(404).json({ ok: false, error: 'Job not found: ' + jobId });
 
   if (card.heygen?.held === true && card.stage === 'all_sent' && !(card.heygen?.videoJobs?.length)) {
@@ -2298,6 +2326,16 @@ app.get('/job/:id', (req, res) => {
       card = yt.card;
     }
   } catch (_e) { /* non-fatal */ }
+
+  // Backfill gate5 publish-check for cards published before gate5 snapshot was persisted
+  if (card.stage === 'published' && card.gate5Result?.passed && !(card.gate5 && card.gate5.outcome === 'pass')) {
+    card.gate5 = {
+      outcome: 'pass',
+      score: 100,
+      prePublishValidation: card.gate5Result.prePublishValidation || { passed: true, violations: [] },
+      checkedAt: card.publishedAt || card.gate5Result.completedAt || new Date().toISOString(),
+    };
+  }
 
   const savedOutputs = card.state?.savedOutputs || {};
   const _pcUsable = (pc) => pc && (pc.title || pc.youtube || pc.platforms?.youtube);
@@ -2599,28 +2637,44 @@ app.post('/job/:id/fix-claims', async (req, res) => {
 // action button re-appears in the dashboard.
 app.post('/job/:id/rollback', (req, res) => {
   const jobId = req.params.id;
-  const card  = persistedJobs[jobId];
+  const card  = resolveJobCard(jobId);
   if (!card) return res.json({ ok: false, error: 'Job not found: ' + jobId });
 
   const before = card.stage || detectStage(card);
 
   if (before === 'published') {
-    // Roll back from published → assembled (clear publish record, keep finalUrl)
+    // Roll back from published → review (clip comps) or assembled (long-form)
     delete card.publishRecord;
     delete card._gate3Approved;
-    card.stage = 'assembled';
+    delete card._gate5Done;
+    delete card._gate5Running;
+    delete card.gate5Error;
+    card.operatorPublishRollback = Date.now();
+    card.stage = card.clipsOnly ? 'awaiting_review' : 'assembled';
     saveJobCard(jobId, card);
-    console.log(`[rollback] ${jobId}: published → assembled`);
-    logError('PIPELINE_ROLLBACK', `Job rolled back: published → assembled`, { jobId, before: 'published', after: 'assembled', at: new Date().toISOString() });
+    const after = card.stage;
+    console.log(`[rollback] ${jobId}: published → ${after} (operatorPublishRollback)`);
+    logError('PIPELINE_ROLLBACK', `Job rolled back: published → ${after}`, { jobId, before: 'published', after, at: new Date().toISOString() });
     try {
       pipelineBus.emit('job:rollback', {
         jobId,
         before: 'published',
-        after: 'assembled',
-        message: 'Publish record cleared — re-approve to re-publish.'
+        after,
+        message: card.clipsOnly
+          ? 'Publish cleared — click ↻ RE-ASSEMBLE for the new cut, then APPROVE & PUBLISH.'
+          : 'Publish record cleared — re-approve to re-publish.',
       });
     } catch (_e) { /* non-fatal */ }
-    return res.json({ ok: true, jobId, before: 'published', after: 'assembled', message: 'Publish record cleared — re-approve to re-publish.' });
+    return res.json({
+      ok: true,
+      jobId,
+      before: 'published',
+      after,
+      operatorPublishRollback: true,
+      message: card.clipsOnly
+        ? 'Publish cleared — click ↻ RE-ASSEMBLE for the new cut, then APPROVE & PUBLISH.'
+        : 'Publish record cleared — re-approve to re-publish.',
+    });
   }
 
   if (before === 'assembled') {
@@ -2689,7 +2743,7 @@ app.post('/job/:id/rollback', (req, res) => {
 // so the next action button appears in the dashboard.
 app.post('/job/:id/advance', (req, res) => {
   const jobId = req.params.id;
-  const card  = persistedJobs[jobId];
+  const card  = resolveJobCard(jobId);
   if (!card) return res.json({ ok: false, error: 'Job not found: ' + jobId });
 
   const stage = card.stage || detectStage(card);
@@ -2817,7 +2871,7 @@ async function _runGate5ForCard(jobId) {
   const { assertPublishAllowed } = require('./lib/publish_hold');
   assertPublishAllowed(jobId);
 
-  let card = persistedJobs[jobId];
+  let card = resolveJobCard(jobId);
   if (!card) throw new Error(`Job not found: ${jobId}`);
 
   const { isClipCompPublishHeld } = require('./lib/clip_comp');
@@ -2869,7 +2923,7 @@ async function _runGate5ForCard(jobId) {
 
   try {
     const { isDriveUrlAlreadyPublished } = require('./lib/publish_dedupe');
-    if (isDriveUrlAlreadyPublished(jobId, driveUrl)) {
+    if (isDriveUrlAlreadyPublished(jobId, driveUrl) && !card.operatorPublishRollback) {
       card.stage = 'published';
       card.publishedAt = card.publishedAt || new Date().toISOString();
       saveJobCard(jobId, card);
@@ -2917,8 +2971,13 @@ async function _runGate5ForCard(jobId) {
   const g5JobSpec = {
     jobId,
     contentType,
+    channelKey: card.channelKey,
     clipsOnly: !!card.clipsOnly,
+    operatorPublishRollback: card.operatorPublishRollback || null,
     driveUrl,
+    publishConfig: card.publishConfig || {},
+    outputPath: card.outputPath || savedOutputs.assembledPath || null,
+    assembledPath: card.outputPath || savedOutputs.assembledPath || null,
     publishSeoAudit: card.publishSeoAudit || savedOutputs.publishSeoAudit || null,
     state: {
       ...(card.state || {}),
@@ -2930,7 +2989,9 @@ async function _runGate5ForCard(jobId) {
       ? card.deliverySpec
       : {
           driveFolderId: process.env.DRIVE_FOLDER_ID || null,
-          uploadPostProfile: process.env.UPLOADPOST_PROFILE || null,
+          uploadPostProfile: card.publishConfig?.uploadPostProfile
+            || process.env.UPLOADPOST_PROFILE
+            || null,
           categoryId: '24',
           ...(card.deliverySpec || {}),
           platforms
@@ -2942,7 +3003,9 @@ async function _runGate5ForCard(jobId) {
   // Mark as running
   card.stage = 'gate5_running';
   saveJobCard(jobId, card);
-  console.log(`[run-gate5] ${jobId}: Gate 5 starting — driveUrl=${driveUrl}`);
+  const { inferYouTubeChannelKey } = require('./lib/channels/registry');
+  const ytChannel = inferYouTubeChannelKey(g5JobSpec);
+  console.log(`[run-gate5] ${jobId}: Gate 5 starting — driveUrl=${driveUrl} youtube=${ytChannel}`);
 
   let g5Result;
   try {
@@ -2965,7 +3028,14 @@ async function _runGate5ForCard(jobId) {
   }
   if (g5Result.passed) {
     card.stage = 'published';
+    delete card.operatorPublishRollback;
     card.publishedAt = new Date().toISOString();
+    card.gate5 = {
+      outcome: 'pass',
+      score: 100,
+      prePublishValidation: g5Result.prePublishValidation || { passed: true, violations: [] },
+      checkedAt: new Date().toISOString(),
+    };
     const epInc = g5Result.episodeIncrement;
     if (epInc && !epInc.skipped) {
       card.episodeCounterIncremented = true;
@@ -2980,6 +3050,8 @@ async function _runGate5ForCard(jobId) {
   } else {
     card.stage = 'gate5_failed';
     const violations = g5Result.prePublishValidation?.violations || [];
+    card.gate5Error = violations.join('; ') || 'Gate 5 validation failed';
+    card.gate5 = { outcome: 'fail', violations, checkedAt: new Date().toISOString() };
     console.warn(`[run-gate5] ${jobId}: Gate 5 FAIL — ${violations.slice(0, 3).join('; ')}`);
     pipelineBus.emit('gate5:failed', { jobId, violations });
   }
@@ -2999,12 +3071,14 @@ app.get('/connect/youtube', (req, res) => {
   if (!process.env.YOUTUBE_CLIENT_ID || !process.env.YOUTUBE_CLIENT_SECRET) {
     return res.status(400).send('YOUTUBE_CLIENT_ID / YOUTUBE_CLIENT_SECRET not set in .env');
   }
+  const channel = String(req.query.channel || 'clipzworldnews').replace(/^@/, '');
   const ytDirect = require('./lib/services/youtube_direct');
-  res.redirect(ytDirect.buildAuthUrl(_ytRedirectUri(req), 'c0'));
+  res.redirect(ytDirect.buildAuthUrl(_ytRedirectUri(req), channel));
 });
 
 app.get('/connect/youtube/callback', async (req, res) => {
-  const { code, error } = req.query;
+  const { code, error, state } = req.query;
+  const channelKey = String(state || 'clipzworldnews').replace(/^@/, '');
   if (error) return res.status(400).send(`Google OAuth error: ${error}`);
   if (!code) return res.status(400).send('Missing authorization code');
   try {
@@ -3019,14 +3093,19 @@ app.get('/connect/youtube/callback', async (req, res) => {
       expires_at: new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString(),
       scope: tokens.scope,
       connectedAt: new Date().toISOString(),
+      channelKey,
     };
     try {
       const info = await ytDirect.getChannelInfo(tokens.access_token);
       if (info) Object.assign(stored, info);
     } catch { /* channel info is cosmetic */ }
-    ytDirect.saveTokens(stored);
-    console.log(`[youtube_direct] Connected channel: ${stored.channelTitle || stored.channelId || 'unknown'}`);
-    res.send(`<h2>✅ YouTube connected</h2><p>Channel: <b>${stored.channelTitle || stored.channelId || 'unknown'}</b></p><p>Gate 5 uploads YouTube via the Data API using these tokens. Upload-Post is only used for TikTok and Instagram.</p>`);
+    ytDirect.saveTokens(stored, channelKey);
+    const tokenCheck = ytDirect.validateTokenChannel(channelKey);
+    console.log(`[youtube_direct] Connected channel (${channelKey}): ${stored.channelTitle || stored.channelId || 'unknown'}`);
+    const mismatch = tokenCheck.ok
+      ? ''
+      : `<p style="color:#c00;font-weight:bold">⚠️ Token mismatch: ${tokenCheck.error}</p>`;
+    res.send(`<h2>✅ YouTube connected</h2><p>Profile: <b>${channelKey}</b></p><p>Channel: <b>${stored.channelTitle || stored.channelId || 'unknown'}</b></p>${mismatch}<p>Gate 5 uploads YouTube via the Data API using these tokens. Upload-Post is only used for TikTok and Instagram.</p>`);
   } catch (e) {
     console.error('[youtube_direct] OAuth exchange failed:', e.response?.data || e.message);
     res.status(500).send(`Token exchange failed: ${e.response?.data?.error_description || e.message}`);
@@ -3035,17 +3114,44 @@ app.get('/connect/youtube/callback', async (req, res) => {
 
 app.get('/connect/youtube/status', (req, res) => {
   const ytDirect = require('./lib/services/youtube_direct');
-  const t = ytDirect.loadTokens();
+  const channelKey = String(req.query.channel || 'clipzworldnews').replace(/^@/, '');
+  const t = ytDirect.loadTokens(channelKey);
   const scope = t?.scope || '';
+  const tokenValidation = ytDirect.validateTokenChannel(channelKey);
   res.json({
-    connected: ytDirect.isConnected(),
+    channelKey,
+    connected: ytDirect.isConnected(channelKey),
     channelTitle: t?.channelTitle || null,
     channelId: t?.channelId || null,
     connectedAt: t?.connectedAt || null,
     directPublishEnabled: true,
+    tokenValidation,
     analyticsScope: scope.includes('yt-analytics.readonly'),
-    needsAnalyticsReconnect: ytDirect.isConnected() && !scope.includes('yt-analytics.readonly'),
+    needsAnalyticsReconnect: ytDirect.isConnected(channelKey) && !scope.includes('yt-analytics.readonly'),
+    connectUrl: `/connect/youtube?channel=${encodeURIComponent(channelKey)}`,
   });
+});
+
+// GET /channels — operator channel registry (CWN + BTM)
+app.get('/channels', (req, res) => {
+  try {
+    const { listChannels, getDefaultChannel } = require('./lib/channels/registry');
+    const ytDirect = require('./lib/services/youtube_direct');
+    const audit = ytDirect.auditAllTokenChannels();
+    const channels = listChannels().map((ch) => {
+      const tokenKey = ch.youtubeTokenKey || ch.id;
+      const tokenValidation = ytDirect.validateTokenChannel(tokenKey);
+      return { ...ch, tokenKey, tokenValidation };
+    });
+    res.json({
+      ok: true,
+      defaultChannelId: getDefaultChannel()?.id,
+      channels,
+      youtubeTokenAudit: audit,
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // Post-live VOD registry — channel lives + claims CSV + Gemini review (skip claimed ranges)
@@ -3079,7 +3185,7 @@ app.get('/stats/channel', async (req, res) => {
 // Gate 5 holds at 'publish_scheduled' and scheduling_cron fires it when due.
 app.post('/job/:id/schedule', (req, res) => {
   const jobId = req.params.id;
-  const card = persistedJobs[jobId];
+  const card = resolveJobCard(jobId);
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
   if (card.stage === 'published') {
     return res.status(400).json({ ok: false, error: 'Job already published — cannot schedule' });
@@ -3550,34 +3656,39 @@ app.get('/calendar/month', async (req, res) => {
     const { getUploadPostCalendarItems } = require('./lib/calendar/upload_post_sync');
     const year = Number(req.query.year) || new Date().getFullYear();
     const month = Number(req.query.month) || (new Date().getMonth() + 1);
+    const channelKey = String(req.query.channel || 'clipzworldnews');
     const refreshYoutube = req.query.refreshYoutube === '1' || req.query.refresh === '1';
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const endDate = `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`;
     let studio = { items: [] };
     let uploadPost = { items: [] };
-    try {
-      studio = await getYoutubeCalendarItems({
-        startDate,
-        endDate,
-        refresh: refreshYoutube,
-        persistedJobs,
-      });
-    } catch (e) {
-      console.warn('[calendar/month] YouTube sync failed:', e.message);
-    }
-    try {
-      uploadPost = await getUploadPostCalendarItems({
-        startDate,
-        endDate,
-        refresh: refreshYoutube,
-        persistedJobs,
-      });
-    } catch (e) {
-      console.warn('[calendar/month] Upload-Post sync failed:', e.message);
+    // Actuals sync is ClipzWorld-oriented today; BTM plan still returns structured slots.
+    if (channelKey === 'clipzworldnews' || channelKey === 'cwn') {
+      try {
+        studio = await getYoutubeCalendarItems({
+          startDate,
+          endDate,
+          refresh: refreshYoutube,
+          persistedJobs,
+        });
+      } catch (e) {
+        console.warn('[calendar/month] YouTube sync failed:', e.message);
+      }
+      try {
+        uploadPost = await getUploadPostCalendarItems({
+          startDate,
+          endDate,
+          refresh: refreshYoutube,
+          persistedJobs,
+        });
+      } catch (e) {
+        console.warn('[calendar/month] Upload-Post sync failed:', e.message);
+      }
     }
     const plan = buildMonthPlan({
       year,
       month,
+      channelKey,
       persistedJobs,
       youtubeItems: studio.items || [],
       uploadPostItems: uploadPost.items || [],
@@ -3600,17 +3711,42 @@ app.get('/calendar/month', async (req, res) => {
   }
 });
 
-// PUT /calendar/month/day — set planned targets for one day { dateKey, short, longform, live, note }
+// PUT /calendar/month/day — set planned targets for one day { dateKey, short, longform, live, note, publishSlots }
 app.put('/calendar/month/day', (req, res) => {
   try {
     const { setDayPlan } = require('./lib/calendar/month_plan');
-    const { dateKey, short, longform, live, note } = req.body || {};
+    const { dateKey, short, longform, live, note, publishSlots, channelKey } = req.body || {};
     if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
       return res.status(400).json({ ok: false, error: 'dateKey required (YYYY-MM-DD)' });
     }
     const [y, m] = dateKey.split('-').map(Number);
-    const result = setDayPlan({ year: y, month: m, dateKey, targets: { short, longform, live }, note });
+    const result = setDayPlan({
+      year: y, month: m, dateKey,
+      targets: { short, longform, live },
+      note,
+      publishSlots,
+      channelKey,
+    });
     res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// GET /calendar/day-slots — publish-time chips for a plan day (CPD-1262/1265)
+app.get('/calendar/day-slots', (req, res) => {
+  try {
+    const { buildDayPublishSlots } = require('./lib/calendar/month_plan');
+    let dateKey = String(req.query.dateKey || '').trim();
+    const channelKey = String(req.query.channel || 'clipzworldnews');
+    if (!dateKey) {
+      const { nowET: n } = require('./lib/live_grid/schedule_time');
+      dateKey = n(new Date()).dateKey;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+      return res.status(400).json({ ok: false, error: 'dateKey must be YYYY-MM-DD' });
+    }
+    res.json(buildDayPublishSlots(dateKey, null, channelKey));
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
@@ -3626,6 +3762,7 @@ app.put('/calendar/month/defaults', (req, res) => {
     const result = setMonthDefaultTargets({
       year,
       month,
+      channelKey: req.body.channelKey || req.body.channel,
       targets: {
         short: req.body.short,
         longform: req.body.longform,
@@ -4731,7 +4868,7 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
 // POST /job/:id/run-gate5 — trigger Gate 5 upload for an assembled/force-advanced job
 app.post('/job/:id/run-gate5', async (req, res) => {
   const jobId = req.params.id;
-  const card = persistedJobs[jobId];
+  const card = resolveJobCard(jobId);
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
 
   const { resolveCardDriveUrl, isDriveUrlAlreadyPublished, needsRepublish } = require('./lib/publish_dedupe');
@@ -4747,10 +4884,10 @@ app.post('/job/:id/run-gate5', async (req, res) => {
       }
     : card;
 
-  if (card.stage === 'published' && !needsRepublish(republishCard, jobId)) {
+  if (card.stage === 'published' && !card.operatorPublishRollback && !needsRepublish(republishCard, jobId)) {
     return res.json({ ok: true, skipped: true, message: 'Job already published — no duplicate upload.' });
   }
-  if (incomingDriveUrl && isDriveUrlAlreadyPublished(jobId, incomingDriveUrl)) {
+  if (incomingDriveUrl && isDriveUrlAlreadyPublished(jobId, incomingDriveUrl) && !card.operatorPublishRollback) {
     card.stage = 'published';
     saveJobCard(jobId, card);
     return res.json({ ok: true, skipped: true, message: 'This assembly was already uploaded — card marked published.' });
@@ -4805,6 +4942,23 @@ app.post('/job/:id/run-gate5', async (req, res) => {
     card.state = card.state || {};
     card.state.savedOutputs = card.state.savedOutputs || {};
     card.state.savedOutputs.thumbnailDriveUrl = req.body.thumbnailDriveUrl;
+  }
+
+  if (req.body.youtubeChannelKey) {
+    const { getChannel } = require('./lib/channels/registry');
+    const ytKey = String(req.body.youtubeChannelKey).replace(/^@/, '').toLowerCase();
+    const ch = getChannel(ytKey);
+    if (!ch) {
+      return res.status(400).json({ ok: false, error: `Unknown YouTube channel: ${ytKey}` });
+    }
+    card.publishConfig = card.publishConfig || {};
+    card.publishConfig.youtubeChannelKey = ch.youtubeTokenKey || ch.id;
+    card.publishConfig.uploadPostProfile = ch.uploadPostProfile;
+    card.channelKey = ch.id;
+    card.deliverySpec = card.deliverySpec || {};
+    card.deliverySpec.uploadPostProfile = ch.uploadPostProfile;
+    saveJobCard(jobId, card);
+    console.log(`[run-gate5] ${jobId}: operator selected YouTube channel ${ch.name} (@${ch.handle})`);
   }
 
   // Mark forced so the advance branch doesn't re-fire on page reload
@@ -5366,7 +5520,7 @@ app.post('/job/:id/manual-segments/resume', (req, res) => {
 // POST /job/:id/queue-pin — creative director pins job to dashboard queue
 app.post('/job/:id/queue-pin', (req, res) => {
   const jobId = req.params.id;
-  const card = persistedJobs[jobId];
+  const card = resolveJobCard(jobId);
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
   card.queuePinned = true;
   card.operatorQueuePin = true;
@@ -5378,7 +5532,7 @@ app.post('/job/:id/queue-pin', (req, res) => {
 // POST /job/:id/queue-unpin — remove from pinned restore set
 app.post('/job/:id/queue-unpin', (req, res) => {
   const jobId = req.params.id;
-  const card = persistedJobs[jobId];
+  const card = resolveJobCard(jobId);
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
   card.queuePinned = false;
   card.queueUnpinnedAt = new Date().toISOString();
@@ -5604,9 +5758,10 @@ app.post('/job/:id/scene-updates/apply', async (req, res) => {
   const labels = validation.labels;
   if (card.stage === 'published') {
     delete card.publishRecord;
-    card.stage = 'assembled';
+    card.operatorPublishRollback = Date.now();
+    card.stage = card.clipsOnly ? 'awaiting_review' : 'assembled';
     saveJobCard(jobId, card);
-    console.log(`[scene-updates] ${jobId}: published → assembled for partial reassemble`);
+    console.log(`[scene-updates] ${jobId}: published → ${card.stage} for partial reassemble`);
   }
 
   card.partialSceneUpdate = {
@@ -5801,7 +5956,7 @@ app.post('/job/:id/reassemble', async (req, res) => {
   const jobId = req.params.id;
   const card  = persistedJobs[jobId];
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
-  if (card.stage === 'published') {
+  if (card.stage === 'published' && !card.operatorPublishRollback) {
     return res.status(400).json({ ok: false, error: 'Job is already published — rollback first if you need to re-assemble.' });
   }
 
@@ -6284,7 +6439,14 @@ app.post('/generate-clip-comp', async (req, res) => {
     } catch (_pl) { /* non-fatal */ }
   }
 
+  const {
+    hasStableLibraryMp4,
+    pickStableLibraryMp4,
+    isStagedVodPeakClip,
+  } = require('./lib/content_library/stable_mp4');
+  // CPD-1273: R2-staged peaks are library clips — never rewrite to YouTube extract.
   const isPostLiveVodClip = (c) => {
+    if (isStagedVodPeakClip(c) || hasStableLibraryMp4(c)) return false;
     if (postLiveVodSessionId || c.postLiveVod) return true;
     const page = c.pageUrl || c.url || c.clipUrl || '';
     return /youtube\.com|youtu\.be/.test(page)
@@ -6299,6 +6461,23 @@ app.post('/generate-clip-comp', async (req, res) => {
       const c = clips[i];
       const pageUrl = c.pageUrl || c.url || c.clipUrl || '';
       const rawUrl = c.url || c.clipUrl || '';
+      const stableMp4 = pickStableLibraryMp4(c);
+      if (stableMp4) {
+        resolved.push({
+          ...c,
+          url: stableMp4,
+          clipUrl: stableMp4,
+          pageUrl: pageUrl || c.pageUrl || rawUrl,
+          mp4Url: stableMp4,
+          stagedUrl: c.stagedUrl || stableMp4,
+          r2Url: c.r2Url || stableMp4,
+          postLiveVod: false,
+          vodPeakWindow: !!c.vodPeakWindow || /cwn_win=/i.test(String(pageUrl || '')),
+          trimStart: c.trimStart != null ? Number(c.trimStart) : 0,
+          trimEnd: c.trimEnd != null ? Number(c.trimEnd) : (Number(c.trimStart) || 0) + 60,
+        });
+        continue;
+      }
       if (isPostLiveVodClip(c)) {
         resolved.push({
           ...c,
@@ -6628,7 +6807,7 @@ app.get('/live-show/rundown', (req, res) => {
 // POST /job/:id/regenerate-hooks — rerun Hook Machine + Claude QA; save candidates without assembly
 app.post('/job/:id/regenerate-hooks', async (req, res) => {
   const jobId = req.params.id;
-  const card = persistedJobs[jobId];
+  const card = resolveJobCard(jobId);
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
   if (card.stage === 'published') {
     return res.status(400).json({ ok: false, error: 'Job is published — rollback first.' });
@@ -6649,7 +6828,7 @@ app.post('/job/:id/regenerate-hooks', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'No orderedClipUrls on card — cannot regenerate hooks.' });
   }
 
-  const { generateClipCompCreativeBrief, buildClipCompSeoInput } = require('./lib/clip_comp_hooks');
+  const { generateClipCompCreativeBrief, ensureHookCandidatePools } = require('./lib/clip_comp_hooks');
   const hookItems = (card.items || orderedClips).map((c) => ({
     title: c.title || '',
     displayName: c.displayName || c.streamer || '',
@@ -6668,7 +6847,7 @@ app.post('/job/:id/regenerate-hooks', async (req, res) => {
     });
 
     const clipHookTitles = clipCompBrief.clips.map((c) => c.hook);
-    const clipHookCandidates = clipCompBrief.clips.map((c) => c.hookCandidates || []);
+    const clipHookCandidates = ensureHookCandidatePools(clipCompBrief.clips);
 
     card.clipHookTitles = clipHookTitles;
     card.clipHookCandidates = clipHookCandidates;
@@ -7669,22 +7848,141 @@ app.get('/assemble-progress/:id', (req, res) => {
 });
 
 
-// GET /download/:file — serve assembled video or thumbnail frame
-app.get('/download/:file', (req, res) => {
-  const filePath = path.join(OUTPUT_DIR, path.basename(req.params.file));
-  if (!fs.existsSync(filePath)) {
-    // Also check tmp dir for thumbnail frames
-    const tmpPath = path.join(TMP_DIR, path.basename(req.params.file));
-    if (fs.existsSync(tmpPath)) {
-      res.setHeader('Accept-Ranges', 'bytes');
-      res.setHeader('Content-Type', 'video/mp4');
-      return res.sendFile(tmpPath);
-    }
+/** Extract job id embedded in assembled output filenames (clip_short_*_script_twitch-short_<ts>.mp4). */
+function jobIdFromOutputFilename(filename) {
+  const m = String(filename || '').match(/script_twitch(?:-short)?_\d+/);
+  return m ? m[0] : null;
+}
+
+/** Stream local media with explicit byte-range support (more reliable than sendFile for large MP4 review). */
+function streamLocalFileWithRange(req, res, filePath, ctype) {
+  let stat;
+  try {
+    stat = fs.statSync(filePath);
+  } catch {
     return res.status(404).json({ error: 'File not found' });
   }
+  const fileSize = stat.size;
+  const range = req.headers.range;
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.setHeader('Accept-Ranges', 'bytes');
-  res.setHeader('Content-Type', 'video/mp4');
-  res.sendFile(filePath);
+  res.setHeader('Content-Type', ctype);
+  res.setHeader('Content-Disposition', 'inline');
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+
+  if (range) {
+    const parts = String(range).replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    if (Number.isNaN(start) || start >= fileSize || end >= fileSize || start > end) {
+      res.status(416).setHeader('Content-Range', `bytes */${fileSize}`);
+      return res.end();
+    }
+    const chunkSize = end - start + 1;
+    res.status(206);
+    res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+    res.setHeader('Content-Length', String(chunkSize));
+    return fs.createReadStream(filePath, { start, end }).pipe(res);
+  }
+
+  res.setHeader('Content-Length', String(fileSize));
+  return fs.createReadStream(filePath).pipe(res);
+}
+
+// GET /download/:file — serve assembled video or thumbnail frame
+app.get('/download/:file', (req, res) => {
+  const base = path.basename(req.params.file);
+  const ext = path.extname(base).toLowerCase();
+
+  // Browser tab navigation to raw /download/*.mp4 spins in Chrome — redirect to review page.
+  if (ext === '.mp4') {
+    const accept = String(req.headers.accept || '');
+    if (accept.includes('text/html')) {
+      const jobId = jobIdFromOutputFilename(base);
+      if (jobId && resolveJobCard(jobId)) {
+        const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+        return res.redirect(302, `/job/${encodeURIComponent(jobId)}/preview${qs}`);
+      }
+    }
+  }
+
+  let filePath = path.join(OUTPUT_DIR, base);
+  if (!fs.existsSync(filePath)) {
+    const tmpPath = path.join(TMP_DIR, base);
+    if (fs.existsSync(tmpPath)) filePath = tmpPath;
+    else return res.status(404).json({ error: 'File not found' });
+  }
+  const ctype = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg'
+    : ext === '.png' ? 'image/png'
+      : ext === '.webp' ? 'image/webp'
+        : ext === '.mp4' ? 'video/mp4'
+          : 'application/octet-stream';
+  return streamLocalFileWithRange(req, res, filePath, ctype);
+});
+
+// GET /job/:id/preview — operator review page (reliable vs raw /download in new tab)
+app.get('/job/:id/preview', (req, res) => {
+  const jobId = req.params.id;
+  const card = resolveJobCard(jobId);
+  if (!card) return res.status(404).send('Job not found');
+
+  const { findJobFinalOutputPath } = require('./lib/assembly_card_persist');
+  const outPath = card.outputPath || findJobFinalOutputPath(card);
+  const localName = outPath ? path.basename(outPath) : (card.filename || null);
+  const localFile = localName ? path.join(OUTPUT_DIR, localName) : null;
+  const localUrl = localFile && fs.existsSync(localFile) ? `/download/${localName}` : null;
+  const cloudUrl = card.driveUrl || card.state?.savedOutputs?.driveUrl || null;
+  if (!localUrl && !cloudUrl) return res.status(404).send('No assembled video yet — wait for assembly to finish.');
+
+  const title = (card.publishCopy?.platforms?.youtube?.title || card.publishCopy?.title || card.title || jobId)
+    .replace(/[<>]/g, '');
+  const bust = card.assemblyId || card.assembledAt || Date.now();
+  const bustQs = '?v=' + encodeURIComponent(String(bust));
+  const cloudSrc = cloudUrl ? cloudUrl + (cloudUrl.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(String(bust)) : '';
+  const localSrc = localUrl ? localUrl + bustQs : '';
+  const poster = card.thumbnailDriveUrl || card.state?.savedOutputs?.thumbnailDriveUrl || '';
+
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title.slice(0, 80)} — Preview</title>
+<style>
+  body{margin:0;background:#0a0f18;color:#fff;font-family:system-ui,sans-serif}
+  header{padding:12px 16px;border-bottom:1px solid rgba(199,175,79,.25)}
+  h1{font-size:16px;margin:0;font-weight:600}
+  .sub{font-size:13px;color:#8899aa;margin-top:4px;font-family:monospace}
+  main{padding:12px;max-width:480px;margin:0 auto}
+  video{width:100%;max-height:85vh;background:#000;border-radius:8px}
+  .links{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;font-size:14px}
+  a{color:#c7af4f}
+  #status{font-size:13px;color:#8899aa;margin-top:8px}
+</style></head><body>
+<header><h1>${title.slice(0, 120)}</h1><div class="sub">${jobId}</div></header>
+<main>
+  <video id="v" controls playsinline preload="metadata"${poster ? ` poster="${poster}"` : ''}></video>
+  <div id="status">Loading preview…</div>
+  <div class="links">
+    ${localSrc ? `<a href="${localSrc}" download>Download MP4</a>` : (cloudSrc ? `<a href="${cloudSrc}" download>Download MP4</a>` : '')}
+    <a href="/">← Dashboard</a>
+  </div>
+</main>
+<script>
+var v=document.getElementById('v'),s=document.getElementById('status');
+var sources=${JSON.stringify([cloudSrc, localSrc].filter(Boolean))};
+var idx=0;
+function ok(){s.textContent='Ready — use player controls.';}
+function fail(){s.textContent='Player stuck — use Download MP4 or return to dashboard.';}
+function loadNext(){
+  if(idx>=sources.length){fail();return;}
+  v.src=sources[idx++];
+}
+v.addEventListener('loadeddata',ok);
+v.addEventListener('canplay',ok);
+v.addEventListener('error',loadNext);
+loadNext();
+setTimeout(function(){if(v.readyState<2&&idx>=sources.length)fail();},10000);
+</script>
+</body></html>`);
 });
 
 // GET /thumbnail/:assemblyId — get extracted thumbnail frame for a job
