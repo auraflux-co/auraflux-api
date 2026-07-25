@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-25 (CPD-1288) — VOD explorer now honors **Last 7D / 30D** pills (`window=` on `/content-library/vods`). SpeedUniverse empty on 7d is correct; switch to Last 30D for more long-form. Hard refresh → VODs → Fetch.
 **Last Updated:** 2026-07-25 (CPD-1287) — Compose preset **C9 FableFlow · Speed Short** (`fableflow_speed`): full-bleed, whisper-only, Punch look, ES bed + whoosh, Short-only. Path: VOD peak → preset → trim → Beats→FX → EXECUTE → curiosity title at publish. Hard refresh Creative Mode.
 **Last Updated:** 2026-07-25 (CPD-1284–1286) — Clip-comp **xfade joins**, **animated text** overlays, **highlight SFX drops**, **Beats→FX music-bed** source, CapCut-style Look catalog (+cinema/noir/sunset/arctic/retro/neon). Hard refresh Composer → Join/Beats source/Text/Look → EXECUTE.
 **Last Updated:** 2026-07-25 (CPD-1283) — CapCut-style **Look tint** presets (teal/punch/warm…) + Beats→FX **red impact flashes** (Gemini Core_fx gap). Speed feel dropdown. Hard refresh Composer.

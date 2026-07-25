@@ -23969,8 +23969,11 @@ function previewTwitchVods() {
   var platforms = (typeof getSelectedStreamerPlatforms === 'function')
     ? getSelectedStreamerPlatforms()
     : ['twitch', 'kick', 'youtube'];
+  var winEl = g('library-window');
+  var windowKey = (winEl && winEl.value) ? winEl.value : 'last7d';
   var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
     + '&platforms=' + encodeURIComponent(platforms.join(','))
+    + '&window=' + encodeURIComponent(windowKey)
     + '&limit=10';
   var xhr = new XMLHttpRequest();
   xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/vods?' + qs, true);
