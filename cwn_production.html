@@ -18238,7 +18238,12 @@ function syncComposerTimelineFromSourceReview() {
     renderComposerSpecRundown();
     scheduleComposerLiveSplitPaint();
     if (_composerPreviewMode !== 'ffmpeg') {
-      setComposerPreviewCaption('9:16 preview ready — scrub · Mark In/Out · Save look here', 'ok');
+      setComposerPreviewCaption(
+        (loadCompCreativePresetFromStorage().preset === 'fableflow_speed')
+          ? 'FableFlow · 9:16 ready — trim, then Beats→FX, then EXECUTE'
+          : '9:16 preview ready — scrub · Mark In/Out · Save look here',
+        'ok'
+      );
     }
     return;
   }
@@ -20277,6 +20282,7 @@ var COMP_LINEUP_TARGETS = {
   serpent_ranked: { lineupSlots: 5, minClips: 2, maxClips: 8, minDurationSec: 0, maxDurationSec: 180 },
   serpent_ranked_vod: { lineupSlots: 10, minClips: 8, maxClips: 12, minDurationSec: 480, maxDurationSec: 1200 },
   twitch_comp_vod: { lineupSlots: 8, minClips: 4, maxClips: 12, minDurationSec: 480, maxDurationSec: 1200 },
+  fableflow_speed: { lineupSlots: 1, minClips: 1, maxClips: 1, minDurationSec: 0, maxDurationSec: 90 },
   custom: { lineupSlots: 4, minClips: 2, maxClips: 10, minDurationSec: 0, maxDurationSec: 1200 }
 };
 
@@ -22593,6 +22599,8 @@ function refreshCompCreativeLabel() {
     el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(46,204,113,0.35);background:rgba(46,204,113,0.08);color:rgba(46,204,113,0.95);font-size:13px;">16:9 clip · <strong>split screen</strong> — tune green/gold boxes below. Switch to <em>Single view</em> above for one full frame.</div>';
   } else if (composerLineupIsLandscape() && preset === 'full_bleed' && !composerLandscapeSplitEnabled()) {
     el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(52,152,219,0.35);background:rgba(52,152,219,0.08);color:rgba(52,152,219,0.95);font-size:13px;">16:9 clip · <strong>single view</strong> — drag the cyan portrait box below to place the crop (same control as split, one frame).</div>';
+  } else if (preset === 'fableflow_speed') {
+    el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);color:rgba(255,255,255,0.88);font-size:13px;line-height:1.45;"><strong style="color:rgba(231,76,60,0.95);">FableFlow path</strong> — VOD peak → Short → trim → <strong>Beats→FX</strong> → EXECUTE. No CapCut. YouTube title = curiosity hook at publish (not burned on-screen).</div>';
   }
 }
 
@@ -22621,7 +22629,7 @@ function composerLandscapeSplitEnabled(stored) {
 function presetLayoutModeForCompose(preset) {
   preset = preset || 'classic_blur_pad';
   if (preset === 'facecam_split') return 'split_screen';
-  if (preset === 'full_bleed' || preset.indexOf('serpent') >= 0 || preset === 'dahbluh_clean' || preset === 'twitch_comp_vod') {
+  if (preset === 'full_bleed' || preset === 'fableflow_speed' || preset.indexOf('serpent') >= 0 || preset === 'dahbluh_clean' || preset === 'twitch_comp_vod') {
     return 'full_bleed_crop';
   }
   return 'blur_pad';
@@ -22850,7 +22858,8 @@ function compCreativeChipList(creative) {
       dahbluh_clean: 'C5 DahBluh',
       twitch_comp_vod: 'C6 Comp VOD',
       custom: 'C7 Custom',
-      facecam_split: 'C8 Facecam split'
+      facecam_split: 'C8 Facecam split',
+      fableflow_speed: 'C9 FableFlow Speed'
     };
     chips.push(labels[preset] || preset);
   }
@@ -22935,6 +22944,16 @@ function getTwitchClipActionState() {
     state.compVod.recommended = true;
     state.compVod.title = 'Edited comp VOD — intro, bridges, ' + spec.minClips + '–' + spec.maxClips + ' clips';
     state.hint = '→ Pick 4–8 clips in lineup, then Comp VOD';
+  } else if (preset === 'fableflow_speed') {
+    state.comp.enabled = false;
+    state.comp.title = 'FableFlow Speed is Short-only — one VOD peak → one Short';
+    state.compVod.enabled = false;
+    state.compVod.title = 'Not for FableFlow Speed — use Short';
+    state.short.recommended = true;
+    state.short.title = 'FableFlow Speed Short — trim peak, Beats→FX, EXECUTE';
+    state.hint = pickedCount >= 1
+      ? '→ Peak ready — Short → Composer → Beats→FX → EXECUTE (title at publish)'
+      : '→ Pick 1 Speed VOD peak, then Short';
   } else {
     state.comp.title = 'Stitch ' + spec.minClips + '–' + spec.lineupSlots + ' lineup clips into one Short';
     if (pickedCount === 1) {
@@ -23046,6 +23065,35 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.layout = overrides.layout || {};
     overrides.layout.logoCorner = stored.logoCorner || 'bottom_right';
   }
+  if (preset === 'fableflow_speed') {
+    // CPD-1287 — editor-less @FableFlow2 Speed Short recipe
+    overrides = overrides || {};
+    overrides.hooks = { mode: 'whisper_only', rankedList: { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 } };
+    overrides.captions = overrides.captions || {};
+    overrides.captions.whisper = true;
+    if (!overrides.captions.style) overrides.captions.style = 'phrase_full_bleed';
+    overrides.audio = Object.assign({}, overrides.audio || {}, {
+      musicBed: stored.musicBed || 'low_trap',
+      musicBedVolume: 0.14,
+      bedMixWeight: 0.18,
+      cutSfx: 'whoosh',
+      duckSpeech: true,
+      clipAudio: true
+    });
+    var lookTintFable = g('composer-look-tint') && g('composer-look-tint').value;
+    overrides.look = { preset: (lookTintFable && lookTintFable !== 'auto') ? lookTintFable : 'punch' };
+    overrides.transition = { style: 'cut', durationSec: 0.35 };
+    overrides.editorial = { enabled: false, introCard: false, ttsBridges: false };
+    overrides.effects = { transform: true, gagOverlays: false };
+    overrides.delivery = { format: 'short', relatedVideoParentId: stored.relatedVideoParentId || null };
+    overrides.beatSync = { suggestOnPreview: true, source: 'clip', maxPeaks: 6 };
+    overrides.layout = Object.assign({}, overrides.layout || {}, {
+      mode: 'full_bleed_crop',
+      logo: 'corner',
+      logoCorner: stored.logoCorner || 'top_right',
+      landscapeSplit: false
+    });
+  }
   if (preset === 'serpent_ranked_vod') {
     overrides = overrides || {};
     overrides.delivery = { format: 'vod_comp', relatedVideoParentId: stored.relatedVideoParentId || null };
@@ -23152,9 +23200,35 @@ function buildCompCreativeRequestPayload(streamerHint) {
 function onCompCreativePresetChange() {
   var hm = g('comp-creative-hook-mode');
   if (hm) delete hm.dataset.userPicked;
+  hydrateFableflowSpeedPresetDefaults();
   hydrateSourceCleanupFromStorage();
   refreshCompCreativeChips();
   refreshTwitchActionBar();
+}
+
+/** CPD-1287 — one-click FableFlow Speed recipe (no CapCut editor pass). */
+function hydrateFableflowSpeedPresetDefaults() {
+  var sel = g('comp-creative-preset');
+  if (!sel || sel.value !== 'fableflow_speed') return;
+  var ll = g('comp-creative-landscape-layout');
+  if (ll) ll.value = 'single';
+  var hm = g('comp-creative-hook-mode');
+  if (hm) { hm.value = 'whisper_only'; delete hm.dataset.userPicked; }
+  var bed = g('comp-creative-music-bed');
+  if (bed) bed.value = 'low_trap';
+  var logo = g('comp-creative-logo-corner');
+  if (logo) logo.value = 'top_right';
+  var look = g('composer-look-tint');
+  if (look) look.value = 'punch';
+  var cap = g('composer-caption-style');
+  if (cap) cap.value = 'phrase_full_bleed';
+  var join = g('composer-transition-style');
+  if (join) join.value = 'cut';
+  var beatSrc = g('composer-beat-source');
+  if (beatSrc) beatSrc.value = 'clip';
+  if (typeof setComposerPreviewCaption === 'function') {
+    setComposerPreviewCaption('FableFlow Speed · trim → Beats→FX → EXECUTE · curiosity title at publish', 'ok');
+  }
 }
 
 function refreshCompCreativeChips() {
@@ -23174,7 +23248,7 @@ function refreshCompCreativeChips() {
   var pseudo = { preset: stored.preset };
   if (stored.preset === 'facecam_split') {
     pseudo.layout = { mode: 'split_screen' };
-  } else if (stored.preset === 'full_bleed' || isRankedPreset || stored.preset === 'dahbluh_clean' || stored.preset === 'twitch_comp_vod') {
+  } else if (stored.preset === 'full_bleed' || stored.preset === 'fableflow_speed' || isRankedPreset || stored.preset === 'dahbluh_clean' || stored.preset === 'twitch_comp_vod') {
     pseudo.layout = { mode: 'full_bleed_crop' };
   } else {
     pseudo.layout = { mode: 'blur_pad' };
@@ -23220,6 +23294,13 @@ function refreshCompCreativeChips() {
   }
   if (stored.preset === 'twitch_comp_vod') {
     pseudo.audio = { musicBed: 'low_trap', cutSfx: 'whoosh' };
+  }
+  if (stored.preset === 'fableflow_speed') {
+    pseudo.hooks = { mode: 'whisper_only', rankedList: { enabled: false } };
+    pseudo.captions = { whisper: true, style: 'phrase_full_bleed' };
+    pseudo.audio = { musicBed: stored.musicBed || 'low_trap', cutSfx: 'whoosh' };
+    pseudo.delivery = { format: 'short' };
+    pseudo.look = { preset: 'punch' };
   }
   var el = g('comp-creative-chips');
   if (el) {

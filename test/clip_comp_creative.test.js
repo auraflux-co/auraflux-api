@@ -136,6 +136,29 @@ test('VALID_PRESETS includes custom', () => {
   assert.ok(VALID_PRESETS.has('classic_blur_pad'));
 });
 
+test('fableflow_speed preset is editor-less Speed Short recipe (CPD-1287)', () => {
+  const c = mergeCompCreative({ preset: 'fableflow_speed' });
+  assert.equal(c.preset, 'fableflow_speed');
+  assert.equal(c.layout.mode, 'full_bleed_crop');
+  assert.equal(c.layout.landscapeSplit, false);
+  assert.equal(c.hooks.mode, 'whisper_only');
+  assert.equal(c.captions.whisper, true);
+  assert.equal(c.captions.style, 'phrase_full_bleed');
+  assert.equal(c.audio.musicBed, 'low_trap');
+  assert.equal(c.audio.cutSfx, 'whoosh');
+  assert.equal(c.look.preset, 'punch');
+  assert.equal(c.transition.style, 'cut');
+  assert.equal(c.effects.transform, true);
+  assert.equal(c.delivery.format, 'short');
+  assert.equal(c.beatSync.suggestOnPreview, true);
+  assert.ok(VALID_PRESETS.has('fableflow_speed'));
+  const { getCompLineupTarget } = require('../lib/clip_comp_creative');
+  const t = getCompLineupTarget('fableflow_speed');
+  assert.equal(t.lineupSlots, 1);
+  assert.equal(t.minClips, 1);
+  assert.equal(t.maxClips, 1);
+});
+
 // ─── Facecam split preset (CPD-1228) ─────────────────────────────────────────
 
 test('facecam_split preset merges with split_screen layout', () => {
