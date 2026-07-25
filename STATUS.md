@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-25 (CPD-1271) — VOD peaks open as **editable Short clips** (Repurpose-style): stage window to R2 → inject picker clip → clear `vod_segment`. Live 9:16 preview uses staged MP4. Hard refresh → VODs → Analyze → Composer.
 **Last Updated:** 2026-07-25 (CPD-1267–1270) — Clip Library **VODs**: Speed YouTube roster + Most Replayed heatmap peaks → stage peak window to R2 (`library-staging/…`) → Composer source-review prefers R2 (no 854/CRF28 crush). Hard refresh → VODs → Analyze → Composer.
 **Last Updated:** 2026-07-19 (CPD-1266) — Brand-pad missing on last two Classic Shorts: CPD-1256 forced landscape Single → `full_bleed_crop`. Compose dropdown now **Split / Brand-pad / Full screen**; Classic stuck on `single` migrates to brand-pad. Hard refresh Compose. Published jobs need reassemble+republish if you want pad on those two.
 **Last Updated:** 2026-07-16 (CPD-1265) — Focus cadence is **day entries** (not banner prose): cells show `12:00 EE · Short` etc. Seed from **2026-07-13**→09-30. Banner = SEO focus lock only. Hard refresh + REFRESH Calendar.

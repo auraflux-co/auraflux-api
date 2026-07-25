@@ -16424,6 +16424,48 @@ function clearComposerVodSegment() {
   if (tl) { tl.classList.remove('is-active'); tl.innerHTML = ''; }
 }
 
+function buildVodPeakPickerClip(vod, entry, seg, staged) {
+  var startSec = Math.max(0, Math.floor(Number(seg.start_sec) || 0));
+  var endSec = Math.max(startSec + 1, Math.floor(Number(seg.end_sec) || (startSec + 45)));
+  var dur = Math.max(1, endSec - startSec);
+  var play = (staged && (staged.r2Url || staged.r2_url || staged.playbackUrl || staged.stagedUrl || staged.mp4Url))
+    || seg.stagedUrl || '';
+  var pageUrl = (staged && staged.url) || (vod.url
+    + (String(vod.url || '').indexOf('?') >= 0 ? '&' : '?')
+    + 'cwn_win=' + startSec + '-' + endSec);
+  var streamer = String(vod.streamer || (entry && entry.name) || 'unknown').toLowerCase();
+  return {
+    title: seg.title || vod.title || ('Peak ' + startSec + '–' + endSec),
+    url: pageUrl,
+    pageUrl: pageUrl,
+    views: vod.views || 0,
+    game: 'vod-peak',
+    thumbnailUrl: vod.thumbnailUrl || '',
+    duration: dur,
+    selected: true,
+    platform: vod.platform || 'youtube',
+    streamer: streamer,
+    displayName: (entry && entry.displayName) || streamer,
+    stagedUrl: play || null,
+    playbackUrl: play || null,
+    r2Url: play || null,
+    mp4Url: play || null,
+    composerTrimStart: 0,
+    composerTrimEnd: dur,
+    trimStart: 0,
+    trimEnd: dur,
+    vodPeakWindow: true,
+    vodOrigin: {
+      vodUrl: vod.url,
+      vodId: vod.vodId,
+      start_sec: startSec,
+      end_sec: endSec,
+      score: seg.score
+    }
+  };
+}
+
+/** CPD-1271 — stage peak window → library-style picker clip (Repurpose pattern), not vod_segment. */
 function sendVodSegmentToComposer(si, vi, segIdx) {
   var entry = _twitchPickerVods[si];
   var vod = entry && entry.vods && entry.vods[vi];
@@ -16434,29 +16476,55 @@ function sendVodSegmentToComposer(si, vi, segIdx) {
   var seg = vod.segments[segIdx != null ? segIdx : 0];
   if (!seg) return;
 
-  function handoff(staged) {
-    _composerVodSegment = {
-      vodUrl: vod.url,
-      vodId: vod.vodId,
-      sessionId: vod.sessionId,
-      title: seg.title || vod.title || 'VOD highlight',
-      streamer: vod.streamer || entry.name,
-      duration_sec: vod.duration || seg.end_sec,
-      start_sec: seg.start_sec,
-      end_sec: seg.end_sec,
-      summary: seg.summary || '',
-      platform: vod.platform || 'youtube',
-      stagedUrl: (staged && (staged.r2Url || staged.r2_url || staged.playbackUrl)) || seg.stagedUrl || null,
-      score: seg.score
-    };
+  function openAsEditableClip(staged) {
+    var clip = buildVodPeakPickerClip(vod, entry, seg, staged);
+    if (!clip.stagedUrl && !clip.mp4Url) {
+      alert('Peak window has no staged MP4 — cannot open editable clip.');
+      return;
+    }
+    var streamer = clip.streamer;
+    var displayName = clip.displayName || streamer;
+    _composerVodSegment = null;
+    clearComposerVodSegment();
+    _twitchPickerStreamers = [{
+      name: streamer,
+      displayName: displayName,
+      platform: clip.platform || 'youtube',
+      selected: true,
+      clips: [clip],
+      clipsRaw: [Object.assign({}, clip)],
+      dropReason: null
+    }];
+    _composerContentSource = 'twitch';
+    if (g('twitch-streamers')) g('twitch-streamers').value = streamer;
     var delSel = g('composer-delivery');
-    if (delSel) { delSel.value = 'vod_segment'; delSel.dataset.userSet = '1'; }
-    sendPickerToComposer();
+    if (delSel) { delSel.value = 'short'; delSel.dataset.userSet = '1'; }
+    try {
+      sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
+        streamers: _twitchPickerStreamers,
+        vodSegment: null,
+        source: 'library-vod-peak'
+      }));
+    } catch (e) {}
+    nav('generate');
+    switchGeneratePillar('twitch');
+    var btn = g('btn-preview-twitch');
+    renderTwitchPicker(btn, 1);
+    setPickerPanelVisible('twitch', true);
+    if (btn) btn.textContent = 'HIDE PICKER';
+    reconcileCompLineup(collectCompPickedClips());
+    renderComposerHandoffSummary();
+    refreshGenerateComposer(true);
+    var panel = g('generate-composer');
+    if (panel) panel.classList.add('is-open');
+    scrollToComposer();
+    var st = g('twitch-fetch-status');
+    if (st) st.textContent = 'Peak staged as editable Short clip — scrub / Mark In-Out / EXECUTE';
+    setTimeout(function() { startComposerReviewPlayback(); }, 80);
   }
 
-  // CPD-1270: stage peak window to R2 (same path as library clips) before Composer
   var statusEl = g('twitch-fetch-status');
-  if (statusEl) statusEl.textContent = 'Staging peak window to R2 for Composer preview…';
+  if (statusEl) statusEl.textContent = 'Staging peak window to R2 for editable clip…';
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage-vod-window', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -16476,15 +16544,14 @@ function sendVodSegmentToComposer(si, vi, segIdx) {
       if (!d.ok) throw new Error(d.error || 'stage failed');
       seg.stagedUrl = d.r2Url || d.r2_url || d.playbackUrl || null;
       if (statusEl) statusEl.textContent = d.cached
-        ? 'Peak window already on R2 — opening Composer'
-        : 'Peak window staged to R2 — opening Composer';
-      handoff(d);
+        ? 'Peak window already on R2 — opening as editable clip'
+        : 'Peak window staged to R2 — opening as editable clip';
+      openAsEditableClip(d);
     })
     .catch(function(e) {
       console.warn('[vod-window-stage]', e.message);
-      if (statusEl) statusEl.textContent = 'R2 stage failed (' + e.message + ') — Composer will use lower-quality fallback';
-      if (!confirm('Could not stage peak to R2 (' + e.message + '). Open Composer with fallback preview anyway?')) return;
-      handoff(null);
+      if (statusEl) statusEl.textContent = 'R2 stage failed: ' + e.message;
+      alert('Could not stage peak to R2 (' + e.message + '). Fix R2/yt-dlp, then try Composer again — editable clips require a staged MP4.');
     });
 }
 

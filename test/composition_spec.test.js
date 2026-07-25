@@ -89,4 +89,45 @@ describe('composition_spec', () => {
     const body = toGenerateClipCompBody(spec);
     assert.equal(body.clips[0].url, 'https://www.twitch.tv/videos/123');
   });
+
+  it('CPD-1271: staged VOD peak window maps to 0-based clip with mp4Url', () => {
+    const { vodSegmentToClip } = require('../lib/composition_spec');
+    const clip = vodSegmentToClip({
+      vodUrl: 'https://www.youtube.com/watch?v=FcbbYyYvneg',
+      vodId: 'FcbbYyYvneg',
+      streamer: 'ishowspeed',
+      title: 'Most replayed peak',
+      start_sec: 319,
+      end_sec: 364,
+      stagedUrl: 'https://assets.auraflux.co/library-staging/ishowspeed/FcbbYyYvneg_319_364.mp4',
+      windowPageUrl: 'https://www.youtube.com/watch?v=FcbbYyYvneg&cwn_win=319-364',
+    });
+    assert.equal(clip.trimStart, 0);
+    assert.equal(clip.trimEnd, 45);
+    assert.equal(clip.stagedUrl, 'https://assets.auraflux.co/library-staging/ishowspeed/FcbbYyYvneg_319_364.mp4');
+    assert.equal(clip.mp4Url, clip.stagedUrl);
+    assert.ok(String(clip.url).includes('cwn_win=319-364'));
+  });
+
+  it('CPD-1271: short delivery with staged peak clip validates like library clip', () => {
+    const { spec, validation } = buildCompositionSpec({
+      deliveryFormat: 'short',
+      compCreativePreset: 'classic_blur_pad',
+      clips: [{
+        url: 'https://www.youtube.com/watch?v=FcbbYyYvneg&cwn_win=319-364',
+        pageUrl: 'https://www.youtube.com/watch?v=FcbbYyYvneg&cwn_win=319-364',
+        title: 'Most replayed peak',
+        streamer: 'ishowspeed',
+        duration: 45,
+        trimStart: 0,
+        trimEnd: 45,
+        stagedUrl: 'https://assets.auraflux.co/library-staging/ishowspeed/FcbbYyYvneg_319_364.mp4',
+        mp4Url: 'https://assets.auraflux.co/library-staging/ishowspeed/FcbbYyYvneg_319_364.mp4',
+      }],
+    });
+    assert.equal(validation.ok, true);
+    assert.equal(spec.deliveryFormat, 'short');
+    assert.equal(spec.clips[0].trimStart, 0);
+    assert.ok(spec.clips[0].mp4Url.includes('library-staging'));
+  });
 });
