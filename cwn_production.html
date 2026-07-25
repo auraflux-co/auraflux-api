@@ -1461,6 +1461,7 @@ input[type="url"], input[type="password"], select, textarea {
                         <button type="button" class="btn btn-outline btn-sm" onclick="discardComposerLookDraft()" title="Throw away unsaved slider/crop draft">Discard draft</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="clearComposerLayoutSegments()" title="Remove all timed looks">Clear looks</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="detectComposerSilence()" title="Find silence on preview clip">🔇 Silence</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="detectComposerBeats()" title="Detect energy peaks → zoom punch + shake on EXECUTE">Beats → FX</button>
                         <label style="font-size:12px;color:rgba(255,255,255,0.55);display:flex;align-items:center;gap:4px;cursor:pointer;">
                           <input type="checkbox" id="composer-trim-lock" onchange="onComposerTrimLockChange()"> Lock trim
                         </label>
@@ -1508,6 +1509,7 @@ input[type="url"], input[type="password"], select, textarea {
                           <button type="button" class="btn btn-gold btn-sm" onclick="saveComposerLookHere()" title="Save current look from playhead forward">Save look here</button>
                           <button type="button" class="btn btn-outline btn-sm" onclick="clearComposerLayoutSegments()" title="Remove all timed looks">Clear looks</button>
                           <button type="button" class="btn btn-outline btn-sm" onclick="detectComposerSilence()" title="Find silence regions on source review clip">🔇 SILENCE</button>
+                          <button type="button" class="btn btn-outline btn-sm" onclick="detectComposerBeats()" title="Detect energy peaks → punch + shake">Beats → FX</button>
                           <span id="composer-source-review-time" class="composer-source-review-time">0:00 / 0:00</span>
                         </div>
                         <input type="range" id="composer-source-review-scrub" class="composer-source-review-scrub" min="0" max="1000" value="0" oninput="onComposerSourceReviewScrub(this.value)">
@@ -18920,6 +18922,47 @@ function detectComposerSilence() {
     .catch(function(e) { if (status) status.textContent = '❌ ' + e.message; });
 }
 
+/** CPD-1282: energy peaks → zoom punch + camera shake on lead clip (EXECUTE burns in). */
+function detectComposerBeats() {
+  var path = window._composerTimelinePreviewPath || window._composerSourceReviewPath;
+  if (!path) { alert('Render full preview first (Done editing → Review, or wait for timeline preview).'); return; }
+  var status = g('composer-preview-caption');
+  if (status) status.textContent = 'Detecting beats…';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/analyze-beats', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filePath: path, maxPeaks: 6 })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'beat detect failed');
+      var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+      if (!lead) throw new Error('No lead clip in Composer');
+      // Timeline preview is trim-window-relative; portrait assembly FX use the same 0-based clock.
+      lead.zoomPunch = d.zoomPunch || null;
+      lead.cameraShake = d.cameraShake || null;
+      lead.beatCutMarks = d.cutMarks || [];
+      _composerEditDone = false;
+      _composerEditReviewed = false;
+      if (typeof syncComposerEditSurfaces === 'function') {
+        syncComposerEditSurfaces({ exitReview: true, syncDropdown: true });
+      }
+      var n = (d.peaks || []).length;
+      var times = (d.peaks || []).map(function(p) { return (Math.round(p.atSec * 10) / 10) + 's'; }).join(', ');
+      if (status) {
+        status.textContent = n
+          ? ('Beats → FX: ' + n + ' peak(s) @ ' + times + ' — punch + shake on EXECUTE')
+          : 'No strong beats found — try a louder section or longer preview';
+      }
+      if (typeof setComposerPreviewCaption === 'function' && status) {
+        setComposerPreviewCaption(status.textContent, n ? 'ok' : 'warn');
+      }
+    })
+    .catch(function(e) {
+      if (status) status.textContent = '❌ Beats: ' + e.message;
+    });
+}
+
 function exportComposerFcpxml() {
   var body = buildCompositionSpecFromUI();
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/export/fcpxml', {
@@ -19436,6 +19479,9 @@ function buildCompositionSpecFromUI() {
       segmentKind: c.segmentKind || '',
       layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],
       openingLayout: c.openingLayout || null,
+      zoomPunch: c.zoomPunch || null,
+      cameraShake: c.cameraShake || null,
+      speedRamps: c.speedRamps || null,
       thumbnailUrl: c.thumbnailUrl || '',
       order: idx,
       orientation: 'landscape',

@@ -6552,6 +6552,9 @@ app.post('/generate-clip-comp', async (req, res) => {
         ...c,
         layoutSegments: fromBody.length ? fromBody : fromSpec,
         openingLayout: c.openingLayout || sc.openingLayout || null,
+        zoomPunch: c.zoomPunch || sc.zoomPunch || null,
+        cameraShake: c.cameraShake || sc.cameraShake || null,
+        speedRamps: c.speedRamps || sc.speedRamps || null,
       };
     });
   }
@@ -6635,6 +6638,13 @@ app.post('/generate-clip-comp', async (req, res) => {
     segmentKind: c.segmentKind || '',
     layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments : [],
     openingLayout: c.openingLayout && typeof c.openingLayout === 'object' ? c.openingLayout : null,
+    zoomPunch: c.zoomPunch && typeof c.zoomPunch === 'object' ? c.zoomPunch : null,
+    cameraShake: c.cameraShake && typeof c.cameraShake === 'object' ? c.cameraShake : null,
+    speedRamps: c.speedRamps || null,
+    stagedUrl: c.stagedUrl || c.r2Url || c.mp4Url || '',
+    mp4Url: c.mp4Url || c.stagedUrl || c.r2Url || '',
+    r2Url: c.r2Url || c.stagedUrl || c.mp4Url || '',
+    vodPeakWindow: !!c.vodPeakWindow,
   }));
 
   const compDeliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType, compCreative });
@@ -6719,6 +6729,13 @@ app.post('/generate-clip-comp', async (req, res) => {
     postLiveVod:     c.postLiveVod,
     layoutSegments:  Array.isArray(c.layoutSegments) ? c.layoutSegments : [],
     openingLayout:   c.openingLayout && typeof c.openingLayout === 'object' ? c.openingLayout : null,
+    zoomPunch:       c.zoomPunch || null,
+    cameraShake:     c.cameraShake || null,
+    speedRamps:      c.speedRamps || null,
+    stagedUrl:       c.stagedUrl || '',
+    mp4Url:          c.mp4Url || '',
+    r2Url:           c.r2Url || '',
+    vodPeakWindow:   !!c.vodPeakWindow,
     clipTimingTargets: [],
     clipTimingFormat: 'none'
   }));
