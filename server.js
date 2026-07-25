@@ -6556,8 +6556,26 @@ app.post('/generate-clip-comp', async (req, res) => {
         cameraShake: c.cameraShake || sc.cameraShake || null,
         impactTint: c.impactTint || sc.impactTint || null,
         speedRamps: c.speedRamps || sc.speedRamps || null,
+        highlightSfx: c.highlightSfx || sc.highlightSfx || null,
+        overlayTexts: c.overlayTexts || sc.overlayTexts || null,
       };
     });
+  }
+
+  // CPD-1285/1286: lift lead-clip FX into compCreative for post-concat mix/transform
+  {
+    const leadFx = clips[0] || {};
+    if (leadFx.highlightSfx && leadFx.highlightSfx.drops?.length) {
+      compCreative.audio = compCreative.audio || {};
+      compCreative.audio.highlightSfx = leadFx.highlightSfx;
+    }
+    if (Array.isArray(leadFx.overlayTexts) && leadFx.overlayTexts.length) {
+      compCreative.animatedText = {
+        enabled: true,
+        items: leadFx.overlayTexts,
+        ...(compCreative.animatedText || {}),
+      };
+    }
   }
 
   // Job spec — same contract as the script flow so all gates read normally.

@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-25 (CPD-1284–1286) — Clip-comp **xfade joins**, **animated text** overlays, **highlight SFX drops**, **Beats→FX music-bed** source, CapCut-style Look catalog (+cinema/noir/sunset/arctic/retro/neon). Hard refresh Composer → Join/Beats source/Text/Look → EXECUTE.
 **Last Updated:** 2026-07-25 (CPD-1283) — CapCut-style **Look tint** presets (teal/punch/warm…) + Beats→FX **red impact flashes** (Gemini Core_fx gap). Speed feel dropdown. Hard refresh Composer.
 **Last Updated:** 2026-07-25 (CPD-1280–1282) — CapCut-parity FX: timed camera shake, variable speed ramps (+atempo), Compose **Beats → FX** (energy peaks → zoom punch + shake on EXECUTE). Hard refresh Composer.
 **Last Updated:** 2026-07-25 (CPD-1279) — Compose zoom keyframes: `expandZoomRamps` smooths full-bleed cropZoom/cx/cy between Save-look marks; `zoom_punch` un-stubbed → real FFmpeg zoompan. CapCut stays export-only. Hard refresh → Save look with zoom change → EXECUTE.

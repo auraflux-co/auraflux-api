@@ -1398,7 +1398,7 @@ input[type="url"], input[type="password"], select, textarea {
                       <option value="phrase_full_bleed">Captions · full bleed</option>
                       <option value="word_karaoke">Captions · karaoke</option>
                     </select>
-                    <select id="composer-look-tint" onchange="onComposerLookTintChange()" title="CapCut-style color look / tint (CPD-1283 — Gemini competitor gap)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
+                    <select id="composer-look-tint" onchange="onComposerLookTintChange()" title="CapCut-style color look / tint filter catalog (CPD-1283/1286)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
                       <option value="auto">Look · Auto grade</option>
                       <option value="crisp">Look · Crisp</option>
                       <option value="vivid">Look · Vivid</option>
@@ -1407,12 +1407,37 @@ input[type="url"], input[type="password"], select, textarea {
                       <option value="teal">Look · Teal</option>
                       <option value="punch">Look · Punch</option>
                       <option value="clean">Look · Clean</option>
+                      <option value="cinema">Look · Cinema</option>
+                      <option value="noir">Look · Noir</option>
+                      <option value="sunset">Look · Sunset</option>
+                      <option value="arctic">Look · Arctic</option>
+                      <option value="retro">Look · Retro</option>
+                      <option value="neon">Look · Neon</option>
                     </select>
                     <select id="composer-speed-feel" onchange="onComposerSpeedFeelChange()" title="Speed feel on lead clip (CPD-1281)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
                       <option value="normal">Speed · Normal</option>
                       <option value="slowmo_hit">Speed · Slow-mo hit</option>
                       <option value="ramp_in">Speed · Ramp in</option>
                       <option value="punch_pause">Speed · Punch pause</option>
+                    </select>
+                    <select id="composer-transition-style" onchange="onComposerTransitionChange()" title="Clip join transition (CPD-1284 xfade)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
+                      <option value="cut">Join · Hard cut</option>
+                      <option value="fade">Join · Crossfade</option>
+                      <option value="fade_black">Join · Fade black</option>
+                      <option value="wipe_left">Join · Wipe left</option>
+                      <option value="dissolve">Join · Dissolve</option>
+                    </select>
+                    <select id="composer-beat-source" title="Beats→FX audio source (CPD-1286)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
+                      <option value="clip">Beats · Clip audio</option>
+                      <option value="music_bed">Beats · Music bed</option>
+                    </select>
+                    <input id="composer-overlay-text" type="text" placeholder="Animated text…" maxlength="48" title="Kinetic overlay on EXECUTE (CPD-1285)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;max-width:140px;" />
+                    <select id="composer-overlay-style" title="Animated text style" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
+                      <option value="fade">Text · Fade</option>
+                      <option value="fly_left">Text · Fly left</option>
+                      <option value="fly_right">Text · Fly right</option>
+                      <option value="scale_pop">Text · Pop</option>
+                      <option value="shake">Text · Shake</option>
                     </select>
                     <select id="composer-template-select" onchange="applyCompositionTemplate(this.value)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;max-width:160px;">
                       <option value="">Templates…</option>
@@ -19003,14 +19028,27 @@ function onComposerSpeedFeelChange() {
 
 /** CPD-1282: energy peaks → zoom punch + camera shake on lead clip (EXECUTE burns in). */
 function detectComposerBeats() {
-  var path = window._composerTimelinePreviewPath || window._composerSourceReviewPath;
-  if (!path) { alert('Render full preview first (Done editing → Review, or wait for timeline preview).'); return; }
   var status = g('composer-preview-caption');
   if (status) status.textContent = 'Detecting beats…';
+  var beatSrc = (g('composer-beat-source') && g('composer-beat-source').value) || 'clip';
+  var body;
+  if (beatSrc === 'music_bed') {
+    var bed = (g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'low_trap';
+    if (!bed || bed === 'off') {
+      alert('Pick a music bed first (or switch Beats source to Clip audio).');
+      if (status) status.textContent = 'Beats: need a music bed';
+      return;
+    }
+    body = { source: 'music_bed', musicBed: bed, maxPeaks: 6 };
+  } else {
+    var path = window._composerTimelinePreviewPath || window._composerSourceReviewPath;
+    if (!path) { alert('Render full preview first (Done editing → Review, or wait for timeline preview).'); return; }
+    body = { filePath: path, maxPeaks: 6 };
+  }
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/analyze-beats', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filePath: path, maxPeaks: 6 })
+    body: JSON.stringify(body)
   })
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -19021,7 +19059,18 @@ function detectComposerBeats() {
       lead.zoomPunch = d.zoomPunch || null;
       lead.cameraShake = d.cameraShake || null;
       lead.impactTint = d.impactTint || null; // CPD-1283 red impact flashes (Gemini Core_fx)
+      lead.highlightSfx = d.highlightSfx || null; // CPD-1286 timed SFX drops
       lead.beatCutMarks = d.cutMarks || [];
+      // Optional kinetic text on first peak
+      var overlayTxt = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
+      if (overlayTxt && d.peaks && d.peaks[0]) {
+        lead.overlayTexts = [{
+          text: overlayTxt,
+          startSec: d.peaks[0].atSec,
+          duration: 2.2,
+          style: (g('composer-overlay-style') && g('composer-overlay-style').value) || 'fade'
+        }];
+      }
       _composerEditDone = false;
       _composerEditReviewed = false;
       if (typeof syncComposerEditSurfaces === 'function') {
@@ -19029,10 +19078,11 @@ function detectComposerBeats() {
       }
       var n = (d.peaks || []).length;
       var times = (d.peaks || []).map(function(p) { return (Math.round(p.atSec * 10) / 10) + 's'; }).join(', ');
+      var srcLabel = (d.source && String(d.source).indexOf('music_bed') === 0) ? 'music bed' : 'clip';
       if (status) {
         status.textContent = n
-          ? ('Beats → FX: ' + n + ' peak(s) @ ' + times + ' — punch + shake + red tint on EXECUTE')
-          : 'No strong beats found — try a louder section or longer preview';
+          ? ('Beats → FX (' + srcLabel + '): ' + n + ' peak(s) @ ' + times + ' — punch + shake + tint + SFX on EXECUTE')
+          : 'No strong beats found — try a louder section, longer preview, or music bed';
       }
       if (typeof setComposerPreviewCaption === 'function' && status) {
         setComposerPreviewCaption(status.textContent, n ? 'ok' : 'warn');
@@ -19041,6 +19091,12 @@ function detectComposerBeats() {
     .catch(function(e) {
       if (status) status.textContent = '❌ Beats: ' + e.message;
     });
+}
+
+function onComposerTransitionChange() {
+  var v = g('composer-transition-style') && g('composer-transition-style').value;
+  var status = g('composer-preview-caption');
+  if (status) status.textContent = 'Join transition: ' + (v || 'cut') + ' (multi-clip EXECUTE)';
 }
 
 function exportComposerFcpxml() {
@@ -19563,6 +19619,8 @@ function buildCompositionSpecFromUI() {
       cameraShake: c.cameraShake || null,
       impactTint: c.impactTint || null,
       speedRamps: c.speedRamps || null,
+      highlightSfx: c.highlightSfx || null,
+      overlayTexts: c.overlayTexts || null,
       thumbnailUrl: c.thumbnailUrl || '',
       order: idx,
       orientation: 'landscape',
@@ -23058,6 +23116,24 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides = overrides || {};
     overrides.look = overrides.look || {};
     overrides.look.preset = lookTint;
+  }
+  var joinStyle = g('composer-transition-style') && g('composer-transition-style').value;
+  if (joinStyle && joinStyle !== 'cut') {
+    overrides = overrides || {};
+    overrides.transition = { style: joinStyle, durationSec: 0.35 };
+  }
+  var overlayTxtPayload = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
+  if (overlayTxtPayload) {
+    overrides = overrides || {};
+    overrides.animatedText = {
+      enabled: true,
+      items: [{
+        text: overlayTxtPayload,
+        startSec: 0.6,
+        duration: 2.2,
+        style: (g('composer-overlay-style') && g('composer-overlay-style').value) || 'fade'
+      }]
+    };
   }
   if (stored.hideChatRail || stored.hideBottomBar || stored.hideTopBar) {
     overrides = overrides || {};
