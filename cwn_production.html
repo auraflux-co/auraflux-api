@@ -1207,13 +1207,13 @@ input[type="url"], input[type="password"], select, textarea {
                   <div id="comp-creative-landscape-split" style="display:none;margin-top:8px;padding:10px 12px;border-radius:6px;border:1px solid rgba(46,204,113,0.28);background:rgba(46,204,113,0.06);font-size:14px;line-height:1.5;color:rgba(255,255,255,0.78);">
                     <label style="display:block;font-size:13px;color:rgba(255,255,255,0.72);margin-bottom:8px;">Wide 16:9 clip layout
                       <select id="comp-creative-landscape-layout" onchange="onCompCreativeLandscapeLayoutChange()" style="width:100%;margin-top:4px;background:#0d1524;color:#fff;border:1px solid rgba(46,204,113,0.45);padding:6px 8px;font-size:14px;border-radius:3px;">
-                        <option value="split_screen">Split screen — face/scene stacked (two crops)</option>
-                        <option value="brand_pad">Single — Classic brand-pad (navy bands)</option>
-                        <option value="single">Single — full screen (edge-to-edge, no brand-pad)</option>
+                        <option value="split_screen">Split screen — two people / face+scene (use for Speed + brother)</option>
+                        <option value="brand_pad">Single — fit width (navy bands · whole 16:9 visible)</option>
+                        <option value="single">Single — full screen (edge-to-edge · ~⅓ of wide frame only)</option>
                       </select>
                     </label>
                     <div id="comp-creative-landscape-single-hint" style="display:none;margin-bottom:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(199,175,79,0.35);background:rgba(199,175,79,0.08);color:rgba(255,255,255,0.78);font-size:13px;line-height:1.45;">
-                      <strong>Single layout</strong> — pick <em>brand-pad</em> for Classic navy bands, or <em>full screen</em> for edge-to-edge. Drag the <strong>cyan box</strong> to place the portrait window on the wide frame.
+                      <strong>Framing</strong> — full screen keeps only ~⅓ of a 16:9 frame (can't fit two people side-by-side). For Speed + brother: use <em>Split</em> or <em>fit width</em>. Cyan box only slides the portrait window — zoom-out cannot widen past that.
                     </div>
                     <div id="comp-creative-landscape-single-controls" style="display:none;">
                       <div style="font-weight:700;color:rgba(52,152,219,0.95);margin-bottom:6px;">Portrait crop on wide clip</div>
@@ -17443,6 +17443,17 @@ function applyComposerLookToPreviewPanes(look) {
     }
     if (mainV) { mainV.style.display = 'block'; mainV.style.opacity = '1'; }
   }
+  // CPD-1289 — approximate CapCut look in live preview (EXECUTE burns real colorbalance)
+  var liveLook = (g('composer-look-tint') && g('composer-look-tint').value) || 'auto';
+  var liveFilter = '';
+  if (liveLook === 'punch') liveFilter = 'saturate(1.35) contrast(1.12) sepia(0.18) hue-rotate(-8deg)';
+  else if (liveLook === 'teal') liveFilter = 'saturate(1.15) hue-rotate(12deg) contrast(1.05)';
+  else if (liveLook === 'warm') liveFilter = 'sepia(0.22) saturate(1.2) contrast(1.05)';
+  else if (liveLook === 'cinema') liveFilter = 'contrast(1.15) saturate(0.92) brightness(0.96)';
+  else if (liveLook === 'noir') liveFilter = 'grayscale(0.85) contrast(1.2)';
+  else if (liveLook === 'neon') liveFilter = 'saturate(1.5) contrast(1.1) hue-rotate(-20deg)';
+  if (main) main.style.filter = liveFilter || 'none';
+  if (bg && splitOn) bg.style.filter = liveFilter || 'none';
   function relayout() {
     if (splitOn) {
       layoutComposerPaneVideo(bg, bgV, fc);
@@ -18981,9 +18992,10 @@ function onComposerLookTintChange() {
     localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
   } catch (_) { /* ignore */ }
   refreshGenerateComposer(false);
+  if (typeof scheduleComposerLiveSplitPaint === 'function') scheduleComposerLiveSplitPaint();
   if (typeof setComposerPreviewCaption === 'function') {
     var lab = (g('composer-look-tint') && g('composer-look-tint').selectedOptions[0].text) || 'Look';
-    setComposerPreviewCaption(lab + ' — burns on EXECUTE (vignette/grade pass)', 'ok');
+    setComposerPreviewCaption(lab + ' — live tint on · full grade on Review/EXECUTE', 'ok');
   }
 }
 
@@ -22600,7 +22612,7 @@ function refreshCompCreativeLabel() {
   } else if (composerLineupIsLandscape() && preset === 'full_bleed' && !composerLandscapeSplitEnabled()) {
     el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(52,152,219,0.35);background:rgba(52,152,219,0.08);color:rgba(52,152,219,0.95);font-size:13px;">16:9 clip · <strong>single view</strong> — drag the cyan portrait box below to place the crop (same control as split, one frame).</div>';
   } else if (preset === 'fableflow_speed') {
-    el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);color:rgba(255,255,255,0.88);font-size:13px;line-height:1.45;"><strong style="color:rgba(231,76,60,0.95);">FableFlow path</strong> — VOD peak → Short → trim → <strong>Beats→FX</strong> → EXECUTE. No CapCut. YouTube title = curiosity hook at publish (not burned on-screen).</div>';
+    el.innerHTML += '<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);color:rgba(255,255,255,0.88);font-size:13px;line-height:1.45;"><strong style="color:rgba(231,76,60,0.95);">FableFlow path</strong> — Punch look shows in live + Review preview. For Speed + brother use <strong>Split</strong> (full screen only keeps ~⅓ of the wide frame). Then Beats→FX → EXECUTE. Title at publish.</div>';
   }
 }
 
@@ -23088,11 +23100,10 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.delivery = { format: 'short', relatedVideoParentId: stored.relatedVideoParentId || null };
     overrides.beatSync = { suggestOnPreview: true, source: 'clip', maxPeaks: 6 };
     overrides.layout = Object.assign({}, overrides.layout || {}, {
-      mode: 'full_bleed_crop',
       logo: 'corner',
-      logoCorner: stored.logoCorner || 'top_right',
-      landscapeSplit: false
+      logoCorner: stored.logoCorner || 'top_right'
     });
+    // mode / landscapeSplit come from landscape dropdown (split default for two-shot)
   }
   if (preset === 'serpent_ranked_vod') {
     overrides = overrides || {};
@@ -23210,8 +23221,11 @@ function onCompCreativePresetChange() {
 function hydrateFableflowSpeedPresetDefaults() {
   var sel = g('comp-creative-preset');
   if (!sel || sel.value !== 'fableflow_speed') return;
+  // CPD-1289 — default split so Speed + brother both fit; switch to full screen for solo.
   var ll = g('comp-creative-landscape-layout');
-  if (ll) ll.value = 'single';
+  if (ll) ll.value = 'split_screen';
+  var topSubj = g('comp-creative-top-pane-subject');
+  if (topSubj) { topSubj.value = 'stacked_figures'; delete topSubj.dataset.userPicked; }
   var hm = g('comp-creative-hook-mode');
   if (hm) { hm.value = 'whisper_only'; delete hm.dataset.userPicked; }
   var bed = g('comp-creative-music-bed');
@@ -23226,8 +23240,9 @@ function hydrateFableflowSpeedPresetDefaults() {
   if (join) join.value = 'cut';
   var beatSrc = g('composer-beat-source');
   if (beatSrc) beatSrc.value = 'clip';
+  if (typeof onCompCreativeLandscapeLayoutChange === 'function') onCompCreativeLandscapeLayoutChange();
   if (typeof setComposerPreviewCaption === 'function') {
-    setComposerPreviewCaption('FableFlow Speed · trim → Beats→FX → EXECUTE · curiosity title at publish', 'ok');
+    setComposerPreviewCaption('C9 FableFlow · Punch look · Split for two people · Beats→FX → EXECUTE', 'ok');
   }
 }
 

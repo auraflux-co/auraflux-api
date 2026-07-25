@@ -136,11 +136,12 @@ test('VALID_PRESETS includes custom', () => {
   assert.ok(VALID_PRESETS.has('classic_blur_pad'));
 });
 
-test('fableflow_speed preset is editor-less Speed Short recipe (CPD-1287)', () => {
+test('fableflow_speed preset is editor-less Speed Short recipe (CPD-1287/1289)', () => {
   const c = mergeCompCreative({ preset: 'fableflow_speed' });
   assert.equal(c.preset, 'fableflow_speed');
-  assert.equal(c.layout.mode, 'full_bleed_crop');
-  assert.equal(c.layout.landscapeSplit, false);
+  // CPD-1289 — split default so two people fit; solo can switch to full bleed in UI
+  assert.equal(c.layout.mode, 'split_screen');
+  assert.equal(c.layout.landscapeSplit, true);
   assert.equal(c.hooks.mode, 'whisper_only');
   assert.equal(c.captions.whisper, true);
   assert.equal(c.captions.style, 'phrase_full_bleed');
