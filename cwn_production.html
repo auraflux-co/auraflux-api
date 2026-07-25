@@ -1398,6 +1398,22 @@ input[type="url"], input[type="password"], select, textarea {
                       <option value="phrase_full_bleed">Captions · full bleed</option>
                       <option value="word_karaoke">Captions · karaoke</option>
                     </select>
+                    <select id="composer-look-tint" onchange="onComposerLookTintChange()" title="CapCut-style color look / tint (CPD-1283 — Gemini competitor gap)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
+                      <option value="auto">Look · Auto grade</option>
+                      <option value="crisp">Look · Crisp</option>
+                      <option value="vivid">Look · Vivid</option>
+                      <option value="warm">Look · Warm</option>
+                      <option value="cool">Look · Cool</option>
+                      <option value="teal">Look · Teal</option>
+                      <option value="punch">Look · Punch</option>
+                      <option value="clean">Look · Clean</option>
+                    </select>
+                    <select id="composer-speed-feel" onchange="onComposerSpeedFeelChange()" title="Speed feel on lead clip (CPD-1281)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
+                      <option value="normal">Speed · Normal</option>
+                      <option value="slowmo_hit">Speed · Slow-mo hit</option>
+                      <option value="ramp_in">Speed · Ramp in</option>
+                      <option value="punch_pause">Speed · Punch pause</option>
+                    </select>
                     <select id="composer-template-select" onchange="applyCompositionTemplate(this.value)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;max-width:160px;">
                       <option value="">Templates…</option>
                     </select>
@@ -4645,6 +4661,8 @@ function persistComposerSessionNow() {
     deliveryFormat: (g('composer-delivery') && g('composer-delivery').value) || _composerDeliveryFormat || 'short',
     deliveryAspect: (g('composer-delivery-aspect') && g('composer-delivery-aspect').value) || '9:16',
     captionStyle: (g('composer-caption-style') && g('composer-caption-style').value) || '',
+    lookTint: (g('composer-look-tint') && g('composer-look-tint').value) || 'auto',
+    speedFeel: (g('composer-speed-feel') && g('composer-speed-feel').value) || 'normal',
     editingLayoutJobId: window._editingLayoutJobId || null,
   };
   try { sessionStorage.setItem(CWN_COMPOSER_SESSION_KEY, JSON.stringify(payload)); } catch (_e) {}
@@ -4727,6 +4745,7 @@ function restoreComposerSession() {
   }
   if (data.deliveryAspect && g('composer-delivery-aspect')) g('composer-delivery-aspect').value = data.deliveryAspect;
   if (data.captionStyle && g('composer-caption-style')) g('composer-caption-style').value = data.captionStyle;
+  if (data.lookTint && g('composer-look-tint')) g('composer-look-tint').value = data.lookTint;
   window._editingLayoutJobId = data.editingLayoutJobId || null;
   pruneCompLineupToPicked(collectCompPickedClips());
   restoreCompLineupOrder(data.compLineupIds || data.compLineupUrls || []);
@@ -18922,6 +18941,66 @@ function detectComposerSilence() {
     .catch(function(e) { if (status) status.textContent = '❌ ' + e.message; });
 }
 
+/** CPD-1283: CapCut-style look tint → compCreative.look.preset (burns in transform). */
+function onComposerLookTintChange() {
+  try {
+    var v = g('composer-look-tint') && g('composer-look-tint').value;
+    var stored = {};
+    try { stored = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}') || {}; } catch (_) {}
+    stored.lookTint = v || 'auto';
+    localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+  } catch (_) { /* ignore */ }
+  refreshGenerateComposer(false);
+  if (typeof setComposerPreviewCaption === 'function') {
+    var lab = (g('composer-look-tint') && g('composer-look-tint').selectedOptions[0].text) || 'Look';
+    setComposerPreviewCaption(lab + ' — burns on EXECUTE (vignette/grade pass)', 'ok');
+  }
+}
+
+/**
+ * CPD-1281: speed feel presets → lead clip.speedRamps (relative to Short trim window).
+ * Template times are authored for ~0–3s; server assembly maps onto portrait segment.
+ */
+function onComposerSpeedFeelChange() {
+  var feel = (g('composer-speed-feel') && g('composer-speed-feel').value) || 'normal';
+  var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+  if (!lead) {
+    if (typeof setComposerPreviewCaption === 'function') setComposerPreviewCaption('Pick a clip first', 'warn');
+    return;
+  }
+  var trimStart = 0; // portrait FX clock is trim-window-relative after layout
+  var trimEnd = Math.max(4, (Number(lead.composerTrimEnd != null ? lead.composerTrimEnd : lead.trimEnd) || 30)
+    - (Number(lead.composerTrimStart != null ? lead.composerTrimStart : lead.trimStart) || 0));
+  var templates = {
+    normal: null,
+    slowmo_hit: [{ startSec: 0.8, endSec: 1.8, factor: 0.55 }],
+    ramp_in: [{ startSec: 0, endSec: 1.2, factor: 0.7 }, { startSec: 1.2, endSec: 2.4, factor: 1.25 }],
+    punch_pause: [{ startSec: 1.0, endSec: 1.4, factor: 0.4 }],
+  };
+  var raw = templates[feel];
+  if (!raw) {
+    delete lead.speedRamps;
+  } else {
+    var scale = Math.min(2.5, Math.max(0.8, trimEnd / 12));
+    lead.speedRamps = raw.map(function(r) {
+      return {
+        startSec: trimStart + r.startSec * scale,
+        endSec: trimStart + r.endSec * scale,
+        factor: r.factor,
+      };
+    });
+  }
+  _composerEditDone = false;
+  _composerEditReviewed = false;
+  refreshGenerateComposer(false);
+  if (typeof setComposerPreviewCaption === 'function') {
+    setComposerPreviewCaption(
+      feel === 'normal' ? 'Speed · Normal (no ramps)' : ('Speed feel saved — ' + feel + ' on EXECUTE'),
+      'ok'
+    );
+  }
+}
+
 /** CPD-1282: energy peaks → zoom punch + camera shake on lead clip (EXECUTE burns in). */
 function detectComposerBeats() {
   var path = window._composerTimelinePreviewPath || window._composerSourceReviewPath;
@@ -18941,6 +19020,7 @@ function detectComposerBeats() {
       // Timeline preview is trim-window-relative; portrait assembly FX use the same 0-based clock.
       lead.zoomPunch = d.zoomPunch || null;
       lead.cameraShake = d.cameraShake || null;
+      lead.impactTint = d.impactTint || null; // CPD-1283 red impact flashes (Gemini Core_fx)
       lead.beatCutMarks = d.cutMarks || [];
       _composerEditDone = false;
       _composerEditReviewed = false;
@@ -18951,7 +19031,7 @@ function detectComposerBeats() {
       var times = (d.peaks || []).map(function(p) { return (Math.round(p.atSec * 10) / 10) + 's'; }).join(', ');
       if (status) {
         status.textContent = n
-          ? ('Beats → FX: ' + n + ' peak(s) @ ' + times + ' — punch + shake on EXECUTE')
+          ? ('Beats → FX: ' + n + ' peak(s) @ ' + times + ' — punch + shake + red tint on EXECUTE')
           : 'No strong beats found — try a louder section or longer preview';
       }
       if (typeof setComposerPreviewCaption === 'function' && status) {
@@ -19481,6 +19561,7 @@ function buildCompositionSpecFromUI() {
       openingLayout: c.openingLayout || null,
       zoomPunch: c.zoomPunch || null,
       cameraShake: c.cameraShake || null,
+      impactTint: c.impactTint || null,
       speedRamps: c.speedRamps || null,
       thumbnailUrl: c.thumbnailUrl || '',
       order: idx,
@@ -22971,6 +23052,12 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides = overrides || {};
     overrides.captions = overrides.captions || {};
     overrides.captions.style = capStyle;
+  }
+  var lookTint = g('composer-look-tint') && g('composer-look-tint').value;
+  if (lookTint && lookTint !== 'auto') {
+    overrides = overrides || {};
+    overrides.look = overrides.look || {};
+    overrides.look.preset = lookTint;
   }
   if (stored.hideChatRail || stored.hideBottomBar || stored.hideTopBar) {
     overrides = overrides || {};

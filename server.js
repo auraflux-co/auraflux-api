@@ -6554,6 +6554,7 @@ app.post('/generate-clip-comp', async (req, res) => {
         openingLayout: c.openingLayout || sc.openingLayout || null,
         zoomPunch: c.zoomPunch || sc.zoomPunch || null,
         cameraShake: c.cameraShake || sc.cameraShake || null,
+        impactTint: c.impactTint || sc.impactTint || null,
         speedRamps: c.speedRamps || sc.speedRamps || null,
       };
     });
@@ -6640,6 +6641,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     openingLayout: c.openingLayout && typeof c.openingLayout === 'object' ? c.openingLayout : null,
     zoomPunch: c.zoomPunch && typeof c.zoomPunch === 'object' ? c.zoomPunch : null,
     cameraShake: c.cameraShake && typeof c.cameraShake === 'object' ? c.cameraShake : null,
+    impactTint: c.impactTint && typeof c.impactTint === 'object' ? c.impactTint : null,
     speedRamps: c.speedRamps || null,
     stagedUrl: c.stagedUrl || c.r2Url || c.mp4Url || '',
     mp4Url: c.mp4Url || c.stagedUrl || c.r2Url || '',
@@ -6731,6 +6733,7 @@ app.post('/generate-clip-comp', async (req, res) => {
     openingLayout:   c.openingLayout && typeof c.openingLayout === 'object' ? c.openingLayout : null,
     zoomPunch:       c.zoomPunch || null,
     cameraShake:     c.cameraShake || null,
+    impactTint:      c.impactTint || null,
     speedRamps:      c.speedRamps || null,
     stagedUrl:       c.stagedUrl || '',
     mp4Url:          c.mp4Url || '',
