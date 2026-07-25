@@ -24,6 +24,9 @@
     "yourragegaming": { "displayName": "Rage", "platform": "twitch" },
     "xqc": { "displayName": "xQc", "platform": "kick" },
     "trainwreckstv": { "displayName": "Trainwrecks", "platform": "kick" },
-    "ishowspeed": { "displayName": "IShowSpeed", "platform": "youtube", "handle": "@IShowSpeed" }
+    "ishowspeed": { "displayName": "IShowSpeed", "platform": "youtube", "handle": "@IShowSpeed" },
+    "livespeedy": { "displayName": "Live Speedy", "platform": "youtube", "handle": "@LiveSpeedy" },
+    "speedyboykins": { "displayName": "Speedy Boykins", "platform": "youtube", "handle": "@speedyboykins7869" },
+    "speeduniverse": { "displayName": "SpeedUniverse", "platform": "youtube", "handle": "@SpeedUniverse" }
   }
 }

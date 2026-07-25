@@ -204,6 +204,27 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-timeline-scrub { width:100%; accent-color:#c7af4f; margin:0; display:block; position:relative; z-index:5; height:32px; cursor:pointer; touch-action:none; }
 .composer-timeline-scrub-label { font-size:10px; letter-spacing:0.06em; color:rgba(199,175,79,0.65); text-transform:uppercase; margin:2px 0 0; }
 .composer-timeline-hint { font-size:12px; line-height:1.45; color:rgba(255,255,255,0.45); margin-top:4px; }
+/* CPD-1255 — YouTube-parity Trim & cut */
+.composer-trim-cut-panel { display:none; margin:8px 0 4px; padding:10px; border-radius:8px; border:1px solid rgba(231,76,60,0.35); background:rgba(0,0,0,0.35); }
+.composer-trim-cut-panel.is-open { display:block; }
+.composer-trim-cut-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.composer-trim-cut-head .title { font-size:12px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:rgba(231,76,60,0.95); flex:1; }
+.composer-cut-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; max-height:140px; overflow:auto; }
+.composer-cut-row { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); cursor:pointer; font-size:13px; }
+.composer-cut-row.is-active { border-color:rgba(231,76,60,0.65); background:rgba(231,76,60,0.12); }
+.composer-cut-row .cut-label { font-weight:700; color:#fff; min-width:3.5em; }
+.composer-cut-row .cut-range { font-family:ui-monospace,Menlo,monospace; color:rgba(255,255,255,0.65); flex:1; }
+.composer-cut-row .cut-del { border:none; background:transparent; color:rgba(231,76,60,0.9); cursor:pointer; font-size:16px; line-height:1; padding:0 4px; }
+.composer-cut-rail-wrap { margin-top:4px; }
+.composer-cut-rail { position:relative; height:44px; border-radius:6px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); overflow:hidden; cursor:pointer; touch-action:none; }
+.composer-cut-rail-track { position:absolute; inset:0; background:repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 8%); pointer-events:none; }
+.composer-cut-selection { position:absolute; top:4px; bottom:4px; background:rgba(231,76,60,0.35); border:2px solid rgba(231,76,60,0.95); border-radius:4px; box-sizing:border-box; z-index:2; }
+.composer-cut-handle { position:absolute; top:0; bottom:0; width:12px; cursor:ew-resize; z-index:3; background:rgba(231,76,60,0.95); }
+.composer-cut-handle.in { left:0; border-radius:2px 0 0 2px; }
+.composer-cut-handle.out { right:0; border-radius:0 2px 2px 0; }
+.composer-cut-playhead { position:absolute; top:0; bottom:0; width:2px; background:#4fa8e0; z-index:4; pointer-events:none; transform:translateX(-50%); }
+.composer-cut-rail-times { display:flex; justify-content:space-between; font-family:ui-monospace,Menlo,monospace; font-size:11px; color:rgba(255,255,255,0.45); margin-top:4px; }
+.composer-cut-note { font-size:11px; color:rgba(255,255,255,0.45); margin-top:4px; line-height:1.4; }
 .composer-preview-caption { margin-top:8px; font-size:12px; line-height:1.45; color:rgba(255,255,255,0.55); text-align:center; font-family:monospace; min-height:2.8em; }
 .composer-preview-caption.ok { color:rgba(46,204,113,0.9); }
 .composer-preview-caption.err { color:rgba(231,76,60,0.95); }
@@ -721,7 +742,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .cal-month-dow span { font-size:13px; font-weight:900; letter-spacing:1px; color:rgba(199,175,79,0.45); text-align:center; }
 .cal-month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
 .cal-month-pad { visibility:hidden; pointer-events:none; }
-.cal-month-day { min-height:92px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px; cursor:pointer; transition:border-color .15s; }
+.cal-month-day { min-height:108px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px; cursor:pointer; transition:border-color .15s; }
 .cal-month-day:hover { border-color:rgba(199,175,79,0.35); }
 .cal-month-day.cal-today { border-color:rgba(199,175,79,0.55); background:rgba(199,175,79,0.06); }
 .cal-month-day.cal-past { opacity:0.92; }
@@ -731,6 +752,16 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .cal-month-day.cal-goal-missed { border-left:3px solid #e74c3c; }
 .cal-month-daynum { font-size:15px; font-weight:700; color:#fff; margin-bottom:4px; }
 .cal-month-plan { font-size:13px; color:rgba(255,255,255,0.45); line-height:1.45; }
+.cal-month-entries { margin-top:2px; max-height:72px; overflow:hidden; }
+.cal-entry { font-size:11px; line-height:1.35; color:rgba(255,255,255,0.82); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-entry-t { color:#c7af4f; font-weight:700; font-variant-numeric:tabular-nums; margin-right:2px; }
+.cal-entry-more { color:rgba(255,255,255,0.4); }
+.cal-slot-chip { font-size:10px; font-weight:700; letter-spacing:0.3px; padding:1px 5px; border-radius:3px; background:rgba(52,152,219,0.18); color:#7ec8f0; white-space:nowrap; }
+.cal-slot-chip.cal-slot-longform { background:rgba(199,175,79,0.18); color:#c7af4f; }
+.cal-slot-chip.cal-slot-comp { background:rgba(155,89,182,0.2); color:#c39bd3; }
+.cal-slot-chip.cal-slot-btm { background:rgba(231,76,60,0.18); color:#f1948a; }
+.cal-slot-chip.cal-slot-live { background:rgba(46,204,113,0.18); color:#2ecc71; }
+.cal-channel-switch { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
 .cal-month-actual { font-size:13px; color:rgba(255,255,255,0.65); margin-top:3px; line-height:1.45; }
 .cal-month-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
 .cal-chip { font-size:12px; padding:1px 4px; border-radius:3px; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.7); }
@@ -1177,11 +1208,12 @@ input[type="url"], input[type="password"], select, textarea {
                     <label style="display:block;font-size:13px;color:rgba(255,255,255,0.72);margin-bottom:8px;">Wide 16:9 clip layout
                       <select id="comp-creative-landscape-layout" onchange="onCompCreativeLandscapeLayoutChange()" style="width:100%;margin-top:4px;background:#0d1524;color:#fff;border:1px solid rgba(46,204,113,0.45);padding:6px 8px;font-size:14px;border-radius:3px;">
                         <option value="split_screen">Split screen — face/scene stacked (two crops)</option>
-                        <option value="single">Single view — one full frame (no top/bottom duplicate)</option>
+                        <option value="brand_pad">Single — Classic brand-pad (navy bands)</option>
+                        <option value="single">Single — full screen (edge-to-edge, no brand-pad)</option>
                       </select>
                     </label>
                     <div id="comp-creative-landscape-single-hint" style="display:none;margin-bottom:8px;padding:8px 10px;border-radius:6px;border:1px solid rgba(199,175,79,0.35);background:rgba(199,175,79,0.08);color:rgba(255,255,255,0.78);font-size:13px;line-height:1.45;">
-                      Uses your Creative preset as one portrait frame (<strong>full bleed</strong> or <strong>brand-pad</strong>) — not two copies of the same wide shot. Drag the <strong>cyan box</strong> below to place the portrait crop on the wide frame.
+                      <strong>Single layout</strong> — pick <em>brand-pad</em> for Classic navy bands, or <em>full screen</em> for edge-to-edge. Drag the <strong>cyan box</strong> to place the portrait window on the wide frame.
                     </div>
                     <div id="comp-creative-landscape-single-controls" style="display:none;">
                       <div style="font-weight:700;color:rgba(52,152,219,0.95);margin-bottom:6px;">Portrait crop on wide clip</div>
@@ -1389,17 +1421,40 @@ input[type="url"], input[type="password"], select, textarea {
                           <div id="composer-preview-logo" class="composer-preview-logo pos-fold">LOGO</div>
                         </div>
                       </div>
+                      <div id="composer-trim-cut-panel" class="composer-trim-cut-panel" aria-label="Trim and cut">
+                        <div class="composer-trim-cut-head">
+                          <span class="title">Trim &amp; cut</span>
+                          <button type="button" class="btn btn-outline btn-sm" onclick="addComposerCut()" title="Add another cut from this source">+ New Cut</button>
+                          <button type="button" id="btn-composer-discard-cuts" class="btn btn-outline btn-sm" onclick="discardComposerCuts()" title="Restore last saved cuts">Discard cuts</button>
+                          <button type="button" id="btn-composer-save-cuts" class="btn btn-gold btn-sm" onclick="saveComposerCuts()" disabled title="Commit cuts into Compose trim (multi-cut → stitch on EXECUTE)">Save cuts</button>
+                        </div>
+                        <div id="composer-cut-list" class="composer-cut-list"></div>
+                        <div class="composer-cut-rail-wrap">
+                          <div id="composer-cut-rail" class="composer-cut-rail" onpointerdown="onComposerCutRailPointerDown(event)">
+                            <div class="composer-cut-rail-track"></div>
+                            <div id="composer-cut-selection" class="composer-cut-selection">
+                              <div class="composer-cut-handle in" onpointerdown="onComposerCutHandlePointerDown('in', event)"></div>
+                              <div class="composer-cut-handle out" onpointerdown="onComposerCutHandlePointerDown('out', event)"></div>
+                            </div>
+                            <div id="composer-cut-playhead" class="composer-cut-playhead" style="left:0%;"></div>
+                          </div>
+                          <div id="composer-cut-rail-times" class="composer-cut-rail-times"><span>0:00</span><span>0:00</span></div>
+                          <div class="composer-cut-note">YouTube-style cuts on the <em>source</em> timeline · drag red handles · Save cuts · then looks / Review / EXECUTE</div>
+                        </div>
+                      </div>
                       <div class="composer-timeline-track">
                         <div id="composer-timeline-markers" class="composer-timeline-markers"></div>
                         <input type="range" id="composer-timeline-scrub" class="composer-timeline-scrub" min="0" max="1000" value="0"
                           onpointerdown="onComposerTimelineScrubStart()" onpointerup="onComposerTimelineScrubEnd()" onpointercancel="onComposerTimelineScrubEnd()"
                           oninput="onComposerTimelineScrub(this.value)" onchange="onComposerTimelineScrub(this.value, true)">
-                        <div class="composer-timeline-scrub-label">Edit timeline · drag to seek · Mark In/Out saves playhead</div>
+                        <div class="composer-timeline-scrub-label">Short timeline · drag to seek inside active cut · Mark In/Out also update the cut</div>
                       </div>
                       <div class="composer-timeline-transport">
                         <button type="button" id="composer-timeline-play" class="btn btn-outline btn-sm" onclick="toggleComposerTimelinePlay()">▶ Play</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="nudgeComposerTimeline(-10)" title="Back 10 seconds">← 10s</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="nudgeComposerTimeline(-1)" title="Back 1 second">← 1s</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="nudgeComposerTimeline(1)" title="Forward 1 second">1s →</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="nudgeComposerTimeline(10)" title="Forward 10 seconds">10s →</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="markComposerTimelineTime('in')" title="Save playhead as trim in">Mark In</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="markComposerTimelineTime('out')" title="Save playhead as trim out">Mark Out</button>
                         <button type="button" class="btn btn-gold btn-sm" onclick="saveComposerLookHere()" title="Save current look from this playhead forward (does not rewrite earlier seconds)">Save look here</button>
@@ -2180,7 +2235,7 @@ input[type="url"], input[type="password"], select, textarea {
     <!-- CLIP LIBRARY PAGE (CPD-1098 / CPD-1118) — pick streamers + clips, send to Composer -->
     <div class="page active" id="page-library">
       <div class="sec-title">CLIP LIBRARY <span class="badge" id="library-count">LIBRARY</span></div>
-      <p id="library-intro-copy" style="font-size:15px;color:rgba(255,255,255,0.45);margin:0 0 10px;line-height:1.5;">Select creators → <strong>Load library</strong> → check clips → <strong>Save picks</strong> (auto-saves too) → add more creators and reload without losing checks → <strong>COMPOSE →</strong></p>
+      <p id="library-intro-copy" style="font-size:15px;color:rgba(255,255,255,0.45);margin:0 0 10px;line-height:1.5;">Select creators → <strong>Load library</strong> → check clips → <strong>Save picks</strong> → <strong>COMPOSE →</strong>. For <strong>ExtraEmily ×2</strong> (or any day with 2 Shorts): check <strong>2 clips</strong>, keep delivery on <strong>Short</strong>, then EXECUTE — creates <strong>2 independent jobs</strong> (1 clip each). Leave schedule blank at generate; set <strong>12:00 / 17:00 ET chips</strong> per job on Approve &amp; Publish. Library stays loaded — no need to reload between picks.</p>
       <div class="btn-row library-source-tabs" style="margin-bottom:12px;gap:6px;">
         <input type="hidden" id="library-source-mode" value="streamers">
         <button type="button" id="btn-library-src-streamers" class="btn btn-gold btn-sm" onclick="setLibrarySourceMode('streamers')">STREAMERS</button>
@@ -2320,8 +2375,12 @@ input[type="url"], input[type="password"], select, textarea {
               <div id="streamer-selected-summary" class="streamer-selected-bar">Select creators, then Load library.</div>
               <div id="twitch-clip-schedule" class="gen-schedule-hint" style="display:none;" aria-hidden="true"></div>
               <div class="progress-wrap" id="twitch-progress-wrap" style="display:none"><div class="progress-bar" id="twitch-progress" style="width:0%"></div></div>
+              <div class="library-media-mode-pills" style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">
+                <button type="button" id="library-mode-clips" class="library-window-pill active" onclick="switchTwitchSubMode('clips')">Clips</button>
+                <button type="button" id="library-mode-vods" class="library-window-pill" onclick="switchTwitchSubMode('vods')" title="Long-form VODs — Analyze uses YouTube Most Replayed peaks when available">VODs</button>
+              </div>
               <div class="gen-action-bar">
-                <button id="btn-preview-twitch" class="btn btn-outline" onclick="loadLibraryClips()">Load library</button>
+                <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchMedia()">Load library</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="saveLibraryClipPicks(true)" title="Save checked clips to this browser">Save picks</button>
                 <button type="button" class="btn btn-gold" onclick="sendPickerToComposer()">COMPOSE →</button>
               </div>
@@ -2480,9 +2539,13 @@ input[type="url"], input[type="password"], select, textarea {
     <div class="page" id="page-calendar">
       <div class="sec-title">CONTENT CALENDAR <span class="badge">MONTHLY PLAN</span></div>
       <div class="btn-row" style="margin-bottom:12px;">
+        <div class="cal-channel-switch" role="group" aria-label="Calendar channel">
+          <button type="button" class="btn btn-gold btn-sm" id="cal-ch-clipzworldnews" onclick="calSetChannel('clipzworldnews')">ClipzWorld</button>
+          <button type="button" class="btn btn-outline btn-sm" id="cal-ch-behindthemasklore" onclick="calSetChannel('behindthemasklore')">Behind the Mask</button>
+        </div>
         <button type="button" class="btn btn-outline btn-sm" id="cal-refresh-btn" onclick="calendarRefresh(true)">REFRESH</button>
         <button class="btn btn-gold btn-sm" onclick="calUnlockOwner()">OWNER UNLOCK</button>
-        <span style="font-size:14px;color:rgba(255,255,255,0.4);align-self:center;">Plan the month · track jobs + YouTube · plan vs published</span>
+        <span style="font-size:14px;color:rgba(255,255,255,0.4);align-self:center;">Who + what per slot · ClipzWorld or BTM plan</span>
       </div>
       <div id="cal-cache-banner" style="display:none;font-size:14px;color:rgba(255,255,255,0.5);margin:-4px 0 8px;padding:8px 12px;border:1px solid rgba(199,175,79,0.25);border-radius:6px;background:rgba(199,175,79,0.06);"></div>
       <div id="cal-focus-banner" style="display:none;font-size:14px;line-height:1.55;color:rgba(255,255,255,0.78);margin:0 0 12px;padding:10px 14px;border:1px solid rgba(46,204,113,0.35);border-radius:6px;background:rgba(46,204,113,0.08);"></div>
@@ -2505,8 +2568,8 @@ input[type="url"], input[type="password"], select, textarea {
               </div>
             </div>
             <div class="cal-legend">
-              <span>▮ Short</span><span>▬ Long-form</span><span>● Live</span>
-              <span style="margin-left:8px;">Planned = your targets · Actual = jobs + YouTube</span>
+              <span>▮ Short</span><span>▬ Long-form / LF</span><span>● Live</span><span>Comp · BTM</span>
+              <span style="margin-left:8px;">Chips = streamer + kind · Actual = jobs + YouTube</span>
             </div>
             <div class="cal-month-dow">
               <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
@@ -3818,7 +3881,7 @@ function setLibrarySourceMode(mode, skipPersist) {
     } else if (mode === 'wire') {
       intro.innerHTML = 'Pick wire source → <strong>Load library</strong> → check stories → <strong>COMPOSE →</strong> edit in Generate Composer.';
     } else {
-      intro.innerHTML = 'Select creators → <strong>Load library</strong> → check clips (each downloads to R2 for hover preview) → <strong>COMPOSE →</strong> edit in Generate Composer. Unused R2 staging clears Sunday EOW.';
+      intro.innerHTML = 'Select creators → <strong>Load library</strong> → check clips → <strong>COMPOSE →</strong>. Two 1-clip Shorts same day: check 2 clips → Short → EXECUTE = 2 jobs. Schedule each on Approve with Calendar chips. Library stays loaded.';
     }
   }
   syncLibraryWindowToPicker();
@@ -4475,6 +4538,9 @@ function snapshotClipForSession(c) {
     selected: !!c.selected,
     composerTrimStart: c.composerTrimStart,
     composerTrimEnd: c.composerTrimEnd,
+    composerCuts: Array.isArray(c.composerCuts) ? c.composerCuts.map(function(cut) {
+      return { id: cut.id, startSec: cut.startSec, endSec: cut.endSec };
+    }) : undefined,
     layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],
     openingLayout: c.openingLayout || null,
     cropZoom: c.cropZoom,
@@ -8945,6 +9011,29 @@ function pipeStep(label, done, active, color) {
     +'</div>';
 }
 
+function gate5PublishCheckPassed(job) {
+  if (!job) return false;
+  if (job.stage === 'published' || (job.gate5Result && job.gate5Result.passed)) return true;
+  if (job.gate5 && job.gate5.prePublishValidation && job.gate5.prePublishValidation.passed) return true;
+  if (job.gate5 && (job.gate5.outcome === 'pass' || (job.gate5.score != null && job.gate5.score >= 85))) return true;
+  return false;
+}
+
+function renderGate5PublishCheckPanel(job) {
+  var qaEl = document.getElementById('gate5-result-' + job.id);
+  if (!qaEl || !gate5PublishCheckPassed(job)) return;
+  var g5 = job.gate5 || {};
+  var ppv = g5.prePublishValidation || (job.gate5Result && job.gate5Result.prePublishValidation) || { passed: true, violations: [] };
+  var color = ppv.passed ? '#2ecc71' : '#e74c3c';
+  qaEl.style.display = 'block';
+  qaEl.innerHTML = '<div style="margin-top:6px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid ' + color + '55;border-radius:4px;">'
+    + '<span style="color:' + color + ';font-size:15px;font-family:monospace;">Gate 5 publish check: '
+    + (ppv.passed ? 'PASS' : 'FAIL')
+    + (g5.score != null ? ' · ' + g5.score + '/100' : '')
+    + (job.stage === 'published' ? ' · published' : '')
+    + '</span></div>';
+}
+
 function isPostLivePublishHeld(job) {
   if (!job || job.postLivePublishReleased) return false;
   if (job.publishHold === 'post_live') return true;
@@ -9604,7 +9693,7 @@ function renderBurnedHookPickerMarkup(job, preAssembly) {
           return '<option value="' + escHtml(e.char) + '">' + escHtml(e.char + ' ' + e.label) + '</option>';
         }).join('') : '')
       + '</select>'
-      + '<input type="text" id="' + inputId + '" value="' + escHtml(displayHook) + '" maxlength="72" placeholder="Your hook line — max 72 chars, emoji OK" '
+      + '<input type="text" id="' + inputId + '" value="' + escHtml(displayHook) + '" placeholder="Your hook line — saved exactly as you type it" '
       + 'style="flex:1;min-width:180px;padding:6px 8px;font-size:15px;border-radius:4px;' + inputBorder + 'background:rgba(0,0,0,0.35);color:#fff;" '
       + 'oninput="saveHookInputDraft(\'' + job.id + '\',' + clipIdx + ',this.value)" '
       + 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();applyCustomClipHook(\'' + job.id + '\',' + clipIdx + ');}" />'
@@ -9757,9 +9846,9 @@ function renderQueueNow() {
       var g3Fail = jobGate3Failed(job);
       pipe += pipeStep('GATE 3 QA', g3Pass || (!!job.driveUrl && !g3Fail), jobActivelyAssembling(job) || (g3Fail && !g3Pass), g3Fail ? '#e74c3c' : '#9b59b6');
     }
-    pipe += pipeStep('GATE 5 QA', !!(job.gate5&&job.gate5.score>=85), !!(job.assembledAt&&!job.gate5), '#3498db');
+    pipe += pipeStep('GATE 5 QA', gate5PublishCheckPassed(job), !!(job.assembledAt && !gate5PublishCheckPassed(job) && job.stage !== 'gate5_running' && job.stage !== 'gate5_forced'), '#3498db');
     var isGate5Running = !!(job.stage === 'gate5_forced' || job.stage === 'gate5_running');
-    pipe += pipeStep('UPLOAD-POST', isGate5Running, !!(job.gate5&&!isGate5Running&&job.stage!=='published'), '#c7af4f');
+    pipe += pipeStep('UPLOAD-POST', job.stage === 'published' || (gate5PublishCheckPassed(job) && !isGate5Running), isGate5Running, '#c7af4f');
     pipe += pipeStep('PUBLISHED', !!(job.stage==='published'||!!(job.publishRecord&&job.publishRecord.gate4==='pass')), isGate5Running, '#27ae60');
     pipe += '</div>';
 
@@ -10354,7 +10443,7 @@ function renderQueueNow() {
       +'</div>'
       +'<span class="tag '+tagCls+'" style="flex-shrink:0;"><span class="tag-dot"></span>'+tagLbl+'</span>'
       +'</div>'
-      +pctBar+gate1FailBanner+gate5FailBanner+scriptReviewBanner+heygenStatusBanner+jobScriptPanel+pipe+creativeBar+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(job.gate5?'block':'none')+'"></div>'+metaStrip+mediaPanel+platBar+actions+segToggle+segHtml
+      +pctBar+gate1FailBanner+gate5FailBanner+scriptReviewBanner+heygenStatusBanner+jobScriptPanel+pipe+creativeBar+'<div id="gate2-result-'+job.id+'" style="display:'+(job.gate2?'block':'none')+'"></div>'+'<div id="gate5-result-'+job.id+'" style="display:'+(gate5PublishCheckPassed(job)?'block':'none')+'"></div>'+metaStrip+mediaPanel+platBar+actions+segToggle+segHtml
       +'</div></div>'
       +asmPanel+'</div>';
     } catch(jobErr) {
@@ -10364,6 +10453,7 @@ function renderQueueNow() {
   }).join('');
   restoreQueueMediaState(queueMediaState);
   restoreQueueScriptEditorState(queueScriptState);
+  visibleJobs.forEach(function(job) { renderGate5PublishCheckPanel(job); });
   JOBS.forEach(function(job) {
     if (!jobAwaitingScriptApproval(job)) return;
     var open = !window._jobScriptPanelOpen || window._jobScriptPanelOpen[job.id] !== false;
@@ -10710,12 +10800,10 @@ function _pollForPublished(jobId) {
         }
         var stage = resp.job.stage || '';
         if (stage === 'published') {
-          cwn_log('[gate5] ' + jobId + ' published ✅ — refreshing queue.', false);
+          cwn_log('[gate5] ' + jobId + ' publish check PASS — published ✅', false);
           var local = JOBS.find(function(j) { return j.id === jobId; });
           if (local) {
-            local.stage = 'published';
-            local.status = resp.job.status || local.status;
-            local.publishedAt = resp.job.publishedAt || local.publishedAt;
+            mergeServerJobIntoLocal(jobId, resp.job, { skipRender: true });
             saveJobs();
           }
           restoreJobsFromServer(false);
@@ -11021,7 +11109,7 @@ function applyCustomClipHook(jobId, clipIndex) {
   var statusEl = document.getElementById('custom-hook-status-' + jobId + '-' + clipIndex);
   var text = input ? String(input.value || '').trim() : '';
   if (!text) {
-    alert('Type your hook line first (max 72 characters, no streamer name).');
+    alert('Type your hook line first.');
     return;
   }
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
@@ -16345,20 +16433,59 @@ function sendVodSegmentToComposer(si, vi, segIdx) {
   }
   var seg = vod.segments[segIdx != null ? segIdx : 0];
   if (!seg) return;
-  _composerVodSegment = {
-    vodUrl: vod.url,
-    vodId: vod.vodId,
-    sessionId: vod.sessionId,
-    title: seg.title || vod.title || 'VOD highlight',
-    streamer: vod.streamer || entry.name,
-    duration_sec: vod.duration || seg.end_sec,
-    start_sec: seg.start_sec,
-    end_sec: seg.end_sec,
-    summary: seg.summary || ''
-  };
-  var delSel = g('composer-delivery');
-  if (delSel) { delSel.value = 'vod_segment'; delSel.dataset.userSet = '1'; }
-  sendPickerToComposer();
+
+  function handoff(staged) {
+    _composerVodSegment = {
+      vodUrl: vod.url,
+      vodId: vod.vodId,
+      sessionId: vod.sessionId,
+      title: seg.title || vod.title || 'VOD highlight',
+      streamer: vod.streamer || entry.name,
+      duration_sec: vod.duration || seg.end_sec,
+      start_sec: seg.start_sec,
+      end_sec: seg.end_sec,
+      summary: seg.summary || '',
+      platform: vod.platform || 'youtube',
+      stagedUrl: (staged && (staged.r2Url || staged.r2_url || staged.playbackUrl)) || seg.stagedUrl || null,
+      score: seg.score
+    };
+    var delSel = g('composer-delivery');
+    if (delSel) { delSel.value = 'vod_segment'; delSel.dataset.userSet = '1'; }
+    sendPickerToComposer();
+  }
+
+  // CPD-1270: stage peak window to R2 (same path as library clips) before Composer
+  var statusEl = g('twitch-fetch-status');
+  if (statusEl) statusEl.textContent = 'Staging peak window to R2 for Composer preview…';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage-vod-window', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      vodUrl: vod.url,
+      vodId: vod.vodId,
+      startSec: seg.start_sec,
+      endSec: seg.end_sec,
+      streamer: vod.streamer || entry.name,
+      title: seg.title || vod.title,
+      platform: vod.platform || 'youtube',
+      thumbnailUrl: vod.thumbnailUrl || ''
+    })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'stage failed');
+      seg.stagedUrl = d.r2Url || d.r2_url || d.playbackUrl || null;
+      if (statusEl) statusEl.textContent = d.cached
+        ? 'Peak window already on R2 — opening Composer'
+        : 'Peak window staged to R2 — opening Composer';
+      handoff(d);
+    })
+    .catch(function(e) {
+      console.warn('[vod-window-stage]', e.message);
+      if (statusEl) statusEl.textContent = 'R2 stage failed (' + e.message + ') — Composer will use lower-quality fallback';
+      if (!confirm('Could not stage peak to R2 (' + e.message + '). Open Composer with fallback preview anyway?')) return;
+      handoff(null);
+    });
 }
 
 function renderComposerVodTimeline() {
@@ -16470,6 +16597,7 @@ var _composerSourceReviewScrubbing = false;
 var _composerLastValidatedDuration = null;
 var _composerTimelineTrimStart = 0;
 var _composerTimelineTrimEnd = 0;
+var _composerTimelineDuration = 0;
 var _composerTimelineScrubbing = false;
 var _composerTrimLocked = false;
 
@@ -16522,14 +16650,355 @@ var _composerEditDone = false;
 var _composerEditReviewed = false;
 var _composerLookBaseline = null;
 
-/** Live 9:16 crop preview — draft at playhead, or saved look when scrubbing. */
+/** Leave Review (ffmpeg timeline-preview) and restore live 9:16 edit preview. */
+function exitComposerReviewToLiveEdit() {
+  if (_composerPreviewMode !== 'ffmpeg') return;
+  setComposerPreviewMode('mock');
+  setComposerReviewVideoMode('edit');
+  bootstrapComposerReviewVideo();
+}
+
+/** Live 9:16 crop preview — draft at playhead, or saved look when scrubbing.
+ *  Never tears down Review edit (ffmpeg). Intentional exits call exitComposerReviewToLiveEdit. */
 function ensureComposerLiveEditPreview() {
-  if (_composerPreviewMode === 'ffmpeg') {
-    setComposerPreviewMode('mock');
-    setComposerReviewVideoMode('edit');
-    bootstrapComposerReviewVideo();
-  }
+  if (_composerPreviewMode === 'ffmpeg' || _composerPreviewMode === 'loading' || _composerPreviewMode === 'assembled') return;
+  setComposerReviewVideoMode('edit');
   syncComposerPanePreview();
+}
+
+/* ── CPD-1255 YouTube-parity Trim & cut ─────────────────────────────── */
+var _composerCutsDirty = false;
+var _composerCutsSnapshot = null;
+var _composerActiveCutIdx = 0;
+var _composerCutDrag = null;
+
+function newComposerCutId() {
+  return 'cut_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 10000);
+}
+
+function getComposerSourceDurationForCuts(clip) {
+  clip = clip || composerLeadClipForEdit();
+  if (!clip) return 60;
+  var d = composerClipSourceDuration(clip);
+  return Math.max(2, Math.round(Number(d) || 60));
+}
+
+function ensureComposerCutsOnClip(clip) {
+  if (!clip) return [];
+  ensureComposerTrimDefaults(clip);
+  if (!Array.isArray(clip.composerCuts) || !clip.composerCuts.length) {
+    var start = Math.floor(Number(clip.composerTrimStart) || 0);
+    var end = Math.floor(Number(clip.composerTrimEnd) || start + 30);
+    var srcDur = getComposerSourceDurationForCuts(clip);
+    if (end <= start) end = Math.min(srcDur, start + 30);
+    clip.composerCuts = [{ id: newComposerCutId(), startSec: start, endSec: Math.min(srcDur, end) }];
+  }
+  return clip.composerCuts;
+}
+
+function getActiveComposerCut(clip) {
+  var cuts = ensureComposerCutsOnClip(clip);
+  if (_composerActiveCutIdx < 0 || _composerActiveCutIdx >= cuts.length) _composerActiveCutIdx = 0;
+  return cuts[_composerActiveCutIdx] || null;
+}
+
+function applyActiveCutToTrim(clip) {
+  if (!clip) return;
+  var cut = getActiveComposerCut(clip);
+  if (!cut) return;
+  clip.composerTrimStart = Math.floor(Number(cut.startSec) || 0);
+  clip.composerTrimEnd = Math.max(Math.floor(Number(cut.endSec) || 1), clip.composerTrimStart + 1);
+  clampComposerTrimToSource(clip);
+  cut.startSec = clip.composerTrimStart;
+  cut.endSec = clip.composerTrimEnd;
+  sanitizeComposerClipLooks(clip);
+}
+
+function syncActiveCutFromTrim(clip) {
+  if (!clip) return;
+  var cut = getActiveComposerCut(clip);
+  if (!cut) return;
+  cut.startSec = Math.floor(Number(clip.composerTrimStart) || 0);
+  cut.endSec = Math.max(Math.floor(Number(clip.composerTrimEnd) || cut.startSec + 1), cut.startSec + 1);
+  markComposerCutsDirty();
+}
+
+function snapshotComposerCuts(clip) {
+  clip = clip || composerLeadClipForEdit();
+  if (!clip) return null;
+  return JSON.stringify(ensureComposerCutsOnClip(clip).map(function(c) {
+    return { id: c.id, startSec: c.startSec, endSec: c.endSec };
+  }));
+}
+
+function markComposerCutsDirty() {
+  _composerCutsDirty = true;
+  updateComposerCutSaveUi();
+}
+
+function updateComposerCutSaveUi() {
+  var saveBtn = g('btn-composer-save-cuts');
+  if (saveBtn) saveBtn.disabled = !_composerCutsDirty;
+}
+
+function expandComposerCutsInLineup(lineup) {
+  var out = [];
+  (lineup || []).forEach(function(slot) {
+    var clip = slot && slot.clip;
+    var cuts = clip && Array.isArray(clip.composerCuts) ? clip.composerCuts : null;
+    if (!cuts || cuts.length <= 1) {
+      out.push(slot);
+      return;
+    }
+    cuts.forEach(function(cut) {
+      var c = Object.assign({}, clip, {
+        composerTrimStart: Math.floor(Number(cut.startSec) || 0),
+        composerTrimEnd: Math.floor(Number(cut.endSec) || 1),
+        trimStart: Math.floor(Number(cut.startSec) || 0),
+        trimEnd: Math.floor(Number(cut.endSec) || 1),
+      });
+      delete c.composerCuts;
+      out.push(Object.assign({}, slot, { clip: c, cutId: cut.id }));
+    });
+  });
+  return out;
+}
+
+function renderComposerTrimCutPanel() {
+  var panel = g('composer-trim-cut-panel');
+  if (!panel) return;
+  if (_composerVodSegment) {
+    panel.classList.remove('is-open');
+    return;
+  }
+  var clip = composerLeadClipForEdit();
+  if (!clip) {
+    panel.classList.remove('is-open');
+    return;
+  }
+  panel.classList.add('is-open');
+  ensureComposerCutsOnClip(clip);
+  if (_composerCutsSnapshot == null) _composerCutsSnapshot = snapshotComposerCuts(clip);
+  renderComposerCutList();
+  renderComposerCutRail();
+  updateComposerCutSaveUi();
+}
+
+function renderComposerCutList() {
+  var el = g('composer-cut-list');
+  var clip = composerLeadClipForEdit();
+  if (!el || !clip) return;
+  var cuts = ensureComposerCutsOnClip(clip);
+  var html = '';
+  cuts.forEach(function(cut, idx) {
+    var active = idx === _composerActiveCutIdx ? ' is-active' : '';
+    html += '<div class="composer-cut-row' + active + '" onclick="selectComposerCut(' + idx + ')">'
+      + '<span class="cut-label">Cut ' + (idx + 1) + '</span>'
+      + '<span class="cut-range">' + fmtSecToClock(cut.startSec) + ' – ' + fmtSecToClock(cut.endSec) + '</span>'
+      + (cuts.length > 1
+        ? '<button type="button" class="cut-del" title="Delete cut" onclick="event.stopPropagation();deleteComposerCut(' + idx + ')">×</button>'
+        : '')
+      + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderComposerCutRail() {
+  var clip = composerLeadClipForEdit();
+  var sel = g('composer-cut-selection');
+  var ph = g('composer-cut-playhead');
+  var times = g('composer-cut-rail-times');
+  if (!clip || !sel) return;
+  var srcDur = getComposerSourceDurationForCuts(clip);
+  var cut = getActiveComposerCut(clip);
+  if (!cut) return;
+  var leftPct = Math.max(0, Math.min(100, (cut.startSec / srcDur) * 100));
+  var rightPct = Math.max(0, Math.min(100, (cut.endSec / srcDur) * 100));
+  var widthPct = Math.max(1, rightPct - leftPct);
+  sel.style.left = leftPct + '%';
+  sel.style.width = widthPct + '%';
+  var abs = getComposerAbsolutePlayheadSec();
+  var phPct = Math.max(0, Math.min(100, (abs / srcDur) * 100));
+  if (ph) ph.style.left = phPct + '%';
+  if (times) {
+    times.innerHTML = '<span>0:00</span><span>Cut ' + (_composerActiveCutIdx + 1) + ' · '
+      + fmtSecToClock(cut.startSec) + '–' + fmtSecToClock(cut.endSec)
+      + '</span><span>' + fmtSecToClock(srcDur) + '</span>';
+  }
+}
+
+function selectComposerCut(idx) {
+  var clip = composerLeadClipForEdit();
+  if (!clip) return;
+  var cuts = ensureComposerCutsOnClip(clip);
+  _composerActiveCutIdx = Math.max(0, Math.min(cuts.length - 1, idx));
+  applyActiveCutToTrim(clip);
+  _composerEditDone = false;
+  _composerEditReviewed = false;
+  exitComposerReviewToLiveEdit();
+  initComposerTimelineFromClip();
+  updateComposerTimelineTransport(0);
+  seekComposerVideoToPlayhead(true);
+  renderComposerCutList();
+  renderComposerCutRail();
+  syncComposerEditSurfaces({ exitReview: false, syncDropdown: false });
+  setComposerPreviewCaption('Cut ' + (_composerActiveCutIdx + 1) + ' · ' + fmtSecToClock(clip.composerTrimStart) + '–' + fmtSecToClock(clip.composerTrimEnd), 'ok');
+}
+
+function addComposerCut() {
+  if (_composerTrimLocked) { alert('Trim is locked — unlock to add cuts.'); return; }
+  var clip = composerLeadClipForEdit();
+  if (!clip) return;
+  var cuts = ensureComposerCutsOnClip(clip);
+  var srcDur = getComposerSourceDurationForCuts(clip);
+  var abs = Math.floor(getComposerAbsolutePlayheadSec());
+  var start = Math.max(0, Math.min(srcDur - 2, abs));
+  var end = Math.min(srcDur, start + Math.max(8, Math.min(30, Math.round(srcDur / 4))));
+  if (end <= start) end = Math.min(srcDur, start + 2);
+  cuts.push({ id: newComposerCutId(), startSec: start, endSec: end });
+  _composerActiveCutIdx = cuts.length - 1;
+  applyActiveCutToTrim(clip);
+  markComposerCutsDirty();
+  _composerEditDone = false;
+  _composerEditReviewed = false;
+  exitComposerReviewToLiveEdit();
+  initComposerTimelineFromClip();
+  updateComposerTimelineTransport(0);
+  seekComposerVideoToPlayhead(true);
+  renderComposerCutList();
+  renderComposerCutRail();
+  persistComposerSessionNow();
+  setComposerPreviewCaption('Added Cut ' + cuts.length + ' — drag handles, then Save cuts', 'pending');
+}
+
+function deleteComposerCut(idx) {
+  if (_composerTrimLocked) { alert('Trim is locked — unlock to delete cuts.'); return; }
+  var clip = composerLeadClipForEdit();
+  if (!clip) return;
+  var cuts = ensureComposerCutsOnClip(clip);
+  if (cuts.length <= 1) return;
+  cuts.splice(idx, 1);
+  if (_composerActiveCutIdx >= cuts.length) _composerActiveCutIdx = cuts.length - 1;
+  applyActiveCutToTrim(clip);
+  markComposerCutsDirty();
+  _composerEditDone = false;
+  _composerEditReviewed = false;
+  exitComposerReviewToLiveEdit();
+  initComposerTimelineFromClip();
+  renderComposerCutList();
+  renderComposerCutRail();
+  persistComposerSessionNow();
+}
+
+function saveComposerCuts() {
+  var clip = composerLeadClipForEdit();
+  if (!clip) return;
+  ensureComposerCutsOnClip(clip);
+  applyActiveCutToTrim(clip);
+  _composerCutsSnapshot = snapshotComposerCuts(clip);
+  _composerCutsDirty = false;
+  updateComposerCutSaveUi();
+  initComposerTimelineFromClip();
+  renderComposerCutList();
+  renderComposerCutRail();
+  syncComposerEditSurfaces({ exitReview: true, syncDropdown: false });
+  var n = clip.composerCuts.length;
+  setComposerPreviewCaption(
+    'Saved ' + n + ' cut' + (n === 1 ? '' : 's') + ' — EXECUTE stitches them in order'
+      + (n > 1 ? ' (Review plays active cut)' : ''),
+    'ok'
+  );
+  persistComposerSessionNow();
+  debouncedComposerValidate();
+}
+
+function discardComposerCuts() {
+  var clip = composerLeadClipForEdit();
+  if (!clip) return;
+  if (_composerCutsSnapshot) {
+    try {
+      clip.composerCuts = JSON.parse(_composerCutsSnapshot);
+    } catch (e) {
+      delete clip.composerCuts;
+    }
+  } else {
+    delete clip.composerCuts;
+  }
+  _composerActiveCutIdx = 0;
+  ensureComposerCutsOnClip(clip);
+  applyActiveCutToTrim(clip);
+  _composerCutsDirty = false;
+  _composerCutsSnapshot = snapshotComposerCuts(clip);
+  updateComposerCutSaveUi();
+  initComposerTimelineFromClip();
+  renderComposerCutList();
+  renderComposerCutRail();
+  syncComposerEditSurfaces({ exitReview: true, syncDropdown: false });
+  setComposerPreviewCaption('Cuts discarded — restored last Save', 'ok');
+}
+
+function onComposerCutHandlePointerDown(side, ev) {
+  if (_composerTrimLocked) return;
+  if (_composerPreviewMode === 'ffmpeg') exitComposerReviewToLiveEdit();
+  ev.preventDefault();
+  ev.stopPropagation();
+  var rail = g('composer-cut-rail');
+  if (!rail) return;
+  _composerCutDrag = { side: side, rail: rail };
+  try { rail.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ }
+  window.addEventListener('pointermove', onComposerCutHandlePointerMove);
+  window.addEventListener('pointerup', onComposerCutHandlePointerUp);
+  window.addEventListener('pointercancel', onComposerCutHandlePointerUp);
+}
+
+function onComposerCutHandlePointerMove(ev) {
+  if (!_composerCutDrag) return;
+  var clip = composerLeadClipForEdit();
+  var cut = getActiveComposerCut(clip);
+  var rail = _composerCutDrag.rail;
+  if (!clip || !cut || !rail) return;
+  var rect = rail.getBoundingClientRect();
+  if (!rect.width) return;
+  var srcDur = getComposerSourceDurationForCuts(clip);
+  var sec = Math.round(Math.max(0, Math.min(srcDur, ((ev.clientX - rect.left) / rect.width) * srcDur)));
+  if (_composerCutDrag.side === 'in') cut.startSec = Math.min(sec, cut.endSec - 1);
+  else cut.endSec = Math.max(sec, cut.startSec + 1);
+  applyActiveCutToTrim(clip);
+  markComposerCutsDirty();
+  _composerEditDone = false;
+  _composerEditReviewed = false;
+  initComposerTimelineFromClip();
+  var shortPh = Math.max(0, Math.min(composerTimelineCapSec(clip), getComposerAbsolutePlayheadSec() - clip.composerTrimStart));
+  updateComposerTimelineTransport(shortPh);
+  seekComposerVideoToPlayhead(true);
+  renderComposerCutRail();
+  renderComposerCutList();
+}
+
+function onComposerCutHandlePointerUp() {
+  if (!_composerCutDrag) return;
+  _composerCutDrag = null;
+  window.removeEventListener('pointermove', onComposerCutHandlePointerMove);
+  window.removeEventListener('pointerup', onComposerCutHandlePointerUp);
+  window.removeEventListener('pointercancel', onComposerCutHandlePointerUp);
+  syncComposerEditSurfaces({ exitReview: true, syncDropdown: false, persist: true });
+}
+
+function onComposerCutRailPointerDown(ev) {
+  if (ev.target && ev.target.classList && ev.target.classList.contains('composer-cut-handle')) return;
+  if (_composerPreviewMode === 'ffmpeg') exitComposerReviewToLiveEdit();
+  var clip = composerLeadClipForEdit();
+  var rail = g('composer-cut-rail');
+  if (!clip || !rail) return;
+  var rect = rail.getBoundingClientRect();
+  if (!rect.width) return;
+  var srcDur = getComposerSourceDurationForCuts(clip);
+  var abs = Math.round(Math.max(0, Math.min(srcDur, ((ev.clientX - rect.left) / rect.width) * srcDur)));
+  ensureComposerTrimDefaults(clip);
+  var shortPh = Math.max(0, Math.min(composerTimelineCapSec(clip), abs - (Number(clip.composerTrimStart) || 0)));
+  updateComposerTimelineTransport(shortPh);
+  seekComposerVideoToPlayheadAt(shortPh, true);
+  renderComposerCutRail();
 }
 
 function markComposerLookDraftDirty() {
@@ -16540,6 +17009,7 @@ function markComposerLookDraftDirty() {
   _composerLookDraftDirty = true;
   _composerEditDone = false;
   _composerEditReviewed = false;
+  exitComposerReviewToLiveEdit();
   updateComposerEditStatus();
   syncComposerExecuteGate();
 }
@@ -16586,14 +17056,12 @@ function syncComposerEditSurfaces(opts) {
   if (look && !_composerLookDraftDirty && opts.syncDropdown) {
     syncComposerUiToSavedLook(look, true);
   }
-  if (_composerPreviewMode === 'ffmpeg' && opts.exitReview) {
-    setComposerPreviewMode('mock');
-    setComposerReviewVideoMode('edit');
-  }
+  if (opts.exitReview) exitComposerReviewToLiveEdit();
   scheduleComposerLiveSplitPaint();
   updateComposerEditStatus();
   syncComposerExecuteGate();
   logComposerLayoutAtPlayhead('sync');
+  renderComposerTrimCutPanel();
   if (opts.validate !== false) debouncedComposerValidate();
   if (opts.persist !== false) persistComposerSessionNow();
 }
@@ -16869,9 +17337,39 @@ function layoutComposerPaneVideo(paneEl, videoEl, rect) {
   videoEl.style.top = Math.round(-ry * vh * scale) + 'px';
 }
 
+function syncPaneVideoToMaster(paneVideo, master) {
+  if (!paneVideo || !master) return;
+  var src = master.currentSrc || master.src || '';
+  if (!src) return;
+  try {
+    var mt = master.currentTime || 0;
+    if (paneVideo.readyState >= 1 && Math.abs((paneVideo.currentTime || 0) - mt) > 0.033) {
+      paneVideo.currentTime = mt;
+    }
+    if (!master.paused) {
+      if (paneVideo.paused) paneVideo.play().catch(function() {});
+    } else {
+      paneVideo.pause();
+    }
+  } catch (e) { /* ignore */ }
+}
+
+/** Keep split-pane videos locked to the hidden master clock during play/scrub. */
+function syncComposerPaneVideoClock() {
+  if (_composerPreviewMode === 'ffmpeg') return;
+  var master = g('composer-preview-video');
+  if (!master || !(master.currentSrc || master.src)) return;
+  var bg = g('composer-preview-bg');
+  var main = g('composer-preview-main');
+  var bgV = bg && bg.querySelector('.composer-pane-video');
+  var mainV = main && main.querySelector('.composer-pane-video');
+  if (bgV && bgV.style.display !== 'none') syncPaneVideoToMaster(bgV, master);
+  if (mainV && mainV.style.display !== 'none') syncPaneVideoToMaster(mainV, master);
+}
+
 function bindComposerPaneVideo(paneVideo, master, thumb) {
   if (!paneVideo || !master) return;
-  var src = master.src || '';
+  var src = master.currentSrc || master.src || '';
   if (src) {
     if (paneVideo.src !== src) {
       paneVideo.removeAttribute('crossorigin');
@@ -16879,17 +17377,12 @@ function bindComposerPaneVideo(paneVideo, master, thumb) {
       paneVideo.load();
     }
     paneVideo.removeAttribute('poster');
+    syncPaneVideoToMaster(paneVideo, master);
   } else if (thumb) {
     paneVideo.removeAttribute('src');
     paneVideo.poster = thumb;
+    paneVideo.pause();
   }
-  try {
-    if (src && master.readyState >= 2 && Math.abs((paneVideo.currentTime || 0) - (master.currentTime || 0)) > 0.06) {
-      paneVideo.currentTime = master.currentTime || 0;
-    }
-  } catch (e) { /* ignore */ }
-  if (!master.paused) paneVideo.play().catch(function() {});
-  else paneVideo.pause();
 }
 
 function syncComposerPanePreview() {
@@ -16995,12 +17488,15 @@ function ensureComposerLeadClipStaged(callback) {
 }
 
 function startComposerReviewPlayback() {
+  // Do not clobber a finished Review edit with source scrub bootstrap.
+  if (_composerPreviewMode === 'ffmpeg' || _composerPreviewMode === 'loading') return;
   if (_composerVodSegment) {
     var reviewBody = buildComposerSourceReviewBody();
     if (reviewBody) fetchComposerSourceReview(reviewBody);
     return;
   }
   ensureComposerLeadClipStaged(function() {
+    if (_composerPreviewMode === 'ffmpeg' || _composerPreviewMode === 'loading') return;
     if (bootstrapComposerReviewVideo()) return;
     var reviewBody = buildComposerSourceReviewBody();
     if (reviewBody) fetchComposerSourceReview(reviewBody);
@@ -17022,25 +17518,28 @@ function composerShortPlayheadFromVideoTime(videoSec) {
 
 function seekComposerVideoToPlayhead(force) {
   var video = getComposerScrubVideo();
-  if (!video || !video.src) return;
+  if (!video || !(video.currentSrc || video.src)) return;
   var t = composerVideoTimeFromShortPlayhead(window._composerTimelinePlayhead || 0);
   if (!force && video.paused) return;
   try {
     if (Math.abs((video.currentTime || 0) - t) > 0.05) video.currentTime = t;
   } catch (e) { /* ignore */ }
+  syncComposerPaneVideoClock();
 }
 
 function seekComposerVideoToPlayheadAt(t, force) {
   var video = getComposerScrubVideo();
-  if (!video || !video.src) return;
+  if (!video || !(video.currentSrc || video.src)) return;
   if (!force && video.paused) return;
   var abs = composerVideoTimeFromShortPlayhead(t);
   try {
     if (Math.abs((video.currentTime || 0) - abs) > 0.05) video.currentTime = abs;
   } catch (e) { /* ignore */ }
+  syncComposerPaneVideoClock();
 }
 
 function bootstrapComposerReviewVideo() {
+  if (_composerPreviewMode === 'ffmpeg') return false;
   var clip = composerLeadClipForEdit();
   if (!clip) return false;
   initComposerTimelineFromClip();
@@ -17080,12 +17579,14 @@ function bindComposerTimelineVideo() {
     syncComposerPanePreview();
   });
   video.addEventListener('timeupdate', function() {
+    syncComposerPaneVideoClock();
     if (_composerTimelineScrubbing) return;
     if (video.paused) return;
     updateComposerTimelineTransport(composerShortPlayheadFromVideoTime(video.currentTime || 0));
     scheduleComposerLiveSplitPaint();
   });
   video.addEventListener('seeked', function() {
+    syncComposerPaneVideoClock();
     scheduleComposerLiveSplitPaint();
     if (_composerTimelineScrubbing) return;
     if (!video.paused) updateComposerTimelineTransport(composerShortPlayheadFromVideoTime(video.currentTime || 0));
@@ -17240,6 +17741,7 @@ function updateComposerTimelineTransport(currentSec) {
   if (scrub && dur > 0 && !_composerTimelineScrubbing) {
     scrub.value = String(Math.round((currentSec / dur) * 1000));
   }
+  renderComposerCutRail();
   scheduleComposerLiveSplitPaint();
 }
 
@@ -17262,18 +17764,22 @@ function onComposerTimelineScrub(val, andSeek) {
 
 function toggleComposerTimelinePlay() {
   var video = getComposerScrubVideo();
-  if (!video || !video.src) {
+  if (!video || !(video.currentSrc || video.src)) {
     setComposerPreviewCaption('Video not loaded — wait for source clip or stage MP4 to R2', 'err');
+    startComposerReviewPlayback();
     return;
   }
   if (video.paused) {
     seekComposerVideoToPlayhead(true);
-    video.play().catch(function() {
+    video.play().then(function() {
+      syncComposerPaneVideoClock();
+    }).catch(function() {
       video.muted = true;
-      video.play().catch(function() {});
+      video.play().then(function() { syncComposerPaneVideoClock(); }).catch(function() {});
     });
   } else {
     video.pause();
+    syncComposerPaneVideoClock();
   }
 }
 
@@ -17283,9 +17789,9 @@ function getComposerTimelineTrimBase() {
 
 function getComposerScrubVideo() {
   var preview = g('composer-preview-video');
-  if (preview && preview.src) return preview;
+  if (preview && (preview.currentSrc || preview.src)) return preview;
   var source = g('composer-source-review-video');
-  if (source && source.src) return source;
+  if (source && (source.currentSrc || source.src)) return source;
   return preview;
 }
 
@@ -17330,12 +17836,22 @@ function setComposerActiveLineupSlot(idx) {
   _composerActiveLineupIdx = Math.max(0, parseInt(idx, 10) || 0);
   _composerEditDone = false;
   _composerEditReviewed = false;
+  _composerActiveCutIdx = 0;
+  _composerCutsDirty = false;
+  _composerCutsSnapshot = null;
   clearComposerLookDraftDirty();
   _composerLastPreviewMode = null;
   renderCompLineupPanel();
   renderComposerSpecRundown();
   initComposerTimelineFromClip();
   hydrateComposerUiForActiveClip();
+  var lead = composerLeadClipForEdit();
+  if (lead) {
+    ensureComposerCutsOnClip(lead);
+    applyActiveCutToTrim(lead);
+    _composerCutsSnapshot = snapshotComposerCuts(lead);
+  }
+  renderComposerTrimCutPanel();
   var reviewBody = buildComposerSourceReviewBody();
   if (reviewBody) fetchComposerSourceReviewNow(reviewBody);
   else refreshGenerateComposer(false, true);
@@ -17816,6 +18332,7 @@ function markComposerSourceReviewTime(kind) {
   _composerTimelineDuration = composerTimelineCapSec(slot.clip);
   // Moving trim in drops same-second / out-of-window layout switches from data + right panel.
   sanitizeComposerClipLooks(slot.clip);
+  syncActiveCutFromTrim(slot.clip);
   _composerEditDone = false;
   _composerEditReviewed = false;
   syncComposerEditSurfaces({ flashKind: kind === 'in' ? 'trim_in' : 'trim_out', exitReview: true });
@@ -17952,7 +18469,12 @@ function snapshotOpeningLayoutFromUI() {
   var payload = buildCompCreativeRequestPayload('');
   var layout = (payload.compCreative && payload.compCreative.layout) || {};
   var splitOn = composerLandscapeSplitEnabled(stored);
-  var mode = splitOn ? 'split_screen' : presetLayoutModeForCompose(stored.preset || payload.compCreativePreset);
+  // CPD-1266: landscape non-split is brand_pad (blur_pad) or single (full_bleed) — not forced full.
+  var mode = splitOn
+    ? 'split_screen'
+    : (composerLineupIsLandscape()
+      ? (composerFullBleedSingleViewActive(stored) ? 'full_bleed_crop' : 'blur_pad')
+      : presetLayoutModeForCompose(stored.preset || payload.compCreativePreset));
   return {
     mode: mode,
     cropCx: layout.cropCx,
@@ -18092,6 +18614,10 @@ function doneComposerEditing() {
     alert('Unsaved draft — click Save look here or Discard draft first.');
     return false;
   }
+  if (_composerCutsDirty) {
+    if (!confirm('Unsaved cuts — OK saves cuts now, then locks edits.\nCancel = stay and edit cuts.')) return false;
+    saveComposerCuts();
+  }
   var clip = composerLeadClipForEdit();
   if (clip && !clip.openingLayout) {
     ensureComposerOpeningLayoutForced(currentComposerLayoutSnapshotForMark());
@@ -18102,7 +18628,12 @@ function doneComposerEditing() {
   renderComposerSpecRundown();
   updateComposerEditStatus();
   syncComposerExecuteGate();
-  setComposerPreviewCaption('Edits locked — click ▶ Review edit to watch the full trim with timed looks', 'ok');
+  var cutN = clip && Array.isArray(clip.composerCuts) ? clip.composerCuts.length : 1;
+  setComposerPreviewCaption(
+    'Edits locked — click ▶ Review edit'
+      + (cutN > 1 ? ' (plays active cut; EXECUTE stitches all ' + cutN + ' cuts)' : ' to watch the full trim with timed looks'),
+    'ok'
+  );
   return true;
 }
 
@@ -18111,6 +18642,10 @@ function reviewComposerEdit() {
     alert('Save or discard your draft look before Review.');
     setComposerPreviewCaption('Review blocked — Save look here or Discard draft first', 'err');
     return;
+  }
+  if (_composerCutsDirty) {
+    if (!confirm('Unsaved cuts — OK saves cuts, then Review.\nCancel = stay.')) return;
+    saveComposerCuts();
   }
   if (!_composerEditDone) {
     if (!doneComposerEditing()) return;
@@ -18693,9 +19228,10 @@ function buildCompositionSpecFromUI() {
   }
   var spec = getCompLineupSpec();
   var maxCount = delivery === 'short' ? 1 : (delivery === 'vod_comp' ? spec.maxClips : spec.lineupSlots);
-  var lineup = getCompLineupForDispatch(maxCount);
+  // Multi-cut (CPD-1255) expands after lineup slice so one pick → N stitch windows.
+  var lineup = expandComposerCutsInLineup(getCompLineupForDispatch(maxCount));
   var creativePayload = buildCompCreativeRequestPayload((composerActiveLineupSlot() && composerActiveLineupSlot().displayName) || (lineup[0] && lineup[0].displayName) || '');
-  var clips = lineup.map(function(slot, idx) {
+  function mapComposerSlotToSpecClip(slot, idx) {
     var c = slot.clip || {};
     ensureComposerTrimDefaults(c);
     syncComposerClipSourceDuration(c);
@@ -18703,7 +19239,7 @@ function buildCompositionSpecFromUI() {
     return {
       url: c.url || '',
       pageUrl: c.pageUrl || c.url || '',
-        mp4Url: pickerClipPreviewUrl(c) || '',
+      mp4Url: pickerClipPreviewUrl(c) || c.stagedUrl || c.r2Url || c.mp4Url || '',
       stagedUrl: c.stagedUrl || c.r2Url || '',
       title: c.title || '',
       streamer: slot.name || c.streamer || '',
@@ -18721,28 +19257,20 @@ function buildCompositionSpecFromUI() {
       order: idx,
       orientation: 'landscape',
       game: c.game || '',
-      views: c.views || 0
+      views: c.views || 0,
+      postId: c.postId,
+      redditSource: c.redditSource,
+      selftext: c.selftext,
+      topComments: c.topComments,
+      permalink: c.permalink,
+      wireSource: c.wireSource,
+      cutId: slot.cutId || null,
     };
-  });
+  }
+  var clips = lineup.map(mapComposerSlotToSpecClip);
   if (delivery === 'short') {
-    var shortLineup = getCompLineupForDispatch(Math.max(1, collectCompPickedClips().length));
-    clips = shortLineup.map(function(slot, idx) {
-      var c = slot.clip || {};
-      ensureComposerTrimDefaults(c);
-      syncComposerClipSourceDuration(c);
-      var sourceDur = composerClipSourceDuration(c);
-      return {
-        url: c.url, pageUrl: c.pageUrl || c.url, mp4Url: c.stagedUrl || c.r2Url || c.mp4Url || '',
-        stagedUrl: c.stagedUrl || c.r2Url || '', title: c.title || '', streamer: slot.name, displayName: slot.displayName,
-        duration: sourceDur, durationHint: sourceDur,
-        trimStart: c.composerTrimStart, trimEnd: c.composerTrimEnd,
-        layoutSegments: Array.isArray(c.layoutSegments) ? c.layoutSegments.slice() : [],
-        openingLayout: c.openingLayout || null,
-        thumbnailUrl: c.thumbnailUrl || '', order: idx, orientation: 'landscape', game: c.game || '', views: c.views || 0,
-        postId: c.postId, redditSource: c.redditSource, selftext: c.selftext, topComments: c.topComments, permalink: c.permalink,
-        wireSource: c.wireSource
-      };
-    });
+    var shortLineup = expandComposerCutsInLineup(getCompLineupForDispatch(Math.max(1, collectCompPickedClips().length)));
+    clips = shortLineup.map(mapComposerSlotToSpecClip);
   }
   return {
     deliveryFormat: delivery,
@@ -18965,6 +19493,7 @@ function refreshGenerateComposer(callValidate, immediatePreview) {
   renderComposerLayoutSegments();
   renderComposerSpecRundown();
   initComposerTimelineFromClip();
+  renderComposerTrimCutPanel();
   var body = buildCompositionSpecFromUI();
   refreshCompCreativeLabel();
   renderCompCreativeSourceMap();
@@ -19134,6 +19663,10 @@ function executeFromComposer() {
   if (_composerLookDraftDirty) {
     alert('You have an unsaved draft look. Click Save look here or Discard draft before EXECUTE.');
     return;
+  }
+  if (_composerCutsDirty) {
+    if (!confirm('Unsaved cuts — OK saves cuts, then continue EXECUTE.\nCancel = stay.')) return;
+    saveComposerCuts();
   }
   if (!_composerValidationOk) {
     alert('Execute blocked: fix composition validation errors first.');
@@ -20989,14 +21522,40 @@ function onCompCreativeFullBleedCropChange(skipSave) {
   }
 }
 
+/** Landscape layout value: split_screen | brand_pad | single (full screen). CPD-1266 */
+function composerLandscapeLayoutValue(stored) {
+  stored = stored || loadCompCreativePresetFromStorage();
+  var v = stored.landscapeLayout || 'split_screen';
+  if (v === 'brand_pad' || v === 'single' || v === 'split_screen') return v;
+  return 'split_screen';
+}
+
+/** True only for explicit full-screen Single (not Classic brand-pad). */
 function composerFullBleedSingleViewActive(stored) {
   stored = stored || loadCompCreativePresetFromStorage();
   if (composerLandscapeSplitEnabled(stored)) return false;
+  if (composerLineupIsLandscape()) {
+    return composerLandscapeLayoutValue(stored) === 'single';
+  }
+  // Portrait sources: only presets that are inherently full-bleed.
   return presetLayoutModeForCompose(stored.preset || 'classic_blur_pad') === 'full_bleed_crop';
 }
 
+/** Classic brand-pad single (navy bands) — landscapeLayout === brand_pad. */
+function composerBrandPadSingleViewActive(stored) {
+  stored = stored || loadCompCreativePresetFromStorage();
+  if (composerLandscapeSplitEnabled(stored)) return false;
+  if (!composerLineupIsLandscape()) return false;
+  return composerLandscapeLayoutValue(stored) === 'brand_pad';
+}
+
+/** Any non-split landscape single (brand-pad or full screen) — cyan crop UI. */
 function composerLandscapeSingleViewEnabled(stored) {
-  return composerFullBleedSingleViewActive(stored);
+  stored = stored || loadCompCreativePresetFromStorage();
+  if (composerLandscapeSplitEnabled(stored)) return false;
+  if (!composerLineupIsLandscape()) return composerFullBleedSingleViewActive(stored);
+  var v = composerLandscapeLayoutValue(stored);
+  return v === 'brand_pad' || v === 'single';
 }
 
 function paintSourceMapOverlay(prefix, topRect, bottomRect) {
@@ -21316,7 +21875,10 @@ function applyOperatorLayoutFromJobCard(job) {
   var layout = (job.compCreative && job.compCreative.layout) || {};
   var landscapeSel = g('comp-creative-landscape-layout');
   if (landscapeSel) {
-    landscapeSel.value = layout.landscapeSplit === false ? 'single' : 'split_screen';
+    // CPD-1266: blur_pad → brand_pad option; full_bleed → single (full screen).
+    landscapeSel.value = layout.landscapeSplit === false
+      ? (layout.mode === 'blur_pad' ? 'brand_pad' : 'single')
+      : 'split_screen';
     try {
       var stored = loadCompCreativePresetFromStorage();
       stored.landscapeLayout = landscapeSel.value;
@@ -21685,7 +22247,7 @@ function composerLandscapeSplitEnabled(stored) {
   var preset = stored.preset || 'classic_blur_pad';
   if (preset === 'facecam_split') return true;
   if (!composerLineupIsLandscape()) return false;
-  return (stored.landscapeLayout || 'split_screen') !== 'single';
+  return composerLandscapeLayoutValue(stored) === 'split_screen';
 }
 
 function presetLayoutModeForCompose(preset) {
@@ -21701,9 +22263,12 @@ function presetLayoutModeForCompose(preset) {
 function composerPresetDefaultLook(stored) {
   stored = stored || loadCompCreativePresetFromStorage();
   var splitOn = composerLandscapeSplitEnabled(stored);
+  // Landscape: split | brand_pad (blur_pad) | single (full_bleed). Portrait keeps preset mode.
   var mode = splitOn
     ? 'split_screen'
-    : (composerFullBleedSingleViewActive(stored) ? 'full_bleed_crop' : presetLayoutModeForCompose(stored.preset || 'classic_blur_pad'));
+    : (composerLineupIsLandscape()
+      ? (composerFullBleedSingleViewActive(stored) ? 'full_bleed_crop' : 'blur_pad')
+      : presetLayoutModeForCompose(stored.preset || 'classic_blur_pad'));
   var look = {
     mode: mode,
     cropCx: 0.5,
@@ -21799,21 +22364,24 @@ function hydrateSourceCleanupFromStorage() {
 function onCompCreativeLandscapeLayoutChange() {
   var sel = g('comp-creative-landscape-layout');
   if (!sel) return;
+  var nextVal = sel.value === 'brand_pad' || sel.value === 'single' || sel.value === 'split_screen'
+    ? sel.value
+    : 'split_screen';
   try {
     var stored = loadCompCreativePresetFromStorage();
     var wasSplit = composerLandscapeSplitEnabled(stored);
-    var goingSingle = sel.value === 'single';
-    var goingSplit = sel.value === 'split_screen';
+    var goingSplit = nextVal === 'split_screen';
+    var goingSingleish = !goingSplit;
     // Freeze prior mode as opening BEFORE storage flips — so scrub before the mark stays old mode.
-    if ((wasSplit && goingSingle) || (!wasSplit && goingSplit)) {
+    if ((wasSplit && goingSingleish) || (!wasSplit && goingSplit)) {
       if (!_composerLookDraftDirty) {
         _composerLookBaseline = resolveComposerSavedLookAt(getComposerAbsolutePlayheadSec());
       }
       lockComposerOpeningBeforeModeSwitch();
       ensureComposerOpeningLayoutForced(_composerLookBaseline);
     }
-    stored.landscapeLayout = goingSingle ? 'single' : 'split_screen';
-    if (goingSingle && stored.cropCx == null && stored.facecamRect) {
+    stored.landscapeLayout = nextVal;
+    if (goingSingleish && stored.cropCx == null && stored.facecamRect) {
       stored.cropCx = stored.facecamRect.x + stored.facecamRect.w / 2;
       stored.cropCy = stored.facecamRect.y + stored.facecamRect.h / 2;
       writeFullBleedCropToDom(stored.cropCx, stored.cropCy);
@@ -21826,11 +22394,14 @@ function onCompCreativeLandscapeLayoutChange() {
   markComposerLookDraftDirty();
   _composerLastPreviewMode = null; // force pane mode switch on next paint
   scheduleComposerLiveSplitPaint();
-  logComposerLayoutAtPlayhead(goingSingle ? 'dropdown→SINGLE' : 'dropdown→SPLIT');
+  var label = nextVal === 'split_screen' ? 'SPLIT' : (nextVal === 'brand_pad' ? 'BRAND-PAD' : 'FULL');
+  logComposerLayoutAtPlayhead('dropdown→' + label);
   setComposerPreviewCaption(
-    goingSingle
-      ? 'Draft SINGLE — preview stays single until Save look here (or Discard)'
-      : 'Draft SPLIT — preview stays split until Save look here (or Discard)',
+    nextVal === 'split_screen'
+      ? 'Draft SPLIT — preview stays split until Save look here (or Discard)'
+      : (nextVal === 'brand_pad'
+        ? 'Draft BRAND-PAD — navy bands until Save look here (or Discard)'
+        : 'Draft FULL SCREEN — edge-to-edge until Save look here (or Discard)'),
     'pending'
   );
 }
@@ -21838,6 +22409,8 @@ function onCompCreativeLandscapeLayoutChange() {
 function refreshLandscapeSplitUI() {
   var stored = loadCompCreativePresetFromStorage();
   var fullBleedSingle = composerFullBleedSingleViewActive(stored);
+  var brandPadSingle = composerBrandPadSingleViewActive(stored);
+  var singleish = composerLandscapeSingleViewEnabled(stored);
   var splitOn = composerLandscapeSplitEnabled(stored);
   var isLandscape = composerLineupIsLandscape();
   var controls = g('comp-creative-landscape-split-controls');
@@ -21845,20 +22418,22 @@ function refreshLandscapeSplitUI() {
   var singleHint = g('comp-creative-landscape-single-hint');
   var sel = g('comp-creative-landscape-layout');
   var landscapePanel = g('comp-creative-landscape-split');
-  if (landscapePanel) landscapePanel.style.display = (isLandscape || fullBleedSingle) ? 'block' : 'none';
+  if (landscapePanel) landscapePanel.style.display = (isLandscape || singleish) ? 'block' : 'none';
   if (sel) {
-    sel.value = splitOn ? 'split_screen' : 'single';
+    sel.value = composerLandscapeLayoutValue(stored);
     var layoutRow = sel.closest('label');
     if (layoutRow) layoutRow.style.display = isLandscape ? '' : 'none';
   }
   if (controls) controls.style.display = (isLandscape && splitOn) ? '' : 'none';
-  if (singleControls) singleControls.style.display = fullBleedSingle ? 'block' : 'none';
+  if (singleControls) singleControls.style.display = singleish ? 'block' : 'none';
   if (singleHint) {
-    singleHint.style.display = fullBleedSingle ? 'block' : 'none';
-    if (fullBleedSingle && !isLandscape) {
+    singleHint.style.display = singleish ? 'block' : 'none';
+    if (singleish && !isLandscape) {
       singleHint.innerHTML = 'Portrait clip → <strong>9:16 Short</strong>. Drag the <strong>cyan box</strong> or use sliders to zoom / reframe before EXECUTE.';
+    } else if (brandPadSingle) {
+      singleHint.innerHTML = '<strong>Single = Classic brand-pad</strong> (navy bands). Drag the <strong>cyan box</strong> to place the portrait window. Use <em>full screen</em> in the dropdown for edge-to-edge.';
     } else if (fullBleedSingle) {
-      singleHint.innerHTML = 'Uses your Creative preset as one portrait frame (<strong>full bleed</strong>) — drag the <strong>cyan box</strong> on the wide frame to place the crop.';
+      singleHint.innerHTML = '<strong>Single = full screen</strong> (edge-to-edge). Drag the <strong>cyan box</strong> on the wide frame. Switch to <em>brand-pad</em> for Classic navy bands.';
     }
   }
 }
@@ -21928,7 +22503,20 @@ function compCreativeChipList(creative) {
 function loadCompCreativePresetFromStorage() {
   try {
     var raw = localStorage.getItem(COMP_CREATIVE_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      var stored = JSON.parse(raw);
+      // CPD-1266: after CPD-1256, Classic + "single" meant full_bleed and ate brand-pad.
+      // One-time migrate Classic creatives stuck on single → brand_pad (navy bands).
+      if (stored && !stored._cpd1266BrandPadMigrated) {
+        var p = stored.preset || 'classic_blur_pad';
+        if (presetLayoutModeForCompose(p) === 'blur_pad' && stored.landscapeLayout === 'single') {
+          stored.landscapeLayout = 'brand_pad';
+        }
+        stored._cpd1266BrandPadMigrated = true;
+        try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored)); } catch (e2) { /* ignore */ }
+      }
+      return stored;
+    }
   } catch (e) { /* ignore */ }
   return { preset: 'classic_blur_pad', streamer: '', theme: 'MOMENTS', hookMode: 'hook_only' };
 }
@@ -22213,7 +22801,7 @@ function refreshCompCreativeChips() {
   if (stored.facecamRect && composerLineupIsLandscape()) writeFacecamSlidersToDom(stored.facecamRect);
   else if (composerLineupIsLandscape()) applyLayoutPreset(topSubj ? topSubj.value : 'stacked_figures');
   if (stored.bottomPaneRect && composerLineupIsLandscape()) writeBottomPaneSlidersToDom(stored.bottomPaneRect);
-  if (composerFullBleedSingleViewActive(stored)) {
+  if (composerLandscapeSingleViewEnabled(stored)) {
     if (stored.cropCx != null || stored.cropCy != null || stored.cropZoom != null) {
       writeFullBleedCropToDom(stored.cropCx, stored.cropCy, stored.cropZoom);
     } else {
@@ -22866,11 +23454,31 @@ var _twitchSubMode = 'clips';
 var _twitchPickerVods = [];
 
 function switchTwitchSubMode(mode) {
-  _twitchSubMode = 'clips';
+  _twitchSubMode = (mode === 'vods') ? 'vods' : 'clips';
+  var clipsBtn = g('library-mode-clips');
+  var vodsBtn = g('library-mode-vods');
+  if (clipsBtn) clipsBtn.classList.toggle('active', _twitchSubMode === 'clips');
+  if (vodsBtn) vodsBtn.classList.toggle('active', _twitchSubMode === 'vods');
+  var btn = g('btn-preview-twitch');
+  var empty = g('gen-twitch-empty');
+  var hint = g('twitch-main-hint');
+  if (_twitchSubMode === 'vods') {
+    if (btn) btn.textContent = 'Fetch VODs';
+    if (empty) empty.innerHTML = 'Select creators (YouTube Speed channels work) → <strong>Fetch VODs</strong> → <strong>Analyze</strong> (Most Replayed peaks) → Open in Composer.';
+    if (hint) hint.textContent = 'VODs → Analyze peaks → Open in Composer';
+    setPickerPanelVisible('twitch', false);
+    _twitchPickerVods = [];
+  } else {
+    if (btn) btn.textContent = 'Load library';
+    if (empty) empty.innerHTML = 'Select creators on the left, choose a time window above, then click <strong>Load library</strong>.';
+    if (hint) hint.textContent = 'Check clips → COMPOSE → edit in Generate';
+    setPickerPanelVisible('twitch', false);
+  }
 }
 
 function previewTwitchMedia() {
-  loadLibraryClips();
+  if (_twitchSubMode === 'vods') previewTwitchVods();
+  else loadLibraryClips();
 }
 
 function previewTwitchVods() {
@@ -22878,14 +23486,19 @@ function previewTwitchVods() {
   var picker = g('twitch-inline-picker');
   if (picker.style.display !== 'none' && _twitchPickerVods.length > 0) {
     setPickerPanelVisible('twitch', false);
-    btn.textContent = 'FETCH VODS';
+    btn.textContent = 'Fetch VODs';
     return;
   }
   btn.textContent = 'FETCHING...'; btn.disabled = true;
   _twitchPickerVods = [];
   var streamers = g('twitch-streamers').value.split(',').map(function(s){ return normalizeStreamerHandle(s.trim()); }).filter(Boolean);
-  if (!streamers.length) { btn.textContent = 'FETCH VODS'; btn.disabled = false; alert('Enter streamers first.'); return; }
-  var qs = 'streamers=' + encodeURIComponent(streamers.join(',')) + '&limit=10';
+  if (!streamers.length) { btn.textContent = 'Fetch VODs'; btn.disabled = false; alert('Select at least one creator on the left first.'); return; }
+  var platforms = (typeof getSelectedStreamerPlatforms === 'function')
+    ? getSelectedStreamerPlatforms()
+    : ['twitch', 'kick', 'youtube'];
+  var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
+    + '&platforms=' + encodeURIComponent(platforms.join(','))
+    + '&limit=10';
   var xhr = new XMLHttpRequest();
   xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/vods?' + qs, true);
   xhr.timeout = 120000;
@@ -22914,12 +23527,115 @@ function previewTwitchVods() {
       btn.textContent = 'HIDE PICKER';
       renderTwitchVodPicker();
     } catch (e) {
-      btn.textContent = 'FETCH VODS';
+      btn.textContent = 'Fetch VODs';
       alert('VOD fetch failed: ' + e.message);
     }
   };
-  xhr.onerror = function() { btn.textContent = 'FETCH VODS'; btn.disabled = false; };
+  xhr.onerror = function() { btn.textContent = 'Fetch VODs'; btn.disabled = false; };
   xhr.send();
+}
+
+function youtubeVideoIdFromUrl(url) {
+  var s = String(url || '');
+  var m = s.match(/[?&]v=([^&#]+)/i) || s.match(/youtu\.be\/([^?&#]+)/i)
+    || s.match(/youtube\.com\/shorts\/([^?&#]+)/i) || s.match(/youtube\.com\/embed\/([^?&#]+)/i)
+    || s.match(/youtube\.com\/live\/([^?&#]+)/i);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+function sortVodSegmentsByScore(segments) {
+  if (!Array.isArray(segments)) return [];
+  return segments.slice().sort(function(a, b) {
+    return (Number(b.score) || 0) - (Number(a.score) || 0);
+  });
+}
+
+function fmtVodPeakClock(sec) {
+  var n = Math.max(0, Math.floor(Number(sec) || 0));
+  var m = Math.floor(n / 60);
+  var s = n % 60;
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+/** CPD-1269 — inline YouTube preview for a peak window (watch/hear before Composer). */
+function previewVodPeakSegment(si, vi, segi) {
+  var entry = _twitchPickerVods[si];
+  var vod = entry && entry.vods && entry.vods[vi];
+  var seg = vod && vod.segments && vod.segments[segi];
+  if (!vod || !seg) return;
+  var hostId = 'vod-peak-preview-' + si + '-' + vi;
+  var host = g(hostId);
+  if (!host) return;
+
+  // Toggle off if same peak already open
+  if (host.dataset.activeSegi === String(segi) && host.style.display !== 'none') {
+    host.style.display = 'none';
+    host.innerHTML = '';
+    delete host.dataset.activeSegi;
+    return;
+  }
+
+  var start = Math.max(0, Math.floor(Number(seg.start_sec) || 0));
+  var end = Math.max(start + 5, Math.floor(Number(seg.end_sec) || (start + 45)));
+  var ytId = vod.vodId || youtubeVideoIdFromUrl(vod.url);
+  var score = (seg.score != null && Number.isFinite(Number(seg.score)))
+    ? Number(seg.score).toFixed(2)
+    : '—';
+  var why = (vod.analyzeMode === 'youtube_heatmap')
+    ? ('Most Replayed score ' + score + ' (1.00 = strongest peak on this VOD)')
+    : ('Suggested window · score ' + score);
+
+  var body = '';
+  if (ytId && (vod.platform === 'youtube' || /youtube\.com|youtu\.be/i.test(vod.url || ''))) {
+    var watchUrl = 'https://www.youtube.com/watch?v=' + encodeURIComponent(ytId) + '&t=' + start + 's';
+    // nocookie + origin reduces localhost embed Error 153; watch-page link is the reliable hear/watch path
+    var origin = encodeURIComponent(location.origin || 'http://localhost:3000');
+    var embed = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(ytId)
+      + '?start=' + start + '&end=' + end + '&autoplay=1&rel=0&modestbranding=1&origin=' + origin;
+    body = '<iframe src="' + embed + '" title="Peak preview" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen '
+      + 'referrerpolicy="strict-origin-when-cross-origin" '
+      + 'style="width:100%;aspect-ratio:16/9;border:0;border-radius:6px;background:#000;"></iframe>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:6px;">If the player errors (common on localhost), '
+      + '<a href="' + watchUrl + '" target="_blank" rel="noopener" style="color:#c7af4f;">open on YouTube at ' + fmtVodPeakClock(start) + '</a>'
+      + ' — same window, full audio.</div>';
+  } else {
+    var openUrl = (vod.url || '') + (vod.url && vod.url.indexOf('?') >= 0 ? '&' : '?') + 't=' + start + 's';
+    body = '<div style="font-size:13px;color:rgba(255,255,255,0.55);padding:8px 0;">Inline preview is YouTube-only for now. '
+      + '<a href="' + openUrl + '" target="_blank" rel="noopener" style="color:#c7af4f;">Open at ' + fmtVodPeakClock(start) + '</a></div>';
+  }
+
+  host.innerHTML = '<div style="margin-top:8px;padding:8px;border:1px solid rgba(199,175,79,0.35);border-radius:6px;background:rgba(0,0,0,0.35);">'
+    + '<div style="font-size:12px;color:rgba(199,175,79,0.9);margin-bottom:6px;">Preview ' + fmtVodPeakClock(start) + '–' + fmtVodPeakClock(end)
+    + ' · ' + why + '</div>'
+    + body
+    + '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">'
+    + '<button type="button" class="btn btn-gold" style="font-size:12px;padding:4px 10px;" onclick="sendVodSegmentToComposer(' + si + ',' + vi + ',' + segi + ')">Looks good → Composer</button>'
+    + '<button type="button" class="btn btn-outline" style="font-size:12px;padding:4px 10px;" onclick="closeVodPeakPreview(' + si + ',' + vi + ')">Close preview</button>'
+    + '</div></div>';
+  host.style.display = 'block';
+  host.dataset.activeSegi = String(segi);
+  try { host.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) { /* ignore */ }
+}
+
+function closeVodPeakPreview(si, vi) {
+  var host = g('vod-peak-preview-' + si + '-' + vi);
+  if (!host) return;
+  host.style.display = 'none';
+  host.innerHTML = '';
+  delete host.dataset.activeSegi;
+}
+
+function openVodPeakOnYouTube(si, vi, segi) {
+  var entry = _twitchPickerVods[si];
+  var vod = entry && entry.vods && entry.vods[vi];
+  var seg = vod && vod.segments && vod.segments[segi];
+  if (!vod || !seg) return;
+  var start = Math.max(0, Math.floor(Number(seg.start_sec) || 0));
+  var ytId = vod.vodId || youtubeVideoIdFromUrl(vod.url);
+  var url = ytId
+    ? ('https://www.youtube.com/watch?v=' + encodeURIComponent(ytId) + '&t=' + start + 's')
+    : ((vod.url || '') + (String(vod.url || '').indexOf('?') >= 0 ? '&' : '?') + 't=' + start + 's');
+  window.open(url, '_blank', 'noopener');
 }
 
 function renderTwitchVodPicker() {
@@ -22943,18 +23659,38 @@ function renderTwitchVodPicker() {
         var thumb = vod.thumbnailUrl || '';
         var durMin = vod.duration ? Math.round(vod.duration / 60) + 'm' : '';
         var views = vod.views >= 1000 ? (vod.views / 1000).toFixed(1) + 'K' : vod.views;
-        html += '<div class="picker-card" style="cursor:default;">';
+        html += '<div class="picker-card" style="cursor:default;min-width:260px;">';
         if (thumb) html += '<img src="' + thumb + '" class="picker-thumb" style="height:55px;" onerror="this.style.display=\'none\'">';
         html += '<div class="picker-title">' + (vod.title || '').slice(0, 60) + '</div>';
-        html += '<div style="font-size:12px;color:rgba(255,255,255,0.35);">' + views + ' views · ' + durMin + '</div>';
+        html += '<div style="font-size:12px;color:rgba(255,255,255,0.35);">' + views + ' views · ' + durMin
+          + (vod.platform === 'youtube' ? ' · YT' : '') + '</div>';
         if (vod.segments && vod.segments.length) {
-          var seg = vod.segments[0];
-          html += '<div style="font-size:13px;color:rgba(46,204,113,0.85);margin:4px 0;">Highlight ' + Math.floor(seg.start_sec/60) + '–' + Math.floor(seg.end_sec/60) + 'm · ' + (seg.title || '') + '</div>';
-          html += '<button type="button" class="btn btn-gold" style="font-size:13px;padding:4px 8px;margin-top:4px;" onclick="sendVodSegmentToComposer(' + si + ',' + vi + ',0)">Open in Composer</button>';
+          html += '<div style="font-size:12px;color:rgba(46,204,113,0.85);margin:4px 0;">'
+            + (vod.analyzeMode === 'youtube_heatmap' ? 'Most Replayed · ' : '')
+            + vod.segments.length + ' window(s) · best first — Preview before Composer</div>';
+          vod.segments.slice(0, 8).forEach(function(seg, segi) {
+            var rank = segi + 1;
+            var scoreNum = Number(seg.score);
+            var scoreLabel = Number.isFinite(scoreNum) ? scoreNum.toFixed(2) : '—';
+            var span = fmtVodPeakClock(seg.start_sec) + '–' + fmtVodPeakClock(seg.end_sec);
+            var bestTag = segi === 0 ? ' <span style="color:#c7af4f;">BEST</span>' : '';
+            html += '<div style="margin:6px 0;padding:6px;border:1px solid rgba(255,255,255,0.08);border-radius:5px;">'
+              + '<div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:4px;">'
+              + '<strong style="color:#fff;">#' + rank + '</strong>' + bestTag
+              + ' · score <span style="color:#c7af4f;font-family:monospace;">' + scoreLabel + '</span>'
+              + ' · ' + span
+              + '</div>'
+              + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+              + '<button type="button" class="btn btn-outline" style="font-size:12px;padding:3px 8px;" onclick="previewVodPeakSegment(' + si + ',' + vi + ',' + segi + ')">▶ Preview</button>'
+              + '<button type="button" class="btn btn-outline" style="font-size:12px;padding:3px 8px;" onclick="openVodPeakOnYouTube(' + si + ',' + vi + ',' + segi + ')" title="Reliable hear/watch — opens YouTube at peak start">Open YT</button>'
+              + '<button type="button" class="btn btn-gold" style="font-size:12px;padding:3px 8px;" onclick="sendVodSegmentToComposer(' + si + ',' + vi + ',' + segi + ')">Composer</button>'
+              + '</div></div>';
+          });
+          html += '<div id="vod-peak-preview-' + si + '-' + vi + '" style="display:none;"></div>';
         }
         html += '<button type="button" class="btn btn-outline" style="font-size:13px;padding:4px 8px;margin-top:4px;" '
           + (vod.analyzing ? 'disabled' : '') + ' onclick="analyzeTwitchVod(' + si + ',' + vi + ')">'
-          + (vod.analyzing ? 'Analyzing…' : (vod.segments ? 'Re-analyze' : 'Analyze')) + '</button></div>';
+          + (vod.analyzing ? 'Analyzing…' : (vod.segments ? 'Re-analyze' : 'Analyze peaks')) + '</button></div>';
       });
       html += '</div>';
     }
@@ -22981,19 +23717,28 @@ function analyzeTwitchVod(si, vi) {
       title: vod.title,
       durationSec: vod.duration,
       views: vod.views,
-      platform: vod.platform || 'twitch'
+      platform: vod.platform || 'twitch',
+      targetSec: (vod.platform === 'youtube') ? 45 : 420,
+      maxPeaks: 8
     })
   })
     .then(function(r) { return r.json(); })
     .then(function(d) {
       vod.analyzing = false;
       if (!d.ok) throw new Error(d.error || 'analyze failed');
-      vod.segments = d.segments || [];
+      vod.segments = sortVodSegmentsByScore(d.segments || []);
       vod.sessionId = d.sessionId;
       vod.analyzeMode = d.mode;
       renderTwitchVodPicker();
       var statusEl = g('twitch-fetch-status');
-      if (statusEl) statusEl.textContent = 'VOD analyzed (' + (d.mode || 'gemini') + ') — ' + (vod.segments[0] && vod.segments[0].title || 'segment ready');
+      if (statusEl) {
+        var modeLabel = d.mode === 'youtube_heatmap' ? 'Most Replayed peaks' : (d.mode || 'gemini');
+        var top = vod.segments[0];
+        var topBit = top
+          ? (' · best ' + fmtVodPeakClock(top.start_sec) + ' (score ' + (Number(top.score) || 0).toFixed(2) + ')')
+          : '';
+        statusEl.textContent = 'VOD analyzed (' + modeLabel + ') — ' + (vod.segments.length || 0) + ' window(s)' + topBit + ' — Preview before Composer';
+      }
     })
     .catch(function(e) {
       vod.analyzing = false;
@@ -23987,6 +24732,7 @@ function mergeServerJobIntoLocal(jobId, serverJob, opts) {
   if (serverJob.outputPath) job.outputPath = serverJob.outputPath;
   if (serverJob.gate3) job.gate3 = serverJob.gate3;
   if (serverJob.gate5) job.gate5 = serverJob.gate5;
+  if (serverJob.gate5Result) job.gate5Result = serverJob.gate5Result;
   if (serverJob.gate5Error) job.gate5Error = serverJob.gate5Error;
   if (serverJob.qaOutcome) job.qaOutcome = serverJob.qaOutcome;
   if (serverJob.metadataQaViolations) job.metadataQaViolations = serverJob.metadataQaViolations;
@@ -27840,7 +28586,7 @@ async function checkContentTypeStatus() {
 
 <!-- Platform Selector Modal — shown before SHORT FORM generate -->
 <div id="platform-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#1a2540;border:1px solid #c7af4f;border-radius:8px;padding:28px 32px;min-width:320px;max-width:400px;">
+  <div style="background:#1a2540;border:1px solid #c7af4f;border-radius:8px;padding:28px 32px;min-width:320px;max-width:460px;">
     <div id="plat-modal-title" style="font-size:13px;color:#c7af4f;letter-spacing:2px;margin-bottom:16px;">SELECT PLATFORMS</div>
     <div id="plat-modal-subtitle" style="font-size:15px;color:#8899aa;margin-bottom:20px;">Choose where to publish this short-form video</div>
     <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
@@ -27867,9 +28613,15 @@ async function checkContentTypeStatus() {
       <span style="color:#fff;font-size:13px;">Instagram Reels</span>
     </label>
     <div style="margin-bottom:16px;">
-      <div style="font-size:14px;color:#8899aa;margin-bottom:6px;letter-spacing:1px;">SCHEDULE PUBLISH (optional)</div>
-      <input type="datetime-local" id="plat-schedule-at" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:8px 10px;font-size:16px;border-radius:4px;">
-      <div style="font-size:14px;color:rgba(255,255,255,0.35);margin-top:4px;">Leave blank = publish when upload completes. Set a time = private until then.</div>
+      <div style="font-size:14px;color:#8899aa;margin-bottom:6px;letter-spacing:1px;">WHEN TO PUBLISH</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+        <label style="font-size:13px;color:#8899aa;">Plan day (ET)</label>
+        <input type="date" id="plat-plan-day" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:6px 8px;font-size:14px;border-radius:4px;" onchange="loadPlatformModalCalendarSlots()">
+      </div>
+      <div id="plat-cal-slots" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:8px;" id="plat-cal-note"></div>
+      <input type="datetime-local" id="plat-schedule-at" style="width:100%;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:8px 10px;font-size:16px;border-radius:4px;" oninput="_platScheduleIso=null;">
+      <div style="font-size:14px;color:rgba(255,255,255,0.35);margin-top:4px;">Chips use Calendar slots (ET). Custom = your clock. Leave blank / Publish now = go public when upload finishes.</div>
     </div>
     <div style="display:flex;gap:12px;justify-content:flex-end;">
       <button onclick="closePlatformModal()" style="background:transparent;border:1px solid #445;color:#8899aa;padding:8px 18px;border-radius:4px;cursor:pointer;font-size:16px;">CANCEL</button>
@@ -27880,6 +28632,7 @@ async function checkContentTypeStatus() {
 
 <script>
 var _platformModalCallback = null;
+var _platScheduleIso = null;
 
 function parsePlatformModalSelection(sel) {
   if (Array.isArray(sel)) return { platforms: sel, scheduledAt: null, youtubeChannelKey: null };
@@ -27928,6 +28681,91 @@ function isoToDatetimeLocalValue(iso) {
     + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
 
+function etDateKeyToday() {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  } catch (e) {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+}
+
+function pickPlatformCalSlot(iso, label) {
+  _platScheduleIso = iso || null;
+  var sched = document.getElementById('plat-schedule-at');
+  if (sched) sched.value = isoToDatetimeLocalValue(iso || '');
+  var chips = document.querySelectorAll('#plat-cal-slots [data-plat-chip]');
+  chips.forEach(function(btn) {
+    var on = btn.getAttribute('data-iso') === iso;
+    btn.style.borderColor = on ? '#c7af4f' : 'rgba(199,175,79,0.3)';
+    btn.style.background = on ? 'rgba(199,175,79,0.25)' : 'transparent';
+  });
+  var note = document.getElementById('plat-cal-note');
+  if (note && label) note.textContent = 'Selected: ' + label + ' (ET → absolute time)';
+}
+
+function clearPlatformScheduleNow() {
+  _platScheduleIso = null;
+  var sched = document.getElementById('plat-schedule-at');
+  if (sched) sched.value = '';
+  var chips = document.querySelectorAll('#plat-cal-slots [data-plat-chip]');
+  chips.forEach(function(btn) {
+    btn.style.borderColor = 'rgba(199,175,79,0.3)';
+    btn.style.background = 'transparent';
+  });
+  var note = document.getElementById('plat-cal-note');
+  if (note) note.textContent = 'Publish now — goes public when upload completes.';
+}
+
+function loadPlatformModalCalendarSlots() {
+  var dayEl = document.getElementById('plat-plan-day');
+  var wrap = document.getElementById('plat-cal-slots');
+  var note = document.getElementById('plat-cal-note');
+  if (!wrap) return;
+  var dateKey = (dayEl && dayEl.value) || etDateKeyToday();
+  wrap.innerHTML = '<span style="font-size:13px;color:#8899aa;">Loading plan slots…</span>';
+  if (note) note.textContent = '';
+  var calCh = (typeof calGetChannel === 'function' ? calGetChannel() : 'clipzworldnews') || 'clipzworldnews';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/calendar/day-slots?dateKey=' + encodeURIComponent(dateKey) + '&channel=' + encodeURIComponent(calCh))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      wrap.innerHTML = '';
+      var nowBtn = document.createElement('button');
+      nowBtn.type = 'button';
+      nowBtn.setAttribute('data-plat-chip', '1');
+      nowBtn.textContent = 'Publish now';
+      nowBtn.style.cssText = 'background:transparent;border:1px solid rgba(199,175,79,0.3);color:#fff;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:13px;';
+      nowBtn.onclick = function() { clearPlatformScheduleNow(); };
+      wrap.appendChild(nowBtn);
+      var slots = (d && d.slots) || [];
+      if (!slots.length) {
+        if (note) note.textContent = (d && d.note) || ('No calendar slots for ' + dateKey + ' — use custom time below.');
+        return;
+      }
+      slots.forEach(function(s) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('data-plat-chip', '1');
+        btn.setAttribute('data-iso', s.iso);
+        var who = s.streamer ? String(s.streamer).replace(/^@/, '') : '';
+        var what = s.kind || '';
+        var chipLabel = (s.timeEt || '') + ' ET';
+        if (who || what) chipLabel += ' · ' + [who, what].filter(Boolean).join(' ');
+        else if (s.label) chipLabel += ' · ' + s.label;
+        btn.textContent = chipLabel;
+        btn.title = (s.label || chipLabel) + (s.iso ? ' · ' + s.iso : '');
+        btn.style.cssText = 'background:transparent;border:1px solid rgba(199,175,79,0.3);color:#fff;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:13px;';
+        btn.onclick = function() { pickPlatformCalSlot(s.iso, btn.textContent); };
+        wrap.appendChild(btn);
+      });
+      if (note) note.textContent = d.note || ('Plan day ' + dateKey);
+    })
+    .catch(function() {
+      wrap.innerHTML = '';
+      if (note) note.textContent = 'Could not load calendar slots — use custom time.';
+    });
+}
+
 function showPlatformModal(callback, opts) {
   opts = opts || {};
   var isPublish = opts.mode === 'publish';
@@ -27939,16 +28777,20 @@ function showPlatformModal(callback, opts) {
   if (ytLabel) ytLabel.textContent = isPublish ? 'YouTube' : 'YouTube Shorts';
   setPublishYoutubeChannelSelection(opts.youtubeChannelKey || 'clipzworldnews');
   togglePublishYoutubeChannelPicker();
+  _platScheduleIso = opts.scheduledAt || null;
   var sched = document.getElementById('plat-schedule-at');
   if (sched) sched.value = isoToDatetimeLocalValue(opts.scheduledAt || '');
+  var dayEl = document.getElementById('plat-plan-day');
+  if (dayEl) dayEl.value = opts.planDateKey || etDateKeyToday();
+  loadPlatformModalCalendarSlots();
   var titleEl = document.getElementById('plat-modal-title');
   var subEl = document.getElementById('plat-modal-subtitle');
   var confirmBtn = document.getElementById('plat-modal-confirm-btn');
   if (titleEl) titleEl.textContent = isPublish ? 'PUBLISH SETTINGS' : 'SELECT PLATFORMS';
   if (subEl) {
     subEl.textContent = isPublish
-      ? 'Pick platforms and when this goes public (upload stays private until then).'
-      : 'Choose where to publish this short-form video';
+      ? 'Pick platforms and when this goes public — calendar chips, custom time, or publish now.'
+      : 'Choose platforms. For multiple 1-clip Shorts, leave schedule blank and set times per job on Approve.';
   }
   if (confirmBtn) confirmBtn.textContent = isPublish ? 'APPROVE & PUBLISH' : 'GENERATE';
   _platformModalCallback = callback;
@@ -27983,16 +28825,26 @@ function confirmPlatformModal() {
   }
 
   document.getElementById('platform-modal').style.display = 'none';
-  var schedEl = document.getElementById('plat-schedule-at');
   var scheduledAt = null;
-  if (schedEl && schedEl.value) {
-    var due = new Date(schedEl.value);
-    if (!isNaN(due.getTime()) && due.getTime() > Date.now()) {
-      scheduledAt = due.toISOString();
-    } else if (schedEl.value) {
-      alert('Schedule time must be in the future — publishing immediately instead.');
+  if (_platScheduleIso) {
+    var chipDue = new Date(_platScheduleIso);
+    if (!isNaN(chipDue.getTime()) && chipDue.getTime() > Date.now()) {
+      scheduledAt = chipDue.toISOString();
+    } else if (!isNaN(chipDue.getTime())) {
+      alert('Selected calendar slot is in the past — publishing immediately instead.');
+    }
+  } else {
+    var schedEl = document.getElementById('plat-schedule-at');
+    if (schedEl && schedEl.value) {
+      var due = new Date(schedEl.value);
+      if (!isNaN(due.getTime()) && due.getTime() > Date.now()) {
+        scheduledAt = due.toISOString();
+      } else if (schedEl.value) {
+        alert('Schedule time must be in the future — publishing immediately instead.');
+      }
     }
   }
+  _platScheduleIso = null;
   if (_platformModalCallback) {
     _platformModalCallback({ platforms: platforms, scheduledAt: scheduledAt, youtubeChannelKey: youtubeChannelKey });
   }
