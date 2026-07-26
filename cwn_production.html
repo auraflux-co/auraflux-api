@@ -276,7 +276,25 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-preview-logo.pos-br { bottom:4%; right:4%; }
 .composer-preview-logo.pos-fold { top:2%; left:50%; transform:translateX(-50%); width:40%; }
 .composer-preview-ranked { position:absolute; top:6%; left:6%; z-index:3; font-size:12px; font-weight:800; color:#9146ff; background:rgba(0,0,0,0.55); padding:3px 6px; border-radius:4px; }
-.composer-features { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0; }
+.composer-features { display:none; }
+.composer-qa { margin:10px 0 8px; padding:10px 12px; border:1px solid rgba(199,175,79,0.35); border-radius:8px; background:rgba(13,21,36,0.95); }
+.composer-qa-head { font-family:'Bebas Neue',sans-serif; letter-spacing:1.5px; font-size:16px; color:#c7af4f; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.composer-qa-sub { font-family:ui-monospace,Menlo,monospace; font-size:11px; color:rgba(255,255,255,0.4); font-weight:400; letter-spacing:0; }
+.composer-qa-rows { display:grid; gap:4px; }
+.composer-qa-row { display:grid; grid-template-columns:92px 64px 1fr 88px; gap:6px; align-items:center; font-size:12px; line-height:1.35; padding:4px 6px; border-radius:4px; background:rgba(255,255,255,0.03); }
+.composer-qa-row .k { color:rgba(255,255,255,0.55); font-family:ui-monospace,Menlo,monospace; }
+.composer-qa-row .v { color:rgba(255,255,255,0.88); }
+.composer-qa-row .w { color:rgba(255,255,255,0.38); font-size:11px; text-align:right; }
+.composer-qa-st { font-family:'Bebas Neue',sans-serif; letter-spacing:1px; font-size:13px; padding:2px 6px; border-radius:3px; text-align:center; }
+.composer-qa-st.on { background:rgba(46,204,113,0.18); color:#2ecc71; }
+.composer-qa-st.off { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.35); }
+.composer-qa-st.pend { background:rgba(199,175,79,0.18); color:#c7af4f; }
+.composer-qa-st.warn { background:rgba(231,76,60,0.18); color:#e74c3c; }
+.composer-qa-st.live { background:rgba(52,152,219,0.18); color:#3498db; }
+@media (max-width: 1100px) {
+  .composer-qa-row { grid-template-columns:80px 56px 1fr; }
+  .composer-qa-row .w { display:none; }
+}
 .composer-feature-chip { font-size:13px; padding:2px 8px; border-radius:10px; background:rgba(199,175,79,0.12); color:rgba(255,255,255,0.75); border:1px solid rgba(199,175,79,0.25); }
 .composer-trim-row { display:flex; align-items:center; gap:8px; margin-top:4px; font-size:13px; color:rgba(255,255,255,0.45); }
 .composer-trim-row input[type=range] { flex:1; min-width:60px; }
@@ -1529,7 +1547,11 @@ input[type="url"], input[type="password"], select, textarea {
                         </div>
                         <div id="composer-source-map-hint" class="composer-source-map-hint">Green = top figure · Gold = bottom figure · click empty area to move active box</div>
                       </div>
-                      <div id="composer-features" class="composer-features"></div>
+                      <div id="composer-features" class="composer-features" aria-hidden="true"></div>
+                      <div id="composer-qa" class="composer-qa" aria-live="polite">
+                        <div class="composer-qa-head">COMPOSE QA <span class="composer-qa-sub" id="composer-qa-sub">what’s on this Short</span></div>
+                        <div id="composer-qa-rows" class="composer-qa-rows"></div>
+                      </div>
                     </div>
                     <div class="composer-spec-column">
                       <div id="composer-spec-rundown" class="composer-spec-rundown">
@@ -1560,6 +1582,10 @@ input[type="url"], input[type="password"], select, textarea {
                       <div id="composer-lineup-trim" style="display:none;"></div>
                       <div id="composer-validation" class="composer-validation"></div>
                       <pre id="composer-layout-log" class="composer-timeline-hint" style="margin-top:6px;max-height:120px;overflow:auto;font-size:11px;font-family:ui-monospace,Menlo,monospace;white-space:pre-wrap;color:rgba(199,175,79,0.9);border:1px solid rgba(199,175,79,0.25);padding:8px;border-radius:4px;">Layout log — scrub to see Short time → SPLIT or SINGLE each second</pre>
+                      <div id="composer-qa-exec" class="composer-qa" style="margin-top:8px;">
+                        <div class="composer-qa-head">BEFORE EXECUTE <span class="composer-qa-sub" id="composer-qa-exec-sub">checklist</span></div>
+                        <div id="composer-qa-exec-rows" class="composer-qa-rows"></div>
+                      </div>
                       <div class="composer-exec-row">
                         <button type="button" id="btn-composer-done-edit" class="btn btn-outline" onclick="doneComposerEditing()" title="Lock trim + saved looks">Done editing</button>
                         <button type="button" id="btn-composer-review-edit" class="btn btn-gold btn-sm" onclick="reviewComposerEdit()" title="Render full trim with timed looks before assembly">▶ Review edit</button>
@@ -18993,6 +19019,7 @@ function onComposerLookTintChange() {
   } catch (_) { /* ignore */ }
   refreshGenerateComposer(false);
   if (typeof scheduleComposerLiveSplitPaint === 'function') scheduleComposerLiveSplitPaint();
+  if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
   if (typeof setComposerPreviewCaption === 'function') {
     var lab = (g('composer-look-tint') && g('composer-look-tint').selectedOptions[0].text) || 'Look';
     setComposerPreviewCaption(lab + ' — live tint on · full grade on Review/EXECUTE', 'ok');
@@ -19078,6 +19105,7 @@ function detectComposerBeats() {
       lead.impactTint = d.impactTint || null; // CPD-1283 red impact flashes (Gemini Core_fx)
       lead.highlightSfx = d.highlightSfx || null; // CPD-1286 timed SFX drops
       lead.beatCutMarks = d.cutMarks || [];
+      if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
       // Optional kinetic text on first peak
       var overlayTxt = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
       if (overlayTxt && d.peaks && d.peaks[0]) {
@@ -19160,6 +19188,150 @@ var _composerPreviewDebounce = null;
 var _composerPreviewAbort = null;
 var _composerPreviewStartedAt = 0;
 
+
+/** CPD-1290 — Compose QA: show what's ON / OFF / PENDING for this Short. */
+function composerQaStatus(on, pending, warn) {
+  if (warn) return { st: 'warn', label: 'WARN' };
+  if (pending) return { st: 'pend', label: 'PEND' };
+  if (on) return { st: 'on', label: 'ON' };
+  return { st: 'off', label: 'OFF' };
+}
+
+function buildComposerQaRows() {
+  var stored = (typeof loadCompCreativePresetFromStorage === 'function')
+    ? loadCompCreativePresetFromStorage() : { preset: 'classic_blur_pad' };
+  var payload = (typeof buildCompCreativeRequestPayload === 'function')
+    ? buildCompCreativeRequestPayload('') : { compCreativePreset: stored.preset, compCreative: null };
+  var preset = payload.compCreativePreset || stored.preset || 'classic_blur_pad';
+  var ov = payload.compCreative || {};
+  var cat = (typeof compCreativeCatalogEntry === 'function') ? compCreativeCatalogEntry(preset) : null;
+  var presetLabel = cat ? (cat.code + ' · ' + cat.name) : preset;
+  var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+  var landscape = (typeof composerLandscapeLayoutValue === 'function')
+    ? composerLandscapeLayoutValue(stored) : (stored.landscapeLayout || '?');
+  var layoutLabel = landscape === 'split_screen' ? 'Split (two panes)'
+    : landscape === 'brand_pad' ? 'Fit width (navy bands)'
+    : landscape === 'single' ? 'Full screen (~⅓ of 16:9)'
+    : String(landscape);
+  var hookMode = (ov.hooks && ov.hooks.mode) || stored.hookMode
+    || (g('comp-creative-hook-mode') && g('comp-creative-hook-mode').value) || 'both';
+  var look = (ov.look && ov.look.preset)
+    || (g('composer-look-tint') && g('composer-look-tint').value) || 'auto';
+  var bed = (ov.audio && ov.audio.musicBed)
+    || (g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'off';
+  var sfx = (ov.audio && ov.audio.cutSfx) || 'off';
+  var capStyle = (ov.captions && ov.captions.style)
+    || (g('composer-caption-style') && g('composer-caption-style').value) || '—';
+  var whisperOn = !(ov.captions && ov.captions.whisper === false) && hookMode !== 'hook_only';
+  var join = (g('composer-transition-style') && g('composer-transition-style').value) || 'cut';
+  var speedFeel = (g('composer-speed-feel') && g('composer-speed-feel').value) || 'normal';
+  var overlayTxt = (g('composer-overlay-text') && g('composer-overlay-text').value.trim()) || '';
+  var beatSrc = (g('composer-beat-source') && g('composer-beat-source').value) || 'clip';
+  function countFx(obj, arrKey) {
+    if (!obj) return 0;
+    if (Array.isArray(obj)) return obj.length;
+    if (arrKey && Array.isArray(obj[arrKey])) return obj[arrKey].length;
+    if (obj.enabled === false) return 0;
+    if (obj.enabled === true) return 1;
+    return 0;
+  }
+  var punches = countFx(lead && lead.zoomPunch, 'punches');
+  var shakes = countFx(lead && lead.cameraShake, 'shakes');
+  var impacts = countFx(lead && lead.impactTint, 'flashes');
+  var sfxDrops = countFx(lead && lead.highlightSfx, 'drops');
+  if (!sfxDrops && lead && lead.highlightSfx && Array.isArray(lead.highlightSfx.items)) {
+    sfxDrops = lead.highlightSfx.items.length;
+  }
+  var beatsOn = punches > 0 || shakes > 0 || impacts > 0 || sfxDrops > 0;
+  var previewMode = _composerPreviewMode || 'mock';
+  var previewLabel = previewMode === 'ffmpeg' ? 'Review MP4 (graded)'
+    : previewMode === 'mock' ? 'Live approx (not final)'
+    : String(previewMode);
+  var draftDirty = !!window._composerLookDraftDirty;
+  var looksSaved = !!(lead && ((lead.layoutSegments && lead.layoutSegments.length) || lead.openingLayout));
+  var cleanup = [];
+  if (stored.hideChatRail) cleanup.push('chat');
+  if (stored.hideBottomBar) cleanup.push('bottom');
+  if (stored.hideTopBar) cleanup.push('top');
+
+  function row(key, status, value, when) {
+    return { key: key, status: status, value: value, when: when };
+  }
+
+  var rows = [];
+  rows.push(row('Preset', composerQaStatus(true), presetLabel, 'payload'));
+  rows.push(row('Layout', composerQaStatus(true), layoutLabel,
+    landscape === 'single' ? 'live+exec' : 'live+exec'));
+  rows.push(row('Look', composerQaStatus(look && look !== 'auto', false, false),
+    look === 'auto' ? 'Auto grade' : String(look),
+    look && look !== 'auto' ? 'live≈ · review/exec burn' : 'exec grade'));
+  rows.push(row('Hooks', composerQaStatus(hookMode !== 'whisper_only'),
+    hookMode === 'whisper_only' ? 'none (whisper only)' : hookMode,
+    hookMode === 'whisper_only' ? 'no burn' : 'exec burn'));
+  rows.push(row('Captions', composerQaStatus(whisperOn),
+    whisperOn ? capStyle : 'off',
+    'exec (Whisper)'));
+  rows.push(row('Music bed', composerQaStatus(bed && bed !== 'off'),
+    bed && bed !== 'off' ? bed : 'off',
+    'exec mix'));
+  rows.push(row('Cut SFX', composerQaStatus(sfx && sfx !== 'off'),
+    sfx && sfx !== 'off' ? sfx : 'off',
+    'exec'));
+  rows.push(row('Beats→FX', composerQaStatus(beatsOn, !beatsOn && preset === 'fableflow_speed'),
+    beatsOn
+      ? ('punch ' + punches + ' · shake ' + shakes
+        + (impacts ? (' · flash ' + impacts) : '')
+        + (sfxDrops ? (' · sfx ' + sfxDrops) : '')
+        + ' · src ' + beatSrc)
+      : ('not run · src ' + beatSrc),
+    beatsOn ? 'exec burn' : 'tap Beats→FX'));
+  rows.push(row('Speed feel', composerQaStatus(speedFeel && speedFeel !== 'normal'),
+    speedFeel || 'normal',
+    'exec'));
+  rows.push(row('Anim text', composerQaStatus(!!overlayTxt),
+    overlayTxt ? ('"' + overlayTxt.slice(0, 28) + '"') : 'off',
+    'exec'));
+  rows.push(row('Join', composerQaStatus(join && join !== 'cut'),
+    join || 'cut',
+    'multi-clip only'));
+  rows.push(row('UI cleanup', composerQaStatus(cleanup.length > 0),
+    cleanup.length ? cleanup.join('+') : 'off',
+    'exec'));
+  rows.push(row('Looks saved', composerQaStatus(looksSaved, draftDirty),
+    draftDirty ? 'DRAFT unsaved' : (looksSaved ? 'saved marks' : 'opening only'),
+    draftDirty ? 'Save look here' : 'exec'));
+  rows.push(row('Preview', { st: previewMode === 'ffmpeg' ? 'live' : 'pend', label: previewMode === 'ffmpeg' ? 'REVIEW' : 'LIVE' },
+    previewLabel,
+    previewMode === 'ffmpeg' ? '≈EXECUTE' : 'approx'));
+  return rows;
+}
+
+function renderComposerQaPanel() {
+  var rows = buildComposerQaRows();
+  function paint(hostId, subId, isExec) {
+    var host = g(hostId);
+    if (!host) return;
+    var sub = g(subId);
+    var onCount = rows.filter(function(r) { return r.status.st === 'on' || r.status.st === 'live'; }).length;
+    var pendCount = rows.filter(function(r) { return r.status.st === 'pend' || r.status.st === 'warn'; }).length;
+    if (sub) {
+      sub.textContent = isExec
+        ? (pendCount ? (pendCount + ' pending') : (onCount + ' on · ready'))
+        : (onCount + ' on · ' + pendCount + ' pending');
+    }
+    host.innerHTML = rows.map(function(r) {
+      return '<div class="composer-qa-row">'
+        + '<span class="k">' + escHtml(r.key) + '</span>'
+        + '<span class="composer-qa-st ' + escHtml(r.status.st) + '">' + escHtml(r.status.label) + '</span>'
+        + '<span class="v">' + escHtml(r.value) + '</span>'
+        + '<span class="w">' + escHtml(r.when) + '</span>'
+        + '</div>';
+    }).join('');
+  }
+  paint('composer-qa-rows', 'composer-qa-sub', false);
+  paint('composer-qa-exec-rows', 'composer-qa-exec-sub', true);
+}
+
 function setComposerPreviewCaption(text, kind) {
   var cap = g('composer-preview-caption');
   if (!cap) return;
@@ -19177,6 +19349,7 @@ function setComposerPreviewMode(mode) {
   var wm = g('composer-preview-mock-watermark');
   if (wm) wm.style.display = (mode === 'mock') ? 'flex' : 'none';
   syncComposerExecuteGate();
+  if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
 }
 
 function syncComposerExecuteGate() {
@@ -19882,6 +20055,7 @@ function refreshGenerateComposer(callValidate, immediatePreview) {
   var body = buildCompositionSpecFromUI();
   refreshCompCreativeLabel();
   renderCompCreativeSourceMap();
+  if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
   startComposerReviewPlayback();
   var loading = g('composer-preview-loading');
   if (immediatePreview) {
@@ -23215,6 +23389,7 @@ function onCompCreativePresetChange() {
   hydrateSourceCleanupFromStorage();
   refreshCompCreativeChips();
   refreshTwitchActionBar();
+  if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
 }
 
 /** CPD-1287 — one-click FableFlow Speed recipe (no CapCut editor pass). */
