@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-25 (CPD-1291) — Near-final Review hang fixed: skip redundant 1080 re-encode (copy finished MP4); transform ultrafast for Review; UI elapsed + 3min timeout. Hard refresh → Review near-final again.
 **Last Updated:** 2026-07-25 (CPD-1291) — **Near-final Review**: ▶ Review near-final burns layout + Punch/transform + Beats→FX + music bed/SFX before EXECUTE (Whisper captions still EXECUTE-only). QA panel shows NEAR-FINAL + what burned. Hard refresh Compose.
 **Last Updated:** 2026-07-25 (CPD-1290) — **Compose QA panel** under preview + above EXECUTE: each feature ON/OFF/PEND with value + when it burns (live vs review vs exec). Hard refresh Compose.
 **Last Updated:** 2026-07-25 (CPD-1289) — C9 Punch look burns in Review preview; live preview CSS tint; sharper timeline preview (1280). C9 defaults to **Split** (Speed+brother); full screen only keeps ~⅓ of 16:9. Hard refresh Compose.
