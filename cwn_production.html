@@ -1335,8 +1335,8 @@ input[type="url"], input[type="password"], select, textarea {
                         <option value="whisper_only">Whisper captions only (no burned hooks)</option>
                       </select>
                     </label>
-                    <label>Music bed <span style="opacity:0.55;">(drop ES_*.mp3 in assets/audio/)</span>
-                      <select id="comp-creative-music-bed" onchange="refreshCompCreativeChips()">
+                    <label>Music bed <span style="opacity:0.55;">(drop ES_*.mp3 in assets/audio/ · also on Compose)</span>
+                      <select id="comp-creative-music-bed" onchange="onComposerMusicBedChange(event); refreshCompCreativeChips();">
                         <option value="low_trap">Low trap (default)</option>
                         <option value="off">No music</option>
                       </select>
@@ -1449,6 +1449,11 @@ input[type="url"], input[type="password"], select, textarea {
                       <option value="clip">Beats · Clip audio</option>
                       <option value="music_bed">Beats · Music bed</option>
                     </select>
+                    <select id="composer-music-bed" onchange="onComposerMusicBedChange(event)" title="Music bed from assets/audio — Hear bed or Review near-final to audition (CPD-1292)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;max-width:200px;">
+                      <option value="low_trap">Bed · Low trap</option>
+                      <option value="off">Bed · Off</option>
+                    </select>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-composer-hear-bed" onclick="hearComposerMusicBed()" title="Play ~12s of the selected bed alone">Hear bed</button>
                     <input id="composer-overlay-text" type="text" placeholder="Animated text…" maxlength="48" title="Kinetic overlay on EXECUTE (CPD-1285)" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;max-width:140px;" />
                     <select id="composer-overlay-style" title="Animated text style" style="background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.3);padding:4px 8px;font-size:15px;">
                       <option value="fade">Text · Fade</option>
@@ -19077,9 +19082,11 @@ function detectComposerBeats() {
   var beatSrc = (g('composer-beat-source') && g('composer-beat-source').value) || 'clip';
   var body;
   if (beatSrc === 'music_bed') {
-    var bed = (g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'low_trap';
+    var bed = (typeof getComposerMusicBed === 'function')
+      ? getComposerMusicBed()
+      : ((g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'low_trap');
     if (!bed || bed === 'off') {
-      alert('Pick a music bed first (or switch Beats source to Clip audio).');
+      alert('Pick a music bed first (Compose → Bed dropdown, or switch Beats source to Clip audio).');
       if (status) status.textContent = 'Beats: need a music bed';
       return;
     }
@@ -19217,8 +19224,10 @@ function buildComposerQaRows() {
     || (g('comp-creative-hook-mode') && g('comp-creative-hook-mode').value) || 'both';
   var look = (ov.look && ov.look.preset)
     || (g('composer-look-tint') && g('composer-look-tint').value) || 'auto';
-  var bed = (ov.audio && ov.audio.musicBed)
-    || (g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'off';
+  var bed = (typeof getComposerMusicBed === 'function')
+    ? getComposerMusicBed()
+    : ((ov.audio && ov.audio.musicBed)
+      || (g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'off');
   var sfx = (ov.audio && ov.audio.cutSfx) || 'off';
   var capStyle = (ov.captions && ov.captions.style)
     || (g('composer-caption-style') && g('composer-caption-style').value) || '—';
@@ -20091,6 +20100,11 @@ function refreshGenerateComposer(callValidate, immediatePreview) {
     return;
   }
   panel.classList.add('is-open');
+  // CPD-1292 — ensure Compose Bed dropdown has assets/audio catalog
+  if (typeof loadCompCreativeMusicBeds === 'function' && g('composer-music-bed')
+      && g('composer-music-bed').options.length <= 2) {
+    loadCompCreativeMusicBeds(getComposerMusicBed());
+  }
   syncComposerAspectLabel();
   var delSel = g('composer-delivery');
   if (delSel && !delSel.dataset.userSet && !vodActive) delSel.value = inferComposerDeliveryFromPreset();
@@ -23241,7 +23255,9 @@ function saveCompCreativePresetToStorage() {
     streamer: (g('comp-creative-streamer') && g('comp-creative-streamer').value) || '',
     theme: (g('comp-creative-theme') && g('comp-creative-theme').value) || 'MOMENTS',
     hookMode: (g('comp-creative-hook-mode') && g('comp-creative-hook-mode').value) || 'both',
-    musicBed: (g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'low_trap',
+    musicBed: (typeof getComposerMusicBed === 'function')
+      ? getComposerMusicBed()
+      : ((g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'low_trap'),
     logoCorner: (g('comp-creative-logo-corner') && g('comp-creative-logo-corner').value) || 'bottom_right',
     relatedVideoParentId: (g('comp-creative-related-vod') && g('comp-creative-related-vod').value) || '',
     contentCx: (g('comp-creative-content-cx') && parseInt(g('comp-creative-content-cx').value, 10)) || 50,
@@ -23554,18 +23570,121 @@ function refreshCompCreativeChips() {
   if (typeof refreshGenerateComposer === 'function') refreshGenerateComposer(true);
 }
 
+var _composerMusicBedFiles = {};
+var _composerBedPreviewAudio = null;
+
+function getComposerMusicBed() {
+  var compose = g('composer-music-bed');
+  if (compose && compose.value) return compose.value;
+  var creative = g('comp-creative-music-bed');
+  if (creative && creative.value) return creative.value;
+  try {
+    var stored = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}');
+    if (stored.musicBed) return stored.musicBed;
+  } catch (_) { /* ignore */ }
+  return 'low_trap';
+}
+
+function syncComposerMusicBedSelects(id) {
+  var bedId = id || getComposerMusicBed();
+  var compose = g('composer-music-bed');
+  var creative = g('comp-creative-music-bed');
+  if (compose && compose.querySelector('option[value="' + bedId.replace(/"/g, '') + '"]')) {
+    compose.value = bedId;
+  } else if (compose && bedId) {
+    compose.value = bedId;
+  }
+  if (creative && creative.querySelector('option[value="' + bedId.replace(/"/g, '') + '"]')) {
+    creative.value = bedId;
+  } else if (creative && bedId) {
+    creative.value = bedId;
+  }
+}
+
+function onComposerMusicBedChange() {
+  var bedId = getComposerMusicBed();
+  syncComposerMusicBedSelects(bedId);
+  try {
+    var stored = loadCompCreativePresetFromStorage();
+    stored.musicBed = bedId;
+    localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+  } catch (_) { /* ignore */ }
+  if (typeof saveCompCreativePresetToStorage === 'function') saveCompCreativePresetToStorage();
+  _composerEditReviewed = false;
+  if (typeof updateComposerEditStatus === 'function') updateComposerEditStatus();
+  if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
+  setComposerPreviewCaption('Music bed → ' + bedId + ' · Hear bed or ▶ Review near-final to audition under the Short', 'pending');
+}
+
+function hearComposerMusicBed() {
+  var btn = g('btn-composer-hear-bed');
+  if (_composerBedPreviewAudio) {
+    try { _composerBedPreviewAudio.pause(); } catch (_) { /* noop */ }
+    _composerBedPreviewAudio = null;
+    if (btn) btn.textContent = 'Hear bed';
+    return;
+  }
+  var bedId = getComposerMusicBed();
+  if (!bedId || bedId === 'off') {
+    alert('Pick a music bed first (Bed dropdown).');
+    return;
+  }
+  var file = _composerMusicBedFiles[bedId];
+  if (!file && bedId.indexOf('file:') === 0) file = bedId.slice(5);
+  if (!file) {
+    alert('No audio file for that bed — hard refresh or drop ES_*.mp3 in assets/audio/.');
+    return;
+  }
+  var url = (CFG.ffmpegUrl || 'http://localhost:3000') + '/assets/audio/' + encodeURIComponent(file);
+  var audio = new Audio(url);
+  _composerBedPreviewAudio = audio;
+  audio.volume = 0.55;
+  if (btn) btn.textContent = 'Stop bed';
+  var stopAt = setTimeout(function() {
+    try { audio.pause(); } catch (_) { /* noop */ }
+    if (_composerBedPreviewAudio === audio) _composerBedPreviewAudio = null;
+    if (btn) btn.textContent = 'Hear bed';
+  }, 12000);
+  audio.onended = function() {
+    clearTimeout(stopAt);
+    if (_composerBedPreviewAudio === audio) _composerBedPreviewAudio = null;
+    if (btn) btn.textContent = 'Hear bed';
+  };
+  audio.play().then(function() {
+    setComposerPreviewCaption('Hearing bed alone (~12s) · ' + file + ' · Review near-final hears it under the Short', 'ok');
+  }).catch(function(e) {
+    clearTimeout(stopAt);
+    _composerBedPreviewAudio = null;
+    if (btn) btn.textContent = 'Hear bed';
+    alert('Could not play bed: ' + ((e && e.message) || e));
+  });
+}
+
 function loadCompCreativeMusicBeds(preferredId) {
   var sel = g('comp-creative-music-bed');
-  if (!sel) return;
+  var composeSel = g('composer-music-bed');
+  if (!sel && !composeSel) return;
   fetch('/clip-comp/audio-beds')
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (!data || !data.ok || !Array.isArray(data.beds)) return;
-      sel.innerHTML = data.beds.map(function(b) {
+      _composerMusicBedFiles = {};
+      data.beds.forEach(function(b) {
+        if (b && b.id && b.file) _composerMusicBedFiles[b.id] = b.file;
+      });
+      var html = data.beds.map(function(b) {
+        var label = b.id === 'off' ? 'Bed · Off' : ('Bed · ' + b.label);
+        return '<option value="' + escHtml(b.id) + '">' + escHtml(label) + '</option>';
+      }).join('');
+      var creativeHtml = data.beds.map(function(b) {
         return '<option value="' + escHtml(b.id) + '">' + escHtml(b.label) + '</option>';
       }).join('');
-      if (preferredId) sel.value = preferredId;
-      else if (sel.querySelector('option[value="low_trap"]')) sel.value = 'low_trap';
+      if (sel) sel.innerHTML = creativeHtml;
+      if (composeSel) composeSel.innerHTML = html;
+      var pick = preferredId || getComposerMusicBed();
+      syncComposerMusicBedSelects(pick);
+      if (sel && preferredId) sel.value = preferredId;
+      else if (sel && sel.querySelector('option[value="low_trap"]') && !preferredId) sel.value = 'low_trap';
     })
     .catch(function() { /* keep static options */ });
 }
