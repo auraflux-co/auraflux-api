@@ -19650,16 +19650,38 @@ function fetchFfmpegComposerPreviewNow(body) {
     var c0 = body.clips[0];
     trimDur = Math.max(1, (Number(c0.trimEnd) || 0) - (Number(c0.trimStart) || 0));
   }
-  setComposerPreviewCaption('Near-final Review (~' + Math.round(trimDur) + 's · FX+grade+bed · usually 45–120s)…', 'pending');
+  setComposerPreviewCaption('Near-final Review (~' + Math.round(trimDur) + 's · FX+grade+bed · usually 20–60s)…', 'pending');
   var fetchOpts = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   };
   if (_composerPreviewAbort) fetchOpts.signal = _composerPreviewAbort.signal;
+  if (window._composerReviewWatchdog) clearInterval(window._composerReviewWatchdog);
+  window._composerReviewWatchdog = setInterval(function() {
+    if (seq !== _composerPreviewSeq) {
+      clearInterval(window._composerReviewWatchdog);
+      window._composerReviewWatchdog = null;
+      return;
+    }
+    var elapsed = Math.round((Date.now() - _composerPreviewStartedAt) / 1000);
+    setComposerPreviewCaption('Near-final still rendering… ' + elapsed + 's (grade/FX/bed — do not refresh)', 'pending');
+    if (elapsed >= 180) {
+      clearInterval(window._composerReviewWatchdog);
+      window._composerReviewWatchdog = null;
+      try { if (_composerPreviewAbort) _composerPreviewAbort.abort(); } catch (_) { /* noop */ }
+      resetComposerReviewEditButton();
+      setComposerPreviewCaption('Review timed out after 3 min — try again (shorter trim) or EXECUTE without Review', 'err');
+      setComposerPreviewMode('mock');
+    }
+  }, 5000);
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/timeline-preview', fetchOpts)
     .then(function(r) { return r.json().then(function(d) { return { httpOk: r.ok, d: d }; }); })
     .then(function(res) {
+      if (window._composerReviewWatchdog) {
+        clearInterval(window._composerReviewWatchdog);
+        window._composerReviewWatchdog = null;
+      }
       var d = res.d || {};
       if (loading && seq === _composerPreviewSeq) loading.style.display = 'none';
       if (seq !== _composerPreviewSeq) return;
@@ -19751,6 +19773,10 @@ function fetchFfmpegComposerPreviewNow(body) {
       }
     })
     .catch(function(e) {
+      if (window._composerReviewWatchdog) {
+        clearInterval(window._composerReviewWatchdog);
+        window._composerReviewWatchdog = null;
+      }
       if (loading && seq === _composerPreviewSeq) loading.style.display = 'none';
       if (seq !== _composerPreviewSeq) return;
       if (e && e.name === 'AbortError') {
