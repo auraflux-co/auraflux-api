@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-25 (PARKED) — Speed Short `…1785027212320` EXECUTE ≠ saved Compose look (black early frames / wrong crops / no whisper). Gate3 48 — see **CPD-1293**. Rob done for tonight; next session fix EXECUTE fidelity vs timeline-preview before another Short.
 **Last Updated:** 2026-07-25 (CPD-1292) — Compose **Bed · …** dropdown (scans `assets/audio/`) + **Hear bed** (~12s solo). Pick track → Hear bed or Review near-final to audition under Short. Hard refresh Compose.
 **Last Updated:** 2026-07-25 (CPD-1291) — Near-final Review hang fixed: skip redundant 1080 re-encode (copy finished MP4); transform ultrafast for Review; UI elapsed + 3min timeout. Hard refresh → Review near-final again.
 **Last Updated:** 2026-07-25 (CPD-1291) — **Near-final Review**: ▶ Review near-final burns layout + Punch/transform + Beats→FX + music bed/SFX before EXECUTE (Whisper captions still EXECUTE-only). QA panel shows NEAR-FINAL + what burned. Hard refresh Compose.
