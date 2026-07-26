@@ -3,7 +3,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-test('clip comp template mode is off unless CLIP_COMP_EXPERIMENT=1', () => {
+test('clip comp template mode is off unless CLIP_COMP_EXPERIMENT=1 or look ordered', () => {
   delete process.env.CLIP_COMP_EXPERIMENT;
   delete process.env.CLIP_COMP_TRANSFORM;
   const mod = require('../lib/clip_comp_template');
@@ -11,6 +11,16 @@ test('clip comp template mode is off unless CLIP_COMP_EXPERIMENT=1', () => {
   assert.equal(mod.shouldApplyClipCompTransform(true), false);
   assert.equal(mod.shouldApplyClipCompTransform(false), false);
   assert.ok(mod.clipCompWhisperCaptionStyleSuffix().includes('MarginV'));
+});
+
+test('CPD-1293: Punch/look ordered enables transform without CLIP_COMP_EXPERIMENT', () => {
+  delete process.env.CLIP_COMP_EXPERIMENT;
+  delete process.env.CLIP_COMP_TRANSFORM;
+  const mod = require('../lib/clip_comp_template');
+  assert.equal(mod.shouldApplyClipCompTransform(true, { compCreative: { look: { preset: 'punch' } } }), true);
+  assert.equal(mod.shouldApplyClipCompTransform(true, { lookPreset: 'teal' }), true);
+  assert.equal(mod.shouldApplyClipCompTransform(true, { compCreative: { effects: { transform: true } } }), true);
+  assert.equal(mod.shouldApplyClipCompTransform(true, { compCreative: { look: { preset: 'auto' } } }), false);
 });
 
 test('CLIP_COMP_EXPERIMENT enables transform and clears template caption suffix', () => {

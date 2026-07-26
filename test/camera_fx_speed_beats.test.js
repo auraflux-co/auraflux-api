@@ -36,6 +36,7 @@ describe('CPD-1280 camera shake', () => {
     const frag = buildShakeFilter(shakes);
     assert.match(frag, /^crop=/);
     assert.match(frag, /between\(t/);
+    assert.match(frag, /scale=1080:1920/, 'CPD-1293: shake must rescale to portrait');
   });
 
   it('camera_shake effect returns filter when enabled', () => {
