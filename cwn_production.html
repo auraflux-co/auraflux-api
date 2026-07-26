@@ -1588,7 +1588,7 @@ input[type="url"], input[type="password"], select, textarea {
                       </div>
                       <div class="composer-exec-row">
                         <button type="button" id="btn-composer-done-edit" class="btn btn-outline" onclick="doneComposerEditing()" title="Lock trim + saved looks">Done editing</button>
-                        <button type="button" id="btn-composer-review-edit" class="btn btn-gold btn-sm" onclick="reviewComposerEdit()" title="Render full trim with timed looks before assembly">▶ Review edit</button>
+                        <button type="button" id="btn-composer-review-edit" class="btn btn-gold btn-sm" onclick="reviewComposerEdit()" title="Near-final Review: layout + Punch/transform + Beats→FX + music bed (Whisper captions still burn at EXECUTE)">▶ Review near-final</button>
                         <button type="button" id="btn-composer-execute" class="btn btn-gold" onclick="executeFromComposer()">EXECUTE → ASSEMBLY</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="exportComposerFcpxml()">⬇ FCPXML</button>
                       </div>
@@ -17303,7 +17303,7 @@ function updateComposerEditStatus() {
     return;
   }
   if (_composerEditDone) {
-    el.innerHTML = 'Edits locked. Click <strong>▶ Review edit</strong> to watch the whole trim with saved looks, then EXECUTE.';
+    el.innerHTML = 'Edits locked. Click <strong>▶ Review near-final</strong> to audit grade/FX/bed (captions at EXECUTE), then EXECUTE.';
     return;
   }
   el.innerHTML = 'Draft crops do not change the whole video until you click <strong>Save look here</strong>.';
@@ -18246,7 +18246,7 @@ function renderComposerSpecRundown(flashKind) {
   } else if (_composerEditReviewed) {
     html += '<div class="composer-spec-save-note" style="color:rgba(46,204,113,0.95);">✓ Reviewed — EXECUTE uses this timed look plan</div>';
   } else if (_composerEditDone) {
-    html += '<div class="composer-spec-save-note">✓ Edits locked — click ▶ Review edit, then EXECUTE</div>';
+    html += '<div class="composer-spec-save-note">✓ Edits locked — click ▶ Review near-final, then EXECUTE</div>';
   } else {
     html += '<div class="composer-spec-save-note">Saved looks · want split then full? Save split at Short 0:00, scrub, switch to Single, Save look here again.</div>';
   }
@@ -18832,7 +18832,7 @@ function doneComposerEditing() {
   syncComposerExecuteGate();
   var cutN = clip && Array.isArray(clip.composerCuts) ? clip.composerCuts.length : 1;
   setComposerPreviewCaption(
-    'Edits locked — click ▶ Review edit'
+    'Edits locked — click ▶ Review near-final'
       + (cutN > 1 ? ' (plays active cut; EXECUTE stitches all ' + cutN + ' cuts)' : ' to watch the full trim with timed looks'),
     'ok'
   );
@@ -18873,21 +18873,21 @@ function reviewComposerEdit() {
   _composerEditReviewed = false;
   _composerLayoutLogLines = [];
   updateComposerEditStatus();
-  setComposerPreviewCaption('Review edit started — rendering full Short with timed looks (30–90s)…', 'pending');
+  setComposerPreviewCaption('Near-final Review — layout + look/transform + Beats→FX + bed (captions at EXECUTE)…', 'pending');
   logComposerLayoutAtPlayhead('review-start');
   var btn = g('btn-composer-review-edit');
   if (btn) { btn.disabled = true; btn.textContent = 'Rendering…'; }
   try {
     fetchFfmpegComposerPreview(body, true);
   } catch (e) {
-    if (btn) { btn.disabled = false; btn.textContent = '▶ Review edit'; }
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Review near-final'; }
     setComposerPreviewCaption('Review failed to start: ' + ((e && e.message) || e), 'err');
   }
 }
 
 function resetComposerReviewEditButton() {
   var btn = g('btn-composer-review-edit');
-  if (btn) { btn.disabled = false; btn.textContent = '▶ Review edit'; }
+  if (btn) { btn.disabled = false; btn.textContent = '▶ Review near-final'; }
 }
 
 function clearComposerLayoutSegments() {
@@ -19244,7 +19244,14 @@ function buildComposerQaRows() {
   }
   var beatsOn = punches > 0 || shakes > 0 || impacts > 0 || sfxDrops > 0;
   var previewMode = _composerPreviewMode || 'mock';
-  var previewLabel = previewMode === 'ffmpeg' ? 'Review MP4 (graded)'
+  var near = window._composerNearFinalLast || null;
+  var nearApplied = (near && near.applied) || [];
+  var nearMissing = (near && near.missing) || [];
+  var nearOn = previewMode === 'ffmpeg' && !!near && near.ok;
+  var previewLabel = nearOn
+    ? ('Near-final · ' + (nearApplied.length ? nearApplied.join('+') : 'layout')
+      + (nearMissing.length ? (' · skip ' + nearMissing.join('+')) : ''))
+    : previewMode === 'ffmpeg' ? 'Review MP4'
     : previewMode === 'mock' ? 'Live approx (not final)'
     : String(previewMode);
   var draftDirty = !!window._composerLookDraftDirty;
@@ -19257,6 +19264,12 @@ function buildComposerQaRows() {
   function row(key, status, value, when) {
     return { key: key, status: status, value: value, when: when };
   }
+  function nearWhen(token, fallback) {
+    if (!nearOn) return fallback;
+    if (nearApplied.indexOf(token) >= 0) return 'in Review';
+    if (nearMissing.indexOf(token) >= 0) return 'exec only';
+    return fallback;
+  }
 
   var rows = [];
   rows.push(row('Preset', composerQaStatus(true), presetLabel, 'payload'));
@@ -19264,19 +19277,20 @@ function buildComposerQaRows() {
     landscape === 'single' ? 'live+exec' : 'live+exec'));
   rows.push(row('Look', composerQaStatus(look && look !== 'auto', false, false),
     look === 'auto' ? 'Auto grade' : String(look),
-    look && look !== 'auto' ? 'live≈ · review/exec burn' : 'exec grade'));
+    nearWhen('look_transform', nearWhen('look_tint',
+      look && look !== 'auto' ? 'live≈ · review/exec burn' : 'exec grade'))));
   rows.push(row('Hooks', composerQaStatus(hookMode !== 'whisper_only'),
     hookMode === 'whisper_only' ? 'none (whisper only)' : hookMode,
     hookMode === 'whisper_only' ? 'no burn' : 'exec burn'));
-  rows.push(row('Captions', composerQaStatus(whisperOn),
+  rows.push(row('Captions', composerQaStatus(whisperOn, nearOn && nearMissing.indexOf('whisper_captions') >= 0),
     whisperOn ? capStyle : 'off',
     'exec (Whisper)'));
   rows.push(row('Music bed', composerQaStatus(bed && bed !== 'off'),
     bed && bed !== 'off' ? bed : 'off',
-    'exec mix'));
+    nearWhen('music_bed_sfx', 'exec mix')));
   rows.push(row('Cut SFX', composerQaStatus(sfx && sfx !== 'off'),
     sfx && sfx !== 'off' ? sfx : 'off',
-    'exec'));
+    nearWhen('music_bed_sfx', 'exec')));
   rows.push(row('Beats→FX', composerQaStatus(beatsOn, !beatsOn && preset === 'fableflow_speed'),
     beatsOn
       ? ('punch ' + punches + ' · shake ' + shakes
@@ -19284,13 +19298,13 @@ function buildComposerQaRows() {
         + (sfxDrops ? (' · sfx ' + sfxDrops) : '')
         + ' · src ' + beatSrc)
       : ('not run · src ' + beatSrc),
-    beatsOn ? 'exec burn' : 'tap Beats→FX'));
+    beatsOn ? nearWhen('beats_fx', 'exec burn') : 'tap Beats→FX'));
   rows.push(row('Speed feel', composerQaStatus(speedFeel && speedFeel !== 'normal'),
     speedFeel || 'normal',
-    'exec'));
+    nearWhen('speed_ramps', 'exec')));
   rows.push(row('Anim text', composerQaStatus(!!overlayTxt),
     overlayTxt ? ('"' + overlayTxt.slice(0, 28) + '"') : 'off',
-    'exec'));
+    nearOn && overlayTxt ? 'in Review (transform)' : 'exec'));
   rows.push(row('Join', composerQaStatus(join && join !== 'cut'),
     join || 'cut',
     'multi-clip only'));
@@ -19300,9 +19314,9 @@ function buildComposerQaRows() {
   rows.push(row('Looks saved', composerQaStatus(looksSaved, draftDirty),
     draftDirty ? 'DRAFT unsaved' : (looksSaved ? 'saved marks' : 'opening only'),
     draftDirty ? 'Save look here' : 'exec'));
-  rows.push(row('Preview', { st: previewMode === 'ffmpeg' ? 'live' : 'pend', label: previewMode === 'ffmpeg' ? 'REVIEW' : 'LIVE' },
+  rows.push(row('Preview', { st: nearOn ? 'live' : (previewMode === 'ffmpeg' ? 'live' : 'pend'), label: nearOn ? 'NEAR-FINAL' : (previewMode === 'ffmpeg' ? 'REVIEW' : 'LIVE') },
     previewLabel,
-    previewMode === 'ffmpeg' ? '≈EXECUTE' : 'approx'));
+    nearOn ? (nearMissing.length ? 'Review ≈EXECUTE (−captions)' : 'Review ≈EXECUTE') : 'approx'));
   return rows;
 }
 
@@ -19378,9 +19392,9 @@ function syncComposerExecuteGate() {
     if (_composerEditReviewed && _composerPreviewMode === 'ffmpeg') {
       execBtn.title = 'Reviewed — dispatch locked compositionSpec to assembly';
     } else if (_composerEditDone) {
-      execBtn.title = 'Edits locked — Review edit recommended before EXECUTE';
+      execBtn.title = 'Edits locked — Review near-final recommended before EXECUTE';
     } else {
-      execBtn.title = 'EXECUTE uses saved looks on the right · Review edit recommended';
+      execBtn.title = 'EXECUTE uses saved looks on the right · Review near-final recommended';
     }
   }
 }
@@ -19494,7 +19508,9 @@ function formatComposerPreviewCaption(d, errMsg) {
   if (errMsg) return 'Preview failed: ' + errMsg + ' · thumbnail mock below is approximate only';
   if (!d || !d.ok || !d.base64) return 'Preview unavailable · click ↻ Refresh preview (needs clip MP4 + FFmpeg)';
   var ls = d.layoutSummary || {};
-  var parts = [d && d.fullTrimWindow ? 'FULL TRIM PREVIEW · matches EXECUTE' : 'ASSEMBLY PREVIEW · layout + logo (matches EXECUTE)'];
+  var parts = [d && d.nearFinalPreview
+    ? 'NEAR-FINAL REVIEW · ≈EXECUTE (−Whisper captions)'
+    : (d && d.fullTrimWindow ? 'FULL TRIM PREVIEW' : 'ASSEMBLY PREVIEW · layout + logo')];
   if (ls.landscapeAutoSplit) parts.push('16:9 → split overrides preset');
   else parts.push(String(ls.effectiveMode || d.mode || 'layout'));
   if (ls.topHeight) parts.push('top ' + ls.topHeight + 'px');
@@ -19520,10 +19536,14 @@ function formatComposerPreviewCaption(d, errMsg) {
   }
   if (ls.sourceCleanup) parts.push('UI mask: ' + ls.sourceCleanup);
   if (ls.timedLayout || d.timedLayoutPreview) parts.push('timed layout');
-  parts.push('hooks/captions added at assembly');
+  var applied = d.nearFinalApplied || ls.nearFinalApplied || [];
+  var missing = d.nearFinalMissing || ls.nearFinalMissing || [];
+  if (applied.length) parts.push('burned ' + applied.join('+'));
+  if (missing.length) parts.push('still EXECUTE: ' + missing.join('+'));
+  if (!d.nearFinalPreview) parts.push('hooks/captions added at assembly');
   if (d.previewVideoUrl) {
     var dur = d.previewDurationSec || 6;
-    if (d.fullTrimWindow) parts.push('full trim ' + Math.round(dur) + 's · matches EXECUTE');
+    if (d.fullTrimWindow) parts.push('full trim ' + Math.round(dur) + 's');
     else parts.push('~' + Math.round(dur) + 's · active lineup clip only (click COMP LINEUP to switch)');
   }
   return parts.join(' · ');
@@ -19630,7 +19650,7 @@ function fetchFfmpegComposerPreviewNow(body) {
     var c0 = body.clips[0];
     trimDur = Math.max(1, (Number(c0.trimEnd) || 0) - (Number(c0.trimStart) || 0));
   }
-  setComposerPreviewCaption('Rendering full trim preview (~' + Math.round(trimDur) + 's clip · usually 30–90s)…', 'pending');
+  setComposerPreviewCaption('Near-final Review (~' + Math.round(trimDur) + 's · FX+grade+bed · usually 45–120s)…', 'pending');
   var fetchOpts = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -19704,13 +19724,19 @@ function fetchFfmpegComposerPreviewNow(body) {
       }
       if (mock) mock.style.display = 'none';
       setComposerPreviewMode('ffmpeg');
+      window._composerNearFinalLast = {
+        ok: !!d.nearFinalPreview,
+        applied: d.nearFinalApplied || [],
+        missing: d.nearFinalMissing || [],
+      };
       _composerEditDone = true;
       _composerEditReviewed = true;
       clearComposerLookDraftDirty();
-      setComposerPreviewCaption(formatComposerPreviewCaption(d) + ' · ▶ Play to review timed looks', 'ok');
+      setComposerPreviewCaption(formatComposerPreviewCaption(d) + ' · ▶ Play to audit before EXECUTE', 'ok');
       updateComposerEditStatus();
       renderComposerTimelineMarkers();
       renderComposerSpecRundown();
+      if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
       resetComposerReviewEditButton();
       logComposerLayoutAtPlayhead('review-ok');
       if (d.layoutSummary && d.layoutSummary.facecamRect) {
@@ -20237,7 +20263,7 @@ function executeFromComposer() {
     if (!_composerEditDone) return;
   }
   if (!_composerEditReviewed || _composerPreviewMode !== 'ffmpeg') {
-    if (!confirm('No Review edit yet. Recommended: ▶ Review edit to watch the full trim with timed looks.\n\nOK = EXECUTE anyway · Cancel = stay and Review')) return;
+    if (!confirm('No near-final Review yet. Recommended: ▶ Review near-final to audit grade/FX/bed before EXECUTE.\n\nOK = EXECUTE anyway · Cancel = stay and Review')) return;
   }
   var body = buildCompositionSpecFromUI();
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
