@@ -23,6 +23,14 @@ test('CPD-1293: Punch/look ordered enables transform without CLIP_COMP_EXPERIMEN
   assert.equal(mod.shouldApplyClipCompTransform(true, { compCreative: { look: { preset: 'auto' } } }), false);
 });
 
+test('CPD-1293: look on standalone compCreative enables transform', () => {
+  delete process.env.CLIP_COMP_EXPERIMENT;
+  delete process.env.CLIP_COMP_TRANSFORM;
+  const mod = require('../lib/clip_comp_template');
+  assert.equal(mod.shouldApplyClipCompTransform(true, null, { look: { preset: 'punch' } }), true);
+  assert.equal(mod.shouldApplyClipCompTransform(true, null, { effects: { transform: true } }), true);
+});
+
 test('CLIP_COMP_EXPERIMENT enables transform and clears template caption suffix', () => {
   process.env.CLIP_COMP_EXPERIMENT = '1';
   const mod = require('../lib/clip_comp_template');

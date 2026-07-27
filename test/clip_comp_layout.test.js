@@ -9,6 +9,7 @@ const {
   layoutFilterDescription,
   buildClipCompLogoFilter,
   FULL_BLEED_FILTER,
+  insetRectAwayFromChatRail,
 } = require('../lib/clip_comp_layout');
 const { PRESET_DEFAULTS } = require('../lib/clip_comp_creative');
 
@@ -48,6 +49,44 @@ test('serpent ranked preset uses corner logo bottom-right', () => {
   assert.equal(resolveLogoCorner(PRESET_DEFAULTS.serpent_ranked), 'bottom_right');
   const fc = buildClipCompLogoFilter(PRESET_DEFAULTS.serpent_ranked, '/tmp/logo.png');
   assert.ok(fc.includes('y=H-h-20'));
+});
+
+test('CPD-1257 classic + timed full-bleed coerces logo to corner top-right', () => {
+  const {
+    collectLayoutModesFromClips,
+    coerceLogoCreativeForOutput,
+  } = require('../lib/clip_comp_layout');
+  const classic = JSON.parse(JSON.stringify(PRESET_DEFAULTS.classic_blur_pad));
+  assert.equal(resolveLogoMode(classic), 'top_blur_fold');
+  const modes = collectLayoutModesFromClips([{
+    openingLayout: { mode: 'split_screen' },
+    layoutSegments: [{ atSec: 21, mode: 'full_bleed_crop' }],
+  }]);
+  assert.deepEqual(modes, ['split_screen', 'full_bleed_crop']);
+  const coerced = coerceLogoCreativeForOutput(classic, { layoutModes: modes });
+  assert.equal(resolveLogoMode(coerced), 'corner');
+  assert.equal(resolveLogoCorner(coerced), 'top_right');
+  const fc = buildClipCompLogoFilter(coerced, '/tmp/logo.png');
+  assert.ok(fc.includes('y=20'));
+  assert.ok(!fc.includes('y=H-h-20'));
+});
+
+test('CPD-1257 classic-only plan keeps top_blur_fold logo', () => {
+  const { coerceLogoCreativeForOutput } = require('../lib/clip_comp_layout');
+  const classic = JSON.parse(JSON.stringify(PRESET_DEFAULTS.classic_blur_pad));
+  const coerced = coerceLogoCreativeForOutput(classic, {
+    layoutModes: ['blur_pad'],
+  });
+  assert.equal(resolveLogoMode(coerced), 'top_blur_fold');
+});
+
+test('CPD-1257 collectLayoutModesFromClips accepts object-shaped layoutSegments', () => {
+  const { collectLayoutModesFromClips } = require('../lib/clip_comp_layout');
+  const modes = collectLayoutModesFromClips([{
+    openingLayout: { mode: 'split_screen' },
+    layoutSegments: { mode: 'split_screen', segments: [{ atSec: 21, mode: 'full_bleed_crop' }] },
+  }]);
+  assert.deepEqual(modes, ['split_screen', 'split_screen', 'full_bleed_crop']);
 });
 
 test('sourceBottomCropPct resolves, defaults to 0, clamps to 0.3 (CPD-1220)', () => {
@@ -308,4 +347,14 @@ test('resolveEffectiveLayoutMode honours cropZoom without landscapeSplit flag', 
   }, null);
   assert.equal(rect.x, 0.65);
   assert.equal(rect.w, 0.3);
+});
+
+test('CPD-1293: chat rail inset clamps wide crops left of delogo column', () => {
+  const wide = insetRectAwayFromChatRail({ x: 0.42, y: 0, w: 0.58, h: 0.7 }, { hideChatRail: true });
+  assert.ok(wide);
+  assert.ok(wide.x + wide.w <= 0.78, 'must not overlap chat_rail');
+  const untouched = insetRectAwayFromChatRail({ x: 0.1, y: 0.2, w: 0.4, h: 0.5 }, { hideChatRail: true });
+  assert.equal(untouched.w, 0.4);
+  const off = insetRectAwayFromChatRail({ x: 0.42, y: 0, w: 0.58, h: 0.7 }, { hideChatRail: false });
+  assert.equal(off.w, 0.58);
 });
