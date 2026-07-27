@@ -57,5 +57,5 @@ test('optional duck path still available for other presets', () => {
     sfxPaths: [],
   });
   const graph = filterParts.join(';');
-  assert.match(graph, /sidechaincompress=.*mix=0\.1/);
+  assert.match(graph, /sidechaincompress=.*mix=0\.95/);
 });
