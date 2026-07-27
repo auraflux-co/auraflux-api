@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-07-26 (CPD-1295) — Dialogue-aware clip-comp mix: Whisper speech windows mute bed under dialogue + attenuate source outside; C9 complementary `neutral_lofi` bed. Sidechain duck remains fallback.
 **Last Updated:** 2026-07-26 (CPD-1294) — Music bed duck fixed (`sidechaincompress` mix 0.1→0.95); C9 quieter bed; highlight SFX capped. C9 has no hook card by design (whisper_only).
 **Last Updated:** 2026-07-26 (CPD-1293) — EXECUTE postprocess before Gate 3a (Whisper+Punch survive hard_fail); audio sentinel strip; chat-rail crop inset; Gate 3a accepts C9 game-top split; staged peaks always pre-trimmed. Verified r4 then shipping r5 with operator Compose boxes restored.
 **Last Updated:** 2026-07-26 (CPD-1293) — EXECUTE≠Review fidelity: shake rescale to 1080×1920; Punch/look transform without CLIP_COMP_EXPERIMENT; openingLayout-only pre-trim; Gate3 report no longer keeps stale “did not run” text. Claude API + Gemini API + Composer explore used. Reassemble Speed job to verify.
