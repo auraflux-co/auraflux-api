@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — stop phone auto-dial on refresh deploying to auraflux-app.
+**Deploy Mode:** dev — SMS Inbox outbound compose deploying to auraflux-api + auraflux-app.
 
-**Last Updated:** 2026-07-15 — Strip ?dial= from /phone URL after one auto-dial so refresh does not redial.
+**Last Updated:** 2026-08-13 — Superadmin SMS Inbox can send from 437/571 via POST /api/admin/sms-send.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
