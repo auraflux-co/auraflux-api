@@ -54,11 +54,15 @@ export default function SmsInboxPage() {
   const fetchMessages = useCallback(async (silent = false) => {
     try {
       const token = await getToken();
-      const res = await fetch(`${API}/api/admin/sms-inbox`, {
+      const res = await fetch(`${API}/api/admin/sms-inbox?t=${Date.now()}`, {
+        cache: 'no-store',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const data = await res.json();
-      if (data.ok && Array.isArray(data.messages)) {
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || `Inbox fetch failed (${res.status})`);
+      }
+      if (Array.isArray(data.messages)) {
         const incoming: SmsMessage[] = data.messages;
         if (seenIds.current.size > 0) {
           const fresh = incoming.filter(m => !seenIds.current.has(m.id));
@@ -69,7 +73,7 @@ export default function SmsInboxPage() {
         setLastRefresh(new Date());
       }
     } catch {
-      // non-fatal
+      // keep existing list; Last timestamp only updates on success
     } finally {
       if (!silent) setLoading(false);
     }

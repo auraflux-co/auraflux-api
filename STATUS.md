@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** dev — SMS Inbox now stores operator-line inbound (437/571), not only brand numbers.
+**Deploy Mode:** dev — SMS Inbox backfill + disable GET cache (304) deploying.
 
-**Last Updated:** 2026-08-17 — Incoming Slack SMS to 437/571 were skipped by SMS Inbox; persist all inbound with nullable brand_id.
+**Last Updated:** 2026-08-17 — Inbox GET was returning 304 cached brand-only rows; backfill Slack threads into inbox and cache-bust fetch.
 
 **Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
 
