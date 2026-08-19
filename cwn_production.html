@@ -162,10 +162,10 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .comp-split-how { margin-bottom:10px;padding:8px 10px;border-radius:6px;background:rgba(0,0,0,0.25);font-size:12px;line-height:1.55;color:rgba(255,255,255,0.62); }
 .comp-split-how strong { color:rgba(46,204,113,0.95); }
 .comp-split-how em { color:rgba(199,175,79,0.95); font-style:normal; }
-.composer-preview-frame { position:relative; width:100%; max-width:360px; aspect-ratio:9/16; margin:0 auto; border-radius:8px; overflow:hidden; background:#000; border:1px solid rgba(199,175,79,0.35); }
+.composer-preview-frame { position:relative; width:100%; max-width:540px; aspect-ratio:9/16; margin:0 auto; border-radius:8px; overflow:hidden; background:#000; border:1px solid rgba(199,175,79,0.35); }
 .composer-preview-frame.is-source-review { max-width:100%; aspect-ratio:16/9; border-color:rgba(52,152,219,0.45); }
-.composer-preview-frame.is-portrait-preview { max-width:360px; aspect-ratio:9/16; }
-.composer-preview-frame.is-live-edit { max-width:360px; aspect-ratio:9/16; border-color:rgba(199,175,79,0.45); }
+.composer-preview-frame.is-portrait-preview { max-width:540px; aspect-ratio:9/16; }
+.composer-preview-frame.is-live-edit { max-width:540px; aspect-ratio:9/16; border-color:rgba(199,175,79,0.45); }
 .composer-preview-frame.is-live-edit .composer-preview-video {
   opacity:0; pointer-events:none; position:absolute; inset:0;
   width:100%; height:100%; object-fit:contain; z-index:0;
@@ -178,13 +178,19 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 }
 .composer-preview-frame.is-live-edit .composer-preview-main { left:0; right:0; }
 .composer-preview-frame.is-live-edit .composer-pane-video {
-  position:absolute; top:0; left:0; pointer-events:none; object-fit:fill;
+  position:absolute; top:0; left:0; pointer-events:none; object-fit:none;
+  image-rendering:auto;
 }
 .composer-preview-frame.is-live-edit .composer-preview-hook,
-.composer-preview-frame.is-live-edit .composer-preview-captions,
-.composer-preview-frame.is-live-edit .composer-preview-logo,
-.composer-preview-frame.is-live-edit .composer-preview-ranked,
-.composer-preview-frame.is-live-edit .composer-preview-mock-watermark { display:none !important; }
+  .composer-preview-frame.is-live-edit .composer-preview-captions,
+  .composer-preview-frame.is-live-edit .composer-preview-logo,
+  .composer-preview-frame.is-live-edit .composer-preview-ranked { display:none !important; }
+.composer-preview-frame.is-live-edit .composer-preview-mock-watermark {
+  display:flex !important; align-items:flex-start; justify-content:center;
+  inset:auto; top:6px; left:8px; right:8px; height:auto; transform:none;
+  font-size:10px; letter-spacing:0.08em; color:rgba(255,220,120,0.95);
+  text-shadow:0 1px 6px #000; pointer-events:none; z-index:8;
+}
 .composer-preview-frame.is-live-edit.is-waiting-video .composer-preview-bg,
 .composer-preview-frame.is-live-edit.is-waiting-video .composer-preview-main { opacity:0.15; }
 .composer-preview-frame.is-live-edit.is-video-fallback .composer-preview-video {
@@ -17311,7 +17317,7 @@ function updateComposerEditStatus() {
     el.innerHTML = 'Edits locked. Click <strong>▶ Review near-final</strong> to audit grade/FX/bed (captions at EXECUTE), then EXECUTE.';
     return;
   }
-  el.innerHTML = 'Draft crops do not change the whole video until you click <strong>Save look here</strong>.';
+  el.innerHTML = 'Live box is a crop guide (not 1080p). Click <strong>▶ Review near-final</strong> for real Short quality. Save look here before that.';
 }
 
 function getComposerAbsolutePlayheadSec() {
@@ -17526,8 +17532,8 @@ function layoutComposerPaneVideo(paneEl, videoEl, rect) {
   var pw = paneEl.clientWidth;
   var ph = paneEl.clientHeight;
   if (pw < 2 || ph < 2) return;
-  var vw = videoEl.videoWidth || 640;
-  var vh = videoEl.videoHeight || 360;
+  var vw = videoEl.videoWidth || 1280;
+  var vh = videoEl.videoHeight || 720;
   var rw = Math.max(0.05, Number(rect.w) || 0.35);
   var rh = Math.max(0.05, Number(rect.h) || 0.35);
   var rx = Math.max(0, Math.min(1 - rw, Number(rect.x) || 0));
@@ -17605,7 +17611,7 @@ function syncComposerPanePreview() {
 function composerLeadPreviewThumbUrl() {
   var clip = composerLeadClipForEdit();
   if (!clip) return '';
-  return (clip.thumbnailUrl || '').replace('{width}', '640').replace('{height}', '360');
+  return (clip.thumbnailUrl || '').replace('{width}', '1280').replace('{height}', '720');
 }
 
 function setComposerVideoFallbackVisible(on) {
@@ -23601,8 +23607,13 @@ function syncComposerMusicBedSelects(id) {
   }
 }
 
-function onComposerMusicBedChange() {
-  var bedId = getComposerMusicBed();
+function onComposerMusicBedChange(ev) {
+  var bedId;
+  if (ev && ev.target && (ev.target.id === 'composer-music-bed' || ev.target.id === 'comp-creative-music-bed')) {
+    bedId = ev.target.value;
+  } else {
+    bedId = getComposerMusicBed();
+  }
   syncComposerMusicBedSelects(bedId);
   try {
     var stored = loadCompCreativePresetFromStorage();
