@@ -3923,9 +3923,12 @@ function nav(page) {
   if (page === 'generate') {
     if (!applyComposerHandoff()) {
       if (!restoreComposerSession()) {
-        applyLibraryHandoff();
-        renderComposerHandoffSummary();
-        loadGeneratePillarPref();
+        fetchOperatorComposerSession(function(ok) {
+          if (ok) return;
+          applyLibraryHandoff();
+          renderComposerHandoffSummary();
+          loadGeneratePillarPref();
+        });
       }
     }
   }
@@ -4618,6 +4621,7 @@ function snapshotClipForSession(c) {
     playbackUrl: c.playbackUrl || '',
     title: c.title || '',
     streamer: c.streamer || '',
+    displayName: c.displayName || '',
     thumbnailUrl: c.thumbnailUrl || '',
     duration: c.duration || c.clipDuration || 60,
     sourceDuration: c.sourceDuration || c.duration || c.clipDuration || 60,
@@ -4726,8 +4730,18 @@ function persistComposerSessionNow() {
     lookTint: (g('composer-look-tint') && g('composer-look-tint').value) || 'auto',
     speedFeel: (g('composer-speed-feel') && g('composer-speed-feel').value) || 'normal',
     editingLayoutJobId: window._editingLayoutJobId || null,
+    compCreative: (typeof saveCompCreativePresetToStorage === 'function')
+      ? saveCompCreativePresetToStorage()
+      : null,
   };
   try { sessionStorage.setItem(CWN_COMPOSER_SESSION_KEY, JSON.stringify(payload)); } catch (_e) {}
+  try {
+    fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/operator-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch(function() {});
+  } catch (_e) {}
 }
 
 function restoreCompLineupOrder(urlsOrIds) {
@@ -4765,22 +4779,18 @@ function restoreCompLineupOrder(urlsOrIds) {
   if (ordered.length) _compLineup = ordered;
 }
 
-function restoreComposerSession() {
-  var raw;
-  try { raw = sessionStorage.getItem(CWN_COMPOSER_SESSION_KEY); } catch (_e) { return false; }
-  if (!raw) return false;
-  var data;
-  try { data = JSON.parse(raw); } catch (_e) { return false; }
+function applyComposerSessionPayload(data) {
   if (!data || data.version !== 1) return false;
-  if (data.savedAt && (Date.now() - Number(data.savedAt)) > COMPOSER_SESSION_TTL_MS) {
-    try { sessionStorage.removeItem(CWN_COMPOSER_SESSION_KEY); } catch (_e) {}
-    return false;
-  }
+  if (data.savedAt && (Date.now() - Number(data.savedAt)) > COMPOSER_SESSION_TTL_MS) return false;
   var hasContent = (data.streamers && data.streamers.length)
     || (data.redditThreads && data.redditThreads.length)
     || (data.wireStories && data.wireStories.length)
     || data.vodSegment;
   if (!hasContent) return false;
+
+  if (data.compCreative && typeof COMP_CREATIVE_STORAGE_KEY === 'string') {
+    try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data.compCreative)); } catch (_e) {}
+  }
 
   if (data.streamers && data.streamers.length) {
     _twitchPickerStreamers = data.streamers;
@@ -4815,12 +4825,39 @@ function restoreComposerSession() {
   renderComposerHandoffSummary();
   if (typeof refreshCompLineupUI === 'function') refreshCompLineupUI();
   refreshGenerateComposer(true, true);
+  var slot = typeof composerActiveLineupSlot === 'function' ? composerActiveLineupSlot() : null;
+  if (slot && slot.clip && slot.clip.openingLayout && typeof syncComposerUiToSavedLook === 'function') {
+    syncComposerUiToSavedLook(slot.clip.openingLayout, true);
+  }
   var panel = g('generate-composer');
   if (panel) {
     panel.classList.add('is-open');
     setTimeout(function() { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 120);
   }
   return true;
+}
+
+function restoreComposerSession() {
+  var raw;
+  try { raw = sessionStorage.getItem(CWN_COMPOSER_SESSION_KEY); } catch (_e) { return false; }
+  if (!raw) return false;
+  var data;
+  try { data = JSON.parse(raw); } catch (_e) { return false; }
+  return applyComposerSessionPayload(data);
+}
+
+function fetchOperatorComposerSession(done) {
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/operator-session')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d || !d.ok || !d.session || !applyComposerSessionPayload(d.session)) {
+        if (done) done(false);
+        return;
+      }
+      try { sessionStorage.setItem(CWN_COMPOSER_SESSION_KEY, JSON.stringify(d.session)); } catch (_e) {}
+      if (done) done(true);
+    })
+    .catch(function() { if (done) done(false); });
 }
 
 function applyComposerHandoff() {
@@ -23598,7 +23635,6 @@ function refreshCompCreativeChips() {
   }
   var landscapePanel = g('comp-creative-landscape-split');
   refreshLandscapeSplitUI();
-  var topSubj = g('comp-creative-top-pane-subject');
   var bottomModeEl = g('comp-creative-bottom-pane-mode');
   if (bottomModeEl) bottomModeEl.value = stored.bottomPaneMode || 'custom_crop';
   refreshBottomPaneModeUI();

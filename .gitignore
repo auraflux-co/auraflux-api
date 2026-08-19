@@ -15,6 +15,7 @@ node_modules/
 !.serena/.gitignore
 .claude/
 data/assembly_jobs.json
+data/composer_operator_session.json
 cwn-drive-key.json
 .DS_Store
 .aider*
