@@ -3852,6 +3852,7 @@ var CWN_ACTIVE_PAGE_KEY = 'cwn_active_page';
 var CWN_COMPOSER_SESSION_KEY = 'cwn_composer_session';
 var COMPOSER_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 var _composerSessionPersistDebounce = null;
+var _suppressComposerPersist = false;
 var CWN_GENERATE_PILLAR_KEY = 'cwn_generate_pillar';
 
 function persistActivePage(page) {
@@ -3922,14 +3923,17 @@ function nav(page) {
   if (page === 'library') libraryPageInit();
   if (page === 'generate') {
     if (!applyComposerHandoff()) {
-      if (!restoreComposerSession()) {
-        fetchOperatorComposerSession(function(ok) {
-          if (ok) return;
-          applyLibraryHandoff();
-          renderComposerHandoffSummary();
-          loadGeneratePillarPref();
-        });
-      }
+      _suppressComposerPersist = true;
+      restoreComposerSession();
+      fetchOperatorComposerSession(function(ok) {
+        applySavedOpeningLookToComposerUi();
+        _suppressComposerPersist = false;
+        persistComposerSessionNow();
+        if (ok || collectCompPickedClips().length) return;
+        applyLibraryHandoff();
+        renderComposerHandoffSummary();
+        loadGeneratePillarPref();
+      });
     }
   }
 }
@@ -4704,6 +4708,7 @@ function persistComposerSession() {
 }
 
 function persistComposerSessionNow() {
+  if (_suppressComposerPersist) return;
   var picked = collectCompPickedClips();
   if (!picked.length && !_composerVodSegment) {
     try { sessionStorage.removeItem(CWN_COMPOSER_SESSION_KEY); } catch (_e) {}
@@ -4846,15 +4851,81 @@ function restoreComposerSession() {
   return applyComposerSessionPayload(data);
 }
 
+function composerClipUrlKey(clip) {
+  return String((clip && (clip.url || clip.pageUrl)) || '').trim();
+}
+
+function applySavedOpeningLookToComposerUi() {
+  var slot = typeof composerActiveLineupSlot === 'function' ? composerActiveLineupSlot() : null;
+  var look = slot && slot.clip && slot.clip.openingLayout;
+  if (!look || !look.mode) return false;
+  if (look.operatorIntent) {
+    var stored = {};
+    try { stored = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}') || {}; } catch (_e) {}
+    stored.preset = 'fableflow_speed';
+    stored.topPaneSubject = 'custom';
+    stored.landscapeLayout = 'split_screen';
+    stored.facecamRect = look.facecamRect;
+    stored.bottomPaneRect = look.bottomPaneRect;
+    stored.topHeight = look.topHeight;
+    stored.bottomPaneMode = look.bottomPaneMode || 'custom_crop';
+    try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored)); } catch (_e) {}
+    var preset = g('comp-creative-preset');
+    if (preset) preset.value = stored.preset;
+    var ll = g('comp-creative-landscape-layout');
+    if (ll) ll.value = 'split_screen';
+  }
+  var topSubj = g('comp-creative-top-pane-subject');
+  if (topSubj && look.facecamRect) topSubj.value = 'custom';
+  if (typeof syncComposerUiToSavedLook === 'function') syncComposerUiToSavedLook(look, true);
+  if (typeof scheduleComposerLiveSplitPaint === 'function') scheduleComposerLiveSplitPaint();
+  if (typeof renderCompCreativeSourceMap === 'function') renderCompCreativeSourceMap();
+  return true;
+}
+
+function mergeOperatorSessionLooks(session) {
+  if (!session || !session.streamers) return false;
+  var looks = {};
+  session.streamers.forEach(function(s) {
+    (s.clips || []).forEach(function(c) {
+      var k = composerClipUrlKey(c);
+      if (k && c.openingLayout && c.openingLayout.mode) looks[k] = c.openingLayout;
+    });
+  });
+  var merged = 0;
+  (_twitchPickerStreamers || []).forEach(function(s) {
+    (s.clips || []).forEach(function(c) {
+      var k = composerClipUrlKey(c);
+      if (looks[k] && (looks[k].operatorIntent || !(c.openingLayout && c.openingLayout.mode))) {
+        c.openingLayout = looks[k];
+        c.selected = true;
+        merged++;
+      }
+    });
+    if ((s.clips || []).some(function(c) { return c.openingLayout; })) s.selected = true;
+  });
+  if (session.compCreative && typeof COMP_CREATIVE_STORAGE_KEY === 'string') {
+    try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(session.compCreative)); } catch (_e) {}
+  }
+  return merged > 0;
+}
+
 function fetchOperatorComposerSession(done) {
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/operator-session')
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      if (!d || !d.ok || !d.session || !applyComposerSessionPayload(d.session)) {
+      if (!d || !d.ok || !d.session) {
         if (done) done(false);
         return;
       }
-      try { sessionStorage.setItem(CWN_COMPOSER_SESSION_KEY, JSON.stringify(d.session)); } catch (_e) {}
+      var hadPicks = collectCompPickedClips().length > 0;
+      if (hadPicks) mergeOperatorSessionLooks(d.session);
+      else applyComposerSessionPayload(d.session);
+      applySavedOpeningLookToComposerUi();
+      setTimeout(function() { applySavedOpeningLookToComposerUi(); }, 400);
+      if (!hadPicks) {
+        try { sessionStorage.setItem(CWN_COMPOSER_SESSION_KEY, JSON.stringify(d.session)); } catch (_e) {}
+      }
       if (done) done(true);
     })
     .catch(function() { if (done) done(false); });
@@ -18796,7 +18867,7 @@ function saveComposerLookHere() {
   var atSec = Math.floor(abs);
   // At/near trim-in: OPEN only — never also insert a LAYOUT switch at the same second.
   if (atSec <= trimStart + 0.5) {
-    slot.clip.openingLayout = Object.assign({}, snap);
+    slot.clip.openingLayout = Object.assign({}, snap, { operatorIntent: true });
     if (Array.isArray(slot.clip.layoutSegments)) {
       slot.clip.layoutSegments = slot.clip.layoutSegments.filter(function(s) {
         return Math.floor(Number(s.atSec)) > trimStart;
@@ -23569,7 +23640,12 @@ function hydrateFableflowSpeedPresetDefaults() {
   var ll = g('comp-creative-landscape-layout');
   if (ll) ll.value = 'split_screen';
   var topSubj = g('comp-creative-top-pane-subject');
-  if (topSubj) { topSubj.value = 'stacked_figures'; delete topSubj.dataset.userPicked; }
+  var slot = typeof composerActiveLineupSlot === 'function' ? composerActiveLineupSlot() : null;
+  var opening = slot && slot.clip && slot.clip.openingLayout;
+  if (!(opening && opening.facecamRect) && topSubj) {
+    topSubj.value = 'stacked_figures';
+    delete topSubj.dataset.userPicked;
+  }
   var hm = g('comp-creative-hook-mode');
   if (hm) { hm.value = 'whisper_only'; delete hm.dataset.userPicked; }
   var bed = g('comp-creative-music-bed');
@@ -23584,7 +23660,9 @@ function hydrateFableflowSpeedPresetDefaults() {
   if (join) join.value = 'cut';
   var beatSrc = g('composer-beat-source');
   if (beatSrc) beatSrc.value = 'clip';
-  if (typeof onCompCreativeLandscapeLayoutChange === 'function') onCompCreativeLandscapeLayoutChange();
+  if (!(opening && opening.operatorIntent) && typeof onCompCreativeLandscapeLayoutChange === 'function') {
+    onCompCreativeLandscapeLayoutChange();
+  }
   if (typeof setComposerPreviewCaption === 'function') {
     setComposerPreviewCaption('C9 FableFlow · Punch look · Split for two people · Beats→FX → EXECUTE', 'ok');
   }
@@ -23592,6 +23670,19 @@ function hydrateFableflowSpeedPresetDefaults() {
 
 /** One-time / preset-change hydrate of split boxes from storage. Not used after Save look here. */
 function hydrateCompCreativeLayoutFromStorage() {
+  var slot = typeof composerActiveLineupSlot === 'function' ? composerActiveLineupSlot() : null;
+  var opening = slot && slot.clip && slot.clip.openingLayout;
+  if (opening && opening.mode === 'split_screen' && opening.facecamRect) {
+    writeFacecamSlidersToDom(opening.facecamRect);
+    if (opening.bottomPaneRect) writeBottomPaneSlidersToDom(opening.bottomPaneRect);
+    if (opening.topHeight != null) writeTopShareToDom(opening.topHeight);
+    var topSubj = g('comp-creative-top-pane-subject');
+    if (topSubj) topSubj.value = 'custom';
+    var modeEl = g('comp-creative-bottom-pane-mode');
+    if (modeEl && opening.bottomPaneMode) modeEl.value = opening.bottomPaneMode;
+    if (typeof refreshLandscapeSplitUI === 'function') refreshLandscapeSplitUI();
+    return;
+  }
   var stored = loadCompCreativePresetFromStorage();
   if (!composerLineupIsLandscape()) return;
   var topSubj = g('comp-creative-top-pane-subject');
@@ -23820,6 +23911,7 @@ function initCompCreativePanel() {
     loadCompCreativeMusicBeds(stored.musicBed);
     refreshCompCreativeChips();
     hydrateCompCreativeLayoutFromStorage();
+    applySavedOpeningLookToComposerUi();
     refreshCompCreativeLabel();
     refreshTwitchActionBar();
   });
