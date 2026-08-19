@@ -10130,12 +10130,13 @@ function renderQueueNow() {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:15px;color:#3498db;">'
         + '⏳ Assembling clip comp — preview + SEO will appear when FFmpeg finishes.'
         + '</div>';
-    } else if (jobStage === 'metadata_review' && job.metadataQaViolations && job.metadataQaViolations.length) {
-      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:15px;color:#e74c3c;">'
-        + '⛔ METADATA QA — fix before publish: ' + escHtml(job.metadataQaViolations.slice(0, 3).join(' · '))
-        + '<div style="margin-top:6px;color:rgba(255,255,255,0.55);">Click 🔄 FIX SEO below. When SEO passes, <strong style="color:#2ecc71;">🚀 APPROVE &amp; PUBLISH</strong> appears on this card (Job Queue — not the Publish tab).</div>'
-        + '</div>';
     } else if ((resolveJobPreviewUrl(job) || job.driveUrl || resolvePublishCopy(job)) && hasSeo && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || jobStage === 'publish_scheduled' || job.assembledAt)) {
+      if (jobStage === 'metadata_review' && job.metadataQaViolations && job.metadataQaViolations.length) {
+        metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.35);border-radius:6px;font-size:15px;color:#e74c3c;">'
+          + '⛔ METADATA QA — fix before publish: ' + escHtml(job.metadataQaViolations.slice(0, 3).join(' · '))
+          + '<div style="margin-top:6px;color:rgba(255,255,255,0.55);">Stay on this card. Click 🔄 FIX SEO (regenerates titles) or type a custom title below. When SEO passes, <strong style="color:#2ecc71;">🚀 APPROVE &amp; PUBLISH</strong> appears here — not under Publish Prep.</div>'
+          + '</div>';
+      }
       var tagCount = (pubPayload.tags || []).length;
       var hashCount = ((pubPayload.description || '').match(/#\w+/g) || []).length;
       var schedNote = '';
@@ -10232,7 +10233,7 @@ function renderQueueNow() {
       var ctTitlePicker = String(job.contentType || job.type || '');
       var isShortTitleJob = ctTitlePicker.indexOf('-short') >= 0 || job.formType === 'short';
       var isTwitchLongForm = ctTitlePicker === 'twitch' && !isShortTitleJob && !job.clipsOnly;
-      var showTitlePicker = jobStage === 'awaiting_review' && (job.clipsOnly || isTwitchLongForm);
+      var showTitlePicker = (jobStage === 'awaiting_review' || jobStage === 'metadata_review') && (job.clipsOnly || isTwitchLongForm);
       if (showTitlePicker) {
         var titlePool = job.titleCandidates && job.titleCandidates.length
           ? job.titleCandidates
@@ -26463,8 +26464,8 @@ function saveManualChapters() {
 }
 
 function regeneratePublishCopy(jobId) {
-  var statusEl = g('short-status-' + jobId) || g('pub-status');
-  if (statusEl) statusEl.textContent = '⏳ Regenerating publish metadata…';
+  var statusEl = g('short-status-' + jobId);
+  if (statusEl) statusEl.textContent = '⏳ Regenerating publish metadata… stay on Job Queue';
   var xhr = new XMLHttpRequest();
   xhr.open('POST', CFG.ffmpegUrl + '/job/' + encodeURIComponent(jobId) + '/regenerate-publish-copy', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
@@ -26473,7 +26474,8 @@ function regeneratePublishCopy(jobId) {
     try {
       var resp = JSON.parse(xhr.responseText);
       if (!resp.ok) {
-        if (statusEl) statusEl.textContent = '❌ ' + (resp.error || 'Regenerate failed');
+        var failEl = g('short-status-' + jobId);
+        if (failEl) failEl.textContent = '❌ ' + (resp.error || 'Regenerate failed');
         return;
       }
       var job = JOBS.find(function(j){ return j.id === jobId; });
@@ -26485,15 +26487,29 @@ function regeneratePublishCopy(jobId) {
         delete _publishCopyHydrateMissing[jobId];
         saveJobs();
       }
-      renderQueue();
-      navToPublishPrep(jobId);
-      if (statusEl) statusEl.textContent = resp.passed ? '✅ SEO QA passed — ready for review' : '⚠️ SEO still has issues: ' + (resp.violations || []).slice(0, 2).join('; ');
+      function paintSeoResult() {
+        renderQueue();
+        var el = g('short-status-' + jobId);
+        if (el) {
+          el.textContent = resp.passed
+            ? '✅ SEO QA passed — 🚀 APPROVE & PUBLISH is on this card'
+            : '⚠️ SEO still has issues: ' + (resp.violations || []).slice(0, 2).join('; ');
+        }
+        var card = document.getElementById('job-' + jobId);
+        if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      fetchJobCard(jobId, function(err, serverJob) {
+        if (!err && serverJob) mergeServerJobIntoLocal(jobId, serverJob);
+        paintSeoResult();
+      });
     } catch(e) {
-      if (statusEl) statusEl.textContent = '❌ ' + e.message;
+      var errEl = g('short-status-' + jobId);
+      if (errEl) errEl.textContent = '❌ ' + e.message;
     }
   };
   xhr.onerror = xhr.ontimeout = function() {
-    if (statusEl) statusEl.textContent = '❌ Regenerate request failed';
+    var el = g('short-status-' + jobId);
+    if (el) el.textContent = '❌ Regenerate request failed';
   };
   xhr.send('{}');
 }
