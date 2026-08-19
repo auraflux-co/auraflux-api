@@ -224,8 +224,9 @@ test('buildSplitScreenFilter honorOperatorCrops keeps Save-look boxes (CPD-1314)
   );
   assert.ok(f.includes('crop=trunc(iw*0.3600/2)*2:trunc(ih*0.3800/2)*2:trunc(iw*0.3200/2)*2:trunc(ih*0.0400/2)*2'));
   assert.ok(f.includes('crop=trunc(iw*0.4300/2)*2:trunc(ih*0.8000/2)*2:trunc(iw*0.2800/2)*2:trunc(ih*0.0200/2)*2'));
-  assert.ok(f.includes('crop=1080:640:0:0'));
-  assert.ok(f.includes('crop=1080:1280:0:0'));
+  assert.ok(f.includes('scale=1080:640'));
+  assert.ok(f.includes('scale=1080:1280'));
+  assert.ok(!f.includes('force_original_aspect_ratio=increase'), 'operator boxes stretch to pane, no cover-crop');
 });
 
 test('buildFullBleedFilter with source dims uses exact 9:16 crop (no stretch)', () => {

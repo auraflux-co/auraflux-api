@@ -138,7 +138,8 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-preview-stack { display:flex; flex-direction:column; gap:10px; }
 .composer-source-map-label { font-size:11px; letter-spacing:0.08em; color:rgba(46,204,113,0.95); font-weight:700; text-transform:uppercase; }
 .composer-source-map { position:relative; width:100%; max-width:340px; margin:0 auto; aspect-ratio:16/9; border-radius:6px; overflow:hidden; background:#000; border:1px solid rgba(46,204,113,0.4); cursor:crosshair; touch-action:none; }
-.composer-source-map-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
+.composer-source-map-bg { position:absolute; inset:0; background-size:contain; background-position:center; background-repeat:no-repeat; }
+.composer-source-map-video { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; pointer-events:none; }
 .composer-source-map-crop { position:absolute; border:2px solid #2ecc71; box-shadow:0 0 0 9999px rgba(0,0,0,0.52); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
 .composer-source-map-crop span { margin-top:2px; font-size:10px; font-weight:800; letter-spacing:0.06em; color:#2ecc71; background:rgba(0,0,0,0.65); padding:2px 5px; border-radius:3px; pointer-events:none; }
 .composer-source-map-bottom-crop { position:absolute; border:2px solid #c7af4f; box-shadow:0 0 0 9999px rgba(0,0,0,0.35); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
@@ -151,7 +152,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .source-map-cleanup-region { position:absolute; box-sizing:border-box; border:2px dashed rgba(231,76,60,0.85); background:rgba(231,76,60,0.22); display:flex; align-items:flex-start; justify-content:center; }
 .source-map-cleanup-region span { margin-top:2px; font-size:9px; font-weight:800; letter-spacing:0.05em; color:#e74c3c; background:rgba(0,0,0,0.7); padding:1px 5px; border-radius:3px; }
 .comp-creative-source-map { position:relative; width:100%; aspect-ratio:16/9; border-radius:6px; overflow:hidden; background:#000; border:1px solid rgba(46,204,113,0.35); margin:6px 0 8px; cursor:crosshair; touch-action:none; }
-.comp-creative-source-map-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
+.comp-creative-source-map-bg { position:absolute; inset:0; background-size:contain; background-position:center; background-repeat:no-repeat; }
 .comp-creative-source-map-crop { position:absolute; border:2px solid #2ecc71; box-shadow:0 0 0 9999px rgba(0,0,0,0.52); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
 .comp-creative-source-map-crop span { margin-top:2px; font-size:9px; font-weight:800; color:#2ecc71; background:rgba(0,0,0,0.65); padding:1px 4px; border-radius:2px; pointer-events:none; }
 .comp-creative-source-map-bottom-crop { position:absolute; border:2px solid #c7af4f; box-shadow:0 0 0 9999px rgba(0,0,0,0.35); z-index:2; cursor:move; display:flex; align-items:flex-start; justify-content:center; box-sizing:border-box; }
@@ -17642,13 +17643,24 @@ function layoutComposerPaneVideo(paneEl, videoEl, rect) {
   var vh = videoEl.videoHeight || 720;
   var rw = Math.max(0.05, Number(rect.w) || 0.35);
   var rh = Math.max(0.05, Number(rect.h) || 0.35);
-  var rx = Math.max(0, Math.min(1 - rw, Number(rect.x) || 0));
-  var ry = Math.max(0, Math.min(1 - rh, Number(rect.y) || 0));
-  var scale = Math.max(pw / (rw * vw), ph / (rh * vh));
-  videoEl.style.width = Math.round(vw * scale) + 'px';
-  videoEl.style.height = Math.round(vh * scale) + 'px';
-  videoEl.style.left = Math.round(-rx * vw * scale) + 'px';
-  videoEl.style.top = Math.round(-ry * vh * scale) + 'px';
+  var rx = Number(rect.x);
+  var ry = Number(rect.y);
+  if (!isFinite(rx)) rx = 0;
+  if (!isFinite(ry)) ry = 0;
+  rx = Math.max(0, Math.min(1 - rw, rx));
+  ry = Math.max(0, Math.min(1 - rh, ry));
+  // CPD-1317: stretch the box to the pane (what is inside the gold/green box = the pane).
+  // Uniform cover-zoom was clipping Speed off the left and showing gameplay beside him.
+  var scaleX = pw / (rw * vw);
+  var scaleY = ph / (rh * vh);
+  videoEl.style.maxWidth = 'none';
+  videoEl.style.maxHeight = 'none';
+  videoEl.style.right = 'auto';
+  videoEl.style.bottom = 'auto';
+  videoEl.style.width = Math.round(vw * scaleX) + 'px';
+  videoEl.style.height = Math.round(vh * scaleY) + 'px';
+  videoEl.style.left = Math.round(-rx * vw * scaleX) + 'px';
+  videoEl.style.top = Math.round(-ry * vh * scaleY) + 'px';
   videoEl.style.objectFit = 'fill';
 }
 
@@ -17712,6 +17724,8 @@ function syncComposerPanePreview() {
     : resolveComposerSavedLookAt(getComposerAbsolutePlayheadSec());
   if (!look) look = composerLookFromDraftDom();
   applyComposerLookToPreviewPanes(look);
+  bindSourceMapClipVideo('composer-source-map');
+  bindSourceMapClipVideo('comp-creative-source-map');
   logComposerLayoutAtPlayhead(playingOrScrubbing ? 'scrub' : 'paint');
 }
 
@@ -22350,6 +22364,40 @@ function composerLandscapeSingleViewEnabled(stored) {
   return v === 'brand_pad' || v === 'single';
 }
 
+function bindSourceMapClipVideo(prefix) {
+  var wrap = g(prefix);
+  var bg = g(prefix + '-bg');
+  if (!wrap || !bg) return false;
+  var vid = bg.querySelector('.composer-source-map-video');
+  if (!vid) {
+    vid = document.createElement('video');
+    vid.className = 'composer-source-map-video';
+    vid.muted = true;
+    vid.playsInline = true;
+    vid.setAttribute('playsinline', '');
+    vid.setAttribute('muted', '');
+    vid.preload = 'metadata';
+    bg.appendChild(vid);
+  }
+  var master = g('composer-preview-video');
+  var clip = typeof composerLeadClipForEdit === 'function' ? composerLeadClipForEdit() : null;
+  var src = (master && (master.currentSrc || master.src)) || '';
+  if (!src && clip && typeof resolveComposerDirectPlayUrl === 'function') {
+    src = resolveComposerDirectPlayUrl(clip) || '';
+  }
+  if (!src) return false;
+  if (vid.getAttribute('src') !== src) {
+    vid.src = src;
+    vid.load();
+  }
+  try {
+    var t = master && master.currentTime != null ? master.currentTime : 0;
+    if (vid.readyState >= 1 && Math.abs((vid.currentTime || 0) - t) > 0.12) vid.currentTime = t;
+  } catch (_e) { /* ignore */ }
+  vid.pause();
+  return true;
+}
+
 function paintSourceMapOverlay(prefix, topRect, bottomRect) {
   var bg = g(prefix + '-bg');
   var crop = g(prefix + '-crop');
@@ -22358,7 +22406,8 @@ function paintSourceMapOverlay(prefix, topRect, bottomRect) {
   var cxLine = g(prefix + '-cx');
   var thumb = getLeadCompClipThumb();
   var singleMode = composerLandscapeSingleViewEnabled();
-  if (bg) bg.style.backgroundImage = thumb ? ('url(' + thumb + ')') : 'none';
+  var mapped = bindSourceMapClipVideo(prefix);
+  if (bg) bg.style.backgroundImage = mapped ? 'none' : (thumb ? ('url(' + thumb + ')') : 'none');
   if (singleMode) {
     if (crop) crop.style.display = 'none';
     if (bottomCrop) bottomCrop.style.display = 'none';

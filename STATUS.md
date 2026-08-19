@@ -18,7 +18,7 @@
 
 ---
 
-**Last Updated:** 2026-08-19 (CPD-1316) — Operator Chrome Compose was staying on stacked-figures defaults because local sessionStorage won and then POSTed over disk. Generate now always merges disk `openingLayout` (`operatorIntent` looks win), and persist cannot clobber a saved Speed split with Classic defaults. Hard refresh Generate · Composer on the dashboard (your Chrome, not the agent browser).
+**Last Updated:** 2026-08-19 (CPD-1317) — Gold/green boxes were sitting on the YouTube thumbnail while the Short preview played the real MP4, so Speed looked framed but was cut off. Source map now uses the same video; live + EXECUTE fill the pane with exactly what’s in the box. Hard refresh Compose.
 **Last Updated:** 2026-08-19 (CPD-1314) — Save look here + Review honor left Layout boxes: dropdown/storage follow saved look; ffmpeg no longer chrome-insets operator green/gold crops. Hard refresh Compose → Save look here → Review near-final.
 **Last Updated:** 2026-08-19 (CPD-1313) — Compose live preview is a crop guide, not 1080p. Larger 540px frame, no pane stretch, Review near-final = real Short quality. Hard refresh Compose.
 **Last Updated:** 2026-08-18 (CPD-1312) — YouTube clip stage 403: drop ANDROID_VR-first yt-dlp client (googlevideo 403). Use `android,ios`. Note: `7mX18Am26lw` is also Video unavailable — pick a live URL. Hard refresh not required; retry Compose download.
