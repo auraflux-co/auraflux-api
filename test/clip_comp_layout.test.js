@@ -211,6 +211,23 @@ test('buildSplitScreenFilter insets bottomPaneRect when operator starts at y=0 (
   assert.ok(f.includes('crop=1080:1286:(iw-1080)/2:0'));
 });
 
+test('buildSplitScreenFilter honorOperatorCrops keeps Save-look boxes (CPD-1314)', () => {
+  const { buildSplitScreenFilter } = require('../lib/clip_comp_layout');
+  const f = buildSplitScreenFilter(
+    { x: 0.32, y: 0.04, w: 0.36, h: 0.38 },
+    {
+      bottomPaneRect: { x: 0.28, y: 0.02, w: 0.43, h: 0.80 },
+      honorOperatorCrops: true,
+      topChromeSafe: 0.14,
+      bottomChromeSafe: 0.06,
+    },
+  );
+  assert.ok(f.includes('crop=trunc(iw*0.3600/2)*2:trunc(ih*0.3800/2)*2:trunc(iw*0.3200/2)*2:trunc(ih*0.0400/2)*2'));
+  assert.ok(f.includes('crop=trunc(iw*0.4300/2)*2:trunc(ih*0.8000/2)*2:trunc(iw*0.2800/2)*2:trunc(ih*0.0200/2)*2'));
+  assert.ok(f.includes('crop=1080:640:0:0'));
+  assert.ok(f.includes('crop=1080:1280:0:0'));
+});
+
 test('buildFullBleedFilter with source dims uses exact 9:16 crop (no stretch)', () => {
   const { buildFullBleedFilter } = require('../lib/clip_comp_layout');
   const f = buildFullBleedFilter(0.42, 0.5, 1, 16 / 9, {

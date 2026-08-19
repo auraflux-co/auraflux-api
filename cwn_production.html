@@ -17285,7 +17285,7 @@ function logComposerLayoutAtPlayhead(reason) {
   var line = 'S' + fmtSecToClock(shortSec)
     + ' src' + fmtSecToClock(Math.floor(abs))
     + ' · saved=' + composerModeLabel(saved && saved.mode)
-    + ' · dropdown=' + (dropdown === 'single' ? 'SINGLE' : 'SPLIT')
+    + ' · dropdown=' + (dropdown === 'single' ? 'FULL' : (dropdown === 'brand_pad' ? 'BRAND-PAD' : (dropdown === 'split_screen' ? 'SPLIT' : dropdown)))
     + ' · paint=' + composerModeLabel(paintMode)
     + ' · draft=' + (_composerLookDraftDirty ? 'YES' : 'no')
     + ' · preview=' + (_composerPreviewMode || '?')
@@ -17370,12 +17370,8 @@ function syncComposerUiToSavedLook(look, force) {
   var sig = look.mode + '|' + JSON.stringify(look.facecamRect || look.cropCx);
   if (!force && sig === _composerLastPreviewMode) return;
   _composerLastPreviewMode = sig;
-  var sel = g('comp-creative-landscape-layout');
-  var wantSingle = look.mode !== 'split_screen';
-  if (sel) {
-    var next = wantSingle ? 'single' : 'split_screen';
-    if (sel.value !== next) sel.value = next;
-  }
+  var next = landscapeLayoutValueFromLookMode(look.mode);
+  persistComposerLandscapeLayoutValue(next);
   if (look.mode === 'split_screen') {
     if (look.facecamRect) writeFacecamSlidersToDom(look.facecamRect);
     if (look.bottomPaneRect) writeBottomPaneSlidersToDom(look.bottomPaneRect);
@@ -18679,6 +18675,10 @@ function lockComposerOpeningBeforeModeSwitch() {
 
 function snapshotOpeningLayoutFromUI() {
   var stored = loadCompCreativePresetFromStorage();
+  var sel = g('comp-creative-landscape-layout');
+  if (sel && (sel.value === 'split_screen' || sel.value === 'brand_pad' || sel.value === 'single')) {
+    stored = Object.assign({}, stored, { landscapeLayout: sel.value });
+  }
   var payload = buildCompCreativeRequestPayload('');
   var layout = (payload.compCreative && payload.compCreative.layout) || {};
   var splitOn = composerLandscapeSplitEnabled(stored);
@@ -18704,10 +18704,12 @@ function snapshotOpeningLayoutFromUI() {
 function currentComposerLayoutSnapshotForMark() {
   var opening = snapshotOpeningLayoutFromUI();
   var fb = readFullBleedCropFromDom();
-  if (opening.mode === 'full_bleed_crop') {
+  if (opening.mode === 'full_bleed_crop' || opening.mode === 'blur_pad') {
     opening.cropCx = fb.cropCx;
     opening.cropCy = fb.cropCy;
     opening.cropZoom = fb.cropZoom;
+    opening.facecamRect = null;
+    opening.bottomPaneRect = null;
   }
   if (opening.mode === 'split_screen') {
     opening.facecamRect = readFacecamSlidersFromDom() || opening.facecamRect;
@@ -18716,6 +18718,9 @@ function currentComposerLayoutSnapshotForMark() {
     opening.bottomPaneMode = readBottomPaneModeFromDom();
     var cxPct = storedContentCxFromDom();
     if (Number.isFinite(cxPct)) opening.contentCx = cxPct / 100;
+    delete opening.cropCx;
+    delete opening.cropCy;
+    delete opening.cropZoom;
   }
   return opening;
 }
@@ -18753,6 +18758,8 @@ function saveComposerLookHere() {
     return;
   }
   var snap = currentComposerLayoutSnapshotForMark();
+  persistComposerLandscapeLayoutValue(landscapeLayoutValueFromLookMode(snap.mode));
+  try { saveCompCreativePresetToStorage(); } catch (e) { /* ignore */ }
   var atSec = Math.floor(abs);
   // At/near trim-in: OPEN only — never also insert a LAYOUT switch at the same second.
   if (atSec <= trimStart + 0.5) {
@@ -19826,6 +19833,36 @@ function inferComposerDeliveryFromPreset() {
   return 'comp';
 }
 
+/** CPD-1314 — Review/EXECUTE layout must follow saved look, not a stale dropdown. */
+function overlaySavedLookOnCompCreative(compCreative, clip) {
+  if (!compCreative || !clip) return;
+  var look = clip.openingLayout;
+  if (!look || !look.mode) return;
+  compCreative.layout = compCreative.layout || {};
+  compCreative.layout.mode = look.mode;
+  compCreative.layout.landscapeSplit = look.mode === 'split_screen';
+  if (look.mode === 'split_screen') {
+    if (look.facecamRect) compCreative.layout.facecamRect = look.facecamRect;
+    if (look.bottomPaneRect) compCreative.layout.bottomPaneRect = look.bottomPaneRect;
+    if (look.topHeight != null) compCreative.layout.topHeight = look.topHeight;
+    if (look.bottomPaneMode) compCreative.layout.bottomPaneMode = look.bottomPaneMode;
+    if (look.contentCx != null) compCreative.layout.contentCx = look.contentCx;
+    delete compCreative.layout.cropCx;
+    delete compCreative.layout.cropCy;
+    delete compCreative.layout.cropZoom;
+  } else {
+    delete compCreative.layout.facecamRect;
+    delete compCreative.layout.bottomPaneRect;
+    delete compCreative.layout.bottomPaneMode;
+    delete compCreative.layout.topPaneSubject;
+    delete compCreative.layout.topHeight;
+    delete compCreative.layout.contentCx;
+    if (look.cropCx != null) compCreative.layout.cropCx = look.cropCx;
+    if (look.cropCy != null) compCreative.layout.cropCy = look.cropCy;
+    if (look.cropZoom != null) compCreative.layout.cropZoom = look.cropZoom;
+  }
+}
+
 function buildCompositionSpecFromUI() {
   var delivery = (g('composer-delivery') && g('composer-delivery').value) || _composerDeliveryFormat || inferComposerDeliveryFromPreset();
   if (delivery === 'vod_segment' && _composerVodSegment) {
@@ -19897,6 +19934,7 @@ function buildCompositionSpecFromUI() {
     var shortLineup = expandComposerCutsInLineup(getCompLineupForDispatch(Math.max(1, collectCompPickedClips().length)));
     clips = shortLineup.map(mapComposerSlotToSpecClip);
   }
+  overlaySavedLookOnCompCreative(creativePayload.compCreative, clips[0]);
   return {
     deliveryFormat: delivery,
     contentSource: _composerContentSource || 'twitch',
@@ -22155,6 +22193,24 @@ function onCompCreativeFullBleedCropChange(skipSave) {
 }
 
 /** Landscape layout value: split_screen | brand_pad | single (full screen). CPD-1266 */
+function landscapeLayoutValueFromLookMode(mode) {
+  if (mode === 'split_screen') return 'split_screen';
+  if (mode === 'blur_pad') return 'brand_pad';
+  if (mode === 'full_bleed_crop') return 'single';
+  return 'split_screen';
+}
+
+function persistComposerLandscapeLayoutValue(v) {
+  if (v !== 'split_screen' && v !== 'brand_pad' && v !== 'single') return;
+  try {
+    var stored = loadCompCreativePresetFromStorage();
+    stored.landscapeLayout = v;
+    localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored));
+  } catch (e) { /* ignore */ }
+  var sel = g('comp-creative-landscape-layout');
+  if (sel && sel.value !== v) sel.value = v;
+}
+
 function composerLandscapeLayoutValue(stored) {
   stored = stored || loadCompCreativePresetFromStorage();
   var v = stored.landscapeLayout || 'split_screen';
@@ -23400,7 +23456,7 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides = overrides || {};
     overrides.layout = overrides.layout || {};
     overrides.layout.landscapeSplit = false;
-    overrides.layout.mode = presetLayoutModeForCompose(preset);
+    overrides.layout.mode = 'blur_pad';
     delete overrides.layout.facecamRect;
     delete overrides.layout.bottomPaneRect;
     delete overrides.layout.bottomPaneMode;
