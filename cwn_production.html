@@ -178,7 +178,7 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 }
 .composer-preview-frame.is-live-edit .composer-preview-main { left:0; right:0; }
 .composer-preview-frame.is-live-edit .composer-pane-video {
-  position:absolute; top:0; left:0; pointer-events:none; object-fit:none;
+  position:absolute; top:0; left:0; pointer-events:none; object-fit:fill;
   image-rendering:auto;
 }
 .composer-preview-frame.is-live-edit .composer-preview-hook,
@@ -1261,7 +1261,7 @@ input[type="url"], input[type="password"], select, textarea {
                       <strong>Green</strong> → top half of Short (face / close-up)<br>
                       <em>Gold</em> → bottom half of Short (body / scene / 2nd figure)<br>
                       The “zoom” feeling = a small region scaled up to fill half the phone screen.<br>
-                      At <strong>50/50 split</strong>, green + gold boxes are the <strong>same shape</strong> (one per output half).
+                      Each box is the region that <strong>fills</strong> that half (no black bars).
                     </div>
                     <label style="display:block;font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:4px;">Quick layout
                       <select id="comp-creative-top-pane-subject" onchange="onCompCreativeTopPaneSubjectChange()" style="width:100%;margin-top:4px;background:#0d1524;color:#fff;border:1px solid rgba(46,204,113,0.35);padding:4px 6px;font-size:14px;border-radius:3px;">
@@ -17409,6 +17409,8 @@ function applyComposerLookToPreviewPanes(look) {
   var frame = g('composer-preview-frame');
   if (!master || !mock || !look) return;
   if (_composerPreviewMode === 'ffmpeg') return;
+  setComposerReviewVideoMode('edit');
+  if (frame) frame.classList.remove('is-brand-pad');
   mock.style.display = 'block';
   setComposerVideoFallbackVisible(false);
   var thumb = composerLeadPreviewThumbUrl() || master.poster || '';
@@ -17539,6 +17541,7 @@ function layoutComposerPaneVideo(paneEl, videoEl, rect) {
   videoEl.style.height = Math.round(vh * scale) + 'px';
   videoEl.style.left = Math.round(-rx * vw * scale) + 'px';
   videoEl.style.top = Math.round(-ry * vh * scale) + 'px';
+  videoEl.style.objectFit = 'fill';
 }
 
 function syncPaneVideoToMaster(paneVideo, master) {
@@ -18676,28 +18679,21 @@ function lockComposerOpeningBeforeModeSwitch() {
 function snapshotOpeningLayoutFromUI() {
   var stored = loadCompCreativePresetFromStorage();
   var sel = g('comp-creative-landscape-layout');
-  if (sel && (sel.value === 'split_screen' || sel.value === 'brand_pad' || sel.value === 'single')) {
-    stored = Object.assign({}, stored, { landscapeLayout: sel.value });
-  }
-  var payload = buildCompCreativeRequestPayload('');
-  var layout = (payload.compCreative && payload.compCreative.layout) || {};
-  var splitOn = composerLandscapeSplitEnabled(stored);
-  // CPD-1266: landscape non-split is brand_pad (blur_pad) or single (full_bleed) — not forced full.
-  var mode = splitOn
+  var ll = (sel && sel.value) || composerLandscapeLayoutValue(stored);
+  if (ll !== 'split_screen' && ll !== 'brand_pad' && ll !== 'single') ll = 'split_screen';
+  var mode = ll === 'split_screen'
     ? 'split_screen'
-    : (composerLineupIsLandscape()
-      ? (composerFullBleedSingleViewActive(stored) ? 'full_bleed_crop' : 'blur_pad')
-      : presetLayoutModeForCompose(stored.preset || payload.compCreativePreset));
+    : (ll === 'single' ? 'full_bleed_crop' : 'blur_pad');
   return {
     mode: mode,
-    cropCx: layout.cropCx,
-    cropCy: layout.cropCy,
-    cropZoom: layout.cropZoom != null ? layout.cropZoom : readFullBleedCropFromDom().cropZoom,
-    facecamRect: layout.facecamRect || null,
-    bottomPaneRect: layout.bottomPaneRect || null,
-    contentCx: layout.contentCx,
-    topHeight: layout.topHeight,
-    bottomPaneMode: layout.bottomPaneMode || null,
+    cropCx: undefined,
+    cropCy: undefined,
+    cropZoom: undefined,
+    facecamRect: null,
+    bottomPaneRect: null,
+    contentCx: undefined,
+    topHeight: undefined,
+    bottomPaneMode: null,
   };
 }
 
@@ -23598,11 +23594,11 @@ function refreshCompCreativeChips() {
   if (composerLineupIsLandscape()) {
     pseudo.layout = pseudo.layout || {};
     pseudo.layout.landscapeSplit = composerLandscapeSplitEnabled(stored);
+    if (pseudo.layout.landscapeSplit) pseudo.layout.mode = 'split_screen';
   }
   var landscapePanel = g('comp-creative-landscape-split');
   refreshLandscapeSplitUI();
   var topSubj = g('comp-creative-top-pane-subject');
-  if (topSubj && stored.topPaneSubject && !topSubj.dataset.userPicked) topSubj.value = stored.topPaneSubject;
   var bottomModeEl = g('comp-creative-bottom-pane-mode');
   if (bottomModeEl) bottomModeEl.value = stored.bottomPaneMode || 'custom_crop';
   refreshBottomPaneModeUI();

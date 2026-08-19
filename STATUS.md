@@ -18,7 +18,7 @@
 
 ---
 
-**Last Updated:** 2026-08-19 (CPD-1314) — Save look here no longer reshapes/reverts green+gold boxes (aspect-lock only when you move Top pane share). Hard refresh Compose, place boxes, Save look here.
+**Last Updated:** 2026-08-19 (CPD-1314) — Compose live split fills each half (no pillarbox); layout snapshot follows the Split dropdown, not a side-effect storage write. Hard refresh Compose.
 **Last Updated:** 2026-08-19 (CPD-1314) — Save look here + Review honor left Layout boxes: dropdown/storage follow saved look; ffmpeg no longer chrome-insets operator green/gold crops. Hard refresh Compose → Save look here → Review near-final.
 **Last Updated:** 2026-08-19 (CPD-1313) — Compose live preview is a crop guide, not 1080p. Larger 540px frame, no pane stretch, Review near-final = real Short quality. Hard refresh Compose.
 **Last Updated:** 2026-08-18 (CPD-1312) — YouTube clip stage 403: drop ANDROID_VR-first yt-dlp client (googlevideo 403). Use `android,ios`. Note: `7mX18Am26lw` is also Video unavailable — pick a live URL. Hard refresh not required; retry Compose download.
