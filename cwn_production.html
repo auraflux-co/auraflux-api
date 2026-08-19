@@ -21948,9 +21948,11 @@ function readBottomPaneSlidersFromDom() {
   });
 }
 
-function writeBottomPaneSlidersToDom(rect) {
+function writeBottomPaneSlidersToDom(rect, opts) {
   if (!rect) return;
-  syncBottomSlidersFromRect(lockRectToPaneAspect(rect, 'bottom'));
+  opts = opts || {};
+  var next = opts.lockAspect ? lockRectToPaneAspect(rect, 'bottom') : clampFacecamRect(rect);
+  if (next) syncBottomSlidersFromRect(next);
 }
 
 function refreshBottomPaneModeUI() {
@@ -22085,8 +22087,7 @@ function syncFacecamSlidersFromRect(rect) {
   var lab = g('comp-creative-facecam-val');
   if (lab) {
     lab.textContent = 'Top · x' + rect.x.toFixed(2) + ' y' + rect.y.toFixed(2)
-      + ' w' + rect.w.toFixed(2) + ' h' + rect.h.toFixed(2)
-      + ' · shape locked to output top half';
+      + ' w' + rect.w.toFixed(2) + ' h' + rect.h.toFixed(2);
   }
 }
 
@@ -22102,8 +22103,7 @@ function syncBottomSlidersFromRect(rect) {
   var lab = g('comp-creative-bottom-val');
   if (lab) {
     lab.textContent = 'Bottom · x' + rect.x.toFixed(2) + ' y' + rect.y.toFixed(2)
-      + ' w' + rect.w.toFixed(2) + ' h' + rect.h.toFixed(2)
-      + ' · shape locked to output bottom half';
+      + ' w' + rect.w.toFixed(2) + ' h' + rect.h.toFixed(2);
   }
 }
 
@@ -22334,7 +22334,8 @@ function renderCompCreativeSourceMap(overrideTopRect, overrideBottomRect) {
     bindSourceMapInteraction('composer-source-map');
     bindSourceMapInteraction('comp-creative-source-map');
   }
-  ensureComposerLiveEditPreview();
+  // CPD-1314: while dragging source-map boxes, do not snap 9:16 preview back to the last saved look.
+  if (!_sourceMapDrag) ensureComposerLiveEditPreview();
 }
 
 function bindSourceMapInteraction(mapId) {
@@ -22437,7 +22438,7 @@ function onSourceMapPointerUp() {
   if (_sourceMapDragMoved) {
     if (_sourceMapDrag.pane !== 'fullbleed') {
       var subj = g('comp-creative-top-pane-subject');
-      if (subj) subj.value = 'custom';
+      if (subj) { subj.value = 'custom'; subj.dataset.userPicked = '1'; }
     }
     markComposerLookDraftDirty();
     scheduleComposerLiveSplitPaint();
@@ -22498,6 +22499,7 @@ function writeTopShareToDom(topHeight) {
   var el = g('comp-creative-top-share');
   var pct = topHeightToSharePct(topHeight);
   if (el) el.value = String(pct);
+  // CPD-1314: restoring a saved look must not reshape green/gold boxes.
   onCompCreativeTopShareChange(pct, true);
 }
 function onCompCreativeTopShareChange(val, skipSave) {
@@ -22506,8 +22508,9 @@ function onCompCreativeTopShareChange(val, skipSave) {
   var topPct = Math.round(h / SPLIT_OUTPUT_HEIGHT * 100);
   var botPct = 100 - topPct;
   var lab = g('comp-creative-top-share-val');
-  if (lab) lab.textContent = 'Split · top ' + topPct + '% / bottom ' + botPct + '% (' + h + 'px) · boxes reshape to match';
-  relLockCropRectsToPaneAspect();
+  if (lab) lab.textContent = 'Split · top ' + topPct + '% / bottom ' + botPct + '% (' + h + 'px)'
+    + (skipSave ? '' : ' · boxes reshape to match');
+  if (!skipSave) relLockCropRectsToPaneAspect();
   if (!skipSave) {
     try {
       var stored = loadCompCreativePresetFromStorage();
@@ -22528,9 +22531,11 @@ function readFacecamSlidersFromDom() {
   };
 }
 
-function writeFacecamSlidersToDom(rect) {
+function writeFacecamSlidersToDom(rect, opts) {
   if (!rect) return;
-  syncFacecamSlidersFromRect(lockRectToPaneAspect(rect, 'top'));
+  opts = opts || {};
+  var next = opts.lockAspect ? lockRectToPaneAspect(rect, 'top') : clampFacecamRect(rect);
+  if (next) syncFacecamSlidersFromRect(next);
 }
 
 function onCompCreativeTopPaneSubjectChange() {
@@ -23518,6 +23523,7 @@ function onCompCreativePresetChange() {
   hydrateFableflowSpeedPresetDefaults();
   hydrateSourceCleanupFromStorage();
   refreshCompCreativeChips();
+  hydrateCompCreativeLayoutFromStorage();
   refreshTwitchActionBar();
   if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
 }
@@ -23549,6 +23555,22 @@ function hydrateFableflowSpeedPresetDefaults() {
   if (typeof setComposerPreviewCaption === 'function') {
     setComposerPreviewCaption('C9 FableFlow · Punch look · Split for two people · Beats→FX → EXECUTE', 'ok');
   }
+}
+
+/** One-time / preset-change hydrate of split boxes from storage. Not used after Save look here. */
+function hydrateCompCreativeLayoutFromStorage() {
+  var stored = loadCompCreativePresetFromStorage();
+  if (!composerLineupIsLandscape()) return;
+  var topSubj = g('comp-creative-top-pane-subject');
+  if (stored.facecamRect) writeFacecamSlidersToDom(stored.facecamRect);
+  else applyLayoutPreset(topSubj ? topSubj.value : 'stacked_figures');
+  if (stored.bottomPaneRect) writeBottomPaneSlidersToDom(stored.bottomPaneRect);
+  if (composerLandscapeSingleViewEnabled(stored)) {
+    if (stored.cropCx != null || stored.cropCy != null || stored.cropZoom != null) {
+      writeFullBleedCropToDom(stored.cropCx, stored.cropCy, stored.cropZoom);
+    }
+  }
+  if (stored.topHeight != null) writeTopShareToDom(stored.topHeight);
 }
 
 function refreshCompCreativeChips() {
@@ -23584,23 +23606,11 @@ function refreshCompCreativeChips() {
   var bottomModeEl = g('comp-creative-bottom-pane-mode');
   if (bottomModeEl) bottomModeEl.value = stored.bottomPaneMode || 'custom_crop';
   refreshBottomPaneModeUI();
-  if (stored.facecamRect && composerLineupIsLandscape()) writeFacecamSlidersToDom(stored.facecamRect);
-  else if (composerLineupIsLandscape()) applyLayoutPreset(topSubj ? topSubj.value : 'stacked_figures');
-  if (stored.bottomPaneRect && composerLineupIsLandscape()) writeBottomPaneSlidersToDom(stored.bottomPaneRect);
-  if (composerLandscapeSingleViewEnabled(stored)) {
-    if (stored.cropCx != null || stored.cropCy != null || stored.cropZoom != null) {
-      writeFullBleedCropToDom(stored.cropCx, stored.cropCy, stored.cropZoom);
-    } else {
-      onCompCreativeFullBleedCropChange(true);
-    }
-  }
+  // CPD-1314: do not rewrite green/gold boxes here — Save look here / drag own those sliders.
+  // Hydrate from storage only on catalog load + preset change (hydrateCompCreativeLayoutFromStorage).
   var cxSlider = g('comp-creative-content-cx');
   if (cxSlider && stored.contentCx != null && !cxSlider.dataset.userPicked) cxSlider.value = String(stored.contentCx);
   if (cxSlider && composerLineupIsLandscape()) onCompCreativeContentCxChange(cxSlider.value);
-  if (composerLineupIsLandscape()) {
-    if (stored.topHeight != null) writeTopShareToDom(stored.topHeight);
-    else onCompCreativeTopShareChange((g('comp-creative-top-share') && g('comp-creative-top-share').value) || 33, true);
-  }
   if (isRankedPreset) {
     pseudo.hooks = { mode: stored.hookMode || 'hook_only', rankedList: { enabled: true, streamer: stored.streamer, theme: stored.theme } };
     pseudo.captions = { whisper: (stored.hookMode || 'hook_only') !== 'hook_only' };
@@ -23777,6 +23787,7 @@ function initCompCreativePanel() {
     }
     loadCompCreativeMusicBeds(stored.musicBed);
     refreshCompCreativeChips();
+    hydrateCompCreativeLayoutFromStorage();
     refreshCompCreativeLabel();
     refreshTwitchActionBar();
   });
