@@ -26,7 +26,7 @@
     "trainwreckstv": { "displayName": "Trainwrecks", "platform": "kick" },
     "ishowspeed": { "displayName": "IShowSpeed", "platform": "youtube", "handle": "@IShowSpeed" },
     "livespeedy": { "displayName": "Live Speedy", "platform": "youtube", "handle": "@LiveSpeedy" },
-    "speedyboykins": { "displayName": "Speedy Boykins", "platform": "youtube", "handle": "@speedyboykins7869" },
-    "speeduniverse": { "displayName": "SpeedUniverse", "platform": "youtube", "handle": "@SpeedUniverse" }
+    "speedyboykins": { "displayName": "Speedy Boykins", "platform": "youtube", "handle": "@speedyboykins7869", "role": "clip_channel", "seoSubject": "IShowSpeed" },
+    "speeduniverse": { "displayName": "SpeedUniverse", "platform": "youtube", "handle": "@SpeedUniverse", "role": "clip_channel", "seoSubject": "IShowSpeed" }
   }
 }

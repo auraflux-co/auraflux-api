@@ -1,15 +1,48 @@
 # Publish Copy Spec — AuraFlux
 
 **Author:** Claude Code
-**Date:** 2026-04-18
+**Date:** 2026-04-18 · **Updated:** 2026-08-19 (CPD-1315 clip-channel vs talent)
 **Status:** 🟢 AUTHORITATIVE — supersedes 2026-04-14 version
 **Applies to:** `/generate-publish-copy` endpoint, `handleGeneratePublishCopy()` in `lib/publish.js`
 
 ---
 
+## Shorts moment contract (CPD-1260) — Twitch clip comps
+
+**Who writes what:** Gemini writes burned on-screen hooks + lead title draft; **GPT-4o** (Gemini fallback) refines YouTube title/description/tags. Claude Sonnet may QA hooks only — it is **not** the publish-copy writer.
+
+**Rule:** Hook + YouTube title + first 1–2 description sentences must sync the **same searchable moment keywords** (streamer + guest / place / stunt / event). Paraphrase OK; inventing a different joke-only angle is not.
+
+| Surface | Role | Must include |
+|---|---|---|
+| Burned hook | 3–8 word curiosity overlay (no streamer name) | Concrete searchable noun when present (DreamCon, Kai, YourRage, …) |
+| `bestTitle` | YouTube Shorts CTR + Search | Streamer + those same moment nouns (query-style when natural) |
+| Description opener | First ~150 chars / first 1–2 sentences | Same moment keywords again |
+
+**Why:** Audit CPD-1259 — ExtraEmily Shorts were ~87% Shorts feed / ~7% Search. Query-named moments (e.g. Philippines Top 5) pulled ~70% Search. Feed-only packaging leaves revenue/legs on the table.
+
+**Dual-focus ops (CPD-1261):** ExtraEmily (~6 Shorts/week) + FunnyMike (~2 Shorts/week). Same moment contract for both — not an EE-only code path. Publish few-shots include FunnyMike query winners (`Father's Day Chocolate Chaos`, `Cheapest iPad Hunt`, `Making It Rain`). Gate 5 auto-adds to ExtraEmily Clipz / Funny Mike's Clipz. Soft catalog backfill: `scripts/shorts_focus_seo_backfill.js`.
+
+Enforced in prompts (`buildClipCompSeoInput`, `buildPublishCopySystemPrompt`, Hook Machine) and soft-checked in `metadata_qa.validateMomentKeywordSync`.
+
+### Clip channel vs on-screen talent (CPD-1315)
+
+Some Clip Library sources are **highlight / clip channels**, not the person on screen.
+
+| Role | Example | Use in copy |
+|---|---|---|
+| **SEO subject (talent)** | IShowSpeed | YouTube title, tags, hashtags, description opener |
+| **Source channel** | Speedy Boykins, SpeedUniverse | Lineup label + Featured Streamers credit only — **do not** lead the title |
+
+Composer may show `Speedy Boykins 80s` as the clip slot. That is the source. Search demand is still **IShowSpeed** (e.g. *iShowSpeed Becomes Spider-Man On Fortnite*).
+
+Map: `lib/clip_channel_seo.js`.
+
+---
+
 ## What This Document Is
 
-The authoritative spec for what Claude generates when producing YouTube/TikTok/Instagram publish copy. All output must match the format and quality of the Customer 0 reference example below. Claude is the generator. The output is a complete, ready-to-use package — nothing left for the operator to write.
+The authoritative spec for what the publish-copy generator produces when producing YouTube/TikTok/Instagram publish copy. All output must match the format and quality of the Customer 0 reference example below. The generator is **GPT-4o** (Gemini fallback). The output is a complete, ready-to-use package — nothing left for the operator to write.
 
 ---
 
