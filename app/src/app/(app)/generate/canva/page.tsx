@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useRole } from '@/hooks/use-role';
 import { Button }      from '@/components/ui/button';
 import { Textarea }    from '@/components/ui/textarea';

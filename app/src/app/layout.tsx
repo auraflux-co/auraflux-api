@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Script from 'next/script';
-import { ClerkProvider } from '@clerk/nextjs';
+import { ClerkProvider } from '@/lib/clerk-compat';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { PWARegister } from '@/components/pwa/pwa-register';

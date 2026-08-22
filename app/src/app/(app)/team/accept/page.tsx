@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { apiFetch } from '@/lib/api';
 import { formatUserError } from '@/lib/job-labels';
 import { Button } from '@/components/ui/button';

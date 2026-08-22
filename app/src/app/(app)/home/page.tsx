@@ -1,4 +1,4 @@
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser } from '@/lib/auth/server-session';
 import { Suspense } from 'react';
 import { SetupChecklist } from '@/components/dashboard/setup-checklist';
 import { LiveTiles } from '@/components/dashboard/live-tiles';

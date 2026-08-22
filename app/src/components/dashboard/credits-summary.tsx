@@ -10,7 +10,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { getCreditBalance, type CreditBalance } from '@/lib/api';

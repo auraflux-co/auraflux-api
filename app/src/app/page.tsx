@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '@/lib/clerk-compat';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 

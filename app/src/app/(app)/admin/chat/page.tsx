@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth, useUser }    from '@clerk/nextjs';
+import { useAuth, useUser }    from '@/lib/clerk-compat';
 import { useRouter }           from 'next/navigation';
 import { cn }                  from '@/lib/utils';
 import {

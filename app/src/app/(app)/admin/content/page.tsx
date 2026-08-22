@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useRole } from '@/hooks/use-role';
 import { useRouter } from 'next/navigation';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';

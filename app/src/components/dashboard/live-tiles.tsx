@@ -8,7 +8,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { cn } from '@/lib/utils';
 import { usePlan } from '@/contexts/plan-context';
 import { useRole } from '@/hooks/use-role';

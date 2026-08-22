@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRole } from '@/hooks/use-role';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';

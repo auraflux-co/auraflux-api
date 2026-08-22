@@ -14,7 +14,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
 import { cn } from '@/lib/utils';
 import {

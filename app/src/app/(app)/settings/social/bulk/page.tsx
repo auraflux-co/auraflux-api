@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { Button } from '@/components/ui/button';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { YouTubeIcon } from '@/components/icons/brand-icons';

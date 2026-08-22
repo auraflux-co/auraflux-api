@@ -7,7 +7,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useRouter } from 'next/navigation';
 import { useRole } from '@/hooks/use-role';
 import { Button } from '@/components/ui/button';

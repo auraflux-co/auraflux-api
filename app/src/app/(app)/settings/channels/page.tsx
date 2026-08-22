@@ -10,7 +10,7 @@
 import { useEffect, useRef, useState, useTransition, useCallback } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

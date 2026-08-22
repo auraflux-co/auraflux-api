@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import Link from 'next/link';
 
 export function CheckoutWelcomeBanner({ firstName }: { firstName: string }) {

@@ -1,4 +1,4 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@/lib/auth/server-session';
 import { NextResponse } from 'next/server';
 import { fetchFleetDashboardSnapshot } from '@/lib/fleet-status';
 

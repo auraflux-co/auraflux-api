@@ -9,7 +9,7 @@
 
 import { useEffect, useState, useCallback, useTransition } from 'react';
 import { useParams } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import Link from 'next/link';
 import { buttonVariants, Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

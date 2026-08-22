@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser } from '@/lib/auth/server-session';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';

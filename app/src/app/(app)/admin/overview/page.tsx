@@ -8,7 +8,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useRole } from '@/hooks/use-role';
 import { EngineHexagon } from '@/components/icons/brand-icons';
 import {

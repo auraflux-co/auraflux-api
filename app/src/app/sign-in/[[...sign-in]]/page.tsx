@@ -1,7 +1,7 @@
 'use client';
 
-import { SignIn } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { SignIn } from '@/lib/clerk-compat';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -9,7 +9,6 @@ const ALLOWED_ORIGIN = 'https://app.auraflux.co';
 
 function isSafeRedirect(url: string): boolean {
   if (!url) return false;
-  // Relative paths are always safe
   if (url.startsWith('/') && !url.startsWith('//')) return true;
   try {
     const parsed = new URL(url);
@@ -19,16 +18,15 @@ function isSafeRedirect(url: string): boolean {
   }
 }
 
-export default function SignInPage() {
-  const [loadFailed, setLoadFailed] = useState(false);
+function SignInInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionExpired = searchParams.get('reason') === 'session_expired';
+  const redirectUrl = searchParams.get('redirect_url') || '/home';
 
-  // Strip any redirect_url that points outside app.auraflux.co (e.g. localhost leftovers from testing)
   useEffect(() => {
-    const redirectUrl = searchParams.get('redirect_url');
-    if (redirectUrl && !isSafeRedirect(redirectUrl)) {
+    const raw = searchParams.get('redirect_url');
+    if (raw && !isSafeRedirect(raw)) {
       const clean = new URLSearchParams(searchParams.toString());
       clean.delete('redirect_url');
       const qs = clean.toString();
@@ -36,77 +34,32 @@ export default function SignInPage() {
     }
   }, [searchParams, router]);
 
-  useEffect(() => {
-    // Clerk custom domain (clerk.auraflux.co) is bound to app.auraflux.co — the
-    // Render *.onrender.com hostname fails Clerk init (status: error).
-    const host = window.location.hostname;
-    if (host === 'auraflux-app.onrender.com' || host === 'auraflux-app-staging.onrender.com') {
-      window.location.replace(
-        `https://app.auraflux.co${window.location.pathname}${window.location.search}`,
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    // Detect Clerk JS load failure — if the sign-in form hasn't mounted
-    // within 10 seconds, Clerk JS likely failed to load from the CDN.
-    const timer = setTimeout(() => {
-      const clerkEl = document.querySelector('.cl-rootBox, .cl-signIn-root, [data-clerk-component]');
-      if (!clerkEl) setLoadFailed(true);
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loadFailed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="max-w-md text-center space-y-4 p-8 rounded-2xl border border-border bg-card">
-          <div className="text-4xl">⚠️</div>
-          <h1 className="text-xl font-semibold text-foreground">Sign-in unavailable</h1>
-          <p className="text-sm text-muted-foreground">
-            The authentication service failed to load. If you opened an{' '}
-            <code className="text-xs">*.onrender.com</code> link, use{' '}
-            <a href="https://app.auraflux.co/sign-in" className="text-primary underline">
-              app.auraflux.co/sign-in
-            </a>{' '}
-            instead — Clerk is configured for that domain only.
-          </p>
-          <div className="flex gap-3 justify-center pt-2">
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              Retry
-            </button>
-            <a
-              href="mailto:support@auraflux.co"
-              className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              Contact support
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background">
-      <Image src="/brand/logo.png" alt="AuraFlux" width={120} height={74} className="object-contain mb-2" priority />
-      {sessionExpired && (
-        <div className="w-full max-w-md rounded-lg border border-amber-400/40 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
-          <span className="font-medium">Your session expired.</span> Please sign in again to continue.
-        </div>
-      )}
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6 bg-background">
+      <Image
+        src="/icons/icon-192.png"
+        alt="AuraFlux"
+        width={64}
+        height={64}
+        className="rounded-xl"
+      />
+      {sessionExpired ? (
+        <p className="text-sm text-amber-600 dark:text-amber-400 text-center max-w-sm">
+          Your session expired. Sign in again to continue.
+        </p>
+      ) : null}
       <SignIn
-        fallbackRedirectUrl="/home"
-        appearance={{
-          layout: {
-            logoImageUrl: 'https://app.auraflux.co/brand/logo.png',
-            logoLinkUrl: '/',
-          },
-        }}
+        forceRedirectUrl={isSafeRedirect(redirectUrl) ? redirectUrl : '/home'}
+        signUpUrl="/sign-up"
       />
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <SignInInner />
+    </Suspense>
   );
 }

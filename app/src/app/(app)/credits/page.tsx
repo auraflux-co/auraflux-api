@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useState, useTransition, Suspense } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useBrand } from '@/contexts/brand-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

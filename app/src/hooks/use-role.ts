@@ -10,7 +10,7 @@
  * account_members and are separate from this.
  */
 
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '@/lib/clerk-compat';
 import type { UserRole } from '@/lib/api';
 
 export function useRole(): {

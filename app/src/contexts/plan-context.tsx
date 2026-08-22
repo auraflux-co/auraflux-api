@@ -9,7 +9,7 @@
  */
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/lib/clerk-compat';
 import { apiFetch, type PlanTier } from '@/lib/api';
 
 type PlanFeaturesResp = { ok: boolean; planTier: PlanTier; features: Record<string, boolean> };

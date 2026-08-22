@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useRole } from '@/hooks/use-role';
 import { listCustomers, type CustomerRecord } from '@/lib/api';
 import { tierLabel } from '@/lib/tier-labels';

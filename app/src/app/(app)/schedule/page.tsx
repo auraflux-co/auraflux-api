@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
 import { FlowNetwork } from '@/components/icons/brand-icons';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';

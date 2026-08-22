@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useSearchParams } from 'next/navigation';
 import { useBrand } from '@/contexts/brand-context';
 import { buttonVariants } from '@/components/ui/button';

@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { useClerk, useAuth } from '@clerk/nextjs';
+import { useClerk, useAuth } from '@/lib/clerk-compat';
 
 export function SessionGuard() {
   const { signOut } = useClerk();

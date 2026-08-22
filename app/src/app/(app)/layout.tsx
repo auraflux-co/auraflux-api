@@ -6,7 +6,7 @@ import { SidebarProvider } from '@/contexts/sidebar-context';
 import { PlanProvider } from '@/contexts/plan-context';
 import { BrandProvider } from '@/contexts/brand-context';
 import { SessionGuard } from '@/components/auth/session-guard';
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser } from '@/lib/auth/server-session';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser();

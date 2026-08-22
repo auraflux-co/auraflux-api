@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { listJobs, type Job } from '@/lib/api';
 import { isReviewQueueJob } from '@/lib/job-labels';
 

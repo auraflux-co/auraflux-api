@@ -8,7 +8,7 @@ import { formatUserError } from '@/lib/job-labels';
  */
 
 import { useEffect, useState, useTransition } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
 import { Button } from '@/components/ui/button';
 import { YouTubeIcon, TikTokIcon, InstagramIcon } from '@/components/icons/brand-icons';

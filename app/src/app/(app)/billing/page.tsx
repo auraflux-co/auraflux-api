@@ -13,7 +13,7 @@
 
 import { useEffect, useState, useTransition, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
 import { tierLabel } from '@/lib/tier-labels';
 import { formatUserError } from '@/lib/job-labels';

@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';

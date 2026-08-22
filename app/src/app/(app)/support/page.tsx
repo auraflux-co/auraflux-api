@@ -9,7 +9,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@/lib/clerk-compat';
 import Link from 'next/link';
 import { usePlan } from '@/contexts/plan-context';
 import { cn } from '@/lib/utils';

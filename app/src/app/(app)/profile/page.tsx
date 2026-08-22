@@ -7,8 +7,8 @@
  */
 
 import { useState, useTransition, useEffect, useRef } from 'react';
-import { useUser, useClerk } from '@clerk/nextjs';
-import { useAuth } from '@clerk/nextjs';
+import { useUser, useClerk } from '@/lib/clerk-compat';
+import { useAuth } from '@/lib/clerk-compat';
 import { useTheme } from 'next-themes';
 import { formatUserError } from '@/lib/job-labels';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

@@ -23,7 +23,7 @@ import {
   useCallback,
   ReactNode,
 } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { getBrands, setActiveBrandId, type Brand } from '@/lib/api';
 
 const LS_KEY = 'auraflux_active_brand_id';

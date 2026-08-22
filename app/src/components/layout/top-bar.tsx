@@ -5,7 +5,7 @@
  * Right: notifications bell | AuraFlux Collab toggle | UserButton
  */
 
-import { UserButton, useAuth } from '@clerk/nextjs';
+import { UserButton, useAuth } from '@/lib/clerk-compat';
 import { useGuide } from '@/contexts/guide-context';
 import { useSidebar } from '@/contexts/sidebar-context';
 import { NotificationsBell } from '@/components/notifications/notifications-bell';

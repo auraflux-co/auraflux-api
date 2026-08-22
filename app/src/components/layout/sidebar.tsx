@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/use-role';
 import { usePlan } from '@/contexts/plan-context';

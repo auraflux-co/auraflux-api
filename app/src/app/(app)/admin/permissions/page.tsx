@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { tierLabel } from '@/lib/tier-labels';

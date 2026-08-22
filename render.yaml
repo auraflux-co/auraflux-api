@@ -157,7 +157,13 @@ services:
       - key: ELEVENLABS_DEFAULT_VOICE_ID
         value: JBFqnCBsd6RMkjVDRZzb
 
-      # Clerk — auth (frontend + API)
+      # Auth — Better Auth JWT (default). Keep Clerk keys until cutover smoke passes.
+      - key: AUTH_PROVIDER
+        value: better-auth
+      - key: BETTER_AUTH_SECRET
+        sync: false
+      - key: AUTH_JWT_SECRET
+        sync: false
       - key: CLERK_SECRET_KEY
         sync: false
       - key: CLERK_PUBLISHABLE_KEY
@@ -231,7 +237,21 @@ services:
       # CPD-325: Cap Next.js server heap — Render Standard = 2GB RAM
       - key: NODE_OPTIONS
         value: --max-old-space-size=1536
-      # Clerk auth — use NEXT_PUBLIC_ prefix for browser-exposed keys
+      # Better Auth (replaces Clerk). Set BETTER_AUTH_SECRET (32+ chars) + DATABASE_URL
+      # (same auraflux-pg Internal URL as auraflux-api). AUTH_JWT_SECRET may match BETTER_AUTH_SECRET.
+      - key: AUTH_PROVIDER
+        value: better-auth
+      - key: BETTER_AUTH_SECRET
+        sync: false
+      - key: AUTH_JWT_SECRET
+        sync: false
+      - key: BETTER_AUTH_URL
+        value: https://app.auraflux.co
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://app.auraflux.co
+      - key: DATABASE_URL
+        sync: false
+      # Legacy Clerk — keep until cutover smoke passes, then remove
       - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
         sync: false
       - key: CLERK_SECRET_KEY

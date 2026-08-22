@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/clerk-compat';
 import { cn } from '@/lib/utils';
 
 const API_BASE       = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
