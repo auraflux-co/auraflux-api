@@ -23,6 +23,18 @@
 - `BETTER_AUTH_SECRET` / `AUTH_JWT_SECRET` = same as app
 - Keep `CLERK_*` until smoke passes
 
+## Password hashing (Clerk migration)
+
+Clerk stores bcrypt digests. Better Auth defaults to scrypt. The app configures bcrypt in `app/src/lib/auth/password.ts` and wires it in `emailAndPassword.password` so imported Clerk hashes verify without a forced reset.
+
+After all users have signed in at least once with bcrypt, you may switch back to scrypt for new passwords only if you re-hash on login (optional, not required for cutover).
+
+## Import Clerk password hashes
+
+1. Clerk Dashboard → Settings → User Exports → Export all users (CSV includes `password_digest`).
+2. Run the Better Auth Clerk migration script (see [Clerk migration guide](https://www.better-auth.com/docs/guides/clerk-migration-guide)) or insert `account` rows with `provider_id = 'credential'` and `password = password_digest` from the CSV.
+3. Keep bcrypt config until smoke sign-in passes for a migrated email/password user.
+
 ## Cutover steps
 
 1. Deploy API (runs `initDb` → applies `036_better_auth`).

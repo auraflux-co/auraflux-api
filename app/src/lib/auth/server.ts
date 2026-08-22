@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { nextCookies } from 'better-auth/next-js';
 import { Pool } from 'pg';
+import { hashPassword, verifyPassword } from '@/lib/auth/password';
 
 export const AUTH_BASE_PATH = '/api/id';
 
@@ -49,6 +50,10 @@ export function createAurafluxAuth() {
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,
+      password: {
+        hash: hashPassword,
+        verify: verifyPassword,
+      },
     },
     user: {
       additionalFields: {},
