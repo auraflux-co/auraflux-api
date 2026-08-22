@@ -286,8 +286,6 @@ function checkPipelineDependencyEnvVars() {
     { key: 'KICK_CLIENT_ID',         label: 'Kick clip sourcing' },
     // Publish
     { key: 'UPLOADPOST_API_KEY',     label: 'UploadPost (multi-platform publish)' },
-    // Observability — warn_only: Sentry DSN is set on Render but not required in local .env
-    { key: 'SENTRY_DSN',             label: 'Sentry error tracking', warn_only: true },
   ];
 
   const envSource = runningOnRender ? 'Render env' : '.env';
@@ -488,14 +486,13 @@ function checkEnvVarsDocumented() {
       : fail(`${v}: NOT in .env.example — undocumented env var`));
 }
 
-function checkSentryOnHardFail() {
+function checkLogErrorOnHardFail() {
   return ['lib/services/pipeline_assembly.js', 'lib/routes/jobs_c1.js', 'lib/queue/worker.js'].map(f => {
     const src = readFile(f);
     if (!src) return warn(`${f}: not found`);
-    // logError() is the project's Sentry wrapper (error_logger.js → Sentry.captureException)
-    return (src.includes('Sentry') || src.includes('captureException') || src.includes('captureMessage') || src.includes('logError'))
-      ? pass(`${f}: error reporting on failure (Sentry/logError)`)
-      : warn(`${f}: no Sentry/logError call detected — failures may be silent`);
+    return src.includes('logError')
+      ? pass(`${f}: error reporting on failure (logError)`)
+      : warn(`${f}: no logError call detected — failures may be silent`);
   });
 }
 
@@ -538,7 +535,7 @@ function runReview() {
     { title: '3.6 Job status UI polling + outputUrl rendered', results: checkJobStatusUIPolling() },
     { title: '3.7 Billing consumer — Stripe webhook + planTier sync', results: checkBillingConsumer() },
     { title: '3.8 Env vars documented in .env.example', results: checkEnvVarsDocumented() },
-    { title: '3.9 Sentry alerts on hard-fail paths', results: checkSentryOnHardFail() },
+    { title: '3.9 logError on hard-fail paths', results: checkLogErrorOnHardFail() },
   ];
 
   let failures = 0, warnings = 0, passes = 0;

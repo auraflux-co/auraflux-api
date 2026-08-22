@@ -41,7 +41,6 @@ const CRITICAL = {
   DOPPLER_TOKEN: 'Local bootstrap — run scripts via doppler_run.sh for full secrets.',
   CF_API_TOKEN: 'Cloudflare API token (marketing deploy).',
   CF_ACCOUNT_ID: 'Cloudflare account id.',
-  SENTRY_DSN: 'Sentry DSN.',
   NEW_RELIC_LICENSE_KEY: 'New Relic license key.'
 };
 

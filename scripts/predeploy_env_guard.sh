@@ -179,7 +179,6 @@ python3 << 'REQEOF'
 # If empty → warn loudly but don't block (they may already be set on Render).
 REQUIRED_KEYS = [
     ("GITHUB_API_TOKEN", "BLOCKING — marketing site reverts on deploy. Generate at https://github.com/settings/tokens (Fine-grained, Contents:read+write on auraflux-co/auraflux-api)"),
-    ("SENTRY_DSN",       "Sentry disabled — get from https://auraflux.sentry.io → Settings → Projects → Client Keys"),
     ("ALLOWED_ORIGINS",  "BLOCKING — dashboard shows 500 for all /jobs calls without this. Value: https://app.auraflux.co,http://localhost:3000"),
 ]
 env = {}
