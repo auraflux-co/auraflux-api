@@ -3,7 +3,7 @@
 **AuraFlux** is an AI-powered video production backend that takes a content brief from intake to published video through a spec-driven portal pipeline.
 
 - **API** — Node.js / Express, deployed on Render (`auraflux-api`)
-- **App** — Next.js 16 dashboard, deployed on Render (`auraflux-app`)
+- **App** — Next.js 16 dashboard, deployed on Vercel (`app.auraflux.co`)
 - **Database** — PostgreSQL (Render managed) — sole database for all environments (CPD-94)
 - **Storage** — Cloudflare R2 for video output and media assets
 - **Auth** — Clerk (JWT, role-based: customer / operator / admin)
@@ -109,7 +109,7 @@ Never use local `.env` as the source of truth for production secrets. Use a pass
 ```
 auraflux-api/
 ├── server.js                  Express entry point
-├── render.yaml                Render Blueprint (auraflux-api, auraflux-app, auraflux-backup)
+├── render.yaml                Render Blueprint (auraflux-api only; app on Vercel)
 ├── lib/
 │   ├── portals/               portal0.js … portal5.js
 │   ├── routes/                jobs_c1.js, credits.js, admin.js, …
@@ -130,15 +130,15 @@ auraflux-api/
 
 ## Deployment
 
-The repo deploys via Render Blueprint (`render.yaml`):
+The API deploys via Render Blueprint (`render.yaml`). The Next.js app deploys on Vercel (`app/` root, production at `app.auraflux.co`).
 
-| Service | Type | What |
+| Service | Platform | What |
 |---|---|---|
-| `auraflux-api` | Web service (Docker) | Express API |
-| `auraflux-app` | Web service (Docker) | Next.js dashboard |
-| `auraflux-backup` | Cron job | Nightly SQLite → R2 backup |
+| `auraflux-api` | Render (Docker) | Express API + nightly R2 backup cron inside process |
+| Next.js app | Vercel | Customer dashboard (`app.auraflux.co`) |
+| `auraflux-pipeline-review` | Render cron | Daily pipeline parity review (manual service) |
 
-Push to `main` triggers auto-deploy. Required env vars are listed in `render.yaml` as `sync: false` — set them once in the Render dashboard.
+API deploy: push to `main` with `[deploy]` in the commit message (see `.github/workflows/render-deploy.yml`). App deploy: Vercel Git integration (connect tomorrow).
 
 ---
 

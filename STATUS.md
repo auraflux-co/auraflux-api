@@ -1,8 +1,8 @@
 # CWN Production — Status & Task Tracker
 
-**Deploy Mode:** Better Auth cutover for AuraFlux (Clerk replacement) — code in progress, Render env + smoke pending.
+**Deploy Mode:** dev
 
-**Last Updated:** 2026-08-22 — Implemented Better Auth for AuraFlux app + API JWT adapter. Set `BETTER_AUTH_SECRET`, `AUTH_JWT_SECRET`, `DATABASE_URL` on `auraflux-app`, `AUTH_PROVIDER=better-auth` on API+app, run migrations via API boot, seed legacy account_ids, then smoke sign-in before cancelling Clerk.
+**Last Updated:** 2026-08-22 — Infra cleanup: auraflux-app deleted from Render; app on Vercel (app.auraflux.co); render.yaml api-only; Pavilion/HSKRG on Neon; side Render Postgres deleted.
 
 **Last Updated:** 2026-08-17 — Inbox GET was returning 304 cached brand-only rows; backfill Slack threads into inbox and cache-bust fetch.
 

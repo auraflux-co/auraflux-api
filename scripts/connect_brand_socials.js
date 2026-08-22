@@ -60,7 +60,7 @@ async function run() {
     process.exit(1);
   }
 
-  const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://auraflux-app.onrender.com'}/settings/social?social_connected=1`;
+  const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.auraflux.co'}/settings/social?social_connected=1`;
 
   console.log(`\nGenerating ${PLATFORMS.join(' + ')} connect URLs for ${brands.length} brand(s)...\n`);
 

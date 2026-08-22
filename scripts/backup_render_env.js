@@ -39,7 +39,7 @@ const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/clien
 // Add or remove service IDs + names as the infrastructure changes.
 const SERVICES = [
   { id: 'srv-d7nsd77avr4c73frifcg', name: 'auraflux-api' },
-  { id: 'srv-d7pnalhj2pic73btevl0', name: 'auraflux-app' },
+  // auraflux-app moved to Vercel (app.auraflux.co) — env vars live in Vercel dashboard
 ];
 
 // Vars that exist locally or in CI but must never be pushed to production Render.

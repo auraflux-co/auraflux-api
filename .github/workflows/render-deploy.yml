@@ -1,6 +1,6 @@
 name: Deploy to Render
 
-# Triggers a Render deploy for auraflux-api and auraflux-app ONLY when the
+# Triggers a Render deploy for auraflux-api ONLY when the
 # merged commit message contains [deploy].
 #
 # Usage — add [deploy] anywhere in your commit message or PR title:
@@ -12,9 +12,9 @@ name: Deploy to Render
 # changes from bouncing the API and orphaning running pipeline jobs.
 #
 # Required GitHub Secret: RENDER_API_KEY
-# Service IDs are hardcoded (stable Render service identifiers):
+# Service ID (stable Render identifier):
 #   auraflux-api: srv-d7nsd77avr4c73frifcg
-#   auraflux-app: srv-d7pnalhj2pic73btevl0
+# App deploys on Vercel (app.auraflux.co) — connect GitHub in Vercel dashboard.
 
 on:
   push:
@@ -44,25 +44,9 @@ jobs:
             echo "::warning::auraflux-api deploy trigger returned $HTTP_CODE"
           fi
 
-      - name: Deploy auraflux-app
-        run: |
-          echo "Triggering auraflux-app deploy..."
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "https://api.render.com/v1/services/srv-d7pnalhj2pic73btevl0/deploys" \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{"clearCache":"do_not_clear"}')
-          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-          BODY=$(echo "$RESPONSE" | head -1)
-          echo "auraflux-app: HTTP $HTTP_CODE — $BODY"
-          if [ "$HTTP_CODE" != "201" ]; then
-            echo "::warning::auraflux-app deploy trigger returned $HTTP_CODE"
-          fi
-
       - name: Summary
         env:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          echo "✅ Render deploys triggered for commit: ${COMMIT_MSG%%$'\n'*}"
+          echo "✅ Render deploy triggered for commit: ${COMMIT_MSG%%$'\n'*}"
           echo "   auraflux-api → https://dashboard.render.com/web/srv-d7nsd77avr4c73frifcg"
-          echo "   auraflux-app → https://dashboard.render.com/web/srv-d7pnalhj2pic73btevl0"
