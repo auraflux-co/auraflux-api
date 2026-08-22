@@ -3,7 +3,26 @@
 **Live URL:** https://auraflux.co  
 **Platform:** Cloudflare Pages (Worker mode)  
 **Project:** `auraflux-marketing` (Account: `df04bc264530390035c77664f1b403d9`)  
-**Last updated:** 2026-05-30
+**Last updated:** 2026-08-22
+
+---
+
+## Cloudflare Pro zone (`auraflux.co`)
+
+Marketing Pages is one piece of the **Pro zone**. The $25/mo plan applies to the whole domain (WAF, SSL, proxy), not Pages hosting alone.
+
+| Host | Origin | Proxied |
+|------|--------|---------|
+| `auraflux.co`, `www` | Cloudflare Pages worker | Yes |
+| `app.auraflux.co` | Vercel | Yes |
+| `api.auraflux.co` | Render (`auraflux-api`) | Yes |
+| `assets.auraflux.co` | R2 | Yes |
+
+**Ops script:** `node scripts/ops/cloudflare_pro_optimize.mjs` (audit) · `--apply` for HSTS/HTTP/3/WAF rulesets. Requires `CF_API_TOKEN` with Zone Settings + Firewall Edit in Doppler.
+
+**Token:** Rotate `CF_API_TOKEN` in Doppler if verify returns 401 — must include Firewall Services Edit to manage WAF/Page Rules via API.
+
+**Keep Pro for:** managed WAF blocks (~400+ scan attempts/week at edge). **Review billing:** disable **Argo Smart Routing** ($5/mo) and **Cache Reserve** if subscribed without clear benefit.
 
 ---
 

@@ -2,6 +2,7 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-08-22 — Cloudflare Pro zone optimized (HSTS, HTTP/3) via `scripts/ops/cloudflare_pro_optimize.mjs`. Rotate `CF_API_TOKEN` in Doppler (Firewall Services Edit) for WAF API.
 **Last Updated:** 2026-08-22 — Infra cleanup: auraflux-app deleted from Render; app on Vercel (app.auraflux.co); render.yaml api-only; Pavilion/HSKRG on Neon; side Render Postgres deleted.
 
 **Last Updated:** 2026-08-17 — Inbox GET was returning 304 cached brand-only rows; backfill Slack threads into inbox and cache-bust fetch.
