@@ -7,7 +7,7 @@
  *   2. Username entry   — manual fallback.
  */
 
-import { useEffect, useRef, useState, useTransition, useCallback } from 'react';
+import { Suspense, useEffect, useRef, useState, useTransition, useCallback } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/clerk-compat';
@@ -84,7 +84,7 @@ function connectionsMap(list: SourceChannelOAuthConnection[] | undefined): Recor
   return map;
 }
 
-export default function SourceChannelsPage() {
+function SourceChannelsPageInner() {
   const { isLoaded, getToken } = useAuth();
   const searchParams  = useSearchParams();
   const { activeBrand } = useBrand();
@@ -399,5 +399,14 @@ export default function SourceChannelsPage() {
         These are defaults only. You can still browse a different channel when creating a job.
       </p>
     </PageShell>
+  );
+}
+
+
+export default function SourceChannelsPage() {
+  return (
+    <Suspense fallback={<PageShell maxWidth="3xl"><PageHeader title="My Channels" subtitle="Loading…" /></PageShell>}>
+      <SourceChannelsPageInner />
+    </Suspense>
   );
 }
