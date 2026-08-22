@@ -1,0 +1,42 @@
+---
+description: HSKRG Work board + wiki — all HSKRG org codebases (global)
+alwaysApply: true
+---
+
+# HSKRG Work — ticket + wiki on every ship
+
+**Board/wiki app (always this):** https://hskrg-work.vercel.app — repo `auraflux-dev/hskrg-work`  
+**Auth:** `HSKRG_AGENT_API_KEY` → `Authorization: Bearer …` + `x-org-id`  
+**Playbook:** https://hskrg-work.vercel.app/wiki/TECH/agent-playbook
+
+## Which org? (code repo → HSKRG Work org)
+
+Use the **git repo you are coding in** to pick the org slug, then `GET /api/orgs` to get `orgId`:
+
+| Code repo / folder | HSKRG org slug | Board project |
+|--------------------|----------------|---------------|
+| `hskrg-work` | `hskrg` | Platform |
+| `auraflux-api`, `auraflux-e2e-tests` | `auraflux` | Platform (CPD) |
+| `cwn-production`, `cwn-c0`, `ClipzWorld` | `cwn` | Platform |
+| `businessrocket` | `hskrg` | Platform |
+| Pavilion / commons apps | `pavilion` | Platform |
+
+When unsure, match folder name to slug or default `auraflux`.
+
+## Tickets (what + when)
+
+1. **Search:** `GET /api/issues?includeDone=false&q=<keywords>` with correct `x-org-id`
+2. **No ticket → create** `POST /api/issues` (`status: open`)
+3. **Has ticket → update** `PATCH /api/issues/:id` + comments during work
+4. **Shipped → close** `PATCH` `status: "done"` + final comment (commit SHA, deploy URL)
+
+## Wiki (why + how, with code)
+
+After close, **upsert** HOME wiki: `PUT /api/wiki/pages` with `spaceKey: "HOME"`, `slug`, `title`, `body`  
+Body must include **why**, **how**, and **code in markdown fences**.
+
+## Order (with commit)
+
+Start: find/create ticket → During: update + comment → QA → commit → deploy → push → Close ticket + upsert wiki
+
+Skip: questions only, cursor-rules-only, non-shippable.
