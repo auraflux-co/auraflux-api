@@ -43,7 +43,6 @@ export function createAurafluxAuth() {
     trustedOrigins: [
       baseURL,
       'https://app.auraflux.co',
-      'https://auraflux-app.onrender.com',
       'http://localhost:3000',
       'http://localhost:3001',
     ],
