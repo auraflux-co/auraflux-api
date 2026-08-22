@@ -36,7 +36,16 @@ async function main() {
   for (const line of seeds) {
     const [email, accountId, role = 'customer', planTier = 'operate'] = line.split('|');
     if (!email || !accountId) continue;
-    // Placeholder auth_user_id until they sign up with Better Auth — then link by email
+    // Stub BA user (unique placeholder email) so FK holds. Real email lives on
+    // user_profiles; /api/auth/token rebinds auth_user_id on first sign-in.
+    const pendingId = `pending:${accountId}`;
+    const stubEmail = `pending+${accountId}@auraflux.local`;
+    await pool.query(
+      `INSERT INTO "user" (id, name, email, email_verified)
+       VALUES ($1, $2, $3, FALSE)
+       ON CONFLICT (id) DO NOTHING`,
+      [pendingId, email.split('@')[0] || 'pending', stubEmail],
+    );
     await pool.query(
       `INSERT INTO user_profiles (auth_user_id, account_id, email, role, plan_tier, legacy_clerk_id)
        VALUES ($1, $2, $3, $4, $5, $2)
@@ -46,7 +55,7 @@ async function main() {
          plan_tier = EXCLUDED.plan_tier,
          legacy_clerk_id = COALESCE(user_profiles.legacy_clerk_id, EXCLUDED.legacy_clerk_id),
          updated_at = NOW()`,
-      [`pending:${accountId}`, accountId, email, role, planTier],
+      [pendingId, accountId, email, role, planTier],
     );
     console.log('seeded profile', email, accountId);
   }
