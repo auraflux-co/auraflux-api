@@ -25,14 +25,15 @@ If work touched both repos, run both.
 6. Once current: check for `[BLOCKING]` items (fix first) and `[SHOULD FIX]` items (fold into plan)
 7. **Warm the Render MCP** — call `user-render list_workspaces` to auto-select the workspace (only one exists, auto-selects on list). This must happen before any `list_deploys`, `list_logs`, or `list_services` calls. Use `user-render` not `plugin-render-render`.
 8. **Check for Doppler secrets management** — if `DOPPLER_TOKEN` exists in `.env`, read `doppler-secrets-management.mdc` immediately. Shared secrets (Atlassian, etc.) come from **Doppler `auraflux/prd`** via `bash scripts/doppler_run.sh` — not local `.env`. MCP Atlassian uses `scripts/run_atlassian_mcp.sh`.
-9. **Read the latest pipeline health report** — query Jira for the most recent auto-generated report:
+9. **Read the latest pipeline health report** — query HSKRG Work (auraflux org) for the most recent auto-generated report:
    ```
-   jira_search: project = CPD AND labels = pipeline-health-report ORDER BY created DESC MAXRESULTS 1
+   GET https://hskrg-work.vercel.app/api/issues?includeDone=false&q=Pipeline+Health+Report
+   Headers: Authorization: Bearer $HSKRG_AGENT_API_KEY, x-org-id: <auraflux orgId>
    ```
-   - If the report is **RED**: surface the failures to the user before starting any code work.
-   - If **AMBER**: note the warnings; fold into the session plan if relevant.
-   - If **GREEN** or no report found yet: proceed normally.
-   - The report is posted nightly at 2am ET by the server cron (`server.js` → `runReviewAndPost`). If today's report is missing, the server may not have been running — note this.
+   - If the report title starts with **`[RED]`**: surface the failures to the user before starting any code work.
+   - If **`[AMBER]`**: note the warnings; fold into the session plan if relevant.
+   - If **`[GREEN]`** or no report found yet: proceed normally.
+   - The report is posted nightly at 3:00 UTC by Render cron `auraflux-pipeline-review` (`scripts/pipeline_parity_review.js --board`). If today's report is missing, check Render cron logs.
 
 ## End of every session
 

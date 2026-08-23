@@ -2,6 +2,7 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-08-23 — pipeline review posts to HSKRG Work board (`lib/ops/hskrg_board.js`, `--board`); Jira posting removed.
 **Last Updated:** 2026-08-23 — pipeline_parity_review: cron/static runs warn on missing secrets + skip C0 live_grid/broadcast env scan (fixes auraflux-pipeline-review exit 1).
 **Last Updated:** 2026-08-22 — Removed Sentry (@sentry/node, SENTRY_DSN from Doppler/Render). Errors via logError only. Delete Sentry uptime monitor in sentry.io UI.
 **Last Updated:** 2026-08-22 — Cloudflare Pro zone optimized (HSTS, HTTP/3) via `scripts/ops/cloudflare_pro_optimize.mjs`. Rotate `CF_API_TOKEN` in Doppler (Firewall Services Edit) for WAF API.

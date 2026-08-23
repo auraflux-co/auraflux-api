@@ -10,11 +10,13 @@
  *   Layer 3 — Pipeline consumers: everything that needs the pipeline to be healthy
  *
  * Run:  node scripts/pipeline_parity_review.js
+ * Post: node scripts/pipeline_parity_review.js --board
  * Output: logs/pipeline_parity_review_<date>.md
  */
 
 const fs   = require('fs');
 const path = require('path');
+const { createBoardIssue } = require('../lib/ops/hskrg_board');
 
 const ROOT    = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'logs');
@@ -609,53 +611,17 @@ function runReview() {
 }
 
 /**
- * Post a completed review report to Jira as a new issue.
- * The issue is created in the CPD project under issue type "Task" with a
- * machine-readable label so the agent can query it at session start.
+ * Post a completed review report to HSKRG Work (Platform project, auraflux org).
+ * Agents query open issues titled "Pipeline Health Report" at session start.
  */
-async function postReportToJira(reportMarkdown, summary) {
-  const domain  = (process.env.ATLASSIAN_DOMAIN   || process.env.JIRA_DOMAIN  || 'aurafluxco.atlassian.net').trim();
-  const email   = (process.env.ATLASSIAN_EMAIL    || process.env.JIRA_EMAIL   || '').trim();
-  const token   = (process.env.ATLASSIAN_API_TOKEN || process.env.JIRA_API_TOKEN || '').trim();
-  const project = (process.env.JIRA_PROJECT_KEY   || 'CPD').trim();
-
-  if (!domain || !email || !token) {
-    console.warn('[pipeline-review] Jira env vars missing — skipping Jira post');
-    return null;
-  }
-
-  const auth = Buffer.from(`${email}:${token}`).toString('base64');
-  const url  = `https://${domain}/rest/api/2/issue`;
-
-  const body = JSON.stringify({
-    fields: {
-      project:     { key: project },
-      summary,
-      issuetype:   { name: 'Task' },
-      description: reportMarkdown.slice(0, 30000), // Jira body cap
-      labels:      ['pipeline-health-report', 'auto-generated'],
-    },
+async function postReportToBoard(reportMarkdown, summary) {
+  const issue = await createBoardIssue({
+    title: summary,
+    description: reportMarkdown.slice(0, 50000),
+    status: 'open',
+    orgSlug: process.env.HSKRG_ORG_SLUG || 'auraflux',
   });
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Content-Type':  'application/json',
-      'Accept':        'application/json',
-    },
-    body,
-  });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error(`[pipeline-review] Jira POST failed ${res.status}: ${txt}`);
-    return null;
-  }
-
-  const data = await res.json();
-  console.log(`[pipeline-review] Jira issue created: ${data.key} — ${url.replace('/rest/api/2/issue', '')}/browse/${data.key}`);
-  return data.key;
+  return issue?.id || null;
 }
 
 async function runReviewAndPost() {
@@ -667,13 +633,17 @@ async function runReviewAndPost() {
     'utf8',
   );
   const summary = `[${status}] Pipeline Health Report ${date} — ${failures} failures, ${warnings} warnings, ${passes} passes`;
-  const key = await postReportToJira(report, summary);
-  return { failures, warnings, passes, jiraKey: key };
+  const issueId = await postReportToBoard(report, summary);
+  return { failures, warnings, passes, boardIssueId: issueId };
 }
 
 if (require.main === module) {
   const args = process.argv.slice(2);
-  if (args.includes('--jira')) {
+  const shouldPost = args.includes('--board') || args.includes('--jira');
+  if (shouldPost) {
+    if (args.includes('--jira')) {
+      console.warn('[pipeline-review] --jira is deprecated; use --board (HSKRG Work)');
+    }
     runReviewAndPost().then(({ failures }) => process.exit(failures > 0 ? 1 : 0)).catch(e => {
       console.error(e);
       process.exit(1);
