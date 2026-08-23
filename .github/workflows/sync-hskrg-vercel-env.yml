@@ -1,0 +1,46 @@
+name: Sync HSKRG agent key → hskrg-work Vercel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upsert HSKRG_AGENT_API_KEY on hskrg-work (production)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          HSKRG_AGENT_API_KEY: ${{ secrets.HSKRG_AGENT_API_KEY }}
+          VERCEL_TEAM_ID: team_Uqf65YPnvqis36qNRfjOqRGr
+          VERCEL_PROJECT_ID: prj_UGoWbUyQBNw5IaQGLPM8efXx9gED
+        run: |
+          set -euo pipefail
+          existing=$(curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/env?teamId=${VERCEL_TEAM_ID}" \
+            | jq -r '.envs[]? | select(.key=="HSKRG_AGENT_API_KEY") | .id' | head -1)
+          if [ -n "$existing" ]; then
+            curl -sS -X DELETE -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/env/${existing}?teamId=${VERCEL_TEAM_ID}" >/dev/null
+          fi
+          curl -sS -X POST -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
+            "https://api.vercel.com/v10/projects/${VERCEL_PROJECT_ID}/env?teamId=${VERCEL_TEAM_ID}" \
+            -d "$(jq -n --arg v "$HSKRG_AGENT_API_KEY" \
+              '{key:"HSKRG_AGENT_API_KEY",value:$v,type:"encrypted",target:["production","preview","development"]}')" \
+            | jq -e '.created // .id' >/dev/null
+          echo "HSKRG_AGENT_API_KEY set on hskrg-work Vercel"
+
+      - name: Redeploy hskrg-work production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TEAM_ID: team_Uqf65YPnvqis36qNRfjOqRGr
+          VERCEL_PROJECT_ID: prj_UGoWbUyQBNw5IaQGLPM8efXx9gED
+        run: |
+          set -euo pipefail
+          curl -sS -X POST -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
+            "https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM_ID}" \
+            -d "$(jq -n \
+              --arg projectId "$VERCEL_PROJECT_ID" \
+              --arg orgId "$VERCEL_TEAM_ID" \
+              '{name:"hskrg-work",project: $projectId,target:"production",gitSource:{type:"github",org:"auraflux-dev",repo:"hskrg-work",ref:"main"}}')" \
+            | jq -e '.url // .id' >/dev/null
+          echo "hskrg-work production redeploy triggered"
