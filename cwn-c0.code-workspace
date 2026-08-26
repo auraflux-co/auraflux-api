@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "name": "cwn-c0 — localhost broadcast",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "window.title": "cwn-c0 — localhost${separator}${activeEditorShort}"
+  }
+}
