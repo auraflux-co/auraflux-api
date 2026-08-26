@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "name": "cwn-production — Render / AuraFlux",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "window.title": "cwn-production — Render${separator}${activeEditorShort}"
+  }
+}
