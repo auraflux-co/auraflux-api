@@ -576,11 +576,12 @@ global.persistedJobsRef = persistedJobs;
 
 function resumeStuckClipCompHookJobs() {
   const STUCK_MS = 90 * 1000;
-  const { runClipCompHookGeneration } = require('./lib/clip_comp_dispatch_assembly');
+  const { runClipCompHookGeneration, clipCompBurnedHooksEnabled } = require('./lib/clip_comp_dispatch_assembly');
   for (const [jobId, card] of Object.entries(persistedJobs)) {
     if (!card?.clipsOnly) continue;
     const hasHooks = (card.clipHookCandidates || []).some((pool) => pool && pool.length);
-    if (card.stage === 'hooks_generating' && hasHooks) {
+    const whisperOnly = !clipCompBurnedHooksEnabled(card);
+    if (card.stage === 'hooks_generating' && hasHooks && !whisperOnly) {
       card.stage = 'hook_review';
       card.status = 'completed';
       card.hookReviewReadyAt = card.hookReviewReadyAt || new Date().toISOString();
@@ -589,7 +590,7 @@ function resumeStuckClipCompHookJobs() {
       continue;
     }
     if (card.stage !== 'hooks_generating') continue;
-    if (hasHooks) continue;
+    if (hasHooks && !whisperOnly) continue;
     if (!(card.orderedClipUrls || []).length) continue;
     const createdMs = Date.parse(card.createdAt || card.savedAt || 0);
     if (!createdMs || Date.now() - createdMs < STUCK_MS) continue;
@@ -6668,6 +6669,11 @@ app.post('/generate-clip-comp', async (req, res) => {
   }));
 
   const compDeliverySpec = buildClipCompDeliverySpec({ platforms, scheduledAt, contentType, compCreative });
+  const { clipCompBurnedHooksEnabled } = require('./lib/clip_comp_dispatch_assembly');
+  const skipsHookReview = !clipCompBurnedHooksEnabled({
+    compCreative,
+    compCreativePreset: compCreative?.preset,
+  });
 
   const card = {
     id:          jobId,
@@ -6686,7 +6692,8 @@ app.post('/generate-clip-comp', async (req, res) => {
     createdAt:   new Date().toISOString(),
     createdBy:   req.body.createdBy || 'dashboard',
     calendarSlotId: req.body.calendarSlotId || null,
-    stage:       'hooks_generating',
+    // whisper_only (FableFlow): skip hooks_generating — setImmediate assembles directly
+    stage:       skipsHookReview ? 'assembling' : 'hooks_generating',
     status:      'processing',
     gate1:         gate1Result || undefined,
     // Synthetic all-clip scene script: keeps saveJobCard segment extraction and
@@ -6797,7 +6804,9 @@ app.post('/generate-clip-comp', async (req, res) => {
     clipCount: segmentData.length,
     platforms,
     compCreative,
-    message: `Hooks generating — pick your hook on the queue card, then the video builds once.`,
+    message: skipsHookReview
+      ? 'Building video — whisper_only preset (no hook pick).'
+      : 'Hooks generating — pick your hook on the queue card, then the video builds once.',
   });
 
   setImmediate(async () => {
@@ -6852,6 +6861,15 @@ app.post('/job/:id/regenerate-hooks', async (req, res) => {
   }
   if (!card.clipsOnly) {
     return res.status(400).json({ ok: false, error: 'Hook regen is for clip-comp / clip-short jobs only.' });
+  }
+  {
+    const { clipCompBurnedHooksEnabled } = require('./lib/clip_comp_dispatch_assembly');
+    if (!clipCompBurnedHooksEnabled(card)) {
+      return res.status(400).json({
+        ok: false,
+        error: 'This preset is whisper_only — no burned hooks to regenerate.',
+      });
+    }
   }
   if (card.hooksOperatorLocked && req.body.force !== true) {
     return res.status(409).json({

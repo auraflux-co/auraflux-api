@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-08-29 (iss_7wN0w8V4E0YP) — whisper_only presets (C9 FableFlow) skip Hook Machine + hook_review; EXECUTE goes straight to assemble. Hard refresh Job Queue.
 **Last Updated:** 2026-08-19 (CPD-1318) — 🔄 FIX SEO stays on Job Queue (no jump to Publish Prep). Type a custom title on the card if QA still fails. Hard refresh Job Queue.
 **Last Updated:** 2026-08-19 (CPD-1314) — Save look here + Review honor left Layout boxes: dropdown/storage follow saved look; ffmpeg no longer chrome-insets operator green/gold crops. Hard refresh Compose → Save look here → Review near-final.
 **Last Updated:** 2026-08-19 (CPD-1313) — Compose live preview is a crop guide, not 1080p. Larger 540px frame, no pane stretch, Review near-final = real Short quality. Hard refresh Compose.
