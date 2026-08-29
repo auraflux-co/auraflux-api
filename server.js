@@ -7149,11 +7149,12 @@ app.post('/job/:id/confirm-hooks', (req, res) => {
   if (card.stage === 'published') {
     return res.status(400).json({ ok: false, error: 'Job is published — rollback first.' });
   }
-  const { needsHookBeforeAssembly, fireClipCompAssembly } = require('./lib/clip_comp_dispatch_assembly');
+  const { needsHookBeforeAssembly, fireClipCompAssembly, clipCompBurnedHooksEnabled } = require('./lib/clip_comp_dispatch_assembly');
   if (!needsHookBeforeAssembly(card)) {
     return res.status(400).json({ ok: false, error: 'Video already built — pick your hook, then RE-ASSEMBLE FROM FILES to burn it.' });
   }
-  if (!(card.clipHookTitles || []).some((h) => String(h || '').trim())) {
+  const burnsHooks = clipCompBurnedHooksEnabled(card);
+  if (burnsHooks && !(card.clipHookTitles || []).some((h) => String(h || '').trim())) {
     return res.status(400).json({ ok: false, error: 'Pick at least one hook before building.' });
   }
   const { normalizeHookLine } = require('./lib/clip_comp_hooks');

@@ -35,10 +35,17 @@ test('clipCompBurnedHooksEnabled — classic_blur_pad burns hooks', () => {
   }), true);
 });
 
-test('needsHookBeforeAssembly — whisper_only skips hook pick even at hook_review', () => {
+test('needsHookBeforeAssembly — whisper_only still needs first assemble', () => {
   assert.equal(needsHookBeforeAssembly({
     clipsOnly: true,
     stage: 'hook_review',
     compCreative: { preset: 'fableflow_speed', hooks: { mode: 'whisper_only' } },
+  }), true);
+  assert.equal(needsHookBeforeAssembly({
+    clipsOnly: true,
+    stage: 'awaiting_review',
+    assembledAt: '2026-01-01',
+    driveUrl: 'https://x',
+    compCreative: { preset: 'fableflow_speed' },
   }), false);
 });
