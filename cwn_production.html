@@ -19335,26 +19335,30 @@ function detectComposerBeats() {
       // Timeline preview is trim-window-relative; portrait assembly FX use the same 0-based clock.
       lead.zoomPunch = d.zoomPunch || null;
       lead.cameraShake = d.cameraShake || null;
-      lead.impactTint = d.impactTint || null; // CPD-1283 red impact flashes (Gemini Core_fx)
       lead.highlightSfx = d.highlightSfx || null; // CPD-1286 timed SFX drops
       lead.beatCutMarks = d.cutMarks || [];
-      // Ensure flashes land on compare still ratios (0.08/0.32/0.62) — 0.28s peaks miss Gemini frames
       var fxWin = winSec;
       try {
         if (typeof composerTrimWindowSec === 'function') fxWin = Math.max(8, composerTrimWindowSec(lead) || winSec);
       } catch (_) { /* ignore */ }
-      var stillFlashes = [0.08, 0.32, 0.62].map(function(r) {
-        return { atSec: Math.round(fxWin * r * 100) / 100, duration: 0.9, strength: 0.42 };
+      // Preserve Gap-fix still-catch flashes (brightness); merge detected peaks under them
+      var keepFlashes = (lead.impactTint && Array.isArray(lead.impactTint.flashes) && lead.impactTint.flashes.length >= 5)
+        ? lead.impactTint.flashes.slice()
+        : null;
+      var peakFlashes = (d.impactTint && Array.isArray(d.impactTint.flashes)) ? d.impactTint.flashes : [];
+      var stillFlashes = [0.08, 0.32, 0.62, 0.9].map(function(r) {
+        return { atSec: Math.round(fxWin * r * 100) / 100, duration: 1.1, strength: 0.55 };
       });
-      if (lead.impactTint && Array.isArray(lead.impactTint.flashes)) {
-        lead.impactTint.flashes = lead.impactTint.flashes.concat(stillFlashes);
-      } else {
-        lead.impactTint = { enabled: true, flashes: stillFlashes };
-      }
+      lead.impactTint = {
+        enabled: true,
+        flashes: (keepFlashes || stillFlashes).concat(peakFlashes),
+      };
       if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
-      // Optional kinetic text — long windows so still QA sees hooks
+      // Keep Gap-fix varied hooks if already stamped; else fill from DOM
+      var hasVaried = Array.isArray(lead.overlayTexts) && lead.overlayTexts.length >= 2
+        && lead.overlayTexts.some(function(o, i, a) { return i > 0 && o.text !== a[0].text; });
       var overlayTxt = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
-      if (overlayTxt && d.peaks && d.peaks[0]) {
+      if (!hasVaried && overlayTxt && d.peaks && d.peaks[0]) {
         var style = (g('composer-overlay-style') && g('composer-overlay-style').value) || 'fade';
         var peakAt = Math.max(0, Number(d.peaks[0].atSec) || 0);
         lead.overlayTexts = [
@@ -19786,27 +19790,46 @@ function applyComposerTransformGapFixes() {
       applied.push('Speed · punch_pause');
     }
   }
-  if (needHooks || needDiff) {
+  if (needHooks || needDiff || needMusic) {
     if (overlayEl) {
       var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
-      var hint = (lead && (lead.title || lead.displayName)) || '';
-      var shortHint = String(hint).replace(/<[^>]+>/g, '').trim().slice(0, 28);
-      if (!overlayEl.value.trim()) {
-        overlayEl.value = shortHint || 'WATCH THIS';
-      }
       if (overlayStyle) overlayStyle.value = 'scale_pop';
-      // Write onto lead clip NOW — Beats→FX is async and Review used to miss DOM-only text
+      // Varied hooks — Gemini docked captions_hooks for repeating WATCH THIS only
+      var winSec = lead ? Math.max(8, composerTrimWindowSec(lead) || 30) : 30;
+      var st = (overlayStyle && overlayStyle.value) || 'scale_pop';
+      var pack = [
+        { text: 'WATCH THIS', ratio: 0.08, dur: 4.5 },
+        { text: 'WAIT FOR IT', ratio: 0.32, dur: 4.0 },
+        { text: 'UNBELIEVABLE', ratio: 0.55, dur: 4.0 },
+        { text: needMusic ? 'THE DROP' : 'DONT BLINK', ratio: 0.78, dur: 3.5 },
+      ];
+      overlayEl.value = pack[0].text;
       if (lead) {
-        var winSec = Math.max(8, composerTrimWindowSec(lead) || 30);
-        var txt = overlayEl.value.trim();
-        var st = (overlayStyle && overlayStyle.value) || 'scale_pop';
-        lead.overlayTexts = [
-          { text: txt, startSec: 0.4, duration: Math.min(5, winSec * 0.4), style: st, fontSize: 72 },
-          { text: txt, startSec: Math.max(4, winSec * 0.42), duration: Math.min(5, winSec * 0.4), style: st, fontSize: 72 },
-          { text: txt, startSec: Math.max(10, winSec * 0.7), duration: Math.min(5, winSec * 0.3), style: st, fontSize: 72 },
-        ];
+        lead.overlayTexts = pack.map(function(p) {
+          return {
+            text: p.text,
+            startSec: Math.round(winSec * p.ratio * 100) / 100,
+            duration: Math.min(p.dur, winSec * 0.35),
+            style: st,
+            fontSize: 76,
+          };
+        });
+        // Strong still-catch beat flashes NOW (brightness pulse) — don't wait on detect
+        if (needMusic) {
+          lead.impactTint = {
+            enabled: true,
+            flashes: [0.08, 0.18, 0.32, 0.48, 0.62, 0.78, 0.9].map(function(r) {
+              return {
+                atSec: Math.round(winSec * r * 100) / 100,
+                duration: 1.1,
+                strength: 0.55,
+              };
+            }),
+          };
+        }
       }
-      applied.push('Anim text · "' + overlayEl.value.trim().slice(0, 24) + '" (2 windows)');
+      applied.push('Anim text · 4 varied hooks @ still ratios');
+      if (needMusic) applied.push('Beat flashes · brightness pulses @ compare frames');
     }
   }
   if (needMusic || needDiff) {
@@ -19823,7 +19846,10 @@ function applyComposerTransformGapFixes() {
     if (leadFx) {
       delete leadFx.zoomPunch;
       delete leadFx.cameraShake;
-      delete leadFx.impactTint;
+      // Keep impactTint if Gap-fix still-catch pack already stamped above
+      if (!(leadFx.impactTint && leadFx.impactTint.flashes && leadFx.impactTint.flashes.length >= 5)) {
+        delete leadFx.impactTint;
+      }
       delete leadFx.highlightSfx;
       delete leadFx.beatCutMarks;
     }
@@ -24129,18 +24155,25 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides = overrides || {};
     overrides.transition = { style: joinStyle, durationSec: 0.35 };
   }
-  var overlayTxtPayload = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
-  if (overlayTxtPayload) {
+  // Prefer lead.overlayTexts (Gap-fix varied pack) over single DOM string
+  var leadOv = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+  if (leadOv && Array.isArray(leadOv.overlayTexts) && leadOv.overlayTexts.length) {
     overrides = overrides || {};
-    overrides.animatedText = {
-      enabled: true,
-      items: [{
-        text: overlayTxtPayload,
-        startSec: 0.6,
-        duration: 2.2,
-        style: (g('composer-overlay-style') && g('composer-overlay-style').value) || 'fade'
-      }]
-    };
+    overrides.animatedText = { enabled: true, items: leadOv.overlayTexts.slice() };
+  } else {
+    var overlayTxtPayload = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
+    if (overlayTxtPayload) {
+      overrides = overrides || {};
+      var oSt0 = (g('composer-overlay-style') && g('composer-overlay-style').value) || 'scale_pop';
+      overrides.animatedText = {
+        enabled: true,
+        items: [
+          { text: overlayTxtPayload, startSec: 0.4, duration: 5, style: oSt0, fontSize: 72 },
+          { text: overlayTxtPayload, startSec: 12, duration: 5, style: oSt0, fontSize: 72 },
+          { text: overlayTxtPayload, startSec: 28, duration: 5, style: oSt0, fontSize: 72 },
+        ],
+      };
+    }
   }
   if (stored.hideChatRail || stored.hideBottomBar || stored.hideTopBar) {
     overrides = overrides || {};
@@ -24169,20 +24202,7 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.audio = Object.assign({}, overrides.audio || {}, { cutSfx: opCutSfx });
   }
 
-  // Anim text for near-final / EXECUTE even if clip.overlayTexts race Beats→FX
-  var overlayDomTxt = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
-  if (overlayDomTxt) {
-    overrides = overrides || {};
-    var oStyle = (g('composer-overlay-style') && g('composer-overlay-style').value) || 'scale_pop';
-    overrides.animatedText = {
-      enabled: true,
-      items: [
-        { text: overlayDomTxt, startSec: 0.4, duration: 5, style: oStyle, fontSize: 72 },
-        { text: overlayDomTxt, startSec: 12, duration: 5, style: oStyle, fontSize: 72 },
-        { text: overlayDomTxt, startSec: 28, duration: 5, style: oStyle, fontSize: 72 },
-      ],
-    };
-  }
+  // animatedText already set above from lead.overlayTexts or DOM — do not overwrite varied pack
 
   return {
     compCreativePreset: preset,

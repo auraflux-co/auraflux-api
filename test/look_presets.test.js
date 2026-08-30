@@ -36,6 +36,7 @@ describe('CPD-1283 look presets (Gemini tint gap)', () => {
 
   it('impact_tint builds enabled colorbalance chain', () => {
     const frag = buildImpactTintFilter([{ atSec: 1.2, duration: 0.3, strength: 0.25 }]);
+    assert.match(frag, /eq=brightness=/);
     assert.match(frag, /colorbalance=rs=/);
     assert.match(frag, /enable='between\(t/);
   });
@@ -46,7 +47,7 @@ describe('CPD-1283 look presets (Gemini tint gap)', () => {
     const fx = VIDEO_EFFECTS.impact_tint({
       effects: { video: { impact_tint: sug.impactTint } },
     });
-    assert.ok(fx && fx.includes('colorbalance='));
+    assert.ok(fx && fx.includes('eq=brightness=') && fx.includes('colorbalance='));
   });
 
   it('color_balance effect returns filter for look tint', () => {
