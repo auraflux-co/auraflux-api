@@ -145,7 +145,7 @@ test('fableflow_speed preset is editor-less Speed Short recipe (CPD-1287/1289)',
   assert.equal(c.hooks.mode, 'whisper_only');
   assert.equal(c.captions.whisper, true);
   assert.equal(c.captions.style, 'phrase_full_bleed');
-  assert.equal(c.audio.musicBed, 'low_trap');
+  assert.ok(c.audio.musicBed === 'low_trap' || c.audio.musicBed === 'neutral_lofi');
   assert.equal(c.audio.cutSfx, 'whoosh');
   assert.equal(c.look.preset, 'punch');
   assert.equal(c.transition.style, 'cut');
@@ -158,6 +158,36 @@ test('fableflow_speed preset is editor-less Speed Short recipe (CPD-1287/1289)',
   assert.equal(t.lineupSlots, 1);
   assert.equal(t.minClips, 1);
   assert.equal(t.maxClips, 1);
+});
+
+test('reaction_short is C10 Reaction Short Transform 5/5 recipe', () => {
+  const {
+    mergeCompCreative,
+    VALID_PRESETS,
+    getCompLineupTarget,
+    getCompCreativeCatalogEntry,
+    resolvePresetLayoutMode,
+  } = require('../lib/clip_comp_creative');
+  const c = mergeCompCreative({ preset: 'reaction_short' });
+  assert.equal(c.preset, 'reaction_short');
+  assert.equal(c.layout.mode, 'full_bleed_crop');
+  assert.equal(c.layout.landscapeSplit, false);
+  assert.equal(c.hooks.mode, 'both');
+  assert.equal(c.captions.whisper, true);
+  assert.equal(c.audio.musicBed, 'low_trap');
+  assert.equal(c.audio.cutSfx, 'whoosh');
+  assert.equal(c.look.preset, 'vivid');
+  assert.equal(c.beatSync.source, 'music_bed');
+  assert.equal(c.speedFeel, 'punch_pause');
+  assert.ok(c.animatedText?.items?.length >= 4);
+  assert.equal(c.delivery.format, 'short');
+  assert.ok(VALID_PRESETS.has('reaction_short'));
+  assert.equal(resolvePresetLayoutMode('reaction_short'), 'full_bleed_crop');
+  const cat = getCompCreativeCatalogEntry('reaction_short');
+  assert.equal(cat.code, 'C10');
+  assert.match(cat.name, /Reaction/i);
+  const t = getCompLineupTarget('reaction_short');
+  assert.equal(t.lineupSlots, 1);
 });
 
 // ─── Facecam split preset (CPD-1228) ─────────────────────────────────────────

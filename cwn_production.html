@@ -20046,7 +20046,10 @@ function syncComposerExecuteGate() {
     execBtn.title = 'Save or discard draft look before EXECUTE';
   } else {
     execBtn.disabled = false;
-    if (_composerEditReviewed && _composerPreviewMode === 'ffmpeg') {
+    var rxGapsTitle = (typeof reactionShortParityGaps === 'function') ? reactionShortParityGaps() : [];
+    if (rxGapsTitle.length) {
+      execBtn.title = 'C10 gaps: ' + rxGapsTitle.slice(0, 2).join(' · ');
+    } else if (_composerEditReviewed && _composerPreviewMode === 'ffmpeg') {
       execBtn.title = 'Reviewed — dispatch locked compositionSpec to assembly';
     } else if (_composerEditDone) {
       execBtn.title = 'Edits locked — Review near-final recommended before EXECUTE';
@@ -20983,6 +20986,12 @@ function executeFromComposer() {
   }
   if (!_composerEditReviewed || _composerPreviewMode !== 'ffmpeg') {
     if (!confirm('No near-final Review yet. Recommended: ▶ Review near-final to audit grade/FX/bed before EXECUTE.\n\nOK = EXECUTE anyway · Cancel = stay and Review')) return;
+  }
+  if (typeof reactionShortParityGaps === 'function') {
+    var rxGaps = reactionShortParityGaps();
+    if (rxGaps.length) {
+      if (!confirm('C10 Reaction Short parity gaps:\n\n• ' + rxGaps.join('\n• ') + '\n\nOK = EXECUTE anyway · Cancel = fix Compose first')) return;
+    }
   }
   var body = buildCompositionSpecFromUI();
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/validate', {
@@ -24095,6 +24104,36 @@ function buildCompCreativeRequestPayload(streamerHint) {
     });
     // mode / landscapeSplit come from landscape dropdown (split default for two-shot)
   }
+  if (preset === 'reaction_short') {
+    overrides = overrides || {};
+    var rxHook = stored.hookMode || 'both';
+    overrides.hooks = { mode: rxHook, rankedList: { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 } };
+    overrides.captions = overrides.captions || {};
+    overrides.captions.whisper = rxHook !== 'hook_only';
+    if (!overrides.captions.style) overrides.captions.style = 'phrase_full_bleed';
+    overrides.audio = Object.assign({}, overrides.audio || {}, {
+      musicBed: stored.musicBed || 'low_trap',
+      musicBedVolume: 0.14,
+      bedMixWeight: 0.18,
+      cutSfx: (window._composerCutSfxOverride != null) ? window._composerCutSfxOverride : (stored.cutSfx != null ? stored.cutSfx : 'whoosh'),
+      duckSpeech: true,
+      clipAudio: true,
+    });
+    var lookRx = g('composer-look-tint') && g('composer-look-tint').value;
+    overrides.look = { preset: (lookRx && lookRx !== 'auto') ? lookRx : 'vivid' };
+    overrides.transition = { style: 'cut', durationSec: 0.35 };
+    overrides.editorial = { enabled: false, introCard: false, ttsBridges: false };
+    overrides.effects = { transform: true, gagOverlays: false };
+    overrides.delivery = { format: 'short', relatedVideoParentId: stored.relatedVideoParentId || null };
+    overrides.beatSync = { suggestOnPreview: true, source: 'music_bed', maxPeaks: 6 };
+    overrides.speedFeel = (g('composer-speed-feel') && g('composer-speed-feel').value) || 'punch_pause';
+    overrides.layout = Object.assign({}, overrides.layout || {}, {
+      logo: 'corner',
+      logoCorner: stored.logoCorner || 'top_right',
+      mode: 'full_bleed_crop',
+      landscapeSplit: false,
+    });
+  }
   if (preset === 'serpent_ranked_vod') {
     overrides = overrides || {};
     overrides.delivery = { format: 'vod_comp', relatedVideoParentId: stored.relatedVideoParentId || null };
@@ -24230,11 +24269,101 @@ function onCompCreativePresetChange() {
   var hm = g('comp-creative-hook-mode');
   if (hm) delete hm.dataset.userPicked;
   hydrateFableflowSpeedPresetDefaults();
+  hydrateReactionShortPresetDefaults();
   hydrateSourceCleanupFromStorage();
   refreshCompCreativeChips();
   hydrateCompCreativeLayoutFromStorage();
   refreshTwitchActionBar();
   if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
+}
+
+/** iss_ahVNGr1DzfdZ — C10 Reaction Short (Transform 5/5 recipe). */
+function hydrateReactionShortPresetDefaults() {
+  var sel = g('comp-creative-preset');
+  if (!sel || sel.value !== 'reaction_short') return;
+  var ll = g('comp-creative-landscape-layout');
+  if (ll) ll.value = 'single';
+  var hm = g('comp-creative-hook-mode');
+  if (hm && !hm.dataset.userPicked) { hm.value = 'both'; }
+  var bed = g('composer-music-bed') || g('comp-creative-music-bed');
+  if (bed) bed.value = 'low_trap';
+  var bedAdv = g('comp-creative-music-bed');
+  if (bedAdv) bedAdv.value = 'low_trap';
+  window._composerCutSfxOverride = 'whoosh';
+  var logo = g('comp-creative-logo-corner');
+  if (logo) logo.value = 'top_right';
+  var look = g('composer-look-tint');
+  if (look) look.value = 'vivid';
+  var cap = g('composer-caption-style');
+  if (cap) cap.value = 'phrase_full_bleed';
+  var join = g('composer-transition-style');
+  if (join) join.value = 'cut';
+  var beatSrc = g('composer-beat-source');
+  if (beatSrc) beatSrc.value = 'music_bed';
+  var speedEl = g('composer-speed-feel');
+  if (speedEl) {
+    speedEl.value = 'punch_pause';
+    if (typeof onComposerSpeedFeelChange === 'function') onComposerSpeedFeelChange();
+  }
+  var overlayEl = g('composer-overlay-text');
+  var overlayStyle = g('composer-overlay-style');
+  if (overlayEl) overlayEl.value = 'WATCH THIS';
+  if (overlayStyle) overlayStyle.value = 'scale_pop';
+  var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+  if (lead) {
+    var winSec = Math.max(8, (typeof composerTrimWindowSec === 'function' ? composerTrimWindowSec(lead) : 30) || 30);
+    var pack = [
+      { text: 'WATCH THIS', ratio: 0.08, duration: 4.5 },
+      { text: 'WAIT FOR IT', ratio: 0.32, duration: 4.0 },
+      { text: 'UNBELIEVABLE', ratio: 0.55, duration: 4.0 },
+      { text: 'THE DROP', ratio: 0.78, duration: 3.5 },
+    ];
+    lead.overlayTexts = pack.map(function(p) {
+      return {
+        text: p.text,
+        startSec: Math.round(winSec * p.ratio * 100) / 100,
+        duration: Math.min(p.duration, winSec * 0.35),
+        style: 'scale_pop',
+        fontSize: 76,
+      };
+    });
+  }
+  if (ll && typeof onCompCreativeLandscapeLayoutChange === 'function') {
+    onCompCreativeLandscapeLayoutChange();
+  }
+  if (typeof setComposerPreviewCaption === 'function') {
+    setComposerPreviewCaption('C10 Reaction · vivid · hooks+anim · bed beats → Review → Compare → EXECUTE', 'ok');
+  }
+}
+
+/** C10 parity gaps before EXECUTE — Compose functions that must be burned. */
+function reactionShortParityGaps() {
+  var sel = g('comp-creative-preset');
+  if (!sel || sel.value !== 'reaction_short') return [];
+  var gaps = [];
+  var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+  var near = window._composerNearFinalLast || {};
+  var applied = near.nearFinalApplied || near.applied || [];
+  var look = g('composer-look-tint') && g('composer-look-tint').value;
+  if (!look || look === 'auto') gaps.push('Look · set vivid (or Punch+)');
+  var hm = g('comp-creative-hook-mode');
+  if (hm && hm.value === 'whisper_only') gaps.push('Hooks · both (not whisper-only)');
+  var overlay = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
+  if (!overlay && !(lead && lead.overlayTexts && lead.overlayTexts.length)) {
+    gaps.push('Anim text · 4 timed hooks');
+  }
+  var bed = (typeof getComposerMusicBed === 'function') ? getComposerMusicBed() : null;
+  if (!bed || bed === 'off') gaps.push('Music bed · low_trap');
+  if (!(lead && (lead.zoomPunch || lead.impactTint || lead.cameraShake))) {
+    gaps.push('Beats→FX · run music-bed detect');
+  }
+  if (applied.length && applied.indexOf('anim_text') < 0 && applied.indexOf('look_transform') >= 0) {
+    gaps.push('Review burn · anim_text missing — Review again after hooks');
+  }
+  if (!_composerEditReviewed || _composerPreviewMode !== 'ffmpeg') {
+    gaps.push('▶ Review near-final (required for C10 parity)');
+  }
+  return gaps;
 }
 
 /** CPD-1287 — one-click FableFlow Speed recipe (no CapCut editor pass). */
