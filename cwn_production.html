@@ -9441,6 +9441,14 @@ function formatGate3ReportText(job) {
   if (g3.ffmpegAlarm && g3.ffmpegAlarm.issue) lines.push(g3.ffmpegAlarm.issue);
   if (g3.report) lines.push(g3.report);
   if (g3.concerns && g3.concerns.length) lines.push('Concerns: ' + g3.concerns.join(' · '));
+  if (g3.deductions && g3.deductions.length) {
+    var dedLines = g3.deductions.map(function(d) {
+      if (typeof d === 'string') return d;
+      var pts = d.points != null ? (' (' + d.points + ')') : '';
+      return (d.reason || '') + pts;
+    }).filter(Boolean);
+    if (dedLines.length) lines.push('Why not 100: ' + dedLines.slice(0, 6).join(' · '));
+  }
   return lines.join('\n');
 }
 
@@ -24127,15 +24135,16 @@ function buildCompCreativeRequestPayload(streamerHint) {
   }
   if (preset === 'reaction_short') {
     overrides = overrides || {};
-    var rxHook = stored.hookMode || 'both';
+    // Anim-text owns punches — default whisper_only (no competing burned hook card)
+    var rxHook = stored.hookMode || 'whisper_only';
     overrides.hooks = { mode: rxHook, rankedList: { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 } };
     overrides.captions = overrides.captions || {};
     overrides.captions.whisper = rxHook !== 'hook_only';
     if (!overrides.captions.style) overrides.captions.style = 'phrase_full_bleed';
     overrides.audio = Object.assign({}, overrides.audio || {}, {
-      musicBed: stored.musicBed || 'low_trap',
-      musicBedVolume: 0.14,
-      bedMixWeight: 0.18,
+      musicBed: stored.musicBed || 'off',
+      musicBedVolume: 0.10,
+      bedMixWeight: 0.12,
       cutSfx: (window._composerCutSfxOverride != null) ? window._composerCutSfxOverride : (stored.cutSfx != null ? stored.cutSfx : 'whoosh'),
       duckSpeech: true,
       clipAudio: true,
@@ -24146,7 +24155,7 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.editorial = { enabled: false, introCard: false, ttsBridges: false };
     overrides.effects = { transform: true, gagOverlays: false };
     overrides.delivery = { format: 'short', relatedVideoParentId: stored.relatedVideoParentId || null };
-    overrides.beatSync = { suggestOnPreview: true, source: 'music_bed', maxPeaks: 6 };
+    overrides.beatSync = { suggestOnPreview: true, source: 'clip', maxPeaks: 6 };
     overrides.speedFeel = (g('composer-speed-feel') && g('composer-speed-feel').value) || 'punch_pause';
     overrides.layout = Object.assign({}, overrides.layout || {}, {
       logo: 'corner',
@@ -24305,11 +24314,11 @@ function hydrateReactionShortPresetDefaults() {
   var ll = g('comp-creative-landscape-layout');
   if (ll) ll.value = 'single';
   var hm = g('comp-creative-hook-mode');
-  if (hm && !hm.dataset.userPicked) { hm.value = 'both'; }
+  if (hm && !hm.dataset.userPicked) { hm.value = 'whisper_only'; }
   var bed = g('composer-music-bed') || g('comp-creative-music-bed');
-  if (bed) bed.value = 'low_trap';
+  if (bed) bed.value = 'off';
   var bedAdv = g('comp-creative-music-bed');
-  if (bedAdv) bedAdv.value = 'low_trap';
+  if (bedAdv) bedAdv.value = 'off';
   window._composerCutSfxOverride = 'whoosh';
   var logo = g('comp-creative-logo-corner');
   if (logo) logo.value = 'top_right';
@@ -24320,7 +24329,7 @@ function hydrateReactionShortPresetDefaults() {
   var join = g('composer-transition-style');
   if (join) join.value = 'cut';
   var beatSrc = g('composer-beat-source');
-  if (beatSrc) beatSrc.value = 'music_bed';
+  if (beatSrc) beatSrc.value = 'clip';
   var speedEl = g('composer-speed-feel');
   if (speedEl) {
     speedEl.value = 'punch_pause';
@@ -24353,7 +24362,7 @@ function hydrateReactionShortPresetDefaults() {
     onCompCreativeLandscapeLayoutChange();
   }
   if (typeof setComposerPreviewCaption === 'function') {
-    setComposerPreviewCaption('C10 Reaction · vivid · hooks+anim · bed beats → Review → Compare → EXECUTE', 'ok');
+    setComposerPreviewCaption('C10 Reaction · vivid · anim punches · source audio → Review → Compare → EXECUTE', 'ok');
   }
 }
 
@@ -24368,15 +24377,16 @@ function reactionShortParityGaps() {
   var look = g('composer-look-tint') && g('composer-look-tint').value;
   if (!look || look === 'auto') gaps.push('Look · set vivid (or Punch+)');
   var hm = g('comp-creative-hook-mode');
-  if (hm && hm.value === 'whisper_only') gaps.push('Hooks · both (not whisper-only)');
+  if (hm && hm.value === 'both') gaps.push('Hooks · whisper_only (anim text owns punches — avoid burned hook card)');
+  if (hm && hm.value === 'hook_only') gaps.push('Hooks · whisper_only (keep Whisper; anim text for punches)');
   var overlay = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
   if (!overlay && !(lead && lead.overlayTexts && lead.overlayTexts.length)) {
     gaps.push('Anim text · 4 timed hooks');
   }
   var bed = (typeof getComposerMusicBed === 'function') ? getComposerMusicBed() : null;
-  if (!bed || bed === 'off') gaps.push('Music bed · low_trap');
+  if (bed && bed !== 'off') gaps.push('Music bed · Off (source performance audio wins)');
   if (!(lead && (lead.zoomPunch || lead.impactTint || lead.cameraShake))) {
-    gaps.push('Beats→FX · run music-bed detect');
+    gaps.push('Beats→FX · run clip-audio detect');
   }
   if (applied.length && applied.indexOf('anim_text') < 0 && applied.indexOf('look_transform') >= 0) {
     gaps.push('Review burn · anim_text missing — Review again after hooks');

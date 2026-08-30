@@ -172,12 +172,12 @@ test('reaction_short is C10 Reaction Short Transform 5/5 recipe', () => {
   assert.equal(c.preset, 'reaction_short');
   assert.equal(c.layout.mode, 'full_bleed_crop');
   assert.equal(c.layout.landscapeSplit, false);
-  assert.equal(c.hooks.mode, 'both');
+  assert.equal(c.hooks.mode, 'whisper_only');
   assert.equal(c.captions.whisper, true);
-  assert.equal(c.audio.musicBed, 'low_trap');
+  assert.equal(c.audio.musicBed, 'off');
   assert.equal(c.audio.cutSfx, 'whoosh');
   assert.equal(c.look.preset, 'vivid');
-  assert.equal(c.beatSync.source, 'music_bed');
+  assert.equal(c.beatSync.source, 'clip');
   assert.equal(c.speedFeel, 'punch_pause');
   assert.ok(c.animatedText?.items?.length >= 4);
   assert.equal(c.delivery.format, 'short');
