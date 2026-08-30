@@ -176,6 +176,7 @@ test('reaction_short is C10 Reaction Short Transform 5/5 recipe', () => {
   assert.equal(c.captions.whisper, true);
   assert.equal(c.audio.musicBed, 'off');
   assert.equal(c.audio.cutSfx, 'whoosh');
+  assert.equal(c.audio.dialogueAwareMix, false);
   assert.equal(c.look.preset, 'vivid');
   assert.equal(c.beatSync.source, 'clip');
   assert.equal(c.speedFeel, 'punch_pause');

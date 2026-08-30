@@ -92,6 +92,8 @@ test('CPD-1295 dialogue-aware gain expr mutes bed in speech windows', () => {
 
   assert.equal(wantsDialogueAwareMix({ musicBed: 'low_trap', duckSpeech: true }), true);
   assert.equal(wantsDialogueAwareMix({ musicBed: 'low_trap', dialogueAwareMix: false }), false);
+  assert.equal(wantsDialogueAwareMix({ musicBed: 'off', dialogueAwareMix: true }), false);
+  assert.equal(wantsDialogueAwareMix({ musicBed: 'off', sourceOutsideSpeechGain: 0.32 }), false);
   assert.equal(resolveEffectiveMusicBed({ musicBed: 'low_trap', bedStyle: 'complement' }), 'neutral_lofi');
   assert.equal(resolveEffectiveMusicBed({ musicBed: 'auto_complement' }), 'neutral_lofi');
   assert.equal(resolveEffectiveMusicBed({ musicBed: 'file:ES_NO MERCY - Ballpoint.mp3' }), 'file:ES_NO MERCY - Ballpoint.mp3');

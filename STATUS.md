@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-08-30 — C10 rebuild fixes: burn anim punches from card creative; never dialogue-duck when bed=off; skip Whisper on music-preflight clips.
 **Last Updated:** 2026-08-30 — C10 Reaction: bed OFF + whisper_only (anim text owns punches; no competing hook card). Gate 3 card keeps deduction lines. Pass threshold still 70 — 72 was soft chrome/overlay notes.
 **Last Updated:** 2026-08-30 — Publish-meta hydrate: open ▶ PREVIEW was blocking queue re-render so cards stayed on “Loading publish metadata” even when SEO existed on server. In-place banner patch + cooldown no longer spins forever. Hard refresh Job Queue.
 **Last Updated:** 2026-08-30 — Job card: do not force “WHISPER ONLY (FableFlow)” when hooks.mode is `both` (was hard-coded for C9 preset). Opening-look restore no longer forces C9. Hard refresh Job Queue.
