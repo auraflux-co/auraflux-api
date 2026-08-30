@@ -9443,6 +9443,17 @@ function jobWhisperCaptionsExpected(job) {
   return true;
 }
 
+/** Burned CWN hook card — off for whisper_only / FableFlow (captions only). */
+function jobBurnsClipHooks(job) {
+  if (!job) return true;
+  var cr = job.compCreative || (job.designSpec && job.designSpec.compCreative) || null;
+  var mode = (cr && cr.hooks && cr.hooks.mode) || '';
+  if (mode === 'whisper_only') return false;
+  var preset = (cr && cr.preset) || job.compCreativePreset || '';
+  if (preset === 'fableflow_speed') return false;
+  return true;
+}
+
 function reloadJobMediaPreview(jobId, opts) {
   opts = opts || {};
   var panel = document.getElementById('job-media-' + jobId);
@@ -10008,8 +10019,9 @@ function renderQueueNow() {
     var isClipCompJob = !!(job.clipsOnly || ((jobStage === 'hook_review' || jobStage === 'hooks_generating') && (job.type || '').indexOf('short') > -1));
     var previewUrlEarly = resolveJobPreviewUrl(job);
     var ffmpegDone = !!(job.assembledAt || job.driveUrl || previewUrlEarly);
+    var burnsHooks = jobBurnsClipHooks(job);
     var hasHookCandidates = !!(job.clipHookCandidates && job.clipHookCandidates.some(function(p) { return p && p.length; }));
-    var hooksReviewActive = isClipCompJob && !job.hooksConfirmedAt && !ffmpegDone && (
+    var hooksReviewActive = burnsHooks && isClipCompJob && !job.hooksConfirmedAt && !ffmpegDone && (
       jobStage === 'hook_review'
       || job.hookMachineFailed
       || (hasHookCandidates && (jobStage === 'hooks_generating' || jobStage === 'awaiting_review'))
@@ -10029,7 +10041,7 @@ function renderQueueNow() {
       var clipsReady = clipSlots.filter(function(s){ return s.clipUrl || s.url; }).length;
       var clipTotal = clipSlots.length || totalSegs;
       pipe += pipeStep('CLIPS '+clipsReady+'/'+clipTotal, clipTotal > 0 && clipsReady >= clipTotal, false, '#9b59b6');
-      if (hooksReviewActive || job.hooksConfirmedAt || jobStage === 'hook_review') {
+      if (burnsHooks && (hooksReviewActive || job.hooksConfirmedAt || jobStage === 'hook_review')) {
         pipe += pipeStep('HOOKS', !!job.hooksConfirmedAt && !hooksReviewActive, hooksReviewActive, '#c7af4f');
       }
     } else {
@@ -10118,7 +10130,11 @@ function renderQueueNow() {
         + '<button type="button" id="confirm-hooks-btn-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;padding:8px 16px;">▶ BUILD VIDEO</button>'
         + '<button type="button" onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine (~1–3 min per clip)">🎣 REGEN HOOKS</button>'
         + '</div>';
-    } else if (isClipCompJob && jobStage === 'hooks_generating') {
+    } else if (!burnsHooks && isClipCompJob && !ffmpegDone && !ffmpegActive && jobStage !== 'failed') {
+      metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.35);border-radius:6px;font-size:15px;color:#3498db;">'
+        + '🎙 <strong>WHISPER ONLY</strong> (FableFlow) — no burned hook card. Click <strong>▶ BUILD VIDEO</strong> to assemble; titles come from SEO at publish.'
+        + '</div>';
+    } else if (burnsHooks && isClipCompJob && jobStage === 'hooks_generating') {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:15px;color:#3498db;">'
         + '🤖 <strong>HOOKS GENERATING</strong> — Hook Machine is writing candidates (~1–3 min). The picker appears when ready.'
         + '</div>'
@@ -10190,7 +10206,7 @@ function renderQueueNow() {
           metaStrip += '<div style="font-size:14px;color:#e67e22;margin-top:4px;">⚠ Create playlist "Streamer Related Clips" on channel (or set YOUTUBE_STREAMER_CLIPS_PLAYLIST_ID)</div>';
         }
       }
-      if (job.clipHookTitles && job.clipHookTitles.length) {
+      if (burnsHooks && job.clipHookTitles && job.clipHookTitles.length) {
         var hookPreview = job.clipHookTitles.filter(function(h){ return h && String(h).trim(); }).slice(0, 4)
           .map(function(h){ return escHtml(String(h).slice(0, 42)); }).join(' · ');
         if (hookPreview) {
@@ -10199,10 +10215,10 @@ function renderQueueNow() {
             + hookPreview + '</div>';
         }
       }
-      if (job.clipsOnly && (jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'gate3_failed' || jobStage === 'metadata_review')) {
+      if (burnsHooks && job.clipsOnly && (jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'gate3_failed' || jobStage === 'metadata_review')) {
         metaStrip += burnedHooksMismatchBanner(job);
         metaStrip += renderBurnedHookPickerMarkup(job, false);
-      } else if (job.clipHookCandidates && job.clipHookCandidates.length) {
+      } else if (burnsHooks && job.clipHookCandidates && job.clipHookCandidates.length) {
         job.clipHookCandidates.forEach(function(pool, clipIdx) {
           if (!pool || !pool.length) return;
           var activeHookLegacy = (job.clipHookTitles && job.clipHookTitles[clipIdx]) ? String(job.clipHookTitles[clipIdx]).trim() : '';
@@ -10444,17 +10460,19 @@ function renderQueueNow() {
     }
     // RE-ASSEMBLE FROM FILES — uses manual_segments folder overrides, skips Gate 2 (chrome burning).
     // Show for clip comps / post-HeyGen jobs including awaiting_review (operator re-burn after code fixes).
-    if (isClipCompJob && hooksReviewActive) {
+    if (burnsHooks && isClipCompJob && hooksReviewActive) {
       actions += '<button type="button" id="confirm-hooks-btn-action-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;">▶ BUILD VIDEO</button>';
       actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine">🎣 REGEN HOOKS</button>';
-    } else if (isClipCompJob && jobStage === 'hooks_generating') {
+    } else if (!burnsHooks && isClipCompJob && !ffmpegDone && !ffmpegActive && jobStage !== 'failed') {
+      actions += '<button type="button" id="confirm-hooks-btn-action-' + job.id + '" onclick="confirmClipHooksAndBuild(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="whisper_only — no hook pick; assemble with captions only">▶ BUILD VIDEO</button>';
+    } else if (burnsHooks && isClipCompJob && jobStage === 'hooks_generating') {
       actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Stuck on HOOKS GEN? Rerun Hook Machine">🎣 REGEN HOOKS</button>';
     }
     var pastHeygenStage = canReassembleJob(job)
       || ['all_sent','awaiting_manual_segments','heygen_done','assembled','assembling','gate3_failed',
         'gate5_forced','gate5_running','gate5_failed','failed'].indexOf(status) > -1;
     if (canReassembleJob(job)) {
-      if (job.clipsOnly && (jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'gate3_failed' || jobStage === 'metadata_review')) {
+      if (burnsHooks && job.clipsOnly && (jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'gate3_failed' || jobStage === 'metadata_review')) {
         actions += '<button onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Rerun Hook Machine + Claude QA (CPD-1106) — does not burn video until you RE-ASSEMBLE">🎣 REGEN HOOKS</button>';
       }
       if (job.clipsOnly) {
@@ -10539,7 +10557,10 @@ function renderQueueNow() {
     var tagLbl = (jobStage === 'gate1_failed' || (jobStage === 'failed' && job.gate1Outcome === 'fail')) ? 'GATE 1 FAIL'
       : awaitingScriptApproval ? 'SCRIPT REVIEW'
       : (jobStage === 'all_sent' || jobStage === 'heygen_done') ? (heygenAllDone ? 'HEYGEN DONE' : 'HEYGEN RENDERING')
-      : (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'gate5_failed') ? 'GATE 5 FAIL' : (jobStage === 'hooks_generating') ? 'HOOKS GEN' : (jobStage === 'hook_review') ? 'HOOK REVIEW' : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobStage === 'assembled' && (job.driveUrl || previewUrl)) ? 'REVIEW' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && jobStage !== 'awaiting_review' && jobStage !== 'assembled' && jobStage !== 'metadata_review')) ? 'ASSEMBLING' : String(status).toUpperCase().replace(/_/g,' ');
+      : (jobStage === 'failed' || status === 'gate3_failed') ? 'GATE 3 FAIL' : (jobStage === 'gate5_failed') ? 'GATE 5 FAIL'
+      : (!burnsHooks && (jobStage === 'hooks_generating' || jobStage === 'hook_review') && !ffmpegDone) ? 'READY'
+      : (jobStage === 'hooks_generating') ? 'HOOKS GEN' : (jobStage === 'hook_review') ? 'HOOK REVIEW'
+      : (jobStage === 'awaiting_review' || jobStage === 'publish_scheduled') ? 'REVIEW' : (jobStage === 'metadata_review') ? 'META QA' : (jobStage === 'assembled' && (job.driveUrl || previewUrl)) ? 'REVIEW' : (jobActivelyAssembling(job) || (job.clipsOnly && !job.driveUrl && !previewUrl && jobStage !== 'hook_review' && jobStage !== 'hooks_generating' && jobStage !== 'awaiting_review' && jobStage !== 'assembled' && jobStage !== 'metadata_review')) ? 'ASSEMBLING' : String(status).toUpperCase().replace(/_/g,' ');
     var pctBar = (status==='processing'||anyRendering) && jobStage !== 'gate1_failed' ?'<div class="progress-wrap" style="margin-top:4px"><div class="progress-bar" style="width:'+(job.pct||5)+'%"></div></div>':'';
     var gate1FailBanner = jobStage === 'gate1_failed'
       ? '<div style="margin:8px 0;padding:8px 10px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.45);border-radius:4px;font-size:14px;color:#e74c3c;">'
@@ -11190,6 +11211,10 @@ function _doResumeConfirmed(jobId, job) {
 function regenerateClipHooks(jobId) {
   var job = JOBS.find(function(j){ return j.id === jobId; });
   if (!job) return;
+  if (!jobBurnsClipHooks(job)) {
+    alert('This preset is whisper_only (FableFlow) — no burned hooks to regenerate. Titles come from SEO at publish.');
+    return;
+  }
   if (!confirm('Regenerate hooks with Hook Machine + Claude QA?\n\nThis overwrites your current hook pick and takes ~1–3 min per clip. After it finishes, pick a hook (or type custom), then RE-ASSEMBLE.')) return;
   cwn_log('[hook] ' + jobId + ' — regenerating hooks (force overwrite)...', false);
   var xhr = new XMLHttpRequest();
