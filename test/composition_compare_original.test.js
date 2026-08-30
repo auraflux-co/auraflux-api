@@ -25,4 +25,26 @@ describe('composition_compare_original', () => {
     assert.ok(DEFAULT_RATIOS[0] < 0.2);
     assert.ok(DEFAULT_RATIOS[DEFAULT_RATIOS.length - 1] > 0.7);
   });
+
+  it('isCompleteCompareReport rejects partial axes', () => {
+    const { isCompleteCompareReport, incompleteAxes } = require('../lib/composition_compare_original');
+    assert.equal(isCompleteCompareReport({
+      transform_strength: 2,
+      axes: { look_grade: { score: 4, notes: 'ok' } },
+    }), false);
+    assert.deepEqual(
+      incompleteAxes({ axes: { look_grade: { score: 4 } } }),
+      ['crop_layout', 'captions_hooks', 'music_beats', 'difference_from_source'],
+    );
+    assert.equal(isCompleteCompareReport({
+      transform_strength: 4,
+      axes: {
+        look_grade: { score: 4 },
+        crop_layout: { score: 5 },
+        captions_hooks: { score: 3 },
+        music_beats: { score: 2 },
+        difference_from_source: { score: 4 },
+      },
+    }), true);
+  });
 });

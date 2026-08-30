@@ -19696,13 +19696,22 @@ function compareComposerVsOriginal() {
     .then(function(d) {
       if (!d.ok) throw new Error(d.error || 'compare failed');
       var rep = d.report || {};
-      window._composerLastCompareReport = rep;
       var axes = rep.axes || {};
+      var axisKeys = ['look_grade', 'crop_layout', 'captions_hooks', 'music_beats', 'difference_from_source'];
+      var missing = axisKeys.filter(function(k) {
+        var a = axes[k];
+        return !(a && a.score != null && Number(a.score) >= 1 && Number(a.score) <= 5);
+      });
+      if (missing.length) {
+        window._composerLastCompareReport = null; // incomplete — Gap fixes must use full pack
+        throw new Error('Gemini returned incomplete scores (missing: ' + missing.join(', ') + '). Tap Compare again.');
+      }
+      window._composerLastCompareReport = rep;
       var lines = [];
       lines.push('Transform ' + (rep.transform_strength != null ? rep.transform_strength : '?') + '/5'
         + ' · C9 fit ' + (rep.c9_fableflow_fit != null ? rep.c9_fableflow_fit : '?') + '/5');
       lines.push(rep.disclaimer || 'creative QA only — not legal advice');
-      ['look_grade', 'crop_layout', 'captions_hooks', 'music_beats', 'difference_from_source'].forEach(function(k) {
+      axisKeys.forEach(function(k) {
         var a = axes[k] || {};
         lines.push((a.score != null ? a.score : '?') + '/5  ' + k + ' — ' + (a.notes || ''));
       });
@@ -19748,12 +19757,14 @@ function applyComposerTransformGapFixes() {
     var a = axes[key];
     return a && a.score != null ? Number(a.score) : null;
   }
-  // If no compare yet, apply full pack. If compare exists, only boost weak axes (<4).
-  var noReport = !rep;
-  var needLook = noReport || (axisScore('look_grade') != null && axisScore('look_grade') < 4);
-  var needHooks = noReport || (axisScore('captions_hooks') != null && axisScore('captions_hooks') < 4);
-  var needMusic = noReport || (axisScore('music_beats') != null && axisScore('music_beats') < 4);
-  var needDiff = noReport || (axisScore('difference_from_source') != null && axisScore('difference_from_source') < 4)
+  // Incomplete Gemini (?/5 axes) → full pack. Complete report → only boost weak axes (<4).
+  var axisKeysGap = ['look_grade', 'crop_layout', 'captions_hooks', 'music_beats', 'difference_from_source'];
+  var incomplete = !rep || axisKeysGap.some(function(k) { return axisScore(k) == null; });
+  var noReport = !rep || incomplete;
+  var needLook = noReport || axisScore('look_grade') < 4;
+  var needHooks = noReport || axisScore('captions_hooks') < 4;
+  var needMusic = noReport || axisScore('music_beats') < 4;
+  var needDiff = noReport || axisScore('difference_from_source') < 4
     || (rep && rep.transform_strength != null && Number(rep.transform_strength) < 4);
 
   var hm = g('comp-creative-hook-mode');
