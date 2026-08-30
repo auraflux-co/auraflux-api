@@ -145,6 +145,9 @@ describe('CPD-1286 analyzeBeatsOnMusicBed (optional ffmpeg)', () => {
       assert.ok(result.bedPath);
       assert.ok(Array.isArray(result.peaks));
       assert.ok(result.source && String(result.source).includes('music_bed'));
+      const again = await analyzeBeatsOnMusicBed('low_trap', { maxPeaks: 3, maxSec: 20 });
+      assert.equal(again.cached, true);
+      assert.equal(again.peakCount, result.peakCount);
     } catch (err) {
       // Local ffmpeg may be docker-wrapped without daemon; path resolution still proves wiring.
       assert.match(String(err.message || err), /no audio|docker|ffmpeg|ENOENT/i);

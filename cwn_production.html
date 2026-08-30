@@ -19287,8 +19287,17 @@ function onComposerSpeedFeelChange() {
 /** CPD-1282: energy peaks → zoom punch + camera shake on lead clip (EXECUTE burns in). */
 function detectComposerBeats() {
   var status = g('composer-preview-caption');
+  var gapStatus = g('composer-gap-fixes-status');
+  var t0 = Date.now();
   if (status) status.textContent = 'Detecting beats…';
   var beatSrc = (g('composer-beat-source') && g('composer-beat-source').value) || 'clip';
+  var leadForWin = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+  var winSec = 20;
+  try {
+    if (leadForWin && typeof composerTrimWindowSec === 'function') {
+      winSec = Math.max(8, Math.min(30, composerTrimWindowSec(leadForWin) || 20));
+    }
+  } catch (_) { /* ignore */ }
   var body;
   if (beatSrc === 'music_bed') {
     var bed = (typeof getComposerMusicBed === 'function')
@@ -19299,19 +19308,27 @@ function detectComposerBeats() {
       if (status) status.textContent = 'Beats: need a music bed';
       return;
     }
-    body = { source: 'music_bed', musicBed: bed, maxPeaks: 6 };
+    // Trim-window only — full bed decode felt like a hang on Gap fixes re-runs
+    body = { source: 'music_bed', musicBed: bed, maxPeaks: 6, maxSec: winSec };
   } else {
     var path = window._composerTimelinePreviewPath || window._composerSourceReviewPath;
     if (!path) { alert('Render full preview first (Done editing → Review, or wait for timeline preview).'); return; }
-    body = { filePath: path, maxPeaks: 6 };
+    body = { filePath: path, maxPeaks: 6, maxSec: Math.min(60, winSec + 5) };
   }
-  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/analyze-beats', {
+  var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var to = setTimeout(function() {
+    try { if (ctrl) ctrl.abort(); } catch (_) { /* ignore */ }
+  }, 8000);
+  var fetchOpts = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
-  })
+  };
+  if (ctrl) fetchOpts.signal = ctrl.signal;
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/analyze-beats', fetchOpts)
     .then(function(r) { return r.json(); })
     .then(function(d) {
+      clearTimeout(to);
       if (!d.ok) throw new Error(d.error || 'beat detect failed');
       var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
       if (!lead) throw new Error('No lead clip in Composer');
@@ -19322,9 +19339,9 @@ function detectComposerBeats() {
       lead.highlightSfx = d.highlightSfx || null; // CPD-1286 timed SFX drops
       lead.beatCutMarks = d.cutMarks || [];
       // Ensure flashes land on compare still ratios (0.08/0.32/0.62) — 0.28s peaks miss Gemini frames
-      var fxWin = 30;
+      var fxWin = winSec;
       try {
-        if (typeof composerTrimWindowSec === 'function') fxWin = Math.max(8, composerTrimWindowSec(lead) || 30);
+        if (typeof composerTrimWindowSec === 'function') fxWin = Math.max(8, composerTrimWindowSec(lead) || winSec);
       } catch (_) { /* ignore */ }
       var stillFlashes = [0.08, 0.32, 0.62].map(function(r) {
         return { atSec: Math.round(fxWin * r * 100) / 100, duration: 0.9, strength: 0.42 };
@@ -19354,17 +19371,29 @@ function detectComposerBeats() {
       var n = (d.peaks || []).length;
       var times = (d.peaks || []).map(function(p) { return (Math.round(p.atSec * 10) / 10) + 's'; }).join(', ');
       var srcLabel = (d.source && String(d.source).indexOf('music_bed') === 0) ? 'music bed' : 'clip';
-      if (status) {
-        status.textContent = n
-          ? ('Beats → FX (' + srcLabel + '): ' + n + ' peak(s) @ ' + times + ' — punch + shake + tint + SFX on EXECUTE')
-          : 'No strong beats found — try a louder section, longer preview, or music bed';
+      var ms = Date.now() - t0;
+      var speedNote = d.cached ? ('cached · ' + ms + 'ms') : (ms + 'ms');
+      var doneMsg = n
+        ? ('Beats → FX (' + srcLabel + ', ' + speedNote + '): ' + n + ' peak(s) @ ' + times + ' — ready for Review')
+        : 'No strong beats found — try a louder section or different bed';
+      if (typeof setComposerPreviewCaption === 'function') {
+        setComposerPreviewCaption(doneMsg, n ? 'ok' : 'warn');
+      } else if (status) {
+        status.textContent = doneMsg;
       }
-      if (typeof setComposerPreviewCaption === 'function' && status) {
-        setComposerPreviewCaption(status.textContent, n ? 'ok' : 'warn');
+      if (gapStatus && /detecting/i.test(gapStatus.textContent || '')) {
+        gapStatus.textContent = (gapStatus.textContent || '').replace(/\(detecting…\)/i, '(' + speedNote + ')')
+          + (n ? ' ✓' : '');
       }
     })
     .catch(function(e) {
-      if (status) status.textContent = '❌ Beats: ' + e.message;
+      clearTimeout(to);
+      var msg = (e && e.name === 'AbortError')
+        ? 'Beats timed out (8s) — retry Beats→FX or skip and Review'
+        : ('❌ Beats: ' + ((e && e.message) || e));
+      if (typeof setComposerPreviewCaption === 'function') setComposerPreviewCaption(msg, 'err');
+      else if (status) status.textContent = msg;
+      if (gapStatus) gapStatus.textContent = msg;
     });
 }
 

@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-08-30 (iss_VbyAlVd0kduz) — Music-bed Beats→FX: cache + 20s window (was 90s) + 8s client timeout; Gap fixes status clears “(detecting…)”. Hard refresh Compose.
 **Last Updated:** 2026-08-30 (iss_VbyAlVd0kduz) — Anim text + beat flashes actually burn into Review: `compCreative.animatedText` on every Review payload, long overlay windows (not 2.2s peak), stronger still-catch flashes @ compare ratios. Hard refresh → Gap fixes → wait Beats→FX → Review → Compare.
 **Last Updated:** 2026-08-30 — Gap fixes now write anim-text onto the lead clip; Review syncs Beats/speed/overlays into timeline-preview (was UI-only → Gemini saw raw crop). Captions still EXECUTE-only. Hard refresh → Gap fixes → Review → Compare.
 **Last Updated:** 2026-08-30 — Compare vs original auto-fetches SOURCE via `/composition/source-review` when path missing (legacy source-review UI is hidden). Hard refresh Compose.
