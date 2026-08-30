@@ -9694,6 +9694,19 @@ function insertHookEmoji(jobId, clipIdx, emoji) {
   saveHookInputDraft(jobId, clipIdx, next);
   input.focus();
 }
+function insertTitleEmoji(jobId, emoji) {
+  if (!emoji) return;
+  var input = document.getElementById('custom-title-input-' + jobId);
+  if (!input) return;
+  var cur = String(input.value || '');
+  var spacer = cur && !/\s$/.test(cur) ? ' ' : '';
+  var next = (cur + spacer + emoji).slice(0, 100);
+  input.value = next;
+  saveTitleInputDraft(jobId, next);
+  var sel = document.getElementById('title-emoji-pick-' + jobId);
+  if (sel) sel.selectedIndex = 0;
+  input.focus();
+}
 function clearHookInputDraft(jobId, clipIdx) {
   delete _hookInputDrafts[jobId + '-' + clipIdx];
 }
@@ -10330,6 +10343,13 @@ function renderQueueNow() {
           : activeTitle;
         metaStrip += '<div style="font-size:12px;color:rgba(255,255,255,0.35);letter-spacing:1px;margin:8px 0 4px;">CUSTOM TITLE (you type it)</div>'
           + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'
+          + '<select id="title-emoji-pick-' + job.id + '" onchange="insertTitleEmoji(\'' + job.id + '\',this.value)" '
+          + 'style="padding:6px 8px;font-size:15px;border-radius:4px;border:1px solid rgba(52,152,219,0.45);background:rgba(0,0,0,0.45);color:#fff;max-width:110px;" title="Add emoji to title">'
+          + '<option value="">+ 😀</option>'
+          + (typeof HOOK_EMOJI_PICKLIST !== 'undefined' ? HOOK_EMOJI_PICKLIST.map(function(e) {
+              return '<option value="' + escHtml(e.char) + '">' + escHtml(e.char + ' ' + e.label) + '</option>';
+            }).join('') : '')
+          + '</select>'
           + '<input type="text" id="' + titleInputId + '" value="' + escHtml(displayTitle) + '" maxlength="100" placeholder="' + escHtml(isTwitchLongForm ? 'YouTube title — long-form episode (no #Shorts)' : 'YouTube title — #Shorts added automatically on Shorts') + '" '
           + 'style="flex:1;min-width:200px;padding:6px 8px;font-size:15px;border-radius:4px;' + titleInputBorder + 'background:rgba(0,0,0,0.35);color:#fff;" '
           + 'oninput="saveTitleInputDraft(\'' + job.id + '\',this.value)" '
@@ -10339,7 +10359,7 @@ function renderQueueNow() {
           + '</button>'
           + '</div>'
           + '<div id="' + titleStatusId + '" style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:6px;">'
-          + (isTitleCustomActive ? 'Custom title confirmed on card.' : 'Type title → USE CUSTOM → publish when ready (no re-assemble).')
+          + (isTitleCustomActive ? 'Custom title confirmed on card.' : 'Type title (or +😀) → USE CUSTOM → publish when ready (no re-assemble).')
           + '</div>'
           + '</div>';
       }
