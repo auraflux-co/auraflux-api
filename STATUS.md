@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-08-30 (iss_vvBSRwiUxGNf) — FableFlow/whisper_only: hide hook picker, REGEN HOOKS, HOOK REVIEW on Job Queue. Hard refresh.
 **Last Updated:** 2026-08-30 (iss_4tfJyevIpOFw) — FIX SEO banner: stop permanent hydrate-miss; retry SEO from server every 20s. Hard refresh Job Queue.
 **Last Updated:** 2026-08-29 — Short-form no longer marks assembly `done` before Gate 3/SEO (was causing FIX SEO on every build). whisper_only keeps SEO brief. Hard refresh Job Queue.
 **Last Updated:** 2026-08-29 (iss_7wN0w8V4E0YP) — whisper_only presets (C9 FableFlow) skip Hook Machine + hook_review; EXECUTE goes straight to assemble. Hard refresh Job Queue.
