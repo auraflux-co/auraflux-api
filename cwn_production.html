@@ -289,6 +289,9 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 .composer-qa-sub { font-family:ui-monospace,Menlo,monospace; font-size:11px; color:rgba(255,255,255,0.4); font-weight:400; letter-spacing:0; }
 .composer-qa-rows { display:grid; gap:4px; }
 .composer-qa-row { display:grid; grid-template-columns:92px 64px 1fr 88px; gap:6px; align-items:center; font-size:12px; line-height:1.35; padding:4px 6px; border-radius:4px; background:rgba(255,255,255,0.03); }
+.composer-qa-row.is-toggle { cursor:pointer; user-select:none; }
+.composer-qa-row.is-toggle:hover { background:rgba(199,175,79,0.12); outline:1px solid rgba(199,175,79,0.35); }
+.composer-qa-row.is-toggle:focus-visible { outline:2px solid #c7af4f; outline-offset:1px; }
 .composer-qa-row .k { color:rgba(255,255,255,0.55); font-family:ui-monospace,Menlo,monospace; }
 .composer-qa-row .v { color:rgba(255,255,255,0.88); }
 .composer-qa-row .w { color:rgba(255,255,255,0.38); font-size:11px; text-align:right; }
@@ -1336,7 +1339,7 @@ input[type="url"], input[type="password"], select, textarea {
                       </select>
                     </label>
                     <label>On-screen text
-                      <select id="comp-creative-hook-mode" onchange="refreshCompCreativeChips()">
+                      <select id="comp-creative-hook-mode" onchange="this.dataset.userPicked='1'; refreshCompCreativeChips(); if (typeof renderComposerQaPanel==='function') renderComposerQaPanel();">
                         <option value="hook_only">Burned hooks only (recommended for ranked)</option>
                         <option value="both">Hooks + whisper captions</option>
                         <option value="whisper_only">Whisper captions only (no burned hooks)</option>
@@ -1561,7 +1564,7 @@ input[type="url"], input[type="password"], select, textarea {
                       </div>
                       <div id="composer-features" class="composer-features" aria-hidden="true"></div>
                       <div id="composer-qa" class="composer-qa" aria-live="polite">
-                        <div class="composer-qa-head">COMPOSE QA <span class="composer-qa-sub" id="composer-qa-sub">what’s on this Short</span></div>
+                        <div class="composer-qa-head">COMPOSE QA <span class="composer-qa-sub" id="composer-qa-sub">tap rows to toggle</span></div>
                         <div id="composer-qa-rows" class="composer-qa-rows"></div>
                       </div>
                     </div>
@@ -1595,7 +1598,7 @@ input[type="url"], input[type="password"], select, textarea {
                       <div id="composer-validation" class="composer-validation"></div>
                       <pre id="composer-layout-log" class="composer-timeline-hint" style="margin-top:6px;max-height:120px;overflow:auto;font-size:11px;font-family:ui-monospace,Menlo,monospace;white-space:pre-wrap;color:rgba(199,175,79,0.9);border:1px solid rgba(199,175,79,0.25);padding:8px;border-radius:4px;">Layout log — scrub to see Short time → SPLIT or SINGLE each second</pre>
                       <div id="composer-qa-exec" class="composer-qa" style="margin-top:8px;">
-                        <div class="composer-qa-head">BEFORE EXECUTE <span class="composer-qa-sub" id="composer-qa-exec-sub">checklist</span></div>
+                        <div class="composer-qa-head">BEFORE EXECUTE <span class="composer-qa-sub" id="composer-qa-exec-sub">tap rows to toggle</span></div>
                         <div id="composer-qa-exec-rows" class="composer-qa-rows"></div>
                       </div>
                       <div class="composer-exec-row">
@@ -19447,8 +19450,8 @@ function buildComposerQaRows() {
   if (stored.hideBottomBar) cleanup.push('bottom');
   if (stored.hideTopBar) cleanup.push('top');
 
-  function row(key, status, value, when) {
-    return { key: key, status: status, value: value, when: when };
+  function row(key, status, value, when, toggleKey) {
+    return { key: key, status: status, value: value, when: when, toggleKey: toggleKey || null };
   }
   function nearWhen(token, fallback) {
     if (!nearOn) return fallback;
@@ -19458,25 +19461,29 @@ function buildComposerQaRows() {
   }
 
   var rows = [];
-  rows.push(row('Preset', composerQaStatus(true), presetLabel, 'payload'));
-  rows.push(row('Layout', composerQaStatus(true), layoutLabel,
-    landscape === 'single' ? 'live+exec' : 'live+exec'));
+  rows.push(row('Preset', composerQaStatus(true), presetLabel, 'payload', null));
+  rows.push(row('Layout', composerQaStatus(true), layoutLabel, 'live+exec', 'layout'));
   rows.push(row('Look', composerQaStatus(look && look !== 'auto', false, false),
     look === 'auto' ? 'Auto grade' : String(look),
     nearWhen('look_transform', nearWhen('look_tint',
-      look && look !== 'auto' ? 'live≈ · review/exec burn' : 'exec grade'))));
+      look && look !== 'auto' ? 'live≈ · review/exec burn' : 'exec grade')),
+    'look'));
   rows.push(row('Hooks', composerQaStatus(hookMode !== 'whisper_only'),
     hookMode === 'whisper_only' ? 'none (whisper only)' : hookMode,
-    hookMode === 'whisper_only' ? 'no burn' : 'exec burn'));
+    hookMode === 'whisper_only' ? 'no burn' : 'exec burn',
+    'hooks'));
   rows.push(row('Captions', composerQaStatus(whisperOn, nearOn && nearMissing.indexOf('whisper_captions') >= 0),
     whisperOn ? capStyle : 'off',
-    'exec (Whisper)'));
+    'exec (Whisper)',
+    'captions'));
   rows.push(row('Music bed', composerQaStatus(bed && bed !== 'off'),
     bed && bed !== 'off' ? bed : 'off',
-    nearWhen('music_bed_sfx', 'exec mix')));
+    nearWhen('music_bed_sfx', 'exec mix'),
+    'music_bed'));
   rows.push(row('Cut SFX', composerQaStatus(sfx && sfx !== 'off'),
     sfx && sfx !== 'off' ? sfx : 'off',
-    nearWhen('music_bed_sfx', 'exec')));
+    nearWhen('music_bed_sfx', 'exec'),
+    'cut_sfx'));
   rows.push(row('Beats→FX', composerQaStatus(beatsOn, !beatsOn && preset === 'fableflow_speed'),
     beatsOn
       ? ('punch ' + punches + ' · shake ' + shakes
@@ -19484,25 +19491,32 @@ function buildComposerQaRows() {
         + (sfxDrops ? (' · sfx ' + sfxDrops) : '')
         + ' · src ' + beatSrc)
       : ('not run · src ' + beatSrc),
-    beatsOn ? nearWhen('beats_fx', 'exec burn') : 'tap Beats→FX'));
+    beatsOn ? nearWhen('beats_fx', 'exec burn') : 'tap to run',
+    'beats_fx'));
   rows.push(row('Speed feel', composerQaStatus(speedFeel && speedFeel !== 'normal'),
     speedFeel || 'normal',
-    nearWhen('speed_ramps', 'exec')));
+    nearWhen('speed_ramps', 'exec'),
+    'speed_feel'));
   rows.push(row('Anim text', composerQaStatus(!!overlayTxt),
     overlayTxt ? ('"' + overlayTxt.slice(0, 28) + '"') : 'off',
-    nearOn && overlayTxt ? 'in Review (transform)' : 'exec'));
+    nearOn && overlayTxt ? 'in Review (transform)' : 'exec',
+    'anim_text'));
   rows.push(row('Join', composerQaStatus(join && join !== 'cut'),
     join || 'cut',
-    'multi-clip only'));
+    'multi-clip only',
+    'join'));
   rows.push(row('UI cleanup', composerQaStatus(cleanup.length > 0),
     cleanup.length ? cleanup.join('+') : 'off',
-    'exec'));
+    'exec',
+    'ui_cleanup'));
   rows.push(row('Looks saved', composerQaStatus(looksSaved, draftDirty),
     draftDirty ? 'DRAFT unsaved' : (looksSaved ? 'saved marks' : 'opening only'),
-    draftDirty ? 'Save look here' : 'exec'));
+    draftDirty ? 'Save look here' : 'exec',
+    null));
   rows.push(row('Preview', { st: nearOn ? 'live' : (previewMode === 'ffmpeg' ? 'live' : 'pend'), label: nearOn ? 'NEAR-FINAL' : (previewMode === 'ffmpeg' ? 'REVIEW' : 'LIVE') },
     previewLabel,
-    nearOn ? (nearMissing.length ? 'Review ≈EXECUTE (−captions)' : 'Review ≈EXECUTE') : 'approx'));
+    nearOn ? (nearMissing.length ? 'Review ≈EXECUTE (−captions)' : 'Review ≈EXECUTE') : 'approx',
+    null));
   return rows;
 }
 
@@ -19520,7 +19534,15 @@ function renderComposerQaPanel() {
         : (onCount + ' on · ' + pendCount + ' pending');
     }
     host.innerHTML = rows.map(function(r) {
-      return '<div class="composer-qa-row">'
+      var canToggle = !!r.toggleKey;
+      var tip = canToggle ? ' title="Tap to toggle / cycle"' : '';
+      var cls = 'composer-qa-row' + (canToggle ? ' is-toggle' : '');
+      var attrs = canToggle
+        ? (' role="button" tabindex="0" data-qa-toggle="' + escHtml(r.toggleKey) + '"'
+          + ' onclick="onComposerQaToggle(\'' + escHtml(r.toggleKey) + '\')"'
+          + ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();onComposerQaToggle(\'' + escHtml(r.toggleKey) + '\');}"')
+        : '';
+      return '<div class="' + cls + '"' + tip + attrs + '>'
         + '<span class="k">' + escHtml(r.key) + '</span>'
         + '<span class="composer-qa-st ' + escHtml(r.status.st) + '">' + escHtml(r.status.label) + '</span>'
         + '<span class="v">' + escHtml(r.value) + '</span>'
@@ -19530,6 +19552,117 @@ function renderComposerQaPanel() {
   }
   paint('composer-qa-rows', 'composer-qa-sub', false);
   paint('composer-qa-exec-rows', 'composer-qa-exec-sub', true);
+}
+
+/** Operator toggles for BEFORE EXECUTE / COMPOSE QA — mutates live controls + storage, then re-paints. */
+function onComposerQaToggle(toggleKey) {
+  var key = String(toggleKey || '');
+  var hm = g('comp-creative-hook-mode');
+  var bedEl = g('composer-music-bed') || g('comp-creative-music-bed');
+  var bedAdv = g('comp-creative-music-bed');
+  var lookEl = g('composer-look-tint');
+  var speedEl = g('composer-speed-feel');
+  var joinEl = g('composer-transition-style');
+  var overlayEl = g('composer-overlay-text');
+  var beatSrcEl = g('composer-beat-source');
+  var layoutEl = g('comp-creative-landscape-layout');
+  var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+
+  function setHookMode(mode) {
+    if (!hm) return;
+    hm.value = mode;
+    hm.dataset.userPicked = '1';
+  }
+  function syncBeds(val) {
+    if (bedEl) bedEl.value = val;
+    if (bedAdv) bedAdv.value = val;
+    if (typeof onComposerMusicBedChange === 'function') {
+      try { onComposerMusicBedChange({ target: bedEl || bedAdv }); } catch (e) { /* ignore */ }
+    }
+  }
+  function cycleSelect(el, values) {
+    if (!el || !values || !values.length) return;
+    var i = values.indexOf(el.value);
+    el.value = values[(i + 1) % values.length];
+  }
+
+  if (key === 'hooks') {
+    var curH = (hm && hm.value) || 'whisper_only';
+    setHookMode(curH === 'whisper_only' ? 'both' : (curH === 'both' ? 'hook_only' : 'whisper_only'));
+  } else if (key === 'captions') {
+    var curC = (hm && hm.value) || 'both';
+    if (curC === 'hook_only') setHookMode('both');
+    else setHookMode('hook_only');
+  } else if (key === 'music_bed') {
+    var curBed = bedEl ? bedEl.value : 'off';
+    syncBeds(curBed && curBed !== 'off' ? 'off' : 'low_trap');
+  } else if (key === 'cut_sfx') {
+    var curSfx = window._composerCutSfxOverride;
+    if (curSfx == null) {
+      try {
+        var stSfx = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}');
+        if (stSfx && stSfx.cutSfx != null) curSfx = stSfx.cutSfx;
+      } catch (eSfx) { /* ignore */ }
+    }
+    if (curSfx == null) {
+      var pSfx = g('comp-creative-preset') && g('comp-creative-preset').value;
+      curSfx = (pSfx === 'fableflow_speed' || pSfx === 'twitch_comp_vod') ? 'whoosh'
+        : (pSfx === 'serpent_ranked' || pSfx === 'serpent_ranked_vod') ? 'serpent_pack'
+        : 'off';
+    }
+    window._composerCutSfxOverride = (curSfx && curSfx !== 'off') ? 'off' : 'whoosh';
+  } else if (key === 'beats_fx') {
+    var hasBeats = !!(lead && (lead.zoomPunch || lead.cameraShake || lead.impactTint || lead.highlightSfx));
+    if (hasBeats && lead) {
+      delete lead.zoomPunch;
+      delete lead.cameraShake;
+      delete lead.impactTint;
+      delete lead.highlightSfx;
+      delete lead.beatCutMarks;
+      if (typeof setComposerPreviewCaption === 'function') {
+        setComposerPreviewCaption('Beats→FX cleared — tap again to re-detect', 'warn');
+      }
+    } else {
+      var bedOn = bedEl && bedEl.value && bedEl.value !== 'off';
+      if (beatSrcEl && bedOn) beatSrcEl.value = 'music_bed';
+      if (typeof detectComposerBeats === 'function') detectComposerBeats();
+    }
+  } else if (key === 'speed_feel') {
+    cycleSelect(speedEl, ['normal', 'punch_pause', 'slowmo_hit', 'ramp_in']);
+    if (typeof onComposerSpeedFeelChange === 'function') onComposerSpeedFeelChange();
+  } else if (key === 'anim_text') {
+    if (overlayEl) {
+      if (overlayEl.value.trim()) overlayEl.value = '';
+      else {
+        overlayEl.value = 'WATCH THIS';
+        overlayEl.focus();
+      }
+    }
+  } else if (key === 'join') {
+    cycleSelect(joinEl, ['cut', 'fade', 'fade_black', 'wipe_left', 'dissolve']);
+    if (typeof onComposerTransitionChange === 'function') onComposerTransitionChange();
+  } else if (key === 'ui_cleanup') {
+    var chat = g('comp-creative-hide-chat');
+    var bot = g('comp-creative-hide-bottom-ui');
+    var top = g('comp-creative-hide-top-ui');
+    var any = (chat && chat.checked) || (bot && bot.checked) || (top && top.checked);
+    var next = !any;
+    if (chat) chat.checked = next;
+    if (bot) bot.checked = next;
+    if (top) top.checked = next;
+    if (typeof onSourceCleanupChange === 'function') onSourceCleanupChange();
+  } else if (key === 'look') {
+    if (lookEl) {
+      lookEl.value = (lookEl.value && lookEl.value !== 'auto') ? 'auto' : 'punch';
+    }
+  } else if (key === 'layout') {
+    cycleSelect(layoutEl, ['single', 'split_screen', 'brand_pad']);
+    if (typeof onCompCreativeLandscapeLayoutChange === 'function') onCompCreativeLandscapeLayoutChange();
+  }
+
+  if (typeof saveCompCreativePresetToStorage === 'function') saveCompCreativePresetToStorage();
+  if (typeof refreshCompCreativeChips === 'function') refreshCompCreativeChips();
+  renderComposerQaPanel();
 }
 
 function setComposerPreviewCaption(text, kind) {
@@ -23540,7 +23673,14 @@ function saveCompCreativePresetToStorage() {
     hideChatRail: !!(g('comp-creative-hide-chat') && g('comp-creative-hide-chat').checked),
     hideBottomBar: !!(g('comp-creative-hide-bottom-ui') && g('comp-creative-hide-bottom-ui').checked),
     hideTopBar: !!(g('comp-creative-hide-top-ui') && g('comp-creative-hide-top-ui').checked),
+    cutSfx: (window._composerCutSfxOverride != null) ? window._composerCutSfxOverride : null,
   };
+  if (data.cutSfx == null) {
+    try {
+      var prevCut = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}');
+      if (prevCut && prevCut.cutSfx != null) data.cutSfx = prevCut.cutSfx;
+    } catch (eCut) { /* ignore */ }
+  }
   try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   return data;
 }
@@ -23586,17 +23726,21 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.layout.logoCorner = stored.logoCorner || 'bottom_right';
   }
   if (preset === 'fableflow_speed') {
-    // CPD-1287 — editor-less @FableFlow2 Speed Short recipe
+    // CPD-1287 — FableFlow Speed defaults; operator QA toggles may override hooks/cutSfx/bed
     overrides = overrides || {};
-    overrides.hooks = { mode: 'whisper_only', rankedList: { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 } };
+    var fableHookMode = stored.hookMode || 'whisper_only';
+    overrides.hooks = { mode: fableHookMode, rankedList: { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 } };
     overrides.captions = overrides.captions || {};
-    overrides.captions.whisper = true;
+    overrides.captions.whisper = fableHookMode !== 'hook_only';
     if (!overrides.captions.style) overrides.captions.style = 'phrase_full_bleed';
+    var fableCutSfx = (window._composerCutSfxOverride != null)
+      ? window._composerCutSfxOverride
+      : (stored.cutSfx != null ? stored.cutSfx : 'whoosh');
     overrides.audio = Object.assign({}, overrides.audio || {}, {
       musicBed: stored.musicBed || 'low_trap',
       musicBedVolume: 0.14,
       bedMixWeight: 0.18,
-      cutSfx: 'whoosh',
+      cutSfx: fableCutSfx,
       duckSpeech: true,
       clipAudio: true
     });
@@ -23710,6 +23854,25 @@ function buildCompCreativeRequestPayload(streamerHint) {
       hideTopBar: !!stored.hideTopBar,
     };
   }
+  // Operator BEFORE EXECUTE toggles — always win over preset hard-locks
+  if (stored.hookMode) {
+    overrides = overrides || {};
+    overrides.hooks = Object.assign({}, overrides.hooks || {}, { mode: stored.hookMode });
+    if (!overrides.hooks.rankedList) {
+      overrides.hooks.rankedList = { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 };
+    }
+    overrides.captions = Object.assign({}, overrides.captions || {}, {
+      whisper: stored.hookMode !== 'hook_only'
+    });
+  }
+  var opCutSfx = (window._composerCutSfxOverride != null)
+    ? window._composerCutSfxOverride
+    : stored.cutSfx;
+  if (opCutSfx != null) {
+    overrides = overrides || {};
+    overrides.audio = Object.assign({}, overrides.audio || {}, { cutSfx: opCutSfx });
+  }
+
   return {
     compCreativePreset: preset,
     compCreative: overrides
@@ -23742,9 +23905,10 @@ function hydrateFableflowSpeedPresetDefaults() {
     delete topSubj.dataset.userPicked;
   }
   var hm = g('comp-creative-hook-mode');
-  if (hm) { hm.value = 'whisper_only'; delete hm.dataset.userPicked; }
+  if (hm && !hm.dataset.userPicked) { hm.value = 'whisper_only'; }
   var bed = g('comp-creative-music-bed');
   if (bed) bed.value = 'low_trap';
+  if (window._composerCutSfxOverride == null) window._composerCutSfxOverride = undefined;
   var logo = g('comp-creative-logo-corner');
   if (logo) logo.value = 'top_right';
   var look = g('composer-look-tint');
@@ -23844,9 +24008,13 @@ function refreshCompCreativeChips() {
     pseudo.audio = { musicBed: 'low_trap', cutSfx: 'whoosh' };
   }
   if (stored.preset === 'fableflow_speed') {
-    pseudo.hooks = { mode: 'whisper_only', rankedList: { enabled: false } };
-    pseudo.captions = { whisper: true, style: 'phrase_full_bleed' };
-    pseudo.audio = { musicBed: stored.musicBed || 'low_trap', cutSfx: 'whoosh' };
+    var chipHook = stored.hookMode || 'whisper_only';
+    var chipSfx = (window._composerCutSfxOverride != null)
+      ? window._composerCutSfxOverride
+      : (stored.cutSfx != null ? stored.cutSfx : 'whoosh');
+    pseudo.hooks = { mode: chipHook, rankedList: { enabled: false } };
+    pseudo.captions = { whisper: chipHook !== 'hook_only', style: 'phrase_full_bleed' };
+    pseudo.audio = { musicBed: stored.musicBed || 'low_trap', cutSfx: chipSfx };
     pseudo.delivery = { format: 'short' };
     pseudo.look = { preset: 'punch' };
   }
