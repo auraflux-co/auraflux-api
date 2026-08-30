@@ -19070,14 +19070,15 @@ function reviewComposerEdit() {
       lead.speedRamps = clip.speedRamps || null;
       lead.overlayTexts = Array.isArray(clip.overlayTexts) ? clip.overlayTexts.slice() : null;
       lead.beatCutMarks = clip.beatCutMarks || null;
-      // DOM anim text → clip if gap-fixes set the field but Beats→FX never wrote overlayTexts
+      // Always refresh long DOM windows — Beats→FX used to leave a 2.2s peak Gemini stills miss
       var overlayDom = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
-      if (overlayDom && !(lead.overlayTexts && lead.overlayTexts.length)) {
+      if (overlayDom) {
         var win = Math.max(8, (Number(lead.trimEnd) || 30) - (Number(lead.trimStart) || 0));
         var style = (g('composer-overlay-style') && g('composer-overlay-style').value) || 'scale_pop';
         lead.overlayTexts = [
-          { text: overlayDom, startSec: 0.4, duration: Math.min(4, win * 0.35), style: style },
-          { text: overlayDom, startSec: Math.max(3, win * 0.45), duration: Math.min(4, win * 0.35), style: style },
+          { text: overlayDom, startSec: 0.4, duration: Math.min(5, win * 0.4), style: style },
+          { text: overlayDom, startSec: Math.max(4, win * 0.42), duration: Math.min(5, win * 0.4), style: style },
+          { text: overlayDom, startSec: Math.max(10, win * 0.7), duration: Math.min(5, win * 0.3), style: style },
         ];
         clip.overlayTexts = lead.overlayTexts.slice();
       }
@@ -19320,16 +19321,30 @@ function detectComposerBeats() {
       lead.impactTint = d.impactTint || null; // CPD-1283 red impact flashes (Gemini Core_fx)
       lead.highlightSfx = d.highlightSfx || null; // CPD-1286 timed SFX drops
       lead.beatCutMarks = d.cutMarks || [];
+      // Ensure flashes land on compare still ratios (0.08/0.32/0.62) — 0.28s peaks miss Gemini frames
+      var fxWin = 30;
+      try {
+        if (typeof composerTrimWindowSec === 'function') fxWin = Math.max(8, composerTrimWindowSec(lead) || 30);
+      } catch (_) { /* ignore */ }
+      var stillFlashes = [0.08, 0.32, 0.62].map(function(r) {
+        return { atSec: Math.round(fxWin * r * 100) / 100, duration: 0.9, strength: 0.42 };
+      });
+      if (lead.impactTint && Array.isArray(lead.impactTint.flashes)) {
+        lead.impactTint.flashes = lead.impactTint.flashes.concat(stillFlashes);
+      } else {
+        lead.impactTint = { enabled: true, flashes: stillFlashes };
+      }
       if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
-      // Optional kinetic text on first peak
+      // Optional kinetic text — long windows so still QA sees hooks
       var overlayTxt = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
       if (overlayTxt && d.peaks && d.peaks[0]) {
-        lead.overlayTexts = [{
-          text: overlayTxt,
-          startSec: d.peaks[0].atSec,
-          duration: 2.2,
-          style: (g('composer-overlay-style') && g('composer-overlay-style').value) || 'fade'
-        }];
+        var style = (g('composer-overlay-style') && g('composer-overlay-style').value) || 'fade';
+        var peakAt = Math.max(0, Number(d.peaks[0].atSec) || 0);
+        lead.overlayTexts = [
+          { text: overlayTxt, startSec: 0.4, duration: Math.min(5, fxWin * 0.4), style: style, fontSize: 72 },
+          { text: overlayTxt, startSec: peakAt, duration: Math.min(5, fxWin * 0.35), style: style, fontSize: 72 },
+          { text: overlayTxt, startSec: Math.max(peakAt + 6, fxWin * 0.55), duration: Math.min(5, fxWin * 0.35), style: style, fontSize: 72 },
+        ];
       }
       _composerEditDone = false;
       _composerEditReviewed = false;
@@ -19757,8 +19772,9 @@ function applyComposerTransformGapFixes() {
         var txt = overlayEl.value.trim();
         var st = (overlayStyle && overlayStyle.value) || 'scale_pop';
         lead.overlayTexts = [
-          { text: txt, startSec: 0.4, duration: Math.min(4.5, winSec * 0.4), style: st },
-          { text: txt, startSec: Math.max(3, winSec * 0.48), duration: Math.min(4.5, winSec * 0.4), style: st },
+          { text: txt, startSec: 0.4, duration: Math.min(5, winSec * 0.4), style: st, fontSize: 72 },
+          { text: txt, startSec: Math.max(4, winSec * 0.42), duration: Math.min(5, winSec * 0.4), style: st, fontSize: 72 },
+          { text: txt, startSec: Math.max(10, winSec * 0.7), duration: Math.min(5, winSec * 0.3), style: st, fontSize: 72 },
         ];
       }
       applied.push('Anim text · "' + overlayEl.value.trim().slice(0, 24) + '" (2 windows)');
@@ -24122,6 +24138,21 @@ function buildCompCreativeRequestPayload(streamerHint) {
   if (opCutSfx != null) {
     overrides = overrides || {};
     overrides.audio = Object.assign({}, overrides.audio || {}, { cutSfx: opCutSfx });
+  }
+
+  // Anim text for near-final / EXECUTE even if clip.overlayTexts race Beats→FX
+  var overlayDomTxt = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
+  if (overlayDomTxt) {
+    overrides = overrides || {};
+    var oStyle = (g('composer-overlay-style') && g('composer-overlay-style').value) || 'scale_pop';
+    overrides.animatedText = {
+      enabled: true,
+      items: [
+        { text: overlayDomTxt, startSec: 0.4, duration: 5, style: oStyle, fontSize: 72 },
+        { text: overlayDomTxt, startSec: 12, duration: 5, style: oStyle, fontSize: 72 },
+        { text: overlayDomTxt, startSec: 28, duration: 5, style: oStyle, fontSize: 72 },
+      ],
+    };
   }
 
   return {

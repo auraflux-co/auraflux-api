@@ -17,6 +17,8 @@ describe('composition near-final preview (CPD-1291)', () => {
     assert.match(src, /applyCameraFx/);
     assert.match(src, /mixCompAudio/);
     assert.match(src, /applyClipCompTransform/);
+    assert.match(src, /anim_text/);
+    assert.match(src, /compCreative\?\.animatedText/);
   });
 
   it('UI labels Review as near-final', () => {
