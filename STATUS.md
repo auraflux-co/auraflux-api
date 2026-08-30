@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-08-30 (iss_NU2iXE4CbOHg) — Cap transform grain + maxrate (heavy grain + CRF blew a Short to ~1.5GB / unplayable preview).
 **Last Updated:** 2026-08-30 (iss_NU2iXE4CbOHg) — C10 EXECUTE auto-burns punch look, denser anim, speedFeel→ramps, auto Beats→FX when Compose skipped them.
 **Last Updated:** 2026-08-30 — C10 rebuild fixes: burn anim punches from card creative; never dialogue-duck when bed=off; skip Whisper on music-preflight clips.
 **Last Updated:** 2026-08-30 — C10 Reaction: bed OFF + whisper_only (anim text owns punches; no competing hook card). Gate 3 card keeps deduction lines. Pass threshold still 70 — 72 was soft chrome/overlay notes.

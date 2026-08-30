@@ -40,7 +40,7 @@ describe('clip_comp_execute_fx', () => {
       animatedText: { enabled: true, items: [{ text: 'X', startSec: 1, duration: 2 }] },
     }, { durationSec: 60 });
     assert.equal(c.look.preset, 'punch');
-    assert.ok(c.look.filmGrainStrength >= 14);
+    assert.ok(c.look.filmGrainStrength >= 7 && c.look.filmGrainStrength <= 9);
     assert.equal(c.beatSync.autoExecute, true);
     assert.ok(c.animatedText.items.length >= 6);
   });
