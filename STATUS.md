@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-08-30 (iss_VbyAlVd0kduz) — Compose **✦ Gap fixes / Apply gap fixes**: one-click sets vivid look, hooks+whisper, punch_pause, anim text, bed+whoosh, Beats→FX (music bed) from Gemini gaps (or full pack). Hard refresh Compose.
 **Last Updated:** 2026-08-30 (iss__qrpQbwdfXTJ) — Gemini **Compare vs original**: Compose button + `POST /composition/compare-original` + `scripts/compare_short_vs_original.js`. Frame-pair creative QA (not legal advice). Hard refresh Compose → Review near-final → ♊ Compare vs original.
 **Last Updated:** 2026-08-30 (iss_G8N7UenNT-CW) — Composer BEFORE EXECUTE / COMPOSE QA rows are **clickable toggles** (hooks, bed, SFX, beats, speed, anim text, layout, look…). FableFlow no longer hard-locks whisper_only/whoosh — tap to override. Hard refresh Compose.
 **Last Updated:** 2026-08-30 (iss_yohcKP2ePT5N) — YouTube title picker: +😀 emoji dropdown (same list as hooks). Hard refresh Job Queue.

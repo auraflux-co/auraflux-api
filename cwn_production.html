@@ -1604,11 +1604,16 @@ input[type="url"], input[type="password"], select, textarea {
                       <div id="composer-compare-result" class="composer-qa" style="display:none;margin-top:8px;">
                         <div class="composer-qa-head">GEMINI vs ORIGINAL <span class="composer-qa-sub">creative QA · not legal advice</span></div>
                         <pre id="composer-compare-result-body" style="margin:0;white-space:pre-wrap;font-size:12px;line-height:1.45;color:rgba(255,255,255,0.88);font-family:ui-monospace,Menlo,monospace;max-height:280px;overflow:auto;"></pre>
+                        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                          <button type="button" id="btn-composer-apply-gap-fixes" class="btn btn-gold btn-sm" onclick="applyComposerTransformGapFixes()" title="Apply Compose fixes for Gemini gaps: stronger look, hooks, speed, anim text, bed, SFX, Beats→FX">✦ Apply gap fixes</button>
+                          <span id="composer-gap-fixes-status" style="font-size:12px;color:rgba(199,175,79,0.9);"></span>
+                        </div>
                       </div>
                       <div class="composer-exec-row">
                         <button type="button" id="btn-composer-done-edit" class="btn btn-outline" onclick="doneComposerEditing()" title="Lock trim + saved looks">Done editing</button>
                         <button type="button" id="btn-composer-review-edit" class="btn btn-gold btn-sm" onclick="reviewComposerEdit()" title="Near-final Review: layout + Punch/transform + Beats→FX + music bed (Whisper captions still burn at EXECUTE)">▶ Review near-final</button>
                         <button type="button" id="btn-composer-compare-original" class="btn btn-outline btn-sm" onclick="compareComposerVsOriginal()" title="Gemini: compare SOURCE vs SHORT stills (creative QA — not legal advice)">♊ Compare vs original</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="applyComposerTransformGapFixes()" title="Close transform gaps without re-picking: look/hooks/speed/anim/bed/SFX/beats">✦ Gap fixes</button>
                         <button type="button" id="btn-composer-execute" class="btn btn-gold" onclick="executeFromComposer()">EXECUTE → ASSEMBLY</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="exportComposerFcpxml()">⬇ FCPXML</button>
                       </div>
@@ -19589,6 +19594,7 @@ function compareComposerVsOriginal() {
     .then(function(d) {
       if (!d.ok) throw new Error(d.error || 'compare failed');
       var rep = d.report || {};
+      window._composerLastCompareReport = rep;
       var axes = rep.axes || {};
       var lines = [];
       lines.push('Transform ' + (rep.transform_strength != null ? rep.transform_strength : '?') + '/5'
@@ -19608,10 +19614,12 @@ function compareComposerVsOriginal() {
         lines.push('Actions:');
         rep.operator_actions.forEach(function(a0) { lines.push('→ ' + a0); });
       }
+      lines.push('');
+      lines.push('→ Tap ✦ Apply gap fixes to set look/hooks/speed/anim/bed/SFX/beats in Compose');
       if (bodyEl) bodyEl.textContent = lines.join('\n');
       if (typeof setComposerPreviewCaption === 'function') {
         setComposerPreviewCaption(
-          'Gemini compare: transform ' + (rep.transform_strength != null ? rep.transform_strength : '?') + '/5',
+          'Gemini compare: transform ' + (rep.transform_strength != null ? rep.transform_strength : '?') + '/5 — Apply gap fixes ready',
           'ok'
         );
       }
@@ -19625,6 +19633,112 @@ function compareComposerVsOriginal() {
     .finally(function() {
       if (btn) btn.disabled = false;
     });
+}
+
+/**
+ * iss_VbyAlVd0kduz — Apply Compose controls that close Gemini transform gaps.
+ * Uses last compare scores when present; otherwise applies the full gap-fix pack.
+ */
+function applyComposerTransformGapFixes() {
+  var rep = window._composerLastCompareReport || null;
+  var axes = (rep && rep.axes) || {};
+  function axisScore(key) {
+    var a = axes[key];
+    return a && a.score != null ? Number(a.score) : null;
+  }
+  // If no compare yet, apply full pack. If compare exists, only boost weak axes (<4).
+  var noReport = !rep;
+  var needLook = noReport || (axisScore('look_grade') != null && axisScore('look_grade') < 4);
+  var needHooks = noReport || (axisScore('captions_hooks') != null && axisScore('captions_hooks') < 4);
+  var needMusic = noReport || (axisScore('music_beats') != null && axisScore('music_beats') < 4);
+  var needDiff = noReport || (axisScore('difference_from_source') != null && axisScore('difference_from_source') < 4)
+    || (rep && rep.transform_strength != null && Number(rep.transform_strength) < 4);
+
+  var hm = g('comp-creative-hook-mode');
+  var bedEl = g('composer-music-bed') || g('comp-creative-music-bed');
+  var bedAdv = g('comp-creative-music-bed');
+  var lookEl = g('composer-look-tint');
+  var speedEl = g('composer-speed-feel');
+  var overlayEl = g('composer-overlay-text');
+  var overlayStyle = g('composer-overlay-style');
+  var beatSrcEl = g('composer-beat-source');
+  var capEl = g('composer-caption-style');
+  var applied = [];
+
+  if (needLook && lookEl) {
+    // Stronger than Punch — vivid reads more “Short craft” on stills
+    lookEl.value = 'vivid';
+    applied.push('Look · vivid');
+  }
+  if (needHooks || needDiff) {
+    if (hm) {
+      hm.value = 'both';
+      hm.dataset.userPicked = '1';
+      applied.push('Hooks · both');
+    }
+    if (capEl && (!capEl.value || capEl.value === 'phrase_bottom_blur')) {
+      capEl.value = 'phrase_full_bleed';
+      applied.push('Captions · full bleed');
+    }
+  }
+  if (needDiff || needMusic) {
+    if (speedEl) {
+      speedEl.value = 'punch_pause';
+      if (typeof onComposerSpeedFeelChange === 'function') onComposerSpeedFeelChange();
+      applied.push('Speed · punch_pause');
+    }
+  }
+  if (needHooks || needDiff) {
+    if (overlayEl) {
+      var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+      var hint = (lead && (lead.title || lead.displayName)) || '';
+      var shortHint = String(hint).replace(/<[^>]+>/g, '').trim().slice(0, 28);
+      if (!overlayEl.value.trim()) {
+        overlayEl.value = shortHint || 'WATCH THIS';
+      }
+      if (overlayStyle) overlayStyle.value = 'scale_pop';
+      applied.push('Anim text · "' + overlayEl.value.trim().slice(0, 24) + '"');
+    }
+  }
+  if (needMusic || needDiff) {
+    if (bedEl) bedEl.value = 'low_trap';
+    if (bedAdv) bedAdv.value = 'low_trap';
+    if (typeof onComposerMusicBedChange === 'function') {
+      try { onComposerMusicBedChange({ target: bedEl || bedAdv }); } catch (eBed) { /* ignore */ }
+    }
+    window._composerCutSfxOverride = 'whoosh';
+    applied.push('Bed · low_trap + Cut SFX · whoosh');
+    if (beatSrcEl) beatSrcEl.value = 'music_bed';
+    // Re-detect beats on music bed (async) — clears weak/empty FX first
+    var leadFx = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+    if (leadFx) {
+      delete leadFx.zoomPunch;
+      delete leadFx.cameraShake;
+      delete leadFx.impactTint;
+      delete leadFx.highlightSfx;
+      delete leadFx.beatCutMarks;
+    }
+    if (typeof detectComposerBeats === 'function') {
+      detectComposerBeats();
+      applied.push('Beats→FX · music bed (detecting…)');
+    }
+  }
+
+  if (typeof saveCompCreativePresetToStorage === 'function') saveCompCreativePresetToStorage();
+  if (typeof refreshCompCreativeChips === 'function') refreshCompCreativeChips();
+  if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
+
+  var panel = g('composer-compare-result');
+  if (panel) panel.style.display = 'block';
+  var statusEl = g('composer-gap-fixes-status');
+  var msg = applied.length
+    ? ('Applied: ' + applied.join(' · ') + ' — Review near-final to burn')
+    : 'Nothing weak enough to change (axes already ≥4)';
+  if (statusEl) statusEl.textContent = msg;
+  if (typeof setComposerPreviewCaption === 'function') {
+    setComposerPreviewCaption(msg, applied.length ? 'ok' : 'warn');
+  }
+  return { applied: applied, report: rep };
 }
 
 /** Operator toggles for BEFORE EXECUTE / COMPOSE QA — mutates live controls + storage, then re-paints. */
