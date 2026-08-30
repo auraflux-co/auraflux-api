@@ -19564,10 +19564,44 @@ function renderComposerQaPanel() {
   paint('composer-qa-exec-rows', 'composer-qa-exec-sub', true);
 }
 
+/** Ensure SOURCE mp4 path exists (legacy source-review UI is hidden — fetch on demand). */
+function ensureComposerSourceReviewPath() {
+  return new Promise(function(resolve, reject) {
+    if (window._composerSourceReviewPath) {
+      resolve(window._composerSourceReviewPath);
+      return;
+    }
+    var body = (typeof buildComposerSourceReviewBody === 'function')
+      ? buildComposerSourceReviewBody()
+      : null;
+    if (!body) {
+      reject(new Error('No clip in Composer lineup to use as SOURCE'));
+      return;
+    }
+    fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/source-review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d.ok || !d.filePath) {
+          throw new Error(d.error || 'Could not prepare SOURCE clip (stage MP4 / retry)');
+        }
+        window._composerSourceReviewPath = d.filePath;
+        if (d.durationSec) _composerSourceReviewDuration = Number(d.durationSec) || 0;
+        if (d.trimStart != null) _composerSourceReviewTrimStart = Number(d.trimStart) || 0;
+        resolve(d.filePath);
+      })
+      .catch(function(err) {
+        reject(err);
+      });
+  });
+}
+
 /** Gemini frame-pair: SOURCE vs SHORT (near-final / timeline preview). Creative QA only. */
 function compareComposerVsOriginal() {
   var shortPath = window._composerTimelinePreviewPath || null;
-  var sourcePath = window._composerSourceReviewPath || null;
   var panel = g('composer-compare-result');
   var bodyEl = g('composer-compare-result-body');
   var btn = g('btn-composer-compare-original');
@@ -19575,22 +19609,24 @@ function compareComposerVsOriginal() {
     alert('Run ▶ Review near-final first so we have a SHORT MP4 to compare.');
     return;
   }
-  if (!sourcePath) {
-    alert('No SOURCE path yet — open the clip in Composer (source review) then retry.');
-    return;
-  }
   if (panel) panel.style.display = 'block';
-  if (bodyEl) bodyEl.textContent = 'Gemini comparing SOURCE vs SHORT stills…';
+  if (bodyEl) bodyEl.textContent = 'Preparing SOURCE clip, then Gemini compare…';
   if (btn) btn.disabled = true;
   if (typeof setComposerPreviewCaption === 'function') {
-    setComposerPreviewCaption('Gemini compare vs original…', 'pending');
+    setComposerPreviewCaption('Preparing SOURCE for Gemini compare…', 'pending');
   }
-  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/compare-original', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sourcePath: sourcePath, shortPath: shortPath, planTier: 'operate' })
-  })
-    .then(function(r) { return r.json(); })
+  ensureComposerSourceReviewPath()
+    .then(function(sourcePath) {
+      if (typeof setComposerPreviewCaption === 'function') {
+        setComposerPreviewCaption('Gemini compare vs original…', 'pending');
+      }
+      if (bodyEl) bodyEl.textContent = 'Gemini comparing SOURCE vs SHORT stills…';
+      return fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/compare-original', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourcePath: sourcePath, shortPath: shortPath, planTier: 'operate' })
+      }).then(function(r) { return r.json(); });
+    })
     .then(function(d) {
       if (!d.ok) throw new Error(d.error || 'compare failed');
       var rep = d.report || {};
@@ -19627,7 +19663,7 @@ function compareComposerVsOriginal() {
     .catch(function(err) {
       if (bodyEl) bodyEl.textContent = 'Compare failed: ' + (err.message || err);
       if (typeof setComposerPreviewCaption === 'function') {
-        setComposerPreviewCaption('Gemini compare failed', 'warn');
+        setComposerPreviewCaption('Gemini compare failed: ' + (err.message || err), 'warn');
       }
     })
     .finally(function() {
