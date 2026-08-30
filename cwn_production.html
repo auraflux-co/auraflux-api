@@ -1612,7 +1612,7 @@ input[type="url"], input[type="password"], select, textarea {
                       <div class="composer-exec-row">
                         <button type="button" id="btn-composer-done-edit" class="btn btn-outline" onclick="doneComposerEditing()" title="Lock trim + saved looks">Done editing</button>
                         <button type="button" id="btn-composer-review-edit" class="btn btn-gold btn-sm" onclick="reviewComposerEdit()" title="Near-final Review: layout + Punch/transform + Beats→FX + music bed (Whisper captions still burn at EXECUTE)">▶ Review near-final</button>
-                        <button type="button" id="btn-composer-compare-original" class="btn btn-outline btn-sm" onclick="compareComposerVsOriginal()" title="Gemini: compare SOURCE vs SHORT stills (creative QA — not legal advice)">♊ Compare vs original</button>
+                        <button type="button" id="btn-composer-compare-original" class="btn btn-outline btn-sm" onclick="compareComposerVsOriginal()" title="Gemini watches full SOURCE then full SHORT video + audio (creative QA — not legal advice; ~1–3 min)">♊ Compare vs original</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="applyComposerTransformGapFixes()" title="Close transform gaps without re-picking: look/hooks/speed/anim/bed/SFX/beats">✦ Gap fixes</button>
                         <button type="button" id="btn-composer-execute" class="btn btn-gold" onclick="executeFromComposer()">EXECUTE → ASSEMBLY</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="exportComposerFcpxml()">⬇ FCPXML</button>
@@ -19676,26 +19676,27 @@ function compareComposerVsOriginal() {
     return;
   }
   if (panel) panel.style.display = 'block';
-  if (bodyEl) bodyEl.textContent = 'Preparing SOURCE clip, then Gemini compare…';
+  if (bodyEl) bodyEl.textContent = 'Preparing SOURCE clip, then Gemini watches full SOURCE + SHORT…';
   if (btn) btn.disabled = true;
   if (typeof setComposerPreviewCaption === 'function') {
-    setComposerPreviewCaption('Preparing SOURCE for Gemini compare…', 'pending');
+    setComposerPreviewCaption('Preparing SOURCE for Gemini video compare…', 'pending');
   }
   ensureComposerSourceReviewPath()
     .then(function(sourcePath) {
       if (typeof setComposerPreviewCaption === 'function') {
-        setComposerPreviewCaption('Gemini compare vs original…', 'pending');
+        setComposerPreviewCaption('Gemini watching full SOURCE then SHORT (may take 1–3 min)…', 'pending');
       }
-      if (bodyEl) bodyEl.textContent = 'Gemini comparing SOURCE vs SHORT stills…';
+      if (bodyEl) bodyEl.textContent = 'Uploading SOURCE + SHORT to Gemini — watching both videos with audio…';
       return fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/compare-original', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourcePath: sourcePath, shortPath: shortPath, planTier: 'operate' })
+        body: JSON.stringify({ sourcePath: sourcePath, shortPath: shortPath, planTier: 'operate', mode: 'video' })
       }).then(function(r) { return r.json(); });
     })
     .then(function(d) {
       if (!d.ok) throw new Error(d.error || 'compare failed');
       var rep = d.report || {};
+      var meta = d.meta || {};
       var axes = rep.axes || {};
       var axisKeys = ['look_grade', 'crop_layout', 'captions_hooks', 'music_beats', 'difference_from_source'];
       var missing = axisKeys.filter(function(k) {
@@ -19708,8 +19709,12 @@ function compareComposerVsOriginal() {
       }
       window._composerLastCompareReport = rep;
       var lines = [];
+      var modeNote = meta.mode === 'video'
+        ? ' (full video + audio)'
+        : (meta.videoFallback ? ' (stills fallback)' : ' (stills)');
       lines.push('Transform ' + (rep.transform_strength != null ? rep.transform_strength : '?') + '/5'
-        + ' · C9 fit ' + (rep.c9_fableflow_fit != null ? rep.c9_fableflow_fit : '?') + '/5');
+        + ' · C9 fit ' + (rep.c9_fableflow_fit != null ? rep.c9_fableflow_fit : '?') + '/5'
+        + modeNote);
       lines.push(rep.disclaimer || 'creative QA only — not legal advice');
       axisKeys.forEach(function(k) {
         var a = axes[k] || {};

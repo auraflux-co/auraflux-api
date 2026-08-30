@@ -9,7 +9,7 @@ const {
 
 describe('composition_compare_original', () => {
   it('buildComparePrompt includes disclaimer and axes', () => {
-    const p = buildComparePrompt({ sourceDuration: 60, shortDuration: 58 });
+    const p = buildComparePrompt({ sourceDuration: 60, shortDuration: 58, mode: 'video' });
     assert.match(p, /NOT legal advice/i);
     assert.match(p, /look_grade/);
     assert.match(p, /crop_layout/);
@@ -18,6 +18,10 @@ describe('composition_compare_original', () => {
     assert.match(p, /difference_from_source/);
     assert.match(p, /60/);
     assert.match(p, /58/);
+    assert.match(p, /TWO full videos/i);
+    assert.match(p, /do NOT say uncertain from stills/i);
+    const stills = buildComparePrompt({ sourceDuration: 60, shortDuration: 58, mode: 'stills' });
+    assert.match(stills, /still frames/i);
   });
 
   it('DEFAULT_RATIOS covers early mid late', () => {

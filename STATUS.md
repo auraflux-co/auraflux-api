@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-08-30 (iss_H_DvoUgXhdQc) — Gemini Compare watches **full SOURCE + SHORT videos** (Files API + audio). Stills only as fallback. Hard refresh → Review → ♊ Compare (1–3 min).
 **Last Updated:** 2026-08-30 (iss__qrpQbwdfXTJ) — Gemini compare: reject incomplete ?/5 reports, auto-retry fewer frames + JSON mode, Gap fixes treats incomplete as full pack. Hard refresh → Compare again (do not trust partial Transform 2/5).
 **Last Updated:** 2026-08-30 (iss_VbyAlVd0kduz) — Gap fixes v3: 4 varied hooks (WATCH THIS / WAIT FOR IT / UNBELIEVABLE / THE DROP) + brightness beat pulses (red tint was invisible on AGT stage). Hard refresh → Gap fixes → Review → Compare.
 **Last Updated:** 2026-08-30 (iss_VbyAlVd0kduz) — Music-bed Beats→FX: cache + 20s window (was 90s) + 8s client timeout; Gap fixes status clears “(detecting…)”. Hard refresh Compose.
