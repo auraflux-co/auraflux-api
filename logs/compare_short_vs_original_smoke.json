@@ -1,0 +1,61 @@
+{
+  "ok": true,
+  "report": {
+    "disclaimer": "creative QA only — not legal advice",
+    "transform_strength": 3,
+    "c9_fableflow_fit": 4,
+    "axes": {
+      "look_grade": {
+        "score": 3,
+        "notes": "The SHORT frames exhibit a slightly increased saturation and contrast, with a warmer, more reddish tint compared to the SOURCE. The highlights appear slightly more pronounced. It's a subtle enhancement rather than a dramatic stylistic change."
+      },
+      "crop_layout": {
+        "score": 5,
+        "notes": "The video is perfectly cropped to a 9:16 vertical aspect ratio. The main subject (performer) is consistently well-framed and centered throughout the sequence, and the stage elements are effectively composed within the vertical frame."
+      },
+      "captions_hooks": {
+        "score": 4,
+        "notes": "The 'WATCH THIS' caption serves as a clear hook in the initial frames. The '@clipzworldnews' watermark and a small icon are consistently present, providing branding. The captions are well-placed and legible."
+      },
+      "music_beats": {
+        "score": 3,
+        "notes": "Uncertain from stills. While the 'WATCH THIS' caption suggests a potential timing with a beat or key moment, there are no explicit visual cues (like flash edits or SFX indicators) to confirm music beat synchronization from these frames alone."
+      },
+      "difference_from_source": {
+        "score": 3,
+        "notes": "The SHORT feels distinctly packaged for a vertical platform due to the 9:16 crop, subtle color grade, and burned-in captions/branding. However, the core visual content and style remain very close to the source, indicating a functional rather than highly creative transformation."
+      }
+    },
+    "gaps": [
+      "The color grade, while present, is quite subtle and could be more stylized or unique to help the short stand out further.",
+      "The 'WATCH THIS' hook is only present at the beginning. More dynamic text or varied captions throughout the video could enhance continuous engagement.",
+      "No additional creative elements like speed ramps, transitions, or more pronounced visual effects are apparent from the stills."
+    ],
+    "operator_actions": [
+      "Experiment with a more aggressive or distinct color grading style (e.g., higher contrast, specific color palettes, or more dramatic lighting enhancements) to give the short a unique visual identity.",
+      "Implement additional text overlays or dynamic captions at key moments beyond the initial hook to maintain viewer interest throughout the entire duration of the short.",
+      "Consider incorporating subtle visual"
+    ]
+  },
+  "meta": {
+    "sourcePath": "/Users/robertgregory/cwn-c0/tmp/_cmp_smoke/source.mp4",
+    "shortPath": "/Users/robertgregory/cwn-c0/tmp/_cmp_smoke/short.mp4",
+    "sourceDurationSec": 8,
+    "shortDurationSec": 8,
+    "sourceFrames": [
+      0.96,
+      2.56,
+      4.16,
+      5.76,
+      7.04
+    ],
+    "shortFrames": [
+      0.96,
+      2.56,
+      4.16,
+      5.76,
+      7.04
+    ],
+    "model": "gemini-2.5-flash"
+  }
+}

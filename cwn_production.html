@@ -1601,9 +1601,14 @@ input[type="url"], input[type="password"], select, textarea {
                         <div class="composer-qa-head">BEFORE EXECUTE <span class="composer-qa-sub" id="composer-qa-exec-sub">tap rows to toggle</span></div>
                         <div id="composer-qa-exec-rows" class="composer-qa-rows"></div>
                       </div>
+                      <div id="composer-compare-result" class="composer-qa" style="display:none;margin-top:8px;">
+                        <div class="composer-qa-head">GEMINI vs ORIGINAL <span class="composer-qa-sub">creative QA · not legal advice</span></div>
+                        <pre id="composer-compare-result-body" style="margin:0;white-space:pre-wrap;font-size:12px;line-height:1.45;color:rgba(255,255,255,0.88);font-family:ui-monospace,Menlo,monospace;max-height:280px;overflow:auto;"></pre>
+                      </div>
                       <div class="composer-exec-row">
                         <button type="button" id="btn-composer-done-edit" class="btn btn-outline" onclick="doneComposerEditing()" title="Lock trim + saved looks">Done editing</button>
                         <button type="button" id="btn-composer-review-edit" class="btn btn-gold btn-sm" onclick="reviewComposerEdit()" title="Near-final Review: layout + Punch/transform + Beats→FX + music bed (Whisper captions still burn at EXECUTE)">▶ Review near-final</button>
+                        <button type="button" id="btn-composer-compare-original" class="btn btn-outline btn-sm" onclick="compareComposerVsOriginal()" title="Gemini: compare SOURCE vs SHORT stills (creative QA — not legal advice)">♊ Compare vs original</button>
                         <button type="button" id="btn-composer-execute" class="btn btn-gold" onclick="executeFromComposer()">EXECUTE → ASSEMBLY</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="exportComposerFcpxml()">⬇ FCPXML</button>
                       </div>
@@ -19552,6 +19557,74 @@ function renderComposerQaPanel() {
   }
   paint('composer-qa-rows', 'composer-qa-sub', false);
   paint('composer-qa-exec-rows', 'composer-qa-exec-sub', true);
+}
+
+/** Gemini frame-pair: SOURCE vs SHORT (near-final / timeline preview). Creative QA only. */
+function compareComposerVsOriginal() {
+  var shortPath = window._composerTimelinePreviewPath || null;
+  var sourcePath = window._composerSourceReviewPath || null;
+  var panel = g('composer-compare-result');
+  var bodyEl = g('composer-compare-result-body');
+  var btn = g('btn-composer-compare-original');
+  if (!shortPath) {
+    alert('Run ▶ Review near-final first so we have a SHORT MP4 to compare.');
+    return;
+  }
+  if (!sourcePath) {
+    alert('No SOURCE path yet — open the clip in Composer (source review) then retry.');
+    return;
+  }
+  if (panel) panel.style.display = 'block';
+  if (bodyEl) bodyEl.textContent = 'Gemini comparing SOURCE vs SHORT stills…';
+  if (btn) btn.disabled = true;
+  if (typeof setComposerPreviewCaption === 'function') {
+    setComposerPreviewCaption('Gemini compare vs original…', 'pending');
+  }
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/compare-original', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sourcePath: sourcePath, shortPath: shortPath, planTier: 'operate' })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'compare failed');
+      var rep = d.report || {};
+      var axes = rep.axes || {};
+      var lines = [];
+      lines.push('Transform ' + (rep.transform_strength != null ? rep.transform_strength : '?') + '/5'
+        + ' · C9 fit ' + (rep.c9_fableflow_fit != null ? rep.c9_fableflow_fit : '?') + '/5');
+      lines.push(rep.disclaimer || 'creative QA only — not legal advice');
+      ['look_grade', 'crop_layout', 'captions_hooks', 'music_beats', 'difference_from_source'].forEach(function(k) {
+        var a = axes[k] || {};
+        lines.push((a.score != null ? a.score : '?') + '/5  ' + k + ' — ' + (a.notes || ''));
+      });
+      if (rep.gaps && rep.gaps.length) {
+        lines.push('');
+        lines.push('Gaps:');
+        rep.gaps.forEach(function(g0) { lines.push('• ' + g0); });
+      }
+      if (rep.operator_actions && rep.operator_actions.length) {
+        lines.push('');
+        lines.push('Actions:');
+        rep.operator_actions.forEach(function(a0) { lines.push('→ ' + a0); });
+      }
+      if (bodyEl) bodyEl.textContent = lines.join('\n');
+      if (typeof setComposerPreviewCaption === 'function') {
+        setComposerPreviewCaption(
+          'Gemini compare: transform ' + (rep.transform_strength != null ? rep.transform_strength : '?') + '/5',
+          'ok'
+        );
+      }
+    })
+    .catch(function(err) {
+      if (bodyEl) bodyEl.textContent = 'Compare failed: ' + (err.message || err);
+      if (typeof setComposerPreviewCaption === 'function') {
+        setComposerPreviewCaption('Gemini compare failed', 'warn');
+      }
+    })
+    .finally(function() {
+      if (btn) btn.disabled = false;
+    });
 }
 
 /** Operator toggles for BEFORE EXECUTE / COMPOSE QA — mutates live controls + storage, then re-paints. */
