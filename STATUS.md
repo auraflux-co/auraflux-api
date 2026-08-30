@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-08-30 — Job card: do not force “WHISPER ONLY (FableFlow)” when hooks.mode is `both` (was hard-coded for C9 preset). Opening-look restore no longer forces C9. Hard refresh Job Queue.
 **Last Updated:** 2026-08-30 (iss_ahVNGr1DzfdZ) — **C10 Reaction Short** (`reaction_short`): vivid + hooks/anim pack + low_trap beats + punch_pause. Hard refresh Compose → pick C10. EXECUTE warns on parity gaps. QA: Review near-final → Gemini full-video Compare → then EXECUTE.
 **Last Updated:** 2026-08-30 (iss_H_DvoUgXhdQc) — Gemini Compare watches **full SOURCE + SHORT videos** (Files API + audio). Stills only as fallback. Hard refresh → Review → ♊ Compare (1–3 min).
 **Last Updated:** 2026-08-30 (iss__qrpQbwdfXTJ) — Gemini compare: reject incomplete ?/5 reports, auto-retry fewer frames + JSON mode, Gap fixes treats incomplete as full pack. Hard refresh → Compare again (do not trust partial Transform 2/5).

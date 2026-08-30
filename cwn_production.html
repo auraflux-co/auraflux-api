@@ -4876,18 +4876,18 @@ function applySavedOpeningLookToComposerUi() {
   if (look.operatorIntent) {
     var stored = {};
     try { stored = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}') || {}; } catch (_e) {}
-    stored.preset = 'fableflow_speed';
+    // Keep current preset (C9/C10/…) — do not force FableFlow when restoring a saved look
     stored.topPaneSubject = 'custom';
-    stored.landscapeLayout = 'split_screen';
+    stored.landscapeLayout = look.mode === 'full_bleed_crop' ? 'single' : 'split_screen';
     stored.facecamRect = look.facecamRect;
     stored.bottomPaneRect = look.bottomPaneRect;
     stored.topHeight = look.topHeight;
     stored.bottomPaneMode = look.bottomPaneMode || 'custom_crop';
     try { localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(stored)); } catch (_e) {}
     var preset = g('comp-creative-preset');
-    if (preset) preset.value = stored.preset;
+    if (preset && stored.preset) preset.value = stored.preset;
     var ll = g('comp-creative-landscape-layout');
-    if (ll) ll.value = 'split_screen';
+    if (ll) ll.value = stored.landscapeLayout || 'split_screen';
   }
   var topSubj = g('comp-creative-top-pane-subject');
   if (topSubj && look.facecamRect) topSubj.value = 'custom';
@@ -9456,14 +9456,17 @@ function jobWhisperCaptionsExpected(job) {
   return true;
 }
 
-/** Burned CWN hook card — off for whisper_only / FableFlow (captions only). */
+/** Burned CWN hook card — follow hooks.mode only (C9 default is whisper_only; operator override / C10 both = burn). */
 function jobBurnsClipHooks(job) {
   if (!job) return true;
   var cr = job.compCreative || (job.designSpec && job.designSpec.compCreative) || null;
   var mode = (cr && cr.hooks && cr.hooks.mode) || '';
+  // Do NOT hard-force off for fableflow_speed — Compose can override to both/hook_only
   if (mode === 'whisper_only') return false;
-  var preset = (cr && cr.preset) || job.compCreativePreset || '';
-  if (preset === 'fableflow_speed') return false;
+  if (!mode) {
+    var preset = (cr && cr.preset) || job.compCreativePreset || '';
+    if (preset === 'fableflow_speed') return false;
+  }
   return true;
 }
 
@@ -10157,8 +10160,12 @@ function renderQueueNow() {
         + '<button type="button" onclick="regenerateClipHooks(\'' + job.id + '\')" class="btn btn-outline btn-sm" title="Rerun Hook Machine (~1–3 min per clip)">🎣 REGEN HOOKS</button>'
         + '</div>';
     } else if (!burnsHooks && isClipCompJob && !ffmpegDone && !ffmpegActive && jobStage !== 'failed') {
+      var presetLbl = (job.compCreativePreset || (job.compCreative && job.compCreative.preset) || '');
+      var whisperNote = (presetLbl === 'fableflow_speed')
+        ? '🎙 <strong>WHISPER ONLY</strong> (C9 FableFlow) — no burned hook card. Click <strong>▶ BUILD VIDEO</strong>; titles from SEO at publish.'
+        : '🎙 <strong>WHISPER CAPTIONS</strong> — no burned hook card on this job. Click <strong>▶ BUILD VIDEO</strong> to assemble.';
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.35);border-radius:6px;font-size:15px;color:#3498db;">'
-        + '🎙 <strong>WHISPER ONLY</strong> (FableFlow) — no burned hook card. Click <strong>▶ BUILD VIDEO</strong> to assemble; titles come from SEO at publish.'
+        + whisperNote
         + '</div>';
     } else if (burnsHooks && isClipCompJob && jobStage === 'hooks_generating') {
       metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.45);border-radius:6px;font-size:15px;color:#3498db;">'
@@ -23857,13 +23864,19 @@ function compCreativeChipList(creative) {
       twitch_comp_vod: 'C6 Comp VOD',
       custom: 'C7 Custom',
       facecam_split: 'C8 Facecam split',
-      fableflow_speed: 'C9 FableFlow Speed'
+      fableflow_speed: 'C9 FableFlow Speed',
+      reaction_short: 'C10 Reaction Short'
     };
     chips.push(labels[preset] || preset);
   }
   var layout = getEffectiveComposerLayoutMode(creative);
   chips.push(layout === 'full_bleed_crop' ? 'full bleed' : layout === 'split_screen' ? 'facecam split' : 'brand-pad');
-  if (composerLineupIsLandscape()) {
+  // Prefer job/creative layout flag — do not leak live Compose dropdown onto job cards
+  if (creative.layout && creative.layout.landscapeSplit === false) {
+    chips.push('16:9 → single view');
+  } else if (creative.layout && creative.layout.landscapeSplit === true) {
+    chips.push('16:9 → split');
+  } else if (typeof composerLineupIsLandscape === 'function' && composerLineupIsLandscape()) {
     chips.push(composerLandscapeSplitEnabled() ? '16:9 → split' : '16:9 → single view');
   }
   if (creative.hooks && creative.hooks.rankedList && creative.hooks.rankedList.enabled) chips.push('ranked list');
