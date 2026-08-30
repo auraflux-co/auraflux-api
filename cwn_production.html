@@ -19052,7 +19052,7 @@ function reviewComposerEdit() {
     alert('Nothing to review — pick a clip and set Mark In/Out.');
     return;
   }
-  // Freeze trim before Review so the rendered MP4 cannot rewrite Mark Out (0:27 bug).
+  // Freeze trim + FX before Review so near-final burns Beats/speed/anim text (not just layout).
   var lead = body.clips && body.clips[0];
   if (lead) {
     var clip = composerLeadClipForEdit();
@@ -19063,6 +19063,24 @@ function reviewComposerEdit() {
       lead.duration = composerClipSourceDuration(clip);
       lead.openingLayout = clip.openingLayout || null;
       lead.layoutSegments = Array.isArray(clip.layoutSegments) ? clip.layoutSegments.slice() : [];
+      lead.zoomPunch = clip.zoomPunch || null;
+      lead.cameraShake = clip.cameraShake || null;
+      lead.impactTint = clip.impactTint || null;
+      lead.highlightSfx = clip.highlightSfx || null;
+      lead.speedRamps = clip.speedRamps || null;
+      lead.overlayTexts = Array.isArray(clip.overlayTexts) ? clip.overlayTexts.slice() : null;
+      lead.beatCutMarks = clip.beatCutMarks || null;
+      // DOM anim text → clip if gap-fixes set the field but Beats→FX never wrote overlayTexts
+      var overlayDom = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
+      if (overlayDom && !(lead.overlayTexts && lead.overlayTexts.length)) {
+        var win = Math.max(8, (Number(lead.trimEnd) || 30) - (Number(lead.trimStart) || 0));
+        var style = (g('composer-overlay-style') && g('composer-overlay-style').value) || 'scale_pop';
+        lead.overlayTexts = [
+          { text: overlayDom, startSec: 0.4, duration: Math.min(4, win * 0.35), style: style },
+          { text: overlayDom, startSec: Math.max(3, win * 0.45), duration: Math.min(4, win * 0.35), style: style },
+        ];
+        clip.overlayTexts = lead.overlayTexts.slice();
+      }
     }
   }
   _composerEditReviewed = false;
@@ -19733,7 +19751,17 @@ function applyComposerTransformGapFixes() {
         overlayEl.value = shortHint || 'WATCH THIS';
       }
       if (overlayStyle) overlayStyle.value = 'scale_pop';
-      applied.push('Anim text · "' + overlayEl.value.trim().slice(0, 24) + '"');
+      // Write onto lead clip NOW — Beats→FX is async and Review used to miss DOM-only text
+      if (lead) {
+        var winSec = Math.max(8, composerTrimWindowSec(lead) || 30);
+        var txt = overlayEl.value.trim();
+        var st = (overlayStyle && overlayStyle.value) || 'scale_pop';
+        lead.overlayTexts = [
+          { text: txt, startSec: 0.4, duration: Math.min(4.5, winSec * 0.4), style: st },
+          { text: txt, startSec: Math.max(3, winSec * 0.48), duration: Math.min(4.5, winSec * 0.4), style: st },
+        ];
+      }
+      applied.push('Anim text · "' + overlayEl.value.trim().slice(0, 24) + '" (2 windows)');
     }
   }
   if (needMusic || needDiff) {
@@ -19768,7 +19796,7 @@ function applyComposerTransformGapFixes() {
   if (panel) panel.style.display = 'block';
   var statusEl = g('composer-gap-fixes-status');
   var msg = applied.length
-    ? ('Applied: ' + applied.join(' · ') + ' — Review near-final to burn')
+    ? ('Applied: ' + applied.join(' · ') + ' — must ▶ Review near-final again (captions still EXECUTE-only)')
     : 'Nothing weak enough to change (axes already ≥4)';
   if (statusEl) statusEl.textContent = msg;
   if (typeof setComposerPreviewCaption === 'function') {
