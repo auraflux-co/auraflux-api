@@ -10405,12 +10405,20 @@ function renderQueueNow() {
       }
       metaStrip += '</div>';
     } else if ((resolveJobPreviewUrl(job) || job.driveUrl) && (jobStage === 'awaiting_review' || jobStage === 'metadata_review' || job.assembledAt) && !hasSeo) {
-      if (_publishCopyHydratePending[job.id] || (_publishCopyHydrateRetryAfter[job.id] && Date.now() < _publishCopyHydrateRetryAfter[job.id])) {
-        metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:15px;color:#3498db;">'
+      var hydratePending = !!_publishCopyHydratePending[job.id];
+      var hydrateCooling = !!( _publishCopyHydrateRetryAfter[job.id] && Date.now() < _publishCopyHydrateRetryAfter[job.id] );
+      if (hydratePending) {
+        metaStrip += '<div id="job-pub-meta-loading-' + job.id + '" style="margin:8px 0;padding:10px 12px;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:6px;font-size:15px;color:#3498db;">'
           + '⏳ <strong>Loading publish metadata</strong> from server…'
+          + '<div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,0.45);">If this stays more than ~15s: collapse ▶ PREVIEW (if open), then 🔄 FIX SEO or ↩ RESTORE JOBS.</div>'
+          + '</div>';
+      } else if (hydrateCooling) {
+        // Do not spin forever during cooldown — SEO may already be on server while preview blocks re-render
+        metaStrip += '<div id="job-pub-meta-loading-' + job.id + '" style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.08);border:1px solid rgba(199,175,79,0.35);border-radius:6px;font-size:15px;color:#c7af4f;">'
+          + '⚠ <strong>SEO not on this card yet</strong> — click <strong>🔄 FIX SEO</strong> or <strong>↩ RESTORE JOBS</strong>. Collapse preview first if open.'
           + '</div>';
       } else {
-        metaStrip += '<div style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.08);border:1px solid rgba(199,175,79,0.35);border-radius:6px;font-size:15px;color:#c7af4f;">'
+        metaStrip += '<div id="job-pub-meta-loading-' + job.id + '" style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.08);border:1px solid rgba(199,175,79,0.35);border-radius:6px;font-size:15px;color:#c7af4f;">'
           + '⚠ <strong>No title / SEO yet</strong> — not on this card yet. Click <strong>🔄 FIX SEO</strong> (or ↩ RESTORE JOBS) — no re-assembly needed.'
           + '</div>';
       }
@@ -26244,9 +26252,39 @@ function hasPublishMetadata(job) {
 var _publishCopyHydratePending = {};
 /** Cooldown timestamps (ms) — never permanently give up; SEO often arrives after first poll. */
 var _publishCopyHydrateRetryAfter = {};
+var _publishCopyHydrateStartedAt = {};
 var PUBLISH_COPY_HYDRATE_COOLDOWN_MS = 20000;
+var PUBLISH_COPY_HYDRATE_STUCK_MS = 18000;
+
+/** When preview blocks full queue rebuild, swap the loading banner in-place (SEO is already in JOBS). */
+function patchPublishMetaLoadingBanner(jobId) {
+  var job = JOBS.find(function(j) { return j.id === jobId; });
+  if (!job || !hasPublishMetadata(job)) return false;
+  var el = document.getElementById('job-pub-meta-loading-' + jobId);
+  if (!el) return false;
+  var pub = resolvePublishPayload(job);
+  var title = (pub && pub.title) || job.title || 'SEO ready';
+  el.outerHTML = '<div id="job-pub-meta-' + jobId + '" style="margin:8px 0;padding:10px 12px;background:rgba(199,175,79,0.06);border:1px solid rgba(199,175,79,0.22);border-radius:6px;">'
+    + '<div style="font-size:13px;font-weight:900;color:rgba(199,175,79,0.55);letter-spacing:2px;margin-bottom:6px;">PUBLISH METADATA — LOADED</div>'
+    + '<div style="font-size:16px;color:#fff;font-weight:700;line-height:1.4;margin-bottom:4px;">' + escHtml(title) + '</div>'
+    + '<div style="font-size:13px;color:rgba(255,255,255,0.45);">Collapse ▶ PREVIEW (or click ↩ RESTORE JOBS) to refresh the full SEO card + Approve.</div>'
+    + '</div>';
+  return true;
+}
+
 function ensurePublishCopyHydrated(jobId) {
-  if (!jobId || _publishCopyHydratePending[jobId]) return;
+  if (!jobId) return;
+  // Watchdog: xhr hung / never called back → clear so card is not stuck on Loading forever
+  if (_publishCopyHydratePending[jobId]) {
+    var started = _publishCopyHydrateStartedAt[jobId] || 0;
+    if (started && (Date.now() - started) > PUBLISH_COPY_HYDRATE_STUCK_MS) {
+      delete _publishCopyHydratePending[jobId];
+      delete _publishCopyHydrateStartedAt[jobId];
+      _publishCopyHydrateRetryAfter[jobId] = Date.now() + PUBLISH_COPY_HYDRATE_COOLDOWN_MS;
+      scheduleQueueRender(true);
+    }
+    return;
+  }
   var retryAfter = _publishCopyHydrateRetryAfter[jobId] || 0;
   if (retryAfter && Date.now() < retryAfter) return;
   var job = JOBS.find(function(j) { return j.id === jobId; });
@@ -26255,15 +26293,22 @@ function ensurePublishCopyHydrated(jobId) {
     return;
   }
   _publishCopyHydratePending[jobId] = true;
+  _publishCopyHydrateStartedAt[jobId] = Date.now();
   fetchJobCard(jobId, function(err, serverJob) {
     delete _publishCopyHydratePending[jobId];
+    delete _publishCopyHydrateStartedAt[jobId];
     if (!err && serverJob) {
       mergeServerJobIntoLocal(jobId, serverJob, { skipRender: true });
-      if (hasPublishMetadata(JOBS.find(function(j) { return j.id === jobId; }))) {
+      var local = JOBS.find(function(j) { return j.id === jobId; });
+      if (hasPublishMetadata(local)) {
         delete _publishCopyHydrateRetryAfter[jobId];
-        // Non-forced: defers while a preview panel is open (CPD-1223 — a forced
-        // rebuild here recreated the <video> mid-playback).
-        scheduleQueueRender();
+        try { saveJobs(); } catch (_e) { /* ignore */ }
+        // Preview-open blocks full rebuild (CPD-1223) — patch banner so UI is not stuck on Loading
+        if (!patchPublishMetaLoadingBanner(jobId)) {
+          scheduleQueueRender();
+        } else {
+          _queueRenderDeferred = true;
+        }
         return;
       }
     }
