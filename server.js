@@ -1730,7 +1730,7 @@ pipelineBus.on('heygen:all_complete', async ({ jobId, contentType, segmentUrls, 
       nbaItems:      card.nbaItems || [],
       captionText:   card.captionText || null,
       captionStyle:  card.captionStyle || null
-    }, { timeout: 10000 });
+    }, { timeout: 10000, headers: { ...require('./lib/c0_internal_fetch').c0AuthHeaders() } });
 
     logger.info({ jobId, assemblyId }, 'Auto-assembly triggered — Gate 3 → Drive will run automatically');
     nrEvent('AssemblyTriggered', {
@@ -1796,6 +1796,18 @@ app.use((req, res, next) => {
   res.setHeader('X-Request-ID', req.id);
   next();
 });
+
+// Optional Basic Auth (tunnel sharing) — off when BASIC_AUTH_USER/PASS unset
+{
+  const { createBasicAuthFromEnv, basicAuthEnabled } = require('./lib/basic_auth_middleware');
+  const basicAuthMw = createBasicAuthFromEnv();
+  if (basicAuthMw) {
+    app.use(basicAuthMw);
+    console.log(`[auth] Basic auth enabled (user=${process.env.BASIC_AUTH_USER})`);
+  } else if (basicAuthEnabled()) {
+    console.warn('[auth] BASIC_AUTH_USER/PASS incomplete — auth left off');
+  }
+}
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -5660,10 +5672,11 @@ app.post('/job/:id/heygen/sync-scene-updates', async (req, res) => {
     const axios = require('axios');
     const port = process.env.PORT || 3000;
     const base = `http://127.0.0.1:${port}`;
+    const { c0AuthHeaders } = require('./lib/c0_internal_fetch');
     const asmResp = await axios.post(
       `${base}/job/${encodeURIComponent(jobId)}/reassemble`,
       reassembleBody,
-      { timeout: 60000, headers: { 'Content-Type': 'application/json' } }
+      { timeout: 60000, headers: { 'Content-Type': 'application/json', ...c0AuthHeaders() } }
     ).catch((e) => ({ data: { ok: false, error: e.response?.data?.error || e.message } }));
 
     return res.json({
@@ -5776,10 +5789,11 @@ app.post('/job/:id/scene-updates/apply', async (req, res) => {
   const port = process.env.PORT || 3000;
   try {
     const axios = require('axios');
+    const { c0AuthHeaders } = require('./lib/c0_internal_fetch');
     const rr = await axios.post(
       `http://127.0.0.1:${port}/job/${encodeURIComponent(jobId)}/reassemble`,
       { partialSceneLabels: labels },
-      { timeout: 15000 }
+      { timeout: 15000, headers: { ...c0AuthHeaders() } }
     );
     return res.json({
       ok: true,
@@ -5932,7 +5946,8 @@ app.post('/job/:id/operator-creative', async (req, res) => {
   const port = process.env.PORT || 3000;
   setImmediate(() => {
     const axios = require('axios');
-    axios.post(`http://127.0.0.1:${port}/job/${encodeURIComponent(jobId)}/reassemble`, { operatorCreative: true })
+    const { c0AuthHeaders } = require('./lib/c0_internal_fetch');
+    axios.post(`http://127.0.0.1:${port}/job/${encodeURIComponent(jobId)}/reassemble`, { operatorCreative: true }, { headers: { ...c0AuthHeaders() } })
       .then((r) => console.log(`[operator-creative] ${jobId} reassemble dispatched — ${r.data?.assemblyId || 'ok'}`))
       .catch((e) => console.error(`[operator-creative] ${jobId} reassemble failed: ${e.response?.data?.error || e.message}`));
   });
@@ -7133,7 +7148,8 @@ function finishHookPickResponse(req, res, jobId, card, bodyExtra = {}) {
           return;
         }
         const port = process.env.PORT || 3000;
-        axios.post(`http://localhost:${port}/job/${jobId}/reassemble`, { fromHookSelect: true }, { timeout: 15000 })
+        const { c0AuthHeaders } = require('./lib/c0_internal_fetch');
+        axios.post(`http://localhost:${port}/job/${jobId}/reassemble`, { fromHookSelect: true }, { timeout: 15000, headers: { ...c0AuthHeaders() } })
           .catch((e) => console.warn(`[hook→reassemble] ${jobId}: ${e.message}`));
       } catch (e) { /* non-fatal */ }
     });
