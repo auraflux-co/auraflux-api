@@ -70,6 +70,29 @@ describe('basic_auth_middleware', () => {
     assert.equal(nextCalled, true);
   });
 
+  it('skips auth for localhost Host (operator machine)', () => {
+    const mw = createBasicAuthMiddleware({ user: 'rob', pass: 'x' });
+    const req = { method: 'GET', path: '/', headers: { host: 'localhost:3000' } };
+    const res = mockRes();
+    let nextCalled = false;
+    mw(req, res, () => { nextCalled = true; });
+    assert.equal(nextCalled, true);
+  });
+
+  it('requires auth for tunnel Host', () => {
+    const mw = createBasicAuthMiddleware({ user: 'rob', pass: 'x' });
+    const req = {
+      method: 'GET',
+      path: '/',
+      headers: { host: 'supported-bundle-blowing-clothing.trycloudflare.com' },
+    };
+    const res = mockRes();
+    let nextCalled = false;
+    mw(req, res, () => { nextCalled = true; });
+    assert.equal(nextCalled, false);
+    assert.equal(res.statusCode, 401);
+  });
+
   it('rejects wrong password', () => {
     const mw = createBasicAuthMiddleware({ user: 'rob', pass: 'x' });
     const tok = Buffer.from('rob:wrong', 'utf8').toString('base64');
