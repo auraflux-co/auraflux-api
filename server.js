@@ -9817,7 +9817,7 @@ app.get('/streamers/vods', async (req, res) => {
   const streamers = streamersParam.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   const platforms = (req.query.platforms || 'twitch,kick,youtube')
     .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-  const limit = Math.max(1, Math.min(10, parseInt(req.query.limit, 10) || 5));
+  const limit = Math.max(1, Math.min(200, parseInt(req.query.limit, 10) || 100));
 
   try {
     const results = await streamerPicker.fetchStreamerPickerVods({ streamers, platforms, limit });

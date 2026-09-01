@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-09-01 (iss_7xuzkmBtbvFl) — Clip Picker VODs: fetch up to 200 long-form (was 10); YouTube uploads playlist paging; **All time** pill for full channel catalog. Hard refresh → VODs → All time → Fetch VODs.
 **Last Updated:** 2026-08-31 — Clip Picker VOD cards: titles no longer run across neighboring cards (`gen-picker-card` + 2-line clamp; dropped `min-width:260px`). Hard refresh Clip Picker → Fetch VODs.
 **Last Updated:** 2026-08-31 (iss_U7KqG-1CNYfv) — Basic Auth skips localhost Host (your regular http://localhost:3000); tunnel Host still prompts. Set `BASIC_AUTH_SKIP_LOCAL=0` to force local login too.
 **Last Updated:** 2026-08-31 (iss_U7KqG-1CNYfv) — Optional C0 Basic Auth: set `BASIC_AUTH_USER` + `BASIC_AUTH_PASS` then redeploy; tunnel URL prompts for login. `/health` + OAuth callbacks exempt. Loopback self-calls send auth automatically.

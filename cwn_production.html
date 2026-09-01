@@ -2505,6 +2505,7 @@ input[type="url"], input[type="password"], select, textarea {
                     <button type="button" class="library-window-pill" data-win="7d" onclick="setLibraryWindow('7d')">24H–7D</button>
                     <button type="button" class="library-window-pill" data-win="30d" onclick="setLibraryWindow('30d')">7D–30D</button>
                     <button type="button" class="library-window-pill" data-win="all" onclick="setLibraryWindow('all')">30D+</button>
+                    <button type="button" class="library-window-pill" data-win="any" onclick="setLibraryWindow('any')" title="No date filter — full channel catalog (up to 200 long-form)">All time</button>
                   </div>
                   <div id="library-window-hint" class="gen-status-line" style="margin:4px 0 0;font-size:13px;min-height:14px;color:rgba(255,255,255,0.42);"></div>
                   <div class="library-sort-pills" id="library-clip-sort-pills">
@@ -2517,7 +2518,7 @@ input[type="url"], input[type="password"], select, textarea {
                 <span class="gen-main-hint" id="twitch-main-hint">Check clips → COMPOSE → edit in Generate</span>
               </div>
               <select id="library-window" style="display:none" aria-hidden="true">
-                <option value="last24h">Last 24H</option><option value="last7d" selected>Last 7D</option><option value="last30d">Last 30D</option><option value="7d">24H–7D</option><option value="30d">7D–30D</option><option value="all">30D+</option>
+                <option value="last24h">Last 24H</option><option value="last7d" selected>Last 7D</option><option value="last30d">Last 30D</option><option value="7d">24H–7D</option><option value="30d">7D–30D</option><option value="all">30D+</option><option value="any">All time</option>
               </select>
               <select id="library-clip-sort" style="display:none" aria-hidden="true">
                 <option value="popular" selected>Popular</option><option value="recent">Recent</option><option value="score">Score</option>
@@ -21888,14 +21889,14 @@ var PICKER_PUB_WINDOW_BANDS = {
   '7d': { minHours: 24, maxHours: 168, label: '24h–7d' },
   '30d': { minHours: 168, maxHours: 720, label: '7d–30d' },
   'all': { minHours: 720, maxHours: null, label: '30d+' },
-  'any': { minHours: 720, maxHours: null, label: '30d+' }
+  'any': { minHours: 0, maxHours: null, label: 'all time' }
 };
 
 /** Age bands each platform can search reliably in Clip Library. Mixed = intersection. */
 var LIBRARY_TIME_WINDOWS_BY_PLATFORM = {
-  twitch: ['last24h', 'last7d', 'last30d', '7d', '30d', 'all'],
-  kick: ['last24h', 'last7d', 'last30d', '7d', '30d', 'all'],
-  youtube: ['last24h', 'last7d', 'last30d', 'all']
+  twitch: ['last24h', 'last7d', 'last30d', '7d', '30d', 'all', 'any'],
+  kick: ['last24h', 'last7d', 'last30d', '7d', '30d', 'all', 'any'],
+  youtube: ['last24h', 'last7d', 'last30d', 'all', 'any']
 };
 
 function getLibraryTimeWindowsForPlatforms(platforms) {
@@ -21951,7 +21952,6 @@ function getPickerFilters(kind) {
   var durMinRaw = minEl && minEl.value !== '' ? parseInt(minEl.value, 10) : null;
   var durMaxRaw = maxEl && maxEl.value !== '' ? parseInt(maxEl.value, 10) : null;
   var pubKey = (pubEl && pubEl.value) ? pubEl.value : 'last7d';
-  if (pubKey === 'any') pubKey = 'all';
   var band = PICKER_PUB_WINDOW_BANDS[pubKey] || PICKER_PUB_WINDOW_BANDS['last7d'];
   return {
     durMin: Number.isFinite(durMinRaw) ? durMinRaw : null,
@@ -25307,7 +25307,7 @@ function previewTwitchVods() {
   var qs = 'streamers=' + encodeURIComponent(streamers.join(','))
     + '&platforms=' + encodeURIComponent(platforms.join(','))
     + '&window=' + encodeURIComponent(windowKey)
-    + '&limit=10';
+    + '&limit=200';
   var xhr = new XMLHttpRequest();
   xhr.open('GET', (CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/vods?' + qs, true);
   xhr.timeout = 120000;
