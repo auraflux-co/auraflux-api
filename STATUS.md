@@ -18,7 +18,7 @@
 
 ---
 
-**Last Updated:** 2026-09-01 (iss_X2ZvjsmLMWI5) — Reaction / YouTube VOD Shorts: publish SEO no longer defaults to Twitch stream copy; Gemini observations forwarded to OpenAI; reaction tag pool. Re-assemble or regenerate publish copy on stuck jobs.
+**Last Updated:** 2026-09-01 (iss_X2ZvjsmLMWI5) — Source-video SEO is preset-agnostic: YouTube/VOD clips + YouTube-only streamers get `youtube-short` metadata (not Twitch), regardless of Compose preset. Re-assemble to refresh stale publish copy.
 **Last Updated:** 2026-09-01 (iss_7xuzkmBtbvFl) — Clip Picker VODs: fetch up to 200 long-form (was 10); YouTube uploads playlist paging; **All time** pill for full channel catalog. Hard refresh → VODs → All time → Fetch VODs.
 **Last Updated:** 2026-08-31 — Clip Picker VOD cards: titles no longer run across neighboring cards (`gen-picker-card` + 2-line clamp; dropped `min-width:260px`). Hard refresh Clip Picker → Fetch VODs.
 **Last Updated:** 2026-08-31 (iss_U7KqG-1CNYfv) — Basic Auth skips localhost Host (your regular http://localhost:3000); tunnel Host still prompts. Set `BASIC_AUTH_SKIP_LOCAL=0` to force local login too.

@@ -4,37 +4,53 @@ process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-key';
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { resolvePublishSeoContext } = require('../lib/publish_seo_context');
+const {
+  resolvePublishSeoContext,
+  resolvePublishContentType,
+} = require('../lib/publish_seo_context');
 const { buildPublishCopySystemPrompt } = require('../lib/publish');
+const { resolveClipCompPublishContentType } = require('../lib/clip_comp');
 
-test('reaction_short preset → reaction seo kind', () => {
+test('YouTube clip URL → source-video without any Compose preset', () => {
   const ctx = resolvePublishSeoContext({
     contentType: 'twitch-short',
-    compCreative: { preset: 'reaction_short' },
+    orderedClipUrls: [{
+      pageUrl: 'https://www.youtube.com/watch?v=abc123',
+      displayName: 'Nene Royal',
+      vodPeakWindow: true,
+    }],
     streamers: [{ displayName: 'Nene Royal' }],
   });
-  assert.equal(ctx.seoKind, 'reaction');
-  assert.equal(ctx.isReactionShort, true);
+  assert.equal(ctx.seoKind, 'source-video');
+  assert.equal(ctx.sourcePlatform, 'youtube');
+  assert.equal(ctx.sourceVideo, true);
 });
 
-test('YouTube-only clip URLs → reaction without twitch', () => {
+test('YouTube-only streamer registry → source-video', () => {
   const ctx = resolvePublishSeoContext({
     contentType: 'twitch-short',
-    clipCompBrief: {
-      leadStreamer: 'Nene Royal',
-      clips: [{
-        platform: 'youtube',
-        pageUrl: 'https://www.youtube.com/watch?v=abc123',
-        observation: 'She performs an emotional ballad on stage under golden lights while the crowd reacts.',
-      }],
-    },
+    streamers: ['neneroyal'],
   });
   assert.equal(ctx.sourcePlatform, 'youtube');
-  assert.equal(ctx.seoKind, 'reaction');
-  assert.equal(ctx.hasGeminiObservations, true);
+  assert.equal(ctx.seoKind, 'source-video');
 });
 
-test('reaction Short forbids Twitch stream copy and includes Gemini observations', () => {
+test('resolvePublishContentType returns youtube-short for YouTube sources', () => {
+  const ct = resolvePublishContentType({
+    jobContentType: 'twitch-short',
+    orderedClipUrls: [{ url: 'https://www.youtube.com/watch?v=xyz' }],
+  });
+  assert.equal(ct, 'youtube-short');
+});
+
+test('resolveClipCompPublishContentType uses source signals not preset', () => {
+  const ct = resolveClipCompPublishContentType('twitch-short', {
+    orderedClipUrls: [{ pageUrl: 'https://www.youtube.com/watch?v=abc' }],
+  });
+  assert.equal(ct, 'youtube-short');
+});
+
+test('source-video Short forbids Twitch stream copy in prompt', () => {
   const cc = {
     showName: 'Twitch Soup',
     handle: '@clipzworldnews',
@@ -48,24 +64,23 @@ test('reaction Short forbids Twitch stream copy and includes Gemini observations
     leadTitleDraft: "Nene Royal's AGT Moment Stuns Judges",
     clips: [{
       platform: 'youtube',
+      pageUrl: 'https://www.youtube.com/watch?v=abc',
       observation: 'A singer performs on the AGT stage; judges lean forward as the chorus hits.',
-      hook: 'Wait For It',
     }],
   };
   const seoContext = resolvePublishSeoContext({
-    contentType: 'reaction-short',
-    compCreative: { preset: 'reaction_short' },
+    contentType: 'youtube-short',
     clipCompBrief,
+    orderedClipUrls: [{ pageUrl: 'https://www.youtube.com/watch?v=abc' }],
   });
   const out = buildPublishCopySystemPrompt({
     cc,
-    cd: 'Reaction Short featuring Nene Royal',
+    cd: 'YouTube Short featuring Nene Royal',
     date: 'today',
     isShort: true,
     scriptExcerpt: 'GEMINI CREATIVE BRIEF...',
-    contentType: 'reaction',
+    contentType: 'youtube',
     clipCompBrief,
-    compCreative: { preset: 'reaction_short' },
     seoContext,
   });
   assert.match(out, /NOT TWITCH/);
