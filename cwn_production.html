@@ -1225,6 +1225,23 @@ input[type="url"], input[type="password"], select, textarea {
                   </select>
                   <div id="comp-creative-label" class="gen-comp-creative-label" style="margin:8px 0;padding:10px 12px;border-radius:6px;border:1px solid rgba(199,175,79,0.28);background:rgba(199,175,79,0.06);font-size:14px;line-height:1.55;color:rgba(255,255,255,0.78);white-space:pre-wrap;font-family:monospace;"></div>
                   <div id="comp-creative-chips" class="gen-comp-creative-chips"></div>
+                  <div id="comp-creative-dual-source" style="display:none;margin-top:8px;padding:10px 12px;border-radius:6px;border:1px solid rgba(155,89,182,0.4);background:rgba(155,89,182,0.08);font-size:13px;line-height:1.5;color:rgba(255,255,255,0.85);">
+                    <div style="font-weight:700;color:#bb8fce;margin-bottom:6px;">Then / Now stack · 2 clips</div>
+                    <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:8px;">
+                      Lineup order: <strong>1 = TOP</strong>, <strong>2 = BOTTOM</strong>.
+                      Top plays until its <strong>Mark Out</strong> (or Switch sec below); bottom holds still.
+                      Then bottom plays its trim; top holds.
+                    </div>
+                    <label style="display:block;margin-bottom:6px;">Top label
+                      <input id="comp-dual-label-top" type="text" value="Age 7" maxlength="24" onchange="saveCompCreativePresetToStorage()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
+                    </label>
+                    <label style="display:block;margin-bottom:6px;">Bottom label
+                      <input id="comp-dual-label-bottom" type="text" value="Age 16" maxlength="24" onchange="saveCompCreativePresetToStorage()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
+                    </label>
+                    <label style="display:block;">Switch after (seconds) · blank = top Mark Out
+                      <input id="comp-dual-switch-sec" type="number" min="1" max="90" step="0.5" placeholder="e.g. 20" onchange="saveCompCreativePresetToStorage()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
+                    </label>
+                  </div>
                   <div id="comp-creative-source-cleanup" style="margin-top:8px;padding:10px 12px;border-radius:6px;border:1px solid rgba(231,76,60,0.28);background:rgba(231,76,60,0.06);font-size:13px;line-height:1.5;color:rgba(255,255,255,0.82);">
                     <div style="font-weight:700;color:rgba(231,76,60,0.95);margin-bottom:6px;">Source UI cleanup · before layout crop</div>
                     <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:8px;">Opt-in only — blurs fixed Twitch UI chrome (chat rail, bars). <strong style="color:rgba(231,76,60,0.9);">Red dashed boxes</strong> on the source map + timeline video update when you toggle. Cannot remove subtitles or text in the middle of gameplay.</div>
@@ -21548,6 +21565,8 @@ var COMP_LINEUP_TARGETS = {
   serpent_ranked_vod: { lineupSlots: 10, minClips: 8, maxClips: 12, minDurationSec: 480, maxDurationSec: 1200 },
   twitch_comp_vod: { lineupSlots: 8, minClips: 4, maxClips: 12, minDurationSec: 480, maxDurationSec: 1200 },
   fableflow_speed: { lineupSlots: 1, minClips: 1, maxClips: 1, minDurationSec: 0, maxDurationSec: 90 },
+  reaction_short: { lineupSlots: 1, minClips: 1, maxClips: 1, minDurationSec: 0, maxDurationSec: 90 },
+  dual_source_stack: { lineupSlots: 2, minClips: 2, maxClips: 2, minDurationSec: 0, maxDurationSec: 120 },
   custom: { lineupSlots: 4, minClips: 2, maxClips: 10, minDurationSec: 0, maxDurationSec: 1200 }
 };
 
@@ -23943,6 +23962,7 @@ function composerLineupIsLandscape() {
 function composerLandscapeSplitEnabled(stored) {
   stored = stored || loadCompCreativePresetFromStorage();
   var preset = stored.preset || 'classic_blur_pad';
+  if (preset === 'dual_source_stack') return false;
   if (preset === 'facecam_split') return true;
   if (!composerLineupIsLandscape()) return false;
   return composerLandscapeLayoutValue(stored) === 'split_screen';
@@ -23950,11 +23970,40 @@ function composerLandscapeSplitEnabled(stored) {
 
 function presetLayoutModeForCompose(preset) {
   preset = preset || 'classic_blur_pad';
+  if (preset === 'dual_source_stack') return 'dual_source_vstack';
   if (preset === 'facecam_split') return 'split_screen';
-  if (preset === 'full_bleed' || preset === 'fableflow_speed' || preset.indexOf('serpent') >= 0 || preset === 'dahbluh_clean' || preset === 'twitch_comp_vod') {
+  if (preset === 'full_bleed' || preset === 'fableflow_speed' || preset === 'reaction_short' || preset.indexOf('serpent') >= 0 || preset === 'dahbluh_clean' || preset === 'twitch_comp_vod') {
     return 'full_bleed_crop';
   }
   return 'blur_pad';
+}
+
+function syncDualSourceStackUi() {
+  var sel = g('comp-creative-preset');
+  var panel = g('comp-creative-dual-source');
+  var on = !!(sel && sel.value === 'dual_source_stack');
+  if (panel) panel.style.display = on ? '' : 'none';
+  if (!on) return;
+  var del = g('composer-delivery');
+  if (del) {
+    del.value = 'comp';
+    del.dataset.userSet = '1';
+  }
+  var hm = g('comp-creative-hook-mode');
+  if (hm && !hm.dataset.userPicked) hm.value = 'whisper_only';
+  var ll = g('comp-creative-landscape-layout');
+  if (ll) ll.value = 'single';
+  try {
+    var stored = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}');
+    if (g('comp-dual-label-top') && stored.dualLabelTop) g('comp-dual-label-top').value = stored.dualLabelTop;
+    if (g('comp-dual-label-bottom') && stored.dualLabelBottom) g('comp-dual-label-bottom').value = stored.dualLabelBottom;
+    if (g('comp-dual-switch-sec') && stored.dualSwitchSec != null && stored.dualSwitchSec !== '') {
+      g('comp-dual-switch-sec').value = stored.dualSwitchSec;
+    }
+  } catch (e0) { /* ignore */ }
+  if (typeof setComposerPreviewCaption === 'function') {
+    setComposerPreviewCaption('C11 Then/Now · trim TOP Mark Out (= switch) · BOTTOM trim · EXECUTE', 'ok');
+  }
 }
 
 /** Preset baseline for a clip with no saved openingLayout — never reuse another clip's saved rects. */
@@ -24351,6 +24400,11 @@ function saveCompCreativePresetToStorage() {
     hideBottomBar: !!(g('comp-creative-hide-bottom-ui') && g('comp-creative-hide-bottom-ui').checked),
     hideTopBar: !!(g('comp-creative-hide-top-ui') && g('comp-creative-hide-top-ui').checked),
     cutSfx: (window._composerCutSfxOverride != null) ? window._composerCutSfxOverride : null,
+    dualLabelTop: (g('comp-dual-label-top') && g('comp-dual-label-top').value.trim()) || 'Age 7',
+    dualLabelBottom: (g('comp-dual-label-bottom') && g('comp-dual-label-bottom').value.trim()) || 'Age 16',
+    dualSwitchSec: (g('comp-dual-switch-sec') && g('comp-dual-switch-sec').value !== '' && g('comp-dual-switch-sec').value != null)
+      ? g('comp-dual-switch-sec').value
+      : '',
   };
   if (data.cutSfx == null) {
     try {
@@ -24434,6 +24488,35 @@ function buildCompCreativeRequestPayload(streamerHint) {
     });
     // mode / landscapeSplit come from landscape dropdown (split default for two-shot)
   }
+  if (preset === 'dual_source_stack') {
+    overrides = overrides || {};
+    var dualSw = stored.dualSwitchSec !== '' && stored.dualSwitchSec != null
+      ? parseFloat(stored.dualSwitchSec)
+      : null;
+    overrides.layout = {
+      mode: 'dual_source_vstack',
+      landscapeSplit: false,
+      logo: 'corner',
+      logoCorner: stored.logoCorner || 'top_right',
+      switchAtSec: (Number.isFinite(dualSw) && dualSw > 0) ? dualSw : null,
+      paneLabels: {
+        top: stored.dualLabelTop || 'Age 7',
+        bottom: stored.dualLabelBottom || 'Age 16'
+      },
+      topHeight: 960
+    };
+    overrides.hooks = { mode: 'whisper_only', rankedList: { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 } };
+    overrides.captions = { whisper: true, style: 'phrase_full_bleed' };
+    overrides.audio = Object.assign({}, overrides.audio || {}, {
+      musicBed: stored.musicBed || 'off',
+      cutSfx: 'off',
+      clipAudio: true,
+      duckSpeech: true
+    });
+    overrides.editorial = { enabled: false, introCard: false, ttsBridges: false };
+    overrides.effects = { transform: false, gagOverlays: false };
+    overrides.delivery = { format: 'short', relatedVideoParentId: stored.relatedVideoParentId || null };
+  }
   if (preset === 'reaction_short') {
     overrides = overrides || {};
     // Anim-text owns punches — default whisper_only (no competing burned hook card)
@@ -24471,7 +24554,9 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.editorial = { enabled: true, introCard: true, ttsBridges: true };
     if (overrides.hooks && overrides.hooks.rankedList) overrides.hooks.rankedList.enabled = true;
   }
-  if (composerLandscapeSplitEnabled(stored) && composerLineupIsLandscape()) {
+  if (preset === 'dual_source_stack') {
+    // layout already set — do not coerce into facecam / full-bleed single
+  } else if (composerLandscapeSplitEnabled(stored) && composerLineupIsLandscape()) {
     overrides = overrides || {};
     overrides.layout = overrides.layout || {};
     var cxPct = Number(stored.contentCx);
@@ -24623,6 +24708,26 @@ function buildCompCreativeRequestPayload(streamerHint) {
 
   // animatedText already set above from lead.overlayTexts or DOM — do not overwrite varied pack
 
+  if (preset === 'dual_source_stack') {
+    var dualSwFinal = stored.dualSwitchSec !== '' && stored.dualSwitchSec != null
+      ? parseFloat(stored.dualSwitchSec)
+      : null;
+    overrides.layout = {
+      mode: 'dual_source_vstack',
+      landscapeSplit: false,
+      logo: 'corner',
+      logoCorner: (overrides.layout && overrides.layout.logoCorner) || stored.logoCorner || 'top_right',
+      switchAtSec: (Number.isFinite(dualSwFinal) && dualSwFinal > 0) ? dualSwFinal : null,
+      paneLabels: {
+        top: stored.dualLabelTop || 'Age 7',
+        bottom: stored.dualLabelBottom || 'Age 16'
+      },
+      topHeight: 960
+    };
+    overrides.hooks = Object.assign({}, overrides.hooks || {}, { mode: 'whisper_only' });
+    if (overrides.hooks.rankedList) overrides.hooks.rankedList.enabled = false;
+  }
+
   return {
     compCreativePreset: preset,
     compCreative: overrides
@@ -24634,6 +24739,7 @@ function onCompCreativePresetChange() {
   if (hm) delete hm.dataset.userPicked;
   hydrateFableflowSpeedPresetDefaults();
   hydrateReactionShortPresetDefaults();
+  syncDualSourceStackUi();
   hydrateSourceCleanupFromStorage();
   refreshCompCreativeChips();
   hydrateCompCreativeLayoutFromStorage();
