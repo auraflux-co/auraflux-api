@@ -43,6 +43,25 @@ describe('clip_comp_dual_source', () => {
     assert.strictEqual(labels.bottom, 'Age 16');
   });
 
+  it('places labels in the same relative spot on each pane', () => {
+    const { resolvePaneLabelPlacement, buildDualPaneLabelFilter } = require('../lib/clip_comp_dual_source');
+    const top = resolvePaneLabelPlacement({ layout: { paneLabelAnchor: 'top' } });
+    assert.strictEqual(top.anchor, 'top');
+    assert.ok(top.topY < 100);
+    assert.ok(top.bottomY > 960 && top.bottomY < 1100);
+    assert.strictEqual(top.bottomY - top.topY, 960); // same inset in each half
+    const bot = resolvePaneLabelPlacement({ layout: { paneLabelAnchor: 'bottom' } });
+    assert.strictEqual(bot.anchor, 'bottom');
+    assert.ok(bot.topY < 960);
+    assert.ok(bot.bottomY > 1700);
+    const filt = buildDualPaneLabelFilter({
+      layout: { paneLabels: { top: 'Age 7', bottom: 'Age 16' }, paneLabelAnchor: 'top' },
+    });
+    assert.ok(filt.includes("text='Age 7'"));
+    assert.ok(filt.includes("text='Age 16'"));
+    assert.ok(filt.includes('box=1'));
+  });
+
   it('creative preset is 2-clip dual_source_vstack', () => {
     const c = mergeCompCreative({ preset: 'dual_source_stack' });
     assert.strictEqual(c.preset, 'dual_source_stack');
@@ -55,8 +74,8 @@ describe('clip_comp_dual_source', () => {
     assert.strictEqual(locked.layout.landscapeSplit, false);
   });
 
-  it('assembles hold-then-switch stack (ffmpeg smoke)', async function () {
-    this.timeout(120000);
+  it('assembles hold-then-switch stack (ffmpeg smoke)', async () => {
+    jest.setTimeout(120000);
     const tmp = path.join(__dirname, '..', 'tmp', 'dual_source_test');
     fs.mkdirSync(tmp, { recursive: true });
     const top = path.join(tmp, 'top.mp4');

@@ -192,11 +192,19 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 }
 .composer-dual-pane-label {
   position:absolute; left:50%; transform:translateX(-50%); z-index:7; pointer-events:none;
-  font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:14px; letter-spacing:0.06em;
-  color:#fff; text-shadow:0 1px 6px #000; background:rgba(0,0,0,0.55); padding:2px 10px; border-radius:3px;
+  font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:18px; letter-spacing:0.08em;
+  color:#fff; text-shadow:0 2px 8px #000; background:rgba(0,0,0,0.72); padding:5px 14px; border-radius:4px;
+  border:1px solid rgba(255,255,255,0.25); white-space:nowrap;
 }
-.composer-dual-pane-label.is-top { bottom:8px; }
-.composer-dual-pane-label.is-bottom { top:8px; }
+/* Same relative spot in each pane (default: top of that half) */
+.composer-preview-frame.is-dual-source .composer-dual-pane-label.is-top,
+.composer-preview-frame.is-dual-source .composer-dual-pane-label.is-bottom {
+  top:10px; bottom:auto;
+}
+.composer-preview-frame.is-dual-source.is-dual-labels-bottom .composer-dual-pane-label.is-top,
+.composer-preview-frame.is-dual-source.is-dual-labels-bottom .composer-dual-pane-label.is-bottom {
+  top:auto; bottom:10px;
+}
 .composer-dual-pane-label.is-active-edit { outline:1px solid #c7af4f; color:#c7af4f; }
 .gen-comp-slot-role {
   display:inline-block; font-size:11px; font-weight:800; letter-spacing:0.06em;
@@ -1265,11 +1273,17 @@ input[type="url"], input[type="password"], select, textarea {
                       Live preview shows both panes stacked. Click a lineup slot to scrub/trim that pane; the other holds on Mark In.
                       On EXECUTE: top plays until its <strong>Mark Out</strong> (or Switch sec); then bottom plays.
                     </div>
-                    <label style="display:block;margin-bottom:6px;">Top label
+                    <label style="display:block;margin-bottom:6px;">Top pane label (text)
                       <input id="comp-dual-label-top" type="text" value="Age 7" maxlength="24" onchange="saveCompCreativePresetToStorage();scheduleComposerLiveSplitPaint()" oninput="scheduleComposerLiveSplitPaint()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
                     </label>
-                    <label style="display:block;margin-bottom:6px;">Bottom label
+                    <label style="display:block;margin-bottom:6px;">Bottom pane label (text)
                       <input id="comp-dual-label-bottom" type="text" value="Age 16" maxlength="24" onchange="saveCompCreativePresetToStorage();scheduleComposerLiveSplitPaint()" oninput="scheduleComposerLiveSplitPaint()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
+                    </label>
+                    <label style="display:block;margin-bottom:6px;">Label position · same on both panes
+                      <select id="comp-dual-label-anchor" onchange="saveCompCreativePresetToStorage();scheduleComposerLiveSplitPaint()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;">
+                        <option value="top">Top of each pane</option>
+                        <option value="bottom">Bottom of each pane</option>
+                      </select>
                     </label>
                     <label style="display:block;">Switch after (seconds) · blank = top Mark Out
                       <input id="comp-dual-switch-sec" type="number" min="1" max="90" step="0.5" placeholder="e.g. 20" onchange="saveCompCreativePresetToStorage()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
@@ -18077,6 +18091,14 @@ function applyComposerDualSourcePreviewPanes() {
   if (frame) {
     frame.classList.remove('is-brand-pad');
     frame.classList.add('is-dual-source');
+    var labelAnchor = 'top';
+    try {
+      var stAnchor = loadCompCreativePresetFromStorage();
+      if (stAnchor && stAnchor.dualLabelAnchor === 'bottom') labelAnchor = 'bottom';
+    } catch (eA) { /* ignore */ }
+    var selAnchor = g('comp-dual-label-anchor');
+    if (selAnchor && selAnchor.value === 'bottom') labelAnchor = 'bottom';
+    frame.classList.toggle('is-dual-labels-bottom', labelAnchor === 'bottom');
   }
   mock.style.display = 'block';
   setComposerVideoFallbackVisible(false);
@@ -24539,6 +24561,9 @@ function syncDualSourceStackUi() {
     var stored = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}');
     if (g('comp-dual-label-top') && stored.dualLabelTop) g('comp-dual-label-top').value = stored.dualLabelTop;
     if (g('comp-dual-label-bottom') && stored.dualLabelBottom) g('comp-dual-label-bottom').value = stored.dualLabelBottom;
+    if (g('comp-dual-label-anchor')) {
+      g('comp-dual-label-anchor').value = (stored.dualLabelAnchor === 'bottom') ? 'bottom' : 'top';
+    }
     if (g('comp-dual-switch-sec') && stored.dualSwitchSec != null && stored.dualSwitchSec !== '') {
       g('comp-dual-switch-sec').value = stored.dualSwitchSec;
     }
@@ -24966,6 +24991,7 @@ function saveCompCreativePresetToStorage() {
     cutSfx: (window._composerCutSfxOverride != null) ? window._composerCutSfxOverride : null,
     dualLabelTop: (g('comp-dual-label-top') && g('comp-dual-label-top').value.trim()) || 'Age 7',
     dualLabelBottom: (g('comp-dual-label-bottom') && g('comp-dual-label-bottom').value.trim()) || 'Age 16',
+    dualLabelAnchor: (g('comp-dual-label-anchor') && g('comp-dual-label-anchor').value) || 'top',
     dualSwitchSec: (g('comp-dual-switch-sec') && g('comp-dual-switch-sec').value !== '' && g('comp-dual-switch-sec').value != null)
       ? g('comp-dual-switch-sec').value
       : '',
@@ -25067,6 +25093,7 @@ function buildCompCreativeRequestPayload(streamerHint) {
         top: stored.dualLabelTop || 'Age 7',
         bottom: stored.dualLabelBottom || 'Age 16'
       },
+      paneLabelAnchor: (stored.dualLabelAnchor === 'bottom') ? 'bottom' : 'top',
       topHeight: 960
     };
     overrides.hooks = { mode: 'whisper_only', rankedList: { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 } };
@@ -25286,6 +25313,7 @@ function buildCompCreativeRequestPayload(streamerHint) {
         top: stored.dualLabelTop || 'Age 7',
         bottom: stored.dualLabelBottom || 'Age 16'
       },
+      paneLabelAnchor: (stored.dualLabelAnchor === 'bottom') ? 'bottom' : 'top',
       topHeight: 960
     };
     overrides.hooks = Object.assign({}, overrides.hooks || {}, { mode: 'whisper_only' });
