@@ -19094,7 +19094,8 @@ function reviewComposerEdit() {
       lead.speedRamps = clip.speedRamps || null;
       lead.overlayTexts = Array.isArray(clip.overlayTexts) ? clip.overlayTexts.slice() : null;
       lead.beatCutMarks = clip.beatCutMarks || null;
-      // Always refresh long DOM windows — Beats→FX used to leave a 2.2s peak Gemini stills miss
+      // Always refresh long DOM windows — Beats→FX used to leave a 2.2s peak Gemini stills miss.
+      // Empty Anim text field = operator OFF — clear sticky clip.overlayTexts or Review keeps burning them.
       var overlayDom = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
       if (overlayDom) {
         var win = Math.max(8, (Number(lead.trimEnd) || 30) - (Number(lead.trimStart) || 0));
@@ -19105,6 +19106,9 @@ function reviewComposerEdit() {
           { text: overlayDom, startSec: Math.max(10, win * 0.7), duration: Math.min(5, win * 0.3), style: style },
         ];
         clip.overlayTexts = lead.overlayTexts.slice();
+      } else {
+        lead.overlayTexts = null;
+        clip.overlayTexts = null;
       }
     }
   }
@@ -19994,8 +19998,14 @@ function onComposerQaToggle(toggleKey) {
     if (typeof onComposerSpeedFeelChange === 'function') onComposerSpeedFeelChange();
   } else if (key === 'anim_text') {
     if (overlayEl) {
-      if (overlayEl.value.trim()) overlayEl.value = '';
-      else {
+      if (overlayEl.value.trim()) {
+        overlayEl.value = '';
+        // Clear sticky beat/gap overlays so Review/EXECUTE match QA OFF
+        if (lead) {
+          lead.overlayTexts = null;
+          delete lead.overlayTexts;
+        }
+      } else {
         overlayEl.value = 'WATCH THIS';
         overlayEl.focus();
       }
@@ -24240,25 +24250,28 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides = overrides || {};
     overrides.transition = { style: joinStyle, durationSec: 0.35 };
   }
-  // Prefer lead.overlayTexts (Gap-fix varied pack) over single DOM string
+  // Anim text: empty DOM = operator OFF. Do not resurrect sticky lead.overlayTexts
+  // from Beats→FX / gap pack (QA showed OFF while near-final still burned WATCH THIS).
   var leadOv = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
-  if (leadOv && Array.isArray(leadOv.overlayTexts) && leadOv.overlayTexts.length) {
+  var overlayTxtPayload = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
+  if (!overlayTxtPayload) {
+    if (leadOv) leadOv.overlayTexts = null;
+    overrides = overrides || {};
+    overrides.animatedText = { enabled: false };
+  } else if (leadOv && Array.isArray(leadOv.overlayTexts) && leadOv.overlayTexts.length) {
     overrides = overrides || {};
     overrides.animatedText = { enabled: true, items: leadOv.overlayTexts.slice() };
   } else {
-    var overlayTxtPayload = g('composer-overlay-text') && g('composer-overlay-text').value.trim();
-    if (overlayTxtPayload) {
-      overrides = overrides || {};
-      var oSt0 = (g('composer-overlay-style') && g('composer-overlay-style').value) || 'scale_pop';
-      overrides.animatedText = {
-        enabled: true,
-        items: [
-          { text: overlayTxtPayload, startSec: 0.4, duration: 5, style: oSt0, fontSize: 72 },
-          { text: overlayTxtPayload, startSec: 12, duration: 5, style: oSt0, fontSize: 72 },
-          { text: overlayTxtPayload, startSec: 28, duration: 5, style: oSt0, fontSize: 72 },
-        ],
-      };
-    }
+    overrides = overrides || {};
+    var oSt0 = (g('composer-overlay-style') && g('composer-overlay-style').value) || 'scale_pop';
+    overrides.animatedText = {
+      enabled: true,
+      items: [
+        { text: overlayTxtPayload, startSec: 0.4, duration: 5, style: oSt0, fontSize: 72 },
+        { text: overlayTxtPayload, startSec: 12, duration: 5, style: oSt0, fontSize: 72 },
+        { text: overlayTxtPayload, startSec: 28, duration: 5, style: oSt0, fontSize: 72 },
+      ],
+    };
   }
   if (stored.hideChatRail || stored.hideBottomBar || stored.hideTopBar) {
     overrides = overrides || {};

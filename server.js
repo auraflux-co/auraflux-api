@@ -6573,7 +6573,10 @@ app.post('/generate-clip-comp', async (req, res) => {
         impactTint: c.impactTint || sc.impactTint || null,
         speedRamps: c.speedRamps || sc.speedRamps || null,
         highlightSfx: c.highlightSfx || sc.highlightSfx || null,
-        overlayTexts: c.overlayTexts || sc.overlayTexts || null,
+        // Explicit null/[] from Compose (Anim text OFF) must win over sticky compositionSpec
+        overlayTexts: Object.prototype.hasOwnProperty.call(c, 'overlayTexts')
+          ? (c.overlayTexts || null)
+          : (sc.overlayTexts || null),
       };
     });
   }
@@ -6585,7 +6588,11 @@ app.post('/generate-clip-comp', async (req, res) => {
       compCreative.audio = compCreative.audio || {};
       compCreative.audio.highlightSfx = leadFx.highlightSfx;
     }
-    if (Array.isArray(leadFx.overlayTexts) && leadFx.overlayTexts.length) {
+    // Operator Anim text OFF — do not re-enable from sticky overlayTexts
+    if (compCreative.animatedText && compCreative.animatedText.enabled === false) {
+      // keep enabled:false; clear sticky items so transform cannot burn them
+      compCreative.animatedText = { enabled: false };
+    } else if (Array.isArray(leadFx.overlayTexts) && leadFx.overlayTexts.length) {
       compCreative.animatedText = {
         enabled: true,
         items: leadFx.overlayTexts,

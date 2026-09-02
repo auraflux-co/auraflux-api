@@ -19,6 +19,14 @@ describe('composition near-final preview (CPD-1291)', () => {
     assert.match(src, /applyClipCompTransform/);
     assert.match(src, /anim_text/);
     assert.match(src, /compCreative\?\.animatedText/);
+    // Operator OFF must not resurrect sticky clip.overlayTexts
+    assert.match(src, /enabled === false/);
+  });
+
+  it('UI clears sticky overlayTexts when Anim text field is empty', () => {
+    const html = fs.readFileSync(path.join(__dirname, '../cwn_production.html'), 'utf8');
+    assert.match(html, /Empty Anim text field = operator OFF/);
+    assert.match(html, /overrides\.animatedText = \{ enabled: false \}/);
   });
 
   it('UI labels Review as near-final', () => {
