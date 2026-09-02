@@ -62,6 +62,38 @@ describe('clip_comp_dual_source', () => {
     assert.ok(filt.includes('box=1'));
   });
 
+  it('enriches C11 SEO brief from Age labels (not Local import Twitch)', () => {
+    const { enrichDualSourceSeoBrief } = require('../lib/clip_comp_dual_source');
+    const card = {
+      compCreative: {
+        preset: 'dual_source_stack',
+        layout: { mode: 'dual_source_vstack', paneLabels: { top: 'Age 7', bottom: 'Age 16' } },
+      },
+      orderedClipUrls: [
+        { title: 'reel_upscaled_1080x1920', displayName: 'Local import', game: 'import' },
+        { title: 'youtube import 6JD5Vzpa29g', pageUrl: 'https://www.youtube.com/watch?v=6JD5Vzpa29g' },
+      ],
+      clipCompBrief: { clips: [], leadStreamer: 'Local import' },
+    };
+    const brief = enrichDualSourceSeoBrief(card);
+    assert.ok(brief.leadTitleDraft.includes('Age 7'));
+    assert.ok(brief.leadTitleDraft.includes('Age 16'));
+    assert.ok(!/Local import/i.test(brief.leadStreamer));
+    assert.strictEqual(brief.clips[1].platform, 'youtube');
+    assert.ok(brief.dualSourceStack);
+  });
+
+  it('finalize locks music bed off for dual_source_stack', () => {
+    const c = finalizeCompCreativeForAssembly(
+      mergeCompCreative({
+        preset: 'dual_source_stack',
+        overrides: { audio: { musicBed: 'low_trap' } },
+      }),
+      { clipOrientations: ['portrait', 'portrait'] },
+    );
+    assert.strictEqual(c.audio.musicBed, 'off');
+  });
+
   it('creative preset is 2-clip dual_source_vstack', () => {
     const c = mergeCompCreative({ preset: 'dual_source_stack' });
     assert.strictEqual(c.preset, 'dual_source_stack');

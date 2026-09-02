@@ -24555,6 +24555,15 @@ function syncDualSourceStackUi() {
   }
   var hm = g('comp-creative-hook-mode');
   if (hm && !hm.dataset.userPicked) hm.value = 'whisper_only';
+  // C11 Then/Now — music bed always off (clip audio only across both panes)
+  if (typeof syncComposerMusicBedSelects === 'function') syncComposerMusicBedSelects('off');
+  try {
+    var bedStore = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}');
+    bedStore.musicBed = 'off';
+    bedStore.preset = 'dual_source_stack';
+    bedStore.hookMode = 'whisper_only';
+    localStorage.setItem(COMP_CREATIVE_STORAGE_KEY, JSON.stringify(bedStore));
+  } catch (eBed) { /* ignore */ }
   var ll = g('comp-creative-landscape-layout');
   if (ll) ll.value = 'single';
   try {
@@ -25099,10 +25108,11 @@ function buildCompCreativeRequestPayload(streamerHint) {
     overrides.hooks = { mode: 'whisper_only', rankedList: { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 } };
     overrides.captions = { whisper: true, style: 'phrase_full_bleed' };
     overrides.audio = Object.assign({}, overrides.audio || {}, {
-      musicBed: stored.musicBed || 'off',
+      musicBed: 'off',
       cutSfx: 'off',
       clipAudio: true,
-      duckSpeech: true
+      duckSpeech: true,
+      bedPerSegment: false,
     });
     overrides.editorial = { enabled: false, introCard: false, ttsBridges: false };
     overrides.effects = { transform: false, gagOverlays: false };
@@ -25273,6 +25283,7 @@ function buildCompCreativeRequestPayload(streamerHint) {
       || (g('comp-creative-music-bed') && g('comp-creative-music-bed').value)
       || stored.musicBed
       || 'off');
+  if (preset === 'dual_source_stack') bedShip = 'off';
   overrides.audio = Object.assign({}, overrides.audio || {}, { musicBed: bedShip });
   // Explicit OFF must not be revived by preset defaults later in merge
   if (bedShip === 'off') {
@@ -25318,6 +25329,12 @@ function buildCompCreativeRequestPayload(streamerHint) {
     };
     overrides.hooks = Object.assign({}, overrides.hooks || {}, { mode: 'whisper_only' });
     if (overrides.hooks.rankedList) overrides.hooks.rankedList.enabled = false;
+    overrides.audio = Object.assign({}, overrides.audio || {}, {
+      musicBed: 'off',
+      cutSfx: 'off',
+      clipAudio: true,
+      bedPerSegment: false,
+    });
   }
 
   return {
