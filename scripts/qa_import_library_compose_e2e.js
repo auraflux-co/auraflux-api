@@ -31,14 +31,30 @@ async function main() {
   });
   await page.reload({ waitUntil: 'networkidle2' });
 
-  const staged = await page.evaluate(async (url) => {
-    const r = await fetch((window.CFG && CFG.ffmpegUrl) || location.origin + '/content-library/stage-url', {
+  // Wait for API (not HTML) — deploy can briefly serve before Express is ready
+  for (let i = 0; i < 20; i++) {
+    const health = await page.evaluate(async (base) => {
+      try {
+        const r = await fetch(base + '/health');
+        const t = await r.text();
+        try { return JSON.parse(t); } catch (e) { return { ok: false, raw: t.slice(0, 40) }; }
+      } catch (e) { return { ok: false, err: String(e) }; }
+    }, BASE);
+    if (health && health.ok) break;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+
+  const staged = await page.evaluate(async (base, url) => {
+    const r = await fetch(base + '/content-library/stage-url', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url })
     });
-    return r.json();
-  }, YT);
+    const t = await r.text();
+    try { return JSON.parse(t); } catch (e) {
+      return { ok: false, error: 'non-json stage response', status: r.status, body: t.slice(0, 120) };
+    }
+  }, BASE, YT);
   if (!staged.ok) {
     console.error(JSON.stringify({ pass: false, step: 'stage-url', staged }, null, 2));
     await browser.close();
