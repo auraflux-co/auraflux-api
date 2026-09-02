@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-09-02 (iss_H3ZnzcX4vmQR) — C11 ▶ Review near-final now stacks TOP+BOTTOM via `assembleDualSourceStack` (was clips[0]/TOP-only ffmpeg preview). Hard refresh → C11 → Review.
 **Last Updated:** 2026-09-02 (iss_YfJ0TcgjWdRa) — C11 Compose honesty: THEN/NOW saved-trim card; Mark In/Out confirms TOP/BOTTOM instantly (no Save cuts needed).
 **Last Updated:** 2026-09-02 (iss_tbtuMzZmWNGj) — C11 dual live preview: master-only audio + soft pane sync (fixes choppy TOP audio).
 **Last Updated:** 2026-09-02 (iss_U1MfiMhDlXAx) — C11 dual stack: live preview audio follows ✎ slot (BOTTOM unmuted when selected); assemble bottom-audio extract hardened.

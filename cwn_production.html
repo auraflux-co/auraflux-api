@@ -19784,7 +19784,12 @@ function reviewComposerEdit() {
   _composerEditReviewed = false;
   _composerLayoutLogLines = [];
   updateComposerEditStatus();
-  setComposerPreviewCaption('Near-final Review — layout + look/transform + Beats→FX + bed (captions at EXECUTE)…', 'pending');
+  setComposerPreviewCaption(
+    (typeof isComposerDualSourceStack === 'function' && isComposerDualSourceStack())
+      ? 'Then/Now Review — stacking TOP+BOTTOM hold→switch (Age labels)…'
+      : 'Near-final Review — layout + look/transform + Beats→FX + bed (captions at EXECUTE)…',
+    'pending'
+  );
   logComposerLayoutAtPlayhead('review-start');
   var btn = g('btn-composer-review-edit');
   if (btn) { btn.disabled = true; btn.textContent = 'Rendering…'; }
@@ -20972,7 +20977,15 @@ function formatComposerPreviewCaption(d, errMsg) {
   var parts = [d && d.nearFinalPreview
     ? 'NEAR-FINAL REVIEW · ≈EXECUTE (−Whisper captions)'
     : (d && d.fullTrimWindow ? 'FULL TRIM PREVIEW' : 'ASSEMBLY PREVIEW · layout + logo')];
-  if (ls.landscapeAutoSplit) parts.push('16:9 → split overrides preset');
+  if (d.dualSourceStack || d.mode === 'dual_source_vstack' || ls.dualSourceStack) {
+    parts = ['THEN/NOW STACK REVIEW · TOP then BOTTOM (hold opposite)'];
+    var ds = d.dualSourceStack || {};
+    if (ds.switchSec != null) parts.push('switch @ ' + Math.round(Number(ds.switchSec)) + 's');
+    if (ds.paneLabels) {
+      parts.push((ds.paneLabels.top || 'TOP') + ' / ' + (ds.paneLabels.bottom || 'BOTTOM'));
+    }
+    if (ds.hasBottomAudio === false) parts.push('phase-2 audio missing');
+  } else if (ls.landscapeAutoSplit) parts.push('16:9 → split overrides preset');
   else parts.push(String(ls.effectiveMode || d.mode || 'layout'));
   if (ls.topHeight) parts.push('top ' + ls.topHeight + 'px');
   if (ls.facecamRect) {
@@ -21004,7 +21017,9 @@ function formatComposerPreviewCaption(d, errMsg) {
   if (!d.nearFinalPreview) parts.push('hooks/captions added at assembly');
   if (d.previewVideoUrl) {
     var dur = d.previewDurationSec || 6;
-    if (d.fullTrimWindow) parts.push('full trim ' + Math.round(dur) + 's');
+    if (d.dualSourceStack || d.mode === 'dual_source_vstack') {
+      parts.push('stacked ' + Math.round(dur) + 's');
+    } else if (d.fullTrimWindow) parts.push('full trim ' + Math.round(dur) + 's');
     else parts.push('~' + Math.round(dur) + 's · active lineup clip only (click COMP LINEUP to switch)');
   }
   return parts.join(' · ');
@@ -21107,11 +21122,22 @@ function fetchFfmpegComposerPreviewNow(body) {
   if (loading) loading.style.display = 'flex';
   setComposerPreviewMode('loading');
   var trimDur = 0;
+  var dualReview = !!(typeof isComposerDualSourceStack === 'function' && isComposerDualSourceStack()
+    && body && body.clips && body.clips.length >= 2);
   if (body && body.clips && body.clips[0]) {
     var c0 = body.clips[0];
     trimDur = Math.max(1, (Number(c0.trimEnd) || 0) - (Number(c0.trimStart) || 0));
+    if (dualReview && body.clips[1]) {
+      var c1 = body.clips[1];
+      trimDur += Math.max(1, (Number(c1.trimEnd) || 0) - (Number(c1.trimStart) || 0));
+    }
   }
-  setComposerPreviewCaption('Near-final Review (~' + Math.round(trimDur) + 's · FX+grade+bed · usually 20–60s)…', 'pending');
+  setComposerPreviewCaption(
+    dualReview
+      ? ('Then/Now Review — stacking TOP+BOTTOM (~' + Math.round(trimDur) + 's hold→switch · may take 1–3 min)…')
+      : ('Near-final Review (~' + Math.round(trimDur) + 's · FX+grade+bed · usually 20–60s)…'),
+    'pending'
+  );
   var fetchOpts = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -21119,6 +21145,7 @@ function fetchFfmpegComposerPreviewNow(body) {
   };
   if (_composerPreviewAbort) fetchOpts.signal = _composerPreviewAbort.signal;
   if (window._composerReviewWatchdog) clearInterval(window._composerReviewWatchdog);
+  var reviewTimeoutSec = dualReview ? 300 : 180;
   window._composerReviewWatchdog = setInterval(function() {
     if (seq !== _composerPreviewSeq) {
       clearInterval(window._composerReviewWatchdog);
@@ -21126,13 +21153,23 @@ function fetchFfmpegComposerPreviewNow(body) {
       return;
     }
     var elapsed = Math.round((Date.now() - _composerPreviewStartedAt) / 1000);
-    setComposerPreviewCaption('Near-final still rendering… ' + elapsed + 's (grade/FX/bed — do not refresh)', 'pending');
-    if (elapsed >= 180) {
+    setComposerPreviewCaption(
+      dualReview
+        ? ('Then/Now stack still rendering… ' + elapsed + 's (do not refresh)')
+        : ('Near-final still rendering… ' + elapsed + 's (grade/FX/bed — do not refresh)'),
+      'pending'
+    );
+    if (elapsed >= reviewTimeoutSec) {
       clearInterval(window._composerReviewWatchdog);
       window._composerReviewWatchdog = null;
       try { if (_composerPreviewAbort) _composerPreviewAbort.abort(); } catch (_) { /* noop */ }
       resetComposerReviewEditButton();
-      setComposerPreviewCaption('Review timed out after 3 min — try again (shorter trim) or EXECUTE without Review', 'err');
+      setComposerPreviewCaption(
+        dualReview
+          ? 'Then/Now Review timed out after 5 min — try shorter trims or EXECUTE without Review'
+          : 'Review timed out after 3 min — try again (shorter trim) or EXECUTE without Review',
+        'err'
+      );
       setComposerPreviewMode('mock');
     }
   }, 5000);
@@ -21170,14 +21207,23 @@ function fetchFfmpegComposerPreviewNow(body) {
         window._composerTimelinePreviewPath = d.previewVideoPath || null;
         // Review MP4 is Short-relative — do NOT write d.trimEnd back onto clip.composerTrimEnd.
         var leadClip = composerLeadClipForEdit();
-        var shortDur = leadClip ? composerTimelineCapSec(leadClip) : (Number(d.previewDurationSec) || 0);
+        var dualStackReview = !!(d.dualSourceStack || d.mode === 'dual_source_vstack'
+          || (typeof isComposerDualSourceStack === 'function' && isComposerDualSourceStack()));
+        // Dual Review file = full hold→switch length (not TOP trim alone).
+        var shortDur = dualStackReview
+          ? (Number(d.previewDurationSec) || 0)
+          : (leadClip ? composerTimelineCapSec(leadClip) : (Number(d.previewDurationSec) || 0));
         _composerTimelineDuration = shortDur || Number(d.previewDurationSec) || 0;
-        _composerTimelineTrimStart = leadClip && leadClip.composerTrimStart != null
-          ? Number(leadClip.composerTrimStart)
-          : (Number(d.trimStart) || 0);
-        _composerTimelineTrimEnd = leadClip && leadClip.composerTrimEnd != null
-          ? Number(leadClip.composerTrimEnd)
-          : (_composerTimelineTrimStart + _composerTimelineDuration);
+        _composerTimelineTrimStart = dualStackReview
+          ? 0
+          : (leadClip && leadClip.composerTrimStart != null
+            ? Number(leadClip.composerTrimStart)
+            : (Number(d.trimStart) || 0));
+        _composerTimelineTrimEnd = dualStackReview
+          ? _composerTimelineDuration
+          : (leadClip && leadClip.composerTrimEnd != null
+            ? Number(leadClip.composerTrimEnd)
+            : (_composerTimelineTrimStart + _composerTimelineDuration));
         bindComposerTimelineVideo();
         video.load();
         video.onloadedmetadata = function() {
