@@ -2483,14 +2483,14 @@ input[type="url"], input[type="password"], select, textarea {
                 <button type="button" class="btn btn-outline btn-sm" onclick="saveLibraryClipPicks(true)" title="Save checked clips to this browser">Save picks</button>
                 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0;">
                 <input type="url" id="library-paste-url" placeholder="YouTube / Twitch / Facebook URL (no channel subscribe needed)" style="flex:1;min-width:220px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.35);padding:6px 8px;font-size:13px;" />
-                <button type="button" class="btn btn-gold btn-sm" onclick="pasteUrlStageFullAndCompose()" title="Download + stage full video (≤15m) → Compose — no roster">URL → Full video</button>
+                <button type="button" class="btn btn-gold btn-sm" onclick="pasteUrlStageFullAndCompose()" title="Stage full video into Clip Library picks (≤15m) — then COMPOSE →">URL → Library</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="pasteUrlAnalyzeAndCompose()" title="Analyze peaks and open best in Composer">URL → Peaks</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="extendComposerPeakWindow(30)" title="Re-stage peak ±30s">Peak ±30s</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="extendComposerPeakWindow(60)" title="Re-stage peak ±60s">Peak ±60s</button>
               </div>
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 6px;">
                 <input type="file" id="library-import-file" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.webm,.mkv" style="flex:1;min-width:180px;font-size:12px;color:rgba(255,255,255,0.75);" />
-                <button type="button" class="btn btn-gold btn-sm" onclick="importLocalMp4ToCompose()" title="Upload local / FB reel MP4 → R2 → Compose">Import MP4 → Compose</button>
+                <button type="button" class="btn btn-gold btn-sm" onclick="importLocalMp4ToCompose()" title="Stage local/FB MP4 into Clip Library picks — then COMPOSE →">Import MP4 → Library</button>
               </div>
               <button type="button" class="btn btn-gold" onclick="sendPickerToComposer()">COMPOSE →</button>
               </div>
@@ -16717,8 +16717,7 @@ function clearComposerVodSegment() {
   if (tl) { tl.classList.remove('is-active'); tl.innerHTML = ''; }
 }
 
-/** Open a staged import (local MP4 or URL pull) as an editable Compose clip.
- *  Appends to the current picker lineup (does not wipe prior imports) so Age 7 + Age 16 can both sit in Compose. */
+/** Stage an import into Clip Library picker (checked). Operator hits COMPOSE → — does not jump to Generate alone. */
 function openStagedImportInComposer(staged, opts) {
   opts = opts || {};
   var play = staged && (staged.playbackUrl || staged.r2Url || staged.r2_url || staged.stagedUrl || staged.mp4Url);
@@ -16754,8 +16753,7 @@ function openStagedImportInComposer(staged, opts) {
     vodPeakWindow: true,
     clipId: clipId
   };
-  _composerVodSegment = null;
-  clearComposerVodSegment();
+
   if (!Array.isArray(_twitchPickerStreamers)) _twitchPickerStreamers = [];
 
   function sameClip(a) {
@@ -16775,7 +16773,7 @@ function openStagedImportInComposer(staged, opts) {
   if (!bucket) {
     bucket = {
       name: streamer,
-      displayName: clip.displayName,
+      displayName: clip.displayName || streamer,
       platform: platform,
       selected: true,
       clips: [],
@@ -16787,62 +16785,45 @@ function openStagedImportInComposer(staged, opts) {
   bucket.selected = true;
   bucket.clips = bucket.clips || [];
   bucket.clipsRaw = bucket.clipsRaw || [];
-  // Keep prior imports selected across streamers
-  for (var s = 0; s < _twitchPickerStreamers.length; s++) {
-    var ent = _twitchPickerStreamers[s];
-    if (!ent || !ent.clips) continue;
-    for (var c = 0; c < ent.clips.length; c++) {
-      if (ent.clips[c] && ent.clips[c].game === 'import') ent.clips[c].selected = true;
-    }
-  }
   var already = bucket.clips.some(sameClip);
   if (!already) {
     bucket.clips.push(clip);
     bucket.clipsRaw.push(Object.assign({}, clip));
   } else {
-    // Refresh staging URLs on re-import of same clip
     for (var j = 0; j < bucket.clips.length; j++) {
       if (sameClip(bucket.clips[j])) {
-        bucket.clips[j] = Object.assign({}, bucket.clips[j], clip);
+        bucket.clips[j] = Object.assign({}, bucket.clips[j], clip, { selected: true });
         break;
       }
     }
   }
 
   _composerContentSource = 'twitch';
-  if (g('twitch-streamers')) g('twitch-streamers').value = streamer;
-  var pickedNow = 0;
-  try {
-    pickedNow = (_twitchPickerStreamers || []).reduce(function(n, e) {
-      return n + ((e.clips || []).filter(function(cl) { return cl && cl.selected; }).length);
-    }, 0);
-  } catch (e1) { pickedNow = 1; }
-  var delSel = g('composer-delivery');
-  if (delSel) {
-    // 2+ imports → Comp lineup so both chips show; single stays Short
-    delSel.value = pickedNow >= 2 ? 'comp' : 'short';
-    delSel.dataset.userSet = '1';
-  }
-  try {
-    sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
-      streamers: _twitchPickerStreamers,
-      vodSegment: null,
-      source: opts.source || 'library-import'
-    }));
-  } catch (e) {}
-  nav('generate');
+  // Stay in Clip Library — same path as Load library → check → COMPOSE →
+  nav('library');
   switchGeneratePillar('twitch');
+  if (typeof setLibrarySourceMode === 'function') {
+    try { setLibrarySourceMode('twitch'); } catch (e0) { /* ignore */ }
+  }
   var btn = g('btn-preview-twitch');
   renderTwitchPicker(btn, 1);
   setPickerPanelVisible('twitch', true);
   if (btn) btn.textContent = 'HIDE PICKER';
-  reconcileCompLineup(collectCompPickedClips());
-  renderComposerHandoffSummary();
-  if (typeof refreshGenerateComposer === 'function') refreshGenerateComposer(true);
+  var pickedNow = 0;
+  try {
+    pickedNow = collectCompPickedClips().length;
+  } catch (e1) {
+    pickedNow = (_twitchPickerStreamers || []).reduce(function(n, e) {
+      return n + ((e.clips || []).filter(function(cl) { return cl && cl.selected; }).length);
+    }, 0);
+  }
   var statusEl = g('twitch-fetch-status');
   if (statusEl) {
-    statusEl.textContent = 'Compose lineup: ' + pickedNow + ' clip' + (pickedNow === 1 ? '' : 's')
-      + (pickedNow >= 2 ? ' (Comp)' : ' (Short)') + ' — import again to add another.';
+    statusEl.textContent = 'Added to library picks (' + pickedNow + ' selected) — check clips, then COMPOSE →';
+  }
+  var hint = g('library-picks-hint');
+  if (hint) {
+    hint.textContent = 'Import staged. Select any other clips you need, then COMPOSE →.';
   }
 }
 
@@ -16865,7 +16846,7 @@ function importLocalMp4ToCompose() {
       var d = pack.d;
       if (!pack.okHttp || !d.ok) throw new Error((d && d.error) || 'Import failed');
       var staged = d.clip || d.staged;
-      if (statusEl) statusEl.textContent = 'Imported — opening Compose…';
+      if (statusEl) statusEl.textContent = 'Imported — added to library picks…';
       openStagedImportInComposer(staged, { source: 'local-mp4-import', displayName: 'Local import' });
       if (fileInput) fileInput.value = '';
     })
@@ -16880,7 +16861,7 @@ function pasteUrlStageFullAndCompose() {
   var url = (input && input.value || '').trim();
   if (!url) { alert('Paste a YouTube, Twitch, or Facebook URL first.'); return; }
   var statusEl = g('twitch-fetch-status');
-  if (statusEl) statusEl.textContent = 'Pulling URL → staging full video (≤15m)…';
+  if (statusEl) statusEl.textContent = 'Pulling URL → library (≤15m)…';
   fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage-url', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -16897,7 +16878,7 @@ function pasteUrlStageFullAndCompose() {
         throw new Error(msg);
       }
       var staged = d.clip || d.staged;
-      if (statusEl) statusEl.textContent = 'URL staged (' + (staged.duration || '?') + 's) — opening Compose…';
+      if (statusEl) statusEl.textContent = 'URL staged (' + (staged.duration || '?') + 's) — added to library picks…';
       openStagedImportInComposer(staged, {
         source: 'url-full-import',
         displayName: staged.streamer || 'URL import',
@@ -16905,7 +16886,7 @@ function pasteUrlStageFullAndCompose() {
       });
     })
     .catch(function(e) {
-      if (statusEl) statusEl.textContent = 'URL → Full video failed: ' + e.message;
+      if (statusEl) statusEl.textContent = 'URL → Library failed: ' + e.message;
       alert('URL pull failed: ' + e.message);
     });
 }
