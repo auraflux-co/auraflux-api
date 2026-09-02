@@ -17883,7 +17883,10 @@ function bindComposerPaneVideoFromClip(paneVideo, clip, syncMaster) {
     paneVideo.removeAttribute('poster');
     if (syncMaster) {
       var master = g('composer-preview-video');
-      if (master) syncPaneVideoToMaster(paneVideo, master);
+      if (master) {
+        if (isComposerDualSourceStack()) syncDualActivePaneToMaster(paneVideo, master);
+        else syncPaneVideoToMaster(paneVideo, master);
+      }
     } else {
       try {
         var hold = Number(clip.composerTrimStart);
@@ -17918,31 +17921,43 @@ function layoutComposerDualCover(paneEl, videoEl) {
 
 function routeComposerDualPaneAudio() {
   if (!isComposerDualSourceStack()) return;
-  var dual = getComposerDualStackSlots();
   var master = g('composer-preview-video');
   var bg = g('composer-preview-bg');
   var main = g('composer-preview-main');
   var bgV = bg && bg.querySelector('.composer-pane-video');
   var mainV = main && main.querySelector('.composer-pane-video');
-  var activeIsTop = dual.activeIdx === 0;
-  // Master stays the scrub clock but must stay muted — panes were always muted so
-  // BOTTOM looked correct while only TOP (active master) could be heard.
+  // Audio plays from the hidden master only (active lineup clip).
+  // Unmuting panes + seeking them every timeupdate made TOP/BOTTOM audio choppy.
   if (master) {
-    master.muted = true;
-    master.volume = 0;
+    master.muted = false;
+    master.volume = 1;
   }
-  if (bgV) {
-    bgV.muted = !activeIsTop;
-    bgV.volume = activeIsTop ? 1 : 0;
-    if (activeIsTop) bgV.removeAttribute('muted');
-    else bgV.setAttribute('muted', '');
-  }
-  if (mainV) {
-    mainV.muted = activeIsTop;
-    mainV.volume = activeIsTop ? 0 : 1;
-    if (!activeIsTop) mainV.removeAttribute('muted');
-    else mainV.setAttribute('muted', '');
-  }
+  [bgV, mainV].forEach(function(v) {
+    if (!v) return;
+    v.muted = true;
+    v.volume = 0;
+    v.setAttribute('muted', '');
+  });
+}
+
+/** Visual-only follow for dual panes — avoid hard seeks while playing (audio stutter). */
+function syncDualActivePaneToMaster(paneVideo, master) {
+  if (!paneVideo || !master) return;
+  var src = master.currentSrc || master.src || '';
+  if (!src) return;
+  try {
+    var mt = master.currentTime || 0;
+    var drift = Math.abs((paneVideo.currentTime || 0) - mt);
+    var seekTol = (!master.paused && !_composerTimelineScrubbing) ? 0.6 : 0.08;
+    if (paneVideo.readyState >= 1 && drift > seekTol) {
+      paneVideo.currentTime = mt;
+    }
+    if (!master.paused) {
+      if (paneVideo.paused) paneVideo.play().catch(function() {});
+    } else {
+      paneVideo.pause();
+    }
+  } catch (e) { /* ignore */ }
 }
 
 function applyComposerDualSourcePreviewPanes() {
@@ -18040,7 +18055,7 @@ function applyComposerDualSourcePreviewPanes() {
   } else {
     setComposerPreviewCaption(
       'C11 Then/Now · TOP=' + labels.top + ' · BOTTOM=' + labels.bottom
-        + ' · audio = ✎ slot (click BOTTOM to hear it) · inactive holds Mark In',
+        + ' · ▶ audio = ✎ slot (smooth) · click BOTTOM to hear Age 16',
       'ok'
     );
   }
@@ -18237,8 +18252,8 @@ function syncComposerPaneVideoClock() {
     var bgV = bg && bg.querySelector('.composer-pane-video');
     var mainV = main && main.querySelector('.composer-pane-video');
     var activeIsTop = dual.activeIdx === 0;
-    if (activeIsTop && bgV && master) syncPaneVideoToMaster(bgV, master);
-    if (!activeIsTop && mainV && master) syncPaneVideoToMaster(mainV, master);
+    if (activeIsTop && bgV && master) syncDualActivePaneToMaster(bgV, master);
+    if (!activeIsTop && mainV && master) syncDualActivePaneToMaster(mainV, master);
     // Inactive pane holds its Mark In frame (Then/Now hold-then-switch preview).
     var holdClip = activeIsTop
       ? (dual.bottom && dual.bottom.clip)
@@ -18254,7 +18269,6 @@ function syncComposerPaneVideoClock() {
         holdV.pause();
       } catch (eHold) { /* ignore */ }
     }
-    routeComposerDualPaneAudio();
     return;
   }
   var master = g('composer-preview-video');
@@ -18503,11 +18517,12 @@ function bindComposerTimelineVideo() {
     if (_composerTimelineScrubbing) return;
     if (video.paused) return;
     updateComposerTimelineTransport(composerShortPlayheadFromVideoTime(video.currentTime || 0));
-    scheduleComposerLiveSplitPaint();
+    // Dual: skip full look re-paint on every tick (rebind/seek caused choppy audio).
+    if (!isComposerDualSourceStack()) scheduleComposerLiveSplitPaint();
   });
   video.addEventListener('seeked', function() {
     syncComposerPaneVideoClock();
-    scheduleComposerLiveSplitPaint();
+    if (!isComposerDualSourceStack()) scheduleComposerLiveSplitPaint();
     if (_composerTimelineScrubbing) return;
     if (!video.paused) updateComposerTimelineTransport(composerShortPlayheadFromVideoTime(video.currentTime || 0));
   });
@@ -18571,8 +18586,9 @@ function attachComposerSourceToPreviewPlayer(reviewUrl) {
   if (img) img.style.display = 'none';
   setComposerReviewVideoMode('edit');
   video.controls = false;
-  video.muted = isComposerDualSourceStack();
-  video.volume = isComposerDualSourceStack() ? 0 : 1;
+  // Dual stack: master is the only unmuted audio source (panes stay muted).
+  video.muted = false;
+  video.volume = 1;
   video.playsInline = true;
   video.loop = false;
   video.removeAttribute('loop');
