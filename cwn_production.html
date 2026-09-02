@@ -8502,7 +8502,7 @@ function renderFindJobList() {
     var canReasm = !!(j.assemblyId || j.assembledAt || (j.heygen && j.heygen.videoJobs && j.heygen.videoJobs.length >= 4))
       && (j.stage || '') !== 'published';
     var reasmBtn = canReasm
-      ? '<button type="button" class="btn btn-outline btn-sm" style="margin-left:6px;white-space:nowrap;color:#3498db;" onclick="addJobToQueueFromServer(\'' + jid.replace(/'/g, "\\'") + '\', true);setTimeout(function(){reassembleFromFiles(\'' + jid.replace(/'/g, "\\'") + '\');},800);">↻ RE-ASSEMBLE</button>'
+      ? '<button type="button" class="btn btn-outline btn-sm" style="margin-left:6px;white-space:nowrap;color:#3498db;" onclick="addJobToQueueFromServer(\'' + jid.replace(/'/g, "\\'") + '\', true);setTimeout(function(){reassembleFromFiles(\'' + jid.replace(/'/g, "\\'") + '\');},800);">📁 RE-ASSEMBLE FROM FILES</button>'
       : '';
     var clipCount = Array.isArray(j.orderedClipUrls) ? j.orderedClipUrls.length : 0;
     var ct = String(j.contentType || j.type || '');
@@ -10481,9 +10481,10 @@ function renderQueueNow() {
     }
     actions += '<button onclick="navToThumbnail(\'' + job.id + '\')" class="btn btn-outline btn-sm">🖼 THUMBNAIL</button>';
     actions += '<button onclick="navToPublishPrep(\'' + job.id + '\')" class="btn btn-outline btn-sm">📋 REVIEW SEO'+(job.publishPrep?' ✓':'')+'</button>';
-    if (jobStage === 'metadata_review') {
-      actions += '<button onclick="regeneratePublishCopy(\'' + job.id + '\')" class="btn btn-gold btn-sm" title="Regenerate YT/TT/IG metadata until SEO QA passes">🔄 FIX SEO</button>';
-    } else if ((jobStage === 'awaiting_review' || job.assembledAt) && (resolveJobPreviewUrl(job) || job.driveUrl) && !hasPublishMetadata(job)) {
+    // Always offer FIX SEO on review cards — titleCandidates may be empty even when publishCopy has titles
+    if (jobStage === 'metadata_review' || jobStage === 'awaiting_review' || jobStage === 'assembled') {
+      actions += '<button onclick="regeneratePublishCopy(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Regenerate YT/TT/IG titles + description + tags">🔄 FIX SEO</button>';
+    } else if ((job.assembledAt) && (resolveJobPreviewUrl(job) || job.driveUrl) && !hasPublishMetadata(job)) {
       actions += '<button onclick="regeneratePublishCopy(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Generate title, description, and tags from assembled video">🔄 FIX SEO</button>';
     }
     if ((jobStage === 'awaiting_review' || jobStage === 'assembled' || jobStage === 'metadata_review' || jobStage === 'gate5_failed' || jobStage === 'publish_scheduled' || job.republishNeeded) && (job.driveUrl || job.finalUrl) && jobStage !== 'metadata_review' && !postLiveHeld) {
@@ -10541,7 +10542,7 @@ function renderQueueNow() {
         actions += '<button onclick="openJobLayoutEditor(\'' + job.id + '\')" class="btn btn-outline btn-sm" style="border-color:rgba(46,204,113,0.55);color:#2ecc71;" title="Edit top/bottom pane crops in Compose, then send back to assembly">✎ EDIT LAYOUT</button>';
         actions += '<button onclick="sendJobBackLayout(\'' + job.id + '\')" class="btn btn-gold btn-sm" style="font-weight:700;" title="Save pane crops from Creative Mode sliders and re-assemble">↩ SEND BACK · LAYOUT</button>';
       }
-      actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;" title="Rebuild from HeyGen cache + manifest — no new credits">↻ RE-ASSEMBLE</button>';
+      actions += '<button onclick="reassembleFromFiles(\'' + job.id + '\')" class="btn btn-ffmpeg btn-sm" style="border:1px solid rgba(52,152,219,0.7);color:#3498db;font-weight:700;" title="Rebuild from cache + burn selected hooks — no new HeyGen credits">📁 RE-ASSEMBLE FROM FILES</button>';
     } else if (pastHeygenStage && jobActivelyAssembling(job)) {
       actions += '<span style="font-size:14px;color:#3498db;font-family:monospace;align-self:center;">⏳ assembling…</span>';
     }
@@ -26469,8 +26470,25 @@ function ensurePublishCopyHydrated(jobId) {
 function youtubeTitleOptionsFromPublishCopy(pc) {
   if (!pc) return [];
   var yt = pickYoutubeFromPublishCopy(pc);
-  if (Array.isArray(yt.titles) && yt.titles.length) return yt.titles.filter(Boolean);
-  return yt.title ? [yt.title] : [];
+  var out = [];
+  function pushTitle(t) {
+    var s = String(t || '').trim();
+    if (!s) return;
+    if (out.some(function(x) { return x.toLowerCase() === s.toLowerCase(); })) return;
+    out.push(s);
+  }
+  if (Array.isArray(yt.titles) && yt.titles.length) {
+    yt.titles.forEach(pushTitle);
+  }
+  // Flatten titleOptions buckets when titles[] missing/stale (common after restore)
+  var opts = yt.titleOptions || pc.titleOptions || null;
+  if (opts && typeof opts === 'object') {
+    ['highCtr', 'shorts', 'breakingNews', 'searchOptimized'].forEach(function(k) {
+      if (Array.isArray(opts[k])) opts[k].forEach(pushTitle);
+    });
+  }
+  if (!out.length && yt.title) pushTitle(yt.title);
+  return out;
 }
 
 function serverPublishCopy(serverJob) {
