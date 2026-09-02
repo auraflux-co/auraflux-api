@@ -847,6 +847,16 @@ function unregisterPoller(jobId) {
 // Implements the fully-automatic pipeline: Gate 1 → HeyGen render → auto-assemble → Gate 3 → Drive → Gate 6 publish (private)
 // Rob's only role: review private drafts on YouTube/TikTok/Instagram and flip to public.
 async function startHeyGenPoller(jobId, card) {
+  try {
+    const { isHeyGenLiveEnabled, heygenLiveDisabledReason } = require('./lib/heygen_runtime');
+    if (!isHeyGenLiveEnabled()) {
+      console.warn(`[heygen-poller:${jobId}] skipped — ${heygenLiveDisabledReason()}`);
+      return;
+    }
+  } catch (_e) {
+    console.warn(`[heygen-poller:${jobId}] skipped — heygen_runtime unavailable`);
+    return;
+  }
   const avatarEngine = card.avatarEngine || process.env.AVATAR_ENGINE || 'heygen';
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
   const simMode = process.env.HEYGEN_SIM_MODE === 'true';
@@ -4411,6 +4421,14 @@ app.post('/job/:id/heygen/send-approved', async (req, res) => {
   const jobId = req.params.id;
   let card = persistedJobs[jobId];
   if (!card) return res.status(404).json({ ok: false, error: `Job not found: ${jobId}` });
+  try {
+    const { isHeyGenLiveEnabled, heygenLiveDisabledReason } = require('./lib/heygen_runtime');
+    if (!isHeyGenLiveEnabled()) {
+      return res.status(503).json({ ok: false, error: heygenLiveDisabledReason(), code: 'HEYGEN_LIVE_OFF' });
+    }
+  } catch (_e) {
+    return res.status(503).json({ ok: false, error: 'HeyGen live unavailable', code: 'HEYGEN_LIVE_OFF' });
+  }
   if (!process.env.HEYGEN_API_KEY && process.env.HEYGEN_SIM_MODE !== 'true') {
     return res.status(400).json({ ok: false, error: 'HEYGEN_API_KEY not set' });
   }
@@ -5220,6 +5238,14 @@ app.post('/job/:id/heygen/resend-missing', async (req, res) => {
   const card = persistedJobs[jobId];
   if (!card?.script?.raw) {
     return res.status(404).json({ ok: false, error: `Job not found or has no script: ${jobId}` });
+  }
+  try {
+    const { isHeyGenLiveEnabled, heygenLiveDisabledReason } = require('./lib/heygen_runtime');
+    if (!isHeyGenLiveEnabled()) {
+      return res.status(503).json({ ok: false, error: heygenLiveDisabledReason(), code: 'HEYGEN_LIVE_OFF' });
+    }
+  } catch (_e) {
+    return res.status(503).json({ ok: false, error: 'HeyGen live unavailable', code: 'HEYGEN_LIVE_OFF' });
   }
   if (!process.env.HEYGEN_API_KEY) {
     return res.status(400).json({ ok: false, error: 'HEYGEN_API_KEY not set' });
