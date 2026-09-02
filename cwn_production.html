@@ -182,6 +182,28 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
   position:absolute; top:0; left:0; pointer-events:none; object-fit:fill;
   image-rendering:auto;
 }
+.composer-preview-frame.is-dual-source .composer-preview-bg,
+.composer-preview-frame.is-dual-source .composer-preview-main {
+  overflow:hidden; background:#000;
+}
+.composer-preview-frame.is-dual-source .composer-pane-video {
+  position:absolute; inset:0; width:100% !important; height:100% !important;
+  left:0 !important; top:0 !important; object-fit:cover !important; max-width:none; max-height:none;
+}
+.composer-dual-pane-label {
+  position:absolute; left:50%; transform:translateX(-50%); z-index:7; pointer-events:none;
+  font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:14px; letter-spacing:0.06em;
+  color:#fff; text-shadow:0 1px 6px #000; background:rgba(0,0,0,0.55); padding:2px 10px; border-radius:3px;
+}
+.composer-dual-pane-label.is-top { bottom:8px; }
+.composer-dual-pane-label.is-bottom { top:8px; }
+.composer-dual-pane-label.is-active-edit { outline:1px solid #c7af4f; color:#c7af4f; }
+.gen-comp-slot-role {
+  display:inline-block; font-size:11px; font-weight:800; letter-spacing:0.06em;
+  padding:1px 6px; border-radius:3px; margin-right:4px; vertical-align:middle;
+}
+.gen-comp-slot-role.top { background:rgba(155,89,182,0.35); color:#e8daef; }
+.gen-comp-slot-role.bottom { background:rgba(52,152,219,0.35); color:#d6eaf8; }
 .composer-preview-frame.is-live-edit .composer-preview-hook,
   .composer-preview-frame.is-live-edit .composer-preview-captions,
   .composer-preview-frame.is-live-edit .composer-preview-logo,
@@ -1229,14 +1251,14 @@ input[type="url"], input[type="password"], select, textarea {
                     <div style="font-weight:700;color:#bb8fce;margin-bottom:6px;">Then / Now stack · 2 clips</div>
                     <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:8px;">
                       Lineup order: <strong>1 = TOP</strong>, <strong>2 = BOTTOM</strong>.
-                      Top plays until its <strong>Mark Out</strong> (or Switch sec below); bottom holds still.
-                      Then bottom plays its trim; top holds.
+                      Live preview shows both panes stacked. Click a lineup slot to scrub/trim that pane; the other holds on Mark In.
+                      On EXECUTE: top plays until its <strong>Mark Out</strong> (or Switch sec); then bottom plays.
                     </div>
                     <label style="display:block;margin-bottom:6px;">Top label
-                      <input id="comp-dual-label-top" type="text" value="Age 7" maxlength="24" onchange="saveCompCreativePresetToStorage()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
+                      <input id="comp-dual-label-top" type="text" value="Age 7" maxlength="24" onchange="saveCompCreativePresetToStorage();scheduleComposerLiveSplitPaint()" oninput="scheduleComposerLiveSplitPaint()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
                     </label>
                     <label style="display:block;margin-bottom:6px;">Bottom label
-                      <input id="comp-dual-label-bottom" type="text" value="Age 16" maxlength="24" onchange="saveCompCreativePresetToStorage()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
+                      <input id="comp-dual-label-bottom" type="text" value="Age 16" maxlength="24" onchange="saveCompCreativePresetToStorage();scheduleComposerLiveSplitPaint()" oninput="scheduleComposerLiveSplitPaint()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
                     </label>
                     <label style="display:block;">Switch after (seconds) · blank = top Mark Out
                       <input id="comp-dual-switch-sec" type="number" min="1" max="90" step="0.5" placeholder="e.g. 20" onchange="saveCompCreativePresetToStorage()" style="width:100%;margin-top:3px;background:#0d1524;color:#fff;border:1px solid rgba(155,89,182,0.4);padding:5px 8px;font-size:13px;" />
@@ -1503,9 +1525,9 @@ input[type="url"], input[type="password"], select, textarea {
                         <div id="composer-preview-loading" class="composer-preview-loading" style="display:none;">Preparing preview…</div>
                         <div id="composer-preview-mock" class="composer-preview-mock" style="display:none;">
                           <div id="composer-preview-mock-watermark" class="composer-preview-mock-watermark" style="display:none;">APPROX ONLY · NOT FINAL</div>
-                          <div id="composer-preview-bg" class="composer-preview-bg"><video class="composer-pane-video" playsinline muted preload="metadata"></video></div>
+                          <div id="composer-preview-bg" class="composer-preview-bg"><video class="composer-pane-video" playsinline muted preload="metadata"></video><div id="composer-dual-label-top-el" class="composer-dual-pane-label is-top" style="display:none;">Age 7</div></div>
                           <div id="composer-preview-band-bottom" class="composer-preview-band-bottom" aria-hidden="true"></div>
-                          <div id="composer-preview-main" class="composer-preview-main"><video class="composer-pane-video" playsinline muted preload="metadata"></video></div>
+                          <div id="composer-preview-main" class="composer-preview-main"><video class="composer-pane-video" playsinline muted preload="metadata"></video><div id="composer-dual-label-bottom-el" class="composer-dual-pane-label is-bottom" style="display:none;">Age 16</div></div>
                           <div id="composer-preview-ranked" class="composer-preview-ranked" style="display:none;">TOP 5 → #1</div>
                           <div id="composer-preview-hook" class="composer-preview-hook">Hook preview</div>
                           <div id="composer-preview-captions" class="composer-preview-captions">Whisper captions zone</div>
@@ -17229,6 +17251,9 @@ function setComposerReviewVideoMode(mode) {
   var label = g('composer-output-aspect-label');
   if (label) {
     if (mode === 'preview') label.textContent = '9:16 assembly preview (optional verify)';
+    else if (mode === 'edit' && typeof isComposerDualSourceStack === 'function' && isComposerDualSourceStack()) {
+      label.textContent = '9:16 Then/Now stack · TOP + BOTTOM (two sources)';
+    }
     else if (mode === 'edit') label.textContent = '9:16 edit preview · split/crops match EXECUTE';
     else label.textContent = 'Source clip · play + scrub to review before marking';
   }
@@ -17769,6 +17794,14 @@ var _composerLastPreviewMode = null;
 /** Sync dropdown/source-map to a look without marking draft dirty (scrub honesty). */
 function syncComposerUiToSavedLook(look, force) {
   if (!look || !look.mode) return;
+  if (isComposerDualSourceStack() || look.mode === 'dual_source_vstack') {
+    _composerLastPreviewMode = 'dual_source_vstack';
+    var block = g('composer-source-map-block');
+    var creativeMap = g('comp-creative-source-map-wrap');
+    if (block) block.style.display = 'none';
+    if (creativeMap) creativeMap.style.display = 'none';
+    return;
+  }
   var sig = look.mode + '|' + JSON.stringify(look.facecamRect || look.cropCx);
   if (!force && sig === _composerLastPreviewMode) return;
   _composerLastPreviewMode = sig;
@@ -17805,12 +17838,200 @@ function syncComposerUiToSavedLook(look, force) {
   }
 }
 
+/** C11 Then/Now — two different sources stacked (not same-source facecam split). */
+function isComposerDualSourceStack() {
+  var sel = g('comp-creative-preset');
+  if (sel && sel.value === 'dual_source_stack') return true;
+  try {
+    var stored = loadCompCreativePresetFromStorage();
+    return (stored.preset || '') === 'dual_source_stack';
+  } catch (e) { return false; }
+}
+
+function getComposerDualStackSlots() {
+  var lineup = getComposerLineupSlots();
+  return {
+    top: lineup[0] || null,
+    bottom: lineup[1] || null,
+    activeIdx: normalizeComposerActiveLineupIdx(lineup),
+  };
+}
+
+function composerDualPaneLabels() {
+  var topEl = g('comp-dual-label-top');
+  var botEl = g('comp-dual-label-bottom');
+  var top = (topEl && topEl.value.trim()) || 'Age 7';
+  var bottom = (botEl && botEl.value.trim()) || 'Age 16';
+  try {
+    var stored = loadCompCreativePresetFromStorage();
+    if ((!topEl || !topEl.value.trim()) && stored.dualLabelTop) top = stored.dualLabelTop;
+    if ((!botEl || !botEl.value.trim()) && stored.dualLabelBottom) bottom = stored.dualLabelBottom;
+  } catch (e0) { /* ignore */ }
+  return { top: top, bottom: bottom };
+}
+
+function bindComposerPaneVideoFromClip(paneVideo, clip, syncMaster) {
+  if (!paneVideo || !clip) return;
+  var src = resolveComposerDirectPlayUrl(clip) || '';
+  var thumb = (clip.thumbnailUrl || '').replace('{width}', '1280').replace('{height}', '720');
+  if (src) {
+    if (paneVideo.src !== src && paneVideo.currentSrc !== src) {
+      paneVideo.removeAttribute('crossorigin');
+      paneVideo.src = src;
+      paneVideo.load();
+    }
+    paneVideo.removeAttribute('poster');
+    if (syncMaster) {
+      var master = g('composer-preview-video');
+      if (master) syncPaneVideoToMaster(paneVideo, master);
+    } else {
+      try {
+        var hold = Number(clip.composerTrimStart);
+        if (!Number.isFinite(hold) || hold < 0) hold = 0;
+        if (paneVideo.readyState >= 1 && Math.abs((paneVideo.currentTime || 0) - hold) > 0.08) {
+          paneVideo.currentTime = hold;
+        }
+        paneVideo.pause();
+      } catch (e1) { /* ignore */ }
+    }
+  } else if (thumb) {
+    paneVideo.removeAttribute('src');
+    paneVideo.poster = thumb;
+    paneVideo.pause();
+  }
+}
+
+function layoutComposerDualCover(paneEl, videoEl) {
+  if (!paneEl || !videoEl) return;
+  videoEl.style.display = 'block';
+  videoEl.style.opacity = '1';
+  videoEl.style.maxWidth = 'none';
+  videoEl.style.maxHeight = 'none';
+  videoEl.style.right = 'auto';
+  videoEl.style.bottom = 'auto';
+  videoEl.style.width = '100%';
+  videoEl.style.height = '100%';
+  videoEl.style.left = '0';
+  videoEl.style.top = '0';
+  videoEl.style.objectFit = 'cover';
+}
+
+function applyComposerDualSourcePreviewPanes() {
+  var master = g('composer-preview-video');
+  var mock = g('composer-preview-mock');
+  var frame = g('composer-preview-frame');
+  if (!master || !mock) return;
+  if (_composerPreviewMode === 'ffmpeg') return;
+  setComposerReviewVideoMode('edit');
+  if (frame) {
+    frame.classList.remove('is-brand-pad');
+    frame.classList.add('is-dual-source');
+  }
+  mock.style.display = 'block';
+  setComposerVideoFallbackVisible(false);
+  var dual = getComposerDualStackSlots();
+  var topClip = dual.top && dual.top.clip;
+  var botClip = dual.bottom && dual.bottom.clip;
+  var labels = composerDualPaneLabels();
+  var bg = g('composer-preview-bg');
+  var main = g('composer-preview-main');
+  var bgV = getComposerPaneVideo(bg);
+  var mainV = getComposerPaneVideo(main);
+  var labelTop = g('composer-dual-label-top-el');
+  var labelBot = g('composer-dual-label-bottom-el');
+  if (!topClip && !botClip && !master.src) {
+    if (frame) frame.classList.add('is-waiting-video');
+    return;
+  }
+  if (frame) frame.classList.remove('is-waiting-video');
+  // Always 50/50 stack — TOP then BOTTOM (different sources).
+  if (bg) {
+    bg.style.display = 'block';
+    bg.style.height = '50%';
+    bg.style.top = '0';
+    bg.style.bottom = 'auto';
+    bg.style.left = '0';
+    bg.style.right = '0';
+    bg.style.backgroundImage = 'none';
+    bg.style.filter = 'none';
+    bg.style.transform = 'none';
+    bg.style.opacity = '1';
+  }
+  if (main) {
+    main.style.display = 'block';
+    main.style.top = '50%';
+    main.style.bottom = '0';
+    main.style.left = '0';
+    main.style.right = '0';
+    main.style.height = 'auto';
+    main.style.backgroundImage = 'none';
+    main.style.opacity = '1';
+  }
+  var activeIsTop = dual.activeIdx === 0;
+  bindComposerPaneVideoFromClip(bgV, topClip, activeIsTop);
+  bindComposerPaneVideoFromClip(mainV, botClip, !activeIsTop);
+  layoutComposerDualCover(bg, bgV);
+  layoutComposerDualCover(main, mainV);
+  if (labelTop) {
+    labelTop.style.display = topClip ? 'block' : 'none';
+    labelTop.textContent = labels.top + (activeIsTop ? ' · editing' : '');
+    labelTop.classList.toggle('is-active-edit', activeIsTop);
+  }
+  if (labelBot) {
+    labelBot.style.display = botClip ? 'block' : 'none';
+    labelBot.textContent = labels.bottom + (!activeIsTop ? ' · editing' : '');
+    labelBot.classList.toggle('is-active-edit', !activeIsTop);
+  }
+  var liveLook = (g('composer-look-tint') && g('composer-look-tint').value) || 'auto';
+  var liveFilter = '';
+  if (liveLook === 'punch') liveFilter = 'saturate(1.35) contrast(1.12) sepia(0.18) hue-rotate(-8deg)';
+  else if (liveLook === 'teal') liveFilter = 'saturate(1.15) hue-rotate(12deg) contrast(1.05)';
+  else if (liveLook === 'warm') liveFilter = 'sepia(0.22) saturate(1.2) contrast(1.05)';
+  else if (liveLook === 'cinema') liveFilter = 'contrast(1.15) saturate(0.92) brightness(0.96)';
+  else if (liveLook === 'noir') liveFilter = 'grayscale(0.85) contrast(1.2)';
+  else if (liveLook === 'neon') liveFilter = 'saturate(1.5) contrast(1.1) hue-rotate(-20deg)';
+  if (main) main.style.filter = liveFilter || 'none';
+  if (bg) bg.style.filter = liveFilter || 'none';
+  if (bgV && !bgV.dataset.dualBound) {
+    bgV.dataset.dualBound = '1';
+    bgV.addEventListener('loadedmetadata', function() { scheduleComposerLiveSplitPaint(); });
+  }
+  if (mainV && !mainV.dataset.dualBound) {
+    mainV.dataset.dualBound = '1';
+    mainV.addEventListener('loadedmetadata', function() { scheduleComposerLiveSplitPaint(); });
+  }
+  var missing = [];
+  if (!topClip) missing.push('TOP');
+  else if (!resolveComposerDirectPlayUrl(topClip)) missing.push('TOP (staging)');
+  if (!botClip) missing.push('BOTTOM');
+  else if (!resolveComposerDirectPlayUrl(botClip)) missing.push('BOTTOM (staging)');
+  if (missing.length) {
+    setComposerPreviewCaption('C11 stack needs 2 clips — missing ' + missing.join(' + '), 'pending');
+  } else {
+    setComposerPreviewCaption(
+      'C11 Then/Now · TOP=' + labels.top + ' · BOTTOM=' + labels.bottom
+        + ' · click lineup to edit trim · inactive pane holds Mark In',
+      'ok'
+    );
+  }
+}
+
 function applyComposerLookToPreviewPanes(look) {
   var master = g('composer-preview-video');
   var mock = g('composer-preview-mock');
   var frame = g('composer-preview-frame');
-  if (!master || !mock || !look) return;
+  if (!master || !mock) return;
   if (_composerPreviewMode === 'ffmpeg') return;
+  if (isComposerDualSourceStack()) {
+    applyComposerDualSourcePreviewPanes();
+    return;
+  }
+  if (!look) return;
+  if (frame) frame.classList.remove('is-dual-source');
+  var labelTopClear = g('composer-dual-label-top-el');
+  var labelBotClear = g('composer-dual-label-bottom-el');
+  if (labelTopClear) labelTopClear.style.display = 'none';
+  if (labelBotClear) labelBotClear.style.display = 'none';
   setComposerReviewVideoMode('edit');
   if (frame) frame.classList.remove('is-brand-pad');
   mock.style.display = 'block';
@@ -17977,6 +18198,33 @@ function syncPaneVideoToMaster(paneVideo, master) {
 /** Keep split-pane videos locked to the hidden master clock during play/scrub. */
 function syncComposerPaneVideoClock() {
   if (_composerPreviewMode === 'ffmpeg') return;
+  if (isComposerDualSourceStack()) {
+    var dual = getComposerDualStackSlots();
+    var master = g('composer-preview-video');
+    var bg = g('composer-preview-bg');
+    var main = g('composer-preview-main');
+    var bgV = bg && bg.querySelector('.composer-pane-video');
+    var mainV = main && main.querySelector('.composer-pane-video');
+    var activeIsTop = dual.activeIdx === 0;
+    if (activeIsTop && bgV && master) syncPaneVideoToMaster(bgV, master);
+    if (!activeIsTop && mainV && master) syncPaneVideoToMaster(mainV, master);
+    // Inactive pane holds its Mark In frame (Then/Now hold-then-switch preview).
+    var holdClip = activeIsTop
+      ? (dual.bottom && dual.bottom.clip)
+      : (dual.top && dual.top.clip);
+    var holdV = activeIsTop ? mainV : bgV;
+    if (holdV && holdClip) {
+      try {
+        var hold = Number(holdClip.composerTrimStart);
+        if (!Number.isFinite(hold) || hold < 0) hold = 0;
+        if (holdV.readyState >= 1 && Math.abs((holdV.currentTime || 0) - hold) > 0.12) {
+          holdV.currentTime = hold;
+        }
+        holdV.pause();
+      } catch (eHold) { /* ignore */ }
+    }
+    return;
+  }
   var master = g('composer-preview-video');
   if (!master || !(master.currentSrc || master.src)) return;
   var bg = g('composer-preview-bg');
@@ -18073,6 +18321,19 @@ function composerPickerEntryForClip(clip) {
 function ensureComposerLeadClipStaged(callback) {
   var clip = composerLeadClipForEdit();
   if (!clip) { if (callback) callback(false); return; }
+  // C11: stage the other stack pane in the background so TOP+BOTTOM both paint.
+  if (isComposerDualSourceStack()) {
+    var dual = getComposerDualStackSlots();
+    [dual.top, dual.bottom].forEach(function(slot) {
+      var other = slot && slot.clip;
+      if (!other || other === clip) return;
+      if (resolveComposerDirectPlayUrl(other)) return;
+      if (other._stageInflight || other.staging || other._composerStagePoll) return;
+      stageClipForLibrary(other, composerPickerEntryForClip(other), function() {
+        scheduleComposerLiveSplitPaint();
+      });
+    });
+  }
   if (resolveComposerDirectPlayUrl(clip)) { if (callback) callback(true); return; }
   if (clip._composerStagePoll) return;
   if (clip._stageInflight || clip.staging) {
@@ -18169,7 +18430,12 @@ function bootstrapComposerReviewVideo() {
   if (direct) {
     setComposerReviewVideoMode('edit');
     attachComposerSourceToPreviewPlayer(direct);
-    setComposerPreviewCaption('9:16 split preview — ▶ Play, drag timeline, Mark In/Out (saved trim shows on right)', 'ok');
+    if (isComposerDualSourceStack()) {
+      setComposerPreviewCaption('C11 Then/Now stack — TOP+BOTTOM · click lineup to edit a pane · ▶ scrubs active clip', 'ok');
+      scheduleComposerLiveSplitPaint();
+    } else {
+      setComposerPreviewCaption('9:16 split preview — ▶ Play, drag timeline, Mark In/Out (saved trim shows on right)', 'ok');
+    }
     return true;
   }
   var video = g('composer-preview-video');
@@ -18418,6 +18684,7 @@ function getComposerScrubVideo() {
 }
 
 function getComposerLineupMaxSlots() {
+  if (isComposerDualSourceStack()) return 2;
   var delivery = (g('composer-delivery') && g('composer-delivery').value) || 'comp';
   if (delivery === 'short') return Math.max(1, collectCompPickedClips().length);
   return getCompLineupSpec().lineupSlots;
@@ -20808,6 +21075,7 @@ function inferComposerDeliveryFromPreset() {
   var preset = stored.preset || 'classic_blur_pad';
   if (preset === 'serpent_ranked_vod' || preset === 'twitch_comp_vod') return 'vod_comp';
   if (preset === 'serpent_ranked') return 'comp';
+  if (preset === 'dual_source_stack') return 'comp';
   var picked = collectCompPickedClips().length;
   if (picked === 1) return 'short';
   return 'comp';
@@ -20816,6 +21084,11 @@ function inferComposerDeliveryFromPreset() {
 /** CPD-1314 — Review/EXECUTE layout must follow saved look, not a stale dropdown. */
 function overlaySavedLookOnCompCreative(compCreative, clip) {
   if (!compCreative || !clip) return;
+  // Dual stack layout is preset-owned — never clobber with per-clip openingLayout.
+  if (compCreative.preset === 'dual_source_stack'
+      || (compCreative.layout && compCreative.layout.mode === 'dual_source_vstack')) {
+    return;
+  }
   var look = clip.openingLayout;
   if (!look || !look.mode) return;
   compCreative.layout = compCreative.layout || {};
@@ -20845,6 +21118,13 @@ function overlaySavedLookOnCompCreative(compCreative, clip) {
 
 function buildCompositionSpecFromUI() {
   var delivery = (g('composer-delivery') && g('composer-delivery').value) || _composerDeliveryFormat || inferComposerDeliveryFromPreset();
+  if (isComposerDualSourceStack()) {
+    delivery = 'comp';
+    if (g('composer-delivery')) {
+      g('composer-delivery').value = 'comp';
+      g('composer-delivery').dataset.userSet = '1';
+    }
+  }
   if (delivery === 'vod_segment' && _composerVodSegment) {
     var creativePayload = buildCompCreativeRequestPayload(_composerVodSegment.streamer || '');
     return {
@@ -20862,8 +21142,13 @@ function buildCompositionSpecFromUI() {
   }
   var spec = getCompLineupSpec();
   var maxCount = delivery === 'short' ? 1 : (delivery === 'vod_comp' ? spec.maxClips : spec.lineupSlots);
+  if (isComposerDualSourceStack()) maxCount = 2;
   // Multi-cut (CPD-1255) expands after lineup slice so one pick → N stitch windows.
   var lineup = expandComposerCutsInLineup(getCompLineupForDispatch(maxCount));
+  if (isComposerDualSourceStack()) {
+    // Dual stack must stay exactly two sources — do not expand multi-cuts into more panes.
+    lineup = getCompLineupForDispatch(2);
+  }
   var creativePayload = buildCompCreativeRequestPayload((composerActiveLineupSlot() && composerActiveLineupSlot().displayName) || (lineup[0] && lineup[0].displayName) || '');
   function mapComposerSlotToSpecClip(slot, idx) {
     var c = slot.clip || {};
@@ -21760,7 +22045,9 @@ function renderCompLineupPanel(opts) {
   });
   var head = stored.preset === 'serpent_ranked_vod'
     ? 'RANKED VOD LINEUP (Top ' + COMP_CLIP_COUNT + ') — countdown + editorial'
-    : 'COMP LINEUP (1–' + COMP_CLIP_COUNT + ') — stitch order · ↑ ↓ to reorder · click a clip to edit trim/layout';
+    : (stored.preset === 'dual_source_stack'
+      ? 'THEN/NOW STACK — slot 1 = TOP · slot 2 = BOTTOM · click to edit that pane’s trim'
+      : 'COMP LINEUP (1–' + COMP_CLIP_COUNT + ') — stitch order · ↑ ↓ to reorder · click a clip to edit trim/layout');
   if (stored.preset === 'serpent_ranked_vod' && spec.minDurationSec) {
     head += ' · target 8+ min clip footage';
   }
@@ -21781,6 +22068,7 @@ function renderCompLineupPanel(opts) {
     + (totalLabel ? '<span class="gen-comp-lineup-total" title="Sum of clip lengths in lineup (hooks/cards add more)">TOTAL ' + totalLabel + '</span>' : '')
     + '</div><div class="gen-comp-lineup-grid">';
   var activeIdx = normalizeComposerActiveLineupIdx(show);
+  var dualStack = stored.preset === 'dual_source_stack';
   show.forEach(function(slot, idx) {
     var c = slot.clip || {};
     var clipDur = compClipDurationSec(c);
@@ -21789,8 +22077,14 @@ function renderCompLineupPanel(opts) {
       ? c.thumbnailUrl.replace('{width}', '96').replace('{height}', '54')
       : '';
     var isActive = idx === activeIdx;
+    var roleBadge = '';
+    if (dualStack) {
+      roleBadge = idx === 0
+        ? '<span class="gen-comp-slot-role top">TOP</span>'
+        : '<span class="gen-comp-slot-role bottom">BOTTOM</span>';
+    }
     html += '<div class="gen-comp-slot' + (isActive ? ' is-active' : '') + '" role="button" tabindex="0" onclick="setComposerActiveLineupSlot(' + idx + ')" title="Edit trim & layout for clip ' + (idx + 1) + '">'
-      + '<span class="gen-comp-slot-num">' + (idx + 1) + (isActive ? ' ✎' : '') + '</span>';
+      + '<span class="gen-comp-slot-num">' + roleBadge + (idx + 1) + (isActive ? ' ✎' : '') + '</span>';
     if (thumb) {
       html += '<img src="' + thumb + '" class="gen-comp-slot-thumb" onerror="this.style.display=\'none\'">';
     } else {
@@ -23181,6 +23475,7 @@ function onCompCreativeFullBleedCropChange(skipSave) {
 
 /** Landscape layout value: split_screen | brand_pad | single (full screen). CPD-1266 */
 function landscapeLayoutValueFromLookMode(mode) {
+  if (mode === 'dual_source_vstack') return 'single';
   if (mode === 'split_screen') return 'split_screen';
   if (mode === 'blur_pad') return 'brand_pad';
   if (mode === 'full_bleed_crop') return 'single';
@@ -23912,6 +24207,7 @@ function populateCompCreativeSelect() {
     return '<option value="' + escHtml(e.id) + '">' + escHtml(e.selectLabel || (e.code + ' · ' + e.name)) + '</option>';
   }).join('');
   if (_compCreativeCatalogById[stored]) sel.value = stored;
+  if (typeof syncDualSourceStackUi === 'function') syncDualSourceStackUi();
 }
 
 function refreshCompCreativeLabel() {
@@ -23983,7 +24279,15 @@ function syncDualSourceStackUi() {
   var panel = g('comp-creative-dual-source');
   var on = !!(sel && sel.value === 'dual_source_stack');
   if (panel) panel.style.display = on ? '' : 'none';
-  if (!on) return;
+  if (!on) {
+    var frameOff = g('composer-preview-frame');
+    if (frameOff) frameOff.classList.remove('is-dual-source');
+    var lt = g('composer-dual-label-top-el');
+    var lb = g('composer-dual-label-bottom-el');
+    if (lt) lt.style.display = 'none';
+    if (lb) lb.style.display = 'none';
+    return;
+  }
   var del = g('composer-delivery');
   if (del) {
     del.value = 'comp';
@@ -24001,14 +24305,33 @@ function syncDualSourceStackUi() {
       g('comp-dual-switch-sec').value = stored.dualSwitchSec;
     }
   } catch (e0) { /* ignore */ }
+  renderCompLineupPanel();
+  scheduleComposerLiveSplitPaint();
+  ensureComposerLeadClipStaged(function() {
+    bootstrapComposerReviewVideo();
+    scheduleComposerLiveSplitPaint();
+  });
   if (typeof setComposerPreviewCaption === 'function') {
-    setComposerPreviewCaption('C11 Then/Now · trim TOP Mark Out (= switch) · BOTTOM trim · EXECUTE', 'ok');
+    setComposerPreviewCaption('C11 Then/Now · TOP+BOTTOM stacked · trim active pane · inactive holds Mark In', 'ok');
   }
 }
 
 /** Preset baseline for a clip with no saved openingLayout — never reuse another clip's saved rects. */
 function composerPresetDefaultLook(stored) {
   stored = stored || loadCompCreativePresetFromStorage();
+  if ((stored.preset || '') === 'dual_source_stack') {
+    return {
+      mode: 'dual_source_vstack',
+      cropCx: 0.5,
+      cropCy: 0.5,
+      cropZoom: 1,
+      facecamRect: null,
+      bottomPaneRect: null,
+      contentCx: undefined,
+      topHeight: 960,
+      bottomPaneMode: null,
+    };
+  }
   var splitOn = composerLandscapeSplitEnabled(stored);
   // Landscape: split | brand_pad (blur_pad) | single (full_bleed). Portrait keeps preset mode.
   var mode = splitOn
