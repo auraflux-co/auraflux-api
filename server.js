@@ -4861,6 +4861,8 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
 
     const { seedTitleCandidates } = require('./lib/operator_publish_titles');
     card.publishCopy = publishCopy;
+    // Drop stale Twitch/Local-import candidates so the picker shows the new titles
+    delete card.titleCandidates;
     seedTitleCandidates(card);
     card.state = card.state || {};
     card.state.savedOutputs = card.state.savedOutputs || {};
