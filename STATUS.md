@@ -382,6 +382,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **feat(iss_SpdIbNmLEjQ8): Intent vs burned + Compose OFF wins at EXECUTE** — ⚡ wiring QA after near-final; composeShipped locks hooks/anim/bed/beats so C1–C10 presets cannot rebuild OFF controls. | lib/composer_intent_vs_burned.js, lib/clip_comp_execute_fx.js, lib/routes/composition.js, cwn_production.html, tests, STATUS.md | — | 2026-09-02 ET |
 | Cursor | **fix(iss_t7BfBrY4Hm33): Anim text OFF still burned in near-final** — Empty overlay field clears sticky clip.overlayTexts; preview/EXECUTE respect enabled:false (no Beats/gap resurrection of WATCH THIS). | cwn_production.html, lib/composition_preview.js, server.js, test/composition_near_final_preview.test.js, STATUS.md | — | 2026-09-02 ET |
 | Cursor | **fix(cpd-1125): wire COMPOSE handoff + composer stack overflow + dashboard E2E** — setNewsDeskMode before wireStories assign; nav pillar fix; getCompLineupForDispatch no recurse; wire picker re-render target; Playwright E2E script. | cwn_production.html, scripts/cpd1122_library_dashboard_e2e.js, STATUS.md | — | 2026-06-29 ET |
 | Cursor | **feat(cpd-1122): Creative Director parity — library UX, wire staging, Avatar VOD** — ec5fd2d4 parent ship. | cwn_production.html, lib/content_library/stage_wire.js, lib/routes/c0_sources.js, STATUS.md | ec5fd2d4 | 2026-06-29 ET |

@@ -1609,9 +1609,14 @@ input[type="url"], input[type="password"], select, textarea {
                           <span id="composer-gap-fixes-status" style="font-size:12px;color:rgba(199,175,79,0.9);"></span>
                         </div>
                       </div>
+                      <div id="composer-intent-burned-result" class="composer-qa" style="display:none;margin-top:8px;">
+                        <div class="composer-qa-head">INTENT vs BURNED <span class="composer-qa-sub">wiring QA · not creative</span></div>
+                        <pre id="composer-intent-burned-body" style="margin:0;white-space:pre-wrap;font-size:12px;line-height:1.45;color:rgba(255,255,255,0.88);font-family:ui-monospace,Menlo,monospace;max-height:280px;overflow:auto;"></pre>
+                      </div>
                       <div class="composer-exec-row">
                         <button type="button" id="btn-composer-done-edit" class="btn btn-outline" onclick="doneComposerEditing()" title="Lock trim + saved looks">Done editing</button>
                         <button type="button" id="btn-composer-review-edit" class="btn btn-gold btn-sm" onclick="reviewComposerEdit()" title="Near-final Review: layout + Punch/transform + Beats→FX + music bed (Whisper captions still burn at EXECUTE)">▶ Review near-final</button>
+                        <button type="button" id="btn-composer-intent-vs-burned" class="btn btn-outline btn-sm" onclick="compareComposerIntentVsBurned()" title="Compare Compose controls (intent) vs what near-final actually burned">⚡ Intent vs burned</button>
                         <button type="button" id="btn-composer-compare-original" class="btn btn-outline btn-sm" onclick="compareComposerVsOriginal()" title="Gemini watches full SOURCE then full SHORT video + audio (creative QA — not legal advice; ~1–3 min)">♊ Compare vs original</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="applyComposerTransformGapFixes()" title="Close transform gaps without re-picking: look/hooks/speed/anim/bed/SFX/beats">✦ Gap fixes</button>
                         <button type="button" id="btn-composer-execute" class="btn btn-gold" onclick="executeFromComposer()">EXECUTE → ASSEMBLY</button>
@@ -19693,6 +19698,104 @@ function ensureComposerSourceReviewPath() {
   });
 }
 
+/** iss_SpdIbNmLEjQ8 — Compose controls (intent) vs near-final burn tokens. Wiring QA, not Gemini. */
+function snapshotComposerIntentForBurnCheck() {
+  var stored = (typeof saveCompCreativePresetToStorage === 'function') ? saveCompCreativePresetToStorage() : {};
+  var lead = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+  var overlayTxt = (g('composer-overlay-text') && g('composer-overlay-text').value.trim()) || '';
+  var look = (g('composer-look-tint') && g('composer-look-tint').value) || 'auto';
+  var hookMode = (g('comp-creative-hook-mode') && g('comp-creative-hook-mode').value) || stored.hookMode || 'both';
+  var bed = (typeof getComposerMusicBed === 'function')
+    ? getComposerMusicBed()
+    : ((g('composer-music-bed') && g('composer-music-bed').value) || stored.musicBed || 'off');
+  var sfx = (window._composerCutSfxOverride != null)
+    ? window._composerCutSfxOverride
+    : (stored.cutSfx || 'off');
+  var speedFeel = (g('composer-speed-feel') && g('composer-speed-feel').value) || 'normal';
+  var beatsOn = !!(lead && (lead.zoomPunch || lead.cameraShake || lead.impactTint || lead.highlightSfx));
+  var hasSpeedRamps = !!(lead && lead.speedRamps && lead.speedRamps.length);
+  return {
+    look: look,
+    hookMode: hookMode,
+    whisperOn: hookMode !== 'hook_only',
+    captionStyle: (g('composer-caption-style') && g('composer-caption-style').value) || '',
+    musicBed: bed,
+    cutSfx: sfx || 'off',
+    highlightSfx: !!(lead && lead.highlightSfx && lead.highlightSfx.drops && lead.highlightSfx.drops.length),
+    beatsOn: beatsOn,
+    speedFeel: speedFeel,
+    hasSpeedRamps: speedFeel === 'normal' ? true : hasSpeedRamps,
+    animTextOn: !!overlayTxt,
+    animTextPreview: overlayTxt ? ('"' + overlayTxt.slice(0, 24) + '"') : '',
+  };
+}
+
+function compareComposerIntentVsBurned() {
+  var near = window._composerNearFinalLast || {};
+  var applied = near.nearFinalApplied || near.applied || [];
+  var missing = near.nearFinalMissing || near.missing || [];
+  var panel = g('composer-intent-burned-result');
+  var bodyEl = g('composer-intent-burned-body');
+  var btn = g('btn-composer-intent-vs-burned');
+  if (!applied.length && !missing.length && !near.ok) {
+    alert('Run ▶ Review near-final first so we know what burned.');
+    return;
+  }
+  if (panel) panel.style.display = 'block';
+  if (bodyEl) bodyEl.textContent = 'Comparing Compose controls vs near-final burns…';
+  if (btn) btn.disabled = true;
+  var intent = snapshotComposerIntentForBurnCheck();
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/composition/intent-vs-burned', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ intent: intent, near: { applied: applied, missing: missing } })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) throw new Error(d.error || 'intent vs burned failed');
+      var rep = d.report || {};
+      var lines = [];
+      lines.push((rep.ok ? 'OK' : 'GAP') + ' · wiring QA (not creative)');
+      lines.push('burned: ' + (((rep.applied || []).join('+')) || 'none'));
+      if ((rep.missing || []).length) lines.push('still EXECUTE: ' + rep.missing.join('+'));
+      lines.push('');
+      (rep.rows || []).forEach(function(row) {
+        lines.push(
+          (row.verdict || '?') + '  ' + row.key
+          + ' · intent ' + (row.intent || '—')
+          + ' · burned ' + (row.burned || '—')
+          + (row.hint ? (' — ' + row.hint) : '')
+        );
+      });
+      if (rep.gaps && rep.gaps.length) {
+        lines.push('');
+        lines.push('Fix → re-Review (do not use ✦ Gap fixes for OVERBURN):');
+        rep.gaps.forEach(function(g0) { lines.push('• ' + g0); });
+      }
+      if (intent.hookMode === 'whisper_only') {
+        lines.push('');
+        lines.push('Hooks OFF (whisper_only) → EXECUTE will skip burned hook card (any C1–C10).');
+      }
+      if (bodyEl) bodyEl.textContent = lines.join('\n');
+      if (typeof setComposerPreviewCaption === 'function') {
+        setComposerPreviewCaption(
+          rep.ok ? 'Intent vs burned · OK' : ('Intent vs burned · ' + (rep.gaps || []).length + ' gap(s) — re-Review'),
+          rep.ok ? 'ok' : 'warn'
+        );
+      }
+      window._composerLastIntentBurnedReport = rep;
+    })
+    .catch(function(err) {
+      if (bodyEl) bodyEl.textContent = 'Intent vs burned failed: ' + (err.message || err);
+      if (typeof setComposerPreviewCaption === 'function') {
+        setComposerPreviewCaption('Intent vs burned failed: ' + (err.message || err), 'warn');
+      }
+    })
+    .finally(function() {
+      if (btn) btn.disabled = false;
+    });
+}
+
 /** Gemini frame-pair: SOURCE vs SHORT (near-final / timeline preview). Creative QA only. */
 function compareComposerVsOriginal() {
   var shortPath = window._composerTimelinePreviewPath || null;
@@ -24281,22 +24384,44 @@ function buildCompCreativeRequestPayload(streamerHint) {
       hideTopBar: !!stored.hideTopBar,
     };
   }
-  // Operator BEFORE EXECUTE toggles — always win over preset hard-locks
-  if (stored.hookMode) {
-    overrides = overrides || {};
-    overrides.hooks = Object.assign({}, overrides.hooks || {}, { mode: stored.hookMode });
-    if (!overrides.hooks.rankedList) {
-      overrides.hooks.rankedList = { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 };
-    }
-    overrides.captions = Object.assign({}, overrides.captions || {}, {
-      whisper: stored.hookMode !== 'hook_only'
-    });
+  // Operator BEFORE EXECUTE toggles — always win over preset hard-locks (any C1–C10)
+  overrides = overrides || {};
+  overrides.composeShipped = true;
+  overrides.operatorLocked = true;
+  // Hooks: Compose DOM is source of truth — whisper_only means no burned hook at queue/EXECUTE
+  var shippedHookMode = stored.hookMode || (g('comp-creative-hook-mode') && g('comp-creative-hook-mode').value) || 'both';
+  overrides.hooks = Object.assign({}, overrides.hooks || {}, { mode: shippedHookMode });
+  if (!overrides.hooks.rankedList) {
+    overrides.hooks.rankedList = { enabled: false, streamer: '', theme: 'MOMENTS', slotCount: 1 };
   }
+  // Ranked presets keep list chrome only when hooks are not whisper_only
+  if (isRanked && shippedHookMode === 'whisper_only') {
+    overrides.hooks.rankedList.enabled = false;
+  } else if (isRanked) {
+    overrides.hooks.rankedList.enabled = true;
+  }
+  overrides.captions = Object.assign({}, overrides.captions || {}, {
+    whisper: shippedHookMode !== 'hook_only'
+  });
+  var bedShip = stored.musicBed
+    || (typeof getComposerMusicBed === 'function' ? getComposerMusicBed() : null)
+    || 'off';
+  overrides.audio = Object.assign({}, overrides.audio || {}, { musicBed: bedShip });
+  var speedShip = g('composer-speed-feel') && g('composer-speed-feel').value;
+  if (speedShip) overrides.speedFeel = speedShip;
+  var lookShip = g('composer-look-tint') && g('composer-look-tint').value;
+  if (lookShip) {
+    overrides.look = Object.assign({}, overrides.look || {}, { preset: lookShip });
+  }
+  var leadBeats = (typeof composerLeadClipForEdit === 'function') ? composerLeadClipForEdit() : null;
+  var hasBeatsShip = !!(leadBeats && (leadBeats.zoomPunch || leadBeats.cameraShake || leadBeats.impactTint || leadBeats.highlightSfx));
+  overrides.beatSync = Object.assign({}, overrides.beatSync || {}, {
+    autoExecute: hasBeatsShip ? true : false,
+  });
   var opCutSfx = (window._composerCutSfxOverride != null)
     ? window._composerCutSfxOverride
     : stored.cutSfx;
   if (opCutSfx != null) {
-    overrides = overrides || {};
     overrides.audio = Object.assign({}, overrides.audio || {}, { cutSfx: opCutSfx });
   }
 

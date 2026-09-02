@@ -32,17 +32,25 @@ describe('clip_comp_execute_fx', () => {
     assert.equal(wait.duration, 2);
   });
 
-  it('strengthens reaction_short look to punch + grain', () => {
+  it('strengthens reaction_short grain; keeps Compose look preset', () => {
     const c = strengthenCompCreativeForExecute({
       preset: 'reaction_short',
       look: { preset: 'vivid' },
       speedFeel: 'punch_pause',
       animatedText: { enabled: true, items: [{ text: 'X', startSec: 1, duration: 2 }] },
     }, { durationSec: 60 });
-    assert.equal(c.look.preset, 'punch');
+    assert.equal(c.look.preset, 'vivid');
     assert.ok(c.look.filmGrainStrength >= 7 && c.look.filmGrainStrength <= 9);
     assert.equal(c.beatSync.autoExecute, true);
     assert.ok(c.animatedText.items.length >= 6);
+  });
+
+  it('does not invent anim text when Compose shipped enabled:false', () => {
+    const c = strengthenCompCreativeForExecute({
+      preset: 'reaction_short',
+      animatedText: { enabled: false },
+    }, { durationSec: 45 });
+    assert.equal(c.animatedText.enabled, false);
   });
 
   it('wantsAutoBeats for reaction_short by default', () => {
