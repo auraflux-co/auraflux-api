@@ -16717,7 +16717,8 @@ function clearComposerVodSegment() {
   if (tl) { tl.classList.remove('is-active'); tl.innerHTML = ''; }
 }
 
-/** Open a staged import (local MP4 or URL pull) as a single editable Compose clip. */
+/** Open a staged import (local MP4 or URL pull) as an editable Compose clip.
+ *  Appends to the current picker lineup (does not wipe prior imports) so Age 7 + Age 16 can both sit in Compose. */
 function openStagedImportInComposer(staged, opts) {
   opts = opts || {};
   var play = staged && (staged.playbackUrl || staged.r2Url || staged.r2_url || staged.stagedUrl || staged.mp4Url);
@@ -16729,6 +16730,7 @@ function openStagedImportInComposer(staged, opts) {
   var streamer = String(staged.streamer || opts.streamer || 'import').toLowerCase();
   var platform = staged.platform || opts.platform || 'import';
   var pageUrl = staged.url || opts.sourceUrl || play;
+  var clipId = staged.clipId || staged.clip_id || null;
   var clip = {
     title: staged.title || opts.title || 'Imported clip',
     url: pageUrl,
@@ -16750,23 +16752,77 @@ function openStagedImportInComposer(staged, opts) {
     trimStart: 0,
     trimEnd: dur,
     vodPeakWindow: true,
-    clipId: staged.clipId || staged.clip_id || null
+    clipId: clipId
   };
   _composerVodSegment = null;
   clearComposerVodSegment();
-  _twitchPickerStreamers = [{
-    name: streamer,
-    displayName: clip.displayName,
-    platform: platform,
-    selected: true,
-    clips: [clip],
-    clipsRaw: [Object.assign({}, clip)],
-    dropReason: null
-  }];
+  if (!Array.isArray(_twitchPickerStreamers)) _twitchPickerStreamers = [];
+
+  function sameClip(a) {
+    if (!a) return false;
+    if (clipId && (a.clipId === clipId || a.id === clipId)) return true;
+    var aPlay = a.playbackUrl || a.r2Url || a.stagedUrl || a.mp4Url || '';
+    return aPlay && aPlay === play;
+  }
+
+  var bucket = null;
+  for (var i = 0; i < _twitchPickerStreamers.length; i++) {
+    if (String(_twitchPickerStreamers[i].name || '').toLowerCase() === streamer) {
+      bucket = _twitchPickerStreamers[i];
+      break;
+    }
+  }
+  if (!bucket) {
+    bucket = {
+      name: streamer,
+      displayName: clip.displayName,
+      platform: platform,
+      selected: true,
+      clips: [],
+      clipsRaw: [],
+      dropReason: null
+    };
+    _twitchPickerStreamers.push(bucket);
+  }
+  bucket.selected = true;
+  bucket.clips = bucket.clips || [];
+  bucket.clipsRaw = bucket.clipsRaw || [];
+  // Keep prior imports selected across streamers
+  for (var s = 0; s < _twitchPickerStreamers.length; s++) {
+    var ent = _twitchPickerStreamers[s];
+    if (!ent || !ent.clips) continue;
+    for (var c = 0; c < ent.clips.length; c++) {
+      if (ent.clips[c] && ent.clips[c].game === 'import') ent.clips[c].selected = true;
+    }
+  }
+  var already = bucket.clips.some(sameClip);
+  if (!already) {
+    bucket.clips.push(clip);
+    bucket.clipsRaw.push(Object.assign({}, clip));
+  } else {
+    // Refresh staging URLs on re-import of same clip
+    for (var j = 0; j < bucket.clips.length; j++) {
+      if (sameClip(bucket.clips[j])) {
+        bucket.clips[j] = Object.assign({}, bucket.clips[j], clip);
+        break;
+      }
+    }
+  }
+
   _composerContentSource = 'twitch';
   if (g('twitch-streamers')) g('twitch-streamers').value = streamer;
+  var pickedNow = 0;
+  try {
+    pickedNow = (_twitchPickerStreamers || []).reduce(function(n, e) {
+      return n + ((e.clips || []).filter(function(cl) { return cl && cl.selected; }).length);
+    }, 0);
+  } catch (e1) { pickedNow = 1; }
   var delSel = g('composer-delivery');
-  if (delSel) { delSel.value = 'short'; delSel.dataset.userSet = '1'; }
+  if (delSel) {
+    // 2+ imports → Comp lineup so both chips show; single stays Short
+    delSel.value = pickedNow >= 2 ? 'comp' : 'short';
+    delSel.dataset.userSet = '1';
+  }
   try {
     sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
       streamers: _twitchPickerStreamers,
@@ -16783,6 +16839,11 @@ function openStagedImportInComposer(staged, opts) {
   reconcileCompLineup(collectCompPickedClips());
   renderComposerHandoffSummary();
   if (typeof refreshGenerateComposer === 'function') refreshGenerateComposer(true);
+  var statusEl = g('twitch-fetch-status');
+  if (statusEl) {
+    statusEl.textContent = 'Compose lineup: ' + pickedNow + ' clip' + (pickedNow === 1 ? '' : 's')
+      + (pickedNow >= 2 ? ' (Comp)' : ' (Short)') + ' — import again to add another.';
+  }
 }
 
 function importLocalMp4ToCompose() {
