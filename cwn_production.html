@@ -2482,10 +2482,15 @@ input[type="url"], input[type="password"], select, textarea {
                 <button id="btn-preview-twitch" class="btn btn-outline" onclick="previewTwitchMedia()">Load library</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="saveLibraryClipPicks(true)" title="Save checked clips to this browser">Save picks</button>
                 <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0;">
-                <input type="url" id="library-paste-url" placeholder="Paste YouTube/Twitch VOD URL → moments" style="flex:1;min-width:220px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.35);padding:6px 8px;font-size:13px;" />
-                <button type="button" class="btn btn-outline btn-sm" onclick="pasteUrlAnalyzeAndCompose()" title="CPD-1278 — analyze peaks and open best in Composer">Paste URL → Peaks</button>
+                <input type="url" id="library-paste-url" placeholder="YouTube / Twitch / Facebook URL (no channel subscribe needed)" style="flex:1;min-width:220px;background:#0d1524;color:#fff;border:1px solid rgba(199,175,79,0.35);padding:6px 8px;font-size:13px;" />
+                <button type="button" class="btn btn-gold btn-sm" onclick="pasteUrlStageFullAndCompose()" title="Download + stage full video (≤15m) → Compose — no roster">URL → Full video</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="pasteUrlAnalyzeAndCompose()" title="Analyze peaks and open best in Composer">URL → Peaks</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="extendComposerPeakWindow(30)" title="Re-stage peak ±30s">Peak ±30s</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="extendComposerPeakWindow(60)" title="Re-stage peak ±60s">Peak ±60s</button>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 6px;">
+                <input type="file" id="library-import-file" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.webm,.mkv" style="flex:1;min-width:180px;font-size:12px;color:rgba(255,255,255,0.75);" />
+                <button type="button" class="btn btn-gold btn-sm" onclick="importLocalMp4ToCompose()" title="Upload local / FB reel MP4 → R2 → Compose">Import MP4 → Compose</button>
               </div>
               <button type="button" class="btn btn-gold" onclick="sendPickerToComposer()">COMPOSE →</button>
               </div>
@@ -16710,6 +16715,138 @@ function clearComposerVodSegment() {
   _composerVodSegment = null;
   var tl = g('composer-vod-timeline');
   if (tl) { tl.classList.remove('is-active'); tl.innerHTML = ''; }
+}
+
+/** Open a staged import (local MP4 or URL pull) as a single editable Compose clip. */
+function openStagedImportInComposer(staged, opts) {
+  opts = opts || {};
+  var play = staged && (staged.playbackUrl || staged.r2Url || staged.r2_url || staged.stagedUrl || staged.mp4Url);
+  if (!play) {
+    alert('Import staged but no playback URL — check R2.');
+    return;
+  }
+  var dur = Math.max(1, Math.floor(Number(staged.duration || staged.duration_sec) || 60));
+  var streamer = String(staged.streamer || opts.streamer || 'import').toLowerCase();
+  var platform = staged.platform || opts.platform || 'import';
+  var pageUrl = staged.url || opts.sourceUrl || play;
+  var clip = {
+    title: staged.title || opts.title || 'Imported clip',
+    url: pageUrl,
+    pageUrl: pageUrl,
+    views: 0,
+    game: 'import',
+    thumbnailUrl: staged.thumbnailUrl || '',
+    duration: dur,
+    selected: true,
+    platform: platform,
+    streamer: streamer,
+    displayName: opts.displayName || streamer,
+    stagedUrl: play,
+    playbackUrl: play,
+    r2Url: play,
+    mp4Url: play,
+    composerTrimStart: 0,
+    composerTrimEnd: dur,
+    trimStart: 0,
+    trimEnd: dur,
+    vodPeakWindow: true,
+    clipId: staged.clipId || staged.clip_id || null
+  };
+  _composerVodSegment = null;
+  clearComposerVodSegment();
+  _twitchPickerStreamers = [{
+    name: streamer,
+    displayName: clip.displayName,
+    platform: platform,
+    selected: true,
+    clips: [clip],
+    clipsRaw: [Object.assign({}, clip)],
+    dropReason: null
+  }];
+  _composerContentSource = 'twitch';
+  if (g('twitch-streamers')) g('twitch-streamers').value = streamer;
+  var delSel = g('composer-delivery');
+  if (delSel) { delSel.value = 'short'; delSel.dataset.userSet = '1'; }
+  try {
+    sessionStorage.setItem('cwn_composer_handoff', JSON.stringify({
+      streamers: _twitchPickerStreamers,
+      vodSegment: null,
+      source: opts.source || 'library-import'
+    }));
+  } catch (e) {}
+  nav('generate');
+  switchGeneratePillar('twitch');
+  var btn = g('btn-preview-twitch');
+  renderTwitchPicker(btn, 1);
+  setPickerPanelVisible('twitch', true);
+  if (btn) btn.textContent = 'HIDE PICKER';
+  reconcileCompLineup(collectCompPickedClips());
+  renderComposerHandoffSummary();
+  if (typeof refreshGenerateComposer === 'function') refreshGenerateComposer(true);
+}
+
+function importLocalMp4ToCompose() {
+  var fileInput = g('library-import-file');
+  var file = fileInput && fileInput.files && fileInput.files[0];
+  if (!file) { alert('Choose an MP4 / MOV file first (e.g. FB reel download).'); return; }
+  var statusEl = g('twitch-fetch-status');
+  if (statusEl) statusEl.textContent = 'Importing ' + file.name + ' → R2…';
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('title', file.name.replace(/\.[^.]+$/, ''));
+  fd.append('streamer', 'local_import');
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage-local', {
+    method: 'POST',
+    body: fd
+  })
+    .then(function(r) { return r.json().then(function(d) { return { okHttp: r.ok, d: d }; }); })
+    .then(function(pack) {
+      var d = pack.d;
+      if (!pack.okHttp || !d.ok) throw new Error((d && d.error) || 'Import failed');
+      var staged = d.clip || d.staged;
+      if (statusEl) statusEl.textContent = 'Imported — opening Compose…';
+      openStagedImportInComposer(staged, { source: 'local-mp4-import', displayName: 'Local import' });
+      if (fileInput) fileInput.value = '';
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Import MP4 failed: ' + e.message;
+      alert('Import failed: ' + e.message);
+    });
+}
+
+function pasteUrlStageFullAndCompose() {
+  var input = g('library-paste-url');
+  var url = (input && input.value || '').trim();
+  if (!url) { alert('Paste a YouTube, Twitch, or Facebook URL first.'); return; }
+  var statusEl = g('twitch-fetch-status');
+  if (statusEl) statusEl.textContent = 'Pulling URL → staging full video (≤15m)…';
+  fetch((CFG.ffmpegUrl || 'http://localhost:3000') + '/content-library/stage-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: url })
+  })
+    .then(function(r) { return r.json().then(function(d) { return { okHttp: r.ok, d: d }; }); })
+    .then(function(pack) {
+      var d = pack.d;
+      if (!pack.okHttp || !d.ok) {
+        var msg = (d && d.error) || 'Stage failed';
+        if (d && d.code === 'TOO_LONG') {
+          msg += '\n\nTip: use “URL → Peaks” for long VODs, or trim with startSec/endSec.';
+        }
+        throw new Error(msg);
+      }
+      var staged = d.clip || d.staged;
+      if (statusEl) statusEl.textContent = 'URL staged (' + (staged.duration || '?') + 's) — opening Compose…';
+      openStagedImportInComposer(staged, {
+        source: 'url-full-import',
+        displayName: staged.streamer || 'URL import',
+        sourceUrl: url
+      });
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'URL → Full video failed: ' + e.message;
+      alert('URL pull failed: ' + e.message);
+    });
 }
 
 function pasteUrlAnalyzeAndCompose() {
