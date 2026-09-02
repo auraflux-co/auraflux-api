@@ -4776,8 +4776,30 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
     const { normalizePublishCopyShape } = require('./lib/publish_copy_normalize');
     const { handleGeneratePublishCopy, ensurePublishMetadataComplete, buildChannelConfig, buildPublishScriptFromCard, buildPublishItemsFromCard } = require('./lib/publish');
     const { validatePublishMetadata, metadataFromPublishCopy } = require('./lib/gates/metadata_qa');
-    const contentType = card.contentType || card.type || 'twitch-short';
-    const isShort = String(contentType).includes('-short') || card.formType === 'short';
+    // C11 Then/Now: refresh SEO brief before regen so Local import / yt_paste never seed titles
+    try {
+      const { isDualSourceStackMode, enrichDualSourceSeoBrief } = require('./lib/clip_comp_dual_source');
+      if (isDualSourceStackMode(card.compCreative || { preset: card.compCreativePreset })) {
+        await enrichDualSourceSeoBrief(card);
+        console.log(`[regenerate-publish-copy] ${jobId}: C11 brief → "${card.clipCompBrief?.leadTitleDraft || ''}"`);
+      }
+    } catch (_dualSeo) { /* non-fatal */ }
+    const { resolvePublishContentType } = require('./lib/publish_seo_context');
+    const contentType = resolvePublishContentType({
+      jobContentType: card.contentType || card.type || 'twitch-short',
+      clipCompBrief: card.clipCompBrief || null,
+      orderedClipUrls: card.orderedClipUrls || [],
+      streamers: card.streamers || [],
+      // dual stack reads preset from brief.dualSourceStack / enrich; also pass creative if resolver grows
+    }) || card.contentType || card.type || 'twitch-short';
+    // Force youtube-short for C11 when brief prefers source video
+    const _dualCt = !!(card.compCreative?.preset === 'dual_source_stack'
+      || card.compCreative?.layout?.mode === 'dual_source_vstack'
+      || card.clipCompBrief?.dualSourceStack);
+    const publishContentType = (_dualCt && card.clipCompBrief?.sourceVideoPreferred)
+      ? 'youtube-short'
+      : contentType;
+    const isShort = String(publishContentType).includes('-short') || card.formType === 'short' || !!card.clipsOnly;
     const platforms = ['youtube', 'tiktok', 'instagram'];
     const items = buildPublishItemsFromCard(card);
     const streamers = card.streamers || card.order?.inputs?.streamers || [];
@@ -4791,7 +4813,7 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
 
     const fakeReq = {
       body: {
-        contentType,
+        contentType: publishContentType,
         formType: isShort ? 'short' : 'compilation',
         script,
         date: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
@@ -4800,6 +4822,7 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
         platforms,
         clipCompBrief: card.clipCompBrief || null,
         compCreative: card.compCreative || null,
+        orderedClipUrls: card.orderedClipUrls || [],
         chapters: existingChapters || null,
       },
     };
@@ -4825,14 +4848,15 @@ app.post('/job/:id/regenerate-publish-copy', async (req, res) => {
       isShort,
       clipCount: regenClipCount,
       compCreative: card.compCreative || null,
-      contentType,
+      clipCompBrief: card.clipCompBrief || null,
+      contentType: publishContentType,
     });
     publishCopy = normalizePublishCopyShape(publishCopy);
     if (!isShort && existingChapters) {
       publishCopy = applyChaptersToPublishCopy(publishCopy, existingChapters);
     }
 
-    const jobSpec = { ...card, contentType, formType: isShort ? 'short' : 'compilation', streamers, items };
+    const jobSpec = { ...card, contentType: publishContentType, formType: isShort ? 'short' : 'compilation', streamers, items };
     const metaCheck = validatePublishMetadata(jobSpec, metadataFromPublishCopy(publishCopy));
 
     const { seedTitleCandidates } = require('./lib/operator_publish_titles');

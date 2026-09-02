@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-09-02 (iss_CUiI3zTA48W9) — C11: music bed forced OFF; Then/Now SEO brief (Age labels, not Local import Twitch) + persist titleCandidates so FIX SEO is not required.
 **Last Updated:** 2026-09-02 (iss_Egf5btdoij8m) — C11 Age labels: same place on each pane (top/bottom control), bigger dark pill; edit under Creative → Then/Now stack.
 **Last Updated:** 2026-09-02 (iss_H3ZnzcX4vmQR) — C11 ▶ Review near-final now stacks TOP+BOTTOM via `assembleDualSourceStack` (was clips[0]/TOP-only ffmpeg preview). Hard refresh → C11 → Review.
 **Last Updated:** 2026-09-02 (iss_YfJ0TcgjWdRa) — C11 Compose honesty: THEN/NOW saved-trim card; Mark In/Out confirms TOP/BOTTOM instantly (no Save cuts needed).

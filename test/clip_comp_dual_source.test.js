@@ -62,7 +62,7 @@ describe('clip_comp_dual_source', () => {
     assert.ok(filt.includes('box=1'));
   });
 
-  it('enriches C11 SEO brief from Age labels (not Local import Twitch)', () => {
+  it('enriches C11 SEO brief from Age labels (not Local import Twitch)', async () => {
     const { enrichDualSourceSeoBrief } = require('../lib/clip_comp_dual_source');
     const card = {
       compCreative: {
@@ -70,17 +70,22 @@ describe('clip_comp_dual_source', () => {
         layout: { mode: 'dual_source_vstack', paneLabels: { top: 'Age 7', bottom: 'Age 16' } },
       },
       orderedClipUrls: [
-        { title: 'reel_upscaled_1080x1920', displayName: 'Local import', game: 'import' },
-        { title: 'youtube import 6JD5Vzpa29g', pageUrl: 'https://www.youtube.com/watch?v=6JD5Vzpa29g' },
+        { title: 'reel_upscaled_1080x1920', displayName: 'Local import', url: 'local://cwn_import_1.mp4', game: 'import' },
+        { title: 'youtube import 6JD5Vzpa29g', displayName: 'yt_paste', pageUrl: 'https://www.youtube.com/shorts/6JD5Vzpa29g' },
       ],
       clipCompBrief: { clips: [], leadStreamer: 'Local import' },
     };
-    const brief = enrichDualSourceSeoBrief(card);
+    const brief = await enrichDualSourceSeoBrief(card);
     assert.ok(brief.leadTitleDraft.includes('Age 7'));
     assert.ok(brief.leadTitleDraft.includes('Age 16'));
     assert.ok(!/Local import/i.test(brief.leadStreamer));
+    assert.ok(!/Local import/i.test(brief.leadTitleDraft));
     assert.strictEqual(brief.clips[1].platform, 'youtube');
+    // oEmbed should replace "youtube import …" with real title when network available
+    assert.ok(brief.clips[1].platformTitle);
+    assert.ok(!/^youtube\s*import/i.test(brief.clips[1].platformTitle));
     assert.ok(brief.dualSourceStack);
+    assert.ok(brief.sourceVideoPreferred);
   });
 
   it('finalize locks music bed off for dual_source_stack', () => {
