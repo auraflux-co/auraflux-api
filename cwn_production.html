@@ -3977,6 +3977,10 @@ function libraryPageInit() {
 
 function setLibrarySourceMode(mode, skipPersist) {
   mode = mode || 'streamers';
+  // Guard: generate pillars (twitch/sports/news) are not library panels — bad mode hides all UI
+  if (mode !== 'streamers' && mode !== 'reddit' && mode !== 'wire') {
+    mode = 'streamers';
+  }
   var modeEl = g('library-source-mode');
   if (modeEl) modeEl.value = mode;
   if (!skipPersist) {
@@ -16800,10 +16804,14 @@ function openStagedImportInComposer(staged, opts) {
 
   _composerContentSource = 'twitch';
   // Stay in Clip Library — same path as Load library → check → COMPOSE →
+  // Library source modes are streamers|reddit|wire (NOT generate pillars like twitch).
+  if (typeof setLibrarySourceMode === 'function') {
+    try { setLibrarySourceMode('streamers'); } catch (e0) { /* ignore */ }
+  }
   nav('library');
   switchGeneratePillar('twitch');
   if (typeof setLibrarySourceMode === 'function') {
-    try { setLibrarySourceMode('twitch'); } catch (e0) { /* ignore */ }
+    try { setLibrarySourceMode('streamers'); } catch (e1) { /* ignore */ }
   }
   var btn = g('btn-preview-twitch');
   renderTwitchPicker(btn, 1);
@@ -16812,15 +16820,14 @@ function openStagedImportInComposer(staged, opts) {
   var pickedNow = 0;
   try {
     pickedNow = collectCompPickedClips().length;
-  } catch (e1) {
+  } catch (e2) {
     pickedNow = (_twitchPickerStreamers || []).reduce(function(n, e) {
       return n + ((e.clips || []).filter(function(cl) { return cl && cl.selected; }).length);
     }, 0);
   }
+  var statusMsg = 'Added to library picks (' + pickedNow + ' selected) — check clips, then COMPOSE →';
   var statusEl = g('twitch-fetch-status');
-  if (statusEl) {
-    statusEl.textContent = 'Added to library picks (' + pickedNow + ' selected) — check clips, then COMPOSE →';
-  }
+  if (statusEl) statusEl.textContent = statusMsg;
   var hint = g('library-picks-hint');
   if (hint) {
     hint.textContent = 'Import staged. Select any other clips you need, then COMPOSE →.';

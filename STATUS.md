@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-09-02 (iss_ZGpGMxmwQ-H3) — Import→Library panel hide bug: setLibrarySourceMode must be streamers|reddit|wire (not twitch). E2E script + unit guard.
 **Last Updated:** 2026-09-02 (iss_SaCsLXT1SCeU) — Import URL/MP4 stages into Clip Library picks and stays on Library; use COMPOSE → (no auto-jump to Generate).
 **Last Updated:** 2026-09-01 (iss_X2ZvjsmLMWI5) — Source-video SEO is preset-agnostic: YouTube/VOD clips + YouTube-only streamers get `youtube-short` metadata (not Twitch), regardless of Compose preset. Re-assemble to refresh stale publish copy.
 **Last Updated:** 2026-09-01 (iss_7xuzkmBtbvFl) — Clip Picker VODs: fetch up to 200 long-form (was 10); YouTube uploads playlist paging; **All time** pill for full channel catalog. Hard refresh → VODs → All time → Fetch VODs.
@@ -302,7 +303,8 @@ A run is **green / successful** only when **all** of the following are true:
 
 | Date | Actor | Run | Job ID(s) | Result | Notes |
 |------|-------|-----|-----------|--------|------|
-| 2026-04-21 | Cursor | **fix(iss_SaCsLXT1SCeU): Import URL/MP4 stays in Clip Library** — stage as checked picks; operator hits COMPOSE → (no auto-nav to Generate). | cwn_production.html | — | 2026-09-02 ET |
+| 2026-04-21 | Cursor | **fix(iss_ZGpGMxmwQ-H3): Import library panel hide** — invalid source mode twitch hid COMPOSE; guard + e2e. | cwn_production.html, scripts/qa_import_library_compose_e2e.js, test/library_import_source_mode.test.js | — | 2026-09-02 ET |
+| Cursor | **fix(iss_SaCsLXT1SCeU): Import URL/MP4 stays in Clip Library** — stage as checked picks; operator hits COMPOSE → (no auto-nav to Generate). | cwn_production.html | — | 2026-09-02 ET |
 | Cursor | Jest unit + integration (npm test / npm run test:all) | — | Pass | 44/44; test:all runner fixed to use Jest (was broken). |
 | 2026-04-21 | Cursor | Phase A 1 — NBA LF 1-clip (`/generate-full-script`) | script_nba_1776721645087 | Pass | ~121s, 438 words; `phase_a_batch.cjs`. |
 | 2026-04-21 | Cursor | Phase A 2 — News LF 1-clip | script_news_1776721885773 | Pass | ~42s, 204 words. |
