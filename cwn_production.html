@@ -204,6 +204,17 @@ body { background:#060a12; color:#fff; font-family:'Barlow Condensed',Arial,sans
 }
 .gen-comp-slot-role.top { background:rgba(155,89,182,0.35); color:#e8daef; }
 .gen-comp-slot-role.bottom { background:rgba(52,152,219,0.35); color:#d6eaf8; }
+.composer-dual-honesty {
+  margin:0 0 10px; padding:10px 12px; border-radius:6px;
+  border:1px solid rgba(155,89,182,0.45); background:rgba(155,89,182,0.12);
+  font-size:13px; line-height:1.45; color:rgba(255,255,255,0.9);
+}
+.composer-dual-honesty .head { font-weight:800; color:#bb8fce; margin-bottom:6px; letter-spacing:0.04em; }
+.composer-dual-honesty .row { font-family:monospace; font-size:12px; margin:3px 0; }
+.composer-dual-honesty .row.is-editing { color:#c7af4f; }
+.composer-dual-honesty .ok { color:rgba(46,204,113,0.95); }
+.composer-dual-honesty .warn { color:rgba(241,196,15,0.95); }
+.composer-dual-honesty .hint { font-size:11px; color:rgba(255,255,255,0.55); margin-top:6px; line-height:1.4; }
 .composer-preview-frame.is-live-edit .composer-preview-hook,
   .composer-preview-frame.is-live-edit .composer-preview-captions,
   .composer-preview-frame.is-live-edit .composer-preview-logo,
@@ -17732,6 +17743,20 @@ function logComposerLayoutAtPlayhead(reason) {
 function updateComposerEditStatus() {
   var el = g('composer-edit-status');
   if (!el) return;
+  if (isComposerDualSourceStack()) {
+    var dual = getComposerDualStackSlots();
+    var role = dual.activeIdx === 0 ? 'TOP' : 'BOTTOM';
+    var clip = composerLeadClipForEdit();
+    var win = '';
+    if (clip) {
+      ensureComposerTrimDefaults(clip);
+      win = ' · saved ' + fmtSecToClock(clip.composerTrimStart) + '–' + fmtSecToClock(clip.composerTrimEnd);
+    }
+    el.innerHTML = '<span style="color:#bb8fce;">C11 Then/Now</span> — editing <strong>' + role + '</strong>'
+      + win
+      + '. <strong>Mark In/Out saves instantly</strong> (no Save cuts needed). Click the other lineup slot to trim the other pane.';
+    return;
+  }
   if (_composerLookDraftDirty) {
     el.innerHTML = '<span style="color:rgba(241,196,15,0.95);">Draft look — not saved.</span> Scrub still shows prior saved looks. Click <strong>Save look here</strong> to apply from this playhead forward.';
     return;
@@ -17745,6 +17770,83 @@ function updateComposerEditStatus() {
     return;
   }
   el.innerHTML = 'Live box is a crop guide (not 1080p). Click <strong>▶ Review near-final</strong> for real Short quality. Save look here before that.';
+}
+
+/** C11 honesty card — both panes' saved trims so operator knows Mark In/Out stuck. */
+function buildDualStackHonestyHtml() {
+  if (!isComposerDualSourceStack()) return '';
+  var lineup = getComposerLineupSlots();
+  var labels = composerDualPaneLabels();
+  var activeIdx = normalizeComposerActiveLineupIdx(lineup);
+  var switchEl = g('comp-dual-switch-sec');
+  var switchSec = switchEl && switchEl.value !== '' ? parseFloat(switchEl.value) : null;
+  var rows = '';
+  var total = 0;
+  var missingUrl = [];
+  [0, 1].forEach(function(i) {
+    var slot = lineup[i];
+    var c = slot && slot.clip;
+    var role = i === 0 ? 'TOP' : 'BOTTOM';
+    var label = i === 0 ? labels.top : labels.bottom;
+    var editing = i === activeIdx ? ' is-editing' : '';
+    if (!c) {
+      rows += '<div class="row warn">✗ ' + role + ' (' + escapeHtml(label) + ') — missing clip</div>';
+      return;
+    }
+    ensureComposerTrimDefaults(c);
+    var ts = Number(c.composerTrimStart) || 0;
+    var te = Number(c.composerTrimEnd) || ts + 1;
+    var dur = Math.max(0, te - ts);
+    if (i === 0 && !(Number.isFinite(switchSec) && switchSec > 0)) total += dur;
+    else if (i === 1) total += dur;
+    var playable = !!resolveComposerDirectPlayUrl(c);
+    if (!playable) missingUrl.push(role);
+    rows += '<div class="row' + editing + '">'
+      + '<span class="ok">✓</span> <strong>' + role + '</strong> (' + escapeHtml(label) + ') '
+      + 'trim <strong>' + fmtSecToClock(ts) + '–' + fmtSecToClock(te) + '</strong> (' + dur + 's)'
+      + (editing ? ' · editing now' : '')
+      + (playable ? '' : ' · <span class="warn">no playable file yet</span>')
+      + '</div>';
+  });
+  if (Number.isFinite(switchSec) && switchSec > 0) {
+    var bot = lineup[1] && lineup[1].clip;
+    var botDur = 0;
+    if (bot) {
+      ensureComposerTrimDefaults(bot);
+      botDur = Math.max(0, (Number(bot.composerTrimEnd) || 0) - (Number(bot.composerTrimStart) || 0));
+    }
+    total = switchSec + botDur;
+  }
+  var html = '<div class="composer-dual-honesty">'
+    + '<div class="head">C11 THEN/NOW — SAVED TRIMS</div>'
+    + rows
+    + '<div class="row ok">Estimated Short ≈ ' + Math.round(total) + 's'
+    + (Number.isFinite(switchSec) && switchSec > 0
+      ? ' (switch after ' + switchSec + 's)'
+      : ' (switch = TOP Mark Out)')
+    + '</div>'
+    + '<div class="hint"><strong>Mark In / Mark Out save immediately</strong> for the ✎ slot — you do not need Save cuts or Save look for C11 trims. '
+    + 'Live preview is crop/trim guide only; full hold→switch audio is on EXECUTE / Review near-final.'
+    + (missingUrl.length ? ' <span class="warn">Waiting on: ' + missingUrl.join(' + ') + ' staging.</span>' : '')
+    + '</div></div>';
+  return html;
+}
+
+function syncDualTrimCutUi() {
+  var on = isComposerDualSourceStack();
+  var note = document.querySelector('#composer-trim-cut-panel .composer-cut-note');
+  if (note) {
+    note.innerHTML = on
+      ? '<strong style="color:#bb8fce;">C11:</strong> Mark In/Out on the ✎ slot saves that pane’s trim instantly. Ignore Save cuts unless you add multiple cuts on one source.'
+      : 'YouTube-style cuts on the <em>source</em> timeline · drag red handles · Save cuts · then looks / Review / EXECUTE';
+  }
+  var addBtn = document.querySelector('#composer-trim-cut-panel button[onclick="addComposerCut()"]');
+  if (addBtn) addBtn.style.display = on ? 'none' : '';
+  var saveBtn = g('btn-composer-save-cuts');
+  if (saveBtn && on && !_composerCutsDirty) {
+    saveBtn.disabled = true;
+    saveBtn.title = 'C11: Mark In/Out already saved the active pane trim';
+  }
 }
 
 function getComposerAbsolutePlayheadSec() {
@@ -18922,9 +19024,11 @@ function renderComposerSpecRundown(flashKind) {
   if (clip) sanitizeComposerClipLooks(clip);
   var events = buildComposerEditSpec(clip);
   var html = '<div class="composer-spec-rundown-head">Edit spec · assembly timestamps</div>';
+  html += buildDualStackHonestyHtml();
   if (!clip && !_composerVodSegment) {
     html += '<div class="composer-spec-empty">Pick a clip — scrub left, Mark In/Out/Layout saves here instantly.</div>';
     el.innerHTML = html;
+    syncDualTrimCutUi();
     return;
   }
   if (clip) {
@@ -18933,25 +19037,27 @@ function renderComposerSpecRundown(flashKind) {
     var outputSec = composerAssemblyOutputSec(clip);
     var rawSpan = compClipDurationSec(clip);
     var lineupCount = getComposerLineupSlots().length;
-    if (lineupCount > 1) {
+    if (lineupCount > 1 && !isComposerDualSourceStack()) {
       var activeSlot = composerActiveLineupSlot();
       html += '<div style="font-size:12px;color:rgba(199,175,79,0.9);margin-bottom:6px;">Editing clip '
         + (normalizeComposerActiveLineupIdx(getComposerLineupSlots()) + 1) + '/' + lineupCount
         + ': <strong>' + escapeHtml((activeSlot && activeSlot.clip && activeSlot.clip.title || '').slice(0, 72)) + '</strong>'
         + ' — click another slot in COMP LINEUP to switch</div>';
     }
-    html += '<div class="composer-spec-rundown-meta">'
-      + '<strong>' + outputSec + 's Short</strong> (timeline 0:00–' + fmtSecToClock(outputSec) + ')'
-      + ' · uses source ' + fmtSecToClock(clip.composerTrimStart) + '–' + fmtSecToClock(clip.composerTrimEnd);
-    if (rawSpan !== outputSec) {
-      html += ' · <span style="color:rgba(231,76,60,0.95);">trim out clamped (clip length '
-        + composerClipSourceDuration(clip) + 's)</span>';
+    if (!isComposerDualSourceStack()) {
+      html += '<div class="composer-spec-rundown-meta">'
+        + '<strong>' + outputSec + 's Short</strong> (timeline 0:00–' + fmtSecToClock(outputSec) + ')'
+        + ' · uses source ' + fmtSecToClock(clip.composerTrimStart) + '–' + fmtSecToClock(clip.composerTrimEnd);
+      if (rawSpan !== outputSec) {
+        html += ' · <span style="color:rgba(231,76,60,0.95);">trim out clamped (clip length '
+          + composerClipSourceDuration(clip) + 's)</span>';
+      }
+      html += '</div>';
+      html += '<div style="font-size:11px;color:rgba(255,255,255,0.45);margin:-2px 0 8px;line-height:1.4;">'
+        + 'Left column = <strong>Short time</strong> (what you scrub). Source time in grey is the Twitch clip clock — not “stuck.”'
+        + '</div>';
     }
-    html += '</div>';
-    html += '<div style="font-size:11px;color:rgba(255,255,255,0.45);margin:-2px 0 8px;line-height:1.4;">'
-      + 'Left column = <strong>Short time</strong> (what you scrub). Source time in grey is the Twitch clip clock — not “stuck.”'
-      + '</div>';
-    if (_composerLastValidatedDuration != null && _composerLastValidatedDuration !== outputSec) {
+    if (_composerLastValidatedDuration != null && _composerLastValidatedDuration !== outputSec && !isComposerDualSourceStack()) {
       html += '<div style="font-size:11px;color:rgba(231,76,60,0.9);margin:-4px 0 8px;">'
         + 'Validation reports ' + _composerLastValidatedDuration + 's — refresh trim or extend source duration.</div>';
     }
@@ -18960,25 +19066,33 @@ function renderComposerSpecRundown(flashKind) {
       + fmtSecToClock(_composerVodSegment.start_sec) + '–' + fmtSecToClock(_composerVodSegment.end_sec)
       + '</div>';
   }
-  html += '<ul class="composer-spec-rundown-list">';
-  events.forEach(function(ev) {
-    var flash = flashKind && ev.kind === flashKind ? ' is-flash' : '';
-    var timeLabel;
-    if (ev.atSec == null) timeLabel = 'ALL';
-    else if (ev.shortSec != null) timeLabel = 'S ' + fmtSecToClock(ev.shortSec);
-    else timeLabel = fmtSecToClock(ev.atSec);
-    var timeClass = ev.atSec != null ? '' : ' is-global';
-    var srcNote = (ev.atSec != null && ev.shortSec != null)
-      ? '<span class="composer-spec-detail" style="opacity:0.55;">source ' + escapeHtml(fmtSecToClock(ev.atSec)) + '</span>'
-      : '';
-    html += '<li class="composer-spec-event ' + ev.kind + flash + '">'
-      + '<span class="composer-spec-time' + timeClass + '" title="Short timeline time">' + escapeHtml(timeLabel) + '</span>'
-      + '<div class="composer-spec-body"><span class="composer-spec-label">' + escapeHtml(ev.label) + '</span>'
-      + '<span class="composer-spec-detail">' + escapeHtml(ev.detail || '') + '</span>'
-      + srcNote + '</div></li>';
-  });
-  html += '</ul>';
-  if (_composerLookDraftDirty) {
+  if (!isComposerDualSourceStack()) {
+    html += '<ul class="composer-spec-rundown-list">';
+    events.forEach(function(ev) {
+      var flash = flashKind && ev.kind === flashKind ? ' is-flash' : '';
+      var timeLabel;
+      if (ev.atSec == null) timeLabel = 'ALL';
+      else if (ev.shortSec != null) timeLabel = 'S ' + fmtSecToClock(ev.shortSec);
+      else timeLabel = fmtSecToClock(ev.atSec);
+      var timeClass = ev.atSec != null ? '' : ' is-global';
+      var srcNote = (ev.atSec != null && ev.shortSec != null)
+        ? '<span class="composer-spec-detail" style="opacity:0.55;">source ' + escapeHtml(fmtSecToClock(ev.atSec)) + '</span>'
+        : '';
+      html += '<li class="composer-spec-event ' + ev.kind + flash + '">'
+        + '<span class="composer-spec-time' + timeClass + '" title="Short timeline time">' + escapeHtml(timeLabel) + '</span>'
+        + '<div class="composer-spec-body"><span class="composer-spec-label">' + escapeHtml(ev.label) + '</span>'
+        + '<span class="composer-spec-detail">' + escapeHtml(ev.detail || '') + '</span>'
+        + srcNote + '</div></li>';
+    });
+    html += '</ul>';
+  } else if (flashKind === 'trim_in' || flashKind === 'trim_out') {
+    html += '<div class="composer-spec-save-note" style="color:rgba(46,204,113,0.95);">✓ '
+      + (flashKind === 'trim_in' ? 'Mark In' : 'Mark Out')
+      + ' saved on the ✎ pane — see THEN/NOW card above</div>';
+  }
+  if (isComposerDualSourceStack()) {
+    html += '<div class="composer-spec-save-note">C11 does not use timed layout looks — trim both panes, then EXECUTE (or Review near-final).</div>';
+  } else if (_composerLookDraftDirty) {
     html += '<div class="composer-spec-save-note" style="color:rgba(241,196,15,0.95);display:flex;flex-wrap:wrap;gap:8px;align-items:center;">'
       + '<span>Draft not saved — does not change the Short until you save.</span>'
       + '<button type="button" class="btn btn-outline btn-sm" onclick="discardComposerLookDraft()">Discard draft</button>'
@@ -18992,6 +19106,8 @@ function renderComposerSpecRundown(flashKind) {
     html += '<div class="composer-spec-save-note">Saved looks · want split then full? Save split at Short 0:00, scrub, switch to Single, Save look here again.</div>';
   }
   el.innerHTML = html;
+  syncDualTrimCutUi();
+  updateComposerEditStatus();
 }
 
 function flashComposerSpecSaved(label, atSec) {
@@ -19276,10 +19392,32 @@ function markComposerSourceReviewTime(kind) {
   // Moving trim in drops same-second / out-of-window layout switches from data + right panel.
   sanitizeComposerClipLooks(slot.clip);
   syncActiveCutFromTrim(slot.clip);
+  // C11: Mark In/Out is the save — clear multi-cut dirty so "Save cuts" is not required.
+  if (isComposerDualSourceStack()) {
+    ensureComposerCutsOnClip(slot.clip);
+    applyActiveCutToTrim(slot.clip);
+    _composerCutsDirty = false;
+    _composerCutsSnapshot = snapshotComposerCuts(slot.clip);
+    updateComposerCutSaveUi();
+  }
   _composerEditDone = false;
   _composerEditReviewed = false;
   syncComposerEditSurfaces({ flashKind: kind === 'in' ? 'trim_in' : 'trim_out', exitReview: true });
-  flashComposerSpecSaved(kind === 'in' ? 'Trim in' : 'Trim out', abs);
+  persistComposerSessionNow();
+  if (isComposerDualSourceStack()) {
+    var role = normalizeComposerActiveLineupIdx(getComposerLineupSlots()) === 0 ? 'TOP' : 'BOTTOM';
+    var ts = Number(slot.clip.composerTrimStart) || 0;
+    var te = Number(slot.clip.composerTrimEnd) || ts + 1;
+    setComposerPreviewCaption(
+      '✓ ' + role + ' trim saved ' + fmtSecToClock(ts) + '–' + fmtSecToClock(te)
+        + ' · click the other lineup slot to trim the other pane',
+      'ok'
+    );
+    renderComposerSpecRundown(kind === 'in' ? 'trim_in' : 'trim_out');
+    updateComposerEditStatus();
+  } else {
+    flashComposerSpecSaved(kind === 'in' ? 'Trim in' : 'Trim out', abs);
+  }
 }
 
 var _composerValidateDebounce = null;
@@ -24356,12 +24494,15 @@ function syncDualSourceStackUi() {
   } catch (e0) { /* ignore */ }
   renderCompLineupPanel();
   scheduleComposerLiveSplitPaint();
+  syncDualTrimCutUi();
+  renderComposerSpecRundown();
+  updateComposerEditStatus();
   ensureComposerLeadClipStaged(function() {
     bootstrapComposerReviewVideo();
     scheduleComposerLiveSplitPaint();
   });
   if (typeof setComposerPreviewCaption === 'function') {
-    setComposerPreviewCaption('C11 Then/Now · TOP+BOTTOM stacked · trim active pane · inactive holds Mark In', 'ok');
+    setComposerPreviewCaption('C11 Then/Now · TOP+BOTTOM stacked · Mark In/Out saves the ✎ pane instantly', 'ok');
   }
 }
 
@@ -25116,6 +25257,10 @@ function onCompCreativePresetChange() {
   refreshCompCreativeChips();
   hydrateCompCreativeLayoutFromStorage();
   refreshTwitchActionBar();
+  renderCompLineupPanel();
+  renderComposerSpecRundown();
+  updateComposerEditStatus();
+  syncDualTrimCutUi();
   if (typeof renderComposerQaPanel === 'function') renderComposerQaPanel();
 }
 
