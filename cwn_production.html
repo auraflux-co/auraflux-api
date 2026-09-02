@@ -17946,8 +17946,13 @@ function isComposerDualSourceStack() {
   if (sel && sel.value === 'dual_source_stack') return true;
   try {
     var stored = loadCompCreativePresetFromStorage();
-    return (stored.preset || '') === 'dual_source_stack';
-  } catch (e) { return false; }
+    if ((stored.preset || '') === 'dual_source_stack') {
+      // Keep Creative Mode dropdown in sync with storage (page restore can desync).
+      if (sel && sel.value !== 'dual_source_stack') sel.value = 'dual_source_stack';
+      return true;
+    }
+  } catch (e) { /* ignore */ }
+  return false;
 }
 
 function getComposerDualStackSlots() {
