@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-09-02 (iss_ZGpGMxmwQ-H3) — E2E now clicks real URL→Library + Import MP4→Library then COMPOSE (both PASS).
 **Last Updated:** 2026-09-02 (iss_ZGpGMxmwQ-H3) — Import→Library panel hide bug: setLibrarySourceMode must be streamers|reddit|wire (not twitch). E2E script + unit guard.
 **Last Updated:** 2026-09-02 (iss_SaCsLXT1SCeU) — Import URL/MP4 stages into Clip Library picks and stays on Library; use COMPOSE → (no auto-jump to Generate).
 **Last Updated:** 2026-09-01 (iss_X2ZvjsmLMWI5) — Source-video SEO is preset-agnostic: YouTube/VOD clips + YouTube-only streamers get `youtube-short` metadata (not Twitch), regardless of Compose preset. Re-assemble to refresh stale publish copy.
