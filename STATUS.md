@@ -18,6 +18,7 @@
 
 ---
 
+**Last Updated:** 2026-09-02 (iss_U1MfiMhDlXAx) — C11 dual stack: live preview audio follows ✎ slot (BOTTOM unmuted when selected); assemble bottom-audio extract hardened.
 **Last Updated:** 2026-09-02 (iss_pUvArdp_qmMr) — Compose live preview for C11 dual_source_stack shows TOP+BOTTOM panes (two sources), not a single lead clip.
 **Last Updated:** 2026-09-02 (iss_fpeqhh5Ip6aO) — C11 dual_source_stack: top plays (Mark Out / switch sec) while bottom holds, then bottom plays with Age labels.
 **Last Updated:** 2026-09-02 (iss_ZGpGMxmwQ-H3) — E2E now clicks real URL→Library + Import MP4→Library then COMPOSE (both PASS).

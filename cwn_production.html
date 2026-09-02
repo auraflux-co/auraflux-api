@@ -17916,6 +17916,35 @@ function layoutComposerDualCover(paneEl, videoEl) {
   videoEl.style.objectFit = 'cover';
 }
 
+function routeComposerDualPaneAudio() {
+  if (!isComposerDualSourceStack()) return;
+  var dual = getComposerDualStackSlots();
+  var master = g('composer-preview-video');
+  var bg = g('composer-preview-bg');
+  var main = g('composer-preview-main');
+  var bgV = bg && bg.querySelector('.composer-pane-video');
+  var mainV = main && main.querySelector('.composer-pane-video');
+  var activeIsTop = dual.activeIdx === 0;
+  // Master stays the scrub clock but must stay muted — panes were always muted so
+  // BOTTOM looked correct while only TOP (active master) could be heard.
+  if (master) {
+    master.muted = true;
+    master.volume = 0;
+  }
+  if (bgV) {
+    bgV.muted = !activeIsTop;
+    bgV.volume = activeIsTop ? 1 : 0;
+    if (activeIsTop) bgV.removeAttribute('muted');
+    else bgV.setAttribute('muted', '');
+  }
+  if (mainV) {
+    mainV.muted = activeIsTop;
+    mainV.volume = activeIsTop ? 0 : 1;
+    if (!activeIsTop) mainV.removeAttribute('muted');
+    else mainV.setAttribute('muted', '');
+  }
+}
+
 function applyComposerDualSourcePreviewPanes() {
   var master = g('composer-preview-video');
   var mock = g('composer-preview-mock');
@@ -17972,6 +18001,7 @@ function applyComposerDualSourcePreviewPanes() {
   bindComposerPaneVideoFromClip(mainV, botClip, !activeIsTop);
   layoutComposerDualCover(bg, bgV);
   layoutComposerDualCover(main, mainV);
+  routeComposerDualPaneAudio();
   if (labelTop) {
     labelTop.style.display = topClip ? 'block' : 'none';
     labelTop.textContent = labels.top + (activeIsTop ? ' · editing' : '');
@@ -18010,7 +18040,7 @@ function applyComposerDualSourcePreviewPanes() {
   } else {
     setComposerPreviewCaption(
       'C11 Then/Now · TOP=' + labels.top + ' · BOTTOM=' + labels.bottom
-        + ' · click lineup to edit trim · inactive pane holds Mark In',
+        + ' · audio = ✎ slot (click BOTTOM to hear it) · inactive holds Mark In',
       'ok'
     );
   }
@@ -18028,6 +18058,7 @@ function applyComposerLookToPreviewPanes(look) {
   }
   if (!look) return;
   if (frame) frame.classList.remove('is-dual-source');
+  if (master) { master.muted = false; master.volume = 1; }
   var labelTopClear = g('composer-dual-label-top-el');
   var labelBotClear = g('composer-dual-label-bottom-el');
   if (labelTopClear) labelTopClear.style.display = 'none';
@@ -18223,6 +18254,7 @@ function syncComposerPaneVideoClock() {
         holdV.pause();
       } catch (eHold) { /* ignore */ }
     }
+    routeComposerDualPaneAudio();
     return;
   }
   var master = g('composer-preview-video');
@@ -18539,7 +18571,8 @@ function attachComposerSourceToPreviewPlayer(reviewUrl) {
   if (img) img.style.display = 'none';
   setComposerReviewVideoMode('edit');
   video.controls = false;
-  video.muted = false;
+  video.muted = isComposerDualSourceStack();
+  video.volume = isComposerDualSourceStack() ? 0 : 1;
   video.playsInline = true;
   video.loop = false;
   video.removeAttribute('loop');

@@ -97,5 +97,6 @@ describe('clip_comp_dual_source', () => {
     assert.ok(fs.existsSync(out.outputPath));
     assert.ok(Math.abs(out.switchSec - 2) < 0.05);
     assert.ok(out.totalDur >= 3.5 && out.totalDur <= 4.5);
+    assert.strictEqual(out.hasBottomAudio, true);
   });
 });
