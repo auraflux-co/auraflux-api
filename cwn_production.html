@@ -24147,7 +24147,7 @@ function saveCompCreativePresetToStorage() {
     hookMode: (g('comp-creative-hook-mode') && g('comp-creative-hook-mode').value) || 'both',
     musicBed: (typeof getComposerMusicBed === 'function')
       ? getComposerMusicBed()
-      : ((g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'low_trap'),
+      : ((g('comp-creative-music-bed') && g('comp-creative-music-bed').value) || 'off'),
     logoCorner: (g('comp-creative-logo-corner') && g('comp-creative-logo-corner').value) || 'bottom_right',
     relatedVideoParentId: (g('comp-creative-related-vod') && g('comp-creative-related-vod').value) || '',
     contentCx: (g('comp-creative-content-cx') && parseInt(g('comp-creative-content-cx').value, 10)) || 50,
@@ -24405,10 +24405,18 @@ function buildCompCreativeRequestPayload(streamerHint) {
   overrides.captions = Object.assign({}, overrides.captions || {}, {
     whisper: shippedHookMode !== 'hook_only'
   });
-  var bedShip = stored.musicBed
-    || (typeof getComposerMusicBed === 'function' ? getComposerMusicBed() : null)
-    || 'off';
+  var bedShip = (typeof getComposerMusicBed === 'function')
+    ? getComposerMusicBed()
+    : ((g('composer-music-bed') && g('composer-music-bed').value)
+      || (g('comp-creative-music-bed') && g('comp-creative-music-bed').value)
+      || stored.musicBed
+      || 'off');
   overrides.audio = Object.assign({}, overrides.audio || {}, { musicBed: bedShip });
+  // Explicit OFF must not be revived by preset defaults later in merge
+  if (bedShip === 'off') {
+    overrides.audio.musicBed = 'off';
+    overrides.audio.bedPerSegment = false;
+  }
   var speedShip = g('composer-speed-feel') && g('composer-speed-feel').value;
   if (speedShip) overrides.speedFeel = speedShip;
   var lookShip = g('composer-look-tint') && g('composer-look-tint').value;
@@ -24680,14 +24688,15 @@ var _composerBedPreviewAudio = null;
 
 function getComposerMusicBed() {
   var compose = g('composer-music-bed');
-  if (compose && compose.value) return compose.value;
+  // Prefer live Compose control (including explicit "off") over storage / presets
+  if (compose && compose.value != null && String(compose.value) !== '') return compose.value;
   var creative = g('comp-creative-music-bed');
-  if (creative && creative.value) return creative.value;
+  if (creative && creative.value != null && String(creative.value) !== '') return creative.value;
   try {
     var stored = JSON.parse(localStorage.getItem(COMP_CREATIVE_STORAGE_KEY) || '{}');
-    if (stored.musicBed) return stored.musicBed;
+    if (stored.musicBed != null && String(stored.musicBed) !== '') return stored.musicBed;
   } catch (_) { /* ignore */ }
-  return 'low_trap';
+  return 'off';
 }
 
 function syncComposerMusicBedSelects(id) {

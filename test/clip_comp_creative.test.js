@@ -218,3 +218,19 @@ test('facecam_split gate3 expectations describe the split panes', () => {
   const target = getCompLineupTarget('facecam_split');
   assert.equal(target.lineupSlots, 4);
 });
+
+test('composeShipped musicBed off wins over fableflow preset low_trap', () => {
+  const { resolveCompCreativeFromContext } = require('../lib/clip_comp_creative');
+  const c = resolveCompCreativeFromContext({
+    body: {
+      compCreativePreset: 'fableflow_speed',
+      compCreative: {
+        composeShipped: true,
+        operatorLocked: true,
+        audio: { musicBed: 'off', cutSfx: 'off' },
+      },
+    },
+  });
+  assert.equal(c.audio.musicBed, 'off');
+  assert.equal(c.audio.bedPerSegment, false);
+});
