@@ -92,7 +92,8 @@ function sqliteBackup(src, dest) {
 
 async function uploadCursorDbChunked(localPath, keyPrefix) {
   const { uploadFileRangeToR2 } = require('../lib/storage');
-  const CHUNK = 4 * 1024 * 1024 * 1024; // 4 GiB — under R2 single-PUT 5 GiB limit
+  // 2 GiB parts — 4 GiB PutObject fails on this R2 path; 2 GiB probe succeeded
+  const CHUNK = 2 * 1024 * 1024 * 1024;
   const size = fs.statSync(localPath).size;
   const parts = [];
 
