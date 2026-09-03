@@ -18,7 +18,7 @@
 
 ---
 
-**Last Updated:** 2026-09-02 — Archive finished C0 production media to R2 then delete local (`scripts/archive_local_media_to_r2.js`); cleared regenerable tmp/logs. Re-run: `node scripts/archive_local_media_to_r2.js --apply`.
+**Last Updated:** 2026-09-02 (iss_TJ8olz56-Afs) — Archive finished C0 production media to R2 then delete local (`scripts/archive_local_media_to_r2.js`); cleared regenerable tmp/logs. Re-run: `node scripts/archive_local_media_to_r2.js --apply`.
 **Last Updated:** 2026-09-02 (iss_tP28Ti4ez7c5) — C11 SEO: reject Local import/yt_paste talent; YouTube oEmbed title seed; FIX SEO regenerates C11 brief first (no manual rewrite).
 **Last Updated:** 2026-09-02 (iss_CUiI3zTA48W9) — C11: music bed forced OFF; Then/Now SEO brief (Age labels, not Local import Twitch) + persist titleCandidates so FIX SEO is not required.
 **Last Updated:** 2026-09-02 (iss_Egf5btdoij8m) — C11 Age labels: same place on each pane (top/bottom control), bigger dark pill; edit under Creative → Then/Now stack.
