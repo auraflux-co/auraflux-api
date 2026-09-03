@@ -91,6 +91,7 @@ function sqliteBackup(src, dest) {
 }
 
 async function uploadCursorDbChunked(localPath, keyPrefix) {
+  const { uploadFileRangeToR2 } = require('../lib/storage');
   const CHUNK = 4 * 1024 * 1024 * 1024; // 4 GiB — under R2 single-PUT 5 GiB limit
   const size = fs.statSync(localPath).size;
   const parts = [];
@@ -104,22 +105,17 @@ async function uploadCursorDbChunked(localPath, keyPrefix) {
     return { driveUrl, key, parts: [{ key, driveUrl, index: 0, bytes: size }] };
   }
 
-  const partDir = path.join(ROOT, 'tmp', 'cursor-offload');
-  fs.mkdirSync(partDir, { recursive: true });
-  console.log(`[weekly-offload] splitting ${(size / 1e9).toFixed(2)} GB into 4GiB parts…`);
-  execSync(`split -b ${CHUNK} "${localPath}" "${partDir}/part_"`, { stdio: 'inherit' });
-  const partFiles = fs.readdirSync(partDir).filter((f) => f.startsWith('part_')).sort();
+  const partCount = Math.ceil(size / CHUNK);
+  console.log(`[weekly-offload] ranged upload ${(size / 1e9).toFixed(2)} GB as ${partCount} × ≤4GiB parts (no local split copy)`);
 
-  for (let i = 0; i < partFiles.length; i++) {
-    const partPath = path.join(partDir, partFiles[i]);
+  for (let i = 0; i < partCount; i++) {
+    const start = i * CHUNK;
+    const end = Math.min(start + CHUNK, size) - 1;
     const key = `${keyPrefix}.part${String(i).padStart(3, '0')}`;
-    console.log(`[weekly-offload] uploading part ${i + 1}/${partFiles.length}: ${partFiles[i]}`);
-    const driveUrl = await uploadToR2(partPath, partFiles[i], {
-      folder: 'local-archive/cursor-state',
-      key,
-    });
-    parts.push({ key, driveUrl, index: i, bytes: fs.statSync(partPath).size });
-    fs.unlinkSync(partPath);
+    const bytes = end - start + 1;
+    console.log(`[weekly-offload] uploading part ${i + 1}/${partCount} (${(bytes / 1e9).toFixed(2)} GB)`);
+    const driveUrl = await uploadFileRangeToR2(localPath, key, { start, end });
+    parts.push({ key, driveUrl, index: i, bytes });
   }
 
   const manifestKey = `${keyPrefix}.manifest.json`;
@@ -130,6 +126,8 @@ async function uploadCursorDbChunked(localPath, keyPrefix) {
     parts,
     restore: 'Download parts in order and: cat part000 part001 … > state.vscdb',
   };
+  const partDir = path.join(ROOT, 'tmp', 'cursor-offload');
+  fs.mkdirSync(partDir, { recursive: true });
   const manifestPath = path.join(partDir, 'manifest.json');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
   const manifestUrl = await uploadToR2(manifestPath, 'manifest.json', {
@@ -162,17 +160,18 @@ async function offloadCursorState() {
         sizeGb: Number(sizeGb.toFixed(2)),
       };
     }
-    console.log('[weekly-offload] quitting Cursor before chunked upload+reset…');
+    console.log('[weekly-offload] quitting Cursor…');
     const ok = quitCursor();
     if (!ok) {
       return { action: 'aborted', reason: 'quit_cursor_failed', sizeGb: Number(sizeGb.toFixed(2)) };
     }
   }
 
-  console.log(`[weekly-offload] uploading ${sizeGb.toFixed(2)} GB to R2 (chunked if >4GiB)`);
-  const uploaded = await uploadCursorDbChunked(STATE_DB, keyPrefix);
-
-  for (const f of ['state.vscdb', 'state.vscdb-wal', 'state.vscdb-shm', 'state.vscdb.backup']) {
+  // Move DB aside so Cursor can reopen with a fresh empty DB while we upload.
+  const offloadPath = path.join(CURSOR_GS, `state.vscdb.offload-${stamp}`);
+  console.log(`[weekly-offload] moving state.vscdb → ${path.basename(offloadPath)}`);
+  fs.renameSync(STATE_DB, offloadPath);
+  for (const f of ['state.vscdb-wal', 'state.vscdb-shm', 'state.vscdb.backup']) {
     const p = path.join(CURSOR_GS, f);
     if (fs.existsSync(p)) fs.unlinkSync(p);
   }
@@ -183,7 +182,18 @@ async function offloadCursorState() {
     if (fs.existsSync(p)) fs.unlinkSync(p);
   }
 
+  // Local space is already freed for Cursor; reopen now if requested
   if (QUIT_CURSOR) reopenCursor();
+
+  console.log(`[weekly-offload] uploading ${sizeGb.toFixed(2)} GB offload file to R2 (chunked if >4GiB)`);
+  let uploaded;
+  try {
+    uploaded = await uploadCursorDbChunked(offloadPath, keyPrefix);
+  } catch (err) {
+    console.error('[weekly-offload] upload failed — offload file kept at', offloadPath);
+    throw err;
+  }
+  fs.unlinkSync(offloadPath);
 
   return {
     action: 'backed_up_and_reset',
