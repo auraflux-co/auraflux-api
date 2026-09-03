@@ -90,6 +90,57 @@ function sqliteBackup(src, dest) {
   }
 }
 
+async function uploadCursorDbChunked(localPath, keyPrefix) {
+  const CHUNK = 4 * 1024 * 1024 * 1024; // 4 GiB — under R2 single-PUT 5 GiB limit
+  const size = fs.statSync(localPath).size;
+  const parts = [];
+
+  if (size <= CHUNK) {
+    const key = `${keyPrefix}.vscdb`;
+    const driveUrl = await uploadToR2(localPath, path.basename(localPath), {
+      folder: 'local-archive/cursor-state',
+      key,
+    });
+    return { driveUrl, key, parts: [{ key, driveUrl, index: 0, bytes: size }] };
+  }
+
+  const partDir = path.join(ROOT, 'tmp', 'cursor-offload');
+  fs.mkdirSync(partDir, { recursive: true });
+  console.log(`[weekly-offload] splitting ${(size / 1e9).toFixed(2)} GB into 4GiB parts…`);
+  execSync(`split -b ${CHUNK} "${localPath}" "${partDir}/part_"`, { stdio: 'inherit' });
+  const partFiles = fs.readdirSync(partDir).filter((f) => f.startsWith('part_')).sort();
+
+  for (let i = 0; i < partFiles.length; i++) {
+    const partPath = path.join(partDir, partFiles[i]);
+    const key = `${keyPrefix}.part${String(i).padStart(3, '0')}`;
+    console.log(`[weekly-offload] uploading part ${i + 1}/${partFiles.length}: ${partFiles[i]}`);
+    const driveUrl = await uploadToR2(partPath, partFiles[i], {
+      folder: 'local-archive/cursor-state',
+      key,
+    });
+    parts.push({ key, driveUrl, index: i, bytes: fs.statSync(partPath).size });
+    fs.unlinkSync(partPath);
+  }
+
+  const manifestKey = `${keyPrefix}.manifest.json`;
+  const manifest = {
+    createdAt: new Date().toISOString(),
+    originalBytes: size,
+    partSize: CHUNK,
+    parts,
+    restore: 'Download parts in order and: cat part000 part001 … > state.vscdb',
+  };
+  const manifestPath = path.join(partDir, 'manifest.json');
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  const manifestUrl = await uploadToR2(manifestPath, 'manifest.json', {
+    folder: 'local-archive/cursor-state',
+    key: manifestKey,
+  });
+  try { fs.unlinkSync(manifestPath); } catch (_) { /* */ }
+
+  return { driveUrl: manifestUrl, key: manifestKey, parts, multipart: true };
+}
+
 async function offloadCursorState() {
   if (!fs.existsSync(STATE_DB)) {
     return { skipped: true, reason: 'no_state_db' };
@@ -97,51 +148,29 @@ async function offloadCursorState() {
   const st = fs.statSync(STATE_DB);
   const sizeGb = st.size / 1e9;
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const key = `local-archive/cursor-state/state-${stamp}.vscdb`;
-  const tmpDir = path.join(ROOT, 'tmp', 'cursor-offload');
-  const tmp = path.join(tmpDir, `state-${stamp}.vscdb`);
+  const keyPrefix = `local-archive/cursor-state/state-${stamp}`;
 
   if (!APPLY) {
-    return { action: 'would_backup_and_reset', sizeGb: Number(sizeGb.toFixed(2)), key };
+    return { action: 'would_backup_and_reset', sizeGb: Number(sizeGb.toFixed(2)), keyPrefix };
   }
-
-  let uploadPath = STATE_DB;
-  let usedTemp = false;
 
   if (cursorRunning()) {
     if (!QUIT_CURSOR) {
-      // Hot backup while Cursor is open (does not reset local)
-      console.log('[weekly-offload] Cursor running — sqlite backup then upload (no local reset without --quit-cursor)');
-      sqliteBackup(STATE_DB, tmp);
-      uploadPath = tmp;
-      usedTemp = true;
-      const driveUrl = await uploadToR2(uploadPath, path.basename(uploadPath), {
-        folder: 'local-archive/cursor-state',
-        key,
-      });
-      try { fs.unlinkSync(tmp); } catch (_) { /* */ }
       return {
-        action: 'backed_up_only',
+        action: 'skipped_reset',
         reason: 'cursor_still_running_pass_quit_cursor_to_reset',
-        driveUrl,
-        key,
         sizeGb: Number(sizeGb.toFixed(2)),
       };
     }
-
-    console.log('[weekly-offload] quitting Cursor before upload+reset…');
+    console.log('[weekly-offload] quitting Cursor before chunked upload+reset…');
     const ok = quitCursor();
     if (!ok) {
       return { action: 'aborted', reason: 'quit_cursor_failed', sizeGb: Number(sizeGb.toFixed(2)) };
     }
   }
 
-  // Cursor is quit — upload the live file (no 2× disk copy), then delete local
-  console.log(`[weekly-offload] uploading ${sizeGb.toFixed(2)} GB to R2 key=${key}`);
-  const driveUrl = await uploadToR2(uploadPath, path.basename(uploadPath), {
-    folder: 'local-archive/cursor-state',
-    key,
-  });
+  console.log(`[weekly-offload] uploading ${sizeGb.toFixed(2)} GB to R2 (chunked if >4GiB)`);
+  const uploaded = await uploadCursorDbChunked(STATE_DB, keyPrefix);
 
   for (const f of ['state.vscdb', 'state.vscdb-wal', 'state.vscdb-shm', 'state.vscdb.backup']) {
     const p = path.join(CURSOR_GS, f);
@@ -153,16 +182,12 @@ async function offloadCursorState() {
     const p = path.join(CURSOR_GS, f);
     if (fs.existsSync(p)) fs.unlinkSync(p);
   }
-  if (usedTemp) {
-    try { fs.unlinkSync(tmp); } catch (_) { /* */ }
-  }
 
   if (QUIT_CURSOR) reopenCursor();
 
   return {
     action: 'backed_up_and_reset',
-    driveUrl,
-    key,
+    ...uploaded,
     sizeGb: Number(sizeGb.toFixed(2)),
   };
 }
