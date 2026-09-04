@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-04 — Google sign-in fixed: Vercel DATABASE_URL → Render external host; Better Auth snake_case field maps for migration 036. Live OAuth redirects to Google.
+**Last Updated:** 2026-09-04 — Google callback: added account.issuer (migration 037) on auraflux-pg. Retry Continue with Google.
 **Last Updated:** 2026-08-23 — HSKRG agent key in Doppler + Render cron; nightly review posts to hskrg-work (iss on Platform/auraflux).
 **Last Updated:** 2026-08-23 — pipeline review posts to HSKRG Work board (`lib/ops/hskrg_board.js`, `--board`); Jira posting removed.
 **Last Updated:** 2026-08-23 — pipeline_parity_review: cron/static runs warn on missing secrets + skip C0 live_grid/broadcast env scan (fixes auraflux-pipeline-review exit 1).
