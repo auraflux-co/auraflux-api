@@ -1,11 +1,5 @@
 {
-  "experimentalServices": {
-    "auraflux-app": {
-      "type": "web",
-      "root": "app",
-      "routePrefix": "/",
-      "framework": "nextjs",
-      "buildCommand": "npm install --include=dev && npm run build"
-    }
-  }
+  "framework": "nextjs",
+  "installCommand": "npm install --include=dev",
+  "buildCommand": "npm run build"
 }
