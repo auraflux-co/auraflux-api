@@ -110,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: string | null;
         role: string;
         planTier: string;
+        setupDismissed?: boolean;
       };
       setTokenCache({ token: j.token, exp: Date.now() + 50 * 60 * 1000 });
       setUser({
@@ -126,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         twoFactorEnabled: false,
         unsafeMetadata: {},
         externalAccounts,
-        publicMetadata: { role: j.role, planTier: j.planTier, setupDismissed: false },
+        publicMetadata: { role: j.role, planTier: j.planTier, setupDismissed: !!j.setupDismissed },
         emailAddresses: j.email ? [{ emailAddress: j.email }] : [],
         primaryEmailAddress: j.email ? { emailAddress: j.email } : null,
         update: async () => {

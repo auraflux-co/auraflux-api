@@ -38,9 +38,9 @@ function getPool() {
 
 async function ensureProfile(authUserId: string, email: string | null) {
   const p = getPool();
-  if (!p) return { accountId: authUserId, role: 'customer', planTier: 'operate', email };
+  if (!p) return { accountId: authUserId, role: 'customer', planTier: 'operate', email, setupDismissed: false };
   const existing = await p.query(
-    `SELECT account_id, role, plan_tier, email FROM user_profiles WHERE auth_user_id = $1 LIMIT 1`,
+    `SELECT account_id, role, plan_tier, email, setup_dismissed FROM user_profiles WHERE auth_user_id = $1 LIMIT 1`,
     [authUserId],
   );
   if (existing.rows[0]) {
@@ -49,13 +49,14 @@ async function ensureProfile(authUserId: string, email: string | null) {
       role: (existing.rows[0].role as string) || 'customer',
       planTier: (existing.rows[0].plan_tier as string) || 'operate',
       email: (existing.rows[0].email as string) || email,
+      setupDismissed: !!existing.rows[0].setup_dismissed,
     };
   }
 
   // Link legacy Clerk account by email (seeded pending:* or legacy_clerk_id rows)
   if (email) {
     const legacy = await p.query(
-      `SELECT auth_user_id, account_id, role, plan_tier, email, legacy_clerk_id
+      `SELECT auth_user_id, account_id, role, plan_tier, email, legacy_clerk_id, setup_dismissed
          FROM user_profiles
         WHERE lower(email) = lower($1)
         LIMIT 1`,
@@ -75,6 +76,7 @@ async function ensureProfile(authUserId: string, email: string | null) {
         role: (row.role as string) || 'customer',
         planTier: (row.plan_tier as string) || 'operate',
         email: (row.email as string) || email,
+        setupDismissed: !!row.setup_dismissed,
       };
     }
   }
@@ -99,7 +101,7 @@ async function ensureProfile(authUserId: string, email: string | null) {
      ON CONFLICT (auth_user_id) DO NOTHING`,
     [authUserId, accountId, email, role, planTier],
   );
-  return { accountId, role, planTier, email };
+  return { accountId, role, planTier, email, setupDismissed: false };
 }
 
 export async function GET() {
@@ -139,5 +141,6 @@ export async function GET() {
     email: profile.email || session.user.email || null,
     role: profile.role,
     planTier: profile.planTier,
+    setupDismissed: !!profile.setupDismissed,
   });
 }

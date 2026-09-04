@@ -2,6 +2,7 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-09-04 — CPD-1330: brands/account + social/channel OAuth use Better Auth JWT (not Clerk); migration 038 setup_dismissed; synced BA secrets to Render API.
 **Last Updated:** 2026-09-04 — Google callback: added account.issuer (migration 037) on auraflux-pg. Retry Continue with Google.
 **Last Updated:** 2026-08-23 — HSKRG agent key in Doppler + Render cron; nightly review posts to hskrg-work (iss on Platform/auraflux).
 **Last Updated:** 2026-08-23 — pipeline review posts to HSKRG Work board (`lib/ops/hskrg_board.js`, `--board`); Jira posting removed.
