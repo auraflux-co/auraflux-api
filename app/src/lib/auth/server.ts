@@ -25,6 +25,16 @@ function authSecret(): string {
   return process.env.BETTER_AUTH_SECRET || process.env.AUTH_JWT_SECRET || '';
 }
 
+/** Google OAuth credentials — infrastructure only; omit provider when unset. */
+export function googleSocialProviderFromEnv():
+  | { clientId: string; clientSecret: string; prompt: 'select_account' }
+  | null {
+  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+  if (!clientId || !clientSecret) return null;
+  return { clientId, clientSecret, prompt: 'select_account' };
+}
+
 export function createAurafluxAuth() {
   const pool = getPool();
   const secret = authSecret();
@@ -34,6 +44,8 @@ export function createAurafluxAuth() {
     process.env.BETTER_AUTH_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     'https://app.auraflux.co';
+
+  const google = googleSocialProviderFromEnv();
 
   return betterAuth({
     database: pool,
@@ -54,6 +66,20 @@ export function createAurafluxAuth() {
         verify: verifyPassword,
       },
     },
+    // Link Google → existing email/password user when emails match
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ['google'],
+      },
+    },
+    ...(google
+      ? {
+          socialProviders: {
+            google,
+          },
+        }
+      : {}),
     user: {
       additionalFields: {},
     },

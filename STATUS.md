@@ -2,6 +2,7 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-09-04 — Continue with Google (Better Auth socialProviders.google + sign-in button). Needs Vercel `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` + Google redirect `…/api/id/callback/google`. HSKRG `iss_TxwDHw2QcqPw`.
 **Last Updated:** 2026-08-23 — HSKRG agent key in Doppler + Render cron; nightly review posts to hskrg-work (iss on Platform/auraflux).
 **Last Updated:** 2026-08-23 — pipeline review posts to HSKRG Work board (`lib/ops/hskrg_board.js`, `--board`); Jira posting removed.
 **Last Updated:** 2026-08-23 — pipeline_parity_review: cron/static runs warn on missing secrets + skip C0 live_grid/broadcast env scan (fixes auraflux-pipeline-review exit 1).
