@@ -1,5 +1,4 @@
 {
-  "comment": "Production Next.js app deploys from app/ on Vercel project auraflux-app (app.auraflux.co). Root experimentalServices kept for monorepo experiments only.",
   "experimentalServices": {
     "auraflux-app": {
       "type": "web",

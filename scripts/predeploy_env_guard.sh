@@ -145,7 +145,7 @@ LOCAL_SKIP_PREFIXES="http://localhost,http://127"
 # DO NOT add production vars here (NODE_ENV, TZ, NODE_OPTIONS, etc.) — if a
 # destructive PUT ever wipes Render vars, the guard can only restore what it
 # knows about. Production vars belong in .env, not in this skip list.
-LOCAL_SKIP_KEYS="VECTCUT_API_URL,DASHBOARD_PORT,ATLASSIAN_API_TOKEN,ATLASSIAN_DOMAIN,ATLASSIAN_EMAIL,JIRA_PROJECT_KEY,JIRA_WEBHOOK_SECRET,CONFLUENCE_SPACE_KEY,NEW_RELIC_APP_NAME,NEW_RELIC_LICENSE_KEY,NEW_RELIC_USER_KEY,RENDER_API_KEY,GATE_TEST_MODE,PORT,PUPPETEER_EXECUTABLE_PATH,USE_LOCAL_FFMPEG"
+LOCAL_SKIP_KEYS="VECTCUT_API_URL,DASHBOARD_PORT,ATLASSIAN_API_TOKEN,ATLASSIAN_DOMAIN,ATLASSIAN_EMAIL,JIRA_PROJECT_KEY,JIRA_WEBHOOK_SECRET,CONFLUENCE_SPACE_KEY,HSKRG_AGENT_API_KEY,HSKRG_WORK_BASE_URL,HSKRG_ORG_SLUG,HSKRG_ORG_ID,HSKRG_PROJECT_ID,NEW_RELIC_APP_NAME,NEW_RELIC_LICENSE_KEY,NEW_RELIC_USER_KEY,RENDER_API_KEY,GATE_TEST_MODE,PORT,PUPPETEER_EXECUTABLE_PATH,USE_LOCAL_FFMPEG"
 
 CANONICAL_JSON=$(python3 << PYEOF
 import json
@@ -179,7 +179,6 @@ python3 << 'REQEOF'
 # If empty → warn loudly but don't block (they may already be set on Render).
 REQUIRED_KEYS = [
     ("GITHUB_API_TOKEN", "BLOCKING — marketing site reverts on deploy. Generate at https://github.com/settings/tokens (Fine-grained, Contents:read+write on auraflux-co/auraflux-api)"),
-    ("SENTRY_DSN",       "Sentry disabled — get from https://auraflux.sentry.io → Settings → Projects → Client Keys"),
     ("ALLOWED_ORIGINS",  "BLOCKING — dashboard shows 500 for all /jobs calls without this. Value: https://app.auraflux.co,http://localhost:3000"),
 ]
 env = {}

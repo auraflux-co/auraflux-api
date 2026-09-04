@@ -212,7 +212,8 @@ services:
 
   # ── Manually managed in Render (not in Blueprint) ────────────────────────────
   # auraflux-redis — Key Value starter; set REDIS_URL on auraflux-api (BullMQ).
-  # auraflux-pipeline-review — daily cron (scripts/pipeline_parity_review.js).
+  # auraflux-pipeline-review — daily cron (scripts/pipeline_parity_review.js --board).
+  # Env: HSKRG_AGENT_API_KEY (+ optional HSKRG_ORG_SLUG=auraflux). Legacy --jira still accepted.
   # Nightly backup runs inside auraflux-api at 03:00 UTC (scripts/backup_to_r2.js).
 
 # ── No managed databases ─────────────────────────────────────────────────────

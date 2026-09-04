@@ -1,7 +1,7 @@
 'use client';
 
 import { SignIn } from '@/lib/clerk-compat';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -22,6 +22,7 @@ function SignInInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionExpired = searchParams.get('reason') === 'session_expired';
+  const googleError = searchParams.get('error') === 'google';
   const redirectUrl = searchParams.get('redirect_url') || '/home';
 
   useEffect(() => {
@@ -46,6 +47,11 @@ function SignInInner() {
       {sessionExpired ? (
         <p className="text-sm text-amber-600 dark:text-amber-400 text-center max-w-sm">
           Your session expired. Sign in again to continue.
+        </p>
+      ) : null}
+      {googleError ? (
+        <p className="text-sm text-red-500 text-center max-w-sm">
+          Google sign-in failed. Try again or use email and password.
         </p>
       ) : null}
       <SignIn

@@ -29,6 +29,9 @@ const CRITICAL = {
   ATLASSIAN_API_TOKEN: 'Preferred Doppler name for Jira/Confluence API token.',
   ATLASSIAN_EMAIL: 'Atlassian account email.',
   ATLASSIAN_DOMAIN: 'your-site.atlassian.net',
+  HSKRG_AGENT_API_KEY: 'HSKRG Work agent Bearer token (hskrg-work npm run agent:key).',
+  HSKRG_WORK_BASE_URL: 'https://hskrg-work.vercel.app',
+  HSKRG_ORG_SLUG: 'Board org slug for this repo (auraflux-api → auraflux).',
   CONFLUENCE_SPACE_KEY: 'Confluence space key (default AF).',
   STRIPE_SECRET_KEY: 'Stripe secret key.',
   STRIPE_WEBHOOK_SECRET: 'Stripe webhook secret.',
@@ -41,7 +44,6 @@ const CRITICAL = {
   DOPPLER_TOKEN: 'Local bootstrap — run scripts via doppler_run.sh for full secrets.',
   CF_API_TOKEN: 'Cloudflare API token (marketing deploy).',
   CF_ACCOUNT_ID: 'Cloudflare account id.',
-  SENTRY_DSN: 'Sentry DSN.',
   NEW_RELIC_LICENSE_KEY: 'New Relic license key.'
 };
 

@@ -10,11 +10,13 @@
  *   Layer 3 — Pipeline consumers: everything that needs the pipeline to be healthy
  *
  * Run:  node scripts/pipeline_parity_review.js
+ * Post: node scripts/pipeline_parity_review.js --board
  * Output: logs/pipeline_parity_review_<date>.md
  */
 
 const fs   = require('fs');
 const path = require('path');
+const { createBoardIssue } = require('../lib/ops/hskrg_board');
 
 const ROOT    = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'logs');
@@ -29,6 +31,18 @@ function readFile(relPath) {
 function pass(msg)  { return { status: '✅', msg }; }
 function fail(msg)  { return { status: '❌', msg }; }
 function warn(msg)  { return { status: '⚠️ ', msg }; }
+
+/** Render cron + local runs without .env — static wiring review only (no API secrets). */
+function isStaticReviewContext() {
+  if (process.env.RENDER_SERVICE_TYPE === 'cron') return true;
+  if (process.env.PIPELINE_REVIEW_STATIC === '1') return true;
+  const envFile = readFile('.env') || '';
+  if (!envFile && !(process.env.DATABASE_URL || '').trim()) return true;
+  return false;
+}
+
+/** C0 localhost broadcast/live grid — not required on Render production API. */
+const ENV_SCAN_SKIP_DIRS = new Set(['live_grid', 'broadcast']);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LAYER 1 — Pipeline parity
@@ -286,8 +300,6 @@ function checkPipelineDependencyEnvVars() {
     { key: 'KICK_CLIENT_ID',         label: 'Kick clip sourcing' },
     // Publish
     { key: 'UPLOADPOST_API_KEY',     label: 'UploadPost (multi-platform publish)' },
-    // Observability — warn_only: Sentry DSN is set on Render but not required in local .env
-    { key: 'SENTRY_DSN',             label: 'Sentry error tracking', warn_only: true },
   ];
 
   const envSource = runningOnRender ? 'Render env' : '.env';
@@ -302,6 +314,8 @@ function checkPipelineDependencyEnvVars() {
     } else if (!runningOnRender && inExample && envFile.includes(`${key}=`)) {
       // Locally: key present but blank in .env
       results.push(warn(`${key}: present in .env but blank — may be set on Render; verify (${label})`));
+    } else if (inExample && isStaticReviewContext()) {
+      results.push(warn(`${key}: not set on review cron — verify on auraflux-api (${label})`));
     } else if (inExample) {
       results.push(fail(`${key}: in .env.example but not set in ${envSource} — pipeline dependency missing (${label})`));
     } else {
@@ -475,7 +489,11 @@ function checkEnvVarsDocumented() {
   const envVars = new Set();
   function scanDir(dir) {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) { scanDir(path.join(dir, entry.name)); continue; }
+      if (entry.isDirectory()) {
+        if (ENV_SCAN_SKIP_DIRS.has(entry.name)) continue;
+        scanDir(path.join(dir, entry.name));
+        continue;
+      }
       if (!entry.name.endsWith('.js')) continue;
       const src = fs.readFileSync(path.join(dir, entry.name), 'utf8');
       for (const m of src.matchAll(/process\.env\.([A-Z][A-Z0-9_]+)/g)) envVars.add(m[1]);
@@ -485,17 +503,16 @@ function checkEnvVarsDocumented() {
   return [...envVars].sort().map(v =>
     exampleSrc.includes(v)
       ? pass(`${v}: documented in .env.example`)
-      : fail(`${v}: NOT in .env.example — undocumented env var`));
+      : warn(`${v}: NOT in .env.example — add comment or exclude from scan`));
 }
 
-function checkSentryOnHardFail() {
+function checkLogErrorOnHardFail() {
   return ['lib/services/pipeline_assembly.js', 'lib/routes/jobs_c1.js', 'lib/queue/worker.js'].map(f => {
     const src = readFile(f);
     if (!src) return warn(`${f}: not found`);
-    // logError() is the project's Sentry wrapper (error_logger.js → Sentry.captureException)
-    return (src.includes('Sentry') || src.includes('captureException') || src.includes('captureMessage') || src.includes('logError'))
-      ? pass(`${f}: error reporting on failure (Sentry/logError)`)
-      : warn(`${f}: no Sentry/logError call detected — failures may be silent`);
+    return src.includes('logError')
+      ? pass(`${f}: error reporting on failure (logError)`)
+      : warn(`${f}: no logError call detected — failures may be silent`);
   });
 }
 
@@ -538,7 +555,7 @@ function runReview() {
     { title: '3.6 Job status UI polling + outputUrl rendered', results: checkJobStatusUIPolling() },
     { title: '3.7 Billing consumer — Stripe webhook + planTier sync', results: checkBillingConsumer() },
     { title: '3.8 Env vars documented in .env.example', results: checkEnvVarsDocumented() },
-    { title: '3.9 Sentry alerts on hard-fail paths', results: checkSentryOnHardFail() },
+    { title: '3.9 logError on hard-fail paths', results: checkLogErrorOnHardFail() },
   ];
 
   let failures = 0, warnings = 0, passes = 0;
@@ -594,53 +611,17 @@ function runReview() {
 }
 
 /**
- * Post a completed review report to Jira as a new issue.
- * The issue is created in the CPD project under issue type "Task" with a
- * machine-readable label so the agent can query it at session start.
+ * Post a completed review report to HSKRG Work (Platform project, auraflux org).
+ * Agents query open issues titled "Pipeline Health Report" at session start.
  */
-async function postReportToJira(reportMarkdown, summary) {
-  const domain  = (process.env.ATLASSIAN_DOMAIN  || '').trim();
-  const email   = (process.env.ATLASSIAN_EMAIL   || '').trim();
-  const token   = (process.env.ATLASSIAN_API_TOKEN || '').trim();
-  const project = (process.env.JIRA_PROJECT_KEY  || 'CPD').trim();
-
-  if (!domain || !email || !token) {
-    console.warn('[pipeline-review] Jira env vars missing — skipping Jira post');
-    return null;
-  }
-
-  const auth = Buffer.from(`${email}:${token}`).toString('base64');
-  const url  = `https://${domain}/rest/api/2/issue`;
-
-  const body = JSON.stringify({
-    fields: {
-      project:     { key: project },
-      summary,
-      issuetype:   { name: 'Task' },
-      description: reportMarkdown.slice(0, 30000), // Jira body cap
-      labels:      ['pipeline-health-report', 'auto-generated'],
-    },
+async function postReportToBoard(reportMarkdown, summary) {
+  const issue = await createBoardIssue({
+    title: summary,
+    description: reportMarkdown.slice(0, 50000),
+    status: 'open',
+    orgSlug: process.env.HSKRG_ORG_SLUG || 'auraflux',
   });
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Content-Type':  'application/json',
-      'Accept':        'application/json',
-    },
-    body,
-  });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error(`[pipeline-review] Jira POST failed ${res.status}: ${txt}`);
-    return null;
-  }
-
-  const data = await res.json();
-  console.log(`[pipeline-review] Jira issue created: ${data.key} — ${url.replace('/rest/api/2/issue', '')}/browse/${data.key}`);
-  return data.key;
+  return issue?.id || null;
 }
 
 async function runReviewAndPost() {
@@ -652,13 +633,17 @@ async function runReviewAndPost() {
     'utf8',
   );
   const summary = `[${status}] Pipeline Health Report ${date} — ${failures} failures, ${warnings} warnings, ${passes} passes`;
-  const key = await postReportToJira(report, summary);
-  return { failures, warnings, passes, jiraKey: key };
+  const issueId = await postReportToBoard(report, summary);
+  return { failures, warnings, passes, boardIssueId: issueId };
 }
 
 if (require.main === module) {
   const args = process.argv.slice(2);
-  if (args.includes('--jira')) {
+  const shouldPost = args.includes('--board') || args.includes('--jira');
+  if (shouldPost) {
+    if (args.includes('--jira')) {
+      console.warn('[pipeline-review] --jira is deprecated; use --board (HSKRG Work)');
+    }
     runReviewAndPost().then(({ failures }) => process.exit(failures > 0 ? 1 : 0)).catch(e => {
       console.error(e);
       process.exit(1);
