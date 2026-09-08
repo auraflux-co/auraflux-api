@@ -1,7 +1,9 @@
 import { betterAuth } from 'better-auth';
 import { nextCookies } from 'better-auth/next-js';
+import { emailOTP } from 'better-auth/plugins';
 import { Pool } from 'pg';
 import { hashPassword, verifyPassword } from '@/lib/auth/password';
+import { sendAuthEmail } from '@/lib/auth/send-email';
 
 export const AUTH_BASE_PATH = '/api/id';
 
@@ -65,6 +67,16 @@ export function createAurafluxAuth() {
         hash: hashPassword,
         verify: verifyPassword,
       },
+      sendResetPassword: async ({ user, url }) => {
+        // Fire-and-forget to avoid timing leaks; Vercel keeps the isolate warm enough for SMTP.
+        void sendAuthEmail({
+          to: user.email,
+          subject: 'Reset your AuraFlux password',
+          text:
+            `Reset your password:\n\n${url}\n\n` +
+            `If you did not request this, you can ignore this email.`,
+        });
+      },
     },
     // Migration 036 uses snake_case; Better Auth defaults to camelCase columns.
     user: {
@@ -117,7 +129,35 @@ export function createAurafluxAuth() {
           },
         }
       : {}),
-    plugins: [nextCookies()],
+    plugins: [
+      nextCookies(),
+      emailOTP({
+        otpLength: 6,
+        expiresIn: 300,
+        disableSignUp: true,
+        async sendVerificationOTP({ email, otp, type }) {
+          const subject =
+            type === 'forget-password'
+              ? 'Your AuraFlux password reset code'
+              : type === 'email-verification'
+                ? 'Verify your AuraFlux email'
+                : 'Your AuraFlux sign-in code';
+          const purpose =
+            type === 'forget-password'
+              ? 'reset your password'
+              : type === 'email-verification'
+                ? 'verify your email'
+                : 'sign in';
+          void sendAuthEmail({
+            to: email,
+            subject,
+            text:
+              `Your one-time code to ${purpose} is:\n\n${otp}\n\n` +
+              `It expires in 5 minutes. If you did not request this, ignore this email.`,
+          });
+        },
+      }),
+    ],
   });
 }
 

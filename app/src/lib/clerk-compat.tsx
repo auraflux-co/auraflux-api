@@ -267,6 +267,8 @@ export function UserButton() {
   );
 }
 
+type AuthFormMode = 'sign-in' | 'sign-up' | 'forgot' | 'otp';
+
 export function SignIn({
   routing: _routing,
   forceRedirectUrl,
@@ -281,7 +283,10 @@ export function SignIn({
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'sign-in' | 'sign-up'>(initialMode);
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
+  const [mode, setMode] = useState<AuthFormMode>(initialMode);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const { isSignedIn, isLoaded } = useAuth();
@@ -292,23 +297,63 @@ export function SignIn({
     }
   }, [isLoaded, isSignedIn, router, forceRedirectUrl]);
 
+  function switchMode(next: AuthFormMode) {
+    setMode(next);
+    setError(null);
+    setInfo(null);
+    setOtp('');
+    setOtpSent(false);
+    if (next !== 'sign-up' && next !== 'sign-in') setPassword('');
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setInfo(null);
     try {
       if (mode === 'sign-in') {
         const res = await authClient.signIn.email({ email, password });
         if (res.error) throw new Error(res.error.message || 'Sign in failed');
-      } else {
+        window.location.href = forceRedirectUrl || '/home';
+        return;
+      }
+      if (mode === 'sign-up') {
         const res = await authClient.signUp.email({
           email,
           password,
           name: email.split('@')[0] || 'User',
         });
         if (res.error) throw new Error(res.error.message || 'Sign up failed');
+        window.location.href = forceRedirectUrl || '/home';
+        return;
       }
-      window.location.href = forceRedirectUrl || '/home';
+      if (mode === 'forgot') {
+        const res = await authClient.requestPasswordReset({
+          email,
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (res.error) throw new Error(res.error.message || 'Could not send reset email');
+        setInfo(
+          'If an account exists for that email, we sent a password reset link. Check your inbox.',
+        );
+        return;
+      }
+      if (mode === 'otp') {
+        if (!otpSent) {
+          const res = await authClient.emailOtp.sendVerificationOtp({
+            email,
+            type: 'sign-in',
+          });
+          if (res.error) throw new Error(res.error.message || 'Could not send code');
+          setOtpSent(true);
+          setInfo('We sent a 6-digit code to your email. It expires in 5 minutes.');
+          return;
+        }
+        const res = await authClient.signIn.emailOtp({ email, otp });
+        if (res.error) throw new Error(res.error.message || 'Invalid or expired code');
+        window.location.href = forceRedirectUrl || '/home';
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Auth failed');
     } finally {
@@ -329,7 +374,6 @@ export function SignIn({
       if (res.error) {
         throw new Error(res.error.message || 'Google sign-in failed');
       }
-      // Successful start redirects to Google; if disableRedirect were set we'd land here
     } catch (err) {
       setError(
         err instanceof Error
@@ -340,29 +384,51 @@ export function SignIn({
     }
   }
 
+  const title =
+    mode === 'sign-up'
+      ? 'Create account'
+      : mode === 'forgot'
+        ? 'Reset password'
+        : mode === 'otp'
+          ? 'Sign in with code'
+          : 'Sign in';
+
+  const submitLabel =
+    mode === 'sign-up'
+      ? 'Sign up'
+      : mode === 'forgot'
+        ? 'Send reset link'
+        : mode === 'otp'
+          ? otpSent
+            ? 'Verify code'
+            : 'Email me a code'
+          : 'Sign in';
+
   return (
     <div className="w-full max-w-sm mx-auto rounded-xl border border-border bg-card p-6 shadow-sm">
-      <h1 className="text-xl font-semibold mb-1">
-        {mode === 'sign-in' ? 'Sign in' : 'Create account'}
-      </h1>
+      <h1 className="text-xl font-semibold mb-1">{title}</h1>
       <p className="text-sm text-muted-foreground mb-4">AuraFlux</p>
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => void continueWithGoogle()}
-        className="w-full mb-4 flex items-center justify-center gap-2 rounded-md border border-border bg-background py-2 text-sm font-medium hover:bg-muted disabled:opacity-60"
-      >
-        <GoogleMark />
-        Continue with Google
-      </button>
-      <div className="relative mb-4">
-        <div className="absolute inset-0 flex items-center" aria-hidden>
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">or</span>
-        </div>
-      </div>
+      {mode === 'sign-in' || mode === 'sign-up' ? (
+        <>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void continueWithGoogle()}
+            className="w-full mb-4 flex items-center justify-center gap-2 rounded-md border border-border bg-background py-2 text-sm font-medium hover:bg-muted disabled:opacity-60"
+          >
+            <GoogleMark />
+            Continue with Google
+          </button>
+          <div className="relative mb-4">
+            <div className="absolute inset-0 flex items-center" aria-hidden>
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+        </>
+      ) : null}
       <form onSubmit={submit} className="space-y-3">
         <label className="block text-sm">
           Email
@@ -375,36 +441,72 @@ export function SignIn({
             className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
           />
         </label>
-        <label className="block text-sm">
-          Password
-          <input
-            type="password"
-            required
-            minLength={8}
-            autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-          />
-        </label>
+        {mode === 'sign-in' || mode === 'sign-up' ? (
+          <label className="block text-sm">
+            Password
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
+          </label>
+        ) : null}
+        {mode === 'otp' && otpSent ? (
+          <label className="block text-sm">
+            One-time code
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              required
+              minLength={6}
+              maxLength={8}
+              autoComplete="one-time-code"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\s/g, ''))}
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm tracking-widest"
+            />
+          </label>
+        ) : null}
+        {mode === 'forgot' ? (
+          <p className="text-xs text-muted-foreground">
+            We&apos;ll email a link to set a new password. Google sign-in users
+            should continue with Google instead.
+          </p>
+        ) : null}
+        {mode === 'otp' && !otpSent ? (
+          <p className="text-xs text-muted-foreground">
+            For email/password accounts (non-Google). We&apos;ll send a 6-digit
+            code — no password needed.
+          </p>
+        ) : null}
+        {info ? <p className="text-sm text-emerald-600 dark:text-emerald-400">{info}</p> : null}
         {error ? <p className="text-sm text-red-500">{error}</p> : null}
         <button
           type="submit"
           disabled={busy}
           className="w-full rounded-md bg-primary text-primary-foreground py-2 text-sm font-medium disabled:opacity-60"
         >
-          {busy ? 'Please wait…' : mode === 'sign-in' ? 'Sign in' : 'Sign up'}
+          {busy ? 'Please wait…' : submitLabel}
         </button>
       </form>
-      <p className="mt-4 text-sm text-muted-foreground">
-        {mode === 'sign-in' ? (
-          <>
+      {mode === 'sign-in' ? (
+        <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+          <p className="flex flex-wrap gap-x-3 gap-y-1">
+            <button type="button" className="underline" onClick={() => switchMode('forgot')}>
+              Forgot password?
+            </button>
+            <button type="button" className="underline" onClick={() => switchMode('otp')}>
+              Email me a code
+            </button>
+          </p>
+          <p>
             No account?{' '}
-            <button
-              type="button"
-              className="underline"
-              onClick={() => setMode('sign-up')}
-            >
+            <button type="button" className="underline" onClick={() => switchMode('sign-up')}>
               Sign up
             </button>
             {signUpUrl ? (
@@ -413,20 +515,15 @@ export function SignIn({
                 or <Link href={signUpUrl} className="underline">sign-up page</Link>
               </>
             ) : null}
-          </>
-        ) : (
-          <>
-            Have an account?{' '}
-            <button
-              type="button"
-              className="underline"
-              onClick={() => setMode('sign-in')}
-            >
-              Sign in
-            </button>
-          </>
-        )}
-      </p>
+          </p>
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">
+          <button type="button" className="underline" onClick={() => switchMode('sign-in')}>
+            Back to sign in
+          </button>
+        </p>
+      )}
     </div>
   );
 }

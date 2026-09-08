@@ -6,6 +6,7 @@ const isPublicPath = (pathname: string) => {
   if (pathname === '/') return true;
   if (pathname.startsWith('/sign-in')) return true;
   if (pathname.startsWith('/sign-up')) return true;
+  if (pathname.startsWith('/reset-password')) return true;
   if (pathname.startsWith('/auth/token')) return true;
   if (pathname.startsWith('/api/health')) return true;
   if (pathname.startsWith('/api/id')) return true;
