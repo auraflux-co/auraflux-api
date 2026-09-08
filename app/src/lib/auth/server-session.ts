@@ -3,6 +3,7 @@
  */
 import { headers } from 'next/headers';
 import { getAuth } from '@/lib/auth/server';
+import { isSuperadminEmail } from '@/lib/auth/superadmin-emails';
 import { Pool } from 'pg';
 
 let pool: Pool | null = null;
@@ -22,10 +23,11 @@ function getPool() {
 async function loadProfile(authUserId: string, email: string | null) {
   const p = getPool();
   if (!p) {
+    const promoted = !!(email && isSuperadminEmail(email));
     return {
       accountId: authUserId,
-      role: 'customer',
-      planTier: 'operate',
+      role: promoted ? 'superadmin' : 'customer',
+      planTier: promoted ? 'managed' : 'operate',
       email,
     };
   }
@@ -34,17 +36,31 @@ async function loadProfile(authUserId: string, email: string | null) {
     [authUserId],
   );
   if (rows[0]) {
+    const effectiveEmail = (rows[0].email as string) || email;
+    let role = (rows[0].role as string) || 'customer';
+    let planTier = (rows[0].plan_tier as string) || 'operate';
+    if (effectiveEmail && isSuperadminEmail(effectiveEmail) && role !== 'superadmin') {
+      await p.query(
+        `UPDATE user_profiles
+            SET role = 'superadmin', plan_tier = 'managed', updated_at = NOW()
+          WHERE account_id = $1`,
+        [rows[0].account_id],
+      );
+      role = 'superadmin';
+      planTier = 'managed';
+    }
     return {
       accountId: rows[0].account_id as string,
-      role: (rows[0].role as string) || 'customer',
-      planTier: (rows[0].plan_tier as string) || 'operate',
-      email: (rows[0].email as string) || email,
+      role,
+      planTier,
+      email: effectiveEmail,
     };
   }
+  const promoted = !!(email && isSuperadminEmail(email));
   return {
     accountId: authUserId,
-    role: 'customer',
-    planTier: 'operate',
+    role: promoted ? 'superadmin' : 'customer',
+    planTier: promoted ? 'managed' : 'operate',
     email,
   };
 }
