@@ -1,49 +1,55 @@
 /**
- * Auth transactional email via SMTP (same vars as API: SMTP_HOST/USER/PASS).
- * No-op when SMTP is not configured — callers still succeed so we don't
- * enumerate users; log a warning for operators.
+ * Auth transactional email — proxies to auraflux-api so SMTP stays on Render/Doppler.
+ * Vercel only needs AURAFLUX_API_SECRET (+ API URL).
  */
-import nodemailer from 'nodemailer';
-
-export function isSmtpConfigured(): boolean {
-  return !!(process.env.SMTP_USER && process.env.SMTP_PASS);
-}
-
 export async function sendAuthEmail(opts: {
   to: string;
   subject: string;
   text: string;
   html?: string;
 }): Promise<boolean> {
-  if (!isSmtpConfigured()) {
+  const apiBase = (
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE ||
+    'https://api.auraflux.co'
+  ).replace(/\/$/, '');
+  const secret = process.env.AURAFLUX_API_SECRET?.trim();
+
+  if (!secret) {
     console.warn(
-      '[auth-email] SMTP_USER/SMTP_PASS not set — skipped send to',
+      '[auth-email] AURAFLUX_API_SECRET not set — skipped send to',
       opts.to,
       opts.subject,
     );
     return false;
   }
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
-  const from =
-    process.env.SMTP_FROM ||
-    `AuraFlux <${process.env.SMTP_USER || 'support@auraflux.co'}>`;
-
-  await transporter.sendMail({
-    from,
-    to: opts.to,
-    subject: opts.subject,
-    text: opts.text,
-    html: opts.html || opts.text.replace(/\n/g, '<br/>'),
-  });
-  return true;
+  try {
+    const res = await fetch(`${apiBase}/internal/auth-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-auraflux-api-secret': secret,
+      },
+      body: JSON.stringify({
+        to: opts.to,
+        subject: opts.subject,
+        text: opts.text,
+        html: opts.html,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      console.warn('[auth-email] API send failed', res.status, body.slice(0, 200));
+      return false;
+    }
+    const json = (await res.json().catch(() => ({}))) as { ok?: boolean; sent?: boolean };
+    return !!json.ok;
+  } catch (err) {
+    console.warn(
+      '[auth-email] API unreachable',
+      err instanceof Error ? err.message : err,
+    );
+    return false;
+  }
 }

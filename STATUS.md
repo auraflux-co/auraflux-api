@@ -2,8 +2,9 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-09-08 — Auth emails (reset/OTP) via API `POST /internal/auth-email` + Render SMTP; Vercel needs `AURAFLUX_API_SECRET` only (no app SMTP).
 **Last Updated:** 2026-09-08 — Superadmin: include robert@businessrocket.ai + promote on login if allowlisted (not only on first profile insert).
-**Last Updated:** 2026-09-08 — Auth: Forgot password (reset link) + Email me a code (email OTP) for non-Google users. Needs SMTP_* on Vercel app. `/reset-password` public route.
+**Last Updated:** 2026-09-08 — Auth: Forgot password (reset link) + Email me a code (email OTP) for non-Google users. `/reset-password` public route.
 **Last Updated:** 2026-09-04 — CPD-1330: brands/account + social/channel OAuth use Better Auth JWT (not Clerk); migration 038 setup_dismissed; synced BA secrets to Render API.
 **Last Updated:** 2026-09-04 — Google callback: added account.issuer (migration 037) on auraflux-pg. Retry Continue with Google.
 **Last Updated:** 2026-08-23 — HSKRG agent key in Doppler + Render cron; nightly review posts to hskrg-work (iss on Platform/auraflux).
