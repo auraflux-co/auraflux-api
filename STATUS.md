@@ -2,7 +2,8 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-08 — Auth emails (reset/OTP) via API `POST /internal/auth-email` + Render SMTP; Vercel needs `AURAFLUX_API_SECRET` only (no app SMTP).
+**Last Updated:** 2026-09-08 — Auth reset/OTP: deploy API+app; mail via Render SMTP using existing AUTH_JWT_SECRET (no extra Vercel secret). Live was RESET_PASSWORD_DISABLED + API 404.
+**Last Updated:** 2026-09-08 — Auth emails (reset/OTP) via API `POST /internal/auth-email` + Render SMTP.
 **Last Updated:** 2026-09-08 — Superadmin: include robert@businessrocket.ai + promote on login if allowlisted (not only on first profile insert).
 **Last Updated:** 2026-09-08 — Auth: Forgot password (reset link) + Email me a code (email OTP) for non-Google users. `/reset-password` public route.
 **Last Updated:** 2026-09-04 — CPD-1330: brands/account + social/channel OAuth use Better Auth JWT (not Clerk); migration 038 setup_dismissed; synced BA secrets to Render API.
