@@ -40,8 +40,9 @@ describe('auth_email helpers', () => {
       path.join(__dirname, '../lib/routes/auth_email.js'),
       'utf8',
     );
-    assert.match(src, /\/internal\/auth-email/);
+    assert.match(src, /AUTH_JWT_SECRET/);
+    assert.match(src, /BETTER_AUTH_SECRET/);
     assert.match(src, /x-auraflux-api-secret/);
-    assert.match(src, /AURAFLUX_API_SECRET/);
+    assert.match(src, /\/internal\/auth-email/);
   });
 });

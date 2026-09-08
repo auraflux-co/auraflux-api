@@ -1,6 +1,6 @@
 /**
- * Auth transactional email — proxies to auraflux-api so SMTP stays on Render/Doppler.
- * Vercel only needs AURAFLUX_API_SECRET (+ API URL).
+ * Auth transactional email — proxies to auraflux-api (Render SMTP).
+ * Uses AUTH_JWT_SECRET / BETTER_AUTH_SECRET already on Vercel + Render.
  */
 export async function sendAuthEmail(opts: {
   to: string;
@@ -13,11 +13,16 @@ export async function sendAuthEmail(opts: {
     process.env.NEXT_PUBLIC_API_BASE ||
     'https://api.auraflux.co'
   ).replace(/\/$/, '');
-  const secret = process.env.AURAFLUX_API_SECRET?.trim();
+  const secret = (
+    process.env.AUTH_JWT_SECRET ||
+    process.env.BETTER_AUTH_SECRET ||
+    process.env.AURAFLUX_API_SECRET ||
+    ''
+  ).trim();
 
-  if (!secret) {
+  if (!secret || secret.length < 32) {
     console.warn(
-      '[auth-email] AURAFLUX_API_SECRET not set — skipped send to',
+      '[auth-email] AUTH_JWT_SECRET/BETTER_AUTH_SECRET missing — skipped send to',
       opts.to,
       opts.subject,
     );
