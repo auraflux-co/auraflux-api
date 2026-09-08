@@ -9085,6 +9085,7 @@ const sourceRouter        = require('./lib/routes/source');
 const heygenRouter        = require('./lib/routes/heygen');
 const jobsC1Router        = require('./lib/routes/jobs_c1');
 const claimFixerRouter    = require('./lib/routes/claim_fixer');
+const authEmailRouter     = require('./lib/routes/auth_email');
 app.use(planRouter);
 app.use(creditsRouter);
 app.use(marketingRouter);
@@ -9109,6 +9110,7 @@ app.use(sourceRouter);
 app.use(jobsC1Router);
 app.use(claimFixerRouter);
 app.use(heygenRouter);
+app.use(authEmailRouter);
 
 // ── Express error middleware (must be last) ───────────────────────
 app.use(errorMiddleware);
