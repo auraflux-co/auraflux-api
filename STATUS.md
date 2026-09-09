@@ -2,6 +2,7 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-09-09 — Fix sign-in/reset favicon: use /brand/logo.png (icons/*.png gitignored → 404 on Vercel).
 **Last Updated:** 2026-09-09 (iss_exFgoTmmRwhP) — Peaks createJob contentType clips; e2e smoke + portrait layout tests; prod API 1.0.344 live with C1–C11 assembly.
 **Last Updated:** 2026-09-09 (iss_exFgoTmmRwhP) — assembly_service applies C1–C11 portrait from compositionSpec (full-bleed vs blur-pad + look); clip_comp_creative on prod; Peaks presets bake into jobs.
 **Last Updated:** 2026-09-09 (iss_exFgoTmmRwhP) — clip_comp_creative + look_presets on prod; short_compile_clips jobs bake C1–C11 compositionSpec.compCreative from Peaks preset.
