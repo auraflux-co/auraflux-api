@@ -3686,12 +3686,36 @@ app.post('/generate-clip-comp', async (req, res) => {
       scheduledAt: req.body.scheduledAt || null,
       clipsOnly: true,
     });
+    try {
+      const { mergeCompCreative } = require('./lib/clip_comp_creative');
+      const presetKey = req.body.featureConfig?.compose?.preset
+        || req.body.compCreativePreset
+        || req.body.compositionSpec?.compCreativePreset
+        || 'classic_blur_pad';
+      const compCreative = mergeCompCreative({
+        ...(req.body.compositionSpec?.compCreative || req.body.compCreative || {}),
+        preset: presetKey,
+      });
+      jobSpec.compositionSpec = {
+        ...(jobSpec.compositionSpec || {}),
+        ...(req.body.compositionSpec || {}),
+        compCreativePreset: presetKey,
+        compCreative,
+      };
+      if (jobSpec.designSpec) jobSpec.designSpec.compCreative = compCreative;
+    } catch (creativeErr) {
+      console.warn('[/generate-clip-comp] compCreative merge skipped:', creativeErr.message);
+    }
     jobSpec = require('./lib/job_spec').updateJobSpec(jobSpec.jobId, {
       clipsOnly: true,
       deliverySpec: jobSpec.deliverySpec,
       order: jobSpec.order,
       stageMap: jobSpec.stageMap,
       designSpec: jobSpec.designSpec,
+      compositionSpec: jobSpec.compositionSpec,
+      format: jobSpec.format,
+      productionProfile: jobSpec.productionProfile,
+      productionPath: jobSpec.productionPath,
       contentType,
     });
   } catch (specErr) {
