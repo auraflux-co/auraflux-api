@@ -54,7 +54,7 @@ function ResetPasswordInner() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6 bg-background">
       <Image
-        src="/icons/icon-192.png"
+        src="/brand/logo.png"
         alt="AuraFlux"
         width={64}
         height={64}

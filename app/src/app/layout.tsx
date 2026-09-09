@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     title:      'AuraFlux',
   },
   icons: {
-    apple: '/icons/icon-192.png',
-    icon:  '/icons/icon-192.png',
+    apple: '/brand/logo.png',
+    icon:  '/brand/logo.png',
   },
 };
 
