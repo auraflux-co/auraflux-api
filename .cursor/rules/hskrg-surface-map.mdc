@@ -1,0 +1,30 @@
+---
+description: HSKRG three-brand surface map — wiki only (AuraFlux agents)
+alwaysApply: true
+---
+
+# HSKRG surface map (AuraFlux workspace)
+
+Before adding portals, shared logins, or “client” UIs, read:
+
+**https://hskrg-work.vercel.app/wiki/HOME/hskrg-product-surface-map**
+
+## Three brands (summary)
+
+| Brand | Repo | Customer unit |
+|-------|------|---------------|
+| AuraFlux | this repo | Video tenant |
+| Pavilion | `~/pavilion` | School/PTO org |
+| Business Rocket | `~/businessrocket` | White-label Pavilion org |
+
+## AuraFlux lane
+
+- Own: video pipeline, tenants, CWN, auraflux.co/app
+- Do not: invent BR member portals or Pavilion family login inside this repo
+- Website+member for a video customer = separate Pavilion/BR provision, ticketed as such
+
+Do not duplicate the full map as a repo `.md`. Wiki only.
+
+## Board
+
+Label AuraFlux product work for the `auraflux` org. Do not use `customer:shms` unless the task is Stone Hill www.
