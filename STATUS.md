@@ -2,6 +2,7 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-09-09 — Peaks stage uses extractVodClips; yt-dlp client android,mweb (ANDROID_VR SABR→403).
 **Last Updated:** 2026-09-09 — yt-dlp: retry android client when YouTube cookies still bot-check on Render IPs.
 **Last Updated:** 2026-09-09 — Peaks line: yt-dlp GitHub binary + Deno/EJS for YouTube cookies; portal4 clip-comp fix; customer nav Peaks-first; remove VectCut runtime.
 **Last Updated:** 2026-09-09 — Fix sign-in/reset favicon: use /brand/logo.png (icons/*.png gitignored → 404 on Vercel).
