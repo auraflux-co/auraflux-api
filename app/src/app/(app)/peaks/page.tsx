@@ -170,7 +170,7 @@ function PeaksPageInner() {
       if (!token) throw new Error('Session not ready');
       const preset = presets.find((p) => p.key === presetKey);
       const result = await createJob({
-        contentType: 'clip_comp',
+        contentType: 'clips',
         entryType: 'fetch',
         platforms: ['youtube'],
         formFactor: 'short',
