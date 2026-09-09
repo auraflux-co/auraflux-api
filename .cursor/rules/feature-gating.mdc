@@ -80,7 +80,6 @@ or call `isFeatureEnabled(key, jobSpec.planTier)` directly.
 |---|---|---|---|
 | `thumbnail.frame` | ✓ | ✓ | ✓ |
 | `thumbnail.designed` | ✓ | ✓ | ✓ |
-| `thumbnail.vectcut` | ✓ | ✓ | ✓ |
 | `thumbnail.gemini_ranking` | ✓ | ✓ | ✓ |
 | `thumbnail.imagen` | — | — | ✓ |
 | `tts.elevenlabs` | ✓ | ✓ | ✓ |

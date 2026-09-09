@@ -137,20 +137,21 @@ interface NavItem {
 }
 
 // Base nav — same for all customer tiers
-const CUSTOMER_NAV_BASE: NavItem[] = [
+const const CUSTOMER_NAV_BASE: NavItem[] = [
+  {
+    href: '/peaks',
+    label: 'Peaks',
+  },
   {
     href: '/myjobs',
     label: 'My Jobs',
     children: [
-      { href: '/myjobs/new',     label: 'New job' },
-      { href: '/peaks',         label: 'Peaks' },
       { href: '/myjobs/active',  label: 'In Progress'  },
       { href: '/myjobs/history', label: 'History' },
     ],
   },
+  // Staging approve — keep until Peaks has an inline approve path
   { href: '/review',    label: 'Review Queue'  },
-  { href: '/schedule',   label: 'Schedule'      },
-  { href: '/templates',  label: 'My Templates'  },
   {
     href:  '/billing',
     label: 'Billing',
@@ -162,29 +163,20 @@ const CUSTOMER_NAV_BASE: NavItem[] = [
     ],
   },
   { href: '/support',    label: 'Support'   },
-];
+];;
 
 // Settings children differ by plan tier
 function settingsNavItem(planTier: string | null): NavItem {
-  // API keys only for self-serve (operate) and enterprise (custom).
-  // Guided / managed are operator-run — they don't need direct API access.
-  // When planTier is null (still loading) we default to hidden to avoid flashing
-  // the link at guided/managed customers before the plan is resolved.
-  const showApiKeys = planTier === 'operate' || planTier === 'custom';
-  const children: { href: string; label: string }[] = [];
-  if (showApiKeys) {
-    children.push({ href: '/settings/api-keys', label: 'API Keys' });
-  }
-  children.push(
+  // Peaks-first customer surface: Brand / Channels / Social / Profile only.
+  // Hide API Keys + Developer until the full self-serve API offer is ready.
+  void planTier;
+  const children: { href: string; label: string }[] = [
     { href: '/settings/brand',   label: 'Brand Identity'     },
     { href: '/settings/channels', label: 'My Channels'       },
     { href: '/settings/social',  label: 'My Social Accounts' },
     { href: '/profile',          label: 'My Profile'         },
     { href: '/settings/team',    label: 'My Team'            },
-  );
-  if (showApiKeys) {
-    children.push({ href: '/developer', label: 'API Reference' });
-  }
+  ];
   return { href: '/settings', label: 'Settings', children };
 }
 

@@ -52,6 +52,20 @@ describe('resolveActivePortals (CPD-1043)', () => {
     const sorted = [...active].sort((a, b) => PORTAL_ORDER.indexOf(a) - PORTAL_ORDER.indexOf(b));
     expect(active).toEqual(sorted);
   });
+
+  test('Peaks short_compile after contentType rewrite still activates portal4', () => {
+    const spec = {
+      contentType: 'twitch-short',
+      productionPath: 'short_compile_clips',
+      staging: true,
+      compositionSpec: { compCreative: { preset: 'fableflow_speed' } },
+      stageMap: { script: { active: false } },
+    };
+    const active = resolveActivePortals(spec);
+    expect(active).toEqual(['portal0', 'portal3a', 'portal3b', 'portal4']);
+    expect(spec.portals.portal1.active).toBe(false);
+    expect(spec.portals.portal4.active).toBe(true);
+  });
 });
 
 describe('resolveActiveExtensions', () => {

@@ -293,7 +293,6 @@ function checkPipelineDependencyEnvVars() {
     // QA / grading
     { key: 'TWELVE_LABS_API_KEY',    label: 'Twelve Labs video QA' },
     { key: 'TOPAZLABS_API_KEY',      label: 'Topaz Labs upscaler' },
-    { key: 'VECTCUT_API_URL',        label: 'VectCut trim/cut service' },
     // Clip sourcing
     { key: 'YOUTUBE_API_KEY',        label: 'YouTube clip sourcing' },
     { key: 'TWITCH_CLIENT_ID',       label: 'Twitch clip sourcing' },

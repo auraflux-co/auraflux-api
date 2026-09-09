@@ -18,7 +18,6 @@ let savedEnv;
 beforeEach(() => {
   savedEnv = { ...process.env };
   // Simulate all credentials present by default
-  process.env.VECTCUT_API_URL   = 'http://localhost:9001';
   process.env.GEMINI_API_KEY    = 'test-gemini-key';
   process.env.RUNPOD_API_KEY    = 'test-runpod-key';
   process.env.ELEVENLABS_API_KEY = 'test-el-key';
@@ -47,9 +46,6 @@ describe('isFeatureEnabled', () => {
     expect(isFeatureEnabled('thumbnail.designed', 'operate')).toBe(true);
   });
   // CPD-109: DIY and DWY are feature-identical — tier distinction is service level only
-  it('enables thumbnail.vectcut for operate (CPD-109)', () => {
-    expect(isFeatureEnabled('thumbnail.vectcut', 'operate')).toBe(true);
-  });
   it('does NOT enable thumbnail.imagen for diy', () => {
     expect(isFeatureEnabled('thumbnail.imagen', 'operate')).toBe(false);
   });
@@ -61,9 +57,6 @@ describe('isFeatureEnabled', () => {
   });
 
   // DWY plan — same feature access as DIY
-  it('enables thumbnail.vectcut for guided (with env)', () => {
-    expect(isFeatureEnabled('thumbnail.vectcut', 'guided')).toBe(true);
-  });
   it('enables thumbnail.gemini_ranking for guided (with env)', () => {
     expect(isFeatureEnabled('thumbnail.gemini_ranking', 'guided')).toBe(true);
   });
@@ -109,10 +102,6 @@ describe('isFeatureEnabled', () => {
   });
 
   // Env var gates (plan is high enough but credential missing)
-  it('returns false when plan qualifies but required env var is missing', () => {
-    delete process.env.VECTCUT_API_URL;
-    expect(isFeatureEnabled('thumbnail.vectcut', 'operate')).toBe(false);
-  });
   it('returns false when GEMINI_API_KEY missing for thumbnail.imagen even on dfy', () => {
     delete process.env.GEMINI_API_KEY;
     expect(isFeatureEnabled('thumbnail.imagen', 'managed')).toBe(false);
@@ -132,15 +121,14 @@ describe('getEnabledFeatures', () => {
     expect(features).toContain('thumbnail.frame');
     expect(features).toContain('thumbnail.designed');
     expect(features).toContain('scheduling');
-    expect(features).toContain('thumbnail.vectcut');
     expect(features).toContain('tts.elevenlabs');
     expect(features).not.toContain('thumbnail.imagen');
     expect(features).not.toContain('avatar.heygen');
+    expect(features).not.toContain('thumbnail.vectcut');
   });
 
   it('returns same feature set for guided as operate (CPD-109)', () => {
     const features = getEnabledFeatures('guided');
-    expect(features).toContain('thumbnail.vectcut');
     expect(features).toContain('thumbnail.gemini_ranking');
     expect(features).toContain('tts.elevenlabs');
     expect(features).not.toContain('thumbnail.imagen');

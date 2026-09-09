@@ -62,7 +62,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libxrandr2 \
     xdg-utils \
     curl \
-    gnupg2
+    gnupg2 \
+    unzip \
+    ca-certificates
 
 # Install PostgreSQL 18 client to match Render managed PG 18.3.
 # Bookworm apt only ships pg_dump 15 which causes "server version mismatch" in backups.
@@ -72,9 +74,24 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
     apt-get update && apt-get install -y --no-install-recommends postgresql-client-18
 
-# Install Python deps: yt-dlp for VOD extract, curl-cffi + tls-client for Kick Cloudflare bypass
-RUN pip3 install --break-system-packages yt-dlp curl-cffi tls-client 2>/dev/null || \
-    pip3 install yt-dlp curl-cffi tls-client
+# yt-dlp: GitHub binary (pip wheels lag; YouTube n-challenge needs current extractor)
+RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
+      -o /usr/local/bin/yt-dlp \
+    && chmod a+rx /usr/local/bin/yt-dlp \
+    && yt-dlp --version
+
+# Deno: required by yt-dlp EJS JS challenge solver when using YouTube cookies
+ARG DENO_VERSION=2.8.3
+RUN curl -fsSL "https://github.com/denoland/deno/releases/download/v${DENO_VERSION}/deno-x86_64-unknown-linux-gnu.zip" \
+      -o /tmp/deno.zip \
+    && unzip -o /tmp/deno.zip -d /usr/local/bin \
+    && chmod a+rx /usr/local/bin/deno \
+    && rm -f /tmp/deno.zip \
+    && deno --version
+
+# Python deps for Kick Cloudflare bypass (not yt-dlp)
+RUN pip3 install --break-system-packages curl-cffi tls-client 2>/dev/null || \
+    pip3 install curl-cffi tls-client
 
 # Tell puppeteer to use the system Chromium, not download its own
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
