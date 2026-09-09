@@ -9071,6 +9071,7 @@ const notificationsRouter  = require('./lib/routes/notifications');
 const collabRouter    = require('./lib/routes/collab');
 const socialRouter    = require('./lib/routes/social_connect');
 const channelConnectRouter = require('./lib/routes/channel_connect');
+const twitchCcvRouter = require('./lib/routes/twitch_ccv');
 const supportRouter   = require('./lib/routes/support');
 const templatesRouter = require('./lib/routes/templates');
 const teamRouter          = require('./lib/routes/team');
@@ -9096,6 +9097,7 @@ app.all('/concierge*', (req, res) => res.redirect(301, req.path.replace('/concie
 app.use(collabRouter);
 app.use(socialRouter);
 app.use(channelConnectRouter);
+app.use(twitchCcvRouter);
 app.use(supportRouter);
 app.use(templatesRouter);
 app.use(teamRouter);
@@ -9180,6 +9182,14 @@ const server = app.listen(PORT, async () => {
     });
   } catch (e) {
     console.warn('⚠️  Production cron failed to start:', e.message);
+  }
+
+  // Customer Twitch CCV peaks — poll connected brands while live, link VOD after
+  try {
+    const { startTwitchCcvCron } = require('./lib/twitch_ccv');
+    startTwitchCcvCron();
+  } catch (e) {
+    console.warn('⚠️  Twitch CCV cron failed to start:', e.message);
   }
 
   // CPD-996: end orphaned live broadcasts from a previous process (restart kills

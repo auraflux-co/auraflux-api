@@ -25,10 +25,12 @@ import {
   disconnectChannelConnection,
   saveSourceChannels,
   resolveSourceChannel,
+  getTwitchCcvPeaks,
   type SourceChannels,
   type SourcePlatform,
   type SourceChannelOAuthConnection,
   type ResolvedChannel,
+  type TwitchCcvPeak,
 } from '@/lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -49,9 +51,9 @@ const PLATFORMS: {
   {
     key: 'twitchLogin', platform: 'twitch',
     label: 'Twitch', placeholder: 'hasanabi',
-    hint: 'Channel login name (lowercase, no @) — saved for this brand; OAuth optional when available',
+    hint: 'Connect Twitch — we record peak viewers while you are live, then link the VOD for trims',
     color: 'bg-purple-600',
-    // oauthPlatform: 'twitch', // CPD-353b — enable when TWITCH_CLIENT_SECRET is set (optional for users who can OAuth)
+    oauthPlatform: 'twitch',
   },
   {
     key: 'kickUsername', platform: 'kick',
@@ -99,6 +101,8 @@ function SourceChannelsPageInner() {
   const [oauthPlatforms, setOauthPlatforms] = useState<string[]>(['kick']);
   const [oauthError, setOauthError]   = useState<string | null>(null);
   const [oauthSuccess, setOauthSuccess] = useState<string | null>(null);
+  const [ccvPeaks, setCcvPeaks] = useState<TwitchCcvPeak[]>([]);
+  const [ccvHint, setCcvHint] = useState<string | null>(null);
 
   const [verify, setVerify] = useState<Record<string, ChannelVerification>>({
     twitchLogin:   { state: 'idle', channel: null, error: null },
@@ -107,6 +111,25 @@ function SourceChannelsPageInner() {
   });
 
   const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  // Load Twitch CCV peaks demo when brand / Twitch channel is present
+  useEffect(() => {
+    if (!isLoaded) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token || cancelled) return;
+        const res = await getTwitchCcvPeaks(token, 5);
+        if (cancelled) return;
+        setCcvPeaks(res.peaks || []);
+        setCcvHint(res.hint || null);
+      } catch {
+        /* peaks optional until migration applied */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isLoaded, getToken, activeBrandId, channels.twitchLogin]);
 
   // Load connected OAuth source channels (same apiFetch path as saved usernames)
   const loadConnections = useCallback(async (token?: string | null) => {
@@ -386,6 +409,55 @@ function SourceChannelsPageInner() {
 
       <Separator />
 
+      <div className="space-y-3">
+        <div>
+          <h2 className="af-label font-medium">Twitch live peaks</h2>
+          <p className="af-caption mt-1">
+            After you connect Twitch and go live, we poll concurrent viewers and map the peak to your VOD
+            (our own Streams Charts for your channel — not third-party).
+          </p>
+        </div>
+        {ccvPeaks.length === 0 ? (
+          <p className="af-caption text-muted-foreground">
+            {ccvHint || 'No captured streams yet. Save Twitch above, go live once, then refresh this page.'}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {ccvPeaks.map((p) => (
+              <Card key={p.id}>
+                <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="af-body font-medium">
+                      Peak {p.peakViewers.toLocaleString()} CCV
+                      {p.peakClock ? ` @ ${p.peakClock}` : ''}
+                    </p>
+                    <p className="af-caption text-muted-foreground">
+                      {p.title || 'Untitled stream'}
+                      {p.status ? ` · ${p.status}` : ''}
+                    </p>
+                  </div>
+                  {p.vodUrl ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(p.vodUrl!, '_blank', 'noopener,noreferrer')}
+                    >
+                      Open VOD at peak
+                    </Button>
+                  ) : (
+                    <span className="af-caption text-muted-foreground">
+                      {p.status === 'live' ? 'Live — capturing…' : 'Linking VOD…'}
+                    </span>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} disabled={isPending}>
           {isPending ? 'Saving…' : 'Save channels'}
@@ -397,6 +469,7 @@ function SourceChannelsPageInner() {
 
       <p className="af-caption">
         These are defaults only. You can still browse a different channel when creating a job.
+        YouTube publish works via direct connect. TikTok and Instagram publish through Upload-Post after you connect them under Social.
       </p>
     </PageShell>
   );

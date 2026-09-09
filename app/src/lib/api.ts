@@ -1327,6 +1327,33 @@ export async function getSourceChannels(
   return apiFetch('/account/source-channels', { token });
 }
 
+/** Customer Twitch CCV peaks (live poll → VOD link) */
+export interface TwitchCcvPeak {
+  id: string;
+  brandId?: string | null;
+  twitchLogin: string;
+  title?: string | null;
+  gameName?: string | null;
+  startedAt?: string;
+  endedAt?: string | null;
+  peakViewers: number;
+  peakAt?: string | null;
+  peakOffsetSec?: number | null;
+  peakClock?: string | null;
+  avgViewers?: number | null;
+  sampleCount?: number;
+  vodId?: string | null;
+  vodUrl?: string | null;
+  status: string;
+}
+
+export async function getTwitchCcvPeaks(
+  token?: string,
+  limit = 10,
+): Promise<{ ok: boolean; peaks: TwitchCcvPeak[]; twitchLogin?: string | null; hint?: string }> {
+  return apiFetch(`/twitch-ccv/peaks?limit=${limit}`, { token });
+}
+
 export async function getChannelConnections(
   token?: string,
 ): Promise<{ ok: boolean; connections: SourceChannelOAuthConnection[]; oauthPlatforms?: string[] }> {
