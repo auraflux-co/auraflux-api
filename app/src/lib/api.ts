@@ -1354,6 +1354,104 @@ export async function getTwitchCcvPeaks(
   return apiFetch(`/twitch-ccv/peaks?limit=${limit}`, { token });
 }
 
+/** YouTube Most Replayed / VOD peaks (Peaks page) */
+export interface ContentLibraryVod {
+  platform: string;
+  streamer: string;
+  vodId: string;
+  title: string;
+  url: string;
+  thumbnailUrl?: string | null;
+  duration: number;
+  views?: number;
+  createdAt?: string | null;
+}
+
+export interface ContentLibraryPeak {
+  start_sec: number;
+  end_sec: number;
+  score?: number | null;
+  title?: string | null;
+  summary?: string | null;
+}
+
+export interface ComposePreset {
+  code: string;
+  key: string;
+  label: string;
+}
+
+export async function listContentLibraryVods(
+  token?: string,
+  opts: { handle?: string; limit?: number } = {},
+): Promise<{ ok: boolean; handle?: string; channelTitle?: string | null; vods: ContentLibraryVod[] }> {
+  const qs = new URLSearchParams();
+  if (opts.handle) qs.set('handle', opts.handle);
+  if (opts.limit) qs.set('limit', String(opts.limit));
+  const q = qs.toString();
+  return apiFetch(`/content-library/vods${q ? `?${q}` : ''}`, { token });
+}
+
+export async function analyzeContentLibraryVod(
+  body: {
+    vodUrl?: string;
+    vodId?: string;
+    title?: string;
+    durationSec?: number;
+    views?: number;
+    platform?: string;
+    streamer?: string;
+    targetSec?: number;
+    maxPeaks?: number;
+  },
+  token?: string,
+): Promise<{ ok: boolean; sessionId?: number; segments: ContentLibraryPeak[]; mode?: string }> {
+  return apiFetch('/content-library/vod/analyze', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    token,
+  });
+}
+
+export async function stageContentLibraryVodWindow(
+  body: {
+    vodUrl: string;
+    vodId?: string;
+    startSec: number;
+    endSec: number;
+    title?: string;
+    streamer?: string;
+    platform?: string;
+    thumbnailUrl?: string | null;
+    force?: boolean;
+  },
+  token?: string,
+): Promise<{
+  ok: boolean;
+  mp4Url?: string;
+  playbackUrl?: string;
+  stagedUrl?: string;
+  r2Url?: string;
+  title?: string;
+  duration?: number;
+  startSec?: number;
+  endSec?: number;
+  cached?: boolean;
+  error?: string;
+}> {
+  return apiFetch('/content-library/stage-vod-window', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    token,
+  });
+}
+
+export async function listComposePresets(
+  token?: string,
+): Promise<{ ok: boolean; presets: ComposePreset[] }> {
+  return apiFetch('/content-library/presets', { token });
+}
+
 export async function getChannelConnections(
   token?: string,
 ): Promise<{ ok: boolean; connections: SourceChannelOAuthConnection[]; oauthPlatforms?: string[] }> {
