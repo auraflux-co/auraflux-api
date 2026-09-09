@@ -2,6 +2,7 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-09-09 (iss_exFgoTmmRwhP) — Peaks MVP: YouTube Most Replayed analyze + stage-vod-window + /peaks page (C1–C11 preset labels → Short job). Migration 040.
 **Last Updated:** 2026-09-09 (iss_2-LBGROjaTgn) — Customer Twitch CCV peaks: poll connected brands while live, store series/peak, link archive VOD; My Channels shows peaks demo. Migration 039. YouTube publish direct; TikTok/IG via Upload-Post white-label.
 **Last Updated:** 2026-09-08 — Auth reset/OTP: deploy API+app; mail via Render SMTP using existing AUTH_JWT_SECRET (no extra Vercel secret). Live was RESET_PASSWORD_DISABLED + API 404.
 **Last Updated:** 2026-09-08 — Auth emails (reset/OTP) via API `POST /internal/auth-email` + Render SMTP.
