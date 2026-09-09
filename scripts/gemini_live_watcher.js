@@ -52,7 +52,7 @@ function ytdlpArgSets() {
     fs.writeFileSync(cookieFile, Buffer.from(cookiesB64, 'base64').toString('utf8'));
     sets.push(['--no-update', '--cookies', cookieFile]);
   }
-  sets.push(['--no-update', '--extractor-args', 'youtube:player_client=ANDROID_VR,ANDROID,tv_embedded']);
+  sets.push(['--no-update', '--extractor-args', 'youtube:player_client=android,mweb']);
   if (process.env.GEMINI_WATCH_BROWSER_COOKIES !== 'off') {
     sets.push(['--no-update', '--cookies-from-browser', process.env.YTDLP_COOKIES_BROWSER || 'chrome']);
   }
