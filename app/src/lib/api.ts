@@ -186,7 +186,6 @@ const CREDIT_RATES = {
   script:              10,
   research:            10,
   content_fetch:       10,
-  vectcut_thumbnail:   10,
   narrative_clip:      10,
   imagen_thumbnail:    20,
 };
@@ -1048,7 +1047,7 @@ export interface ThumbnailCandidate {
   url:           string;
   score:         number | null;
   offsetSeconds: number | null;
-  method:        'frame' | 'designed' | 'vectcut' | 'imagen' | string;
+  method:        'frame' | 'designed' | 'imagen' | string;
 }
 
 export interface ThumbnailCandidatesResponse {
@@ -1061,7 +1060,6 @@ export interface ThumbnailCandidatesResponse {
   geminiRanking?:      unknown;
   candidates:          ThumbnailCandidate[];
   designedUrl?:        string | null;
-  vectcutUrl?:         string | null;
   imagenUrl?:          string | null;
 }
 

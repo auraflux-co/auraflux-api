@@ -204,8 +204,7 @@ describe('initiateApprovalStage', () => {
     expect(result.passed).toBe(true);
   });
 
-  it('skips VectCut path when VECTCUT_API_URL is not set', async () => {
-    delete process.env.VECTCUT_API_URL;
+  it('does not produce VectCut candidates (path removed)', async () => {
     const jobSpec = makeJobSpec();
     await initiateApprovalStage(jobSpec);
     const vcCand = jobSpec.state.thumbnail.candidates.find((c) => c.method === 'vectcut');
