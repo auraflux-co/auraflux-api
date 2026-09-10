@@ -1354,6 +1354,35 @@ export async function getTwitchCcvPeaks(
   return apiFetch(`/twitch-ccv/peaks?limit=${limit}`, { token });
 }
 
+/** Customer Kick CCV peaks (official Kick Dev poll → VOD ?t= integer seconds) */
+export interface KickCcvPeak {
+  id: string;
+  brandId?: string | null;
+  kickSlug: string;
+  title?: string | null;
+  categoryName?: string | null;
+  startedAt?: string;
+  endedAt?: string | null;
+  peakViewers: number;
+  peakAt?: string | null;
+  peakOffsetSec?: number | null;
+  peakClock?: string | null;
+  avgViewers?: number | null;
+  sampleCount?: number;
+  vodId?: string | null;
+  vodUrl?: string | null;
+  /** Kick VOD URL with ?t= peak seek (integer seconds) when available */
+  vodUrlAtPeak?: string | null;
+  status: string;
+}
+
+export async function getKickCcvPeaks(
+  token?: string,
+  limit = 10,
+): Promise<{ ok: boolean; peaks: KickCcvPeak[]; kickSlug?: string | null; hint?: string }> {
+  return apiFetch(`/kick-ccv/peaks?limit=${limit}`, { token });
+}
+
 /** YouTube Most Replayed / VOD peaks (Peaks page) */
 export interface ContentLibraryVod {
   platform: string;

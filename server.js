@@ -8993,6 +8993,7 @@ const collabRouter    = require('./lib/routes/collab');
 const socialRouter    = require('./lib/routes/social_connect');
 const channelConnectRouter = require('./lib/routes/channel_connect');
 const twitchCcvRouter = require('./lib/routes/twitch_ccv');
+const kickCcvRouter = require('./lib/routes/kick_ccv');
 const contentLibraryRouter = require('./lib/routes/content_library');
 const supportRouter   = require('./lib/routes/support');
 const templatesRouter = require('./lib/routes/templates');
@@ -9020,6 +9021,7 @@ app.use(collabRouter);
 app.use(socialRouter);
 app.use(channelConnectRouter);
 app.use(twitchCcvRouter);
+app.use(kickCcvRouter);
 app.use(contentLibraryRouter);
 app.use(supportRouter);
 app.use(templatesRouter);
@@ -9113,6 +9115,14 @@ const server = app.listen(PORT, async () => {
     startTwitchCcvCron();
   } catch (e) {
     console.warn('⚠️  Twitch CCV cron failed to start:', e.message);
+  }
+
+  // Customer Kick CCV peaks — official Kick Dev API only (no Apify); ?t= integer seconds
+  try {
+    const { startKickCcvCron } = require('./lib/kick_ccv');
+    startKickCcvCron();
+  } catch (e) {
+    console.warn('⚠️  Kick CCV cron failed to start:', e.message);
   }
 
   // CPD-996: end orphaned live broadcasts from a previous process (restart kills

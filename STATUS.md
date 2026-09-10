@@ -2,6 +2,7 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-09-10 — Kick CCV (iss_U1ju7aVdGAW4): official Kick Dev poll + My Channels peaks; VOD ?t= integer seconds; no Partner Analytics / Apify.
 **Last Updated:** 2026-09-09 — Twitch CCV My Channels: list by brand+login; VOD deep-link ?t= peak; UI error + live refresh.
 **Last Updated:** 2026-09-09 — Twitch chat peak segment labels; GQL hash + Client-ID fix for heatmap.
 **Last Updated:** 2026-09-09 — Twitch Peaks parity: GET /content-library/vods?platform=twitch + Peaks UI toggle; chat-heatmap analyze; e2e.

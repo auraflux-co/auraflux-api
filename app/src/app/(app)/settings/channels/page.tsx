@@ -26,11 +26,13 @@ import {
   saveSourceChannels,
   resolveSourceChannel,
   getTwitchCcvPeaks,
+  getKickCcvPeaks,
   type SourceChannels,
   type SourcePlatform,
   type SourceChannelOAuthConnection,
   type ResolvedChannel,
   type TwitchCcvPeak,
+  type KickCcvPeak,
 } from '@/lib/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -104,6 +106,9 @@ function SourceChannelsPageInner() {
   const [ccvPeaks, setCcvPeaks] = useState<TwitchCcvPeak[]>([]);
   const [ccvHint, setCcvHint] = useState<string | null>(null);
   const [ccvError, setCcvError] = useState<string | null>(null);
+  const [kickCcvPeaks, setKickCcvPeaks] = useState<KickCcvPeak[]>([]);
+  const [kickCcvHint, setKickCcvHint] = useState<string | null>(null);
+  const [kickCcvError, setKickCcvError] = useState<string | null>(null);
 
   const [verify, setVerify] = useState<Record<string, ChannelVerification>>({
     twitchLogin:   { state: 'idle', channel: null, error: null },
@@ -149,6 +154,43 @@ function SourceChannelsPageInner() {
       if (timer) clearInterval(timer);
     };
   }, [isLoaded, getToken, activeBrandId, channels.twitchLogin]);
+
+  // Load Kick CCV peaks when brand / Kick channel is present; refresh while live
+  useEffect(() => {
+    if (!isLoaded) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    async function loadKickCcv() {
+      try {
+        const token = await getToken();
+        if (!token || cancelled) return;
+        const res = await getKickCcvPeaks(token, 5);
+        if (cancelled) return;
+        setKickCcvPeaks(res.peaks || []);
+        setKickCcvHint(res.hint || null);
+        setKickCcvError(null);
+        const live = (res.peaks || []).some((p) => p.status === 'live');
+        if (live && !timer) {
+          timer = setInterval(() => { void loadKickCcv(); }, 60_000);
+        }
+        if (!live && timer) {
+          clearInterval(timer);
+          timer = null;
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setKickCcvError(e instanceof Error ? e.message : 'Failed to load Kick live peaks');
+        }
+      }
+    }
+
+    void loadKickCcv();
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
+  }, [isLoaded, getToken, activeBrandId, channels.kickUsername]);
 
   // Load connected OAuth source channels (same apiFetch path as saved usernames)
   const loadConnections = useCallback(async (token?: string | null) => {
@@ -446,6 +488,61 @@ function SourceChannelsPageInner() {
         ) : (
           <div className="space-y-2">
             {ccvPeaks.map((p) => {
+              const openUrl = p.vodUrlAtPeak || p.vodUrl;
+              return (
+              <Card key={p.id}>
+                <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="af-body font-medium">
+                      Peak {p.peakViewers.toLocaleString()} CCV
+                      {p.peakClock ? ` @ ${p.peakClock}` : ''}
+                    </p>
+                    <p className="af-caption text-muted-foreground">
+                      {p.title || 'Untitled stream'}
+                      {p.status ? ` · ${p.status}` : ''}
+                    </p>
+                  </div>
+                  {openUrl ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(openUrl, '_blank', 'noopener,noreferrer')}
+                    >
+                      Open VOD at peak
+                    </Button>
+                  ) : (
+                    <span className="af-caption text-muted-foreground">
+                      {p.status === 'live' ? 'Live — capturing…' : 'Linking VOD…'}
+                    </span>
+                  )}
+                </CardContent>
+              </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
+      <div className="space-y-3">
+        <div>
+          <h2 className="af-label font-medium">Kick live peaks</h2>
+          <p className="af-caption mt-1">
+            After you save Kick and go live, we poll concurrent viewers via Kick&apos;s official API
+            and deep-link the VOD at peak (?t= seconds — no Partner Analytics required).
+          </p>
+        </div>
+        {kickCcvError && (
+          <p className="af-caption text-destructive mb-2">{kickCcvError}</p>
+        )}
+        {kickCcvPeaks.length === 0 ? (
+          <p className="af-caption text-muted-foreground">
+            {kickCcvHint || 'No captured streams yet. Save Kick above, go live once, then refresh this page.'}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {kickCcvPeaks.map((p) => {
               const openUrl = p.vodUrlAtPeak || p.vodUrl;
               return (
               <Card key={p.id}>
