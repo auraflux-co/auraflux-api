@@ -2,44 +2,44 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
 
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
 
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
 
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -57,26 +57,26 @@
 
 ---
 
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
-**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
+**Last Updated:** 2026-09-10 — Fix better-auth client baseURL so Vercel prerender of /admin/chat + /generate/canva does not throw Invalid URL.
 **Branch:** main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.
