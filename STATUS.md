@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Plan graphic: Short preview is streamer clip, not typewriter.
+**Last Updated:** 2026-09-10 — Marketing shell balance: mist canvas + dark heroes/tiles, fixed contrast fights.
 
 
 
