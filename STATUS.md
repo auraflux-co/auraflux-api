@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Marketing: pair Peaks with Most Replayed / chat spikes / CCV on first use.
+**Last Updated:** 2026-09-10 — Marketing readability: BR dark heroes + zinc bands; fix white-on-white inner pages.
 
 
 

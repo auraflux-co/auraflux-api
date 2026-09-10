@@ -23,7 +23,7 @@ ${FRAMER_CSS || ''}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 
-/* Business Rocket structure + AuraFlux gold/navy - light canvas site */
+/* Business Rocket structure + AuraFlux gold/navy */
 body{
   background:#fff !important;
   color:#111827 !important;
@@ -35,12 +35,12 @@ body{
   position:relative;text-align:center;
   padding:5rem 1.25rem 4.5rem;
   overflow:hidden;
-  background:#020617; /* slate-950 */
+  background:#0f172a; /* slate-900 like BR */
   color:#fff;
 }
 .hero-glow{
   position:absolute;inset:0;
-  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(245,197,66,0.12) 0%,transparent 70%);
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(245,197,66,0.14) 0%,transparent 70%);
   pointer-events:none;
 }
 .hero-badge{
@@ -101,11 +101,11 @@ body{
 }
 .hero-feat-icon svg{width:16px;height:16px;stroke:#f5c542;fill:none;stroke-width:2;}
 
-/* ── Logo bar (light mist) ────────────────────────────────────────────────── */
+/* ── Logo bar (zinc band) ─────────────────────────────────────────────────── */
 .logo-bar{
   padding:3rem 1.25rem;
-  background:#fafafa; /* zinc-50 */
-  border-bottom:1px solid rgba(228,228,231,.9);
+  background:#f4f4f5; /* zinc-100 */
+  border-bottom:1px solid #e4e4e7;
   text-align:center;
 }
 .logo-bar-label{
@@ -131,24 +131,24 @@ body{
   max-width:72rem;margin:0 auto;padding:4rem 1.25rem;
 }
 @media(min-width:768px){.section{padding:5.5rem 1.25rem;}}
-.section-band{background:#fafafa;border-top:1px solid rgba(228,228,231,.9);border-bottom:1px solid rgba(228,228,231,.9);}
+.section-band{background:#f4f4f5;border-top:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;}
 .section-band .section{max-width:72rem;}
 .section-eyebrow{
   display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.1em;
-  text-transform:uppercase;color:#64748b;margin-bottom:16px;
-  background:#f4f4f5;border:1px solid #e4e4e7;padding:4px 14px;border-radius:9999px;
+  text-transform:uppercase;color:#71717a;margin-bottom:16px;
+  background:#fff;border:1px solid #e4e4e7;padding:4px 14px;border-radius:9999px;
 }
 .section-title{
   font-family:'Satoshi','Plus Jakarta Sans','Inter',-apple-system,sans-serif;
-  font-size:clamp(1.85rem,3.5vw,2.75rem);font-weight:800;color:#0f172a !important;
+  font-size:clamp(1.85rem,3.5vw,2.75rem);font-weight:800;color:#18181b !important;
   line-height:1.15;letter-spacing:-.03em;margin-bottom:16px;
 }
 .section-title .gold{font-style:normal;color:#0b1220;font-weight:800;
   background:linear-gradient(transparent 60%,rgba(245,197,66,.45) 60%);
 }
 .section-sub{
-  font-size:1rem;color:#334155 !important;font-weight:400;line-height:1.625;
-  max-width:560px;margin-bottom:3rem;
+  font-size:1.05rem;color:#3f3f46 !important;font-weight:400;line-height:1.65;
+  max-width:36rem;margin-bottom:3rem;
 }
 .section-center{text-align:center;}
 .section-center .section-sub{margin-left:auto;margin-right:auto;}
@@ -209,24 +209,23 @@ body{
 .format-item h4{font-size:.95rem;font-weight:600;color:#0f172a !important;margin-bottom:4px;}
 .format-item p{font-size:.85rem;color:#334155 !important;font-weight:400;line-height:1.5;}
 .format-visual{
-  background:#fff;border:1px solid rgba(228,228,231,.9);
-  box-shadow:0 1px 2px rgba(15,23,42,.06);
+  background:#0f172a;border:1px solid #1e293b;
+  box-shadow:0 4px 12px rgba(15,23,42,.18);
   border-radius:1rem;padding:2.25rem 1.75rem;text-align:center;
+  color:#fff;
 }
 .format-visual-title{
   font-family:'Satoshi','Plus Jakarta Sans','Inter',sans-serif;
-  font-size:1.75rem;font-weight:800;color:#0f172a !important;margin-bottom:8px;line-height:1.15;letter-spacing:-.03em;
+  font-size:1.75rem;font-weight:800;color:#fff !important;margin-bottom:8px;line-height:1.15;letter-spacing:-.03em;
 }
-.format-visual-title .gold{font-style:normal;color:#0b1220;
-  background:linear-gradient(transparent 60%,rgba(245,197,66,.45) 60%);
-}
-.format-stat{font-size:.85rem;color:#64748b !important;margin-bottom:1.75rem;}
+.format-visual-title .gold{font-style:normal;color:#f5c542 !important;background:none;}
+.format-stat{font-size:.85rem;color:#94a3b8 !important;margin-bottom:1.75rem;}
 .format-pills{display:flex;flex-direction:column;gap:0.5rem;text-align:left;}
 .format-pill{
   display:flex;align-items:center;gap:10px;
   padding:0.75rem 1rem;
-  background:#fafafa;border:1px solid rgba(228,228,231,.9);
-  border-radius:0.5rem;font-size:.88rem;color:#334155;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:0.5rem;font-size:.88rem;color:#e2e8f0;
 }
 .format-pill-dot{width:8px;height:8px;border-radius:50%;background:#f5c542;flex-shrink:0;}
 
@@ -252,11 +251,11 @@ body{
 .compare-card.bad .compare-item svg{stroke:#ef4444;fill:none;stroke-width:2.5;}
 .compare-card.good .compare-item svg{stroke:#0b1220;fill:none;stroke-width:2.5;}
 
-/* Audience - light mist band with white stat cards */
+/* Audience - zinc band with white stat cards */
 .audience{
-  background:#fafafa;
-  border-top:1px solid rgba(228,228,231,.9);
-  border-bottom:1px solid rgba(228,228,231,.9);
+  background:#f4f4f5;
+  border-top:1px solid #e4e4e7;
+  border-bottom:1px solid #e4e4e7;
   padding:4.5rem 1.25rem;
 }
 .audience-inner{max-width:72rem;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:3.5rem;align-items:center;}
@@ -281,7 +280,7 @@ body{
 /* Final CTA - dark band */
 .final-cta{
   text-align:center;padding:5.5rem 1.25rem;
-  background:#0b1220;
+  background:#0f172a;
   color:#fff;
 }
 .final-cta h2{
@@ -454,6 +453,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 </div>
 
 <!-- ── Job Templates ──────────────────────────────────────────────────────── -->
+<div class="section-band">
 <div class="section section-center">
   <span class="section-eyebrow">Start here</span>
   <h2 class="section-title">Peaks is the fastest path to a <span class="gold">Short</span></h2>
@@ -479,9 +479,9 @@ ${FRAMER_NAV || FALLBACK_NAV}
     </div>
   </div>
 </div>
+</div>
 
 <!-- ── Formats ────────────────────────────────────────────────────────────── -->
-<div class="section-band">
 <div class="section">
   <div class="formats">
     <div>
@@ -531,7 +531,6 @@ ${FRAMER_NAV || FALLBACK_NAV}
       </div>
     </div>
   </div>
-</div>
 </div>
 
 <!-- ── Comparison ─────────────────────────────────────────────────────────── -->

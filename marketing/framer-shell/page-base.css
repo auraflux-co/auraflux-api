@@ -1,29 +1,28 @@
-/* ── AuraFlux design tokens - Business Rocket structure, AuraFlux brand ─────
- * Structure mirrors businessrocket/web (light canvas, zinc cards, slate-950
- * footer, frosted sticky nav). Brand accents stay AuraFlux gold + navy.
- * Marketing site is Cloudflare worker HTML/CSS (no Tailwind).
+/* ── AuraFlux marketing - Business Rocket structure, AF gold/navy brand ─────
+ * BR pattern: frosted light nav, dark slate heroes, white cards on zinc bands,
+ * slate-950 footer, readable slate-700 body. Brand accent = AF gold.
+ * Injected last in <head> so these rules win over page-local dark leftovers.
  * ────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Brand (AuraFlux) - map into BR primary/accent slots */
-  --brand-primary: #0b1220;       /* navy - BR uses #00274d here */
+  --brand-primary: #0b1220;
   --brand-dark: #050a12;
-  --brand-accent: #f5c542;        /* gold - BR uses orange #ff6600 */
+  --brand-accent: #f5c542;
   --brand-soft: #eef2f6;
   --brand-line: #e5e7eb;
-  --brand-mist: #f9fafb;
+  --brand-mist: #f4f4f5; /* zinc-100 - stronger than pure white */
   --brand-text: #111827;
 
-  /* Semantic (BR-aligned) */
   --paper: #ffffff;
-  --paper-deep: #f4f4f5;          /* zinc-100-ish / zinc-50 sections */
+  --paper-deep: #f4f4f5;
   --ink: #111827;
-  --ink-muted: #334155;           /* slate-700 - readable body */
-  --ink-faint: #64748b;           /* slate-500 */
-  --line: #e4e4e7;                /* zinc-200 */
+  --ink-muted: #3f3f46; /* zinc-700 - readable body */
+  --ink-faint: #71717a; /* zinc-500 */
+  --line: #e4e4e7;
   --line-soft: rgba(228, 228, 231, 0.9);
+  --slate-900: #0f172a;
+  --slate-950: #020617;
 
-  /* Legacy aliases used by older page CSS */
   --af-bg: var(--paper-deep);
   --af-bg-card: var(--paper);
   --af-gold: var(--brand-accent);
@@ -33,9 +32,9 @@
   --af-border: var(--line-soft);
   --af-border-hi: #d4d4d8;
 
-  --radius-xl: 1rem;              /* rounded-2xl */
-  --radius-lg: 0.75rem;           /* rounded-xl */
-  --radius-md: 0.5rem;            /* rounded-lg */
+  --radius-xl: 1rem;
+  --radius-lg: 0.75rem;
+  --radius-md: 0.5rem;
   --nav-h: 64px;
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
@@ -70,37 +69,322 @@ p {
 a { color: var(--brand-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ── BR-style surface utilities ─────────────────────────────────────────── */
+/* ── Surfaces (BR) ──────────────────────────────────────────────────────── */
 .surface-light { background: var(--paper); color: var(--ink); }
 .surface-mist { background: var(--paper-deep); color: var(--ink); }
 .surface-dark {
-  background: #020617; /* slate-950 */
-  color: #fff;
+  background: var(--slate-900) !important;
+  color: #fff !important;
+  border-color: #1e293b;
 }
-.surface-dark p { color: #94a3b8 !important; } /* slate-400 */
+.surface-dark h1,
+.surface-dark h2,
+.surface-dark h3 {
+  color: #fff !important;
+}
+.surface-dark p {
+  color: #cbd5e1 !important;
+}
+.surface-dark .gold {
+  color: var(--brand-accent) !important;
+}
 
-.af-card {
-  background: #fff;
-  border: 1px solid rgba(228, 228, 231, 0.9); /* zinc-200/90 */
-  box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-xl);
-  padding: 1.5rem;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+/* Nested light panels inside dark */
+.surface-panel { color: #0f172a; }
+.surface-dark .surface-panel p { color: #0f172a !important; }
+
+/* Short stacked copy (BR copy-stack) */
+.copy-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
-.af-card:hover { box-shadow: var(--shadow-md); }
+.copy-stack__line {
+  margin: 0;
+  max-width: 40rem;
+  line-height: 1.55;
+}
+
+/* ── PageHero: every .hero is a dark BR band ────────────────────────────── */
+.hero {
+  background: var(--slate-900) !important;
+  color: #fff !important;
+  border-bottom: 1px solid #1e293b;
+  text-align: center;
+  padding: 3.5rem 1.25rem 3.25rem !important;
+}
+@media (min-width: 768px) {
+  .hero { padding: 5rem 1.25rem 4.5rem !important; }
+}
+.hero h1,
+.hero h2,
+.hero h3 {
+  color: #fff !important;
+}
+.hero p,
+.hero .hero-sub {
+  color: #cbd5e1 !important;
+  max-width: 40rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+.hero-eyebrow {
+  color: var(--brand-accent) !important;
+  border-color: rgba(245, 197, 66, 0.35) !important;
+  background: transparent !important;
+}
+
+/* ── Cards: white on light canvas (rescue dark leftover cards) ──────────── */
+.af-card,
+.value-card,
+.step-card,
+.tpl-card,
+.format-item,
+.compare-card,
+.audience-stat,
+.diff-card,
+.type-card,
+.feat-cat,
+.team-card,
+.portal,
+.plan,
+.platform,
+.source,
+.ct-form-card,
+.ct-channels-card,
+.rdm-card {
+  background: var(--paper) !important;
+  border: 1px solid var(--line-soft) !important;
+  box-shadow: var(--shadow-sm) !important;
+  color: var(--ink) !important;
+}
+.af-card:hover,
+.value-card:hover,
+.step-card:hover,
+.tpl-card:hover,
+.diff-card:hover,
+.portal:hover,
+.plan:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.value-card h3,
+.step-card h3,
+.tpl-name,
+.diff-card h3,
+.type-card h3,
+.feat-cat-name,
+.team-name,
+.portal-body h3,
+.plan-title,
+.platform-name,
+.source-name,
+.ct-form-card h2,
+.ct-channels-card h2,
+.rdm-card h3 {
+  color: var(--ink) !important;
+}
+
+.value-card p,
+.step-card p,
+.tpl-tag,
+.diff-card p,
+.type-card p,
+.feat-list li,
+.team-role,
+.portal-body p,
+.plan-sub,
+.credits,
+.features li,
+.platform-note,
+.source-note,
+.rdm-card p {
+  color: var(--ink-muted) !important;
+}
+
+.feat-list li {
+  background: var(--paper-deep) !important;
+  border-radius: 0.375rem;
+}
+
+/* Plans: BR white cards; featured = slate border */
+.plan {
+  border-radius: 1rem !important;
+  overflow: hidden;
+}
+.plan.featured {
+  border: 2px solid var(--slate-900) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.plan-name { color: var(--brand-primary) !important; }
+.price { color: var(--ink) !important; }
+.price .period { color: var(--ink-faint) !important; }
+.features li::before { color: var(--brand-primary) !important; }
+.features li.no,
+.features li.no::before { color: #a1a1aa !important; }
+.plan-img,
+.plan-img-contain {
+  background: var(--paper-deep) !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+.cta-secondary {
+  border: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+  background: var(--paper-deep) !important;
+}
+.cta-primary {
+  background: var(--brand-primary) !important;
+  color: #fff !important;
+}
+
+/* Section titles that were white-on-white */
+.mission h2,
+.diff h2,
+.tech h2,
+.team h2,
+.types h2,
+.features h2,
+.publish h2,
+.flow-wrap h2,
+.ladder-title,
+.credits-inner h2,
+.cta-section h2:not(.surface-dark h2) {
+  color: var(--ink) !important;
+}
+.mission p,
+.diff-sub,
+.tech-sub,
+.team-sub,
+.types-sub,
+.features-sub,
+.publish-sub,
+.flow-sub,
+.credits-inner p,
+.cta-section p {
+  color: var(--ink-muted) !important;
+}
+.mission blockquote {
+  background: var(--paper-deep) !important;
+  color: var(--ink) !important;
+  border-left-color: var(--brand-accent) !important;
+}
+.step-body h4 { color: var(--ink) !important; }
+.step-body p { color: var(--ink-muted) !important; }
+.step {
+  border-bottom-color: var(--line) !important;
+}
+
+/* Mist bands for content rhythm */
+.section-band,
+.logo-bar,
+.audience,
+.types,
+.features,
+.diff,
+.team,
+.ladder,
+.credit-note {
+  background: var(--paper-deep);
+}
+.types,
+.features,
+.diff,
+.team,
+.flow-wrap,
+.mission,
+.publish,
+.ladder {
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
+}
+
+/* Keep intentional dark bands */
+.stats,
+.credits-band,
+.cta-section,
+.final-cta {
+  background: var(--slate-900) !important;
+  color: #fff !important;
+  border-color: #1e293b !important;
+}
+.stats h2,
+.credits-band .credits-inner h2,
+.cta-section h2,
+.final-cta h2,
+.stat-num,
+.credit-num {
+  color: #fff !important;
+}
+.stats .stat-label { color: #e2e8f0 !important; }
+.credits-band .credits-inner p,
+.cta-section p,
+.final-cta p,
+.credit-label,
+.credit-desc {
+  color: #cbd5e1 !important;
+}
+.credit-plan {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+.credit-name { color: var(--brand-accent) !important; }
+.credit-note-inner {
+  background: var(--paper) !important;
+  border: 1px solid var(--line) !important;
+}
+.credit-note-inner p { color: var(--ink-muted) !important; }
+.credit-note-inner strong { color: var(--ink) !important; }
+
+/* Comparison table (plans) - light */
+.ladder {
+  background: var(--paper) !important;
+}
+.ladder-title { color: var(--ink) !important; }
+table th {
+  color: var(--brand-primary) !important;
+  background: var(--paper-deep) !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+table td {
+  color: var(--ink-muted) !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+table .label { color: var(--ink) !important; }
+table .yes { color: var(--brand-primary) !important; }
+table .no-val { color: #a1a1aa !important; }
+tr:hover td { background: var(--paper-deep) !important; }
+
+/* Portal badge stays gold */
+.portal-badge {
+  background: rgba(245, 197, 66, 0.15) !important;
+  border: 1px solid rgba(245, 197, 66, 0.4) !important;
+  color: var(--brand-primary) !important;
+}
+
+/* Contact form inputs on light cards */
+.ct-form-card input,
+.ct-form-card textarea,
+.ct-form-card select {
+  background: var(--paper-deep) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+}
+
+/* Roadmap columns */
+.rdm-col {
+  background: var(--paper-deep) !important;
+}
+.rdm-col-title { color: var(--ink) !important; }
 
 .af-container {
   width: 100%;
-  max-width: 72rem; /* max-w-6xl */
+  max-width: 72rem;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1.25rem;
   padding-right: 1.25rem;
 }
-
-.af-section {
-  padding: 4rem 0;
-}
+.af-section { padding: 4rem 0; }
 @media (min-width: 768px) {
   .af-section { padding: 6rem 0; }
 }
@@ -108,17 +392,17 @@ a:hover { text-decoration: underline; }
 .af-eyebrow {
   display: inline-block;
   border-radius: 9999px;
-  background: var(--brand-mist);
+  background: var(--paper);
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
+  color: var(--ink-faint);
   border: 1px solid var(--line);
 }
 
-/* Primary CTA - BR solid dark, AF navy fill + gold available via .btn-accent */
+/* Primary CTA */
 .btn-primary,
 .cta-primary,
 .nav-cta,
@@ -168,15 +452,14 @@ a:hover { text-decoration: underline; }
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: #f1f5f9 !important; /* slate-100 */
-  color: #475569 !important;      /* slate-600 */
+  background: #f1f5f9 !important;
+  color: #475569 !important;
   font-weight: 500 !important;
   font-size: 0.875rem;
   padding: 0.625rem 1.25rem;
   border-radius: var(--radius-md);
   border: none;
   text-decoration: none !important;
-  transition: background 0.15s ease;
 }
 .btn-secondary:hover,
 .secondary:hover,
@@ -186,27 +469,27 @@ a:hover { text-decoration: underline; }
 }
 
 .surface-dark .btn-ghost,
-.surface-dark .btn-secondary {
+.surface-dark .btn-secondary,
+.hero .btn-ghost,
+.hero .btn-secondary {
   background: transparent !important;
   color: #fff !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
 }
 .surface-dark .btn-ghost:hover,
-.surface-dark .btn-secondary:hover {
+.hero .btn-ghost:hover {
   background: rgba(255, 255, 255, 0.1) !important;
 }
 .surface-dark .btn-primary,
-.surface-dark .primary {
-  /* AF brand: gold fills BR white-on-dark CTA slot */
-  background: var(--brand-accent) !important;
-  color: var(--brand-primary) !important;
-}
-.surface-dark .btn-accent {
+.surface-dark .primary,
+.hero .primary,
+.hero .btn-primary,
+.final-cta .primary,
+.cta-section .primary {
   background: var(--brand-accent) !important;
   color: var(--brand-primary) !important;
 }
 
-/* Framer legacy class height stubs (homepage shell) */
 :where(.framer-frJN9) {
   background: transparent !important;
   height: var(--nav-h) !important;
@@ -217,5 +500,10 @@ a:hover { text-decoration: underline; }
   width: 126px !important;
 }
 
-/* Gold accent span used in CMS titles */
 .gold { color: var(--brand-accent) !important; font-style: normal; }
+/* On light surfaces, gold highlight is underline-style navy + gold wash */
+.section-title .gold,
+.format-visual-title .gold {
+  color: var(--brand-primary) !important;
+  background: linear-gradient(transparent 60%, rgba(245, 197, 66, 0.45) 60%);
+}
