@@ -1,7 +1,7 @@
 'use client';
 /**
- * Peaks — YouTube Most Replayed → customer upload stage → Short job (C1–C11).
- * Browser hop: user downloads/trims locally, uploads MP4 (no Render YouTube pull).
+ * Peaks — YouTube Most Replayed / Twitch chat peaks → customer upload → Short (C1–C11).
+ * Browser hop: user downloads/trims locally, uploads MP4 (no server VOD pull on Render).
  */
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -50,6 +50,7 @@ function PeaksPageInner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingPeakRef = useRef<ContentLibraryPeak | null>(null);
 
+  const [sourcePlatform, setSourcePlatform] = useState<'youtube' | 'twitch'>('youtube');
   const [handle, setHandle] = useState('');
   const [vods, setVods] = useState<ContentLibraryVod[]>([]);
   const [presets, setPresets] = useState<ComposePreset[]>([]);
@@ -73,21 +74,34 @@ function PeaksPageInner() {
     } catch { /* optional */ }
   }, [getToken]);
 
-  const loadVods = useCallback(async (overrideHandle?: string) => {
-    setBusy('Loading VODs…');
+  const loadVods = useCallback(async (overrideHandle?: string, platformOverride?: 'youtube' | 'twitch') => {
+    const platform = platformOverride || sourcePlatform;
+    setBusy(platform === 'twitch' ? 'Loading Twitch VODs…' : 'Loading VODs…');
     setError(null);
     setHint(null);
+    setPeaks([]);
+    setSelectedVod(null);
+    setStaged(null);
+    setAnalyzeMode(null);
     try {
       const token = await getToken();
       if (!token) throw new Error('Session not ready');
       const res = await listContentLibraryVods(token, {
         handle: overrideHandle || handle || undefined,
         limit: 40,
+        platform,
       });
       setVods(res.vods || []);
-      if (res.handle) setHandle(res.handle.startsWith('@') ? res.handle : `@${res.handle}`);
+      if (res.handle) {
+        const h = res.handle.replace(/^@/, '');
+        setHandle(platform === 'youtube' ? `@${h}` : h);
+      }
       if (!(res.vods || []).length) {
-        setHint('No long VODs found. Connect YouTube under My Channels or enter @handle.');
+        setHint(
+          platform === 'twitch'
+            ? 'No long Twitch archives found. Connect Twitch under My Channels or enter a login.'
+            : 'No long VODs found. Connect YouTube under My Channels or enter @handle.',
+        );
       }
     } catch (e) {
       setError(formatUserError(e instanceof Error ? e.message : 'Failed to load VODs'));
@@ -95,7 +109,7 @@ function PeaksPageInner() {
     } finally {
       setBusy(null);
     }
-  }, [getToken, handle]);
+  }, [getToken, handle, sourcePlatform]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -108,7 +122,8 @@ function PeaksPageInner() {
     setPeaks([]);
     setStaged(null);
     setAnalyzeMode(null);
-    setBusy('Analyzing Most Replayed peaks…');
+    const plat = (vod.platform === 'twitch' ? 'twitch' : 'youtube') as 'youtube' | 'twitch';
+    setBusy(plat === 'twitch' ? 'Analyzing Twitch chat peaks…' : 'Analyzing Most Replayed peaks…');
     setError(null);
     try {
       const token = await getToken();
@@ -119,7 +134,7 @@ function PeaksPageInner() {
         title: vod.title,
         durationSec: vod.duration,
         views: vod.views,
-        platform: 'youtube',
+        platform: plat,
         streamer: vod.streamer,
         targetSec: 45,
         maxPeaks: 8,
@@ -129,7 +144,9 @@ function PeaksPageInner() {
       if (!(res.segments || []).length) setHint('No peaks returned — try another VOD.');
       else {
         setHint(
-          'Open the peak on YouTube, download/trim that window on your device, then Upload clip. Staging uses your upload — no server YouTube download.',
+          plat === 'twitch'
+            ? 'Open the peak on Twitch, download/trim that window on your device, then Upload clip. Staging uses your upload — no server Twitch pull.'
+            : 'Open the peak on YouTube, download/trim that window on your device, then Upload clip. Staging uses your upload — no server YouTube download.',
         );
       }
     } catch (e) {
@@ -163,7 +180,7 @@ function PeaksPageInner() {
         {
           title: peak?.title || selectedVod?.title || file.name.replace(/\.[^.]+$/, ''),
           streamer: selectedVod?.streamer || 'peaks_upload',
-          platform: 'youtube',
+          platform: selectedVod?.platform === 'twitch' ? 'twitch' : sourcePlatform,
           vodUrl: selectedVod?.url,
           vodId: selectedVod?.vodId,
           startSec: peak?.start_sec,
@@ -219,7 +236,7 @@ function PeaksPageInner() {
             url: staged.mp4Url,
             title: staged.title,
             duration: staged.duration,
-            platform: 'youtube',
+            platform: selectedVod?.platform === 'twitch' ? 'twitch' : sourcePlatform,
             contentType: 'vod_peak',
           }],
         },
@@ -247,7 +264,7 @@ function PeaksPageInner() {
     <PageShell maxWidth="4xl">
       <PageHeader
         title="Peaks"
-        subtitle="VODs → Most Replayed peaks → upload your trim → Short (C1–C11). You pull the clip; we compose and publish."
+        subtitle="VODs → peaks (YouTube Most Replayed or Twitch chat) → upload your trim → Short (C1–C11). You pull the clip; we compose and publish."
       />
 
       <input
@@ -276,16 +293,48 @@ function PeaksPageInner() {
 
       <Card>
         <CardContent className="pt-5 space-y-3">
-          <Label htmlFor="yt-handle">YouTube channel</Label>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={sourcePlatform === 'youtube' ? 'default' : 'outline'}
+              disabled={!!busy}
+              onClick={() => {
+                setSourcePlatform('youtube');
+                setVods([]);
+                setPeaks([]);
+                setHandle((h) => (h && !h.startsWith('@') ? `@${h}` : h));
+              }}
+            >
+              YouTube
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={sourcePlatform === 'twitch' ? 'default' : 'outline'}
+              disabled={!!busy}
+              onClick={() => {
+                setSourcePlatform('twitch');
+                setVods([]);
+                setPeaks([]);
+                setHandle((h) => h.replace(/^@/, ''));
+              }}
+            >
+              Twitch
+            </Button>
+          </div>
+          <Label htmlFor="peaks-handle">
+            {sourcePlatform === 'twitch' ? 'Twitch login' : 'YouTube channel'}
+          </Label>
           <div className="flex flex-wrap gap-2">
             <Input
-              id="yt-handle"
-              placeholder="@yourchannel"
+              id="peaks-handle"
+              placeholder={sourcePlatform === 'twitch' ? 'channel_login' : '@yourchannel'}
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
               className="max-w-xs"
             />
-            <Button onClick={() => loadVods(handle)} disabled={!!busy}>
+            <Button onClick={() => loadVods(handle, sourcePlatform)} disabled={!!busy}>
               Fetch VODs
             </Button>
             <Button variant="outline" onClick={onUploadAny} disabled={!!busy}>
@@ -293,7 +342,9 @@ function PeaksPageInner() {
             </Button>
           </div>
           <p className="af-caption text-muted-foreground">
-            Upload skips YouTube download on our servers — same idea as staging a local file on localhost.
+            {sourcePlatform === 'twitch'
+              ? 'Upload skips Twitch download on our servers — trim locally, then stage to R2.'
+              : 'Upload skips YouTube download on our servers — same idea as staging a local file on localhost.'}
           </p>
         </CardContent>
       </Card>
@@ -318,7 +369,7 @@ function PeaksPageInner() {
                     rel="noreferrer"
                     className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }))}
                   >
-                    Open on YouTube
+                    {v.platform === 'twitch' ? 'Open on Twitch' : 'Open on YouTube'}
                   </a>
                 )}
               </div>
