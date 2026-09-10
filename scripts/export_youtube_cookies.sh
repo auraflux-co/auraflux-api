@@ -97,6 +97,83 @@ base64 < "$FILTERED_FILE" | tr -d '\n' > "$B64_FILE"
 BYTES=$(wc -c < "$FILTERED_FILE" | tr -d ' ')
 B64_LEN=$(wc -c < "$B64_FILE" | tr -d ' ')
 
+# Pre-deploy gate: same decode path as lib/assembly_service.js
+# (Buffer.from(YOUTUBE_COOKIES_BASE64, 'base64')). Catch corrupt b64 / oversized
+# jars before they land on Render. Soft warn 64 KiB; hard fail 200 KiB (env paste
+# + dashboard limits; full Chrome jars ~1MB must stay filtered).
+python3 - "$B64_FILE" "$FILTERED_FILE" <<'PY'
+import base64
+import re
+import sys
+from pathlib import Path
+
+b64_path, filtered_path = Path(sys.argv[1]), Path(sys.argv[2])
+b64 = b64_path.read_text().strip()
+filtered = filtered_path.read_bytes()
+
+SOFT_WARN = 64 * 1024
+HARD_FAIL = 200 * 1024
+
+if not b64:
+    raise SystemExit("validate: base64 file empty")
+if re.search(r"[^A-Za-z0-9+/=]", b64):
+    raise SystemExit("validate: base64 contains illegal characters (newlines/spaces?)")
+if len(b64) % 4 != 0:
+    raise SystemExit(f"validate: base64 length {len(b64)} not divisible by 4")
+
+try:
+    decoded = base64.b64decode(b64, validate=True)
+except Exception as e:
+    raise SystemExit(f"validate: base64 decode failed: {e}") from e
+
+if decoded != filtered:
+    raise SystemExit(
+        f"validate: round-trip mismatch (decoded {len(decoded)}B vs filtered {len(filtered)}B)"
+    )
+
+text = decoded.decode("utf-8", errors="replace")
+if "Netscape" not in text.splitlines()[0] and "# Netscape" not in text[:200]:
+    # Still accept HttpOnly-only jars that lost the header comment
+    if "youtube.com" not in text.lower() and ".youtube.com" not in text.lower():
+        raise SystemExit("validate: decoded jar missing youtube.com cookies")
+elif "youtube.com" not in text.lower() and ".youtube.com" not in text.lower():
+    raise SystemExit("validate: decoded jar missing youtube.com cookies")
+
+# Mirror Node Buffer.from(..., 'base64') used at runtime
+node_ok = True
+try:
+    import subprocess
+    node_ok = subprocess.run(
+        [
+            "node",
+            "-e",
+            "const fs=require('fs');const b=fs.readFileSync(process.argv[1],'utf8').trim();"
+            "const d=Buffer.from(b,'base64');"
+            "if(d.length<100) process.exit(2);"
+            "if(!d.toString('utf8').toLowerCase().includes('youtube')) process.exit(3);",
+            str(b64_path),
+        ],
+        capture_output=True,
+        timeout=10,
+    ).returncode == 0
+except Exception:
+    node_ok = True  # skip if node unavailable in PATH
+
+if not node_ok:
+    raise SystemExit("validate: Node Buffer.from(base64) check failed (runtime decode path)")
+
+n = len(b64)
+if n > HARD_FAIL:
+    raise SystemExit(
+        f"validate: FAIL base64 is {n} chars (>{HARD_FAIL}). "
+        "Re-filter to YouTube/Google only — Render env paste will reject/truncate."
+    )
+if n > SOFT_WARN:
+    print(f"validate: WARN base64 is {n} chars (>{SOFT_WARN}) — prefer smaller jar for Render UI paste")
+else:
+    print(f"validate: OK base64={n} chars decoded={len(decoded)}B youtube_cookies_present")
+PY
+
 echo ""
 echo "OK — Filtered Netscape cookies: $FILTERED_FILE ($BYTES bytes)"
 echo "OK — Base64 one-liner: $B64_FILE ($B64_LEN chars)"
@@ -106,6 +183,6 @@ echo "  1) Render Dashboard → auraflux-api → Environment → set YOUTUBE_COO
 echo "     to the contents of: $B64_FILE"
 echo "  2) Copy to clipboard:  pbcopy < \"$B64_FILE\""
 echo "  3) Tell the agent the path \"$B64_FILE\" so it can update Render env"
-echo "     (agent must MERGE the env var — never PUT a single key alone)"
+echo "     (agent must use per-key PUT — never replace the full env-var list)"
 echo ""
 echo "Cookies expire — re-run when Peaks stage-vod-window hits YouTube bot checks again."
