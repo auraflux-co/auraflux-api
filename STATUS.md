@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Plans card graphic: Peaks+publish one-plan illustration.
+**Last Updated:** 2026-09-10 — Allow marketing plan PNG in git; ship Peaks+publish card art.
 
 
 
