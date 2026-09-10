@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — One-plan graphic: Engagement peak chart → Short → channel publish.
+**Last Updated:** 2026-09-10 — Cache-bust one-plan peak→publish graphic on /plans.
 
 
 

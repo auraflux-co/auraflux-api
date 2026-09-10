@@ -16,7 +16,7 @@
       "Developer API by invite (Peaks + publish)"
     ],
     "cta_label": "Start AuraFlux",
-    "image_url": "/images/plan-auraflux-peaks-publish.png",
+    "image_url": "/images/plan-auraflux-peaks-publish.png?v=2",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=operate",
     "cta_style": "cta cta-primary"
   },
