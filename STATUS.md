@@ -2,6 +2,7 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-09-09 — Peaks yt-dlp: isDatacenterBlock + section→splice fallback; cookie export base64 validate.
 **Last Updated:** 2026-09-09 — Peaks: android then cookies fallback for YouTube section downloads on Render.
 **Last Updated:** 2026-09-09 — Peaks stage uses extractVodClips; yt-dlp client android,mweb (ANDROID_VR SABR→403).
 **Last Updated:** 2026-09-09 — yt-dlp: retry android client when YouTube cookies still bot-check on Render IPs.
