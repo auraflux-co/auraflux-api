@@ -37,3 +37,9 @@ test('vodUrlAtPeak appends integer ?t= (not Twitch 1h2m3s)', () => {
   assert.equal(vodUrlAtPeak(null, 10), null);
   assert.equal(vodUrlAtPeak(base, null), base);
 });
+
+test('peakWindow pads around CCV peak for compose', () => {
+  const { peakWindow } = require('../lib/kick_ccv');
+  assert.deepEqual(peakWindow(100), { start_sec: 80, end_sec: 125, peak_sec: 100 });
+  assert.deepEqual(peakWindow(5), { start_sec: 0, end_sec: 30, peak_sec: 5 });
+});

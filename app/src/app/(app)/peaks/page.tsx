@@ -1,11 +1,11 @@
 'use client';
 /**
- * Peaks — YouTube Most Replayed / Twitch chat peaks → customer upload → Short (C1–C11).
+ * Peaks — YouTube Most Replayed / Twitch chat / Kick CCV → customer upload → Short (C1–C11).
  * Browser hop: user downloads/trims locally, uploads MP4 (no server VOD pull on Render).
  */
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -21,9 +21,11 @@ import {
   analyzeContentLibraryVod,
   stageContentLibraryLocalFile,
   listComposePresets,
+  getKickCcvPeaks,
   type ContentLibraryVod,
   type ContentLibraryPeak,
   type ComposePreset,
+  type KickCcvPeak,
 } from '@/lib/api';
 
 function formatClock(sec: number) {
@@ -34,6 +36,8 @@ function formatClock(sec: number) {
   if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
   return `${m}:${String(r).padStart(2, '0')}`;
 }
+
+type SourcePlatform = 'youtube' | 'twitch' | 'kick';
 
 export default function PeaksPage() {
   return (
@@ -47,12 +51,20 @@ function PeaksPageInner() {
   const { getToken, isLoaded } = useAuth();
   const { activeBrand } = useBrand();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingPeakRef = useRef<ContentLibraryPeak | null>(null);
 
-  const [sourcePlatform, setSourcePlatform] = useState<'youtube' | 'twitch'>('youtube');
+  const initialPlatform = ((): SourcePlatform => {
+    const p = (searchParams.get('platform') || '').toLowerCase();
+    if (p === 'twitch' || p === 'kick' || p === 'youtube') return p;
+    return 'youtube';
+  })();
+
+  const [sourcePlatform, setSourcePlatform] = useState<SourcePlatform>(initialPlatform);
   const [handle, setHandle] = useState('');
   const [vods, setVods] = useState<ContentLibraryVod[]>([]);
+  const [kickPeaks, setKickPeaks] = useState<KickCcvPeak[]>([]);
   const [presets, setPresets] = useState<ComposePreset[]>([]);
   const [presetKey, setPresetKey] = useState('fableflow_speed');
   const [selectedVod, setSelectedVod] = useState<ContentLibraryVod | null>(null);
@@ -74,12 +86,70 @@ function PeaksPageInner() {
     } catch { /* optional */ }
   }, [getToken]);
 
-  const loadVods = useCallback(async (overrideHandle?: string, platformOverride?: 'youtube' | 'twitch') => {
+  const loadKickCcvPeaks = useCallback(async () => {
+    setBusy('Loading Kick CCV peaks…');
+    setError(null);
+    setHint(null);
+    setPeaks([]);
+    setVods([]);
+    setSelectedVod(null);
+    setStaged(null);
+    setAnalyzeMode('kick_ccv');
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Session not ready');
+      const res = await getKickCcvPeaks(token, 20);
+      const rows = res.peaks || [];
+      setKickPeaks(rows);
+      if (res.kickSlug) setHandle(res.kickSlug);
+      const segments: ContentLibraryPeak[] = rows.map((p) => ({
+        start_sec: p.startSec ?? Math.max(0, (p.peakOffsetSec || 0) - 20),
+        end_sec: p.endSec ?? Math.max(5, (p.peakOffsetSec || 0) + 25),
+        title: p.title || `Peak ${p.peakViewers} CCV`,
+        summary: [
+          p.peakClock ? `CCV peak @ ${p.peakClock}` : null,
+          `${p.peakViewers} viewers`,
+          p.status,
+        ].filter(Boolean).join(' · '),
+        score: p.peakViewers,
+      }));
+      setPeaks(segments);
+      const withUrl = rows.find((p) => p.vodUrlAtPeak || p.vodUrl);
+      if (withUrl) {
+        setSelectedVod({
+          platform: 'kick',
+          streamer: withUrl.kickSlug || res.kickSlug || 'kick',
+          vodId: withUrl.vodId || withUrl.id,
+          title: withUrl.title || 'Kick stream',
+          url: withUrl.vodUrl || withUrl.vodUrlAtPeak || '',
+          duration: withUrl.endSec || 0,
+        });
+      }
+      if (!rows.length) {
+        setHint(res.hint || 'No Kick CCV peaks yet. Save Kick under My Channels, go live once, then refresh.');
+      } else {
+        setHint('Open VOD at peak (integer ?t=), trim locally, Upload clip — same Short path as YouTube/Twitch.');
+      }
+    } catch (e) {
+      setError(formatUserError(e instanceof Error ? e.message : 'Failed to load Kick peaks'));
+      setKickPeaks([]);
+      setPeaks([]);
+    } finally {
+      setBusy(null);
+    }
+  }, [getToken]);
+
+  const loadVods = useCallback(async (overrideHandle?: string, platformOverride?: SourcePlatform) => {
     const platform = platformOverride || sourcePlatform;
+    if (platform === 'kick') {
+      await loadKickCcvPeaks();
+      return;
+    }
     setBusy(platform === 'twitch' ? 'Loading Twitch VODs…' : 'Loading VODs…');
     setError(null);
     setHint(null);
     setPeaks([]);
+    setKickPeaks([]);
     setSelectedVod(null);
     setStaged(null);
     setAnalyzeMode(null);
@@ -109,12 +179,12 @@ function PeaksPageInner() {
     } finally {
       setBusy(null);
     }
-  }, [getToken, handle, sourcePlatform]);
+  }, [getToken, handle, sourcePlatform, loadKickCcvPeaks]);
 
   useEffect(() => {
     if (!isLoaded) return;
     void loadPresets();
-    void loadVods();
+    void loadVods(undefined, sourcePlatform);
   }, [isLoaded, activeBrand?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function onAnalyze(vod: ContentLibraryVod) {
@@ -156,7 +226,18 @@ function PeaksPageInner() {
     }
   }
 
-  function onUploadPeak(peak: ContentLibraryPeak) {
+  function onUploadPeak(peak: ContentLibraryPeak, kickRow?: KickCcvPeak) {
+    if (kickRow) {
+      setSelectedVod({
+        platform: 'kick',
+        streamer: kickRow.kickSlug || handle || 'kick',
+        vodId: kickRow.vodId || kickRow.id,
+        title: kickRow.title || peak.title || 'Kick peak',
+        url: kickRow.vodUrl || kickRow.vodUrlAtPeak || '',
+        duration: peak.end_sec,
+      });
+    } else {
+    }
     pendingPeakRef.current = peak;
     fileInputRef.current?.click();
   }
@@ -164,6 +245,30 @@ function PeaksPageInner() {
   function onUploadAny() {
     pendingPeakRef.current = null;
     fileInputRef.current?.click();
+  }
+
+  function openAtPeakHref(peak: ContentLibraryPeak, kickRow?: KickCcvPeak): string | null {
+    if (kickRow?.vodUrlAtPeak) return kickRow.vodUrlAtPeak;
+    if (kickRow?.vodUrl) {
+      const t = Math.floor(kickRow.peakOffsetSec ?? peak.start_sec);
+      const sep = kickRow.vodUrl.includes('?') ? '&' : '?';
+      return `${kickRow.vodUrl}${sep}t=${t}`;
+    }
+    if (!selectedVod?.url) return null;
+    if (selectedVod.platform === 'kick' || sourcePlatform === 'kick') {
+      const t = Math.floor(peak.start_sec);
+      const sep = selectedVod.url.includes('?') ? '&' : '?';
+      return `${selectedVod.url}${sep}t=${t}`;
+    }
+    const sep = selectedVod.url.includes('?') ? '&' : '?';
+    return `${selectedVod.url}${sep}t=${Math.floor(peak.start_sec)}s`;
+  }
+
+  function resolvePlatform(): SourcePlatform {
+    if (selectedVod?.platform === 'twitch' || selectedVod?.platform === 'kick') {
+      return selectedVod.platform;
+    }
+    return sourcePlatform;
   }
 
   async function onFileChosen(file: File | null) {
@@ -175,12 +280,13 @@ function PeaksPageInner() {
     try {
       const token = await getToken();
       if (!token) throw new Error('Session not ready');
+      const plat = resolvePlatform();
       const res = await stageContentLibraryLocalFile(
         file,
         {
           title: peak?.title || selectedVod?.title || file.name.replace(/\.[^.]+$/, ''),
           streamer: selectedVod?.streamer || 'peaks_upload',
-          platform: selectedVod?.platform === 'twitch' ? 'twitch' : sourcePlatform,
+          platform: plat,
           vodUrl: selectedVod?.url,
           vodId: selectedVod?.vodId,
           startSec: peak?.start_sec,
@@ -220,6 +326,7 @@ function PeaksPageInner() {
       const token = await getToken();
       if (!token) throw new Error('Session not ready');
       const preset = presets.find((p) => p.key === presetKey);
+      const plat = resolvePlatform();
       const result = await createJob({
         contentType: 'clips',
         entryType: 'fetch',
@@ -236,7 +343,7 @@ function PeaksPageInner() {
             url: staged.mp4Url,
             title: staged.title,
             duration: staged.duration,
-            platform: selectedVod?.platform === 'twitch' ? 'twitch' : sourcePlatform,
+            platform: plat,
             contentType: 'vod_peak',
           }],
         },
@@ -264,7 +371,7 @@ function PeaksPageInner() {
     <PageShell maxWidth="4xl">
       <PageHeader
         title="Peaks"
-        subtitle="VODs → peaks (YouTube Most Replayed or Twitch chat) → upload your trim → Short (C1–C11). You pull the clip; we compose and publish."
+        subtitle="VODs → peaks (YouTube Most Replayed, Twitch chat, or Kick live CCV) → upload your trim → Short (C1–C11)."
       />
 
       <input
@@ -303,6 +410,7 @@ function PeaksPageInner() {
                 setSourcePlatform('youtube');
                 setVods([]);
                 setPeaks([]);
+                setKickPeaks([]);
                 setHandle((h) => (h && !h.startsWith('@') ? `@${h}` : h));
               }}
             >
@@ -317,101 +425,141 @@ function PeaksPageInner() {
                 setSourcePlatform('twitch');
                 setVods([]);
                 setPeaks([]);
+                setKickPeaks([]);
                 setHandle((h) => h.replace(/^@/, ''));
               }}
             >
               Twitch
             </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={sourcePlatform === 'kick' ? 'default' : 'outline'}
+              disabled={!!busy}
+              onClick={() => {
+                setSourcePlatform('kick');
+                setVods([]);
+                setPeaks([]);
+                setKickPeaks([]);
+                setHandle((h) => h.replace(/^@/, ''));
+              }}
+            >
+              Kick
+            </Button>
           </div>
           <Label htmlFor="peaks-handle">
-            {sourcePlatform === 'twitch' ? 'Twitch login' : 'YouTube channel'}
+            {sourcePlatform === 'twitch'
+              ? 'Twitch login'
+              : sourcePlatform === 'kick'
+                ? 'Kick login'
+                : 'YouTube channel'}
           </Label>
           <div className="flex flex-wrap gap-2">
             <Input
               id="peaks-handle"
-              placeholder={sourcePlatform === 'twitch' ? 'channel_login' : '@yourchannel'}
+              placeholder={
+                sourcePlatform === 'twitch'
+                  ? 'channel_login'
+                  : sourcePlatform === 'kick'
+                    ? 'kick_login'
+                    : '@yourchannel'
+              }
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
               className="max-w-xs"
+              disabled={sourcePlatform === 'kick'}
             />
-            <Button onClick={() => loadVods(handle, sourcePlatform)} disabled={!!busy}>
-              Fetch VODs
+            <Button
+              onClick={() => loadVods(handle, sourcePlatform)}
+              disabled={!!busy}
+            >
+              {sourcePlatform === 'kick' ? 'Load CCV peaks' : 'Fetch VODs'}
             </Button>
             <Button variant="outline" onClick={onUploadAny} disabled={!!busy}>
               Upload any clip
             </Button>
           </div>
           <p className="af-caption text-muted-foreground">
-            {sourcePlatform === 'twitch'
-              ? 'Upload skips Twitch download on our servers — trim locally, then stage to R2.'
-              : 'Upload skips YouTube download on our servers — same idea as staging a local file on localhost.'}
+            {sourcePlatform === 'kick'
+              ? 'Kick peaks come from live CCV we captured on My Channels — open the VOD at peak, trim locally, upload.'
+              : sourcePlatform === 'twitch'
+                ? 'Upload skips Twitch download on our servers — trim locally, then stage to R2.'
+                : 'Upload skips YouTube download on our servers — same idea as staging a local file on localhost.'}
           </p>
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        {vods.map((v) => (
-          <Card key={v.vodId} className={selectedVod?.vodId === v.vodId ? 'ring-2 ring-primary' : ''}>
-            <CardContent className="pt-5 space-y-2">
-              <p className="af-body font-medium line-clamp-2">{v.title}</p>
-              <p className="af-caption text-muted-foreground">
-                {formatClock(v.duration || 0)}
-                {v.views ? ` · ${v.views.toLocaleString()} views` : ''}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => onAnalyze(v)} disabled={!!busy}>
-                  Analyze peaks
-                </Button>
-                {v.url && (
-                  <a
-                    href={v.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }))}
-                  >
-                    {v.platform === 'twitch' ? 'Open on Twitch' : 'Open on YouTube'}
-                  </a>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {peaks.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="af-label font-medium">Peaks</h2>
-          <p className="af-caption text-muted-foreground">
-            For each peak: open the VOD at that timestamp, trim/download locally, then Upload clip.
-          </p>
-          {peaks.map((p, i) => (
-            <Card key={`${p.start_sec}-${i}`}>
-              <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="af-body font-medium">
-                    {formatClock(p.start_sec)} – {formatClock(p.end_sec)}
-                    {p.score != null ? ` · score ${Number(p.score).toFixed(2)}` : ''}
-                  </p>
-                  <p className="af-caption text-muted-foreground">{p.title || p.summary || 'Peak window'}</p>
-                </div>
+      {sourcePlatform !== 'kick' && (
+        <div className="grid gap-3 md:grid-cols-2">
+          {vods.map((v) => (
+            <Card key={v.vodId} className={selectedVod?.vodId === v.vodId ? 'ring-2 ring-primary' : ''}>
+              <CardContent className="pt-5 space-y-2">
+                <p className="af-body font-medium line-clamp-2">{v.title}</p>
+                <p className="af-caption text-muted-foreground">
+                  {formatClock(v.duration || 0)}
+                  {v.views ? ` · ${v.views.toLocaleString()} views` : ''}
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {selectedVod?.url && (
+                  <Button size="sm" variant="outline" onClick={() => onAnalyze(v)} disabled={!!busy}>
+                    Analyze peaks
+                  </Button>
+                  {v.url && (
                     <a
-                      href={`${selectedVod.url}${selectedVod.url.includes('?') ? '&' : '?'}t=${Math.floor(p.start_sec)}s`}
+                      href={v.url}
                       target="_blank"
                       rel="noreferrer"
-                      className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}
+                      className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }))}
                     >
-                      Open at peak
+                      {v.platform === 'twitch' ? 'Open on Twitch' : 'Open on YouTube'}
                     </a>
                   )}
-                  <Button size="sm" onClick={() => onUploadPeak(p)} disabled={!!busy}>
-                    Upload clip
-                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {peaks.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="af-label font-medium">
+            {sourcePlatform === 'kick' ? 'Kick CCV peaks' : 'Peaks'}
+          </h2>
+          <p className="af-caption text-muted-foreground">
+            For each peak: open the VOD at that timestamp, trim/download locally, then Upload clip.
+          </p>
+          {peaks.map((p, i) => {
+            const kickRow = sourcePlatform === 'kick' ? kickPeaks[i] : undefined;
+            const openHref = openAtPeakHref(p, kickRow);
+            return (
+              <Card key={`${p.start_sec}-${i}`}>
+                <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="af-body font-medium">
+                      {formatClock(p.start_sec)} – {formatClock(p.end_sec)}
+                      {p.score != null ? ` · score ${Number(p.score).toFixed(0)}` : ''}
+                    </p>
+                    <p className="af-caption text-muted-foreground">{p.title || p.summary || 'Peak window'}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {openHref && (
+                      <a
+                        href={openHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}
+                      >
+                        Open at peak
+                      </a>
+                    )}
+                    <Button size="sm" onClick={() => onUploadPeak(p, kickRow)} disabled={!!busy}>
+                      Upload clip
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
