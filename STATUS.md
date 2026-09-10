@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Marketing em-dash cleanup after copy rewrite.
+**Last Updated:** 2026-09-10 — Marketing: Peaks-only core cards; secondary offers in-portal.
 
 
 

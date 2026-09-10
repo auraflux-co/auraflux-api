@@ -17,7 +17,7 @@
     {
       "badge": "P2",
       "name": "Edit & assembly",
-      "description": "Cutting, reframing, captions, and timeline assembly according to the job template.",
+      "description": "Cutting, reframing, captions, and timeline assembly for the Short.",
       "tag": "ALWAYS ON"
     },
     {
@@ -43,28 +43,28 @@
     {
       "icon": "📈",
       "name": "Peaks Shorts",
-      "description": "High-signal moments from YouTube, Twitch, and Kick produced as Shorts."
-    },
-    {
-      "icon": "🎬",
-      "name": "Highlight Shorts",
-      "description": "Staged trims with captions and brand, ready for connected platforms."
-    },
-    {
-      "icon": "📋",
-      "name": "Template jobs",
-      "description": "Longer or multi-step productions when the job spec declares more portals."
+      "description": "High-signal moments from YouTube Most Replayed, Twitch chat peaks, and Kick CCV peaks, produced as Shorts."
     },
     {
       "icon": "✨",
-      "name": "Managed add-ons",
-      "description": "HeyGen, Imagen, and other Managed-tier extensions when ordered on the job."
+      "name": "Captions, brand, QA",
+      "description": "The Short pipeline polishes and checks before publish from the member portal."
+    },
+    {
+      "icon": "📤",
+      "name": "Direct publish",
+      "description": "Connect accounts once. Ship from the job instead of re-uploading by hand."
+    },
+    {
+      "icon": "🧰",
+      "name": "More in the portal",
+      "description": "Extra job tools and Managed add-ons stay in-app for workflows that need them. Not equal homepage offers."
     }
   ],
   "pipeline_title": "The production pipeline",
   "pipeline_sub": "Portals run when the job spec says so. Skipped is not failed.",
   "content_types_title": "What you can produce",
-  "content_types_sub": "Peaks first. Full jobs when your template needs them.",
+  "content_types_sub": "Peaks first on the site. Extra tools live in the member portal.",
   "features_title": "Inside the member portal",
   "features_sub": "Peaks, jobs, channels, social accounts, review queue, and billing at app.auraflux.co.",
   "credits_title": "How credits work",
