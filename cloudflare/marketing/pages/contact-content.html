@@ -120,7 +120,7 @@
 <!-- Hero -->
 <div class="ct-hero">
   <h1 >Get in Touch</h1>
-  <p data-editable="hero_subtext">Sales, support, partnerships, or feedback — we read every message.</p>
+  <p data-editable="hero_subtext">Sales, support, partnerships, or feedback - we read every message.</p>
 </div>
 
 <!-- Top: Form + Channels -->
@@ -141,7 +141,7 @@
       <div>
         <label for="cf-topic">Topic</label>
         <select id="cf-topic" name="topic">
-          <option value="">— Select a topic —</option>
+          <option value="">- Select a topic -</option>
           <option value="sales">Sales &amp; pricing</option>
           <option value="support">Technical support</option>
           <option value="partnership">Partnership or integration</option>
@@ -175,11 +175,11 @@
         });
         var data = await res.json();
         if (data.ok) {
-          btn.textContent = '✓ Sent'; msg.className = 'ct-form-msg ok'; msg.textContent = "Thanks — we'll be in touch shortly."; msg.style.display = 'block';
+          btn.textContent = '✓ Sent'; msg.className = 'ct-form-msg ok'; msg.textContent = "Thanks - we'll be in touch shortly."; msg.style.display = 'block';
           e.target.reset();
         } else { throw new Error(data.error || 'Submission failed'); }
       } catch(err) {
-        msg.className = 'ct-form-msg err'; msg.textContent = err.message || 'Something went wrong — email support@auraflux.co'; msg.style.display = 'block';
+        msg.className = 'ct-form-msg err'; msg.textContent = err.message || 'Something went wrong - email support@auraflux.co'; msg.style.display = 'block';
       }
       btn.disabled = false; btn.textContent = 'Send message';
     });
@@ -230,18 +230,18 @@
   <dl class="ct-faq-grid">
 
     <div class="ct-faq-card">
-      <dt data-editable="faq_1_q">What's the difference between our plans?</dt>
-      <dd data-editable="faq_1_a">Both plans include the full AuraFlux automated engine. <strong style="color:#fff;">Operate</strong> is entirely self-serve via our dashboard and API. <strong style="color:#fff;">Guided</strong> includes built-in Collab workspace assistance to monitor and refine your outputs. <strong style="color:#fff;">Managed</strong> adds dedicated human account managers.</dd>
+      <dt data-editable="faq_1_q">What's included in the AuraFlux plan?</dt>
+      <dd data-editable="faq_1_a">One plan covers the member portal, Peaks (Most Replayed, chat spikes, CCV), the Short production pipeline, and publish to connected accounts. Inquire about Managed if you want done-for-you production.</dd>
     </div>
 
     <div class="ct-faq-card">
       <dt data-editable="faq_2_q">How do credits work?</dt>
-      <dd data-editable="faq_2_a">Each plan includes a monthly credit allowance. One credit = one complete production job. Unused credits roll over automatically, and Extra Credit Packs can be purchased any time directly inside your account dashboard.</dd>
+      <dd data-editable="faq_2_a">The AuraFlux plan includes 400 credits per month. Buy packs inside the app if you need more mid-cycle. Managed credit capacity is scoped when you inquire.</dd>
     </div>
 
     <div class="ct-faq-card">
       <dt data-editable="faq_3_q">Can I connect multiple social accounts?</dt>
-      <dd data-editable="faq_3_a">Yes — connect all major platforms and target any job to one or more simultaneously.
+      <dd data-editable="faq_3_a">Yes - connect all major platforms and target any job to one or more simultaneously.
         <div class="ct-platform-badges">
           <span class="ct-badge" style="background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.2);color:#ff4444;">▶ YouTube</span>
           <span class="ct-badge" style="background:rgba(105,201,208,.07);border:1px solid rgba(105,201,208,.2);color:#69c9d0;">♪ TikTok</span>

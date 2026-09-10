@@ -1,57 +1,32 @@
 {
-  "hero_headline": "Plans That Match How You Run Production",
-  "hero_sub": "Operate, Guided, and Managed all include the AuraFlux member portal, Peaks (Most Replayed, chat spikes, CCV), and the automated production pipeline. The difference is how much support you want.",
-  "operate": {
-    "title": "Self-serve",
-    "subtitle": "Full platform access. You run Peaks (Most Replayed, chat spikes, CCV), jobs, and publish yourself from app.auraflux.co.",
+  "hero_headline": "One Plan. Peaks to Publish.",
+  "hero_sub": "Member portal with Peaks (Most Replayed, chat spikes, CCV), the Short production pipeline, and publish to connected accounts. Need us to run it for you? Inquire about Managed.",
+  "plan": {
+    "name": "AuraFlux",
+    "title": "Peaks + publish",
+    "subtitle": "Full platform access. You run Peaks, jobs, and publish from app.auraflux.co. Buy credit packs in-app when you need more.",
     "price": "$999",
     "credits": "400 credits/month · Self-serve checkout",
     "features": [
-      "Member portal with Peaks (Most Replayed, chat spikes, CCV)",
-      "Spec-driven production pipeline",
+      "Peaks: YouTube Most Replayed, Twitch chat spikes, Kick CCV",
+      "Spec-driven Short production pipeline",
       "Direct publish to connected platforms",
+      "Member portal: jobs, channels, review, billing",
       "API access for operators who want it",
-      "Standard support"
+      "Credit packs available in-app"
     ],
-    "cta_label": "Start Operate",
+    "cta_label": "Start AuraFlux",
     "image_url": "/cf-assets/marketing/images/plan-operate.png",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=operate",
     "cta_style": "cta cta-primary"
   },
-  "guided": {
-    "title": "Done-with-you",
-    "subtitle": "Same core platform as Operate, plus operator guidance so you are not alone in the dashboard.",
-    "price": "$2,499",
-    "credits": "1,200 credits/month · Self-serve upgrade",
-    "features": [
-      "Everything in Operate",
-      "Operator monitoring and guidance",
-      "Collab assistance in the app",
-      "Help refining workflows and job templates",
-      "Standard support with guided onboarding"
-    ],
-    "cta_label": "Start Guided",
-    "image_url": "/cf-assets/marketing/images/plan-guided.png",
-    "cta_url": "https://api.auraflux.co/api/public/checkout?plan=guided",
-    "cta_style": "cta cta-primary"
-  },
   "managed": {
-    "title": "Done-for-you",
-    "subtitle": "We run production with you. Highest monthly credits plus Managed-tier add-ons like HeyGen and Imagen when ordered.",
-    "price": "$4,499",
-    "credits": "2,000 credits/month · Sales onboarding",
-    "features": [
-      "Everything in Guided",
-      "Dedicated account manager",
-      "Custom workflow builds",
-      "Managed-tier add-ons (HeyGen, Imagen, and more)",
-      "Priority support"
-    ],
-    "cta_label": "Talk to Sales",
-    "image_url": "/cf-assets/marketing/images/plan-managed.png",
+    "eyebrow": "Need more hands on?",
+    "title": "Inquire about Managed",
+    "body": "Done-for-you production, dedicated account management, and Managed-tier add-ons when your workflow needs them. Tell us how you ship Shorts today.",
+    "cta_label": "Contact us",
     "cta_url": "/contact",
-    "cta_style": "secondary"
+    "cta_style": "cta-managed"
   },
-  "credit_note": "Need more mid-cycle? Buy credit packs inside the AuraFlux app without changing your plan.",
-  "comparison_title": "Plan comparison"
+  "credit_note": "Need more mid-cycle? Buy credit packs inside the AuraFlux app without changing your plan."
 }

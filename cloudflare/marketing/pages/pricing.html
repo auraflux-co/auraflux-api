@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Plans. AuraFlux</title>
-<meta name="description" content="Choose the plan that fits your team. Operate, Guided, or Managed. all include the full AuraFlux automated content pipeline.">
+<meta name="description" content="One AuraFlux plan for Peaks and publish. Most Replayed, chat spikes, and CCV to Shorts. Inquire about Managed if you want done-for-you.">
 <link rel="canonical" href="https://auraflux.co/plans">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E"></script>
@@ -19,7 +19,6 @@ ${FRAMER_CSS || ''}
 *{box-sizing:border-box;margin:0;padding:0}
 body{line-height:1.6}
 
-/* ── Hero ─────────────────────────────────────────────────────────── */
 .hero{text-align:center;padding:60px 24px 48px}
 .hero h1{
   font-size:clamp(2.25rem,4vw,3.5rem);font-weight:800;margin-bottom:16px;
@@ -27,69 +26,41 @@ body{line-height:1.6}
 }
 .hero p{font-size:1.05rem;color:#cbd5e1 !important;max-width:40rem;margin:0 auto;line-height:1.65;}
 
-/* ── Plan cards (light BR cards; page-base reinforces) ────────────── */
-.plans{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:24px;max-width:1100px;margin:0 auto;padding:48px 24px 56px;
+.plans-wrap{
   background:#f4f4f5;
+  padding:48px 24px 32px;
 }
-@media(max-width:768px){.plans{grid-template-columns:1fr}}
-
+.plans{
+  display:grid;
+  grid-template-columns:1fr;
+  max-width:420px;
+  margin:0 auto;
+  gap:24px;
+}
 .plan{
-  background:#fff;border:1px solid #e4e4e7;
+  background:#fff;border:2px solid #0f172a;
   border-radius:16px;overflow:hidden;
   display:flex;flex-direction:column;
-  transition:border-color .25s,box-shadow .25s;position:relative;
 }
-.plan:hover{border-color:#d4d4d8;box-shadow:0 4px 12px rgba(15,23,42,.08);}
-.plan.featured{border:2px solid #0f172a;}
-
-.badge{
-  position:absolute;top:16px;right:16px;z-index:10;
-  background:#f5c542;color:#0b1220;
-  font-size:.65rem;font-weight:800;padding:4px 12px;
-  border-radius:100px;letter-spacing:.06em;
-  display:flex;align-items:center;gap:5px;
-}
-.badge-dot{
-  width:6px;height:6px;border-radius:50%;background:#0b1220;
-  animation:planpulse 2s ease-in-out infinite;
-}
-@keyframes planpulse{0%,100%{opacity:1}50%{opacity:.3}}
-
-/* Plan image header */
 .plan-img{
-  width:100%;display:block;
-  height:240px;
-  border-bottom:1px solid rgba(255,255,255,.06);
-  object-fit:cover;
-  object-position:center 35%;
+  width:100%;display:block;height:200px;
+  border-bottom:1px solid #e4e4e7;
+  object-fit:cover;object-position:center 35%;
+  background:#f4f4f5;
 }
-/* Guided and Managed images: contain so full artwork is visible */
-.plan-img-contain{
-  object-fit:contain;
-  object-position:center center;
-  background:#0a1224;
-  padding:8px 0;
-}
-
 .plan-body{padding:28px 28px 24px;display:flex;flex-direction:column;flex:1;}
-
 .plan-name{
   font-size:.68rem;font-weight:800;letter-spacing:.14em;
   text-transform:uppercase;color:#0b1220;margin-bottom:6px;
-  font-family:'Satoshi','Inter',sans-serif;
 }
 .plan-title{
   font-size:1.5rem;font-weight:700;color:#18181b;
   letter-spacing:-.02em;margin-bottom:4px;
 }
-.plan-sub{font-size:.85rem;color:#3f3f46;margin-bottom:20px;line-height:1.5;}
-
+.plan-sub{font-size:.9rem;color:#3f3f46;margin-bottom:20px;line-height:1.55;}
 .price{
   font-size:2.8rem;font-weight:800;color:#18181b;
   letter-spacing:-.02em;line-height:1.15;margin-bottom:10px;
-  font-family:'Satoshi','Inter',sans-serif;
 }
 .price .period{font-size:1rem;font-weight:400;color:#71717a;letter-spacing:0;}
 .credits{
@@ -105,22 +76,16 @@ body{line-height:1.6}
   display:flex;gap:10px;line-height:1.55;
 }
 .features li::before{content:"✓";color:#0b1220;font-weight:700;flex-shrink:0;}
-.features li.no::before{content:"-";color:#a1a1aa;}
-.features li.no{color:#a1a1aa;}
-
 .cta{
   display:block;text-align:center;padding:13px;
   border-radius:10px;font-weight:700;font-size:.9rem;
   transition:opacity .2s;text-decoration:none;
-  letter-spacing:-.01em;
 }
 .cta-primary{background:#0b1220;color:#fff;}
-.cta-secondary{border:1px solid #e4e4e7;color:#18181b;background:#f4f4f5;}
 .cta:hover{opacity:.85;text-decoration:none;}
 
-/* Credit pack footnote */
 .credit-note{
-  max-width:1100px;margin:0 auto;padding:0 24px 56px;
+  max-width:720px;margin:0 auto;padding:0 24px 40px;
   background:#f4f4f5;
 }
 .credit-note-inner{
@@ -129,53 +94,37 @@ body{line-height:1.6}
   background:#fff;
 }
 .credit-note-inner p{font-size:.88rem;color:#3f3f46;line-height:1.65;}
-.credit-note-inner strong{color:#18181b;}
 
-/* ── Comparison table ─────────────────────────────────────────────── */
-.ladder{max-width:1100px;margin:0 auto;padding:48px 24px 80px;background:#fff;}
-.ladder-title{
-  font-size:1.6rem;font-weight:800;color:#18181b;
-  letter-spacing:-.03em;margin-bottom:32px;text-align:center;
+.managed-band{
+  background:#fff;
+  padding:24px 24px 80px;
 }
-table{width:100%;border-collapse:collapse;font-size:.88rem;}
-th{
-  text-align:left;padding:14px 20px;color:#0b1220;
-  font-weight:700;border-bottom:1px solid #e4e4e7;
-  background:#f4f4f5;letter-spacing:-.01em;
+.managed-card{
+  max-width:720px;margin:0 auto;
+  background:#0f172a;color:#fff;
+  border-radius:16px;padding:2.5rem 2rem;
+  text-align:center;
+  border:1px solid #1e293b;
 }
-th:not(:first-child){text-align:center;}
-td{padding:12px 20px;color:#3f3f46;border-bottom:1px solid #f4f4f5;}
-td:not(:first-child){text-align:center;}
-tr:hover td{background:#fafafa;}
-.yes{color:#0b1220;font-weight:700;font-size:1rem;}
-.no-val{color:#a1a1aa;}
-.label{color:#18181b;font-weight:500;}
+.managed-eyebrow{
+  font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:#f5c542;margin-bottom:12px;
+}
+.managed-card h2{
+  font-size:clamp(1.5rem,3vw,2rem);font-weight:800;color:#fff !important;
+  margin-bottom:12px;letter-spacing:-.03em;
+}
+.managed-card p{
+  font-size:1rem;color:#cbd5e1 !important;max-width:32rem;
+  margin:0 auto 1.75rem;line-height:1.6;
+}
+.managed-card a.cta-managed{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#f5c542;color:#0b1220;font-weight:700;font-size:.9rem;
+  padding:12px 24px;border-radius:8px;text-decoration:none;
+}
+.managed-card a.cta-managed:hover{opacity:.9;text-decoration:none;}
 
-/* Mobile: hide table, show card-style summary */
-.compare-mobile{display:none;}
-.compare-mobile-card{
-  background:#fff;border:1px solid #e4e4e7;
-  border-radius:14px;padding:20px;margin-bottom:16px;
-  box-shadow:0 1px 2px rgba(15,23,42,.06);
-}
-.compare-mobile-card h3{
-  font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:#0b1220;margin-bottom:14px;font-family:'Satoshi','Inter',sans-serif;
-}
-.compare-mobile-row{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px 0;border-bottom:1px solid #f4f4f5;font-size:.85rem;
-}
-.compare-mobile-row:last-child{border-bottom:none;}
-.compare-mobile-row span:first-child{color:#3f3f46;flex:1;}
-.compare-mobile-row .yes-m{color:#0b1220;font-weight:700;font-size:.9rem;}
-.compare-mobile-row .no-m{color:#a1a1aa;}
-@media(max-width:600px){
-  table,.ladder-title+table{display:none;}
-  .compare-mobile{display:block;}
-}
-
-/* Price loading pulse */
 .price-loading .price-val{opacity:.3;animation:ppulse 1.2s ease-in-out infinite;}
 @keyframes ppulse{0%,100%{opacity:.15}50%{opacity:.5}}
 </style>
@@ -184,160 +133,63 @@ tr:hover td{background:#fafafa;}
 ${FRAMER_NAV || FALLBACK_NAV}
 
 <div class="hero">
-  <h1>Plans That Match How You Run Production</h1>
-  <p>Operate, Guided, and Managed all include the AuraFlux member portal, Peaks (Most Replayed, chat spikes, CCV), and the automated production pipeline. The difference is how much support you want.</p>
+  <h1>One Plan. Peaks to Publish.</h1>
+  <p>Member portal with Peaks (Most Replayed, chat spikes, CCV), the Short production pipeline, and publish to connected accounts. Need us to run it for you? Inquire about Managed.</p>
 </div>
 
+<div class="plans-wrap">
 <div class="plans">
-
-  <!-- OPERATE -->
   <div class="plan">
-    <img class="plan-img" src="/cf-assets/marketing/images/plan-operate.png" alt="Operate plan">
+    <img class="plan-img" src="/cf-assets/marketing/images/plan-operate.png" alt="AuraFlux plan">
     <div class="plan-body">
-      <div class="plan-name">Operate</div>
-      <div class="plan-title">Self-serve</div>
-      <div class="plan-sub">Full platform access. You run Peaks (Most Replayed, chat spikes, CCV), jobs, and publish yourself from app.auraflux.co.</div>
+      <div class="plan-name">AuraFlux</div>
+      <div class="plan-title">Peaks + publish</div>
+      <div class="plan-sub">Full platform access. You run Peaks, jobs, and publish from app.auraflux.co. Buy credit packs in-app when you need more.</div>
       <div class="price price-loading" id="price-operate"><span class="price-val">$999</span><span class="period">/mo</span></div>
       <div class="credits">400 credits/month · Self-serve checkout</div>
       <ul class="features">
-        <li>Member portal with Peaks (Most Replayed, chat spikes, CCV)</li>
-        <li>Spec-driven production pipeline</li>
+        <li>Peaks: YouTube Most Replayed, Twitch chat spikes, Kick CCV</li>
+        <li>Spec-driven Short production pipeline</li>
         <li>Direct publish to connected platforms</li>
+        <li>Member portal: jobs, channels, review, billing</li>
         <li>API access for operators who want it</li>
-        <li>Standard support</li>
-        <li class="no">Operator monitoring and guidance</li>
-        <li class="no">Dedicated account manager</li>
+        <li>Credit packs available in-app</li>
       </ul>
-      <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Start Operate</a>
+      <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Start AuraFlux</a>
     </div>
   </div>
-
-  <!-- GUIDED -->
-  <div class="plan featured">
-    <div class="badge"><span class="badge-dot"></span>MOST POPULAR</div>
-    <img class="plan-img plan-img-contain" src="/cf-assets/marketing/images/plan-guided.png" alt="Guided plan">
-    <div class="plan-body">
-      <div class="plan-name">Guided</div>
-      <div class="plan-title">Done-with-you</div>
-      <div class="plan-sub">Same core platform as Operate, plus operator guidance so you are not alone in the dashboard.</div>
-      <div class="price price-loading" id="price-guided"><span class="price-val">$2,499</span><span class="period">/mo</span></div>
-      <div class="credits">1,200 credits/month · Self-serve upgrade</div>
-      <ul class="features">
-        <li>Everything in Operate</li>
-        <li>Operator monitoring and guidance</li>
-        <li>Collab assistance in the app</li>
-        <li>Help refining workflows and templates</li>
-        <li>Guided onboarding</li>
-        <li class="no">Custom end-to-end builds by experts</li>
-        <li class="no">Dedicated account manager</li>
-      </ul>
-      <a href="https://api.auraflux.co/api/public/checkout?plan=guided" class="cta cta-primary" data-cta="guided_cta">Start Guided</a>
-    </div>
-  </div>
-
-  <!-- MANAGED -->
-  <div class="plan">
-    <img class="plan-img plan-img-contain" src="/cf-assets/marketing/images/plan-managed.png" alt="Managed plan">
-    <div class="plan-body">
-      <div class="plan-name">Managed</div>
-      <div class="plan-title">Done-for-you</div>
-      <div class="plan-sub">We run production with you. Highest monthly credits plus Managed-tier add-ons when ordered.</div>
-      <div class="price">$4,499<span class="period">/mo</span></div>
-      <div class="credits">2,000 credits/month · Sales onboarding</div>
-      <ul class="features">
-        <li>Everything in Guided</li>
-        <li>Dedicated account manager</li>
-        <li>Custom workflow builds</li>
-        <li>Managed add-ons (HeyGen, Imagen, and more)</li>
-        <li>Priority support</li>
-      </ul>
-      <a href="/contact" class="secondary" data-cta="managed_cta">Talk to Sales</a>
-    </div>
-  </div>
-
+</div>
 </div>
 
-<!-- Credit pack footnote -->
-<div class="credit-note">
-  <div class="credit-note-inner">
+<div class="credit-note" style="width:100%;max-width:none;">
+  <div class="credit-note-inner" style="max-width:420px;margin:0 auto;">
     <p>Need more mid-cycle? Buy credit packs inside the AuraFlux app without changing your plan.</p>
   </div>
 </div>
 
-<!-- Comparison table -->
-<div class="ladder">
-  <div class="ladder-title">Plan comparison</div>
-  <table>
-    <thead>
-      <tr>
-        <th>Feature / Resource</th>
-        <th>Operate</th>
-        <th>Guided</th>
-        <th>Managed</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td class="label">Peaks (Most Replayed · chat · CCV)</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Production pipeline + publish</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">API access</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Operator guidance / Collab</td><td class="no-val">-</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Managed add-ons (HeyGen, Imagen)</td><td class="no-val">-</td><td class="no-val">-</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Dedicated account manager</td><td class="no-val">-</td><td class="no-val">-</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Monthly credits</td><td>400</td><td>1,200</td><td>2,000</td></tr>
-      <tr><td class="label">Support</td><td>Standard</td><td>Guided</td><td>Priority</td></tr>
-    </tbody>
-  </table>
-
-  <div class="compare-mobile">
-    <div class="compare-mobile-card">
-      <h3>Operate</h3>
-      <div class="compare-mobile-row"><span>Peaks (Most Replayed · chat · CCV)</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Pipeline + publish</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Operator guidance</span><span class="no-m">-</span></div>
-      <div class="compare-mobile-row"><span>Managed add-ons</span><span class="no-m">-</span></div>
-      <div class="compare-mobile-row"><span>Account manager</span><span class="no-m">-</span></div>
-      <div class="compare-mobile-row"><span>Credits / mo</span><span>400</span></div>
-    </div>
-    <div class="compare-mobile-card" style="border-color:rgba(199,175,79,.3);">
-      <h3>Guided</h3>
-      <div class="compare-mobile-row"><span>Peaks (Most Replayed · chat · CCV)</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Pipeline + publish</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Operator guidance</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Managed add-ons</span><span class="no-m">-</span></div>
-      <div class="compare-mobile-row"><span>Account manager</span><span class="no-m">-</span></div>
-      <div class="compare-mobile-row"><span>Credits / mo</span><span>1,200</span></div>
-    </div>
-    <div class="compare-mobile-card">
-      <h3>Managed</h3>
-      <div class="compare-mobile-row"><span>Peaks (Most Replayed · chat · CCV)</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Pipeline + publish</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Operator guidance</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Managed add-ons</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Account manager</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Credits / mo</span><span style="color:#f5c542;">2,000</span></div>
-    </div>
+<div class="managed-band">
+  <div class="managed-card">
+    <div class="managed-eyebrow">Need more hands on?</div>
+    <h2>Inquire about Managed</h2>
+    <p>Done-for-you production, dedicated account management, and Managed-tier add-ons when your workflow needs them. Tell us how you ship Shorts today.</p>
+    <a href="/contact" class="cta-managed" data-cta="managed_cta">Contact us</a>
   </div>
 </div>
 
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
 <script>
-// Try to load live prices; fall back gracefully to hardcoded values
 (function() {
-  var fallback = { operate: '$999', guided: '$2,499' };
   fetch('/api/public/plans')
     .then(function(r) { return r.json(); })
     .then(function(plans) {
-      ['operate','guided'].forEach(function(plan) {
-        var el = document.querySelector('#price-' + plan + ' .price-val');
-        if (el && plans[plan]) {
-          el.textContent = plans[plan].replace('/mo','').trim();
-        }
-        var container = document.getElementById('price-' + plan);
-        if (container) container.classList.remove('price-loading');
-      });
+      var el = document.querySelector('#price-operate .price-val');
+      if (el && plans.operate) {
+        el.textContent = plans.operate.replace('/mo','').trim();
+      }
+      var container = document.getElementById('price-operate');
+      if (container) container.classList.remove('price-loading');
     })
     .catch(function() {
-      // API unreachable - hardcoded values already shown, just stop pulse
       document.querySelectorAll('.price-loading').forEach(function(el) {
         el.classList.remove('price-loading');
       });
