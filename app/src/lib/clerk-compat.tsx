@@ -31,7 +31,7 @@ type SessionUser = {
   twoFactorEnabled?: boolean;
   unsafeMetadata?: Record<string, unknown>;
   externalAccounts?: { provider: string }[];
-  publicMetadata: { role?: string; planTier?: string; setupDismissed?: boolean };
+  publicMetadata: { role?: string; planTier?: string; apiAccess?: string | null; setupDismissed?: boolean };
   emailAddresses: { emailAddress: string }[];
   primaryEmailAddress?: { emailAddress: string } | null;
   update: (data: Record<string, unknown>) => Promise<void>;
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           twoFactorEnabled: false,
           unsafeMetadata: {},
           externalAccounts,
-          publicMetadata: { role: 'customer', planTier: 'operate', setupDismissed: false },
+          publicMetadata: { role: 'customer', planTier: 'operate', apiAccess: null, setupDismissed: false },
           emailAddresses: data.user.email
             ? [{ emailAddress: data.user.email }]
             : [],
@@ -110,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: string | null;
         role: string;
         planTier: string;
+        apiAccess?: string | null;
         setupDismissed?: boolean;
       };
       setTokenCache({ token: j.token, exp: Date.now() + 50 * 60 * 1000 });
@@ -127,7 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         twoFactorEnabled: false,
         unsafeMetadata: {},
         externalAccounts,
-        publicMetadata: { role: j.role, planTier: j.planTier, setupDismissed: !!j.setupDismissed },
+        publicMetadata: {
+          role: j.role,
+          planTier: j.planTier,
+          apiAccess: j.apiAccess ?? null,
+          setupDismissed: !!j.setupDismissed,
+        },
         emailAddresses: j.email ? [{ emailAddress: j.email }] : [],
         primaryEmailAddress: j.email ? { emailAddress: j.email } : null,
         update: async () => {

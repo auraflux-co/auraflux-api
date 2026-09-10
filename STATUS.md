@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — API invite gate + Peaks on /v1; marketing developer docs rewrite.
+**Last Updated:** 2026-09-10 — API invite + Peaks /v1; fix clerk-compat apiAccess type for app deploy.
 
 
 
