@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Cache-bust one-plan peak→publish graphic on /plans.
+**Last Updated:** 2026-09-10 — Plans card: full 4:3 peak→publish graphic (no crop), wider card.
 
 
 

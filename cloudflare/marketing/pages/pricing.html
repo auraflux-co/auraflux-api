@@ -33,7 +33,7 @@ body{line-height:1.6}
 .plans{
   display:grid;
   grid-template-columns:1fr;
-  max-width:420px;
+  max-width:520px;
   margin:0 auto;
   gap:24px;
 }
@@ -43,10 +43,11 @@ body{line-height:1.6}
   display:flex;flex-direction:column;
 }
 .plan-img{
-  width:100%;display:block;height:200px;
+  width:100%;display:block;height:auto;
+  aspect-ratio:4/3;
   border-bottom:1px solid #e4e4e7;
-  object-fit:cover;object-position:center 35%;
-  background:#f4f4f5;
+  object-fit:contain;object-position:center;
+  background:#0b1426;
 }
 .plan-body{padding:28px 28px 24px;display:flex;flex-direction:column;flex:1;}
 .plan-name{
@@ -140,7 +141,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <div class="plans-wrap">
 <div class="plans">
   <div class="plan">
-    <img class="plan-img" src="/images/plan-auraflux-peaks-publish.png?v=2" alt="AuraFlux Peaks + publish plan">
+    <img class="plan-img" src="/images/plan-auraflux-peaks-publish.png?v=3" alt="AuraFlux Peaks + publish plan">
     <div class="plan-body">
       <div class="plan-name">AuraFlux</div>
       <div class="plan-title">Peaks + publish</div>
