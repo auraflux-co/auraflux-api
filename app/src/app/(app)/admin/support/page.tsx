@@ -7,7 +7,7 @@
  * Replies route to SMS (if session came via SMS) or web.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { Suspense, useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth, useUser } from '@/lib/clerk-compat';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -108,6 +108,14 @@ function MessageBubble({ msg }: { msg: SupportMessage }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function OperatorSupportInbox() {
+  return (
+    <Suspense fallback={<div className="p-6 af-caption text-muted-foreground">Loading support inbox…</div>}>
+      <OperatorSupportInboxInner />
+    </Suspense>
+  );
+}
+
+function OperatorSupportInboxInner() {
   const { getToken } = useAuth();
   const { user }     = useUser();
   const role         = (user?.publicMetadata?.role as string | undefined) ?? null;

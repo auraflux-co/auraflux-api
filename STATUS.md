@@ -2,44 +2,44 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
 
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
 
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
 
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -57,26 +57,26 @@
 
 ---
 
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
-**Last Updated:** 2026-09-10 — Auth client ignores Vercel [SENSITIVE] placeholders; NEXT_PUBLIC_APP_URL set non-sensitive on Vercel.
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
+**Last Updated:** 2026-09-10 — Suspense wrappers for useSearchParams on social/bulk + admin/support (Vercel prerender).
 **Branch:** main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.

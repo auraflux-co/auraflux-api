@@ -9,7 +9,7 @@
  *   3. POSTs the mappings to /social/bulk/save on save
  */
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/clerk-compat';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,14 @@ import {
 import { CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function BulkSocialPage() {
+  return (
+    <Suspense fallback={<PageShell><PageHeader title="Map YouTube channels" subtitle="Loading…" /></PageShell>}>
+      <BulkSocialPageInner />
+    </Suspense>
+  );
+}
+
+function BulkSocialPageInner() {
   const { getToken } = useAuth();
   const router       = useRouter();
   const params       = useSearchParams();
