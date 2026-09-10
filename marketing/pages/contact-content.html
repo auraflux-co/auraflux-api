@@ -120,7 +120,7 @@
 <!-- Hero -->
 <div class="ct-hero">
   <h1 >Get in Touch</h1>
-  <p data-editable="hero_subtext">Sales, support, partnerships, or feedback — we read every message.</p>
+  <p data-editable="hero_subtext">Sales, support, partnerships, or feedback - we read every message.</p>
 </div>
 
 <!-- Top: Form + Channels -->
@@ -141,7 +141,7 @@
       <div>
         <label for="cf-topic">Topic</label>
         <select id="cf-topic" name="topic">
-          <option value="">— Select a topic —</option>
+          <option value="">- Select a topic -</option>
           <option value="sales">Sales &amp; pricing</option>
           <option value="support">Technical support</option>
           <option value="partnership">Partnership or integration</option>
@@ -175,11 +175,11 @@
         });
         var data = await res.json();
         if (data.ok) {
-          btn.textContent = '✓ Sent'; msg.className = 'ct-form-msg ok'; msg.textContent = "Thanks — we'll be in touch shortly."; msg.style.display = 'block';
+          btn.textContent = '✓ Sent'; msg.className = 'ct-form-msg ok'; msg.textContent = "Thanks - we'll be in touch shortly."; msg.style.display = 'block';
           e.target.reset();
         } else { throw new Error(data.error || 'Submission failed'); }
       } catch(err) {
-        msg.className = 'ct-form-msg err'; msg.textContent = err.message || 'Something went wrong — email support@auraflux.co'; msg.style.display = 'block';
+        msg.className = 'ct-form-msg err'; msg.textContent = err.message || 'Something went wrong - email support@auraflux.co'; msg.style.display = 'block';
       }
       btn.disabled = false; btn.textContent = 'Send message';
     });
@@ -241,7 +241,7 @@
 
     <div class="ct-faq-card">
       <dt data-editable="faq_3_q">Can I connect multiple social accounts?</dt>
-      <dd data-editable="faq_3_a">Yes — connect all major platforms and target any job to one or more simultaneously.
+      <dd data-editable="faq_3_a">Yes - connect all major platforms and target any job to one or more simultaneously.
         <div class="ct-platform-badges">
           <span class="ct-badge" style="background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.2);color:#ff4444;">▶ YouTube</span>
           <span class="ct-badge" style="background:rgba(105,201,208,.07);border:1px solid rgba(105,201,208,.2);color:#69c9d0;">♪ TikTok</span>

@@ -1,14 +1,14 @@
-/* ── AuraFlux design tokens — Business Rocket structure, AuraFlux brand ─────
+/* ── AuraFlux design tokens - Business Rocket structure, AuraFlux brand ─────
  * Structure mirrors businessrocket/web (light canvas, zinc cards, slate-950
  * footer, frosted sticky nav). Brand accents stay AuraFlux gold + navy.
  * Marketing site is Cloudflare worker HTML/CSS (no Tailwind).
  * ────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Brand (AuraFlux) — map into BR primary/accent slots */
-  --brand-primary: #0b1220;       /* navy — BR uses #00274d here */
+  /* Brand (AuraFlux) - map into BR primary/accent slots */
+  --brand-primary: #0b1220;       /* navy - BR uses #00274d here */
   --brand-dark: #050a12;
-  --brand-accent: #f5c542;        /* gold — BR uses orange #ff6600 */
+  --brand-accent: #f5c542;        /* gold - BR uses orange #ff6600 */
   --brand-soft: #eef2f6;
   --brand-line: #e5e7eb;
   --brand-mist: #f9fafb;
@@ -18,7 +18,7 @@
   --paper: #ffffff;
   --paper-deep: #f4f4f5;          /* zinc-100-ish / zinc-50 sections */
   --ink: #111827;
-  --ink-muted: #334155;           /* slate-700 — readable body */
+  --ink-muted: #334155;           /* slate-700 - readable body */
   --ink-faint: #64748b;           /* slate-500 */
   --line: #e4e4e7;                /* zinc-200 */
   --line-soft: rgba(228, 228, 231, 0.9);
@@ -118,7 +118,7 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--line);
 }
 
-/* Primary CTA — BR solid dark, AF navy fill + gold available via .btn-accent */
+/* Primary CTA - BR solid dark, AF navy fill + gold available via .btn-accent */
 .btn-primary,
 .cta-primary,
 .nav-cta,

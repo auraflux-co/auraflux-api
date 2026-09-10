@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Marketing copy rewrite for current offering (Peaks + Operate/Guided/Managed).
+**Last Updated:** 2026-09-10 — Marketing em-dash cleanup after copy rewrite.
 
 
 
