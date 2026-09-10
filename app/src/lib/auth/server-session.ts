@@ -29,16 +29,18 @@ async function loadProfile(authUserId: string, email: string | null) {
       role: promoted ? 'superadmin' : 'customer',
       planTier: promoted ? 'managed' : 'operate',
       email,
+      apiAccess: promoted ? 'approved' : null,
     };
   }
   const { rows } = await p.query(
-    `SELECT account_id, role, plan_tier, email FROM user_profiles WHERE auth_user_id = $1 LIMIT 1`,
+    `SELECT account_id, role, plan_tier, email, api_access FROM user_profiles WHERE auth_user_id = $1 LIMIT 1`,
     [authUserId],
   );
   if (rows[0]) {
     const effectiveEmail = (rows[0].email as string) || email;
     let role = (rows[0].role as string) || 'customer';
     let planTier = (rows[0].plan_tier as string) || 'operate';
+    let apiAccess = (rows[0].api_access as string) || null;
     if (effectiveEmail && isSuperadminEmail(effectiveEmail) && role !== 'superadmin') {
       await p.query(
         `UPDATE user_profiles
@@ -48,12 +50,15 @@ async function loadProfile(authUserId: string, email: string | null) {
       );
       role = 'superadmin';
       planTier = 'managed';
+      apiAccess = 'approved';
     }
+    if (role === 'superadmin' && !apiAccess) apiAccess = 'approved';
     return {
       accountId: rows[0].account_id as string,
       role,
       planTier,
       email: effectiveEmail,
+      apiAccess,
     };
   }
   const promoted = !!(email && isSuperadminEmail(email));
@@ -62,6 +67,7 @@ async function loadProfile(authUserId: string, email: string | null) {
     role: promoted ? 'superadmin' : 'customer',
     planTier: promoted ? 'managed' : 'operate',
     email,
+    apiAccess: promoted ? 'approved' : null,
   };
 }
 
@@ -93,6 +99,7 @@ export async function currentUser() {
     publicMetadata: {
       role: profile.role,
       planTier: profile.planTier,
+      apiAccess: profile.apiAccess || null,
       setupDismissed: false,
     },
   };

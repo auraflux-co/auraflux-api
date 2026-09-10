@@ -43,6 +43,7 @@ type ProfileRow = {
   planTier: string;
   email: string | null;
   setupDismissed: boolean;
+  apiAccess: string | null;
 };
 
 /** Promote allowlisted emails to superadmin even if first login created a customer row. */
@@ -78,11 +79,12 @@ async function ensureProfile(authUserId: string, email: string | null): Promise<
       planTier: promoted ? 'managed' : 'operate',
       email,
       setupDismissed: false,
+      apiAccess: promoted ? 'approved' : null,
     };
   }
 
   const existing = await p.query(
-    `SELECT account_id, role, plan_tier, email, setup_dismissed FROM user_profiles WHERE auth_user_id = $1 LIMIT 1`,
+    `SELECT account_id, role, plan_tier, email, setup_dismissed, api_access FROM user_profiles WHERE auth_user_id = $1 LIMIT 1`,
     [authUserId],
   );
   if (existing.rows[0]) {
@@ -101,13 +103,14 @@ async function ensureProfile(authUserId: string, email: string | null): Promise<
       planTier: promoted.planTier,
       email: effectiveEmail,
       setupDismissed: !!row.setup_dismissed,
+      apiAccess: (row.api_access as string) || (promoted.role === 'superadmin' ? 'approved' : null),
     };
   }
 
   // Link legacy Clerk account by email (seeded pending:* or legacy_clerk_id rows)
   if (email) {
     const legacy = await p.query(
-      `SELECT auth_user_id, account_id, role, plan_tier, email, legacy_clerk_id, setup_dismissed
+      `SELECT auth_user_id, account_id, role, plan_tier, email, legacy_clerk_id, setup_dismissed, api_access
          FROM user_profiles
         WHERE lower(email) = lower($1)
         LIMIT 1`,
@@ -134,6 +137,7 @@ async function ensureProfile(authUserId: string, email: string | null): Promise<
         planTier: promoted.planTier,
         email: (row.email as string) || email,
         setupDismissed: !!row.setup_dismissed,
+        apiAccess: (row.api_access as string) || (promoted.role === 'superadmin' ? 'approved' : null),
       };
     }
   }
@@ -149,7 +153,10 @@ async function ensureProfile(authUserId: string, email: string | null): Promise<
      ON CONFLICT (auth_user_id) DO NOTHING`,
     [authUserId, accountId, email, role, planTier],
   );
-  return { accountId, role, planTier, email, setupDismissed: false };
+  return {
+    accountId, role, planTier, email, setupDismissed: false,
+    apiAccess: promoted ? 'approved' : null,
+  };
 }
 
 export async function GET() {
@@ -177,6 +184,7 @@ export async function GET() {
       email: profile.email || session.user.email || null,
       role: profile.role,
       planTier: profile.planTier,
+      apiAccess: profile.apiAccess,
     },
     secret,
     60 * 60,
@@ -189,6 +197,7 @@ export async function GET() {
     email: profile.email || session.user.email || null,
     role: profile.role,
     planTier: profile.planTier,
+    apiAccess: profile.apiAccess,
     setupDismissed: !!profile.setupDismissed,
   });
 }

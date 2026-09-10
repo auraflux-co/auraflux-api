@@ -13,6 +13,8 @@ export default async function handler(req, res) {
     const name = String(body.name || '').slice(0, 200);
     const email = String(body.email || '').slice(0, 200);
     const message = String(body.message || '').slice(0, 2000);
+    const topic = String(body.topic || '').slice(0, 64);
+    const source = String(body.source || 'auraflux.co').slice(0, 64);
 
     if (!email || !message) {
       return res.status(400).json({ ok: false, error: 'email and message are required' });
@@ -22,7 +24,7 @@ export default async function handler(req, res) {
     const upstream = await fetch(`${apiOrigin}/api/public/contact`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, message, source: 'auraflux.co' }),
+      body: JSON.stringify({ name, email, message, topic, source }),
       signal: AbortSignal.timeout(8000),
     });
 

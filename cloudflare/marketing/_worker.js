@@ -695,6 +695,8 @@ async function handleContactForm(request) {
     const name    = String(data.name    || '').slice(0, 200);
     const email   = String(data.email   || '').slice(0, 200);
     const message = String(data.message || '').slice(0, 2000);
+    const topic   = String(data.topic   || '').slice(0, 64);
+    const source  = String(data.source  || 'auraflux.co').slice(0, 64);
 
     if (!email || !message) {
       return json({ ok: false, error: 'email and message are required' }, 400);
@@ -703,7 +705,7 @@ async function handleContactForm(request) {
     const resp = await fetch(`${API_ORIGIN}/api/public/contact`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, message, source: 'auraflux.co' }),
+      body: JSON.stringify({ name, email, message, topic, source }),
       signal: AbortSignal.timeout(8000),
     });
 

@@ -11,7 +11,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/clerk-compat';
 import { apiFetch } from '@/lib/api';
-import { usePlan } from '@/contexts/plan-context';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -120,7 +119,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function DeveloperPage() {
   const { isLoaded, getToken } = useAuth();
-  const { planTier } = usePlan();
   const [apiKey, setApiKey] = useState<string | null>(null);
 
   const loadKey = useCallback(async () => {
@@ -147,21 +145,38 @@ export default function DeveloperPage() {
       body ? `  -d '${body}'` : null,
     ].filter(Boolean).join('\n');
 
-  const isOperate = planTier === 'operate' || planTier === 'custom' || !planTier;
-
   return (
     <PageShell maxWidth="4xl">
       <PageHeader
         title="API Reference"
-        subtitle={`Full reference for the AuraFlux API. Base URL: ${BASE_URL}`}
+        subtitle={`Peaks → Short → publish. Base URL: ${BASE_URL}. Access is invite-only.`}
       />
+
+      <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
+        <CardContent className="pt-4 space-y-2">
+          <p className="text-sm font-medium">API access is by invite</p>
+          <p className="text-sm text-muted-foreground">
+            Request review for platform-signal Peaks, then create keys at{' '}
+            <a href="/settings/api-keys" className="text-primary hover:underline">Settings → API Keys</a>
+            {' '}once approved.
+          </p>
+          <a
+            href="https://auraflux.co/contact?topic=api_invite"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex text-sm font-medium text-primary hover:underline"
+          >
+            Request API access →
+          </a>
+        </CardContent>
+      </Card>
 
       {/* Quick start */}
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="pb-2"><CardTitle className="text-sm">Quick start</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Pass your API key as a Bearer token on every request. Get or create keys at{' '}
+            Authenticate with Bearer af_live_…. Optional brand header: X-Brand-Id. Flow: analyze → stage → jobs → approve-publish. Keys at{' '}
             <a href="/settings/api-keys" className="text-primary hover:underline">Settings → API Keys</a>.
           </p>
           <CodeBlock code={`curl ${BASE_URL}/account \\\n  -H "${authHeader}"`} />
@@ -178,12 +193,52 @@ export default function DeveloperPage() {
         />
       </Section>
 
+      <Section title="Peaks (platform signal)">
+        <Endpoint
+          method="GET" path="/peaks/vods" title="List VODs"
+          description="List recent YouTube or Twitch VODs for the brand channel."
+          response={JSON.stringify({ ok: true, platform: 'youtube', count: 1, vods: [{ vodId: '…', title: '…' }] }, null, 2)}
+          curl={`curl "${BASE_URL}/peaks/vods?platform=youtube" \\\n  -H "${authHeader}"`}
+        />
+        <Endpoint
+          method="POST" path="/peaks/analyze" title="Analyze VOD peaks"
+          description="YouTube Most Replayed or Twitch chat heatmap — real platform signal, not AI guessing."
+          request={JSON.stringify({ platform: 'youtube', vodUrl: 'https://www.youtube.com/watch?v=…', maxPeaks: 8 }, null, 2)}
+          response={JSON.stringify({ ok: true, sessionId: 123, peaks: [] }, null, 2)}
+          curl={curl('POST', '/peaks/analyze', JSON.stringify({ platform: 'youtube', vodUrl: 'https://www.youtube.com/watch?v=…', maxPeaks: 8 }))}
+        />
+        <Endpoint
+          method="GET" path="/peaks/sessions/:id/segments" title="List segments"
+          description="Fetch stored segments for an analysis session."
+          response={JSON.stringify({ ok: true, segments: [] }, null, 2)}
+          curl={curl('GET', '/peaks/sessions/123/segments')}
+        />
+        <Endpoint
+          method="POST" path="/peaks/stage" title="Stage VOD window"
+          description="Stage a trimmed VOD window to R2 for Short compile."
+          request={JSON.stringify({ vodUrl: 'https://www.youtube.com/watch?v=…', startSec: 120, endSec: 165 }, null, 2)}
+          response={JSON.stringify({ ok: true, stagedAssetId: '…' }, null, 2)}
+          curl={curl('POST', '/peaks/stage', JSON.stringify({ vodUrl: 'https://www.youtube.com/watch?v=…', startSec: 120, endSec: 165 }))}
+        />
+        <Endpoint
+          method="GET" path="/peaks/kick" title="Kick CCV peaks"
+          description="Recent Kick concurrent-viewer peaks for the brand."
+          response={JSON.stringify({ ok: true, peaks: [] }, null, 2)}
+          curl={curl('GET', '/peaks/kick')}
+        />
+        <Endpoint
+          method="GET" path="/peaks/twitch-ccv" title="Twitch CCV peaks"
+          description="Recent Twitch concurrent-viewer peaks for the brand."
+          response={JSON.stringify({ ok: true, peaks: [] }, null, 2)}
+          curl={curl('GET', '/peaks/twitch-ccv')}
+        />
+      </Section>
+
       {/* Jobs */}
-      <Section title="Jobs">
+      <Section title="Jobs & publish">
         <Endpoint
           method="POST" path="/jobs" title="Submit a job"
-          description="Submit a new video production job. Returns immediately with a jobId — poll GET /jobs/:id to track progress. Credits are deducted at submission."
-          credits="1–3 credits"
+          description="Submit a production job (including Short compile after Peaks stage). Poll GET /jobs/:id for progress. Fair-use job-start limits apply."
           request={JSON.stringify({
             entry: 'fetch',
             url: 'https://clips.twitch.tv/your-clip',
@@ -329,33 +384,14 @@ export default function DeveloperPage() {
         </Card>
       </Section>
 
-      {/* Rate limits & credits */}
-      <Section title="Rate limits & credit costs">
+      <Section title="Fair use & rate limits">
         <Card>
           <CardContent className="pt-4 space-y-3 text-sm text-muted-foreground">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">Rate limits</p>
-                <ul className="space-y-1 text-xs">
-                  <li>60 API requests / minute</li>
-                  <li>10 concurrent job submissions</li>
-                  <li>500MB max upload size</li>
-                </ul>
-              </div>
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">Credit costs per job</p>
-                <ul className="space-y-1 text-xs">
-                  <li>Short-form, single clip — <strong>1 credit</strong></li>
-                  <li>Long-form or multi-clip — <strong>2 credits</strong></li>
-                  <li>Video generation (WAN) — <strong>3 credits</strong></li>
-                </ul>
-              </div>
-            </div>
-            <p className="text-xs">
-              Check your balance with <code className="bg-muted px-1 py-0.5 rounded">GET /account</code>.
-              Purchase additional credits on the{' '}
-              <a href="/credits" className="text-primary hover:underline">Credits page</a>.
-            </p>
+            <ul className="space-y-1 text-xs">
+              <li>60 API requests / minute per key</li>
+              <li>Terms fair use: 1 brand, 2 concurrent jobs, 10 job starts/hr, 20 Peaks analyses/hr</li>
+              <li>See <a href="https://auraflux.co/terms" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Terms of Service</a></li>
+            </ul>
           </CardContent>
         </Card>
       </Section>

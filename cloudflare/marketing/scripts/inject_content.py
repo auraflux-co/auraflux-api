@@ -308,8 +308,7 @@ for filename, (content_key, extra_patch) in PAGES.items():
             })
         if content_key == 'plans':
             html = patch_ctas(html, flat, {
-                'operate_cta': ('operate.cta_label', 'operate.cta_url', 'operate.cta_style'),
-                'guided_cta':  ('guided.cta_label',  'guided.cta_url',  'guided.cta_style'),
+                'operate_cta': ('plan.cta_label', 'plan.cta_url', 'plan.cta_style'),
                 'managed_cta': ('managed.cta_label', 'managed.cta_url', 'managed.cta_style'),
             })
         if content_key == 'home':

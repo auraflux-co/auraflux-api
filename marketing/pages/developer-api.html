@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>API Reference. AuraFlux</title>
-<meta name="description" content="Full reference for the AuraFlux REST API. Submit jobs, track production status, manage templates, and publish directly to platforms.">
+<title>Developer API — Peaks by invite. AuraFlux</title>
+<meta name="description" content="AuraFlux Developer API: platform-signal Peaks (YouTube Most Replayed, Twitch chat, Kick CCV), Short pipeline, and publish. Access by invite.">
 <link rel="canonical" href="https://auraflux.co/developer-api">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E"></script>
@@ -136,8 +136,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <div class="dev-wrap">
 
   <div class="dev-hero">
-    <h1>API Reference</h1>
-    <p>Full reference for the AuraFlux REST API. Submit jobs, track production, manage templates, and publish to any platform - all programmable.</p>
+    <h1>Developer API</h1>
+    <p>Program Peaks from real platform signal data — YouTube Most Replayed, Twitch chat spikes, Kick CCV — then Short compile and publish. Not AI-guessed viral moments.</p>
   </div>
 
   <div class="dev-base">
@@ -146,23 +146,113 @@ ${FRAMER_NAV || FALLBACK_NAV}
   </div>
 
   <div class="dev-auth-card">
-    <div style="font-size:1.2rem;flex-shrink:0;">🔑</div>
-    <p><strong>Authentication:</strong> Pass your API key as a Bearer token on every request - <code style="background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;color:#f5c542;">Authorization: Bearer af_live_YOUR_KEY</code>. Get or create API keys inside your account at <a href="https://app.auraflux.co/settings/api-keys" style="color:#f5c542;">Settings → API Keys</a>. The AuraFlux plan includes full API access.</p>
+    <div style="font-size:1.2rem;flex-shrink:0;">✉</div>
+    <p><strong>Invite only.</strong> API access is reviewed for tech buyers who need platform-signal Peaks. <a href="/contact?topic=api_invite" style="color:#f5c542;">Request API access</a>, then create keys at <a href="https://app.auraflux.co/settings/api-keys" style="color:#f5c542;">Settings → API Keys</a> once approved. Authenticate with <code style="background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;color:#f5c542;">Authorization: Bearer af_live_YOUR_KEY</code>. Optional brand scope: <code style="background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;color:#f5c542;">X-Brand-Id</code>.</p>
+  </div>
+
+  <!-- PEAKS -->
+  <div class="dev-section">
+    <div class="dev-section-title">Peaks (platform signal)</div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/peaks/vods</code>
+        <span class="dev-endpoint-title">List VODs</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">List recent YouTube or Twitch VODs for the brand channel. Query: <code>platform</code>=youtube|twitch, optional <code>handle</code>, <code>limit</code>.</p>
+        <div class="dev-code-label">cURL</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl "https://api.auraflux.co/v1/peaks/vods?platform=youtube" \
+  -H "Authorization: Bearer af_live_YOUR_KEY"</div>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-post">POST</span>
+        <code class="dev-path">/peaks/analyze</code>
+        <span class="dev-endpoint-title">Analyze VOD peaks</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Run YouTube Most Replayed or Twitch chat heatmap analysis. Returns ranked peak segments for Short production. Subject to fair-use Peaks analysis limits in the Terms.</p>
+        <div class="dev-grid">
+          <div>
+            <div class="dev-code-label">Request body</div>
+            <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>{
+  "platform": "youtube",
+  "vodUrl": "https://www.youtube.com/watch?v=…",
+  "streamer": "yourbrand",
+  "maxPeaks": 8,
+  "targetSec": 45
+}</div>
+          </div>
+          <div>
+            <div class="dev-code-label">Flow</div>
+            <div class="dev-code">analyze → stage → POST /jobs → approve-publish</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/peaks/sessions/:id/segments</code>
+        <span class="dev-endpoint-title">List segments</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Fetch stored segments for an analysis session id returned by <code>/peaks/analyze</code>.</p>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-post">POST</span>
+        <code class="dev-path">/peaks/stage</code>
+        <span class="dev-endpoint-title">Stage VOD window</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Stage a trimmed VOD window to R2 for Short compile. Same contract as the in-app Peaks stage step.</p>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/peaks/kick</code>
+        <span class="dev-endpoint-title">Kick CCV peaks</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Recent Kick concurrent-viewer peaks for the brand channel (captured while live).</p>
+      </div>
+    </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/peaks/twitch-ccv</code>
+        <span class="dev-endpoint-title">Twitch CCV peaks</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Recent Twitch concurrent-viewer peaks for the brand channel.</p>
+      </div>
+    </div>
   </div>
 
   <!-- JOBS -->
   <div class="dev-section">
-    <div class="dev-section-title">Jobs</div>
+    <div class="dev-section-title">Jobs &amp; publish</div>
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
         <span class="dev-method m-post">POST</span>
         <code class="dev-path">/jobs</code>
         <span class="dev-endpoint-title">Submit a job</span>
-        <span class="dev-credits-badge">1-3 credits</span>
+
       </div>
       <div class="dev-endpoint-body">
-        <p class="dev-desc">Submit a new video production job. Returns immediately with a <code>jobId</code> - poll <code>GET /jobs/:id</code> to track progress. Credits are deducted at submission.</p>
+        <p class="dev-desc">Submit a new video production job (including Short compile after Peaks stage). Returns immediately with a <code>jobId</code> — poll <code>GET /jobs/:id</code> to track progress. Subject to fair-use job-start limits.</p>
         <div class="dev-grid">
           <div>
             <div class="dev-code-label">Request body</div>
@@ -437,13 +527,18 @@ ${FRAMER_NAV || FALLBACK_NAV}
     </div>
   </div>
 
+  <div class="dev-section">
+    <div class="dev-section-title">Fair use</div>
+    <p class="dev-desc" style="margin:0;">Self-serve is unlimited Peaks+publish for one brand, with rate limits in the <a href="/terms" style="color:#f5c542;">Terms</a> (concurrent jobs, hourly job starts, Peaks analyses). API RPM limits also apply per key.</p>
+  </div>
+
   <!-- CTA -->
   <div class="dev-cta">
     <div class="dev-cta-text">
-      <h3>Ready to start building?</h3>
-      <p>Get your API key and start submitting jobs in minutes on the AuraFlux plan.</p>
+      <h3>Request API access</h3>
+      <p>Tell us your brand, stack, and Peaks use case. We review invites for platform-signal buyers.</p>
     </div>
-    <a href="https://api.auraflux.co/api/public/checkout?plan=operate">Get API Access</a>
+    <a href="/contact?topic=api_invite">Request access</a>
   </div>
 
 </div>

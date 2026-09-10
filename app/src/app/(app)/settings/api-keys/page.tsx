@@ -24,6 +24,8 @@ function isOperatePlan(tier: string | null | undefined) {
   return tier === 'operate' || tier === 'custom';
 }
 
+const INVITE_URL = 'https://auraflux.co/contact?topic=api_invite';
+
 interface ApiKey {
   id: string;
   key_prefix: string;
@@ -48,6 +50,11 @@ export default function ApiKeysPage() {
   const clerkPlanTier = normaliseTier(user?.publicMetadata?.planTier as string | undefined);
   const effectivePlan = planTier ?? clerkPlanTier;
   const canUseApiKeys = isOperatePlan(effectivePlan);
+  const metaApiAccess = (user?.publicMetadata?.apiAccess as string | undefined) || null;
+  const role = (user?.publicMetadata?.role as string | undefined) || null;
+  const [apiApproved, setApiApproved] = useState(
+    role === 'superadmin' || String(metaApiAccess || '').toLowerCase() === 'approved',
+  );
 
   const { isLoaded, getToken } = useAuth();
   const [keys, setKeys]               = useState<ApiKey[]>([]);
@@ -66,8 +73,14 @@ export default function ApiKeysPage() {
     if (!isLoaded || !canUseApiKeys) return;
     try {
       const token = await getToken();
-      const data = await apiFetch<{ ok: boolean; apiKeys: ApiKey[] }>('/account/api-keys', { token: token ?? undefined });
-      setKeys(data.apiKeys || []);
+      const [keysData, accessData] = await Promise.all([
+        apiFetch<{ ok: boolean; apiKeys: ApiKey[] }>('/account/api-keys', { token: token ?? undefined }),
+        apiFetch<{ ok: boolean; approved: boolean }>('/account/api-access', { token: token ?? undefined }).catch(() => null),
+      ]);
+      setKeys(keysData.apiKeys || []);
+      if (accessData && typeof accessData.approved === 'boolean') {
+        setApiApproved(accessData.approved);
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load API keys');
     } finally {
@@ -166,7 +179,29 @@ export default function ApiKeysPage() {
         subtitle={<>Use API keys to authenticate requests to <code className="af-caption bg-muted px-1 py-0.5 rounded">https://api.auraflux.co/v1/</code>. Keys are shown once at creation — store them securely.</>}
       />
 
-      {/* New key reveal */}
+      {!apiApproved && (
+        <Card className="border-amber-500/40 bg-amber-50 dark:bg-amber-950/20">
+          <CardContent className="pt-4 space-y-2">
+            <p className="af-label font-medium">API access is invite-only</p>
+            <p className="af-body">
+              Peaks uses real platform signal data (YouTube Most Replayed, Twitch chat, Kick CCV) —
+              not AI-guessed viral moments. Request access so we can review your stack and use case.
+            </p>
+            <a
+              href={INVITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+            >
+              Request API access
+            </a>
+            {keys.length > 0 && (
+              <p className="af-caption">Existing keys below still work. New keys require approval.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {newKeyResult && (
         <Card className="border-green-500/40 bg-green-50 dark:bg-green-950/20">
           <CardContent className="pt-4 space-y-3">
@@ -194,38 +229,46 @@ export default function ApiKeysPage() {
         </Card>
       )}
 
-      {/* Create form */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="af-subhead">Create new API key</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-1.5">
-            <Label className="af-caption">Key name</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="e.g. Production bot"
-                value={newKeyName}
-                onChange={e => setNewKeyName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleCreate()}
-                className="h-8 text-sm"
-              />
-              <Button
-                size="sm"
-                onClick={handleCreate}
-                disabled={creating}
-              >
-                {creating ? 'Creating…' : 'Create key'}
-              </Button>
+      {apiApproved && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="af-subhead">Create new API key</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="af-caption">Key name</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g. Production bot"
+                  value={newKeyName}
+                  onChange={e => setNewKeyName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleCreate()}
+                  className="h-8 text-sm"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleCreate}
+                  disabled={creating}
+                >
+                  {creating ? 'Creating…' : 'Create key'}
+                </Button>
+              </div>
             </div>
-          </div>
-          {error && <p className="af-caption text-destructive">{formatUserError(error)}</p>}
-        </CardContent>
-      </Card>
+            {error && <p className="af-caption text-destructive">{formatUserError(error)}</p>}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Keys list */}
+      {!apiApproved && error && (
+        <p className="af-caption text-destructive">{formatUserError(error)}</p>
+      )}
+
       <div className="space-y-2">
         <h2 className="af-subhead">Active keys</h2>
         {keys.length === 0 ? (
-          <p className="af-body">No API keys yet. Create one above to get started.</p>
+          <p className="af-body">
+            {apiApproved
+              ? 'No API keys yet. Create one above to get started.'
+              : 'No API keys yet. Request access to create your first key.'}
+          </p>
         ) : (
           <Card>
             <CardContent className="p-0">
@@ -261,7 +304,6 @@ export default function ApiKeysPage() {
         )}
       </div>
 
-      {/* Docs callout */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-4 space-y-1">
           <p className="af-label font-medium">Using the API</p>

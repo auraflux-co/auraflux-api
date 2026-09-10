@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Marketing unlimited Peaks+publish; ToS fair-use hourly limits.
+**Last Updated:** 2026-09-10 — API invite gate + Peaks on /v1; marketing developer docs rewrite.
 
 
 

@@ -146,6 +146,7 @@
           <option value="support">Technical support</option>
           <option value="partnership">Partnership or integration</option>
           <option value="feedback">Product feedback</option>
+          <option value="api_invite">API access request</option>
           <option value="other">Other</option>
         </select>
       </div>
@@ -157,11 +158,22 @@
       <div id="cf-msg" style="display:none" class="ct-form-msg"></div>
     </form>
     <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('topic') === 'api_invite') {
+        var sel = document.getElementById('cf-topic');
+        if (sel) sel.value = 'api_invite';
+        var ta = document.getElementById('cf-message');
+        if (ta && !ta.value) {
+          ta.placeholder = 'Tell us your brand, stack, and how you want to use Peaks + publish via API...';
+        }
+      }
+    })();
     document.getElementById('contact-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       var btn = document.getElementById('cf-submit');
       var msg = document.getElementById('cf-msg');
-      btn.disabled = true; btn.textContent = 'Sending…';
+      btn.disabled = true; btn.textContent = 'Sending...';
       msg.style.display = 'none';
       try {
         var res = await fetch('/api/contact', {
@@ -170,16 +182,23 @@
           body: JSON.stringify({
             name:    document.getElementById('cf-name').value,
             email:   document.getElementById('cf-email').value,
+            topic:   document.getElementById('cf-topic').value || '',
+            source:  (new URLSearchParams(window.location.search).get('topic') === 'api_invite' ? 'api_invite' : 'auraflux.co'),
             message: (document.getElementById('cf-topic').value ? '[' + document.getElementById('cf-topic').value + '] ' : '') + document.getElementById('cf-message').value,
           })
         });
         var data = await res.json();
         if (data.ok) {
-          btn.textContent = '✓ Sent'; msg.className = 'ct-form-msg ok'; msg.textContent = "Thanks - we'll be in touch shortly."; msg.style.display = 'block';
+          btn.textContent = 'Sent';
+          msg.className = 'ct-form-msg ok';
+          msg.textContent = 'Thanks - we will be in touch shortly.';
+          msg.style.display = 'block';
           e.target.reset();
         } else { throw new Error(data.error || 'Submission failed'); }
-      } catch(err) {
-        msg.className = 'ct-form-msg err'; msg.textContent = err.message || 'Something went wrong - email support@auraflux.co'; msg.style.display = 'block';
+      } catch (err) {
+        msg.className = 'ct-form-msg err';
+        msg.textContent = err.message || 'Something went wrong - email support@auraflux.co';
+        msg.style.display = 'block';
       }
       btn.disabled = false; btn.textContent = 'Send message';
     });
