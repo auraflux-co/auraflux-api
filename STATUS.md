@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Plans card: full 4:3 peak→publish graphic (no crop), wider card.
+**Last Updated:** 2026-09-10 — Plan graphic: Short preview is streamer clip, not typewriter.
 
 
 
