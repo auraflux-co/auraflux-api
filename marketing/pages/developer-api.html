@@ -137,7 +137,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
   <div class="dev-hero">
     <h1>Developer API</h1>
-    <p>Program Peaks from real platform signal data — YouTube Most Replayed, Twitch chat spikes, Kick CCV — then Short compile and publish. Not AI-guessed viral moments.</p>
+    <p>AuraFlux is two parts in one API: <strong>Peaks</strong> (real platform signal — YouTube Most Replayed, Twitch chat, Kick CCV) and <strong>Short edits</strong> (C1–C11 compose presets plus captions, grade, effects, audio, branding, TTS). Not AI-guessed viral moments.</p>
   </div>
 
   <div class="dev-base">
@@ -189,7 +189,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
           </div>
           <div>
             <div class="dev-code-label">Flow</div>
-            <div class="dev-code">analyze → stage → POST /jobs → approve-publish</div>
+            <div class="dev-code">analyze → stage → GET /peaks/presets → POST /jobs (short_compile_clips + C1–C11) → approve-publish</div>
           </div>
         </div>
       </div>
@@ -238,6 +238,27 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <p class="dev-desc">Recent Twitch concurrent-viewer peaks for the brand channel.</p>
       </div>
     </div>
+
+    <div class="dev-endpoint">
+      <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="dev-method m-get">GET</span>
+        <code class="dev-path">/peaks/presets</code>
+        <span class="dev-endpoint-title">C1–C11 edit presets</span>
+      </div>
+      <div class="dev-endpoint-body">
+        <p class="dev-desc">Part 2 — Short compose presets after you stage a peak. Default for Peaks Shorts: <code>fableflow_speed</code> (C9). Also: brand-pad (C1), full bleed (C2), ranked Short/VOD (C3/C4), karaoke clean (C5), long comp VOD (C6), custom (C7), facecam split (C8), reaction (C10), then/now stack (C11).</p>
+        <div class="dev-code-label">Then compile</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X POST https://api.auraflux.co/v1/jobs \
+  -H "Authorization: Bearer af_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"entry":"fetch","url":"https://r2…/staged.mp4","productionPath":"short_compile_clips","featureConfig":{"compose":{"preset":"fableflow_speed"}},"format":"short","staging":true,"platforms":["youtube"]}'</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dev-section">
+    <div class="dev-section-title">More edit knobs</div>
+    <p class="dev-desc" style="margin-bottom:12px;">Beyond C1–C11, <code>GET /v1/feature-inputs</code> documents captions, color grade, effects, audio, branding/chrome, layout, TTS, thumbnail, and publish metadata. Use <code>addOns</code> / feature fields on <code>POST /v1/jobs</code>.</p>
   </div>
 
   <!-- JOBS -->

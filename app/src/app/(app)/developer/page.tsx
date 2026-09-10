@@ -149,7 +149,7 @@ export default function DeveloperPage() {
     <PageShell maxWidth="4xl">
       <PageHeader
         title="API Reference"
-        subtitle={`Peaks → Short → publish. Base URL: ${BASE_URL}. Access is invite-only.`}
+        subtitle={`Peaks + C1–C11 edits → publish. Base URL: ${BASE_URL}. Access is invite-only.`}
       />
 
       <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
@@ -176,7 +176,7 @@ export default function DeveloperPage() {
         <CardHeader className="pb-2"><CardTitle className="text-sm">Quick start</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Authenticate with Bearer af_live_…. Optional brand header: X-Brand-Id. Flow: analyze → stage → jobs → approve-publish. Keys at{' '}
+            Authenticate with Bearer af_live_…. Optional brand header: X-Brand-Id. Flow: analyze → stage → pick C1–C11 preset → short_compile_clips job → approve-publish. Keys at{' '}
             <a href="/settings/api-keys" className="text-primary hover:underline">Settings → API Keys</a>.
           </p>
           <CodeBlock code={`curl ${BASE_URL}/account \\\n  -H "${authHeader}"`} />
@@ -231,6 +231,30 @@ export default function DeveloperPage() {
           description="Recent Twitch concurrent-viewer peaks for the brand."
           response={JSON.stringify({ ok: true, peaks: [] }, null, 2)}
           curl={curl('GET', '/peaks/twitch-ccv')}
+        />
+        <Endpoint
+          method="GET" path="/peaks/presets" title="C1–C11 edit presets"
+          description="Part 2 of AuraFlux: Short compose presets after Peaks stage. Default Peaks Short: fableflow_speed (C9)."
+          response={JSON.stringify({ ok: true, defaultKey: 'fableflow_speed', presets: [{ code: 'C9', key: 'fableflow_speed', label: 'FableFlow Speed' }] }, null, 2)}
+          curl={curl('GET', '/peaks/presets')}
+        />
+      </Section>
+
+      <Section title="Short compile (after Peaks)">
+        <Endpoint
+          method="POST" path="/jobs" title="Compile staged peak with preset"
+          description="Pass productionPath short_compile_clips and featureConfig.compose.preset (C1–C11 key). Use the staged R2 URL from /peaks/stage. Also see GET /feature-inputs for captions, grade, effects, audio, branding, TTS."
+          request={JSON.stringify({
+            entry: 'fetch',
+            url: 'https://r2…/staged.mp4',
+            productionPath: 'short_compile_clips',
+            featureConfig: { compose: { preset: 'fableflow_speed' } },
+            format: 'short',
+            staging: true,
+            platforms: ['youtube'],
+          }, null, 2)}
+          response={JSON.stringify({ jobId: 'job_abc123', status: 'queued' }, null, 2)}
+          curl={curl('POST', '/jobs', JSON.stringify({ entry: 'fetch', url: 'https://r2…/staged.mp4', productionPath: 'short_compile_clips', featureConfig: { compose: { preset: 'fableflow_speed' } }, staging: true, platforms: ['youtube'] }))}
         />
       </Section>
 

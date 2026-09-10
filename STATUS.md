@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — API invite + Peaks /v1; fix clerk-compat apiAccess type for app deploy.
+**Last Updated:** 2026-09-10 — Peaks+/v1 + C1–C11 edit presets as one wrap (presets endpoint + short_compile on /v1/jobs).
 
 
 

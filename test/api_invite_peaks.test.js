@@ -67,4 +67,15 @@ test('developer_peaks router mounts expected paths', () => {
   assert.ok(paths.some((p) => p.includes('/peaks/stage')));
   assert.ok(paths.some((p) => p.includes('/peaks/kick')));
   assert.ok(paths.some((p) => p.includes('/peaks/twitch-ccv')));
+  assert.ok(paths.some((p) => p.includes('/peaks/presets')));
+});
+
+test('listComposePresets returns C1–C11 keys', () => {
+  const { listComposePresets } = require('../lib/routes/content_library');
+  const presets = listComposePresets();
+  const keys = presets.map((p) => p.key);
+  assert.ok(keys.includes('fableflow_speed'));
+  assert.ok(keys.includes('classic_blur_pad'));
+  assert.ok(presets.some((p) => p.code === 'C9'));
+  assert.ok(presets.length >= 11);
 });
