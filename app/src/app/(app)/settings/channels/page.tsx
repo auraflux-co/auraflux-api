@@ -502,19 +502,28 @@ function SourceChannelsPageInner() {
                       {p.status ? ` · ${p.status}` : ''}
                     </p>
                   </div>
-                  {openUrl ? (
+                  <div className="flex flex-wrap gap-2">
+                    {openUrl ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(openUrl, '_blank', 'noopener,noreferrer')}
+                      >
+                        Open VOD at peak
+                      </Button>
+                    ) : (
+                      <span className="af-caption text-muted-foreground">
+                        {p.status === 'live' ? 'Live — capturing…' : 'Linking VOD…'}
+                      </span>
+                    )}
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
-                      onClick={() => window.open(openUrl, '_blank', 'noopener,noreferrer')}
+                      onClick={() => { window.location.href = '/peaks?platform=twitch'; }}
                     >
-                      Open VOD at peak
+                      Create Short
                     </Button>
-                  ) : (
-                    <span className="af-caption text-muted-foreground">
-                      {p.status === 'live' ? 'Live — capturing…' : 'Linking VOD…'}
-                    </span>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
               );
@@ -557,19 +566,28 @@ function SourceChannelsPageInner() {
                       {p.status ? ` · ${p.status}` : ''}
                     </p>
                   </div>
-                  {openUrl ? (
+                  <div className="flex flex-wrap gap-2">
+                    {openUrl ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(openUrl, '_blank', 'noopener,noreferrer')}
+                      >
+                        Open VOD at peak
+                      </Button>
+                    ) : (
+                      <span className="af-caption text-muted-foreground">
+                        {p.status === 'live' ? 'Live — capturing…' : 'Linking VOD…'}
+                      </span>
+                    )}
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
-                      onClick={() => window.open(openUrl, '_blank', 'noopener,noreferrer')}
+                      onClick={() => { window.location.href = '/peaks?platform=kick'; }}
                     >
-                      Open VOD at peak
+                      Create Short
                     </Button>
-                  ) : (
-                    <span className="af-caption text-muted-foreground">
-                      {p.status === 'live' ? 'Live — capturing…' : 'Linking VOD…'}
-                    </span>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
               );

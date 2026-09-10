@@ -2,44 +2,44 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Kick CCV (iss_U1ju7aVdGAW4): official Kick Dev poll + My Channels peaks; VOD ?t= integer seconds; no Partner Analytics / Apify.
-**Last Updated:** 2026-09-09 — Twitch CCV My Channels: list by brand+login; VOD deep-link ?t= peak; UI error + live refresh.
-**Last Updated:** 2026-09-09 — Twitch chat peak segment labels; GQL hash + Client-ID fix for heatmap.
-**Last Updated:** 2026-09-09 — Twitch Peaks parity: GET /content-library/vods?platform=twitch + Peaks UI toggle; chat-heatmap analyze; e2e.
-**Last Updated:** 2026-09-09 — Peaks core QA: extended prod e2e (analyze + stage-local→R2 + create job); browser Fetch/Analyze on app.auraflux.co.
-**Last Updated:** 2026-09-09 — Peaks Vercel build: fix sidebar `const const` + Button asChild→anchor (base-ui).
-**Last Updated:** 2026-09-09 — Peaks browser stage: POST /content-library/stage-local (multipart → R2); UI upload hop.
-**Last Updated:** 2026-09-09 — Peaks yt-dlp: isDatacenterBlock + section→splice fallback; cookie export base64 validate.
-**Last Updated:** 2026-09-09 — Peaks: android then cookies fallback for YouTube section downloads on Render.
-**Last Updated:** 2026-09-09 — Peaks stage uses extractVodClips; yt-dlp client android,mweb (ANDROID_VR SABR→403).
-**Last Updated:** 2026-09-09 — yt-dlp: retry android client when YouTube cookies still bot-check on Render IPs.
-**Last Updated:** 2026-09-09 — Peaks line: yt-dlp GitHub binary + Deno/EJS for YouTube cookies; portal4 clip-comp fix; customer nav Peaks-first; remove VectCut runtime.
-**Last Updated:** 2026-09-09 — Fix sign-in/reset favicon: use /brand/logo.png (icons/*.png gitignored → 404 on Vercel).
-**Last Updated:** 2026-09-09 (iss_exFgoTmmRwhP) — Peaks createJob contentType clips; e2e smoke + portrait layout tests; prod API 1.0.344 live with C1–C11 assembly.
-**Last Updated:** 2026-09-09 (iss_exFgoTmmRwhP) — assembly_service applies C1–C11 portrait from compositionSpec (full-bleed vs blur-pad + look); clip_comp_creative on prod; Peaks presets bake into jobs.
-**Last Updated:** 2026-09-09 (iss_exFgoTmmRwhP) — clip_comp_creative + look_presets on prod; short_compile_clips jobs bake C1–C11 compositionSpec.compCreative from Peaks preset.
-**Last Updated:** 2026-09-09 (iss_exFgoTmmRwhP) — Peaks MVP: YouTube Most Replayed analyze + stage-vod-window + /peaks page (C1–C11 preset labels → Short job). Migration 040.
-**Last Updated:** 2026-09-09 (iss_2-LBGROjaTgn) — Customer Twitch CCV peaks: poll connected brands while live, store series/peak, link archive VOD; My Channels shows peaks demo. Migration 039. YouTube publish direct; TikTok/IG via Upload-Post white-label.
-**Last Updated:** 2026-09-08 — Auth reset/OTP: deploy API+app; mail via Render SMTP using existing AUTH_JWT_SECRET (no extra Vercel secret). Live was RESET_PASSWORD_DISABLED + API 404.
-**Last Updated:** 2026-09-08 — Auth emails (reset/OTP) via API `POST /internal/auth-email` + Render SMTP.
-**Last Updated:** 2026-09-08 — Superadmin: include robert@businessrocket.ai + promote on login if allowlisted (not only on first profile insert).
-**Last Updated:** 2026-09-08 — Auth: Forgot password (reset link) + Email me a code (email OTP) for non-Google users. `/reset-password` public route.
-**Last Updated:** 2026-09-04 — CPD-1330: brands/account + social/channel OAuth use Better Auth JWT (not Clerk); migration 038 setup_dismissed; synced BA secrets to Render API.
-**Last Updated:** 2026-09-04 — Google callback: added account.issuer (migration 037) on auraflux-pg. Retry Continue with Google.
-**Last Updated:** 2026-08-23 — HSKRG agent key in Doppler + Render cron; nightly review posts to hskrg-work (iss on Platform/auraflux).
-**Last Updated:** 2026-08-23 — pipeline review posts to HSKRG Work board (`lib/ops/hskrg_board.js`, `--board`); Jira posting removed.
-**Last Updated:** 2026-08-23 — pipeline_parity_review: cron/static runs warn on missing secrets + skip C0 live_grid/broadcast env scan (fixes auraflux-pipeline-review exit 1).
-**Last Updated:** 2026-08-22 — Removed Sentry (@sentry/node, SENTRY_DSN from Doppler/Render). Errors via logError only. Delete Sentry uptime monitor in sentry.io UI.
-**Last Updated:** 2026-08-22 — Cloudflare Pro zone optimized (HSTS, HTTP/3) via `scripts/ops/cloudflare_pro_optimize.mjs`. Rotate `CF_API_TOKEN` in Doppler (Firewall Services Edit) for WAF API.
-**Last Updated:** 2026-08-22 — Infra cleanup: auraflux-app deleted from Render; app on Vercel (app.auraflux.co); render.yaml api-only; Pavilion/HSKRG on Neon; side Render Postgres deleted.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
 
-**Last Updated:** 2026-08-17 — Inbox GET was returning 304 cached brand-only rows; backfill Slack threads into inbox and cache-bust fetch.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
 
-**Last Updated:** 2026-07-06 (CPD-1231) — Customer send-back auto-redispatches assembly from natural-language feedback; operator v1 sendback/retry API; email on job ready when SMTP+email; YouTube avatar for sub-brands (testing); Twitch OAuth optional on My Channels.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
 
-**Last Updated:** 2026-06-21 (Sprint 7 close) — pricing sync, E2E Gemini UX gate, ops runbooks, C0 repo policy.
-**Last Updated:** 2026-06-21 (CPD-1013/1014/999/1026) — trusted domains, publish guard, worker rootCause, portal5 poll test.
-**Last Updated:** 2026-06-23 (CPD-1077) — fleetPaused operator hold; roster refresh API; mirror disclaimers; solo brand frame; fleet CPU monitor scripts.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
@@ -57,26 +57,26 @@
 
 ---
 
-**Last Updated:** 2026-06-20 (CPD-1047) — Deploy 0e38292f feeder login fix for solo Q1 titles.
-**Last Updated:** 2026-06-20 (CPD-1047) — Deploy broadcast-staging `dbdc9915`: solo RTSP fix + fresh YouTube broadcasts; main + Q1–Q4 live.
-**Last Updated:** 2026-06-13 (CPD-1043) — Slate-lock on blank quadrant remove; dashboard uses /quadrant/N/replace; EPIPE-safe feeder pipes (GO LIVE crash fix).
-**Last Updated:** 2026-06-13 (CPD-1055) — Direct dashboard→Render API (broadcast_api.js + CORS); c0 removed from encode path; static dashboard server on :3002.
-**Last Updated:** 2026-06-13 (CPD-1055) — Dashboard→Render proxy catch-all; read routes on sidecar; sync env from Doppler/cwn-production (not c0).
-**Last Updated:** 2026-06-20 (CPD-1047) — Broadcast reliability: deploy-safe stop (no endLiveBroadcast on SIGTERM), auto-resume, solo auto-start, SEO template, relay transcode, autotune off.
-**Last Updated:** 2026-06-20 (CPD-1043) — Overnight bench fail-open, dashboard GO LIVE fixes, studio-first RTMP + START RTMP button.
-**Last Updated:** 2026-06-20 (CPD-1043) — Render broadcast fix pack: pro_plus CPU, native YouTube aspect probe, direct RTMP CBR, autotune + delivery QA.
-**Last Updated:** 2026-06-20 (CPD-1043) — Render 1080p@6000k veryfast direct RTMP; autotune off for stability pilot.
-**Last Updated:** 2026-06-20 (CPD-1043) — On-air avatar/badge overlay asset + remove gold row gutter; deploy broadcast-staging.
-**Last Updated:** 2026-06-20 (CPD-1043) — Fix deep/choppy audio: disable AAC copy on UDP+middleware; restreamer re-encodes 48kHz AAC.
-**Last Updated:** 2026-06-19 (CPD-1043) — Render delivery QA: viewer signals on /live-grid/delivery, sidecar self-heal (restreamer), HLS staleness detection.
-**Last Updated:** 2026-06-19 (CPD-1043) — Restreamer: drop -re on local HLS (fixes YouTube cutouts when encode lags); x264 superfast on Render.
-**Last Updated:** 2026-06-19 (CPD-1041) — Broadcast R0 executing: Dockerfile.broadcast + auraflux-broadcast-staging deploy for 7pm grid.
-**Last Updated:** 2026-06-16 (CPD-1037) — Assembly Twitch clips via Helix only (no GQL); deploy + re-test staging job.
-**Last Updated:** 2026-06-15 (CPD-553) — GITHUB_API_TOKEN renewed in Doppler prd + Render sync; renew script auto-syncs Doppler→Render.
-**Last Updated:** 2026-06-15 (CPD-1026) — Channel Stats dashboard, env.example sync, C0 sports route guard, GitHub token renewal script.
-**Last Updated:** 2026-06-15 (CPD-1027) — YouTube OAuth scope expanded for API video delete.
-**Last Updated:** 2026-06-15 (CPD-1027) — YouTube channel metadata backfill for wanderbot + customUrl handles.
-**Last Updated:** 2026-06-15 (CPD-1027) — buffer R2 downloads for YouTube upload (Content-Length fix).
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
+**Last Updated:** 2026-09-10 — Kick Peaks compose (iss_Rg8qQqEfKXq4): Peaks Kick tab + My Channels Create Short CTA; peakWindow; VOD relink harden.
 **Branch:** main
 **Phase A agreed runs — HeyGen ON:** Use **`GATE_TEST_MODE=false`** (live synthesis). This test batch is **not** a dry-run; confirm keys + env in `ecosystem.config.js` / `.env` before starting.
 **How to start a session:** Read **this file first (Owned execution order)** → `cursor.md` → tell the agent the **current focus** bullet below.

@@ -1374,6 +1374,10 @@ export interface KickCcvPeak {
   /** Kick VOD URL with ?t= peak seek (integer seconds) when available */
   vodUrlAtPeak?: string | null;
   status: string;
+  /** Suggested clip window around peak (for Peaks compose) */
+  startSec?: number;
+  endSec?: number;
+  peakSec?: number;
 }
 
 export async function getKickCcvPeaks(
