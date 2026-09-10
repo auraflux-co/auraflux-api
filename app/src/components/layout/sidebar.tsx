@@ -137,7 +137,7 @@ interface NavItem {
 }
 
 // Base nav — same for all customer tiers
-const const CUSTOMER_NAV_BASE: NavItem[] = [
+const CUSTOMER_NAV_BASE: NavItem[] = [
   {
     href: '/peaks',
     label: 'Peaks',
