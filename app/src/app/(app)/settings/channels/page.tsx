@@ -103,6 +103,7 @@ function SourceChannelsPageInner() {
   const [oauthSuccess, setOauthSuccess] = useState<string | null>(null);
   const [ccvPeaks, setCcvPeaks] = useState<TwitchCcvPeak[]>([]);
   const [ccvHint, setCcvHint] = useState<string | null>(null);
+  const [ccvError, setCcvError] = useState<string | null>(null);
 
   const [verify, setVerify] = useState<Record<string, ChannelVerification>>({
     twitchLogin:   { state: 'idle', channel: null, error: null },
@@ -112,11 +113,13 @@ function SourceChannelsPageInner() {
 
   const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-  // Load Twitch CCV peaks demo when brand / Twitch channel is present
+  // Load Twitch CCV peaks when brand / Twitch channel is present; refresh while live
   useEffect(() => {
     if (!isLoaded) return;
     let cancelled = false;
-    (async () => {
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    async function loadCcv() {
       try {
         const token = await getToken();
         if (!token || cancelled) return;
@@ -124,11 +127,27 @@ function SourceChannelsPageInner() {
         if (cancelled) return;
         setCcvPeaks(res.peaks || []);
         setCcvHint(res.hint || null);
-      } catch {
-        /* peaks optional until migration applied */
+        setCcvError(null);
+        const live = (res.peaks || []).some((p) => p.status === 'live');
+        if (live && !timer) {
+          timer = setInterval(() => { void loadCcv(); }, 60_000);
+        }
+        if (!live && timer) {
+          clearInterval(timer);
+          timer = null;
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setCcvError(e instanceof Error ? e.message : 'Failed to load Twitch live peaks');
+        }
       }
-    })();
-    return () => { cancelled = true; };
+    }
+
+    void loadCcv();
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
   }, [isLoaded, getToken, activeBrandId, channels.twitchLogin]);
 
   // Load connected OAuth source channels (same apiFetch path as saved usernames)
@@ -417,13 +436,18 @@ function SourceChannelsPageInner() {
             (our own Streams Charts for your channel — not third-party).
           </p>
         </div>
+        {ccvError && (
+          <p className="af-caption text-destructive mb-2">{ccvError}</p>
+        )}
         {ccvPeaks.length === 0 ? (
           <p className="af-caption text-muted-foreground">
             {ccvHint || 'No captured streams yet. Save Twitch above, go live once, then refresh this page.'}
           </p>
         ) : (
           <div className="space-y-2">
-            {ccvPeaks.map((p) => (
+            {ccvPeaks.map((p) => {
+              const openUrl = p.vodUrlAtPeak || p.vodUrl;
+              return (
               <Card key={p.id}>
                 <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -436,11 +460,11 @@ function SourceChannelsPageInner() {
                       {p.status ? ` · ${p.status}` : ''}
                     </p>
                   </div>
-                  {p.vodUrl ? (
+                  {openUrl ? (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(p.vodUrl!, '_blank', 'noopener,noreferrer')}
+                      onClick={() => window.open(openUrl, '_blank', 'noopener,noreferrer')}
                     >
                       Open VOD at peak
                     </Button>
@@ -451,7 +475,8 @@ function SourceChannelsPageInner() {
                   )}
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

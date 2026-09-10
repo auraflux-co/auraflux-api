@@ -1342,6 +1342,8 @@ export interface TwitchCcvPeak {
   sampleCount?: number;
   vodId?: string | null;
   vodUrl?: string | null;
+  /** Twitch VOD URL with ?t= peak seek when available */
+  vodUrlAtPeak?: string | null;
   status: string;
 }
 
