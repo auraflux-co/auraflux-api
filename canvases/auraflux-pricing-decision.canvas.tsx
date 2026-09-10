@@ -53,7 +53,7 @@ const PLANS = [
 ] as const;
 
 // ── Fixed operating cost base (monthly, customer-independent) ─────────────────
-const FIXED_BASE = 763; // Render + Cloudflare + Google + Atlassian + Canva + Cursor + Twilio + HeyGen plan + VectCut + Twitch + RunPod base + Gemini base + New Relic
+const FIXED_BASE = 763; // Render + Cloudflare + Google + Atlassian + Canva + Cursor + Twilio + HeyGen plan + CapCut + Twitch + RunPod base + Gemini base + New Relic
 
 // ── Per-customer overhead (ops only — not AM, not per-job API) ────────────────
 const OPS_OVERHEAD = { Operate: 5, Guided: 15, Managed: 40 };
@@ -99,7 +99,6 @@ const ADDON_CREDITS = {
   'Web research':        10,
   'Content fetch':       10,
   'Shoppable CTA':       10,
-  'VectCut thumbnail':   10,
   'Narrative Clip':      10,
   'Imagen thumbnail':    20,
 };

@@ -64,8 +64,6 @@ services:
         value: both
       - key: USE_LOCAL_FFMPEG
         value: 'false'
-      - key: VECTCUT_API_URL
-        value: ''
 
       # ── Secrets — set values in Render environment panel (sync: false) ────────
       # AI APIs

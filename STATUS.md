@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Marketing BR shell: light canvas tokens, frosted nav, slate-950 footer, homepage bento cards (AuraFlux gold/navy).
+**Last Updated:** 2026-09-10 — Remove VectCut runtime/config from production (CapCut routes retained).
 
 
 
