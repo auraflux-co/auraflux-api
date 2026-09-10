@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Marketing: single AuraFlux plan + Managed by inquiry.
+**Last Updated:** 2026-09-10 — Marketing unlimited Peaks+publish; ToS fair-use hourly limits.
 
 
 

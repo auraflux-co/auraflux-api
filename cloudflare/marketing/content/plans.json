@@ -1,19 +1,19 @@
 {
-  "hero_headline": "One Plan. Peaks to Publish.",
-  "hero_sub": "Member portal with Peaks (Most Replayed, chat spikes, CCV), the Short production pipeline, and publish to connected accounts. Need us to run it for you? Inquire about Managed.",
+  "hero_headline": "One Plan. Unlimited Peaks to Publish.",
+  "hero_sub": "Member portal with Peaks (Most Replayed, chat spikes, CCV), the Short production pipeline, and publish to connected accounts. One brand. Fair-use rate limits apply (see Terms). Need us to run it for you? Inquire about Managed.",
   "plan": {
     "name": "AuraFlux",
     "title": "Peaks + publish",
-    "subtitle": "Full platform access. You run Peaks, jobs, and publish from app.auraflux.co. Buy credit packs in-app when you need more.",
+    "subtitle": "Unlimited Peaks, Short production, and publish for one brand. You run it from app.auraflux.co. Fair-use rate limits protect the platform (see Terms).",
     "price": "$999",
-    "credits": "400 credits/month · Self-serve checkout",
+    "credits": "Unlimited · one brand · self-serve checkout",
     "features": [
-      "Peaks: YouTube Most Replayed, Twitch chat spikes, Kick CCV",
-      "Spec-driven Short production pipeline",
+      "Unlimited Peaks: YouTube Most Replayed, Twitch chat spikes, Kick CCV",
+      "Unlimited Short production pipeline (fair use)",
       "Direct publish to connected platforms",
+      "One brand on the self-serve plan",
       "Member portal: jobs, channels, review, billing",
-      "API access for operators who want it",
-      "Credit packs available in-app"
+      "API access for operators who want it"
     ],
     "cta_label": "Start AuraFlux",
     "image_url": "/cf-assets/marketing/images/plan-operate.png",
@@ -28,5 +28,5 @@
     "cta_url": "/contact",
     "cta_style": "cta-managed"
   },
-  "credit_note": "Need more mid-cycle? Buy credit packs inside the AuraFlux app without changing your plan."
+  "credit_note": "Fair-use rate limits apply so the platform stays fast for everyone. Details are in the Terms of Service."
 }
