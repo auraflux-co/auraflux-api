@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Marketing host moved to Vercel project `auraflux-co` (DNS remains Cloudflare CNAME).
+**Last Updated:** 2026-09-10 — Marketing copy rewrite for current offering (Peaks + Operate/Guided/Managed).
 
 
 

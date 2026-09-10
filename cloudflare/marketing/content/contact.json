@@ -3,20 +3,20 @@
   "hero_sub": "Sales, support, partnerships, or feedback. We read every message.",
   "faq": [
     {
-      "question": "What's the difference between our plans?",
-      "answer": "Both plans include the full AuraFlux automated engine. Operate is entirely self-serve via our dashboard and API. Guided includes our built-in Collab assistant to monitor and refine your outputs. Managed adds dedicated human account managers."
+      "question": "What is Peaks?",
+      "answer": "Peaks is the member-portal flow that finds high-signal moments on YouTube (Most Replayed), Twitch (chat peaks), and Kick (live CCV), then stages a trim into the Short production pipeline."
+    },
+    {
+      "question": "What's the difference between Operate, Guided, and Managed?",
+      "answer": "All three include the member portal, Peaks, and the production pipeline. Operate is self-serve. Guided adds operator guidance. Managed is done-for-you with higher credits and Managed-tier add-ons."
     },
     {
       "question": "How do credits work?",
-      "answer": "Each plan includes a monthly credit allowance. One credit = one complete production job. Unused credits roll over automatically, and Extra Credit Packs can be purchased any time directly inside your account dashboard."
+      "answer": "Operate includes 400 credits/month, Guided 1,200, Managed 2,000. Buy packs inside the app if you need more mid-cycle."
     },
     {
-      "question": "Can I connect multiple social accounts?",
-      "answer": "Yes. connect all major platforms and target any job to one or more simultaneously. YouTube, TikTok, Instagram, Twitch, and Kick are all supported."
-    },
-    {
-      "question": "Do I need technical knowledge?",
-      "answer": "No. The dashboard guides you through every step. For teams that prefer raw API access, full developer documentation is available at auraflux.co/developer-api."
+      "question": "Which platforms can I publish to?",
+      "answer": "Connect social accounts in the app and publish from the job. YouTube and TikTok are primary paths today, with more platforms available through your connected accounts."
     }
   ],
   "form_title": "Send a message",

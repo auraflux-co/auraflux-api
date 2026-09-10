@@ -1,71 +1,71 @@
 {
-  "hero_headline": "Run Your Content Without a Team.",
-  "hero_sub": "AuraFlux runs your content production from start to finish. Raw clips, videos, and ideas become polished, published content automatically.",
-  "cta_primary_label": "See How It Works",
-  "cta_primary_url": "/our-system",
+  "hero_headline": "Turn Stream Peaks Into Published Shorts.",
+  "hero_sub": "AuraFlux finds the moments that matter on YouTube, Twitch, and Kick, then runs them through your production pipeline to a finished Short you can publish.",
+  "cta_primary_label": "Open Peaks",
+  "cta_primary_url": "https://app.auraflux.co/peaks",
   "trusted_by": [
     {
       "platform": "YouTube",
-      "handle": "YouTube Creators",
-      "quote": "Daily uploads, zero editing time"
-    },
-    {
-      "platform": "TikTok",
-      "handle": "TikTok Streamers",
-      "quote": "Clips published while they sleep"
+      "handle": "YouTube",
+      "quote": "Most Replayed peaks to Shorts"
     },
     {
       "platform": "Twitch",
-      "handle": "Twitch Partners",
-      "quote": "VOD highlights on autopilot"
+      "handle": "Twitch",
+      "quote": "Chat peaks from VODs"
     },
     {
       "platform": "Kick",
-      "handle": "Kick Streamers",
-      "quote": "Multi-platform from one stream"
+      "handle": "Kick",
+      "quote": "Live CCV peaks to clips"
+    },
+    {
+      "platform": "TikTok",
+      "handle": "TikTok",
+      "quote": "Short-form ready to publish"
     },
     {
       "platform": "Instagram",
-      "handle": "Instagram Creators",
-      "quote": "Reels generated automatically"
+      "handle": "Instagram",
+      "quote": "Reels from the same job"
     }
   ],
   "steps": [
     {
-      "headline": "Start With Any Source",
-      "body": "Submit a YouTube URL, Twitch VOD, Kick replay, or direct upload. AuraFlux ingests it instantly."
+      "headline": "Find the peak",
+      "body": "Pull YouTube Most Replayed, Twitch chat peaks, or Kick live CCV from My Channels. Pick the window worth shipping."
     },
     {
-      "headline": "AuraFlux Publishes For You",
-      "body": "Our pipeline scripts, assembles, applies brand chrome, QA-checks, and queues your content for publish."
+      "headline": "Stage your trim",
+      "body": "Upload the clip you cut locally (or from the VOD deeplink). AuraFlux stages it for the Short pipeline without re-downloading the whole VOD on our servers."
     },
     {
-      "headline": "Automated Production",
-      "body": "Six production portals run in sequence. each one verified before the next begins. No manual steps."
+      "headline": "Run the pipeline",
+      "body": "Spec-driven portals assemble, caption, brand, and QA the Short. Only the portals your job needs actually run."
     },
     {
-      "headline": "Content Published",
-      "body": "Your content lands on every connected platform with the right format, captions, and metadata. Done."
+      "headline": "Publish",
+      "body": "Connect YouTube and TikTok (and more via your social accounts). Metadata and format go out with the job."
     }
   ],
-  "final_cta_headline": "Stop Managing Content. Start Producing It.",
-  "final_cta_sub": "No team, no editors, no upload queues. AuraFlux handles the entire pipeline from source to publish.",
-  "final_cta_label": "Start Producing",
+  "final_cta_headline": "Start With Peaks. Ship Shorts Faster.",
+  "final_cta_sub": "Member portal at app.auraflux.co. Same production stack for Operate, Guided, and Managed.",
+  "final_cta_label": "Go to App",
   "og_image": "https://auraflux.co/favicon.png",
-  "trusted_by_label": "Trusted by creators on",
-  "value_eyebrow": "The Problem",
-  "value_title": "Creating Content Isn't The Hard Part.<br><span class=\"gold\">Running It Is.</span>",
-  "value_sub": "You have the ideas, the clips, the audience. What you don't have is the time to turn raw footage into polished, published content every single day.",
-  "steps_eyebrow": "How It Works",
-  "steps_title": "From Idea to Published Content <span class=\"gold\">Automatically.</span>",
-  "steps_sub": "Four steps. No editors, no coordinators, no upload queues.",
-  "formats_eyebrow": "Content Types",
-  "formats_title": "From Shorts To <span class=\"gold\">Full Productions.</span>",
-  "formats_sub": "Your content format, your content type. AuraFlux handles every combination.",
-  "compare_eyebrow": "The Difference",
-  "compare_title": "Work Smarter. <span class=\"gold\">Not Harder.</span>",
-  "compare_sub": "Stop spending 80% of your time on production. Start spending it on what actually matters.",
+  "trusted_by_label": "Built for creators on",
+  "value_eyebrow": "What you get",
+  "value_title": "Peaks In. Shorts Out.<br><span class=\"gold\">Pipeline In Between.</span>",
+  "value_sub": "Stop losing high-energy moments in the VOD. AuraFlux is built around finding peaks, producing Shorts, and publishing without standing up an edit team.",
+  "steps_eyebrow": "How it works",
+  "steps_title": "Four steps from peak to publish",
+  "steps_sub": "Designed around Peaks in the member portal, then the same AuraFlux production environment.",
+  "formats_eyebrow": "What you can produce",
+  "formats_title": "Shorts first. Full jobs when you need them.",
+  "formats_sub": "Peaks is the fastest path to a Short. The full portal pipeline still supports longer jobs when your template calls for them.",
+  "compare_eyebrow": "Why AuraFlux",
+  "compare_title": "Production software. Not another editor seat.",
+  "compare_sub": "Operate and Guided include the same core platform. Managed adds done-for-you ops and higher-tier add-ons.",
   "cta_primary_style": "primary",
-  "final_cta_url": "/plans",
+  "final_cta_url": "https://app.auraflux.co/peaks",
   "final_cta_style": "primary"
 }

@@ -1,68 +1,56 @@
 {
-  "hero_headline": "Content Production, Without the Team",
-  "hero_sub": "AuraFlux is the production infrastructure for creators who can't afford to stop streaming to edit.",
-  "mission_body": "Most streamers and creators produce hours of content every week and then lose most of it. Editing takes longer than the stream itself. Hiring an editor costs more than the content earns. So the clips sit on a hard drive, and the channel doesn't grow.\n\nWe built AuraFlux to close that gap. Not by making editing faster, but by eliminating the need for it entirely.",
-  "blockquote": "Every creator should be able to produce like a media company. That's not a staffing problem. It's a software problem.",
+  "hero_headline": "Production Infrastructure for Streamers",
+  "hero_sub": "AuraFlux exists so creators can ship Shorts from the peaks of their streams without standing up an edit team.",
+  "mission_body": "Most streamers produce hours of content every week and then lose the best moments in the VOD. Scrubbing by hand is slow. Hiring editors is expensive. Clips sit unused while the channel waits.\n\nWe built AuraFlux around Peaks: find the high-signal moments on YouTube, Twitch, and Kick, stage a trim, run the production pipeline, and publish from the member portal.",
+  "blockquote": "Every creator should ship like a media team. That is a software problem, not a staffing problem.",
   "stats": [
-    {
-      "number": "06",
-      "label": "SYS_PORTALS"
-    },
-    {
-      "number": "05",
-      "label": "PLATFORMS"
-    },
-    {
-      "number": "03",
-      "label": "PLAN_TIERS"
-    },
-    {
-      "number": "00",
-      "label": "HUMAN_EFFORT"
-    }
+    { "number": "03", "label": "PEAK_SOURCES" },
+    { "number": "01", "label": "MEMBER_PORTAL" },
+    { "number": "03", "label": "PLAN_TIERS" },
+    { "number": "00", "label": "EDITORS_REQUIRED" }
   ],
   "diff_cards": [
     {
-      "icon": "\u26a1",
-      "headline": "A full pipeline, not a feature",
-      "body": "Connect your YouTube and Kick channels once and the platform identifies, selects, assembles, quality-checks, and publishes for you."
+      "icon": "⚡",
+      "headline": "Peaks first",
+      "body": "YouTube Most Replayed, Twitch chat peaks, and Kick live CCV live in the member portal so you start from signal, not a blank timeline."
     },
     {
-      "icon": "\ud83c\udfaf",
-      "headline": "Platform-aware by default",
-      "body": "Every output is sized, captioned, and formatted for the destination platform. TikTok gets 9:16. YouTube gets 16:9. No manual reformatting."
+      "icon": "🎯",
+      "headline": "Spec-driven pipeline",
+      "body": "Jobs declare which portals run. Skipped portals are not failures. The environment adapts to the job."
     },
     {
-      "icon": "\ud83e\udd16",
-      "headline": "Automated quality checks at every stage",
-      "body": "Before your content ever reaches a platform, our quality gates check it against your brand spec and technical requirements."
+      "icon": "🛡️",
+      "headline": "QA before publish",
+      "body": "Portal QA marks compliant or non-compliant before content leaves the system."
     },
     {
-      "icon": "\ud83d\udce4",
-      "headline": "Direct publish, no manual export",
-      "body": "OAuth connections to every major platform mean your content publishes directly. No downloading, uploading, or scheduling tools needed."
+      "icon": "📤",
+      "headline": "Publish from the app",
+      "body": "Connect social accounts once. Ship Shorts with metadata from the job instead of re-uploading everywhere by hand."
     },
     {
-      "icon": "\ud83d\udcac",
-      "headline": "Collab guides you through it",
-      "body": "Your plan includes Collab, the AuraFlux in-app assistant. It monitors your pipeline, flags issues, and guides you to better outputs."
+      "icon": "💬",
+      "headline": "Operate, Guided, or Managed",
+      "body": "Same core platform on Operate and Guided. Guided adds operator support. Managed adds done-for-you ops and higher-tier add-ons."
     },
     {
-      "icon": "\ud83d\udd0c",
-      "headline": "API-first for technical operators",
-      "body": "The entire platform is accessible via REST API. Integrate AuraFlux directly into your own tooling, dashboard, or workflow automation."
+      "icon": "🔌",
+      "headline": "API when you need it",
+      "body": "Operators who want programmatic control get API access. Most creators start in Peaks and the dashboard."
     }
   ],
-  "cta_headline": "Ready to automate your production?",
-  "cta_sub": "No salary required.",
+  "cta_headline": "Ready to ship Shorts from Peaks?",
+  "cta_sub": "Open the member portal and start with Peaks.",
   "founder_photo": "/cf-assets/marketing/images/founder-rob-gregory.jpg",
   "founder_name": "Rob Gregory",
   "founder_role": "Founder & CEO",
-  "founder_bio": "Started AuraFlux after spending years watching creators lose hours to manual editing. Built the platform he wished existed.",
+  "founder_bio": "Built AuraFlux after watching creators lose hours scrubbing VODs for moments that should have shipped the same day.",
   "hero_eyebrow": "Our Story",
   "mission_title": "Why We Built This",
   "diff_title": "What Makes AuraFlux Different",
-  "diff_sub": "Not a tool. An automated production environment.",
+  "diff_sub": "Not a single-clip editor. A production environment.",
   "team_title": "The People Behind AuraFlux",
   "team_sub": "Built by operators, for operators.",
   "hero_cta_label": "How It Works",

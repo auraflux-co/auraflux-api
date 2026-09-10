@@ -1,56 +1,57 @@
 {
-  "hero_headline": "Match Your Team's Capability",
-  "hero_sub": "Choose the path that fits your current operational setup. All plans include the full AuraFlux automated production pipeline.",
+  "hero_headline": "Plans That Match How You Run Production",
+  "hero_sub": "Operate, Guided, and Managed all include the AuraFlux member portal, Peaks, and the automated production pipeline. The difference is how much support you want.",
   "operate": {
-    "title": "DIY / API",
-    "subtitle": "Automated processing via self-serve dashboard & API access only.",
+    "title": "Self-serve",
+    "subtitle": "Full platform access. You run Peaks, jobs, and publish yourself from app.auraflux.co.",
     "price": "$999",
-    "credits": "400 credits/month · Self-serve instant checkout",
+    "credits": "400 credits/month · Self-serve checkout",
     "features": [
-      "Full API access & raw endpoints",
-      "Comprehensive developer documentation",
-      "Self-hosted integration control",
-      "Community & standard support"
+      "Member portal with Peaks (YouTube, Twitch, Kick)",
+      "Spec-driven production pipeline",
+      "Direct publish to connected platforms",
+      "API access for operators who want it",
+      "Standard support"
     ],
-    "cta_label": "Get Started",
+    "cta_label": "Start Operate",
     "image_url": "/cf-assets/marketing/images/plan-operate.png",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=operate",
     "cta_style": "cta cta-primary"
   },
   "guided": {
-    "title": "Collab Assist",
-    "subtitle": "Complete platform toolkit plus built-in Collab workspace assistance.",
+    "title": "Done-with-you",
+    "subtitle": "Same core platform as Operate, plus operator guidance so you are not alone in the dashboard.",
     "price": "$2,499",
-    "credits": "1,200 credits/month · Self-serve subscription upgrade",
+    "credits": "1,200 credits/month · Self-serve upgrade",
     "features": [
       "Everything in Operate",
-      "Interactive in-app flows",
-      "Collab-powered live visual guidance",
-      "Visual drag-and-drop workflow builders",
-      "Automated operational threshold alerts"
+      "Operator monitoring and guidance",
+      "Collab assistance in the app",
+      "Help refining workflows and job templates",
+      "Standard support with guided onboarding"
     ],
-    "cta_label": "Get Started",
+    "cta_label": "Start Guided",
     "image_url": "/cf-assets/marketing/images/plan-guided.png",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=guided",
     "cta_style": "cta cta-primary"
   },
   "managed": {
-    "title": "Done-For-You",
-    "subtitle": "Full Collab platform plus a dedicated human account manager.",
+    "title": "Done-for-you",
+    "subtitle": "We run production with you. Highest monthly credits plus Managed-tier add-ons like HeyGen and Imagen when ordered.",
     "price": "$4,499",
-    "credits": "2,000 credits/month · Custom onboarding & sales intake",
+    "credits": "2,000 credits/month · Sales onboarding",
     "features": [
       "Everything in Guided",
-      "Dedicated Account Manager",
-      "Custom end-to-end workflow builds",
-      "Priority support with custom SLAs",
-      "Unlimited credits"
+      "Dedicated account manager",
+      "Custom workflow builds",
+      "Managed-tier add-ons (HeyGen, Imagen, and more)",
+      "Priority support"
     ],
     "cta_label": "Talk to Sales",
     "image_url": "/cf-assets/marketing/images/plan-managed.png",
-    "cta_url": "/contact-us",
+    "cta_url": "/contact",
     "cta_style": "secondary"
   },
-  "credit_note": "Running low mid-month? Extra Credit Packs are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades.",
-  "comparison_title": "Implementation &amp; Feature Comparison"
+  "credit_note": "Need more mid-cycle? Buy credit packs inside the AuraFlux app without changing your plan.",
+  "comparison_title": "Plan comparison"
 }

@@ -85,7 +85,7 @@ body{line-height:1.6}
 }
 .plan-sub{font-size:.85rem;color:#8f9bb7;margin-bottom:20px;line-height:1.5;}
 
-/* Price — proportional to headings: same font, sized between h2 and h1 */
+/* Price - proportional to headings: same font, sized between h2 and h1 */
 .price{
   font-size:2.8rem;font-weight:800;color:#fff;
   letter-spacing:-.02em;line-height:1.15;margin-bottom:10px;
@@ -104,7 +104,7 @@ body{line-height:1.6}
   display:flex;gap:10px;line-height:1.55;
 }
 .features li::before{content:"✓";color:#f5c542;font-weight:700;flex-shrink:0;}
-.features li.no::before{content:"—";color:#333355;}
+.features li.no::before{content:"-";color:#333355;}
 .features li.no{color:#3d3d5c;}
 
 .cta{
@@ -181,8 +181,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
 ${FRAMER_NAV || FALLBACK_NAV}
 
 <div class="hero">
-  <h1 >Match Your Team's Capability</h1>
-  <p >Choose the path that fits your current operational setup. All plans include the full AuraFlux automated production pipeline.</p>
+  <h1>Plans That Match How You Run Production</h1>
+  <p>Operate, Guided, and Managed all include the AuraFlux member portal, Peaks, and the automated production pipeline. The difference is how much support you want.</p>
 </div>
 
 <div class="plans">
@@ -192,20 +192,20 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <img class="plan-img" src="/cf-assets/marketing/images/plan-operate.png" alt="Operate plan">
     <div class="plan-body">
       <div class="plan-name">Operate</div>
-      <div class="plan-title">DIY / API</div>
-      <div class="plan-sub">Automated processing via self-serve dashboard &amp; API access only.</div>
+      <div class="plan-title">Self-serve</div>
+      <div class="plan-sub">Full platform access. You run Peaks, jobs, and publish yourself from app.auraflux.co.</div>
       <div class="price price-loading" id="price-operate"><span class="price-val">$999</span><span class="period">/mo</span></div>
-      <div class="credits">400 credits/month · Self-serve instant checkout</div>
+      <div class="credits">400 credits/month · Self-serve checkout</div>
       <ul class="features">
-        <li>Full API access &amp; raw endpoints</li>
-        <li>Comprehensive developer documentation</li>
-        <li>Self-hosted integration control</li>
-        <li>Community &amp; standard support</li>
-        <li class="no">In-app visual flow builders</li>
-        <li class="no">Collab-powered guidance</li>
+        <li>Member portal with Peaks (YouTube, Twitch, Kick)</li>
+        <li>Spec-driven production pipeline</li>
+        <li>Direct publish to connected platforms</li>
+        <li>API access for operators who want it</li>
+        <li>Standard support</li>
+        <li class="no">Operator monitoring and guidance</li>
         <li class="no">Dedicated account manager</li>
       </ul>
-      <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Get Started</a>
+      <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Start Operate</a>
     </div>
   </div>
 
@@ -215,20 +215,20 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <img class="plan-img plan-img-contain" src="/cf-assets/marketing/images/plan-guided.png" alt="Guided plan">
     <div class="plan-body">
       <div class="plan-name">Guided</div>
-      <div class="plan-title">Collab Assist</div>
-      <div class="plan-sub">Complete platform toolkit plus built-in Collab workspace assistance.</div>
+      <div class="plan-title">Done-with-you</div>
+      <div class="plan-sub">Same core platform as Operate, plus operator guidance so you are not alone in the dashboard.</div>
       <div class="price price-loading" id="price-guided"><span class="price-val">$2,499</span><span class="period">/mo</span></div>
-      <div class="credits">1,200 credits/month · Self-serve subscription upgrade</div>
+      <div class="credits">1,200 credits/month · Self-serve upgrade</div>
       <ul class="features">
         <li>Everything in Operate</li>
-        <li>Interactive in-app flows</li>
-        <li>Collab-powered live visual guidance</li>
-        <li>Visual drag-and-drop workflow builders</li>
-        <li>Automated operational threshold alerts</li>
-        <li class="no">Custom end-to-end workflow builds</li>
+        <li>Operator monitoring and guidance</li>
+        <li>Collab assistance in the app</li>
+        <li>Help refining workflows and templates</li>
+        <li>Guided onboarding</li>
+        <li class="no">Custom end-to-end builds by experts</li>
         <li class="no">Dedicated account manager</li>
       </ul>
-      <a href="https://api.auraflux.co/api/public/checkout?plan=guided" class="cta cta-primary" data-cta="guided_cta">Get Started</a>
+      <a href="https://api.auraflux.co/api/public/checkout?plan=guided" class="cta cta-primary" data-cta="guided_cta">Start Guided</a>
     </div>
   </div>
 
@@ -237,18 +237,18 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <img class="plan-img plan-img-contain" src="/cf-assets/marketing/images/plan-managed.png" alt="Managed plan">
     <div class="plan-body">
       <div class="plan-name">Managed</div>
-      <div class="plan-title">Done-For-You</div>
-      <div class="plan-sub">Full Collab platform plus a dedicated human account manager.</div>
+      <div class="plan-title">Done-for-you</div>
+      <div class="plan-sub">We run production with you. Highest monthly credits plus Managed-tier add-ons when ordered.</div>
       <div class="price">$4,499<span class="period">/mo</span></div>
-      <div class="credits">2,000 credits/month · Custom onboarding &amp; sales intake</div>
+      <div class="credits">2,000 credits/month · Sales onboarding</div>
       <ul class="features">
         <li>Everything in Guided</li>
-        <li>Dedicated Account Manager</li>
-        <li>Custom end-to-end workflow builds</li>
-        <li>Priority support with custom SLAs</li>
-        <li>Unlimited credits</li>
+        <li>Dedicated account manager</li>
+        <li>Custom workflow builds</li>
+        <li>Managed add-ons (HeyGen, Imagen, and more)</li>
+        <li>Priority support</li>
       </ul>
-      <a href="#" class="cta cta-secondary" onclick="document.getElementById('af-chat-panel').classList.add('open');return false;">Talk to Sales</a>
+      <a href="/contact" class="secondary" data-cta="managed_cta">Talk to Sales</a>
     </div>
   </div>
 
@@ -257,13 +257,13 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <!-- Credit pack footnote -->
 <div class="credit-note">
   <div class="credit-note-inner">
-    <p >Running low mid-month? Extra Credit Packs are available on-demand exclusively inside the AuraFlux App dashboard to keep your content engines rendering without plan upgrades.</p>
+    <p>Need more mid-cycle? Buy credit packs inside the AuraFlux app without changing your plan.</p>
   </div>
 </div>
 
 <!-- Comparison table -->
 <div class="ladder">
-  <div class="ladder-title" >Implementation &amp; Feature Comparison</div>
+  <div class="ladder-title">Plan comparison</div>
   <table>
     <thead>
       <tr>
@@ -274,51 +274,44 @@ ${FRAMER_NAV || FALLBACK_NAV}
       </tr>
     </thead>
     <tbody>
-      <tr><td class="label">Core Infrastructure &amp; API Access</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Developer Documentation &amp; SDKs</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">In-App Visual Flow Builders</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Collab Guidance</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Automated Threshold Notifications</td><td class="no-val">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Custom Workflow Construction by Experts</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Dedicated Account Manager</td><td class="no-val">—</td><td class="no-val">—</td><td class="yes">✓</td></tr>
-      <tr><td class="label">Support SLA</td><td>Standard</td><td>Standard</td><td>Priority 24/7</td></tr>
+      <tr><td class="label">Peaks + member portal</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Production pipeline + publish</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+      <tr><td class="label">API access</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Operator guidance / Collab</td><td class="no-val">-</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Managed add-ons (HeyGen, Imagen)</td><td class="no-val">-</td><td class="no-val">-</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Dedicated account manager</td><td class="no-val">-</td><td class="no-val">-</td><td class="yes">✓</td></tr>
+      <tr><td class="label">Monthly credits</td><td>400</td><td>1,200</td><td>2,000</td></tr>
+      <tr><td class="label">Support</td><td>Standard</td><td>Guided</td><td>Priority</td></tr>
     </tbody>
   </table>
 
-  <!-- Mobile comparison cards (shown instead of table on small screens) -->
   <div class="compare-mobile">
     <div class="compare-mobile-card">
       <h3>Operate</h3>
-      <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="no-m">—</span></div>
-      <div class="compare-mobile-row"><span>Collab Guidance</span><span class="no-m">—</span></div>
-      <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="no-m">—</span></div>
-      <div class="compare-mobile-row"><span>Custom Workflows</span><span class="no-m">—</span></div>
-      <div class="compare-mobile-row"><span>Account Manager</span><span class="no-m">—</span></div>
-      <div class="compare-mobile-row"><span>Support SLA</span><span>Standard</span></div>
+      <div class="compare-mobile-row"><span>Peaks + portal</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Pipeline + publish</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Operator guidance</span><span class="no-m">-</span></div>
+      <div class="compare-mobile-row"><span>Managed add-ons</span><span class="no-m">-</span></div>
+      <div class="compare-mobile-row"><span>Account manager</span><span class="no-m">-</span></div>
+      <div class="compare-mobile-row"><span>Credits / mo</span><span>400</span></div>
     </div>
     <div class="compare-mobile-card" style="border-color:rgba(199,175,79,.3);">
       <h3>Guided</h3>
-      <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Collab Guidance</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Custom Workflows</span><span class="no-m">—</span></div>
-      <div class="compare-mobile-row"><span>Account Manager</span><span class="no-m">—</span></div>
-      <div class="compare-mobile-row"><span>Support SLA</span><span>Standard</span></div>
+      <div class="compare-mobile-row"><span>Peaks + portal</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Pipeline + publish</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Operator guidance</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Managed add-ons</span><span class="no-m">-</span></div>
+      <div class="compare-mobile-row"><span>Account manager</span><span class="no-m">-</span></div>
+      <div class="compare-mobile-row"><span>Credits / mo</span><span>1,200</span></div>
     </div>
     <div class="compare-mobile-card">
       <h3>Managed</h3>
-      <div class="compare-mobile-row"><span>Core API Access</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Developer Docs</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>In-App Flow Builders</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Collab Guidance</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Threshold Alerts</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Custom Workflows</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Account Manager</span><span class="yes-m">✓</span></div>
-      <div class="compare-mobile-row"><span>Support SLA</span><span style="color:#f5c542;">Priority 24/7</span></div>
+      <div class="compare-mobile-row"><span>Peaks + portal</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Pipeline + publish</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Operator guidance</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Managed add-ons</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Account manager</span><span class="yes-m">✓</span></div>
+      <div class="compare-mobile-row"><span>Credits / mo</span><span style="color:#f5c542;">2,000</span></div>
     </div>
   </div>
 </div>
@@ -341,7 +334,7 @@ ${FRAMER_FOOTER || FALLBACK_FOOTER}
       });
     })
     .catch(function() {
-      // API unreachable — hardcoded values already shown, just stop pulse
+      // API unreachable - hardcoded values already shown, just stop pulse
       document.querySelectorAll('.price-loading').forEach(function(el) {
         el.classList.remove('price-loading');
       });
