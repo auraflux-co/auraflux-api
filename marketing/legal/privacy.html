@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy | AuraFlux</title>
+<meta name="description" content="How AuraFlux collects, uses, and protects your personal information.">
+<link rel="canonical" href="https://auraflux.co/privacy">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-MBS26S2W6E');
+</script>
+${FRAMER_FONTS || ''}
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Satoshi','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#ffffff;line-height:1.7}
+a{color:#f5c542;text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:780px;margin:0 auto;padding:104px 24px 120px}
+h1{font-size:2.5rem;font-weight:700;margin-bottom:8px;color:#fff}
+.meta{font-size:.85rem;color:#a0a0b8;margin-bottom:40px}
+h2{font-size:1.6rem;font-weight:600;margin:36px 0 12px;color:#fff}
+p,li{font-size:.95rem;color:#8f9bb7;margin-bottom:12px}
+ul,ol{padding-left:24px;margin-bottom:16px}
+</style>
+${FRAMER_CSS ? `<style id="af-framer-tokens">${FRAMER_CSS}</style>` : ''}
+</head>
+<body>
+${FRAMER_NAV || FALLBACK_NAV}
+<div class="wrap">
+<h1>Privacy Policy</h1>
+<p class="meta">Effective: 1 June 2026 · Last updated: 28 May 2026</p>
+<p>AuraFlux ("we", "us") operates the platform at <a href="https://app.auraflux.co">app.auraflux.co</a> and the marketing site at <a href="https://auraflux.co">auraflux.co</a>. This policy explains what data we collect, why, and your rights over it.</p>
+
+<h2>1. Data We Collect</h2>
+<ul>
+  <li><strong>Account data:</strong> name, email address, profile photo (via Clerk authentication)</li>
+  <li><strong>Billing data:</strong> payment method details handled entirely by Stripe — we never store card numbers</li>
+  <li><strong>Usage data:</strong> jobs created, portals run, credits consumed, platform connections</li>
+  <li><strong>OAuth tokens:</strong> access tokens for connected platforms (Twitch, YouTube, Kick, TikTok, Instagram) — stored encrypted at rest</li>
+  <li><strong>Analytics:</strong> page views, performance metrics via New Relic browser agent</li>
+</ul>
+
+<h2>2. How We Use Your Data</h2>
+<ul>
+  <li>Deliver and operate the AuraFlux video production platform</li>
+  <li>Process billing and credit transactions via Stripe</li>
+  <li>Publish videos to connected social accounts on your instruction</li>
+  <li>Send transactional emails (job completions, billing receipts, alerts)</li>
+  <li>Improve platform reliability and performance</li>
+</ul>
+
+<h2>3. Third-Party Processors</h2>
+<ul>
+  <li><strong>Clerk</strong> — authentication and user management (<a href="https://clerk.com/privacy">clerk.com/privacy</a>)</li>
+  <li><strong>Stripe</strong> — payment processing (<a href="https://stripe.com/privacy">stripe.com/privacy</a>)</li>
+  <li><strong>Upload-Post</strong> — social media publishing</li>
+  <li><strong>Google / YouTube</strong> — YouTube API Services. By connecting YouTube, you also agree to <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>. You can revoke access at <a href="https://security.google.com/settings/security/permissions">Google Security Settings</a>.</li>
+  <li><strong>Twitch / Kick</strong> — channel data and clip access</li>
+  <li><strong>Cloudflare R2</strong> — video output storage (US-based)</li>
+  <li><strong>Render</strong> — application hosting (US-based)</li>
+  <li><strong>New Relic</strong> — performance monitoring</li>
+</ul>
+
+<h2>4. Data Retention</h2>
+<p>Account data is retained while your account is active. Job outputs stored in R2 are retained for 90 days then purged unless you export them. You can request account deletion by emailing <a href="mailto:privacy@auraflux.co">privacy@auraflux.co</a>.</p>
+
+<h2>5. Your Rights</h2>
+<p><strong>GDPR (EU/UK):</strong> access, rectification, erasure, portability, restriction, objection.</p>
+<p><strong>CCPA (California):</strong> right to know, delete, and opt out of sale (we do not sell personal data).</p>
+<p>Submit requests to <a href="mailto:privacy@auraflux.co">privacy@auraflux.co</a>.</p>
+
+<h2>6. Cookies</h2>
+<p>We use essential session cookies (Clerk) and analytics cookies (New Relic). See our <a href="/cookies">Cookie Policy</a> for details and opt-out options.</p>
+
+<h2>7. Contact</h2>
+<p>Privacy questions: <a href="mailto:privacy@auraflux.co">privacy@auraflux.co</a></p>
+</div>
+${FRAMER_FOOTER || FALLBACK_FOOTER}
+</body>
+</html>

@@ -1,0 +1,141 @@
+<style>
+  .af-footer {
+    background: #020617; /* slate-950 — BR footer canvas */
+    color: #e2e8f0;
+    padding: 3.5rem 0 2rem;
+    margin-top: 0;
+  }
+  .af-footer-inner {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+  }
+  .af-footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  @media (min-width: 640px) {
+    .af-footer-grid { grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 2rem; }
+  }
+  .af-footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .af-footer-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-decoration: none !important;
+    letter-spacing: -0.02em;
+  }
+  .af-footer-logo:hover { text-decoration: none !important; }
+  .af-footer-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--brand-accent, #f5c542);
+    color: #0b1220;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+  #af-footer-tagline {
+    color: #94a3b8 !important;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 18rem;
+  }
+  .af-footer-col-label {
+    display: block;
+    color: #e2e8f0 !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase;
+    margin: 0 0 1rem !important;
+  }
+  .af-footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+  .af-footer-col a {
+    color: #94a3b8 !important;
+    font-size: 0.875rem;
+    text-decoration: none !important;
+  }
+  .af-footer-col a:hover { color: #f8fafc !important; }
+  .af-footer-social {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+  .af-social {
+    color: #94a3b8 !important;
+    font-size: 0.8125rem;
+    text-decoration: none !important;
+  }
+  .af-social:hover { color: var(--brand-accent, #f5c542) !important; }
+  .af-footer-bottom {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(51, 65, 85, 0.8);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #af-footer-copy {
+    margin: 0;
+    color: #64748b !important;
+    font-size: 0.8125rem;
+  }
+</style>
+<footer class="af-footer" role="contentinfo">
+  <div class="af-footer-inner">
+    <div class="af-footer-grid">
+      <div class="af-footer-brand">
+        <a class="af-footer-logo" href="/">
+          <span class="af-footer-mark" aria-hidden="true">AF</span>
+          AuraFlux
+        </a>
+        <p id="af-footer-tagline">Automated content production from source to publish. No team required.</p>
+        <div class="af-footer-social">
+          <a class="af-social af-social-li" href="https://www.linkedin.com/in/aura-flux-930b86413">LinkedIn</a>
+          <a class="af-social af-social-ig" href="https://www.instagram.com/aurafluxco/">Instagram</a>
+          <a class="af-social af-social-tt" href="https://www.tiktok.com/@aurafluxco?_r=1&_t=ZS-96xfObJOkbN">TikTok</a>
+          <a class="af-social af-social-yt" href="https://youtube.com/@auraflux">YouTube</a>
+        </div>
+      </div>
+      <div class="af-footer-col">
+        <span class="af-footer-col-label">Platform</span>
+          <a href="/our-story">Our Story</a>
+          <a href="/our-system">Our System</a>
+          <a href="/roadmap">Roadmap</a>
+        </div>
+      <div class="af-footer-col">
+        <span class="af-footer-col-label">Resources</span>
+          <a href="/pricing">Plans</a>
+          <a href="/blog">Blog</a>
+          <a href="/contact-us">Contact Us</a>
+        </div>
+      <div class="af-footer-col">
+        <span class="af-footer-col-label">Legal</span>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+    <div class="af-footer-bottom">
+      <p id="af-footer-copy">© 2026 AuraFlux. All rights reserved</p>
+    </div>
+  </div>
+</footer>

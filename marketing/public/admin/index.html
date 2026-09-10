@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>AuraFlux — Content Editor</title>
+  <style>
+    body { margin: 0; background: #0b1220; color: #fff; font-family: -apple-system, sans-serif; }
+    #cms-loading {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+      background: #0b1220; z-index: 9999;
+    }
+    #cms-loading .logo { font-size: 1.4rem; font-weight: 700; color: #f5c542; letter-spacing: .03em; }
+    #cms-loading .msg  { font-size: .9rem; color: #9999b8; }
+    #cms-loading .spinner {
+      width: 32px; height: 32px; border: 3px solid rgba(245,197,66,.2);
+      border-top-color: #f5c542; border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="cms-loading">
+    <div class="logo">AuraFlux</div>
+    <div class="spinner"></div>
+    <div class="msg">Loading Content Editor…</div>
+  </div>
+  <!-- Pinned version via jsDelivr (faster CDN than unpkg, no version-resolution round-trip) -->
+  <script src="https://cdn.jsdelivr.net/npm/@sveltia/cms@0.165.1/dist/sveltia-cms.js"
+          onload="document.getElementById('cms-loading').style.display='none'"
+          onerror="document.querySelector('#cms-loading .msg').textContent='Failed to load CMS — check your connection and refresh.'">
+  </script>
+</body>
+</html>

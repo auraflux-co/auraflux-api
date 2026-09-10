@@ -1,0 +1,117 @@
+<style>
+  .af-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    height: var(--nav-h, 64px);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(228, 228, 231, 0.9);
+  }
+  .af-nav-inner {
+    max-width: 72rem;
+    margin: 0 auto;
+    height: 100%;
+    padding: 0 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .af-nav-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none !important;
+    color: var(--brand-primary, #0b1220) !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.02em;
+  }
+  .af-nav-brand:hover { text-decoration: none !important; }
+  .af-nav-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--brand-primary, #0b1220);
+    color: var(--brand-accent, #f5c542);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+  #af-nav-links {
+    display: none;
+    align-items: center;
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 900px) {
+    #af-nav-links { display: flex; }
+  }
+  #af-nav-links a {
+    color: #475569 !important;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none !important;
+  }
+  #af-nav-links a:hover { color: #0f172a !important; }
+  .af-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .af-nav-login {
+    display: none;
+    color: #475569 !important;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none !important;
+    padding: 0.5rem 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .af-nav-login { display: inline-flex; }
+  }
+  .af-nav-login:hover { color: #0f172a !important; }
+  #af-nav-cta {
+    display: inline-flex;
+    align-items: center;
+    background: var(--brand-primary, #0b1220) !important;
+    color: #fff !important;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  }
+  #af-nav-cta:hover {
+    background: #050a12 !important;
+    text-decoration: none !important;
+  }
+</style>
+<header class="af-nav" role="banner">
+  <div class="af-nav-inner">
+    <a class="af-nav-brand" href="/">
+      <span class="af-nav-mark" aria-hidden="true">AF</span>
+      AuraFlux
+    </a>
+    <div id="af-nav-links">
+      <a href="/">Home</a>
+      <a href="/our-story">Our Story</a>
+      <a href="/our-system">Our System</a>
+      <a href="/pricing">Plans</a>
+      <a href="/roadmap">Roadmap</a>
+      <a href="/contact-us">Contact Us</a>
+    </div>
+    <div class="af-nav-actions">
+      <a class="af-nav-login" href="https://app.auraflux.co/login">Log in</a>
+      <a id="af-nav-cta" href="/plans">Get Started</a>
+    </div>
+  </div>
+</header>

@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Remove VectCut runtime/config from production (CapCut routes retained).
+**Last Updated:** 2026-09-10 — Marketing host moved to Vercel project `auraflux-co` (DNS remains Cloudflare CNAME).
 
 
 

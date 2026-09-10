@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "buildCommand": "python3 scripts/build-static.py",
+  "outputDirectory": "dist",
+  "framework": null,
+  "redirects": [
+    { "source": "/pricing", "destination": "/plans", "permanent": true },
+    { "source": "/about", "destination": "/our-story", "permanent": true },
+    { "source": "/system", "destination": "/our-system", "permanent": true },
+    { "source": "/contact-us", "destination": "/contact", "permanent": true },
+    { "source": "/sign-in", "destination": "https://app.auraflux.co/sign-in", "permanent": false },
+    { "source": "/sign-up", "destination": "https://app.auraflux.co/sign-up", "permanent": false },
+    { "source": "/login", "destination": "https://app.auraflux.co/login", "permanent": false }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
+  ]
+}

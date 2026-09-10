@@ -1,3 +1,6 @@
+# DEPRECATED for production: marketing hosts on Vercel (project auraflux-co).
+# Use: cd marketing && npx vercel deploy --prod --yes --scope robert-4220s-projects
+#
 #!/usr/bin/env bash
 # deploy.sh — Build + deploy _worker.js to Cloudflare Pages (auraflux-marketing)
 #

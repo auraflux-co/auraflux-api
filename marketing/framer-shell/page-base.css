@@ -1,0 +1,221 @@
+/* ── AuraFlux design tokens — Business Rocket structure, AuraFlux brand ─────
+ * Structure mirrors businessrocket/web (light canvas, zinc cards, slate-950
+ * footer, frosted sticky nav). Brand accents stay AuraFlux gold + navy.
+ * Marketing site is Cloudflare worker HTML/CSS (no Tailwind).
+ * ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Brand (AuraFlux) — map into BR primary/accent slots */
+  --brand-primary: #0b1220;       /* navy — BR uses #00274d here */
+  --brand-dark: #050a12;
+  --brand-accent: #f5c542;        /* gold — BR uses orange #ff6600 */
+  --brand-soft: #eef2f6;
+  --brand-line: #e5e7eb;
+  --brand-mist: #f9fafb;
+  --brand-text: #111827;
+
+  /* Semantic (BR-aligned) */
+  --paper: #ffffff;
+  --paper-deep: #f4f4f5;          /* zinc-100-ish / zinc-50 sections */
+  --ink: #111827;
+  --ink-muted: #334155;           /* slate-700 — readable body */
+  --ink-faint: #64748b;           /* slate-500 */
+  --line: #e4e4e7;                /* zinc-200 */
+  --line-soft: rgba(228, 228, 231, 0.9);
+
+  /* Legacy aliases used by older page CSS */
+  --af-bg: var(--paper-deep);
+  --af-bg-card: var(--paper);
+  --af-gold: var(--brand-accent);
+  --af-text: var(--ink);
+  --af-muted: var(--ink-muted);
+  --af-faint: var(--ink-faint);
+  --af-border: var(--line-soft);
+  --af-border-hi: #d4d4d8;
+
+  --radius-xl: 1rem;              /* rounded-2xl */
+  --radius-lg: 0.75rem;           /* rounded-xl */
+  --radius-md: 0.5rem;            /* rounded-lg */
+  --nav-h: 64px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Satoshi', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding-top: var(--nav-h);
+  line-height: 1.625;
+}
+
+h1, h2, h3 {
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.15 !important;
+  color: var(--ink);
+}
+
+p {
+  color: var(--ink-muted) !important;
+  font-weight: 400 !important;
+  line-height: 1.625 !important;
+}
+
+a { color: var(--brand-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── BR-style surface utilities ─────────────────────────────────────────── */
+.surface-light { background: var(--paper); color: var(--ink); }
+.surface-mist { background: var(--paper-deep); color: var(--ink); }
+.surface-dark {
+  background: #020617; /* slate-950 */
+  color: #fff;
+}
+.surface-dark p { color: #94a3b8 !important; } /* slate-400 */
+
+.af-card {
+  background: #fff;
+  border: 1px solid rgba(228, 228, 231, 0.9); /* zinc-200/90 */
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.af-card:hover { box-shadow: var(--shadow-md); }
+
+.af-container {
+  width: 100%;
+  max-width: 72rem; /* max-w-6xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.af-section {
+  padding: 4rem 0;
+}
+@media (min-width: 768px) {
+  .af-section { padding: 6rem 0; }
+}
+
+.af-eyebrow {
+  display: inline-block;
+  border-radius: 9999px;
+  background: var(--brand-mist);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  border: 1px solid var(--line);
+}
+
+/* Primary CTA — BR solid dark, AF navy fill + gold available via .btn-accent */
+.btn-primary,
+.cta-primary,
+.nav-cta,
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--brand-primary) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: none;
+  box-shadow: var(--shadow-sm);
+  text-decoration: none !important;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.btn-primary:hover,
+.cta-primary:hover,
+.primary:hover {
+  background: var(--brand-dark) !important;
+  text-decoration: none !important;
+}
+
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--brand-accent) !important;
+  color: var(--brand-primary) !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none !important;
+}
+.btn-accent:hover { opacity: 0.9; text-decoration: none !important; }
+
+.btn-secondary,
+.secondary,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #f1f5f9 !important; /* slate-100 */
+  color: #475569 !important;      /* slate-600 */
+  font-weight: 500 !important;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: none;
+  text-decoration: none !important;
+  transition: background 0.15s ease;
+}
+.btn-secondary:hover,
+.secondary:hover,
+.btn-ghost:hover {
+  background: #e2e8f0 !important;
+  text-decoration: none !important;
+}
+
+.surface-dark .btn-ghost,
+.surface-dark .btn-secondary {
+  background: transparent !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+.surface-dark .btn-ghost:hover,
+.surface-dark .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+.surface-dark .btn-primary,
+.surface-dark .primary {
+  /* AF brand: gold fills BR white-on-dark CTA slot */
+  background: var(--brand-accent) !important;
+  color: var(--brand-primary) !important;
+}
+.surface-dark .btn-accent {
+  background: var(--brand-accent) !important;
+  color: var(--brand-primary) !important;
+}
+
+/* Framer legacy class height stubs (homepage shell) */
+:where(.framer-frJN9) {
+  background: transparent !important;
+  height: var(--nav-h) !important;
+  border-bottom: none !important;
+}
+:where(.framer-1k32ijd) {
+  height: var(--nav-h) !important;
+  width: 126px !important;
+}
+
+/* Gold accent span used in CMS titles */
+.gold { color: var(--brand-accent) !important; font-style: normal; }

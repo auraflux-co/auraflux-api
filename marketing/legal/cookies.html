@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cookie Policy | AuraFlux</title>
+<meta name="description" content="How AuraFlux uses cookies and tracking technologies.">
+<link rel="canonical" href="https://auraflux.co/cookies">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-MBS26S2W6E');
+</script>
+${FRAMER_FONTS || ''}
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Satoshi','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0b1220;color:#ffffff;line-height:1.7}
+a{color:#f5c542;text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:780px;margin:0 auto;padding:104px 24px 120px}
+h1{font-size:2.5rem;font-weight:700;margin-bottom:8px;color:#fff}
+.meta{font-size:.85rem;color:#a0a0b8;margin-bottom:40px}
+h2{font-size:1.6rem;font-weight:600;margin:36px 0 12px;color:#fff}
+p,li{font-size:.95rem;color:#8f9bb7;margin-bottom:12px}
+ul,ol{padding-left:24px;margin-bottom:16px}
+</style>
+${FRAMER_CSS ? `<style id="af-framer-tokens">${FRAMER_CSS}</style>` : ''}
+</head>
+<body>
+${FRAMER_NAV || FALLBACK_NAV}
+<div class="wrap">
+<h1>Cookie Policy</h1>
+<p class="meta">Effective: 1 June 2026 · Last updated: 28 May 2026</p>
+
+<h2>What Are Cookies</h2>
+<p>Cookies are small text files stored by your browser. We use them to keep you signed in, understand how the platform is used, and improve performance.</p>
+
+<h2>Cookies We Use</h2>
+<h2>Essential (cannot be disabled)</h2>
+<ul>
+  <li><strong>Clerk session cookies</strong> — keep you authenticated in the app. Without these the app cannot function.</li>
+</ul>
+<h2>Analytics</h2>
+<ul>
+  <li><strong>New Relic browser agent</strong> — page load times, JS errors, performance metrics. No personal data is shared with New Relic beyond anonymous session identifiers.</li>
+</ul>
+<h2>Third-Party</h2>
+<ul>
+  <li><strong>Framer</strong> — the marketing site is built with Framer which may set analytics cookies on auraflux.co pages.</li>
+</ul>
+
+<h2>Managing Cookies</h2>
+<p>You can block or delete cookies in your browser settings. Blocking essential cookies will prevent you from signing in. For analytics cookies, most modern browsers support Global Privacy Control (GPC) which we honour.</p>
+
+<h2>Contact</h2>
+<p><a href="mailto:privacy@auraflux.co">privacy@auraflux.co</a></p>
+</div>
+${FRAMER_FOOTER || FALLBACK_FOOTER}
+</body>
+</html>

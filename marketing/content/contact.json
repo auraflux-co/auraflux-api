@@ -1,0 +1,26 @@
+{
+  "hero_headline": "Get in Touch",
+  "hero_sub": "Sales, support, partnerships, or feedback. We read every message.",
+  "faq": [
+    {
+      "question": "What's the difference between our plans?",
+      "answer": "Both plans include the full AuraFlux automated engine. Operate is entirely self-serve via our dashboard and API. Guided includes our built-in Collab assistant to monitor and refine your outputs. Managed adds dedicated human account managers."
+    },
+    {
+      "question": "How do credits work?",
+      "answer": "Each plan includes a monthly credit allowance. One credit = one complete production job. Unused credits roll over automatically, and Extra Credit Packs can be purchased any time directly inside your account dashboard."
+    },
+    {
+      "question": "Can I connect multiple social accounts?",
+      "answer": "Yes. connect all major platforms and target any job to one or more simultaneously. YouTube, TikTok, Instagram, Twitch, and Kick are all supported."
+    },
+    {
+      "question": "Do I need technical knowledge?",
+      "answer": "No. The dashboard guides you through every step. For teams that prefer raw API access, full developer documentation is available at auraflux.co/developer-api."
+    }
+  ],
+  "form_title": "Send a message",
+  "channels_title": "Other ways to reach us",
+  "faq_eyebrow": "FAQ",
+  "faq_title": "Common Questions"
+}

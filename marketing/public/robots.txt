@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://auraflux.co/sitemap.xml
+
+Disallow: /admin
+Disallow: /oauth/

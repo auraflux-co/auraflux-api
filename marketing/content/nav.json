@@ -1,0 +1,30 @@
+{
+  "cta_label": "Get Started",
+  "cta_url": "/plans",
+  "links": [
+    {
+      "label": "Home",
+      "url": "/"
+    },
+    {
+      "label": "Our Story",
+      "url": "/our-story"
+    },
+    {
+      "label": "Our System",
+      "url": "/our-system"
+    },
+    {
+      "label": "Plans",
+      "url": "/pricing"
+    },
+    {
+      "label": "Roadmap",
+      "url": "/roadmap"
+    },
+    {
+      "label": "Contact Us",
+      "url": "/contact-us"
+    }
+  ]
+}

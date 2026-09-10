@@ -1,0 +1,8 @@
+{
+  "name": "auraflux-co",
+  "private": true,
+  "scripts": {
+    "build": "python3 scripts/build-static.py",
+    "deploy": "npx vercel deploy --prod --yes --scope robert-4220s-projects"
+  }
+}
