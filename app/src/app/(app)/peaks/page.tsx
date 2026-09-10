@@ -1,10 +1,10 @@
 'use client';
 /**
- * Peaks — YouTube Most Replayed → stage trim → Short job (C1–C11 preset labeled).
- * iss_exFgoTmmRwhP
+ * Peaks — YouTube Most Replayed → customer upload stage → Short job (C1–C11).
+ * Browser hop: user downloads/trims locally, uploads MP4 (no Render YouTube pull).
  */
 
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
@@ -18,7 +18,7 @@ import {
   createJob,
   listContentLibraryVods,
   analyzeContentLibraryVod,
-  stageContentLibraryVodWindow,
+  stageContentLibraryLocalFile,
   listComposePresets,
   type ContentLibraryVod,
   type ContentLibraryPeak,
@@ -46,6 +46,8 @@ function PeaksPageInner() {
   const { getToken, isLoaded } = useAuth();
   const { activeBrand } = useBrand();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingPeakRef = useRef<ContentLibraryPeak | null>(null);
 
   const [handle, setHandle] = useState('');
   const [vods, setVods] = useState<ContentLibraryVod[]>([]);
@@ -56,6 +58,7 @@ function PeaksPageInner() {
   const [analyzeMode, setAnalyzeMode] = useState<string | null>(null);
   const [staged, setStaged] = useState<{ mp4Url?: string; title?: string; duration?: number; startSec?: number; endSec?: number } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [uploadPct, setUploadPct] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
 
@@ -123,6 +126,11 @@ function PeaksPageInner() {
       setPeaks(res.segments || []);
       setAnalyzeMode(res.mode || null);
       if (!(res.segments || []).length) setHint('No peaks returned — try another VOD.');
+      else {
+        setHint(
+          'Open the peak on YouTube, download/trim that window on your device, then Upload clip. Staging uses your upload — no server YouTube download.',
+        );
+      }
     } catch (e) {
       setError(formatUserError(e instanceof Error ? e.message : 'Analyze failed'));
     } finally {
@@ -130,34 +138,59 @@ function PeaksPageInner() {
     }
   }
 
-  async function onStage(peak: ContentLibraryPeak) {
-    if (!selectedVod) return;
-    setBusy('Staging peak window to R2…');
+  function onUploadPeak(peak: ContentLibraryPeak) {
+    pendingPeakRef.current = peak;
+    fileInputRef.current?.click();
+  }
+
+  function onUploadAny() {
+    pendingPeakRef.current = null;
+    fileInputRef.current?.click();
+  }
+
+  async function onFileChosen(file: File | null) {
+    if (!file) return;
+    const peak = pendingPeakRef.current;
+    setBusy(`Uploading ${file.name}…`);
+    setUploadPct(0);
     setError(null);
     try {
       const token = await getToken();
       if (!token) throw new Error('Session not ready');
-      const res = await stageContentLibraryVodWindow({
-        vodUrl: selectedVod.url,
-        vodId: selectedVod.vodId,
-        startSec: peak.start_sec,
-        endSec: peak.end_sec,
-        title: peak.title || selectedVod.title,
-        streamer: selectedVod.streamer,
-        platform: 'youtube',
-        thumbnailUrl: selectedVod.thumbnailUrl,
-      }, token);
+      const res = await stageContentLibraryLocalFile(
+        file,
+        {
+          title: peak?.title || selectedVod?.title || file.name.replace(/\.[^.]+$/, ''),
+          streamer: selectedVod?.streamer || 'peaks_upload',
+          platform: 'youtube',
+          vodUrl: selectedVod?.url,
+          vodId: selectedVod?.vodId,
+          startSec: peak?.start_sec,
+          endSec: peak?.end_sec,
+          thumbnailUrl: selectedVod?.thumbnailUrl,
+          force: true,
+        },
+        token,
+        (pct) => {
+          setUploadPct(pct);
+          setBusy(`Uploading… ${pct}%`);
+        },
+      );
       setStaged({
         mp4Url: res.mp4Url || res.playbackUrl || res.stagedUrl || res.r2Url || undefined,
-        title: res.title || peak.title,
+        title: res.title || peak?.title || file.name,
         duration: res.duration,
-        startSec: res.startSec,
-        endSec: res.endSec,
+        startSec: res.startSec ?? peak?.start_sec,
+        endSec: res.endSec ?? peak?.end_sec,
       });
+      setHint('Clip staged to R2 — pick a preset and create your Short.');
     } catch (e) {
-      setError(formatUserError(e instanceof Error ? e.message : 'Stage failed'));
+      setError(formatUserError(e instanceof Error ? e.message : 'Upload stage failed'));
     } finally {
       setBusy(null);
+      setUploadPct(null);
+      pendingPeakRef.current = null;
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }
 
@@ -213,7 +246,15 @@ function PeaksPageInner() {
     <PageShell maxWidth="4xl">
       <PageHeader
         title="Peaks"
-        subtitle="Pull YouTube VODs → Most Replayed peaks → trim → Short (C1–C11). Publish to YouTube when ready."
+        subtitle="VODs → Most Replayed peaks → upload your trim → Short (C1–C11). You pull the clip; we compose and publish."
+      />
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.webm,.mkv"
+        className="hidden"
+        onChange={(e) => void onFileChosen(e.target.files?.[0] || null)}
       />
 
       {error && (
@@ -221,7 +262,12 @@ function PeaksPageInner() {
           {error}
         </div>
       )}
-      {busy && <p className="af-caption text-muted-foreground">{busy}</p>}
+      {busy && (
+        <p className="af-caption text-muted-foreground">
+          {busy}
+          {uploadPct != null ? ` (${uploadPct}%)` : ''}
+        </p>
+      )}
       {hint && !error && <p className="af-caption text-muted-foreground">{hint}</p>}
       {analyzeMode && (
         <p className="af-caption">Analyze mode: <strong>{analyzeMode}</strong></p>
@@ -241,7 +287,13 @@ function PeaksPageInner() {
             <Button onClick={() => loadVods(handle)} disabled={!!busy}>
               Fetch VODs
             </Button>
+            <Button variant="outline" onClick={onUploadAny} disabled={!!busy}>
+              Upload any clip
+            </Button>
           </div>
+          <p className="af-caption text-muted-foreground">
+            Upload skips YouTube download on our servers — same idea as staging a local file on localhost.
+          </p>
         </CardContent>
       </Card>
 
@@ -254,9 +306,16 @@ function PeaksPageInner() {
                 {formatClock(v.duration || 0)}
                 {v.views ? ` · ${v.views.toLocaleString()} views` : ''}
               </p>
-              <Button size="sm" variant="outline" onClick={() => onAnalyze(v)} disabled={!!busy}>
-                Analyze peaks
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => onAnalyze(v)} disabled={!!busy}>
+                  Analyze peaks
+                </Button>
+                {v.url && (
+                  <Button size="sm" variant="ghost" asChild>
+                    <a href={v.url} target="_blank" rel="noreferrer">Open on YouTube</a>
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -265,6 +324,9 @@ function PeaksPageInner() {
       {peaks.length > 0 && (
         <div className="space-y-3">
           <h2 className="af-label font-medium">Peaks</h2>
+          <p className="af-caption text-muted-foreground">
+            For each peak: open the VOD at that timestamp, trim/download locally, then Upload clip.
+          </p>
           {peaks.map((p, i) => (
             <Card key={`${p.start_sec}-${i}`}>
               <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
@@ -275,9 +337,22 @@ function PeaksPageInner() {
                   </p>
                   <p className="af-caption text-muted-foreground">{p.title || p.summary || 'Peak window'}</p>
                 </div>
-                <Button size="sm" onClick={() => onStage(p)} disabled={!!busy}>
-                  Stage trim
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  {selectedVod?.url && (
+                    <Button size="sm" variant="outline" asChild>
+                      <a
+                        href={`${selectedVod.url}${selectedVod.url.includes('?') ? '&' : '?'}t=${Math.floor(p.start_sec)}s`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Open at peak
+                      </a>
+                    </Button>
+                  )}
+                  <Button size="sm" onClick={() => onUploadPeak(p)} disabled={!!busy}>
+                    Upload clip
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -289,7 +364,10 @@ function PeaksPageInner() {
           <CardContent className="pt-5 space-y-4">
             <h2 className="af-label font-medium">Staged · ready for compose</h2>
             <p className="af-caption">
-              {staged.title} · {formatClock(staged.startSec || 0)}–{formatClock(staged.endSec || 0)}
+              {staged.title}
+              {staged.startSec != null && staged.endSec != null
+                ? ` · ${formatClock(staged.startSec)}–${formatClock(staged.endSec)}`
+                : ''}
             </p>
             <video src={staged.mp4Url} controls className="w-full max-w-md rounded-md bg-black" />
             <div className="space-y-2">
@@ -305,9 +383,6 @@ function PeaksPageInner() {
                   <option key={p.key} value={p.key}>{p.code} · {p.label}</option>
                 ))}
               </select>
-              <p className="af-caption text-muted-foreground">
-                Preset is saved on the job. Full C9–C11 assembly looks continue to land; trim + YouTube publish work now.
-              </p>
             </div>
             <Button onClick={onCreateJob} disabled={!!busy}>
               Create Short job (YouTube)
