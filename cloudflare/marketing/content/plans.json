@@ -1,13 +1,13 @@
 {
   "hero_headline": "Plans That Match How You Run Production",
-  "hero_sub": "Operate, Guided, and Managed all include the AuraFlux member portal, Peaks, and the automated production pipeline. The difference is how much support you want.",
+  "hero_sub": "Operate, Guided, and Managed all include the AuraFlux member portal, Peaks (Most Replayed, chat spikes, CCV), and the automated production pipeline. The difference is how much support you want.",
   "operate": {
     "title": "Self-serve",
-    "subtitle": "Full platform access. You run Peaks, jobs, and publish yourself from app.auraflux.co.",
+    "subtitle": "Full platform access. You run Peaks (Most Replayed, chat spikes, CCV), jobs, and publish yourself from app.auraflux.co.",
     "price": "$999",
     "credits": "400 credits/month · Self-serve checkout",
     "features": [
-      "Member portal with Peaks (YouTube, Twitch, Kick)",
+      "Member portal with Peaks (Most Replayed, chat spikes, CCV)",
       "Spec-driven production pipeline",
       "Direct publish to connected platforms",
       "API access for operators who want it",

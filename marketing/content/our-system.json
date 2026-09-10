@@ -1,6 +1,6 @@
 {
   "hero_headline": "From Peak to Published Short",
-  "hero_sub": "AuraFlux is a spec-driven production environment. Peaks finds the moment. The pipeline runs only the portals that job needs. Then you publish from the member portal.",
+  "hero_sub": "AuraFlux is a spec-driven production environment. Peaks finds the moment using YouTube Most Replayed, Twitch chat spikes, and Kick CCV. The pipeline runs only the portals that job needs. Then you publish from the member portal.",
   "portals": [
     {
       "badge": "P0",
@@ -64,9 +64,9 @@
   "pipeline_title": "The production pipeline",
   "pipeline_sub": "Portals run when the job spec says so. Skipped is not failed.",
   "content_types_title": "What you can produce",
-  "content_types_sub": "Peaks first on the site. Extra tools live in the member portal.",
+  "content_types_sub": "Peaks means Most Replayed, chat spikes, and CCV first. Extra tools live in the member portal.",
   "features_title": "Inside the member portal",
-  "features_sub": "Peaks, jobs, channels, social accounts, review queue, and billing at app.auraflux.co.",
+  "features_sub": "Peaks (Most Replayed, chat, CCV), jobs, channels, social accounts, review queue, and billing at app.auraflux.co.",
   "credits_title": "How credits work",
   "credits_body": "Plans include monthly credits (Operate 400, Guided 1,200, Managed 2,000). Credits are consumed when production runs. Buy packs in-app if you need more mid-cycle.",
   "publish_title": "Where AuraFlux publishes",

@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Marketing: Peaks-only core cards; secondary offers in-portal.
+**Last Updated:** 2026-09-10 — Marketing: pair Peaks with Most Replayed / chat spikes / CCV on first use.
 
 
 

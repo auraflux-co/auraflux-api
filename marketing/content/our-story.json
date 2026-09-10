@@ -1,7 +1,7 @@
 {
   "hero_headline": "Production Infrastructure for Streamers",
-  "hero_sub": "AuraFlux exists so creators can ship Shorts from the peaks of their streams without standing up an edit team.",
-  "mission_body": "Most streamers produce hours of content every week and then lose the best moments in the VOD. Scrubbing by hand is slow. Hiring editors is expensive. Clips sit unused while the channel waits.\n\nWe built AuraFlux around Peaks: find the high-signal moments on YouTube, Twitch, and Kick, stage a trim, run the production pipeline, and publish from the member portal.",
+  "hero_sub": "AuraFlux exists so creators can ship Shorts from stream peaks (Most Replayed, chat spikes, CCV) without standing up an edit team.",
+  "mission_body": "Most streamers produce hours of content every week and then lose the best moments in the VOD. Scrubbing by hand is slow. Hiring editors is expensive. Clips sit unused while the channel waits.\n\nWe built AuraFlux around Peaks: YouTube Most Replayed, Twitch chat spikes, and Kick CCV. Find the window, stage a trim, run the production pipeline, and publish from the member portal.",
   "blockquote": "Every creator should ship like a media team. That is a software problem, not a staffing problem.",
   "stats": [
     { "number": "03", "label": "PEAK_SOURCES" },
@@ -13,7 +13,7 @@
     {
       "icon": "⚡",
       "headline": "Peaks first",
-      "body": "YouTube Most Replayed, Twitch chat peaks, and Kick live CCV live in the member portal so you start from signal, not a blank timeline."
+      "body": "YouTube Most Replayed, Twitch chat spikes, and Kick live CCV live in the member portal so you start from signal, not a blank timeline."
     },
     {
       "icon": "🎯",
@@ -38,11 +38,11 @@
     {
       "icon": "🔌",
       "headline": "API when you need it",
-      "body": "Operators who want programmatic control get API access. Most creators start in Peaks and the dashboard."
+      "body": "Operators who want programmatic control get API access. Most creators start with Peaks (Most Replayed, chat spikes, CCV) in the dashboard."
     }
   ],
   "cta_headline": "Ready to ship Shorts from Peaks?",
-  "cta_sub": "Open the member portal and start with Peaks.",
+  "cta_sub": "Open Peaks for Most Replayed, chat spikes, and CCV in the member portal.",
   "founder_photo": "/cf-assets/marketing/images/founder-rob-gregory.jpg",
   "founder_name": "Rob Gregory",
   "founder_role": "Founder & CEO",

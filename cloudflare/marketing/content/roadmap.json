@@ -1,6 +1,6 @@
 {
   "hero_headline": "What's Next for AuraFlux",
-  "hero_sub": "Live product first: Peaks, the member portal, and the production pipeline. Below is what we are hardening next.",
+  "hero_sub": "Live product first: Peaks (Most Replayed, chat spikes, CCV), the member portal, and the production pipeline. Below is what we are hardening next.",
   "now": [
     {
       "tag": "Product",
@@ -17,7 +17,7 @@
     {
       "tag": "Production",
       "headline": "More Short templates",
-      "description": "Additional job templates for common streamer Short formats beyond Peaks."
+      "description": "More in-portal job tools for common streamer Short workflows beyond the Peaks homepage offer."
     },
     {
       "tag": "Publish",
