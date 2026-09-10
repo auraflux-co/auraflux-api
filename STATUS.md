@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Peaks+/v1 + C1–C11 edit presets as one wrap (presets endpoint + short_compile on /v1/jobs).
+**Last Updated:** 2026-09-10 — Plans card graphic: Peaks+publish one-plan illustration.
 
 
 
