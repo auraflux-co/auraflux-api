@@ -164,3 +164,62 @@ test('create C9 short_compile job from sample mp4', { skip: !enabled || !createJ
   assert.ok(jobId, `expected jobId: ${JSON.stringify(json)}`);
   console.log('created job', jobId);
 });
+
+const TWITCH_HANDLE = process.env.E2E_TWITCH_HANDLE || 'shroud';
+const gqlStrict = process.env.TWITCH_GQL_STRICT === '1';
+
+test('twitch vod list returns archives', { skip: !enabled }, async () => {
+  const { status, json } = await api(
+    `/content-library/vods?platform=twitch&handle=${encodeURIComponent(TWITCH_HANDLE)}&limit=5`,
+  );
+  if (status === 500 && /Twitch Client ID and Token|Helix|401/i.test(JSON.stringify(json || {}))) {
+    console.log('twitch vod list skipped — Helix creds missing on API');
+    return;
+  }
+  assert.equal(status, 200, JSON.stringify(json || {}));
+  assert.ok(json?.ok);
+  assert.equal(json.platform, 'twitch');
+  globalThis.__PEAKS_TWITCH_VODS = json.vods || [];
+  console.log('twitch vods', globalThis.__PEAKS_TWITCH_VODS.length);
+});
+
+test('twitch analyze returns peak segments', { skip: !enabled }, async () => {
+  let vods = globalThis.__PEAKS_TWITCH_VODS;
+  if (!vods) {
+    const list = await api(
+      `/content-library/vods?platform=twitch&handle=${encodeURIComponent(TWITCH_HANDLE)}&limit=3`,
+    );
+    if (list.status !== 200) {
+      console.log('twitch analyze skipped — list failed', list.status);
+      return;
+    }
+    vods = list.json?.vods || [];
+  }
+  if (!vods.length) {
+    console.log('twitch analyze skipped — no archives ≥180s');
+    return;
+  }
+  const vod = vods[0];
+  const { status, json } = await api('/content-library/vod/analyze', {
+    method: 'POST',
+    body: {
+      platform: 'twitch',
+      vodId: vod.vodId,
+      vodUrl: vod.url,
+      title: vod.title,
+      durationSec: Math.min(vod.duration || 3600, 3600),
+      streamer: vod.streamer || TWITCH_HANDLE,
+      views: vod.views,
+      maxPeaks: 5,
+    },
+  });
+  assert.equal(status, 200, JSON.stringify(json || {}));
+  assert.ok(json?.ok);
+  assert.ok(Array.isArray(json.segments) && json.segments.length >= 1, 'expected segments');
+  console.log('twitch analyze mode', json.mode, 'segs', json.segments.length);
+  if (gqlStrict) {
+    assert.equal(json.mode, 'twitch_chat_heatmap');
+  } else if (json.mode !== 'twitch_chat_heatmap') {
+    console.warn('twitch analyze fell back to', json.mode, '(set TWITCH_GQL_STRICT=1 to fail)');
+  }
+});

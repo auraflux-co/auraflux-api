@@ -2,6 +2,8 @@
 
 **Deploy Mode:** dev
 
+**Last Updated:** 2026-09-09 — Twitch chat peak segment labels; GQL hash + Client-ID fix for heatmap.
+**Last Updated:** 2026-09-09 — Twitch Peaks parity: GET /content-library/vods?platform=twitch + Peaks UI toggle; chat-heatmap analyze; e2e.
 **Last Updated:** 2026-09-09 — Peaks core QA: extended prod e2e (analyze + stage-local→R2 + create job); browser Fetch/Analyze on app.auraflux.co.
 **Last Updated:** 2026-09-09 — Peaks Vercel build: fix sidebar `const const` + Button asChild→anchor (base-ui).
 **Last Updated:** 2026-09-09 — Peaks browser stage: POST /content-library/stage-local (multipart → R2); UI upload hop.

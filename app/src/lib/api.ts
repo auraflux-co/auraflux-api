@@ -1381,11 +1381,12 @@ export interface ComposePreset {
 
 export async function listContentLibraryVods(
   token?: string,
-  opts: { handle?: string; limit?: number } = {},
-): Promise<{ ok: boolean; handle?: string; channelTitle?: string | null; vods: ContentLibraryVod[] }> {
+  opts: { handle?: string; limit?: number; platform?: 'youtube' | 'twitch' | string } = {},
+): Promise<{ ok: boolean; handle?: string; channelTitle?: string | null; platform?: string; vods: ContentLibraryVod[] }> {
   const qs = new URLSearchParams();
   if (opts.handle) qs.set('handle', opts.handle);
   if (opts.limit) qs.set('limit', String(opts.limit));
+  if (opts.platform) qs.set('platform', opts.platform);
   const q = qs.toString();
   return apiFetch(`/content-library/vods${q ? `?${q}` : ''}`, { token });
 }
