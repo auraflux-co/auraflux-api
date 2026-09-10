@@ -1444,6 +1444,79 @@ export async function stageContentLibraryVodWindow(
   });
 }
 
+/**
+ * Customer browser hop: multipart upload → server → R2 (no browser→R2 CORS, no YouTube pull).
+ */
+export async function stageContentLibraryLocalFile(
+  file: File,
+  meta: {
+    title?: string;
+    streamer?: string;
+    platform?: string;
+    sourceUrl?: string;
+    vodUrl?: string;
+    vodId?: string;
+    startSec?: number;
+    endSec?: number;
+    thumbnailUrl?: string | null;
+    force?: boolean;
+  },
+  token?: string,
+  onProgress?: (pct: number) => void,
+): Promise<{
+  ok: boolean;
+  mp4Url?: string;
+  playbackUrl?: string;
+  stagedUrl?: string;
+  r2Url?: string;
+  title?: string;
+  duration?: number;
+  startSec?: number;
+  endSec?: number;
+  cached?: boolean;
+  error?: string;
+}> {
+  const base = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
+  const url = `${base}/content-library/stage-local`;
+
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (meta.title) form.append('title', meta.title);
+    if (meta.streamer) form.append('streamer', meta.streamer);
+    if (meta.platform) form.append('platform', meta.platform);
+    if (meta.sourceUrl) form.append('sourceUrl', meta.sourceUrl);
+    if (meta.vodUrl) form.append('vodUrl', meta.vodUrl);
+    if (meta.vodId) form.append('vodId', meta.vodId);
+    if (meta.startSec != null) form.append('startSec', String(meta.startSec));
+    if (meta.endSec != null) form.append('endSec', String(meta.endSec));
+    if (meta.thumbnailUrl) form.append('thumbnailUrl', meta.thumbnailUrl);
+    if (meta.force) form.append('force', '1');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText || '{}');
+        if (xhr.status >= 200 && xhr.status < 300 && data.ok !== false) {
+          resolve(data);
+        } else {
+          reject(new Error(data.error || data.message || `Upload failed: ${xhr.status}`));
+        }
+      } catch {
+        reject(new Error(`Upload failed: ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.send(form);
+  });
+}
+
 export async function listComposePresets(
   token?: string,
 ): Promise<{ ok: boolean; presets: ComposePreset[] }> {
