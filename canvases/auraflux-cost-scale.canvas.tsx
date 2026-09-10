@@ -42,7 +42,7 @@ const FIXED_BASE = [
   { service: 'Twilio (number)',                monthly: 3,   notes: '$3.30 — per-message billed separately' },
   { service: 'HeyGen plan (100 min incl.)',    monthly: 100, notes: 'Base plan. API overage in credit model.' },
   { service: 'ElevenLabs TTS',               monthly: 0,   notes: 'Free tier active (10K credits remaining). Upgrade to Pro $99/mo only when exhausted — threshold trigger.' },
-  { service: 'CapCut / VectCut',              monthly: 20,  notes: 'Tooling subscription' },
+  { service: 'CapCut',              monthly: 20,  notes: 'Tooling subscription' },
   { service: 'Twitch',                         monthly: 12,  notes: 'Content source' },
   { service: 'RunPod (storage while paused)',  monthly: 7,   notes: 'GPU compute is per-job variable' },
   { service: 'Gemini API (base)',              monthly: 10,  notes: 'Copilot + script calls. Scales with usage.' },

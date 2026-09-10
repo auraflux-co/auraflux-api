@@ -13,7 +13,6 @@ alwaysApply: true
 2. **Infrastructure credentials** (env vars) — for credentials only, never for feature activation
 
 **Environment variables are infrastructure, not feature switches.**
-- `VECTCUT_API_URL` — credential for the VectCut service
 - `GEMINI_API_KEY` — credential for Google AI
 - `RUNPOD_API_KEY` — credential for RunPod
 
