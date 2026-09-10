@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Allow marketing plan PNG in git; ship Peaks+publish card art.
+**Last Updated:** 2026-09-10 — One-plan graphic: Engagement peak chart → Short → channel publish.
 
 
 
