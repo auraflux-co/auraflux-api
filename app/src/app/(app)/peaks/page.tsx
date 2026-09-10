@@ -8,7 +8,8 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -311,9 +312,14 @@ function PeaksPageInner() {
                   Analyze peaks
                 </Button>
                 {v.url && (
-                  <Button size="sm" variant="ghost" asChild>
-                    <a href={v.url} target="_blank" rel="noreferrer">Open on YouTube</a>
-                  </Button>
+                  <a
+                    href={v.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }))}
+                  >
+                    Open on YouTube
+                  </a>
                 )}
               </div>
             </CardContent>
@@ -339,15 +345,14 @@ function PeaksPageInner() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {selectedVod?.url && (
-                    <Button size="sm" variant="outline" asChild>
-                      <a
-                        href={`${selectedVod.url}${selectedVod.url.includes('?') ? '&' : '?'}t=${Math.floor(p.start_sec)}s`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open at peak
-                      </a>
-                    </Button>
+                    <a
+                      href={`${selectedVod.url}${selectedVod.url.includes('?') ? '&' : '?'}t=${Math.floor(p.start_sec)}s`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}
+                    >
+                      Open at peak
+                    </a>
                   )}
                   <Button size="sm" onClick={() => onUploadPeak(p)} disabled={!!busy}>
                     Upload clip
