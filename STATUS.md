@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — API invite gate + Peaks /v1 live; restore header API nav + plans invite copy.
+**Last Updated:** 2026-09-11 — How it works live media: system-demo.mp4 + step GIFs/JPG from plan graphic + short still.
 
 
 

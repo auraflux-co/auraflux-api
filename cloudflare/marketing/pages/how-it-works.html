@@ -232,14 +232,22 @@ ${FRAMER_FOOTER || FALLBACK_FOOTER}
     return;
   }
 
-  // Prefer local MP4 when present under /assets/system-demo.mp4
-  var probe = new Image(); // unused — use fetch HEAD for mp4
-  fetch('/assets/system-demo.mp4', { method: 'HEAD' }).then(function (res) {
-    if (res.ok) {
-      video.hidden = false;
-      root.classList.add('is-ready');
-    }
-  }).catch(function () {});
+  // Prefer local MP4: /assets/system-demo.mp4 or /assets/demo.mp4
+  var sources = ['/assets/system-demo.mp4', '/assets/demo.mp4'];
+  (function tryNext(i) {
+    if (i >= sources.length) return;
+    fetch(sources[i], { method: 'HEAD' }).then(function (res) {
+      if (res.ok) {
+        var srcEl = video.querySelector('source');
+        if (srcEl) srcEl.src = sources[i];
+        video.load();
+        video.hidden = false;
+        root.classList.add('is-ready');
+      } else {
+        tryNext(i + 1);
+      }
+    }).catch(function () { tryNext(i + 1); });
+  })(0);
 })();
 </script>
 </body>
