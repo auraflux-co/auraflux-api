@@ -1,34 +1,36 @@
 {
-  "hero_headline": "Blog",
-  "hero_sub": "Insights on automated video production, content automation, and building a streaming-to-revenue pipeline.",
+  "hero_headline": "AuraFlux Insights & Engineering",
+  "hero_sub": "Guides, API strategies, and automation playbooks for streamers and content teams.",
+  "featured": {
+    "category": "automation",
+    "badge": "Featured Guide",
+    "title": "From Twitch Clip to Published Video in Under 5 Minutes",
+    "description": "How AuraFlux's portal pipeline handles sourcing, scripting, voiceover, thumbnails, and direct publishing automatically.",
+    "date": "Sep 11, 2026",
+    "read": "5 min read",
+    "url": "/blog/twitch-clip-to-published-video"
+  },
   "posts": [
     {
-      "tag": "Guide",
-      "title": "From Twitch Clip to Published Video in Under 5 Minutes",
-      "description": "How AuraFlux's portal pipeline handles sourcing, scripting, voiceover, thumbnails, and direct publishing. automatically.",
-      "status": "Coming soon",
-      "url": ""
-    },
-    {
-      "tag": "Monetization",
+      "category": "Monetization",
       "title": "The Multi-Platform Content Strategy for Streamers",
-      "description": "How top streamers on Twitch and Kick maximise revenue by cross-posting to YouTube, TikTok, and subscription platforms.",
-      "status": "Coming soon",
-      "url": ""
+      "description": "How top streamers on Twitch and Kick maximize revenue by cross-posting to YouTube, TikTok, and subscription platforms.",
+      "date": "Sep 10, 2026",
+      "url": "/blog/one-plan"
     },
     {
-      "tag": "Platform",
+      "category": "Platform",
       "title": "Direct Publishing to TikTok and YouTube: A Deep Dive",
       "description": "OAuth-based direct publish means no manual uploads. Here's how the AuraFlux publish portal handles both platforms.",
-      "status": "Coming soon",
-      "url": ""
+      "date": "Sep 8, 2026",
+      "url": "/blog/why-peaks"
     },
     {
-      "tag": "Automation",
-      "title": "Inside AuraFlux's Portal Pipeline: How 6 Portals Turn a Clip Into a Published Video",
-      "description": "A detailed walkthrough of each production stage. from Portal 0 (intake) through Portal 5 (publish).",
-      "status": "Coming soon",
-      "url": ""
+      "category": "Automation",
+      "title": "Inside AuraFlux's Portal Pipeline: How Portals Turn a Clip Into a Published Video",
+      "description": "A detailed walkthrough of each production stage — from intake through publish — in the AuraFlux portal pipeline.",
+      "date": "Sep 5, 2026",
+      "url": "/blog/peaks-to-short"
     }
   ]
 }

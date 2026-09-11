@@ -39,20 +39,68 @@ def patch_editables(html, data):
 
 
 def patch_blog(html, data):
+    """Inject featured banner + secondary post cards from blog.json."""
+    featured = data.get('featured') or {}
+    if featured:
+        cat = (featured.get('category') or 'automation').lower()
+        badge = featured.get('badge') or 'Featured Guide'
+        title = featured.get('title') or ''
+        desc = featured.get('description') or ''
+        date = featured.get('date') or ''
+        read = featured.get('read') or ''
+        url = featured.get('url') or '#'
+        featured_html = f'''  <div class="blog-featured" data-category="{cat}">
+    <div class="blog-featured-copy">
+      <span class="blog-featured-badge">{badge}</span>
+      <h2>{title}</h2>
+      <p>{desc}</p>
+      <div class="blog-featured-meta">
+        <span>{date}</span>
+        <span>•</span>
+        <span>{read}</span>
+      </div>
+    </div>
+    <div class="blog-featured-cta-wrap">
+      <a class="blog-featured-cta" href="{url}">Read Article →</a>
+    </div>
+  </div>'''
+        html = re.sub(
+            r'<!--BLOG_FEATURED-->[\s\S]*?<!--/BLOG_FEATURED-->',
+            '<!--BLOG_FEATURED-->\n' + featured_html + '\n  <!--/BLOG_FEATURED-->',
+            html,
+            count=1,
+        )
+
     posts = data.get('posts', [])
-    if not posts:
-        return html
-    cards = '\n'.join(f'''    <div class="post-card">
-      <span class="post-tag">{p["tag"]}</span>
-      <h2>{p["title"]}</h2>
-      <p>{p["description"]}</p>
-      <div class="post-meta">{p.get("status", "Coming soon")}</div>
-    </div>''' for p in posts)
-    return re.sub(
-        r'(<div class="posts">)([\s\S]*?)(</div>\s*\n\s*\$\{FRAMER_FOOTER|\n\$\{FRAMER_FOOTER)',
-        lambda m: m.group(1) + '\n' + cards + '\n  </div>\n\n${FRAMER_FOOTER',
-        html
-    )
+    if posts:
+        cards = []
+        for p in posts:
+            cat_label = p.get('category') or p.get('tag') or 'Guide'
+            cat_key = cat_label.lower()
+            title = p.get('title') or ''
+            desc = p.get('description') or ''
+            date = p.get('date') or p.get('status') or ''
+            url = p.get('url') or '#'
+            cards.append(
+                f'''    <article class="blog-card" data-category="{cat_key}">
+      <div>
+        <span class="blog-card-cat">{cat_label}</span>
+        <h3><a href="{url}">{title}</a></h3>
+        <p class="blog-card-body">{desc}</p>
+      </div>
+      <div class="blog-card-foot">
+        <span>{date}</span>
+        <a href="{url}">Read More →</a>
+      </div>
+    </article>'''
+            )
+        html = re.sub(
+            r'<!--BLOG_POSTS-->[\s\S]*?<!--/BLOG_POSTS-->',
+            '<!--BLOG_POSTS-->\n' + '\n'.join(cards) + '\n    <!--/BLOG_POSTS-->',
+            html,
+            count=1,
+        )
+    return html
 
 
 def patch_roadmap(html, data):

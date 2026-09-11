@@ -10,6 +10,7 @@
     { "source": "/our-system", "destination": "/features", "permanent": true },
     { "source": "/contact-us", "destination": "/contact", "permanent": true },
     { "source": "/process", "destination": "/how-it-works", "permanent": true },
+    { "source": "/blog/twitch-clip-to-published-video", "destination": "/blog/peaks-to-short", "permanent": false },
     { "source": "/sign-in", "destination": "https://app.auraflux.co/sign-in", "permanent": false },
     { "source": "/sign-up", "destination": "https://app.auraflux.co/sign-up", "permanent": false },
     { "source": "/signup", "destination": "https://app.auraflux.co/sign-up", "permanent": false },

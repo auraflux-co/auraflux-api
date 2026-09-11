@@ -9,62 +9,222 @@
 <link rel="icon" href="/favicon.ico?v=4" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Blog. AuraFlux">
-<meta property="og:description" content="Insights on Peaks, automated Shorts, and publishing from the AuraFlux member portal.">
+<meta property="og:title" content="AuraFlux Insights &amp; Engineering">
+<meta property="og:description" content="Guides, API strategies, and automation playbooks for streamers and content teams.">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MBS26S2W6E');</script>
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
-.blog-wrap{max-width:860px;margin:0 auto;padding:48px 24px 100px}
-.blog-hero{text-align:center;margin-bottom:40px}
-.blog-hero h1{font-size:clamp(2.2rem,4vw,3.2rem);font-weight:800;color:#0f172a;letter-spacing:-.03em;margin-bottom:12px}
-.blog-hero p{font-size:1.05rem;color:#475569;max-width:34rem;margin:0 auto;line-height:1.65}
-.posts{display:grid;gap:16px}
-.post-card{
-  display:block;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;
-  padding:28px 32px;text-decoration:none !important;transition:border-color .2s
+.blog-page,.blog-page *{box-sizing:border-box;}
+.blog-page{
+  max-width:72rem;margin:0 auto;padding:7rem 1rem 4rem;position:relative;z-index:1;
 }
-.post-card:hover{border-color:rgba(245,197,66,.4)}
-.post-tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f5c542;background:rgba(245,197,66,.1);border-radius:4px;padding:3px 8px;margin-bottom:12px}
-.post-card h2{font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:8px;line-height:1.4}
-.post-card p{font-size:.9rem;color:#cbd5e1;margin-bottom:12px;line-height:1.6}
-.post-meta{font-size:.8rem;color:#94a3b8}
+.blog-hero{margin-bottom:0;}
+.blog-hero h1{
+  font-size:clamp(1.85rem,4vw,2.25rem);font-weight:800;letter-spacing:-.025em;
+  color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;margin:0 0 .75rem;
+}
+.blog-hero p{
+  font-size:1rem;font-weight:500;color:#475569 !important;-webkit-text-fill-color:#475569 !important;
+  max-width:42rem;line-height:1.65;margin:0;
+}
+
+/* Category pills */
+.blog-cats{
+  display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;
+  margin:2rem 0;padding-bottom:1.5rem;border-bottom:1px solid #e2e8f0;
+}
+.blog-cat{
+  font-size:.75rem;font-weight:500;padding:.5rem 1rem;border-radius:.5rem;border:none;
+  background:#f1f5f9;color:#334155;cursor:pointer;font-family:inherit;
+  transition:background .15s,color .15s,box-shadow .15s;
+}
+.blog-cat:hover{background:#e2e8f0;}
+.blog-cat.is-active{
+  background:#fbbf24 !important;color:#020617 !important;font-weight:700;
+  box-shadow:0 1px 2px rgba(15,23,42,.08);
+}
+
+/* Featured banner */
+.blog-featured{
+  display:grid;grid-template-columns:1fr;gap:2rem;align-items:center;
+  background:#fff !important;border:1px solid #e2e8f0;border-radius:1rem;
+  padding:2rem;margin:0 0 3rem;box-shadow:0 1px 2px rgba(15,23,42,.06);
+  transition:box-shadow .2s;
+}
+.blog-featured:hover{box-shadow:0 4px 14px rgba(15,23,42,.08);}
+@media(min-width:1024px){
+  .blog-featured{grid-template-columns:minmax(0,8fr) minmax(0,4fr);}
+}
+.blog-featured-badge{
+  display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  background:#fef3c7;color:#78350f;border:1px solid #fde68a;
+  padding:.25rem .75rem;border-radius:.375rem;margin:0 0 .75rem;
+}
+.blog-featured h2{
+  font-size:clamp(1.35rem,3vw,1.875rem);font-weight:700;color:#0f172a !important;
+  line-height:1.3;margin:0 0 .75rem;letter-spacing:-.02em;
+}
+.blog-featured p{
+  font-size:.875rem;color:#475569 !important;line-height:1.65;margin:0;
+}
+.blog-featured-meta{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  font-size:.75rem;font-weight:500;color:#94a3b8 !important;padding-top:.5rem;margin-top:.5rem;
+}
+.blog-featured-cta-wrap{display:flex;justify-content:flex-start;}
+@media(min-width:1024px){.blog-featured-cta-wrap{justify-content:flex-end;}}
+.blog-featured-cta{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#fbbf24;color:#020617 !important;font-weight:700;font-size:.875rem;
+  padding:.75rem 1.5rem;border-radius:.75rem;text-decoration:none !important;
+  box-shadow:0 1px 2px rgba(15,23,42,.08);transition:background .15s,box-shadow .15s;
+}
+.blog-featured-cta:hover{background:#f59e0b;box-shadow:0 4px 12px rgba(15,23,42,.12);}
+
+/* Secondary grid */
+.blog-grid{
+  display:grid;grid-template-columns:1fr;gap:2rem;
+}
+@media(min-width:768px){.blog-grid{grid-template-columns:1fr 1fr;}}
+@media(min-width:1024px){.blog-grid{grid-template-columns:1fr 1fr 1fr;}}
+.blog-card{
+  background:#fff !important;border:1px solid #e2e8f0;border-radius:1rem;
+  padding:1.5rem;box-shadow:0 1px 2px rgba(15,23,42,.06);
+  display:flex;flex-direction:column;justify-content:space-between;min-height:100%;
+  transition:box-shadow .2s;
+}
+.blog-card:hover{box-shadow:0 4px 14px rgba(15,23,42,.08);}
+.blog-card[hidden]{display:none !important;}
+.blog-card-cat{
+  display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:#d97706 !important;margin:0 0 .5rem;
+}
+.blog-card h3{
+  font-size:1.125rem;font-weight:700;color:#0f172a !important;line-height:1.35;
+  margin:0 0 .5rem;letter-spacing:-.015em;
+}
+.blog-card h3 a{color:inherit !important;text-decoration:none !important;}
+.blog-card h3 a:hover{color:#d97706 !important;}
+.blog-card-body{
+  font-size:.75rem;color:#475569 !important;line-height:1.65;margin:0 0 1.5rem;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.blog-card-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  font-size:.75rem;color:#94a3b8 !important;
+  border-top:1px solid #f1f5f9;padding-top:1rem;margin-top:auto;
+}
+.blog-card-foot a{
+  font-weight:700;color:#0f172a !important;text-decoration:none !important;
+}
+.blog-card-foot a:hover{color:#d97706 !important;}
+.blog-empty{
+  grid-column:1/-1;text-align:center;padding:2rem;color:#64748b;font-size:.9rem;display:none;
+}
 </style>
 </head>
 <body>
 ${FRAMER_NAV || FALLBACK_NAV}
-<div class="blog-wrap">
+
+<div class="blog-page">
   <div class="blog-hero">
-    <h1>Blog</h1>
-    <p>Peaks, Short production, and publish — notes for streamers and operators running AuraFlux.</p>
+    <h1 >AuraFlux Insights & Engineering</h1>
+    <p >Guides, API strategies, and automation playbooks for streamers and content teams.</p>
   </div>
-  <div class="posts">
-    <div class="post-card">
-      <span class="post-tag">Guide</span>
+
+  <div class="blog-cats" role="tablist" aria-label="Post categories">
+    <button type="button" class="blog-cat is-active" data-filter="all">All Posts</button>
+    <button type="button" class="blog-cat" data-filter="automation">Automation</button>
+    <button type="button" class="blog-cat" data-filter="monetization">Monetization</button>
+    <button type="button" class="blog-cat" data-filter="platform">Platform</button>
+  </div>
+
+  <!--BLOG_FEATURED-->
+  <div class="blog-featured" data-category="automation">
+    <div class="blog-featured-copy">
+      <span class="blog-featured-badge">Featured Guide</span>
       <h2>From Twitch Clip to Published Video in Under 5 Minutes</h2>
-      <p>How AuraFlux's portal pipeline handles sourcing, scripting, voiceover, thumbnails, and direct publishing. automatically.</p>
-      <div class="post-meta">Coming soon</div>
+      <p>How AuraFlux's portal pipeline handles sourcing, scripting, voiceover, thumbnails, and direct publishing automatically.</p>
+      <div class="blog-featured-meta">
+        <span>Sep 11, 2026</span>
+        <span>•</span>
+        <span>5 min read</span>
+      </div>
     </div>
-    <div class="post-card">
-      <span class="post-tag">Monetization</span>
-      <h2>The Multi-Platform Content Strategy for Streamers</h2>
-      <p>How top streamers on Twitch and Kick maximise revenue by cross-posting to YouTube, TikTok, and subscription platforms.</p>
-      <div class="post-meta">Coming soon</div>
-    </div>
-    <div class="post-card">
-      <span class="post-tag">Platform</span>
-      <h2>Direct Publishing to TikTok and YouTube: A Deep Dive</h2>
-      <p>OAuth-based direct publish means no manual uploads. Here's how the AuraFlux publish portal handles both platforms.</p>
-      <div class="post-meta">Coming soon</div>
-    </div>
-    <div class="post-card">
-      <span class="post-tag">Automation</span>
-      <h2>Inside AuraFlux's Portal Pipeline: How 6 Portals Turn a Clip Into a Published Video</h2>
-      <p>A detailed walkthrough of each production stage. from Portal 0 (intake) through Portal 5 (publish).</p>
-      <div class="post-meta">Coming soon</div>
+    <div class="blog-featured-cta-wrap">
+      <a class="blog-featured-cta" href="/blog/twitch-clip-to-published-video">Read Article →</a>
     </div>
   </div>
+  <!--/BLOG_FEATURED-->
+
+  <div class="blog-grid" id="blog-grid">
+    <!--BLOG_POSTS-->
+    <article class="blog-card" data-category="monetization">
+      <div>
+        <span class="blog-card-cat">Monetization</span>
+        <h3><a href="/blog/one-plan">The Multi-Platform Content Strategy for Streamers</a></h3>
+        <p class="blog-card-body">How top streamers on Twitch and Kick maximize revenue by cross-posting to YouTube, TikTok, and subscription platforms.</p>
+      </div>
+      <div class="blog-card-foot">
+        <span>Sep 10, 2026</span>
+        <a href="/blog/one-plan">Read More →</a>
+      </div>
+    </article>
+    <article class="blog-card" data-category="platform">
+      <div>
+        <span class="blog-card-cat">Platform</span>
+        <h3><a href="/blog/why-peaks">Direct Publishing to TikTok and YouTube: A Deep Dive</a></h3>
+        <p class="blog-card-body">OAuth-based direct publish means no manual uploads. Here's how the AuraFlux publish portal handles both platforms.</p>
+      </div>
+      <div class="blog-card-foot">
+        <span>Sep 8, 2026</span>
+        <a href="/blog/why-peaks">Read More →</a>
+      </div>
+    </article>
+    <article class="blog-card" data-category="automation">
+      <div>
+        <span class="blog-card-cat">Automation</span>
+        <h3><a href="/blog/peaks-to-short">Inside AuraFlux's Portal Pipeline: How Portals Turn a Clip Into a Published Video</a></h3>
+        <p class="blog-card-body">A detailed walkthrough of each production stage — from intake through publish — in the AuraFlux portal pipeline.</p>
+      </div>
+      <div class="blog-card-foot">
+        <span>Sep 5, 2026</span>
+        <a href="/blog/peaks-to-short">Read More →</a>
+      </div>
+    </article>
+    <!--/BLOG_POSTS-->
+    <p class="blog-empty" id="blog-empty">No posts in this category yet.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var cats = document.querySelectorAll('.blog-cat');
+  var cards = document.querySelectorAll('.blog-card[data-category]');
+  var featured = document.querySelector('.blog-featured');
+  var empty = document.getElementById('blog-empty');
+  cats.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      cats.forEach(function(b){ b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      var f = btn.getAttribute('data-filter') || 'all';
+      var shown = 0;
+      cards.forEach(function(card){
+        var show = f === 'all' || card.getAttribute('data-category') === f;
+        card.hidden = !show;
+        if (show) shown++;
+      });
+      if (featured) {
+        var fc = featured.getAttribute('data-category') || '';
+        featured.style.display = (f === 'all' || f === fc) ? '' : 'none';
+      }
+      if (empty) empty.style.display = shown ? 'none' : 'block';
+    });
+  });
+})();
+</script>
 
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
 </body>
