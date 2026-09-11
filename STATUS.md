@@ -190,7 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(marketing): Start Free Trial nav CTA + jobs wrap** — CTA → app.auraflux.co/signup; jobs field+curl in max-w-5xl grid wrap. | nav.html, nav.json, developer-api.html, STATUS.md | pending | 2026-09-11 ET |
+| Cursor | **fix(marketing): Start Free Trial nav CTA + jobs wrap** — CTA → app.auraflux.co/signup; jobs field+curl in max-w-5xl grid wrap. | nav.html, nav.json, developer-api.html, STATUS.md | 7424170e | 2026-09-11 ET |
 | Cursor | **fix(marketing): Developer API method badge colors + jobs grid polish** — GET emerald / POST blue / DELETE rose; 7/5 field+curl grid. | developer-api.html, page-base.css, STATUS.md | e7806045 | 2026-09-11 ET |
 | Cursor | **fix(marketing): Developer API high-contrast typography** — slate-900 hero/section titles; bright auth banner; light endpoint cards; page-base aligned. | developer-api.html, page-base.css (marketing + cloudflare), STATUS.md | dcdaf211 | 2026-09-11 ET |
 | Cursor | **fix(cpd-1185/1186/1187): brand_id + startup rescue + postprocess export** — createJobSpec brandId; restore rescueInterruptedJobs; applyPostProcessingEffects wrapper. | job_spec.js, startup, assembly_postprocess.js, server.js, tests, STATUS.md | c6deb625 | 2026-06-30 ET |
