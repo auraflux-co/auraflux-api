@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AuraFlux Insights &amp; Engineering | Blog</title>
+<title>Blog. AuraFlux</title>
 <meta name="description" content="Insights on automated video production, content automation, and building a streaming-to-revenue pipeline.">
 <link rel="canonical" href="https://auraflux.co/blog">
 <link rel="icon" type="image/png" href="/favicon.png?v=4">
@@ -53,12 +53,11 @@ body{
   box-shadow:0 1px 2px rgba(15,23,42,.08);
 }
 
-/* Featured banner — white + brand blue outline / left accent */
+/* Featured banner — slate outline + amber pill */
 .blog-featured{
   display:grid;grid-template-columns:1fr;gap:2rem;align-items:center;
   background:#fff !important;
-  border:2px solid rgba(37,99,235,.2);
-  border-left:8px solid #2563eb;
+  border:1px solid #e2e8f0;
   border-radius:1rem;
   padding:2rem;margin:0 0 3rem;
   box-shadow:0 1px 2px rgba(15,23,42,.06);
@@ -67,8 +66,7 @@ body{
 }
 .blog-featured:hover{
   box-shadow:0 4px 14px rgba(15,23,42,.08);
-  border-color:rgba(37,99,235,.4);
-  border-left-color:#2563eb;
+  border-color:#cbd5e1;
 }
 @media(min-width:1024px){
   .blog-featured{grid-template-columns:minmax(0,8fr) minmax(0,4fr);}
@@ -76,7 +74,7 @@ body{
 .blog-featured-copy{min-width:0;overflow:visible;}
 .blog-featured-badge{
   display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
-  background:#eff6ff !important;color:#1d4ed8 !important;border:1px solid #bfdbfe;
+  background:#fbbf24 !important;color:#020617 !important;border:none;
   padding:.25rem .75rem;border-radius:.375rem;margin:0 0 .75rem;
 }
 .blog-featured h2{
@@ -104,7 +102,7 @@ body{
 }
 .blog-featured-cta:hover{background:#f59e0b !important;box-shadow:0 4px 12px rgba(15,23,42,.12);}
 
-/* Secondary grid — brand blue outlines */
+/* Secondary grid — crisp slate borders + amber accents */
 .blog-grid{
   display:grid;grid-template-columns:1fr;gap:2rem;
 }
@@ -112,7 +110,7 @@ body{
 @media(min-width:1024px){.blog-grid{grid-template-columns:1fr 1fr 1fr;}}
 .blog-card{
   background:#fff !important;
-  border:2px solid rgba(37,99,235,.2);
+  border:1px solid #e2e8f0;
   border-radius:1rem;
   padding:1.5rem;box-shadow:0 1px 2px rgba(15,23,42,.06);
   display:flex;flex-direction:column;justify-content:space-between;min-height:100%;
@@ -121,19 +119,19 @@ body{
 }
 .blog-card:hover{
   box-shadow:0 4px 14px rgba(15,23,42,.08);
-  border-color:rgba(37,99,235,.6);
+  border-color:#94a3b8;
 }
 .blog-card[hidden]{display:none !important;}
 .blog-card-cat{
   display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
-  color:#2563eb !important;-webkit-text-fill-color:#2563eb !important;margin:0 0 .5rem;
+  color:#d97706 !important;-webkit-text-fill-color:#d97706 !important;margin:0 0 .5rem;
 }
 .blog-card h3{
   font-size:1.125rem;font-weight:700;color:#0f172a !important;line-height:1.35;
   margin:0 0 .5rem;letter-spacing:-.015em;
 }
-.blog-card h3 a{color:inherit !important;text-decoration:none !important;}
-.blog-card h3 a:hover{color:#2563eb !important;}
+.blog-card h3 a{color:inherit !important;text-decoration:none !important;transition:color .15s;}
+.blog-card h3 a:hover{color:#d97706 !important;-webkit-text-fill-color:#d97706 !important;}
 .blog-card-body{
   font-size:.75rem;color:#475569 !important;line-height:1.65;margin:0 0 1.5rem;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
@@ -144,10 +142,10 @@ body{
   border-top:1px solid #f1f5f9;padding-top:1rem;margin-top:auto;
 }
 .blog-card-foot a{
-  font-size:.75rem;font-weight:700;color:#2563eb !important;-webkit-text-fill-color:#2563eb !important;
+  font-size:.75rem;font-weight:700;color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
   text-decoration:none !important;transition:color .15s;
 }
-.blog-card-foot a:hover{color:#1d4ed8 !important;-webkit-text-fill-color:#1d4ed8 !important;}
+.blog-card-foot a:hover{color:#d97706 !important;-webkit-text-fill-color:#d97706 !important;}
 .blog-empty{
   grid-column:1/-1;text-align:center;padding:2rem;color:#64748b;font-size:.9rem;display:none;
 }

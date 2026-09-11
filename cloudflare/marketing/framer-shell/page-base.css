@@ -418,17 +418,17 @@ body:has(.blog-page) {
 }
 .blog-featured {
   background: #fff !important;
-  border: 2px solid rgba(37, 99, 235, 0.2) !important;
-  border-left: 8px solid #2563eb !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 1px solid #e2e8f0 !important;
 }
 .blog-featured:hover {
-  border-color: rgba(37, 99, 235, 0.4) !important;
-  border-left-color: #2563eb !important;
+  border-color: #cbd5e1 !important;
+  border-left-color: #cbd5e1 !important;
 }
 .blog-featured-badge {
-  background: #eff6ff !important;
-  color: #1d4ed8 !important;
-  border: 1px solid #bfdbfe !important;
+  background: #fbbf24 !important;
+  color: #020617 !important;
+  border: none !important;
 }
 .blog-featured h2 {
   color: #0f172a !important;
@@ -446,22 +446,22 @@ body:has(.blog-page) {
 }
 .blog-card {
   background: #fff !important;
-  border: 2px solid rgba(37, 99, 235, 0.2) !important;
+  border: 1px solid #e2e8f0 !important;
   color: #0f172a !important;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
 }
 .blog-card:hover {
-  border-color: rgba(37, 99, 235, 0.6) !important;
+  border-color: #94a3b8 !important;
 }
 .blog-card-cat {
-  color: #2563eb !important;
+  color: #d97706 !important;
 }
 .blog-card h3,
 .blog-card h3 a {
   color: #0f172a !important;
 }
 .blog-card h3 a:hover {
-  color: #2563eb !important;
+  color: #d97706 !important;
 }
 .blog-card-body {
   color: #475569 !important;
@@ -471,11 +471,11 @@ body:has(.blog-page) {
   font-weight: 600 !important;
 }
 .blog-card-foot a {
-  color: #2563eb !important;
+  color: #0f172a !important;
   font-weight: 700 !important;
 }
 .blog-card-foot a:hover {
-  color: #1d4ed8 !important;
+  color: #d97706 !important;
 }
 /* legacy dark post-card — keep harmless if old markup appears */
 .post-card {
