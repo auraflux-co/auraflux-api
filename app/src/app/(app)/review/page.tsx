@@ -550,7 +550,8 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
         {
           method: 'POST',
           body: JSON.stringify({
-            platforms: Array.from(new Set([...(assets.input.platforms || []), 'youtube'])),
+            // Private ClipzWorld News (@clipzworldnews) testing — YouTube only
+            platforms: ['youtube'],
             youtubePlaylistId: playlistMatch?.playlistId || undefined,
             youtubePlaylistTitle: playlistMatch?.playlistTitle || undefined,
             playlistStrategyBadge: playlistMatch?.playlistId ? 'Auto-matched by strategy rule' : undefined,
