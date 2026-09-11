@@ -64,7 +64,7 @@ export function PaidAccessGate({ children }: { children: React.ReactNode }) {
   if (state === 'checking') {
     return (
       <div className="flex h-screen items-center justify-center text-sm text-muted-foreground bg-background">
-        Checking membership…
+        Checking creator access…
       </div>
     );
   }
@@ -75,10 +75,10 @@ export function PaidAccessGate({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans antialiased">
         <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-5 text-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-            Member access
+            Creator access
           </p>
           <h1 className="text-2xl font-extrabold tracking-tight text-white">
-            Customer membership required
+            Creator plan required
           </h1>
           <p className="text-sm text-slate-400 leading-relaxed">
             You&apos;re signed in
@@ -88,8 +88,8 @@ export function PaidAccessGate({ children }: { children: React.ReactNode }) {
                 as <span className="text-slate-200 font-medium">{email}</span>
               </>
             ) : null}
-            , but this account doesn&apos;t have an active customer subscription yet.
-            Sign in with a member account, or get a plan — we won&apos;t send you away
+            , but this account doesn&apos;t have an active creator subscription yet.
+            Sign in with a creator account, or get a plan — we won&apos;t send you away
             automatically.
           </p>
           <div className="space-y-3 pt-2">

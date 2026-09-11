@@ -119,9 +119,20 @@ export default function GuestReviewSharePage() {
           disabled={!!busy || data.permissions?.approve === false}
           onClick={async () => {
             setBusy('Approving…');
+            setError(null);
             try {
-              await publicReviewApprove(token);
-              setDone('Approved for publish');
+              const res = await publicReviewApprove(token, {
+                captions: showCaptions,
+                audioBed: showBed,
+                comment: comment.trim() || undefined,
+              });
+              if (res.accepted || res.ok) {
+                setDone(res.status === 'publishing'
+                  ? 'Approved — publish queued'
+                  : 'Approved for publish');
+              } else {
+                setError(res.message || res.error || 'Approve failed');
+              }
             } catch (e) {
               setError(e instanceof Error ? e.message : 'Approve failed');
             } finally {
@@ -129,7 +140,7 @@ export default function GuestReviewSharePage() {
             }
           }}
         >
-          Approve
+          Approve & publish
         </Button>
         <Button
           variant="secondary"

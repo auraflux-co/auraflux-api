@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Customer member portal chrome — Pavilion MemberShell pattern,
+ * Creator portal chrome — Pavilion MemberShell pattern,
  * AuraFlux brand tokens (navy + gold on warm canvas).
  * Not used for superadmin (legacy sidebar remains for platform tools).
  */
@@ -57,7 +57,7 @@ export function MemberShell({ children }: { children: React.ReactNode }) {
                   AuraFlux
                 </span>
                 <span className="hidden sm:inline text-[10px] font-semibold uppercase tracking-wider text-[var(--mp-muted)] border border-[var(--mp-border)] rounded-full px-2 py-0.5">
-                  Member
+                  Creator
                 </span>
               </Link>
               <div className="hidden md:block min-w-0">

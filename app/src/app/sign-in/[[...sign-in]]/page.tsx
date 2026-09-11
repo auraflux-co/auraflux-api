@@ -139,7 +139,7 @@ function SignInInner() {
           <p className="text-sm text-slate-400 text-center">
             Checkout verified{pending.plan ? ` (${pending.plan})` : ''}. Create your account with
             the same email you used at Stripe
-            {pending.email ? ` (${pending.email})` : ''}, then you&apos;ll land in the member
+            {pending.email ? ` (${pending.email})` : ''}, then you&apos;ll land in the creator
             portal.
           </p>
         ) : null}

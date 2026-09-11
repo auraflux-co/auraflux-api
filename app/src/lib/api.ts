@@ -1086,9 +1086,9 @@ export async function approveThumbnail(
 
 export async function previewThumbnailOverlay(
   jobId: string,
-  opts: { candidateIndex?: number; hookText?: string; enabled?: boolean },
+  opts: { candidateIndex?: number; hookText?: string; enabled?: boolean; approve?: boolean },
   token?: string,
-): Promise<{ ok: boolean; url?: string | null; overlay?: boolean; hookText?: string }> {
+): Promise<{ ok: boolean; url?: string | null; overlay?: boolean; approved?: boolean; hookText?: string }> {
   return apiFetch(`/jobs/${jobId}/thumbnail/preview-overlay`, {
     method: 'POST',
     token,
@@ -1122,8 +1122,14 @@ export async function getPublicReviewShare(shareToken: string): Promise<{
   return apiFetch(`/public/review-share/${encodeURIComponent(shareToken)}`);
 }
 
-export async function publicReviewApprove(shareToken: string): Promise<{ ok: boolean }> {
-  return apiFetch(`/public/review-share/${encodeURIComponent(shareToken)}/approve`, { method: 'POST', body: '{}' });
+export async function publicReviewApprove(
+  shareToken: string,
+  body: { captions?: boolean; audioBed?: boolean; comment?: string } = {},
+): Promise<{ ok: boolean; accepted?: boolean; status?: string; error?: string; message?: string }> {
+  return apiFetch(`/public/review-share/${encodeURIComponent(shareToken)}/approve`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 }
 
 export async function publicReviewRevise(
@@ -1148,9 +1154,15 @@ export async function publicReviewComment(
 
 export async function scanJobSponsors(
   jobId: string,
-  body: { appendSponsorOverlay?: boolean; brandName?: string; trimStart?: number; trimEnd?: number } = {},
+  body: {
+    appendSponsorOverlay?: boolean;
+    brandName?: string;
+    trimStart?: number;
+    trimEnd?: number;
+    applyBoundaries?: boolean;
+  } = {},
   token?: string,
-): Promise<{ ok: boolean; markers: unknown[]; boundaries?: unknown; lowerThird?: unknown }> {
+): Promise<{ ok: boolean; markers: unknown[]; boundaries?: unknown; lowerThird?: unknown; applied?: boolean }> {
   return apiFetch(`/jobs/${jobId}/sponsor-scan`, {
     method: 'POST',
     token,
@@ -1162,7 +1174,15 @@ export async function getPlaylistStrategyMatch(
   jobId: string,
   token?: string,
   platform = 'youtube',
-): Promise<{ ok: boolean; matched: boolean; playlistId?: string | null; playlistTitle?: string | null; badge?: string; gated?: boolean }> {
+): Promise<{
+  ok: boolean;
+  matched: boolean;
+  playlistId?: string | null;
+  playlistTitle?: string | null;
+  badge?: string;
+  gated?: boolean;
+  reason?: string;
+}> {
   return apiFetch(`/jobs/${jobId}/playlist-strategy?platform=${encodeURIComponent(platform)}`, { token });
 }
 
@@ -1657,6 +1677,8 @@ export async function renderCompositionTimelinePreview(
       trimEnd?: number;
     };
     compCreativePreset?: string;
+    compCreative?: Record<string, unknown>;
+    brandId?: string;
     deliveryAspect?: '9:16' | '1:1';
   },
   token?: string,

@@ -28,6 +28,7 @@ import { updateJobSchedule, getSchedulePrefs, type SchedulePrefs, type ScheduleS
 import { ThumbnailFramePicker } from '@/components/creator/thumbnail-frame-picker';
 import { GenerateReviewLinkButton } from '@/components/creator/generate-review-link-button';
 import { PlaylistStrategyBadge } from '@/components/creator/playlist-strategy-badge';
+import { SponsorScanPanel } from '@/components/creator/sponsor-scan-panel';
 import { Separator } from '@/components/ui/separator';
 import { apiFetch, listJobs, type Job } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
@@ -885,6 +886,11 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
           <div className="space-y-3">
             <ThumbnailFramePicker jobId={jobId} token={authToken} topic={assets.input.topic || undefined} />
             <GenerateReviewLinkButton jobId={jobId} token={authToken} />
+            <SponsorScanPanel
+              jobId={jobId}
+              token={authToken}
+              brandName={assets.input.brandName || undefined}
+            />
             <PlaylistStrategyBadge
               jobId={jobId}
               token={authToken}

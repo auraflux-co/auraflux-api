@@ -19,13 +19,14 @@ import { formatUserError, platformLabel } from '@/lib/job-labels';
 import {
   getJobDetail, operatorJobAction, saveJobAsTemplate, approveAndPublish,
   getThumbnailCandidates, approveThumbnail, getStagingAssets, listConnectedAccounts,
-  scanJobSponsors,
   type Job, type OperatorAction, type ThumbnailCandidate, type StagingAssets,
   type ConnectedAccount,
 } from '@/lib/api';
 import { SaveTemplateDialog, type SaveTemplateOptions } from '@/components/jobs/save-template-dialog';
 import { ThumbnailFramePicker } from '@/components/creator/thumbnail-frame-picker';
 import { GenerateReviewLinkButton } from '@/components/creator/generate-review-link-button';
+import { SponsorScanPanel } from '@/components/creator/sponsor-scan-panel';
+import { PlaylistStrategyBadge } from '@/components/creator/playlist-strategy-badge';
 import { labelForContentType } from '@/lib/content-types';
 import { useRole } from '@/hooks/use-role';
 
@@ -550,22 +551,10 @@ export default function JobDetailPage() {
             </div>
           )}
           {authTok && (
-            <div className="flex flex-wrap gap-3 items-start">
+            <div className="space-y-3">
               <GenerateReviewLinkButton jobId={jobId} token={authTok} />
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  onChange={async (e) => {
-                    try {
-                      await scanJobSponsors(jobId, {
-                        appendSponsorOverlay: e.target.checked,
-                        brandName: job.brandName || undefined,
-                      }, authTok);
-                    } catch { /* soft */ }
-                  }}
-                />
-                Append Sponsor Overlay
-              </label>
+              <SponsorScanPanel jobId={jobId} token={authTok} brandName={job.brandName || undefined} />
+              <PlaylistStrategyBadge jobId={jobId} token={authTok} />
             </div>
           )}
 

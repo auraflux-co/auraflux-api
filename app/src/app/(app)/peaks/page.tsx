@@ -343,6 +343,7 @@ function PeaksPageInner() {
           trimEnd: staged.duration,
         },
         compCreativePreset: presetKey,
+        brandId: activeBrand?.id,
         deliveryAspect: '9:16',
       }, token);
       const rel = res.previewVideoAbsoluteUrl || res.previewVideoUrl;
@@ -651,8 +652,16 @@ function PeaksPageInner() {
               <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 space-y-1">
                 <p className="af-caption font-medium">Brand Profile · {activeBrand.name}</p>
                 <p className="af-caption text-muted-foreground">
-                  Switch brands in the header to swap creative defaults. Peak thumbnails and sponsor overlay land on Review after your Short finishes.
+                  Near-final and Create Short use this brand’s creative profile (captions, audio bed, colors).
+                  Switch brands in the header to swap defaults. Thumbnail peak picker, sponsor markers, guest review, and playlist strategy land on Review / job detail after the Short finishes.
                 </p>
+                {(activeBrand as { creative_profile?: { captionStyle?: string | null; audioBed?: string | null } }).creative_profile && (
+                  <p className="af-caption text-muted-foreground">
+                    Active: captions {(activeBrand as { creative_profile?: { captionStyle?: string | null } }).creative_profile?.captionStyle || 'default'}
+                    {' · '}
+                    bed {(activeBrand as { creative_profile?: { audioBed?: string | null } }).creative_profile?.audioBed || 'off'}
+                  </p>
+                )}
               </div>
             )}
             <div className="grid gap-4 lg:grid-cols-2">

@@ -51,11 +51,22 @@ export function ThumbnailFramePicker({
   async function onSelect(c: ThumbnailCandidate) {
     setSelected(c.index);
     setPreviewUrl(c.url);
-    setBusy('Setting cover…');
+    setBusy(overlayOn ? 'Burning overlay cover…' : 'Setting cover…');
     setError(null);
     try {
-      await approveThumbnail(jobId, { method: c.method || 'frame', candidateIndex: c.index, r2Url: c.url }, token);
-      setApproved(true);
+      if (overlayOn) {
+        const res = await previewThumbnailOverlay(jobId, {
+          candidateIndex: c.index,
+          hookText,
+          enabled: true,
+          approve: true,
+        }, token);
+        if (res.url) setPreviewUrl(res.url);
+        setApproved(true);
+      } else {
+        await approveThumbnail(jobId, { method: c.method || 'frame', candidateIndex: c.index, r2Url: c.url }, token);
+        setApproved(true);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Approve failed');
     } finally {
@@ -66,7 +77,7 @@ export function ThumbnailFramePicker({
   async function onToggleOverlay(next: boolean) {
     setOverlayOn(next);
     if (selected == null) return;
-    setBusy('Preview overlay…');
+    setBusy(next ? 'Preview overlay…' : 'Clearing overlay…');
     try {
       const res = await previewThumbnailOverlay(jobId, {
         candidateIndex: selected,
@@ -80,6 +91,27 @@ export function ThumbnailFramePicker({
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Overlay preview failed');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function onApproveOverlay() {
+    if (selected == null) return;
+    setBusy('Saving overlay cover…');
+    setError(null);
+    try {
+      const res = await previewThumbnailOverlay(jobId, {
+        candidateIndex: selected,
+        hookText,
+        enabled: true,
+        approve: true,
+      }, token);
+      if (res.url) setPreviewUrl(res.url);
+      setOverlayOn(true);
+      setApproved(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Overlay approve failed');
     } finally {
       setBusy(null);
     }
@@ -121,9 +153,9 @@ export function ThumbnailFramePicker({
           </button>
         ))}
       </div>
-      {previewUrl && overlayOn && (
+      {previewUrl && (overlayOn || approved) && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={previewUrl} alt="Overlay preview" className="w-full max-w-sm rounded-md border" />
+        <img src={previewUrl} alt="Cover preview" className="w-full max-w-sm rounded-md border" />
       )}
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex items-center gap-2 text-sm">
@@ -132,15 +164,20 @@ export function ThumbnailFramePicker({
             checked={overlayOn}
             onChange={(e) => onToggleOverlay(e.target.checked)}
           />
-          Headline overlay preview
+          Headline overlay
         </label>
         {overlayOn && (
           <div className="flex-1 min-w-[160px] space-y-1">
             <Label>Headline</Label>
             <Input value={hookText} onChange={(e) => setHookText(e.target.value)} />
-            <Button type="button" size="sm" variant="outline" disabled={!!busy} onClick={() => onToggleOverlay(true)}>
-              Refresh preview
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" size="sm" variant="outline" disabled={!!busy} onClick={() => onToggleOverlay(true)}>
+                Refresh preview
+              </Button>
+              <Button type="button" size="sm" disabled={!!busy || selected == null} onClick={onApproveOverlay}>
+                Save overlay as cover
+              </Button>
+            </div>
           </div>
         )}
       </div>

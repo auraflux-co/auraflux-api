@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 23:20 UTC  
+**Last Updated:** 2026-09-12 00:05 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator pipeline extensions shipped (`c4c45f70`+): peak thumbs, sponsor markers, brand creative profiles, guest review links, playlist strategy. Fixing Vercel TS null-safe picker.
+Hardening creator portal (not MVP): overlay thumb approve + R2 rehydrate, sponsor boundary apply + Review UI, brand creative merge into jobs/near-final, guest approve → real publish queue, playlist auto-match on approve-publish + miss reasons; external copy → Creator.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

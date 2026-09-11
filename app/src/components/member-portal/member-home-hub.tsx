@@ -34,7 +34,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
     <div className="space-y-8">
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-[var(--mp-muted)]">
-          Member portal
+          Creator portal
         </p>
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-3xl font-extrabold tracking-tight text-[var(--mp-text)]">
