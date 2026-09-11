@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 22:15 UTC  
+**Last Updated:** 2026-09-11 22:30 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator Growth + Peaks UX: plan labels Growth / Creator + Pro Operator / Agency; test account `growth` (30 credits); Collab closed by default; Peaks linear creator path + staged preview + Jobs handoff. Migration `044_growth_tier.sql` applied.
+C0 graduation (`iss_tY3Ii28wvWBK`): port Compose near-final preview stack into Render — `/composition/timeline-preview` + Peaks **Review near-final** before Create Short. Discarded C0 operator chrome (templates/moment-finder/EXECUTE/broadcast).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

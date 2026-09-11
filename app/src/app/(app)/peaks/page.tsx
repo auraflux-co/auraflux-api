@@ -21,6 +21,8 @@ import {
   analyzeContentLibraryVod,
   stageContentLibraryLocalFile,
   listComposePresets,
+  renderCompositionTimelinePreview,
+  compositionPreviewFileUrl,
   getKickCcvPeaks,
   type ContentLibraryVod,
   type ContentLibraryPeak,
@@ -71,6 +73,8 @@ function PeaksPageInner() {
   const [peaks, setPeaks] = useState<ContentLibraryPeak[]>([]);
   const [analyzeMode, setAnalyzeMode] = useState<string | null>(null);
   const [staged, setStaged] = useState<{ mp4Url?: string; title?: string; duration?: number; startSec?: number; endSec?: number } | null>(null);
+  const [nearFinalUrl, setNearFinalUrl] = useState<string | null>(null);
+  const [nearFinalMeta, setNearFinalMeta] = useState<{ applied: string[]; missing: string[] } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [uploadPct, setUploadPct] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -307,7 +311,9 @@ function PeaksPageInner() {
         startSec: res.startSec ?? peak?.start_sec,
         endSec: res.endSec ?? peak?.end_sec,
       });
-      setHint('Clip staged — scrub the preview, pick a C1–C11 preset (or Custom in Jobs), then create your Short.');
+      setNearFinalUrl(null);
+      setNearFinalMeta(null);
+      setHint('Clip staged — pick a preset, Review near-final (burns layout/look), then Create Short.');
     } catch (e) {
       setError(formatUserError(e instanceof Error ? e.message : 'Upload stage failed'));
     } finally {
@@ -315,6 +321,42 @@ function PeaksPageInner() {
       setUploadPct(null);
       pendingPeakRef.current = null;
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  async function onReviewNearFinal() {
+    if (!staged?.mp4Url) return;
+    setBusy('Burning near-final preview…');
+    setError(null);
+    setNearFinalUrl(null);
+    setNearFinalMeta(null);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Session not ready');
+      const res = await renderCompositionTimelinePreview({
+        clip: {
+          mp4Url: staged.mp4Url,
+          resolvedMp4: staged.mp4Url,
+          title: staged.title,
+          duration: staged.duration,
+          trimStart: 0,
+          trimEnd: staged.duration,
+        },
+        compCreativePreset: presetKey,
+        deliveryAspect: '9:16',
+      }, token);
+      const rel = res.previewVideoAbsoluteUrl || res.previewVideoUrl;
+      if (!rel) throw new Error(res.error || 'Near-final encode returned no video');
+      setNearFinalUrl(compositionPreviewFileUrl(rel));
+      setNearFinalMeta({
+        applied: res.nearFinalApplied || [],
+        missing: res.nearFinalMissing || [],
+      });
+      setHint('Near-final ready — scrub the burned preview, then Create Short when it looks right.');
+    } catch (e) {
+      setError(formatUserError(e instanceof Error ? e.message : 'Near-final preview failed'));
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -596,24 +638,33 @@ function PeaksPageInner() {
       {staged?.mp4Url && (
         <Card className="border-primary/30">
           <CardContent className="pt-5 space-y-4">
-            <h2 className="af-subhead">Preview · pick preset · create Short</h2>
+            <h2 className="af-subhead">Preview · Review near-final · create Short</h2>
             <p className="af-caption text-muted-foreground">
-              Scrub your staged trim below before assembly. This is your near-final check before credits burn.
+              {nearFinalUrl
+                ? 'Scrub the burned near-final (layout + look + FX). Credits burn only when you Create Short.'
+                : 'Scrub your staged trim, pick a preset, then Review near-final before Create Short.'}
             </p>
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-2">
                 <p className="af-caption font-medium text-foreground">
-                  {staged.title}
+                  {nearFinalUrl ? 'Near-final · ' : 'Staged · '}{staged.title}
                   {staged.startSec != null && staged.endSec != null
                     ? ` · ${formatClock(staged.startSec)}–${formatClock(staged.endSec)}`
                     : ''}
                 </p>
                 <video
-                  src={staged.mp4Url}
+                  key={nearFinalUrl || staged.mp4Url}
+                  src={nearFinalUrl || staged.mp4Url}
                   controls
                   playsInline
                   className="w-full aspect-[9/16] max-h-[70vh] rounded-xl bg-black object-contain"
                 />
+                {nearFinalMeta && (
+                  <p className="af-caption text-muted-foreground">
+                    Applied: {nearFinalMeta.applied.length ? nearFinalMeta.applied.join(', ') : 'base layout'}
+                    {nearFinalMeta.missing.length ? ` · Later at execute: ${nearFinalMeta.missing.join(', ')}` : ''}
+                  </p>
+                )}
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -621,7 +672,11 @@ function PeaksPageInner() {
                   <select
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                     value={presetKey}
-                    onChange={(e) => setPresetKey(e.target.value)}
+                    onChange={(e) => {
+                      setPresetKey(e.target.value);
+                      setNearFinalUrl(null);
+                      setNearFinalMeta(null);
+                    }}
                   >
                     {(presets.length ? presets : [
                       { code: 'C9', key: 'fableflow_speed', label: 'Speed cut Short' },
@@ -633,14 +688,23 @@ function PeaksPageInner() {
                     Or build a custom job with this clip prefilled in the job builder.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button onClick={onCreateJob} disabled={!!busy} className="flex-1">
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant={nearFinalUrl ? 'outline' : 'default'}
+                    onClick={onReviewNearFinal}
+                    disabled={!!busy}
+                    className="w-full"
+                  >
+                    {nearFinalUrl ? 'Re-burn near-final' : 'Review near-final'}
+                  </Button>
+                  <Button onClick={onCreateJob} disabled={!!busy} className="w-full">
                     Create Short job
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1"
+                    className="w-full"
                     disabled={!!busy}
                     onClick={() => {
                       try {

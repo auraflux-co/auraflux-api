@@ -1559,6 +1559,47 @@ export async function listComposePresets(
   return apiFetch('/content-library/presets', { token });
 }
 
+/** C0 graduation — burn near-final MP4 for Peaks Review (iss_tY3Ii28wvWBK). */
+export async function renderCompositionTimelinePreview(
+  body: {
+    clip: {
+      mp4Url?: string;
+      stagedUrl?: string;
+      resolvedMp4?: string;
+      url?: string;
+      title?: string;
+      duration?: number;
+      trimStart?: number;
+      trimEnd?: number;
+    };
+    compCreativePreset?: string;
+    deliveryAspect?: '9:16' | '1:1';
+  },
+  token?: string,
+): Promise<{
+  ok: boolean;
+  previewVideoUrl?: string | null;
+  previewVideoAbsoluteUrl?: string | null;
+  previewUrl?: string;
+  previewAbsoluteUrl?: string;
+  nearFinalApplied?: string[];
+  nearFinalMissing?: string[];
+  previewDurationSec?: number;
+  error?: string;
+}> {
+  return apiFetch('/composition/timeline-preview', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    token,
+  });
+}
+
+export function compositionPreviewFileUrl(relativeOrAbsolute: string): string {
+  if (/^https?:\/\//i.test(relativeOrAbsolute)) return relativeOrAbsolute;
+  const base = process.env.NEXT_PUBLIC_API_BASE || 'https://auraflux-api.onrender.com';
+  return `${base.replace(/\/$/, '')}${relativeOrAbsolute.startsWith('/') ? '' : '/'}${relativeOrAbsolute}`;
+}
+
 export async function getChannelConnections(
   token?: string,
 ): Promise<{ ok: boolean; connections: SourceChannelOAuthConnection[]; oauthPlatforms?: string[] }> {
