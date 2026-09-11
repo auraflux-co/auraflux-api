@@ -548,15 +548,34 @@ body:has(.art) {
 .art .meta { color: #64748b !important; font-weight: 600 !important; }
 .art .post-prose,
 .art .post-prose p {
-  color: #1e293b !important;
+  color: #334155 !important;
   font-size: 1rem !important;
   line-height: 1.625 !important;
+}
+.art .post-prose .lead {
+  color: #1e293b !important;
+  font-size: 1.125rem !important;
+  font-weight: 500 !important;
 }
 .art .post-prose h2 {
   color: #0f172a !important;
   font-size: 1.5rem !important;
   font-weight: 700 !important;
   margin: 2rem 0 1rem !important;
+}
+.art .post-prose a {
+  color: #d97706 !important;
+  font-weight: 700 !important;
+}
+.art .post-callout {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.art .post-callout-title { color: #0f172a !important; }
+.art .post-callout-body { color: #475569 !important; font-size: 0.75rem !important; }
+.art .post-prose code {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 .art .post-cta {
   background: #0f172a !important;

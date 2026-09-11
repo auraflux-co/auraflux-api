@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Sitewide nav CTA: Book a Demo → cal.com/auraflux-demo/60min.
+**Last Updated:** 2026-09-11 — Expanded /blog/one-plan editorial article structure.
 
 
 
@@ -190,6 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **content(marketing): expand /blog/one-plan article** — full self-serve + managed sections, callout. | blog-one-plan.html, page-base.css, STATUS.md | pending | 2026-09-11 ET |
 | Cursor | **feat(marketing): replace Start Free Trial with Book a Demo** — nav CTA → Cal.com 60-min; sitewide. | nav.json, nav.html, inject_content.py, STATUS.md | 3d186804 | 2026-09-11 ET |
 | Cursor | **feat(marketing): Cal.com AuraFlux demo booking** — blog Book a Demo → cal.com; /contact calendar+message tabs. | blog posts, contact-content, STATUS.md | c3c5b674 | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog post template Book a Demo** — no free-trial CTA; pt-36; amber tag; prose contrast. | blog-*-*.html, template, page-base.css, STATUS.md | b308409d | 2026-09-11 ET |

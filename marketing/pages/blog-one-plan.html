@@ -38,15 +38,38 @@ body:has(.art){padding-top:0 !important;background:#fff !important;}
 .art .post-prose{
   max-width:48rem;margin:0 auto;
   display:flex;flex-direction:column;gap:1.5rem;
-  color:#1e293b !important;font-size:1rem;line-height:1.625;
+  color:#334155 !important;font-size:1rem;line-height:1.625;
 }
-.art .post-prose p{margin:0;color:#1e293b !important;font-size:1rem;line-height:1.625;}
+.art .post-prose > p{margin:0;color:#334155 !important;font-size:1rem;line-height:1.625;}
+.art .post-prose .lead{
+  font-size:1.125rem;font-weight:500;color:#1e293b !important;line-height:1.625;
+}
 .art .post-prose h2{
   font-size:1.5rem;font-weight:700;color:#0f172a !important;
   margin:2rem 0 1rem;letter-spacing:-.02em;
 }
-.art .post-prose a{font-weight:700;color:#0f172a !important;}
-.art .post-prose a:hover{color:#d97706 !important;}
+.art .post-prose ul{
+  margin:0;padding-left:1.5rem;list-style:disc;
+  display:flex;flex-direction:column;gap:.5rem;color:#334155 !important;
+}
+.art .post-prose li{margin:0;line-height:1.625;}
+.art .post-prose strong{color:#0f172a !important;font-weight:700;}
+.art .post-prose a{font-weight:700;color:#d97706 !important;text-decoration:none;}
+.art .post-prose a:hover{text-decoration:underline;}
+.art .post-callout{
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:.75rem;
+  padding:1.25rem;margin:.5rem 0;display:flex;flex-direction:column;gap:.75rem;
+}
+.art .post-callout-title{
+  margin:0;font-size:.875rem;font-weight:700;color:#0f172a !important;
+}
+.art .post-callout-body{
+  margin:0;font-size:.75rem;color:#475569 !important;line-height:1.625;
+}
+.art .post-prose code{
+  background:#e2e8f0;color:#0f172a;padding:.125rem .375rem;border-radius:.25rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;
+}
 .art .post-cta-wrap{
   max-width:48rem;margin:4rem auto 0;padding-top:2.5rem;
   border-top:1px solid #e2e8f0;
@@ -82,8 +105,24 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <h1>One Plan, Managed by Inquiry</h1>
   <p class="meta">Sep 10, 2026 · AuraFlux</p>
   <div class="post-prose">
-    <p>Self-serve AuraFlux is one plan: Peaks + Short production + publish for one brand at $999/mo, with fair-use rate limits in the Terms.</p>
-    <p>Managed is available by inquiry when you want us to run production with you. API access is invite-gated for operators who need /v1 Peaks and jobs.</p>
+    <p class="lead">AuraFlux operates on a focused, single-tier self-serve structure designed specifically for media teams, high-volume creators, and growth agencies.</p>
+
+    <h2>The $999/mo Self-Serve Plan</h2>
+    <p>Our core plan provides complete access to our core clip generation pipeline for a single active brand. You get automated stream peak detection, AI-driven Short production, and direct publishing workflow tools out of the box.</p>
+
+    <ul>
+      <li><strong>Peak Detection:</strong> Automated tracking for YouTube Most Replayed data, Twitch chat velocity, and CCV spikes.</li>
+      <li><strong>Short Production:</strong> Automated vertical reframing, dynamic captioning, and hook extraction.</li>
+      <li><strong>Multi-Platform Publishing:</strong> Direct push to YouTube Shorts, TikTok, and Instagram Reels.</li>
+    </ul>
+
+    <h2>Managed Production &amp; API Access</h2>
+    <p>For agencies managing multiple creator networks or enterprises needing custom video volumes, AuraFlux offers hands-on managed workflows:</p>
+
+    <div class="post-callout">
+      <p class="post-callout-title">Managed Inquiries &amp; Enterprise API</p>
+      <p class="post-callout-body">Need our production team to co-manage your editing pipelines or require dedicated <code>/v1/peaks</code> API access? Reach out directly via our <a href="/contact">Contact Form</a> to build a custom allocation.</p>
+    </div>
   </div>
   <div class="post-cta-wrap">
     <div class="post-cta">
