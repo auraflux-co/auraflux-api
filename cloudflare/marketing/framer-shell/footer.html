@@ -1,6 +1,6 @@
 <style>
   .af-footer {
-    background: #020617; /* slate-950 - BR footer canvas */
+    background: #020617;
     color: #e2e8f0;
     padding: 3.5rem 0 2rem;
     margin-top: 0;
@@ -15,8 +15,8 @@
     grid-template-columns: 1fr;
     gap: 2.5rem;
   }
-  @media (min-width: 640px) {
-    .af-footer-grid { grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 2rem; }
+  @media (min-width: 720px) {
+    .af-footer-grid { grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 2rem; }
   }
   .af-footer-brand {
     display: flex;
@@ -53,6 +53,11 @@
     margin: 0;
     max-width: 18rem;
   }
+  .af-footer-entity {
+    color: #64748b !important;
+    font-size: 0.75rem;
+    margin: 0;
+  }
   .af-footer-col-label {
     display: block;
     color: #e2e8f0 !important;
@@ -77,6 +82,7 @@
     display: flex;
     gap: 0.75rem;
     margin-top: 0.5rem;
+    flex-wrap: wrap;
   }
   .af-social {
     color: #94a3b8 !important;
@@ -109,29 +115,38 @@
           AuraFlux
         </a>
         <p id="af-footer-tagline">Peaks (Most Replayed, chat spikes, CCV) to Shorts. Member portal for YouTube, Twitch, and Kick.</p>
+        <p class="af-footer-entity">A product of HSKRG LLC.</p>
         <div class="af-footer-social">
-          <a class="af-social af-social-li" href="https://www.linkedin.com/in/aura-flux-930b86413">LinkedIn</a>
-          <a class="af-social af-social-ig" href="https://www.instagram.com/aurafluxco/">Instagram</a>
-          <a class="af-social af-social-tt" href="https://www.tiktok.com/@aurafluxco?_r=1&_t=ZS-96xfObJOkbN">TikTok</a>
-          <a class="af-social af-social-yt" href="https://youtube.com/@auraflux">YouTube</a>
+          <a class="af-social" href="https://www.linkedin.com/in/aura-flux-930b86413">LinkedIn</a>
+          <a class="af-social" href="https://www.instagram.com/aurafluxco/">Instagram</a>
+          <a class="af-social" href="https://www.tiktok.com/@aurafluxco">TikTok</a>
+          <a class="af-social" href="https://youtube.com/@auraflux">YouTube</a>
         </div>
       </div>
       <div class="af-footer-col">
-        <span class="af-footer-col-label">Platform</span>
-          <a href="/our-story">Our Story</a>
-          <a href="/our-system">Our System</a>
-          <a href="/roadmap">Roadmap</a>
-        </div>
+        <span class="af-footer-col-label">Explore</span>
+        <a href="/our-story">Our Story</a>
+        <a href="/our-system">Our System</a>
+        <a href="/process">How it works</a>
+        <a href="/work">Work</a>
+        <a href="/roadmap">Roadmap</a>
+        <a href="/developer-api">Developer API</a>
+      </div>
       <div class="af-footer-col">
-        <span class="af-footer-col-label">Resources</span>
-          <a href="/pricing">Plans</a>
-          <a href="/blog">Blog</a>
-          <a href="/contact-us">Contact Us</a>
-        </div>
+        <span class="af-footer-col-label">Contact</span>
+        <a href="tel:+15716002835">+1 (571) 600-2835</a>
+        <a href="mailto:support@auraflux.co">support@auraflux.co</a>
+        <a href="/contact">Contact form</a>
+        <a href="/plans">Plans</a>
+        <a href="/blog">Blog</a>
+      </div>
       <div class="af-footer-col">
         <span class="af-footer-col-label">Legal</span>
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
+        <a href="/cookies">Cookies</a>
+        <a href="/refunds">Refunds</a>
+        <a href="/aup">Acceptable Use</a>
       </div>
     </div>
     <div class="af-footer-bottom">

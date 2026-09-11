@@ -119,8 +119,12 @@
 
 <!-- Hero -->
 <div class="ct-hero">
-  <h1 >Get in Touch</h1>
-  <p data-editable="hero_subtext">Sales, support, partnerships, or feedback - we read every message.</p>
+  <h1 >Talk to us</h1>
+  <p data-editable="hero_subtext">Sales, Managed inquiry, API invite, or support. Call or text +1 (571) 600-2835, email support@auraflux.co, or send the form — we respond within one business day.</p>
+  <p style="margin-top:16px;">
+    <a href="tel:+15716002835" style="display:inline-flex;margin-right:10px;padding:10px 16px;background:#f5c542;color:#0b1220;font-weight:700;border-radius:8px;text-decoration:none;">Call / text</a>
+    <a href="mailto:support@auraflux.co" style="display:inline-flex;padding:10px 16px;border:1px solid #cbd5e1;color:#0b1220;font-weight:600;border-radius:8px;text-decoration:none;background:#fff;">Email us</a>
+  </p>
 </div>
 
 <!-- Top: Form + Channels -->
@@ -189,11 +193,8 @@
         });
         var data = await res.json();
         if (data.ok) {
-          btn.textContent = 'Sent';
-          msg.className = 'ct-form-msg ok';
-          msg.textContent = 'Thanks - we will be in touch shortly.';
-          msg.style.display = 'block';
-          e.target.reset();
+          window.location.href = '/thanks';
+          return;
         } else { throw new Error(data.error || 'Submission failed'); }
       } catch (err) {
         msg.className = 'ct-form-msg err';

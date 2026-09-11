@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Work. AuraFlux</title>
+<meta name="description" content="Workflows AuraFlux ships: Peaks to Shorts for streamers, multi-platform publish, and API operators.">
+<link rel="canonical" href="https://auraflux.co/work">
+<link rel="icon" type="image/png" href="/favicon.png?v=2">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MBS26S2W6E');</script>
+${FRAMER_FONTS || ''}
+${FRAMER_CSS || ''}
+<style>
+.hero{text-align:center;padding:3.5rem 1.25rem 3rem}
+.hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;color:#fff !important;letter-spacing:-.03em;margin-bottom:12px}
+.hero p{color:#cbd5e1 !important;max-width:36rem;margin:0 auto;line-height:1.65}
+.wrap{max-width:72rem;margin:0 auto;padding:3rem 1.25rem 5rem}
+.work-grid{display:grid;grid-template-columns:1fr;gap:1.25rem}
+@media(min-width:720px){.work-grid{grid-template-columns:1fr 1fr}}
+.work-card{
+  background:#fff;border:1px solid #e4e4e7;border-radius:1rem;padding:1.75rem 1.5rem;
+  box-shadow:0 1px 2px rgba(15,23,42,.06);
+}
+.work-tag{display:inline-block;font-size:.65rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:#0b1220;background:rgba(245,197,66,.2);padding:3px 8px;border-radius:4px;margin-bottom:12px}
+.work-card h2{font-size:1.2rem;font-weight:800;color:#0f172a !important;margin-bottom:8px;letter-spacing:-.02em}
+.work-card p{font-size:.92rem;color:#475569 !important;line-height:1.6;margin-bottom:1rem}
+.work-meta{font-size:.78rem;font-weight:600;color:#64748b;letter-spacing:.04em;text-transform:uppercase}
+.work-cta{text-align:center;padding:2rem 1.25rem 4rem}
+.work-cta a{
+  display:inline-flex;background:#0b1220;color:#fff !important;font-weight:700;padding:12px 22px;
+  border-radius:8px;text-decoration:none !important;margin:0 6px 8px
+}
+.work-cta a.alt{background:#f5c542;color:#0b1220 !important}
+</style>
+</head>
+<body>
+${FRAMER_NAV || FALLBACK_NAV}
+<div class="hero">
+  <h1>Work we ship</h1>
+  <p>Proof is the workflow — Peaks signal in, Shorts out, publish from the member portal. These are the operator patterns AuraFlux is built for (not a generic agency portfolio).</p>
+</div>
+<div class="wrap">
+  <div class="work-grid">
+    <article class="work-card">
+      <span class="work-tag">Peaks · YouTube</span>
+      <h2>Most Replayed → Short</h2>
+      <p>Operators pull VOD heat windows, stage a trim, run a compose preset (default C9 Speed), and publish vertical Shorts without hiring an editor for every peak.</p>
+      <div class="work-meta">Signal · stage · pipeline · publish</div>
+    </article>
+    <article class="work-card">
+      <span class="work-tag">Peaks · Twitch / Kick</span>
+      <h2>Chat spikes &amp; CCV peaks</h2>
+      <p>Live and VOD energy moments become the same Short path — Twitch chat spikes and Kick concurrent-viewer peaks feed the same member portal flow.</p>
+      <div class="work-meta">Live signal · fair-use unlimited</div>
+    </article>
+    <article class="work-card">
+      <span class="work-tag">Publish</span>
+      <h2>Multi-platform from one job</h2>
+      <p>Connect YouTube and TikTok once. Metadata rides with the job so operators stop re-uploading the same Short by hand across apps.</p>
+      <div class="work-meta">Channels · social accounts · review</div>
+    </article>
+    <article class="work-card">
+      <span class="work-tag">API</span>
+      <h2>Peaks + edits on /v1</h2>
+      <p>Invite-gated API for tech buyers: platform-signal Peaks endpoints plus Short compose presets and jobs — same product wrap as the portal.</p>
+      <div class="work-meta"><a href="/developer-api" style="color:#0b1220">Developer API →</a></div>
+    </article>
+  </div>
+</div>
+<div class="work-cta">
+  <a href="https://app.auraflux.co/peaks">Open Peaks</a>
+  <a class="alt" href="/contact">Talk to us</a>
+</div>
+${FRAMER_FOOTER || FALLBACK_FOOTER}
+</body>
+</html>

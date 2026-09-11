@@ -94,10 +94,16 @@ def main() -> int:
     page_map = {
         "/": "home.html",
         "/blog": "blog.html",
+        "/blog/peaks-to-short": "blog-peaks-to-short.html",
+        "/blog/why-peaks": "blog-why-peaks.html",
+        "/blog/one-plan": "blog-one-plan.html",
         "/plans": "pricing.html",
         "/our-story": "about.html",
         "/our-system": "system.html",
         "/developer-api": "developer-api.html",
+        "/work": "work.html",
+        "/process": "process.html",
+        "/thanks": "thanks.html",
     }
 
     for route, fname in page_map.items():

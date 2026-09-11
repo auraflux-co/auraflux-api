@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-10 — Marketing shell balance: mist canvas + dark heroes/tiles, fixed contrast fights.
+**Last Updated:** 2026-09-11 — Marketing BR parity: work/process/blog posts, mobile nav, home hero+pricing+preview, plans FAQ, dual CTAs (keep Roadmap/API).
 
 
 

@@ -126,6 +126,18 @@ body{line-height:1.6}
 }
 .managed-card a.cta-managed:hover{opacity:.9;text-decoration:none;}
 
+.plans-faq{max-width:640px;margin:0 auto;padding:0 24px 64px;background:#f4f4f5;}
+.plans-faq h2{font-size:1.35rem;font-weight:800;color:#0f172a;text-align:center;margin-bottom:1.25rem;letter-spacing:-.02em}
+.faq-item{background:#fff;border:1px solid #e4e4e7;border-radius:12px;margin-bottom:10px;overflow:hidden}
+.faq-item summary{
+  cursor:pointer;padding:14px 18px;font-weight:700;font-size:.92rem;color:#0f172a;
+  list-style:none;display:flex;justify-content:space-between;gap:12px;
+}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:#64748b;font-weight:700}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 18px 16px;margin:0;font-size:.88rem;color:#475569;line-height:1.6}
+
 .price-loading .price-val{opacity:.3;animation:ppulse 1.2s ease-in-out infinite;}
 @keyframes ppulse{0%,100%{opacity:.15}50%{opacity:.5}}
 </style>
@@ -175,6 +187,26 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <p>Done-for-you production, dedicated account management, and Managed-tier add-ons when your workflow needs them. Tell us how you ship Shorts today.</p>
     <a href="/contact" class="cta-managed" data-cta="managed_cta">Contact us</a>
   </div>
+</div>
+
+<div class="plans-faq">
+  <h2>Plans FAQ</h2>
+  <details class="faq-item">
+    <summary>What does “unlimited” mean?</summary>
+    <p>Self-serve includes unlimited Peaks analysis and Short production for one brand, subject to fair-use rate limits in the Terms (concurrent jobs, hourly starts, Peaks analyses). Limits protect platform speed for everyone.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Can I cancel anytime?</summary>
+    <p>Yes. Cancel via Settings → Billing or email support@auraflux.co. See Refunds and Terms for billing details.</p>
+  </details>
+  <details class="faq-item">
+    <summary>What’s the difference vs Managed?</summary>
+    <p>Self-serve: you run Peaks → pipeline → publish in the member portal. Managed: we operate production with you — inquire via Contact. Same product surfaces; different service level.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Is API included?</summary>
+    <p>API access is invite-gated for tech buyers. Request access from Contact or Settings → API Keys after approval. See Developer API for Peaks + edit endpoints.</p>
+  </details>
 </div>
 
 ${FRAMER_FOOTER || FALLBACK_FOOTER}

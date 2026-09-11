@@ -3,80 +3,67 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Blog. AuraFlux</title>
-<meta name="description" content="Insights on automated video production, content automation, and building a streaming-to-revenue pipeline.">
+<meta name="description" content="Insights on Peaks, automated Shorts, and publishing from the AuraFlux member portal.">
 <link rel="canonical" href="https://auraflux.co/blog">
 <link rel="icon" type="image/png" href="/favicon.png?v=2">
-<!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Blog. AuraFlux">
-<meta property="og:description" content="Insights on automated video production, content automation, and building a streaming-to-revenue pipeline.">
-<meta property="og:image" content="https://auraflux.co/favicon.png">
+<meta property="og:description" content="Insights on Peaks, automated Shorts, and publishing from the AuraFlux member portal.">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-MBS26S2W6E');
-</script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MBS26S2W6E');</script>
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#0b1220;color:#fff;line-height:1.6}
-/* Blog content */
-.blog-wrap{max-width:860px;margin:0 auto;padding:60px 24px 120px}
-.blog-hero{text-align:center;margin-bottom:56px}
-.blog-hero h1{font-size:3.5rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:16px;line-height:1.1}
-.blog-hero p{font-size:1.05rem;color:#8f9bb7;max-width:520px;margin:0 auto}
-.posts{display:grid;gap:24px}
-.post-card{background:#0f172a;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px 32px;transition:border-color .2s}
-.post-card:hover{border-color:rgba(245,197,66,.3)}
+.blog-wrap{max-width:860px;margin:0 auto;padding:48px 24px 100px}
+.blog-hero{text-align:center;margin-bottom:40px}
+.blog-hero h1{font-size:clamp(2.2rem,4vw,3.2rem);font-weight:800;color:#0f172a;letter-spacing:-.03em;margin-bottom:12px}
+.blog-hero p{font-size:1.05rem;color:#475569;max-width:34rem;margin:0 auto;line-height:1.65}
+.posts{display:grid;gap:16px}
+.post-card{
+  display:block;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;
+  padding:28px 32px;text-decoration:none !important;transition:border-color .2s
+}
+.post-card:hover{border-color:rgba(245,197,66,.4)}
 .post-tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f5c542;background:rgba(245,197,66,.1);border-radius:4px;padding:3px 8px;margin-bottom:12px}
 .post-card h2{font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:8px;line-height:1.4}
-.post-card p{font-size:.9rem;color:#8f9bb7;margin-bottom:16px;line-height:1.6}
-.post-meta{font-size:.8rem;color:#a0a0b8}
-.blog-cta{background:linear-gradient(to bottom,#0b1220,#0a1028);border-top:1px solid rgba(255,255,255,.06);padding:80px 24px}
-.blog-cta-inner{max-width:600px;margin:0 auto;text-align:center}
-.blog-cta-inner h2{font-size:2rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:12px;line-height:1.2}
-.blog-cta-inner p{font-size:1rem;color:#8f9bb7;margin-bottom:32px}
+.post-card p{font-size:.9rem;color:#cbd5e1;margin-bottom:12px;line-height:1.6}
+.post-meta{font-size:.8rem;color:#94a3b8}
 </style>
 </head>
 <body>
 ${FRAMER_NAV || FALLBACK_NAV}
-
 <div class="blog-wrap">
   <div class="blog-hero">
-    <h1 >Blog</h1>
-    <p >Insights on automated video production, content automation, and building a streaming-to-revenue pipeline.</p>
+    <h1>Blog</h1>
+    <p>Peaks, Short production, and publish — notes for streamers and operators running AuraFlux.</p>
   </div>
-
   <div class="posts">
-    <div class="post-card">
+    <a class="post-card" href="/blog/peaks-to-short">
       <span class="post-tag">Guide</span>
-      <h2>From Twitch Clip to Published Video in Under 5 Minutes</h2>
-      <p>How AuraFlux's portal pipeline handles sourcing, scripting, voiceover, thumbnails, and direct publishing. automatically.</p>
-      <div class="post-meta">Coming soon</div>
-    </div>
-    <div class="post-card">
-      <span class="post-tag">Monetization</span>
-      <h2>The Multi-Platform Content Strategy for Streamers</h2>
-      <p>How top streamers on Twitch and Kick maximise revenue by cross-posting to YouTube, TikTok, and subscription platforms.</p>
-      <div class="post-meta">Coming soon</div>
-    </div>
-    <div class="post-card">
-      <span class="post-tag">Platform</span>
-      <h2>Direct Publishing to TikTok and YouTube: A Deep Dive</h2>
-      <p>OAuth-based direct publish means no manual uploads. Here's how the AuraFlux publish portal handles both platforms.</p>
-      <div class="post-meta">Coming soon</div>
-    </div>
-    <div class="post-card">
-      <span class="post-tag">Automation</span>
-      <h2>Inside AuraFlux's Portal Pipeline: How 6 Portals Turn a Clip Into a Published Video</h2>
-      <p>A detailed walkthrough of each production stage. from Portal 0 (intake) through Portal 5 (publish).</p>
-      <div class="post-meta">Coming soon</div>
-    </div>
+      <h2>From Peak to Published Short</h2>
+      <p>How Most Replayed, chat spikes, and CCV feed the Short pipeline — and what you do in the member portal.</p>
+      <div class="meta post-meta">Read →</div>
+    </a>
+    <a class="post-card" href="/blog/why-peaks">
+      <span class="post-tag">Product</span>
+      <h2>Why Peaks Beat Scrubbing VODs</h2>
+      <p>Human editors spent hours hunting moments. Peaks starts from platform signal so production time goes to shipping.</p>
+      <div class="post-meta">Read →</div>
+    </a>
+    <a class="post-card" href="/blog/one-plan">
+      <span class="post-tag">Plans</span>
+      <h2>One Plan, Managed by Inquiry</h2>
+      <p>What $999/mo includes, how fair use works, and when to talk to us about Managed or API invite.</p>
+      <div class="post-meta">Read →</div>
+    </a>
+    <a class="post-card" href="/developer-api">
+      <span class="post-tag">API</span>
+      <h2>Peaks + edits on the Developer API</h2>
+      <p>Invite-gated /v1 for platform-signal Peaks and C1–C11 compose presets — same wrap as the app.</p>
+      <div class="post-meta">Docs →</div>
+    </a>
   </div>
-
+</div>
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
 </body>
 </html>
