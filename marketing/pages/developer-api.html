@@ -76,7 +76,7 @@ ${FRAMER_CSS || ''}
 }
 .dev-page .dev-section-heading{
   font-size:1.25rem;font-weight:700 !important;color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
-  margin:3rem 0 1.5rem;letter-spacing:-.02em;
+  margin:0 0 1.5rem;letter-spacing:-.02em;
 }
 
 /* Light endpoint cards — force readable path text */
@@ -143,6 +143,10 @@ ${FRAMER_CSS || ''}
 .dev-page .dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
 @media(max-width:700px){.dev-page .dev-grid{grid-template-columns:1fr;}}
 
+/* Jobs ref wrap — centered max-w-5xl */
+.dev-page .dev-jobs-wrap{
+  max-width:64rem;margin:3rem auto 0;width:100%;
+}
 /* Jobs ref — 7/5 side-by-side grid */
 .dev-page .dev-jobs-ref{
   display:grid;
@@ -629,7 +633,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   </div>
 
   <!-- FIELD REFERENCE -->
-  <div class="dev-section">
+  <div class="dev-section dev-jobs-wrap">
     <h2 class="dev-section-heading">POST /jobs — Field Reference &amp; Example</h2>
     <div class="dev-jobs-ref">
       <div class="dev-jobs-ref-table">

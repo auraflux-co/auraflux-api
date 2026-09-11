@@ -1,6 +1,6 @@
 {
-  "cta_label": "Get Started",
-  "cta_url": "/pricing",
+  "cta_label": "Start Free Trial",
+  "cta_url": "https://app.auraflux.co/signup",
   "links": [
     { "label": "Home", "url": "/" },
     { "label": "How it works", "url": "/how-it-works" },
