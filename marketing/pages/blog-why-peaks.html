@@ -11,23 +11,96 @@
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
-.art{max-width:40rem;margin:0 auto;padding:3rem 1.25rem 5rem}
-.art a.back{font-size:.85rem;font-weight:600;color:#0b1220;text-decoration:none}
-.art h1{font-size:clamp(1.75rem,3.5vw,2.4rem);font-weight:800;color:#0f172a;letter-spacing:-.03em;margin:1.25rem 0 1rem;line-height:1.15}
-.art .meta{font-size:.85rem;color:#64748b;margin-bottom:2rem}
-.art p{font-size:1.05rem;color:#334155;line-height:1.7;margin-bottom:1.15rem}
+*{box-sizing:border-box}
+body{margin:0;line-height:1.625;background:#fff !important;}
+body:has(.art){padding-top:0 !important;background:#fff !important;}
+.art{
+  max-width:48rem;margin:0 auto;padding:9rem 1rem 4rem;
+  background:#fff;color:#0f172a;min-height:100vh;
+}
+@media(max-width:899px){.art{padding-top:11rem;}}
+.art a.back{
+  display:inline-block;font-size:.75rem;font-weight:700;color:#475569 !important;
+  text-decoration:none !important;margin-bottom:1.5rem;transition:color .15s;
+}
+.art a.back:hover{color:#d97706 !important;}
+.art .post-tag{
+  display:inline-block;font-size:.75rem;font-weight:700;
+  background:#fbbf24 !important;color:#020617 !important;border:none;
+  padding:.25rem .75rem;border-radius:.375rem;text-transform:uppercase;letter-spacing:.08em;
+  margin:0 0 1rem;
+}
+.art h1{
+  font-size:clamp(1.75rem,3.5vw,2.4rem);font-weight:800;color:#0f172a !important;
+  letter-spacing:-.03em;margin:0 0 1rem;line-height:1.15;
+}
+.art .meta{font-size:.75rem;font-weight:600;color:#64748b !important;margin:0 0 2rem;}
+.art .post-prose{
+  max-width:48rem;margin:0 auto;
+  display:flex;flex-direction:column;gap:1.5rem;
+  color:#1e293b !important;font-size:1rem;line-height:1.625;
+}
+.art .post-prose p{margin:0;color:#1e293b !important;font-size:1rem;line-height:1.625;}
+.art .post-prose h2{
+  font-size:1.5rem;font-weight:700;color:#0f172a !important;
+  margin:2rem 0 1rem;letter-spacing:-.02em;
+}
+.art .post-prose a{font-weight:700;color:#0f172a !important;}
+.art .post-prose a:hover{color:#d97706 !important;}
+.art .post-cta-wrap{
+  max-width:48rem;margin:4rem auto 0;padding-top:2.5rem;
+  border-top:1px solid #e2e8f0;
+}
+.art .post-cta{
+  background:#0f172a;border:1px solid #1e293b;border-radius:1rem;
+  padding:2rem;color:#fff;box-shadow:0 20px 25px -5px rgba(15,23,42,.15);
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:1.5rem;
+}
+@media(min-width:768px){
+  .art .post-cta{flex-direction:row;}
+  .art .post-cta-copy{text-align:left;}
+}
+.art .post-cta-copy{text-align:center;}
+.art .post-cta h3{font-size:1.25rem;font-weight:800;color:#fff !important;margin:0 0 .5rem;}
+.art .post-cta p{color:#cbd5e1 !important;font-size:.75rem;margin:0;line-height:1.5;}
+@media(min-width:768px){.art .post-cta p{font-size:.875rem;}}
+.art .post-cta-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#fbbf24 !important;color:#020617 !important;font-weight:700;
+  padding:.875rem 1.5rem;border-radius:.75rem;text-decoration:none !important;
+  font-size:.875rem;white-space:nowrap;box-shadow:0 4px 6px rgba(15,23,42,.12);
+  transition:background .15s;
+}
+.art .post-cta-btn:hover{background:#f59e0b !important;}
 </style>
 </head>
 <body>
 ${FRAMER_NAV || FALLBACK_NAV}
 <article class="art">
-  <a class="back" href="/blog">← Blog</a>
+  <a class="back" href="/blog">← Back to Blog</a>
+  <span class="post-tag">Platform</span>
   <h1>Why Peaks Beat Scrubbing VODs</h1>
-  <p class="meta">Product · AuraFlux</p>
-  <p>Manual clip hunting scales with hours watched. Peaks scales with platform signal: heat maps, chat density, and live CCV already tell you where the energy was.</p>
-  <p>AuraFlux wraps that signal with edits (compose presets, captions, brand, QA) and publish — so the product is Peaks plus production, not a single-feature clip tool.</p>
-  <p><a href="/features" style="font-weight:700;color:#0b1220">See Our System →</a></p>
+  <p class="meta">Sep 8, 2026 · AuraFlux</p>
+  <div class="post-prose">
+    <p>Manual clip hunting scales with hours watched. Peaks scales with platform signal: heat maps, chat density, and live CCV already tell you where the energy was.</p>
+    <p>AuraFlux wraps that signal with edits (compose presets, captions, brand, QA) and publish — so the product is Peaks plus production, not a single-feature clip tool.</p>
+  </div>
+  <div class="post-cta-wrap">
+    <div class="post-cta">
+      <div class="post-cta-copy">
+        <h3>Ready to Scale Your Content Pipeline?</h3>
+        <p>Explore our $999/mo plan or request managed production for your brand.</p>
+      </div>
+      <a class="post-cta-btn" href="/contact">Book a Demo →</a>
+    </div>
+  </div>
 </article>
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
+<style>
+html, body { background:#fff !important; }
+body:has(.art) { padding-top:0 !important; }
+.art { padding:9rem 1rem 4rem !important; }
+@media(max-width:899px){ .art{ padding-top:11rem !important; } }
+</style>
 </body>
 </html>

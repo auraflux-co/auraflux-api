@@ -15,47 +15,111 @@
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{line-height:1.7}
-.post-wrap{max-width:760px;margin:0 auto;padding:48px 24px 120px;}
-.post-header{margin-bottom:40px;}
-.post-tag{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-family:'Satoshi','Inter',monospace;padding:3px 12px;border-radius:100px;background:rgba(245,197,66,.1);color:#f5c542;margin-bottom:16px;}
-.post-header h1{font-size:2.5rem;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.1;margin-bottom:16px;}
-.post-meta{font-size:.82rem;color:#8f9bb7;display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
-.post-meta span{display:flex;align-items:center;gap:6px;}
-.post-cover{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;margin-bottom:40px;border:1px solid rgba(255,255,255,.07);}
-.post-body{font-size:1rem;color:#c8c8e0;line-height:1.8;}
-.post-body h2{font-size:1.6rem;font-weight:800;color:#fff;letter-spacing:-.02em;margin:40px 0 16px;}
-.post-body h3{font-size:1.2rem;font-weight:700;color:#fff;letter-spacing:-.01em;margin:32px 0 12px;}
-.post-body p{margin-bottom:20px;}
-.post-body strong{color:#fff;font-weight:700;}
-.post-body a{color:#f5c542;}
-.post-body ul,.post-body ol{padding-left:24px;margin-bottom:20px;display:flex;flex-direction:column;gap:8px;}
-.post-body li{color:#c8c8e0;}
-.post-body blockquote{border-left:3px solid #f5c542;padding:16px 20px;background:rgba(245,197,66,.05);border-radius:0 12px 12px 0;margin:24px 0;font-style:italic;color:#e4e4f0;}
-.post-body code{background:#0f172a;padding:2px 8px;border-radius:4px;font-size:.88em;color:#f5c542;font-family:monospace;}
-.post-body pre{background:#0f172a;padding:20px;border-radius:12px;overflow-x:auto;margin-bottom:20px;}
-.post-body pre code{background:none;padding:0;color:#a0a0b8;}
-.post-body img{max-width:100%;border-radius:12px;margin:20px 0;}
-.post-back{display:inline-flex;align-items:center;gap:6px;color:#8f9bb7;font-size:.88rem;margin-bottom:32px;text-decoration:none;transition:color .15s;}
-.post-back:hover{color:#fff;text-decoration:none;}
+*{box-sizing:border-box}
+body{margin:0;line-height:1.625;background:#fff !important;}
+body:has(.art){padding-top:0 !important;background:#fff !important;}
+.art{
+  max-width:48rem;margin:0 auto;padding:9rem 1rem 4rem;
+  background:#fff;color:#0f172a;min-height:100vh;
+}
+@media(max-width:899px){.art{padding-top:11rem;}}
+.art a.back{
+  display:inline-block;font-size:.75rem;font-weight:700;color:#475569 !important;
+  text-decoration:none !important;margin-bottom:1.5rem;transition:color .15s;
+}
+.art a.back:hover{color:#d97706 !important;}
+.art .post-tag{
+  display:inline-block;font-size:.75rem;font-weight:700;
+  background:#fbbf24 !important;color:#020617 !important;border:none;
+  padding:.25rem .75rem;border-radius:.375rem;text-transform:uppercase;letter-spacing:.08em;
+  margin:0 0 1rem;
+}
+.art h1{
+  font-size:clamp(1.75rem,3.5vw,2.4rem);font-weight:800;color:#0f172a !important;
+  letter-spacing:-.03em;margin:0 0 1rem;line-height:1.15;
+}
+.art .meta{
+  font-size:.75rem;font-weight:600;color:#64748b !important;margin:0 0 2rem;
+  display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;
+}
+.art .post-cover{
+  width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:1rem;
+  margin:0 0 2rem;border:1px solid #e2e8f0;
+}
+.art .post-prose{
+  max-width:48rem;margin:0 auto;
+  display:flex;flex-direction:column;gap:1.5rem;
+  color:#1e293b !important;font-size:1rem;line-height:1.625;
+}
+.art .post-prose p{margin:0;color:#1e293b !important;font-size:1rem;line-height:1.625;}
+.art .post-prose h2{
+  font-size:1.5rem;font-weight:700;color:#0f172a !important;
+  margin:2rem 0 1rem;letter-spacing:-.02em;
+}
+.art .post-prose h3{
+  font-size:1.25rem;font-weight:700;color:#0f172a !important;margin:1.5rem 0 .75rem;
+}
+.art .post-prose a{font-weight:700;color:#0f172a !important;}
+.art .post-prose a:hover{color:#d97706 !important;}
+.art .post-prose ul,.art .post-prose ol{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.5rem;color:#1e293b;}
+.art .post-prose strong{color:#0f172a;font-weight:700;}
+.art .post-cta-wrap{
+  max-width:48rem;margin:4rem auto 0;padding-top:2.5rem;
+  border-top:1px solid #e2e8f0;
+}
+.art .post-cta{
+  background:#0f172a;border:1px solid #1e293b;border-radius:1rem;
+  padding:2rem;color:#fff;box-shadow:0 20px 25px -5px rgba(15,23,42,.15);
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:1.5rem;
+}
+@media(min-width:768px){
+  .art .post-cta{flex-direction:row;}
+  .art .post-cta-copy{text-align:left;}
+}
+.art .post-cta-copy{text-align:center;}
+.art .post-cta h3{font-size:1.25rem;font-weight:800;color:#fff !important;margin:0 0 .5rem;}
+.art .post-cta p{color:#cbd5e1 !important;font-size:.75rem;margin:0;line-height:1.5;}
+@media(min-width:768px){.art .post-cta p{font-size:.875rem;}}
+.art .post-cta-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#fbbf24 !important;color:#020617 !important;font-weight:700;
+  padding:.875rem 1.5rem;border-radius:.75rem;text-decoration:none !important;
+  font-size:.875rem;white-space:nowrap;box-shadow:0 4px 6px rgba(15,23,42,.12);
+  transition:background .15s;
+}
+.art .post-cta-btn:hover{background:#f59e0b !important;}
 </style>
 </head>
 <body>
 ${FRAMER_NAV || FALLBACK_NAV}
-<div class="post-wrap">
-  <a href="/blog" class="post-back">← Back to Blog</a>
-  <div class="post-header">
-    <span class="post-tag">__POST_TAG__</span>
-    <h1>__POST_TITLE__</h1>
-    <div class="post-meta">
-      <span>__POST_AUTHOR__</span>
-      <span>__POST_DATE__</span>
-    </div>
+<article class="art">
+  <a class="back" href="/blog">← Back to Blog</a>
+  <span class="post-tag">__POST_TAG__</span>
+  <h1>__POST_TITLE__</h1>
+  <div class="meta">
+    <span>__POST_AUTHOR__</span>
+    <span>·</span>
+    <span>__POST_DATE__</span>
   </div>
   __POST_COVER__
-  <div class="post-body">__POST_BODY__</div>
-</div>
+  <div class="post-prose">__POST_BODY__</div>
+
+  <div class="post-cta-wrap">
+    <div class="post-cta">
+      <div class="post-cta-copy">
+        <h3>Ready to Scale Your Content Pipeline?</h3>
+        <p>Explore our $999/mo plan or request managed production for your brand.</p>
+      </div>
+      <a class="post-cta-btn" href="/contact">Book a Demo →</a>
+    </div>
+  </div>
+</article>
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
+<style>
+html, body { background:#fff !important; }
+body:has(.art) { padding-top:0 !important; }
+.art { padding:9rem 1rem 4rem !important; }
+@media(max-width:899px){ .art{ padding-top:11rem !important; } }
+</style>
 </body>
 </html>

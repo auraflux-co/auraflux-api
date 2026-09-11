@@ -517,6 +517,59 @@ body:has(.blog-page) {
   color: var(--brand-accent) !important;
 }
 
+/* ── Blog post articles (.art) — white canvas, high-contrast prose ───────── */
+body:has(.art) {
+  background: #fff !important;
+  padding-top: 0 !important;
+}
+.art {
+  background: #fff !important;
+  padding: 9rem 1rem 4rem !important;
+  max-width: 48rem !important;
+  color: #0f172a !important;
+}
+@media (max-width: 899px) {
+  .art { padding-top: 11rem !important; }
+}
+.art a.back {
+  color: #475569 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+}
+.art a.back:hover { color: #d97706 !important; }
+.art .post-tag {
+  background: #fbbf24 !important;
+  color: #020617 !important;
+  border: none !important;
+  border-radius: 0.375rem !important;
+  letter-spacing: 0.08em !important;
+}
+.art h1 { color: #0f172a !important; }
+.art .meta { color: #64748b !important; font-weight: 600 !important; }
+.art .post-prose,
+.art .post-prose p {
+  color: #1e293b !important;
+  font-size: 1rem !important;
+  line-height: 1.625 !important;
+}
+.art .post-prose h2 {
+  color: #0f172a !important;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  margin: 2rem 0 1rem !important;
+}
+.art .post-cta {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+.art .post-cta h3 { color: #fff !important; }
+.art .post-cta p { color: #cbd5e1 !important; }
+.art .post-cta-btn {
+  background: #fbbf24 !important;
+  color: #020617 !important;
+}
+.art .post-cta-btn:hover { background: #f59e0b !important; }
+
 /* ── API docs: mist page + light endpoint rows (high contrast) ──────────── */
 .dev-wrap,
 .dev-page {
