@@ -460,7 +460,7 @@ export function SignIn({
             value={email}
             readOnly={lockEmail && mode === 'sign-up'}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-all read-only:opacity-80"
+            className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 text-sm focus:border-amber-400 focus:outline-none transition-colors placeholder:text-slate-500 read-only:opacity-80"
           />
         </label>
         {mode === 'sign-in' || mode === 'sign-up' ? (
@@ -473,7 +473,7 @@ export function SignIn({
               autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-all"
+              className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 text-sm focus:border-amber-400 focus:outline-none transition-colors placeholder:text-slate-500"
             />
           </label>
         ) : null}
@@ -490,7 +490,7 @@ export function SignIn({
               autoComplete="one-time-code"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\s/g, ''))}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white tracking-widest focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-all"
+              className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 text-sm tracking-widest focus:border-amber-400 focus:outline-none transition-colors"
             />
           </label>
         ) : null}
@@ -517,32 +517,32 @@ export function SignIn({
         </button>
       </form>
       {mode === 'sign-in' ? (
-        <div className="pt-2 space-y-2 text-xs text-slate-400 text-center">
-          <p className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+        <div className="pt-3 space-y-2 text-center text-xs text-slate-400">
+          <div className="flex justify-center gap-4">
             <button
               type="button"
-              className="font-medium no-underline hover:text-amber-400 transition-colors"
+              className="hover:text-amber-400 transition-colors"
               onClick={() => switchMode('forgot')}
             >
               Forgot password?
             </button>
             <button
               type="button"
-              className="font-medium no-underline hover:text-amber-400 transition-colors"
+              className="hover:text-amber-400 transition-colors"
               onClick={() => switchMode('otp')}
             >
               Email me a code
             </button>
-          </p>
-          <p>
-            No account?{' '}
+          </div>
+          <div>
+            <span>No account? </span>
             <a
-              href={signUpUrl}
-              className="font-semibold no-underline text-slate-300 hover:text-amber-400 transition-colors"
+              href="https://auraflux.co/pricing"
+              className="text-slate-300 font-semibold hover:text-amber-400 transition-colors"
             >
               Purchase a plan first
             </a>
-          </p>
+          </div>
         </div>
       ) : (
         <p className="pt-2 text-xs text-slate-400 text-center">

@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 21:21 UTC  
+**Last Updated:** 2026-09-11 21:23 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Sign-in: dark portal shell + system-ui stack; Better Auth form restyled (amber CTA, slate inputs); globals.css [data-better-auth] overrides.
+Sign-in polish: input px-4 py-3 rounded-xl; helper links pt-3 space-y-2; purchase CTA → auraflux.co/pricing.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
