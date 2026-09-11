@@ -1,114 +1,124 @@
 <style>
-/* Override LEGAL_SHELL .wrap to be full width for contact */
-.wrap{max-width:1100px !important;padding-left:32px !important;padding-right:32px !important;}
-@media(max-width:600px){.wrap{padding-left:20px !important;padding-right:20px !important;}}
-
-/* ── Contact page layout ─────────────────────────────────────────────── */
-.ct-hero{margin-bottom:48px;}
-.ct-hero h1{letter-spacing:-.03em;}
-.ct-hero p{color:#8f9bb7;margin-top:8px;line-height:1.6;max-width:32rem;}
-
-/* Top section: form + channels side by side */
-.ct-top{
-  display:grid;grid-template-columns:1.4fr 1fr;gap:40px;
-  margin-bottom:64px;align-items:start;
+/* Page shell — clear fixed nav; light mist canvas */
+.wrap{
+  max-width:64rem !important;
+  margin:0 auto !important;
+  padding:7rem 1rem 4rem !important;
 }
-@media(max-width:768px){.ct-top{grid-template-columns:1fr;}}
+.ct-page{width:100%;}
 
-/* Form card */
+.ct-hero{margin-bottom:2.5rem;}
+.ct-hero h1{
+  font-size:clamp(1.75rem,4vw,2.25rem);font-weight:800;letter-spacing:-.03em;
+  color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;margin:0 0 1rem;
+}
+.ct-hero p{
+  color:#475569 !important;-webkit-text-fill-color:#475569 !important;
+  font-size:1.05rem;font-weight:500;line-height:1.7;max-width:40rem;margin:0;
+}
+
+/* 2-column grid */
+.ct-grid{
+  display:grid;grid-template-columns:1fr;gap:3rem;
+  margin-bottom:4rem;align-items:start;
+}
+@media(min-width:1024px){
+  .ct-grid{grid-template-columns:minmax(0,5fr) minmax(0,7fr);}
+}
+
+/* Left — direct contact card */
+.ct-direct{
+  background:#0f172a !important;border:1px solid #1e293b;border-radius:1rem;
+  padding:1.5rem;color:#e2e8f0 !important;box-shadow:0 20px 40px rgba(15,23,42,.25);
+}
+.ct-direct h3{
+  font-size:1.125rem;font-weight:700;color:#fff !important;margin:0 0 1rem;
+}
+.ct-direct-block{margin:0 0 1rem;}
+.ct-direct-block:last-child{margin-bottom:0;}
+.ct-direct-label{
+  font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+  color:#fbbf24 !important;margin:0 0 .35rem;
+}
+.ct-direct-value{
+  font-size:.95rem;font-weight:600;color:#fff !important;margin:0 0 .2rem;
+}
+.ct-direct-value a{color:#fff !important;text-decoration:none;}
+.ct-direct-value a:hover{color:#fbbf24 !important;}
+.ct-direct-meta{font-size:.75rem;color:#94a3b8 !important;margin:0;}
+.ct-chat-btn{
+  width:100%;margin-top:1.25rem;display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:12px 16px;background:rgba(255,255,255,.06);border:1px solid #334155;border-radius:10px;
+  color:#fff !important;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.ct-chat-btn:hover{background:rgba(255,255,255,.1);}
+.ct-chat-dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;
+}
+
+/* Right — light form card */
 .ct-form-card{
-  background:#0f172a;border:1px solid rgba(199,175,79,.2);
-  border-radius:16px;padding:36px 32px;
+  background:#fff !important;border:1px solid #e2e8f0;border-radius:1rem;
+  padding:2rem;box-shadow:0 1px 2px rgba(15,23,42,.06);
 }
-.ct-form-card h2{font-size:1.2rem;font-weight:700;color:#fff;
-  letter-spacing:-.02em;margin-bottom:24px;}
-.ct-form{display:flex;flex-direction:column;gap:16px;}
-.ct-form label{font-size:.8rem;font-weight:600;color:#8f9bb7;
-  text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;}
+.ct-form{display:flex;flex-direction:column;gap:1.25rem;}
+.ct-form-row{display:grid;grid-template-columns:1fr;gap:1rem;}
+@media(min-width:768px){.ct-form-row{grid-template-columns:1fr 1fr;}}
+.ct-form label{
+  display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:#0f172a !important;margin:0 0 .5rem;
+}
 .ct-form input,.ct-form textarea,.ct-form select{
-  width:100%;padding:11px 14px;
-  background:#0b1220;border:1px solid rgba(255,255,255,.1);
-  border-radius:8px;color:#fff;font-size:.95rem;
-  font-family:'Satoshi','Inter',sans-serif;outline:none;
+  width:100%;padding:.75rem 1rem;box-sizing:border-box;
+  background:#f8fafc !important;border:1px solid #e2e8f0;border-radius:.75rem;
+  color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
+  font-size:.875rem;font-family:inherit;outline:none;
   transition:border-color .15s,box-shadow .15s;
 }
+.ct-form input::placeholder,.ct-form textarea::placeholder{color:#94a3b8 !important;}
 .ct-form input:focus,.ct-form textarea:focus,.ct-form select:focus{
-  border-color:#c7af4f !important;
-  box-shadow:0 0 0 3px rgba(199,175,79,.15) !important;
+  border-color:#fbbf24 !important;box-shadow:0 0 0 3px rgba(251,191,36,.2);
 }
-.ct-form select{appearance:none;cursor:pointer;}
-.ct-form textarea{min-height:120px;resize:vertical;}
-.ct-form button{
-  padding:12px 28px;background:#f5c542;color:#0b1220;
-  font-weight:700;font-size:.95rem;letter-spacing:-.01em;
-  border:none;border-radius:8px;cursor:pointer;
-  transition:opacity .15s;align-self:flex-start;
-  font-family:inherit;
+.ct-form select{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23334155' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 1rem center;padding-right:2.5rem;
 }
-.ct-form button:hover{opacity:.88;}
-.ct-form button:disabled{opacity:.5;cursor:not-allowed;}
+.ct-form textarea{min-height:7rem;resize:vertical;}
+.ct-form button[type=submit]{
+  width:100%;padding:.9rem 1.5rem;background:#fbbf24 !important;color:#020617 !important;
+  font-weight:700;font-size:.95rem;border:none;border-radius:.75rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(251,191,36,.35);font-family:inherit;transition:background .15s;
+}
+.ct-form button[type=submit]:hover{background:#f59e0b !important;}
+.ct-form button[type=submit]:disabled{opacity:.5;cursor:not-allowed;}
 .ct-form-msg{padding:10px 14px;border-radius:8px;font-size:.85rem;margin-top:4px;}
-.ct-form-msg.ok{background:rgba(245,197,66,.1);color:#f5c542;border:1px solid rgba(245,197,66,.25);}
-.ct-form-msg.err{background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.25);}
+.ct-form-msg.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;}
+.ct-form-msg.err{background:#fff1f2;color:#9f1239;border:1px solid #fecdd3;}
 
-/* Channels card */
-.ct-channels-card{
-  background:#0f172a;border:1px solid rgba(255,255,255,.07);
-  border-radius:16px;padding:32px 28px;
-}
-.ct-channels-card h2{font-size:1.1rem;font-weight:700;color:#fff;
-  letter-spacing:-.02em;margin-bottom:20px;}
-.ct-channel{
-  display:flex;align-items:center;gap:12px;
-  padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);
-  font-size:.9rem;color:#a0a0b8;
-}
-.ct-channel:last-child{border-bottom:none;}
-.ct-channel-icon{
-  width:36px;height:36px;border-radius:8px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:1rem;
-}
-.ct-channel a{color:#f5c542;text-decoration:none;}
-.ct-channel a:hover{opacity:.8;}
-.ct-channel-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;
-  text-transform:uppercase;color:#555580;display:block;margin-bottom:2px;}
-
-/* ── FAQ section ─────────────────────────────────────────────────────── */
-.ct-faq-section{
-  border-top:1px solid rgba(255,255,255,.06);
-  padding-top:56px;
-}
-.ct-faq-header{
-  text-align:center;margin-bottom:40px;
-}
+/* FAQ — keep below */
+.ct-faq-section{border-top:1px solid #e2e8f0;padding-top:3.5rem;}
+.ct-faq-header{text-align:center;margin-bottom:2.5rem;}
 .ct-faq-eyebrow{
-  display:inline-block;font-size:.68rem;font-weight:800;
-  letter-spacing:.14em;text-transform:uppercase;
-  color:#f5c542;border:1px solid rgba(245,197,66,.25);
+  display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:#b45309;border:1px solid rgba(245,197,66,.45);background:#fffbeb;
   padding:4px 14px;border-radius:100px;margin-bottom:14px;
 }
 .ct-faq-header h2{
-  font-size:1.8rem;font-weight:800;color:#fff;
-  letter-spacing:-.03em;line-height:1.1;
+  font-size:clamp(1.4rem,3vw,1.8rem);font-weight:800;color:#0f172a !important;
+  letter-spacing:-.03em;line-height:1.15;margin:0;
 }
-.ct-faq-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:16px;
-}
-@media(max-width:640px){.ct-faq-grid{grid-template-columns:1fr;}}
+.ct-faq-grid{display:grid;grid-template-columns:1fr;gap:1rem;}
+@media(min-width:640px){.ct-faq-grid{grid-template-columns:1fr 1fr;}}
 .ct-faq-card{
-  background:#0f172a;border:1px solid rgba(255,255,255,.07);
-  border-radius:14px;padding:28px 24px;
+  background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;padding:1.5rem 1.25rem;
   transition:border-color .2s;
 }
-.ct-faq-card:hover{border-color:rgba(199,175,79,.3);}
+.ct-faq-card:hover{border-color:#fbbf24;}
 .ct-faq-card dt{
-  font-size:.95rem;font-weight:700;color:#fff;
-  letter-spacing:-.01em;margin-bottom:10px;line-height:1.3;
+  font-size:.95rem;font-weight:700;color:#0f172a !important;margin:0 0 .6rem;line-height:1.3;
 }
-.ct-faq-card dd{
-  font-size:.88rem;color:#8f9bb7;line-height:1.75;margin:0;
-}
+.ct-faq-card dd{font-size:.88rem;color:#475569 !important;line-height:1.75;margin:0;}
+.ct-faq-card a{color:#b45309 !important;}
 .ct-platform-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
 .ct-badge{
   display:inline-flex;align-items:center;gap:4px;
@@ -117,165 +127,165 @@
 }
 </style>
 
-<!-- Hero -->
-<div class="ct-hero">
-  <h1 >Talk to us</h1>
-  <p data-editable="hero_subtext">Sales, Managed inquiry, API invite, or support. Call or text +1 (571) 600-2835, email support@auraflux.co, or send the form — we respond within one business day.</p>
-  <p style="margin-top:16px;">
-    <a href="tel:+15716002835" style="display:inline-flex;margin-right:10px;padding:10px 16px;background:#f5c542;color:#0b1220;font-weight:700;border-radius:8px;text-decoration:none;">Call / text</a>
-    <a href="mailto:support@auraflux.co" style="display:inline-flex;padding:10px 16px;border:1px solid #cbd5e1;color:#0b1220;font-weight:600;border-radius:8px;text-decoration:none;background:#fff;">Email us</a>
-  </p>
-</div>
+<div class="ct-page">
 
-<!-- Top: Form + Channels -->
-<div class="ct-top">
-
-  <!-- Form -->
-  <div class="ct-form-card">
-    <h2 >Send a message</h2>
-    <form class="ct-form" id="contact-form">
-      <div>
-        <label for="cf-name">Name</label>
-        <input id="cf-name" name="name" type="text" placeholder="Your name" autocomplete="name">
-      </div>
-      <div>
-        <label for="cf-email">Email <span style="color:#f55a42">*</span></label>
-        <input id="cf-email" name="email" type="email" placeholder="you@example.com" required autocomplete="email">
-      </div>
-      <div>
-        <label for="cf-topic">Topic</label>
-        <select id="cf-topic" name="topic">
-          <option value="">- Select a topic -</option>
-          <option value="sales">Sales &amp; pricing</option>
-          <option value="support">Technical support</option>
-          <option value="partnership">Partnership or integration</option>
-          <option value="feedback">Product feedback</option>
-          <option value="api_invite">API access request</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-      <div>
-        <label for="cf-message">Message <span style="color:#f55a42">*</span></label>
-        <textarea id="cf-message" name="message" placeholder="Tell us what's on your mind…" required></textarea>
-      </div>
-      <button type="submit" id="cf-submit">Send message</button>
-      <div id="cf-msg" style="display:none" class="ct-form-msg"></div>
-    </form>
-    <script>
-    (function() {
-      var params = new URLSearchParams(window.location.search);
-      if (params.get('topic') === 'api_invite') {
-        var sel = document.getElementById('cf-topic');
-        if (sel) sel.value = 'api_invite';
-        var ta = document.getElementById('cf-message');
-        if (ta && !ta.value) {
-          ta.placeholder = 'Tell us your brand, stack, and how you want to use Peaks + publish via API...';
-        }
-      }
-    })();
-    document.getElementById('contact-form').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      var btn = document.getElementById('cf-submit');
-      var msg = document.getElementById('cf-msg');
-      btn.disabled = true; btn.textContent = 'Sending...';
-      msg.style.display = 'none';
-      try {
-        var res = await fetch('/api/contact', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({
-            name:    document.getElementById('cf-name').value,
-            email:   document.getElementById('cf-email').value,
-            topic:   document.getElementById('cf-topic').value || '',
-            source:  (new URLSearchParams(window.location.search).get('topic') === 'api_invite' ? 'api_invite' : 'auraflux.co'),
-            message: (document.getElementById('cf-topic').value ? '[' + document.getElementById('cf-topic').value + '] ' : '') + document.getElementById('cf-message').value,
-          })
-        });
-        var data = await res.json();
-        if (data.ok) {
-          window.location.href = '/thanks';
-          return;
-        } else { throw new Error(data.error || 'Submission failed'); }
-      } catch (err) {
-        msg.className = 'ct-form-msg err';
-        msg.textContent = err.message || 'Something went wrong - email support@auraflux.co';
-        msg.style.display = 'block';
-      }
-      btn.disabled = false; btn.textContent = 'Send message';
-    });
-    </script>
+  <div class="ct-hero">
+    <h1>Get in Touch with AuraFlux</h1>
+    <p data-editable="hero_subtext">Have questions about custom API limits, agency seat delegation, or platform setup? Our team is standing by.</p>
   </div>
 
-  <!-- Channels -->
-  <div class="ct-channels-card">
-    <h2 >Other ways to reach us</h2>
-    <div class="ct-channel">
-      <div class="ct-channel-icon" style="background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.2);">✉</div>
-      <div>
-        <span class="ct-channel-label">Email</span>
-        <a href="mailto:support@auraflux.co">support@auraflux.co</a>
-      </div>
-    </div>
-    <div class="ct-channel">
-      <div class="ct-channel-icon" style="background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.2);">📞</div>
-      <div>
-        <span class="ct-channel-label">Phone / SMS</span>
-        <a href="tel:+15716002835">+1 (571) 600-2835</a>
-      </div>
-    </div>
-    <div class="ct-channel">
-      <div class="ct-channel-icon" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);">⚡</div>
-      <div>
-        <span class="ct-channel-label">Response time</span>
-        <span style="color:#fff;">Within 1 business day</span>
-      </div>
-    </div>
-    <div style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);">
-      <button onclick="(function(){var p=document.getElementById('af-chat-panel');if(p){p.classList.add('open');var i=document.getElementById('af-chat-input');if(i)i.focus();}})()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .15s;font-family:inherit;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;animation:rdm-pulse 2s ease-in-out infinite;"></span>
-        Chat with Us
-      </button>
-    </div>
-  </div>
+  <div class="ct-grid">
 
-</div>
-
-<!-- FAQ -->
-<div class="ct-faq-section">
-  <div class="ct-faq-header">
-    <div class="ct-faq-eyebrow" >FAQ</div>
-    <h2 >Common Questions</h2>
-  </div>
-
-  <dl class="ct-faq-grid">
-
-    <div class="ct-faq-card">
-      <dt data-editable="faq_1_q">What's included in the AuraFlux plan?</dt>
-      <dd data-editable="faq_1_a">Unlimited Peaks (Most Replayed, chat spikes, CCV), Short production, and publish for one brand, subject to fair-use rate limits in the Terms. Inquire about Managed if you want done-for-you production.</dd>
-    </div>
-
-    <div class="ct-faq-card">
-      <dt data-editable="faq_2_q">Is usage really unlimited?</dt>
-      <dd data-editable="faq_2_a">Yes for normal Peaks-to-publish use on one brand. To keep the platform reliable we rate-limit job starts, concurrent jobs, and Peaks analyses per hour. Current numbers are in the Terms of Service.</dd>
-    </div>
-
-    <div class="ct-faq-card">
-      <dt data-editable="faq_3_q">Can I connect multiple social accounts?</dt>
-      <dd data-editable="faq_3_a">Yes - connect all major platforms and target any job to one or more simultaneously.
-        <div class="ct-platform-badges">
-          <span class="ct-badge" style="background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.2);color:#ff4444;">▶ YouTube</span>
-          <span class="ct-badge" style="background:rgba(105,201,208,.07);border:1px solid rgba(105,201,208,.2);color:#69c9d0;">♪ TikTok</span>
-          <span class="ct-badge" style="background:rgba(225,48,108,.08);border:1px solid rgba(225,48,108,.2);color:#e1306c;">◈ Instagram</span>
-          <span class="ct-badge" style="background:rgba(145,70,255,.1);border:1px solid rgba(145,70,255,.2);color:#9b59b6;">▣ Twitch</span>
-          <span class="ct-badge" style="background:rgba(83,252,24,.07);border:1px solid rgba(83,252,24,.2);color:#53fc18;">◉ Kick</span>
+    <!-- LEFT: Direct contact -->
+    <div class="ct-direct-col">
+      <div class="ct-direct">
+        <h3>Direct Contact &amp; Support</h3>
+        <div class="ct-direct-block">
+          <p class="ct-direct-label">Enterprise &amp; Sales</p>
+          <p class="ct-direct-value"><a href="mailto:sales@auraflux.co">sales@auraflux.co</a></p>
+          <p class="ct-direct-meta">Response time: &lt; 2 business hours</p>
         </div>
-      </dd>
+        <div class="ct-direct-block">
+          <p class="ct-direct-label">Customer Support</p>
+          <p class="ct-direct-value"><a href="mailto:support@auraflux.co">support@auraflux.co</a></p>
+          <p class="ct-direct-meta"><a href="tel:+15716002835" style="color:#94a3b8">+1 (571) 600-2835</a></p>
+        </div>
+        <div class="ct-direct-block">
+          <p class="ct-direct-label">Office Hours</p>
+          <p class="ct-direct-value">Mon – Fri: 9:00 AM – 6:00 PM EST</p>
+        </div>
+        <button type="button" class="ct-chat-btn" onclick="(function(){var p=document.getElementById('af-chat-panel');if(p){p.classList.add('open');var i=document.getElementById('af-chat-input');if(i)i.focus();}})()">
+          <span class="ct-chat-dot"></span>
+          Chat with Us
+        </button>
+      </div>
     </div>
 
-    <div class="ct-faq-card">
-      <dt data-editable="faq_4_q">Do I need technical knowledge?</dt>
-      <dd data-editable="faq_4_a">No. The dashboard guides you through every step. For teams that prefer raw API access, full developer documentation is available at <a href="/developer-api" style="color:#f5c542;">auraflux.co/developer-api</a>.</dd>
+    <!-- RIGHT: Form -->
+    <div class="ct-form-card">
+      <form class="ct-form" id="contact-form">
+        <div class="ct-form-row">
+          <div>
+            <label for="cf-name">First Name *</label>
+            <input id="cf-name" name="name" type="text" required placeholder="Alex" autocomplete="given-name">
+          </div>
+          <div>
+            <label for="cf-email">Work Email *</label>
+            <input id="cf-email" name="email" type="email" required placeholder="alex@agency.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div>
+          <label for="cf-topic">Inquiry Type *</label>
+          <select id="cf-topic" name="topic" required>
+            <option value="enterprise">Enterprise API Access &amp; White-Label</option>
+            <option value="agency">Agency / Pro Operator Plan ($999/mo)</option>
+            <option value="support">Technical Support</option>
+            <option value="other">General Inquiry</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="cf-channel">Channel or Agency URL</label>
+          <input id="cf-channel" name="channel" type="url" placeholder="https://youtube.com/@yourchannel" autocomplete="url">
+        </div>
+
+        <div>
+          <label for="cf-message">Message *</label>
+          <textarea id="cf-message" name="message" required rows="4" placeholder="Tell us about your clip pipeline and volume needs..."></textarea>
+        </div>
+
+        <button type="submit" id="cf-submit">Send Message</button>
+        <div id="cf-msg" style="display:none" class="ct-form-msg"></div>
+      </form>
+      <script>
+      (function() {
+        var params = new URLSearchParams(window.location.search);
+        var topic = params.get('topic');
+        var sel = document.getElementById('cf-topic');
+        if (sel && topic) {
+          if (topic === 'api_invite') sel.value = 'enterprise';
+          else if (['enterprise','agency','support','other'].indexOf(topic) >= 0) sel.value = topic;
+        }
+      })();
+      document.getElementById('contact-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var btn = document.getElementById('cf-submit');
+        var msg = document.getElementById('cf-msg');
+        btn.disabled = true; btn.textContent = 'Sending...';
+        msg.style.display = 'none';
+        var topic = document.getElementById('cf-topic').value || '';
+        var channel = (document.getElementById('cf-channel').value || '').trim();
+        var bodyMsg = document.getElementById('cf-message').value || '';
+        if (channel) bodyMsg = bodyMsg + '\n\nChannel/Agency URL: ' + channel;
+        if (topic) bodyMsg = '[' + topic + '] ' + bodyMsg;
+        try {
+          var res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+              name:    document.getElementById('cf-name').value,
+              email:   document.getElementById('cf-email').value,
+              topic:   topic,
+              source:  (new URLSearchParams(window.location.search).get('topic') === 'api_invite' ? 'api_invite' : 'auraflux.co'),
+              message: bodyMsg
+            })
+          });
+          var data = await res.json();
+          if (data.ok) {
+            window.location.href = '/thanks';
+            return;
+          } else { throw new Error(data.error || 'Submission failed'); }
+        } catch (err) {
+          msg.className = 'ct-form-msg err';
+          msg.textContent = err.message || 'Something went wrong - email support@auraflux.co';
+          msg.style.display = 'block';
+        }
+        btn.disabled = false; btn.textContent = 'Send Message';
+      });
+      </script>
     </div>
 
-  </dl>
+  </div>
+
+  <!-- FAQ -->
+  <div class="ct-faq-section">
+    <div class="ct-faq-header">
+      <div class="ct-faq-eyebrow">FAQ</div>
+      <h2>Common Questions</h2>
+    </div>
+
+    <dl class="ct-faq-grid">
+
+      <div class="ct-faq-card">
+        <dt data-editable="faq_1_q">What's included in the AuraFlux plan?</dt>
+        <dd data-editable="faq_1_a">Unlimited Peaks (Most Replayed, chat spikes, CCV), Short production, and publish for one brand, subject to fair-use rate limits in the Terms. Inquire about Managed if you want done-for-you production.</dd>
+      </div>
+
+      <div class="ct-faq-card">
+        <dt data-editable="faq_2_q">Is usage really unlimited?</dt>
+        <dd data-editable="faq_2_a">Yes for normal Peaks-to-publish use on one brand. To keep the platform reliable we rate-limit job starts, concurrent jobs, and Peaks analyses per hour. Current numbers are in the Terms of Service.</dd>
+      </div>
+
+      <div class="ct-faq-card">
+        <dt data-editable="faq_3_q">Can I connect multiple social accounts?</dt>
+        <dd data-editable="faq_3_a">Yes - connect all major platforms and target any job to one or more simultaneously.
+          <div class="ct-platform-badges">
+            <span class="ct-badge" style="background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.2);color:#b91c1c;">▶ YouTube</span>
+            <span class="ct-badge" style="background:rgba(8,145,178,.08);border:1px solid rgba(8,145,178,.25);color:#0e7490;">♪ TikTok</span>
+            <span class="ct-badge" style="background:rgba(225,48,108,.08);border:1px solid rgba(225,48,108,.2);color:#be185d;">◈ Instagram</span>
+            <span class="ct-badge" style="background:rgba(145,70,255,.1);border:1px solid rgba(145,70,255,.2);color:#7c3aed;">▣ Twitch</span>
+            <span class="ct-badge" style="background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.25);color:#15803d;">◉ Kick</span>
+          </div>
+        </dd>
+      </div>
+
+      <div class="ct-faq-card">
+        <dt data-editable="faq_4_q">Do I need technical knowledge?</dt>
+        <dd data-editable="faq_4_a">No. The dashboard guides you through every step. For teams that prefer raw API access, full developer documentation is available at <a href="/developer-api">auraflux.co/developer-api</a>.</dd>
+      </div>
+
+    </dl>
+  </div>
+
 </div>
