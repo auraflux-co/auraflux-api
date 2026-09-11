@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 21:29 UTC  
+**Last Updated:** 2026-09-11 21:32 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Reset-password page matched to dark system-ui auth card (amber CTA, slate inputs, back to sign-in).
+Pay-first flow consolidated: Stripe success → /sign-in (create account or log in) → /home claim. /sign-up redirects to /sign-in. No separate public sign-up page required.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
