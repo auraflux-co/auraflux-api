@@ -79,16 +79,27 @@ ${FRAMER_CSS || ''}
   color:#f5c542;background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);
   padding:0.35rem 0.75rem;border-radius:9999px;
 }
-/* aspect-video rounded-xl bg-slate-900 border border-slate-800/80 p-2 overflow-hidden flex items-center justify-center */
+/* aspect-video rounded-xl bg-slate-900 border border-slate-800/80 p-2 overflow-hidden flex items-center justify-center shadow-lg */
 .step-media{
+  position:relative;
   aspect-ratio:16/9;border-radius:0.75rem;
   background:#0f172a;border:1px solid rgba(30,41,59,.8);
   padding:0.5rem;display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
+  overflow:hidden;box-shadow:0 10px 15px -3px rgba(0,0,0,.35),0 4px 6px -4px rgba(0,0,0,.3);
 }
+.step-media-fallback{
+  position:absolute;inset:0.5rem;display:flex;align-items:center;justify-content:center;
+  border-radius:0.5rem;background:#020617;border:1px dashed rgba(245,197,66,.35);
+  color:#f5c542 !important;font-size:0.9rem;font-weight:700;letter-spacing:.02em;
+  text-align:center;padding:1rem;z-index:0;pointer-events:none;
+}
+.step-media.is-loaded .step-media-fallback{display:none}
+.step-media.is-broken .step-media-fallback{display:flex}
+.step-media.is-broken img{display:none}
 /* Steps 02–04: w-full h-full object-contain rounded-lg */
 .step-media img,
 .step-media video{
+  position:relative;z-index:1;
   width:100%;height:100%;object-fit:contain;border-radius:0.5rem;display:block;
 }
 /* Step 01: w-full h-auto object-contain max-h-[280px] rounded-lg p-2 */
@@ -149,9 +160,11 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-01">
+        <div class="step-media-fallback" aria-hidden="true">Peak Detection</div>
         <img
+          class="step-media-img step-media-img--peak"
           src="/assets/peak-detection-demo.gif"
-          alt="Twitch Chat &amp; Heatmap Peak Detection"
+          alt="Peak Detection"
           width="1280"
           height="720"
           loading="lazy"
@@ -171,7 +184,9 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-02">
+        <div class="step-media-fallback" aria-hidden="true">9:16 Auto-Framing</div>
         <img
+          class="step-media-img"
           src="/assets/auto-crop-framing.gif"
           alt="Smart 9:16 Facecam &amp; Gameplay Framing"
           width="1280"
@@ -193,7 +208,9 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-03">
+        <div class="step-media-fallback" aria-hidden="true">Kinetic Captions</div>
         <img
+          class="step-media-img"
           src="/assets/kinetic-captions-preview.gif"
           alt="Kinetic Captions and Brand Overlays"
           width="1280"
@@ -215,7 +232,9 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-04">
+        <div class="step-media-fallback" aria-hidden="true">Multi-Platform Publish</div>
         <img
+          class="step-media-img"
           src="/assets/dashboard-publishing-preview.jpg"
           alt="AuraFlux Dashboard Publishing to TikTok, Shorts, and Reels"
           width="1280"
@@ -268,6 +287,24 @@ ${FRAMER_FOOTER || FALLBACK_FOOTER}
       }
     }).catch(function () { tryNext(i + 1); });
   })(0);
+})();
+
+(function () {
+  document.querySelectorAll('.step-media').forEach(function (slot) {
+    var img = slot.querySelector('img');
+    if (!img) {
+      slot.classList.add('is-broken');
+      return;
+    }
+    function markLoaded() { slot.classList.add('is-loaded'); slot.classList.remove('is-broken'); }
+    function markBroken() { slot.classList.add('is-broken'); slot.classList.remove('is-loaded'); }
+    img.addEventListener('load', markLoaded);
+    img.addEventListener('error', markBroken);
+    if (img.complete) {
+      if (img.naturalWidth > 0) markLoaded();
+      else markBroken();
+    }
+  });
 })();
 </script>
 </body>

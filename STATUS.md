@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — How it works layout: nav-h mobile sync + hero padding !important + media contain.
+**Last Updated:** 2026-09-11 — How it works step media: contain + shadow + broken-image fallbacks.
 
 
 
