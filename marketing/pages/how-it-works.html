@@ -12,18 +12,36 @@
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
-.hero{text-align:center;padding:3.75rem 1.25rem 3.25rem}
+.hero{text-align:center;padding:3.75rem 1.25rem 2.5rem}
 .hero h1{
   font-size:clamp(1.85rem,4vw,2.85rem);font-weight:800;color:#fff !important;
   letter-spacing:-.03em;margin-bottom:14px;line-height:1.15;max-width:42rem;margin-left:auto;margin-right:auto;
 }
-.hero p{
+.hero > p{
   color:#cbd5e1 !important;max-width:38rem;margin:0 auto;line-height:1.65;font-size:1.05rem;font-weight:400;
 }
-.pipeline{max-width:52rem;margin:0 auto;padding:2rem 1.25rem 4.5rem;display:flex;flex-direction:column;gap:1.25rem}
+/* aspect-video w-full max-w-4xl mx-auto rounded-xl bg-slate-800 border border-slate-700 mt-8 overflow-hidden */
+.hero-video{
+  aspect-ratio:16/9;width:100%;max-width:56rem;margin:2rem auto 0;
+  border-radius:0.75rem;background:#1e293b;border:1px solid #334155;
+  overflow:hidden;position:relative;
+}
+.hero-video-placeholder{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#e2e8f0 !important;font-size:1.05rem;font-weight:700;letter-spacing:.01em;
+  background:linear-gradient(160deg,rgba(15,23,42,.35),rgba(15,23,42,.65));
+}
+.pipeline{max-width:64rem;margin:0 auto;padding:1.5rem 1.25rem 4.5rem;display:flex;flex-direction:column;gap:1.5rem}
 .step-block{
   background:#0f172a;border:1px solid #1e293b;border-radius:1rem;padding:1.75rem 1.5rem;
   box-shadow:0 4px 16px rgba(15,23,42,.12);
+}
+/* grid grid-cols-1 lg:grid-cols-2 gap-8 items-center */
+.step-grid{
+  display:grid;grid-template-columns:1fr;gap:2rem;align-items:center;
+}
+@media (min-width:1024px){
+  .step-grid{grid-template-columns:1fr 1fr}
 }
 .step-num{
   font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
@@ -32,7 +50,7 @@ ${FRAMER_CSS || ''}
 .step-block h2{
   font-size:1.25rem;font-weight:700;color:#fff !important;margin:0 0 0.5rem;line-height:1.3;letter-spacing:-.02em;
 }
-.step-block p{
+.step-block .step-copy p{
   font-size:1rem;color:#cbd5e1 !important;line-height:1.625;margin:0 0 1rem;font-weight:400;
 }
 .step-pills{display:flex;flex-wrap:wrap;gap:0.5rem}
@@ -41,6 +59,19 @@ ${FRAMER_CSS || ''}
   font-size:0.72rem;font-weight:700;letter-spacing:.04em;
   color:#f5c542;background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);
   padding:0.35rem 0.75rem;border-radius:9999px;
+}
+/* aspect-video rounded-lg bg-slate-800/80 border border-slate-700/50 p-4 */
+.step-media{
+  aspect-ratio:16/9;border-radius:0.5rem;
+  background:rgba(30,41,59,.8);border:1px solid rgba(51,65,85,.5);
+  padding:1rem;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.step-media-label{
+  color:#94a3b8 !important;font-size:0.85rem;font-weight:600;text-align:center;letter-spacing:.02em;
+}
+.step-media img,.step-media video{
+  width:100%;height:100%;object-fit:cover;border-radius:0.35rem;
 }
 .cta-band{
   background:#020617;color:#fff;text-align:center;padding:3.5rem 1.25rem;
@@ -61,42 +92,73 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <div class="hero">
   <h1>How AuraFlux Turns Stream Peaks Into Viral Shorts</h1>
   <p>From raw stream VOD to fully styled 9:16 short-form video in minutes—without manual editing or scrubbing timeline files.</p>
+  <div class="hero-video" role="img" aria-label="System demo video placeholder">
+    <div class="hero-video-placeholder">▶ Play 60-Sec System Demo</div>
+  </div>
 </div>
 
 <div class="pipeline">
   <article class="step-block">
-    <div class="step-num">01</div>
-    <h2>1. Real-Time Signal &amp; VOD Ingestion</h2>
-    <p>Connect YouTube, Twitch, or Kick. AuraFlux continuously scans chat velocity, emote spikes, YouTube Most Replayed curves, and CCV surges to flag viral moments automatically.</p>
-    <div class="step-pills">
-      <span class="step-pill">Chat Spikes · Heatmaps · CCV Surges</span>
+    <div class="step-grid">
+      <div class="step-copy">
+        <div class="step-num">01</div>
+        <h2>1. Real-Time Signal &amp; VOD Ingestion</h2>
+        <p>Connect YouTube, Twitch, or Kick. AuraFlux continuously scans chat velocity, emote spikes, YouTube Most Replayed curves, and CCV surges to flag viral moments automatically.</p>
+        <div class="step-pills">
+          <span class="step-pill">Chat Spikes · Heatmaps · CCV Surges</span>
+        </div>
+      </div>
+      <div class="step-media" data-asset="step-01">
+        <span class="step-media-label">Visual · Peak detection</span>
+      </div>
     </div>
   </article>
 
   <article class="step-block">
-    <div class="step-num">02</div>
-    <h2>2. Smart 9:16 Composition &amp; Tracking</h2>
-    <p>Our composition engine centers your facecam and gameplay automatically. Apply layout presets tailored to your stream style without manual keyframing.</p>
-    <div class="step-pills">
-      <span class="step-pill">Facecam Detection · 9:16 Auto-Framing</span>
+    <div class="step-grid">
+      <div class="step-copy">
+        <div class="step-num">02</div>
+        <h2>2. Smart 9:16 Composition &amp; Tracking</h2>
+        <p>Our composition engine centers your facecam and gameplay automatically. Apply layout presets tailored to your stream style without manual keyframing.</p>
+        <div class="step-pills">
+          <span class="step-pill">Facecam Detection · 9:16 Auto-Framing</span>
+        </div>
+      </div>
+      <div class="step-media" data-asset="step-02">
+        <span class="step-media-label">Visual · 9:16 framing</span>
+      </div>
     </div>
   </article>
 
   <article class="step-block">
-    <div class="step-num">03</div>
-    <h2>3. Auto-Captions &amp; Brand Presets</h2>
-    <p>Generate high-accuracy animated subtitles, custom color highlights, and brand logos automatically applied before rendering.</p>
-    <div class="step-pills">
-      <span class="step-pill">Dynamic Captions · Brand Presets</span>
+    <div class="step-grid">
+      <div class="step-copy">
+        <div class="step-num">03</div>
+        <h2>3. Auto-Captions &amp; Brand Presets</h2>
+        <p>Generate high-accuracy animated subtitles, custom color highlights, and brand logos automatically applied before rendering.</p>
+        <div class="step-pills">
+          <span class="step-pill">Dynamic Captions · Brand Presets</span>
+        </div>
+      </div>
+      <div class="step-media" data-asset="step-03">
+        <span class="step-media-label">Visual · Captions &amp; brand</span>
+      </div>
     </div>
   </article>
 
   <article class="step-block">
-    <div class="step-num">04</div>
-    <h2>4. Multi-Account Social Publishing</h2>
-    <p>Review and publish instantly to TikTok, YouTube Shorts, and Instagram Reels directly from your member portal dashboard.</p>
-    <div class="step-pills">
-      <span class="step-pill">TikTok · YouTube Shorts · IG Reels</span>
+    <div class="step-grid">
+      <div class="step-copy">
+        <div class="step-num">04</div>
+        <h2>4. Multi-Account Social Publishing</h2>
+        <p>Review and publish instantly to TikTok, YouTube Shorts, and Instagram Reels directly from your member portal dashboard.</p>
+        <div class="step-pills">
+          <span class="step-pill">TikTok · YouTube Shorts · IG Reels</span>
+        </div>
+      </div>
+      <div class="step-media" data-asset="step-04">
+        <span class="step-media-label">Visual · Multi-platform publish</span>
+      </div>
     </div>
   </article>
 </div>

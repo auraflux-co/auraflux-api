@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — /how-it-works page overhaul (peak→publish pipeline); /process redirects.
+**Last Updated:** 2026-09-11 — How it works: hero video + 2-col step media slots.
 
 
 
