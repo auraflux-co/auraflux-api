@@ -294,3 +294,39 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
 }
+/* ── Member portal (Pavilion chrome + AuraFlux brand) ─────────────────────────
+ * Customers get light warm canvas + white cards + navy/gold accents.
+ * Scoped under .member-portal so admin dark shell is unchanged.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.member-portal {
+  --mp-canvas: #f5f2eb;
+  --mp-card: #ffffff;
+  --mp-text: #0b1220;
+  --mp-muted: #5a6070;
+  --mp-border: #e8e4dc;
+  --mp-border-soft: #f0ede8;
+  --mp-soft: #eef2f8;
+  --mp-navy: #0b1220;
+  --mp-accent: #f5c542;
+  --mp-accent-fg: #0b1220;
+  --mp-accent-ink: #8a6d12;
+  /* Bridge shadcn tokens so existing customer pages read on light chrome */
+  --background: #f5f2eb;
+  --foreground: #0b1220;
+  --card: #ffffff;
+  --card-foreground: #0b1220;
+  --popover: #ffffff;
+  --popover-foreground: #0b1220;
+  --muted: #eef2f8;
+  --muted-foreground: #5a6070;
+  --border: #e8e4dc;
+  --input: #e8e4dc;
+  --secondary: #eef2f8;
+  --secondary-foreground: #0b1220;
+  --accent: #f5c542;
+  --accent-foreground: #0b1220;
+  --primary: #f5c542;
+  --primary-foreground: #0b1220;
+  color-scheme: light;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}

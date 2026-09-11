@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 20:57 UTC  
+**Last Updated:** 2026-09-11 21:01 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Customer member portal direction locked: Pavilion member-portal design base → AuraFlux adaptations. Phases Design → Dev → QA → functional test. Legacy dark sidebar is not the target. Rule: `.cursor/rules/member-portal-pavilion-base.mdc`. Board: auraflux wiki HOME/member-portal-pavilion-base.
+Customer member portal v1: Pavilion-style MemberShell + hub home for non-superadmin; legacy dark sidebar kept for superadmin only. Warm canvas + navy/gold tokens under `.member-portal`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
