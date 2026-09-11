@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Pricing cards: rename plan-features (kill nested mist box), unify padding/buttons, badge z-20.
+**Last Updated:** 2026-09-11 — Pricing SVG checks + hero pt; nav Start Free Trial → app sign-up, Log in → app login.
 
 
 

@@ -12,6 +12,7 @@
     { "source": "/process", "destination": "/how-it-works", "permanent": true },
     { "source": "/sign-in", "destination": "https://app.auraflux.co/sign-in", "permanent": false },
     { "source": "/sign-up", "destination": "https://app.auraflux.co/sign-up", "permanent": false },
+    { "source": "/signup", "destination": "https://app.auraflux.co/sign-up", "permanent": false },
     { "source": "/login", "destination": "https://app.auraflux.co/login", "permanent": false }
   ],
   "headers": [

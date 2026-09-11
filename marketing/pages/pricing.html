@@ -20,10 +20,11 @@ ${FRAMER_CSS || ''}
 <style>
 .hero{
   text-align:center;
-  padding:3rem 1.25rem 2.5rem !important;
+  /* pt-16 equivalent — clears fixed header / avoids clipping */
+  padding:4rem 1.25rem 2.5rem !important;
 }
 @media (min-width:768px){
-  .hero{padding:4rem 1.25rem 3rem !important}
+  .hero{padding:5rem 1.25rem 3rem !important}
 }
 .hero h1{
   font-size:clamp(1.85rem,4vw,2.85rem);font-weight:800;color:#fff !important;
@@ -106,24 +107,25 @@ ${FRAMER_CSS || ''}
   margin:0.25rem 0 0;line-height:1.45;
 }
 
-/* Dedicated list class — avoids global .features section mist background */
+/* Dedicated list class — avoids global .features mist box */
 .plans .plan-features{
-  list-style:none;margin:1.5rem 0;padding:0;
-  display:flex;flex-direction:column;gap:1rem;
+  list-style:none;margin:1.5rem 0;padding:0 0.5rem;
+  display:flex;flex-direction:column;gap:0.75rem;
   text-align:left;background:transparent !important;
-  flex:1;
+  flex:1;box-shadow:none !important;border:none !important;
 }
 .plans .plan-features li{
-  display:flex;align-items:center;gap:0.75rem;
+  display:flex;align-items:flex-start;gap:0.75rem;
   font-size:0.875rem;font-weight:500;color:#1e293b !important;
   line-height:1.5;background:transparent !important;
-  border-radius:0;padding:0;
+  border-radius:0;padding:0;box-shadow:none !important;border:none !important;
 }
-.plans .plan-features li::before{
-  content:"✓";
-  color:#f59e0b !important;font-weight:800;font-size:1rem;
-  flex-shrink:0;line-height:1;
+.plans .plan-features li::before{content:none !important;display:none !important}
+.plans .plan-check{
+  width:1.25rem;height:1.25rem;flex-shrink:0;margin-top:0.125rem;
+  color:#f59e0b;display:block;
 }
+.plans .plan-features li span{flex:1;min-width:0}
 
 .plans .cta{
   display:block;width:100%;text-align:center;
@@ -191,11 +193,26 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <div class="price">$299<span class="period">/mo</span></div>
         <p class="price-note">or custom starter — talk to us if you need a lighter seat</p>
         <ul class="plan-features">
-          <li>Up to 40 hours of VOD processing / mo</li>
-          <li>3 Connected channels (YouTube, Twitch, Kick)</li>
-          <li>Auto 9:16 framing &amp; kinetic captions</li>
-          <li>1080p60 vertical exports</li>
-          <li>Direct dispatch to TikTok, Shorts &amp; Reels</li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>Up to 40 hours of VOD processing / mo</span>
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>3 Connected channels (YouTube, Twitch, Kick)</span>
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>Auto 9:16 framing &amp; kinetic captions</span>
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>1080p60 vertical exports</span>
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>Direct dispatch to TikTok, Shorts &amp; Reels</span>
+          </li>
         </ul>
       </div>
       <a href="/contact" class="cta cta-secondary" data-cta="growth_cta">Start Growth</a>
@@ -210,12 +227,30 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <div class="price">$999<span class="period">/mo</span></div>
         <p class="price-note">Full platform seat with priority queue &amp; team access</p>
         <ul class="plan-features">
-          <li>Unlimited VOD processing &amp; peak detection</li>
-          <li>Unlimited connected channels &amp; social dispatch</li>
-          <li>Custom caption font uploads &amp; brand templates</li>
-          <li>Priority render queue (&lt; 2 min processing)</li>
-          <li>Team workspace seats &amp; API key access</li>
-          <li>Dedicated Account Manager</li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>Unlimited VOD processing &amp; peak detection</span>
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>Unlimited connected channels &amp; social dispatch</span>
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>Custom caption font uploads &amp; brand templates</span>
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>Priority render queue (&lt; 2 min processing)</span>
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>Team workspace seats &amp; API key access</span>
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span>Dedicated Account Manager</span>
+          </li>
         </ul>
       </div>
       <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Start Pro Operator</a>
