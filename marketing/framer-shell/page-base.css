@@ -402,27 +402,69 @@ tr:hover td { background: var(--paper-deep) !important; }
 .rdm-col-title { color: var(--ink) !important; }
 
 /* ── Blog: mist page + dark post tiles ──────────────────────────────────── */
-.blog-wrap {
-  background: transparent;
+/* ── Blog index — pure white canvas + light cards ───────────────────────── */
+body:has(.blog-page) {
+  background: #fff !important;
+}
+.blog-wrap,
+.blog-page {
+  background: #fff !important;
 }
 .blog-hero h1 {
-  color: var(--ink) !important;
+  color: #0f172a !important;
 }
 .blog-hero p {
-  color: var(--ink-muted) !important;
+  color: #475569 !important;
 }
+.blog-featured {
+  background: #f8fafc !important;
+  border-color: rgba(226, 232, 240, 0.8) !important;
+}
+.blog-featured-badge {
+  background: #fbbf24 !important;
+  color: #020617 !important;
+  border: none !important;
+}
+.blog-featured h2 {
+  color: #0f172a !important;
+}
+.blog-featured p {
+  color: #475569 !important;
+}
+.blog-featured-meta {
+  color: #64748b !important;
+  font-weight: 600 !important;
+}
+.blog-card {
+  background: #fff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+}
+.blog-card h3,
+.blog-card h3 a {
+  color: #0f172a !important;
+}
+.blog-card-body {
+  color: #475569 !important;
+}
+.blog-card-foot {
+  color: #64748b !important;
+  font-weight: 600 !important;
+}
+/* legacy dark post-card — keep harmless if old markup appears */
 .post-card {
-  background: var(--slate-900) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: var(--shadow-md) !important;
-  color: #fff !important;
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+  color: #0f172a !important;
 }
 .post-card h2 {
-  color: #fff !important;
+  color: #0f172a !important;
 }
 .post-card p,
 .post-meta {
-  color: var(--on-dark-muted) !important;
+  color: #475569 !important;
 }
 .post-tag {
   color: var(--brand-accent) !important;
