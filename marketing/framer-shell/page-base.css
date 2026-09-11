@@ -165,6 +165,8 @@ a:hover { text-decoration: underline; }
 .compare-card.good .compare-item { color: #047857 !important; font-weight: 600 !important; }
 .compare-card.bad .compare-label { color: #ef4444 !important; font-weight: 700 !important; }
 .compare-card.good .compare-label { color: #059669 !important; font-weight: 700 !important; }
+.audience-item { color: #1e293b !important; font-weight: 500 !important; }
+.audience-dot { background: #f59e0b !important; }
 .af-card:hover,
 .value-card:hover,
 .step-card:hover,

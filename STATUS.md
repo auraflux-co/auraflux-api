@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Nav: Home, How it works, Features, Pricing, Contact, Blog + Log in/Open App.
+**Last Updated:** 2026-09-11 — Who it is for bullets: slate-800 text, amber-500 dots.
 
 
 
