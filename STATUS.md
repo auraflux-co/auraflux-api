@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — How it works live media: system-demo.mp4 + step GIFs/JPG from plan graphic + short still.
+**Last Updated:** 2026-09-11 — How it works: hero H1 clear of nav + step media object-contain.
 
 
 
