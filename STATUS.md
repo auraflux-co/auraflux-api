@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Pricing: pt-28 page wrap, equal-height cards, flex-grow checklists, aligned CTAs.
+**Last Updated:** 2026-09-11 — HIW media: system-demo.mp4 (60s) + peak/crop/captions GIFs + publish JPG from repo art.
 
 
 

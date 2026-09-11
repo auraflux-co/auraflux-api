@@ -124,12 +124,12 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <h1>How AuraFlux Turns Stream Peaks Into Viral Shorts</h1>
   <p>From raw stream VOD to fully styled 9:16 short-form video in minutes—without manual editing or scrubbing timeline files.</p>
 
-  <!-- Hero: 30s stream URL → chat peak → 9:16 Short. Set DEMO_EMBED_SRC or use /assets/streamer-demo.mp4 -->
+  <!-- Hero: dashboard demo from /assets/system-demo.mp4. Set DEMO_EMBED_SRC for YouTube/Loom if preferred. -->
   <div class="hero-video" id="af-hero-demo">
     <iframe
       id="af-demo-iframe"
       class="hero-video-frame"
-      title="AuraFlux Live Stream VOD to 9:16 Short Demo"
+      title="AuraFlux Dashboard Demo"
       src=""
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       allowfullscreen
@@ -137,9 +137,9 @@ ${FRAMER_NAV || FALLBACK_NAV}
       hidden
     ></iframe>
     <video id="af-demo-video" controls playsinline preload="metadata" hidden>
-      <source src="/assets/streamer-demo.mp4" type="video/mp4">
+      <source src="/assets/system-demo.mp4" type="video/mp4">
     </video>
-    <div class="hero-video-fallback" id="af-demo-fallback">▶ Stream URL → Peak → 9:16 Short (30s)</div>
+    <div class="hero-video-fallback" id="af-demo-fallback">▶ AuraFlux System Demo</div>
   </div>
 </div>
 
@@ -158,8 +158,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <div class="step-media-fallback" aria-hidden="true">Chat Velocity · Most Replayed</div>
         <img
           class="step-media-img"
-          src="/assets/twitch-chat-velocity-heatmap.gif"
-          alt="Twitch Chat Emote Spikes and YouTube Most Replayed Curve"
+          src="/assets/peak-detection-demo.gif"
+          alt="Engagement Peak Detection Chart"
           width="1280"
           height="720"
           loading="lazy"
@@ -182,8 +182,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <div class="step-media-fallback" aria-hidden="true">9:16 Facecam Layout</div>
         <img
           class="step-media-img"
-          src="/assets/vertical-916-facecam-crop.gif"
-          alt="9:16 Vertical Facecam &amp; Gameplay Layout"
+          src="/assets/auto-crop-framing.gif"
+          alt="9:16 Auto Framing Facecam Layout"
           width="1280"
           height="720"
           loading="lazy"
@@ -206,8 +206,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <div class="step-media-fallback" aria-hidden="true">Kinetic Captions</div>
         <img
           class="step-media-img"
-          src="/assets/kinetic-captions-overlay.gif"
-          alt="Animated Word-by-Word Kinetic Subtitles"
+          src="/assets/kinetic-captions-preview.gif"
+          alt="Animated Kinetic Captions Preview"
           width="1280"
           height="720"
           loading="lazy"
@@ -230,8 +230,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <div class="step-media-fallback" aria-hidden="true">TikTok · Shorts · Reels</div>
         <img
           class="step-media-img"
-          src="/assets/social-dispatch-dashboard.jpg"
-          alt="One-Click Publishing to TikTok, Shorts, and Reels"
+          src="/assets/dashboard-publishing-preview.jpg"
+          alt="Publishing Preview to YouTube Shorts"
           width="1280"
           height="720"
           loading="lazy"
@@ -266,8 +266,8 @@ ${FRAMER_FOOTER || FALLBACK_FOOTER}
     return;
   }
 
-  // Prefer streamer 30s demo, then legacy aliases
-  var sources = ['/assets/streamer-demo.mp4', '/assets/system-demo.mp4', '/assets/demo.mp4'];
+  // Prefer system-demo.mp4 (dashboard walkthrough), then aliases
+  var sources = ['/assets/system-demo.mp4', '/assets/demo.mp4', '/assets/streamer-demo.mp4'];
   (function tryNext(i) {
     if (i >= sources.length) return;
     fetch(sources[i], { method: 'HEAD' }).then(function (res) {
