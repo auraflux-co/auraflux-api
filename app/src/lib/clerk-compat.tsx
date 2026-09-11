@@ -460,7 +460,7 @@ export function SignIn({
             value={email}
             readOnly={lockEmail && mode === 'sign-up'}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 text-sm focus:border-amber-400 focus:outline-none transition-colors placeholder:text-slate-500 read-only:opacity-80"
+            className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 pr-10 text-sm focus:border-amber-400 focus:outline-none transition-colors placeholder:text-slate-500 read-only:opacity-80"
           />
         </label>
         {mode === 'sign-in' || mode === 'sign-up' ? (
@@ -473,7 +473,7 @@ export function SignIn({
               autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 text-sm focus:border-amber-400 focus:outline-none transition-colors placeholder:text-slate-500"
+              className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 pr-10 text-sm focus:border-amber-400 focus:outline-none transition-colors placeholder:text-slate-500"
             />
           </label>
         ) : null}
@@ -490,7 +490,7 @@ export function SignIn({
               autoComplete="one-time-code"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\s/g, ''))}
-              className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 text-sm tracking-widest focus:border-amber-400 focus:outline-none transition-colors"
+              className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 pr-10 text-sm tracking-widest focus:border-amber-400 focus:outline-none transition-colors"
             />
           </label>
         ) : null}

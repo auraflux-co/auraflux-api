@@ -58,11 +58,12 @@ function SignInInner() {
           forceRedirectUrl={isSafeRedirect(redirectUrl) ? redirectUrl : '/home'}
           signUpUrl="/sign-up"
         />
-        <p className="text-center text-xs text-slate-500">
-          <Link href="/login" className="hover:text-amber-400 transition-colors no-underline">
-            ← Back to portal
-          </Link>
-        </p>
+        <Link
+          href="/login"
+          className="inline-block text-xs font-semibold text-slate-400 hover:text-amber-400 transition-colors mt-6"
+        >
+          ← Back to portal
+        </Link>
       </div>
     </div>
   );

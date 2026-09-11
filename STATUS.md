@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 21:23 UTC  
+**Last Updated:** 2026-09-11 21:27 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Sign-in polish: input px-4 py-3 rounded-xl; helper links pt-3 space-y-2; purchase CTA → auraflux.co/pricing.
+Sign-in: input pr-10 for password-manager icons; back-to-portal link slate-400/amber hover + mt-6.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
