@@ -79,7 +79,7 @@ ${FRAMER_CSS || ''}
   color:#f5c542;background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);
   padding:0.35rem 0.75rem;border-radius:9999px;
 }
-/* aspect-video rounded-xl bg-slate-900 border border-slate-800/80 p-2 overflow-hidden flex items-center justify-center shadow-lg */
+/* aspect-video rounded-xl bg-slate-900 border border-slate-800 p-2 overflow-hidden shadow-lg flex items-center justify-center */
 .step-media{
   position:relative;
   aspect-ratio:16/9;border-radius:0.75rem;
@@ -96,19 +96,11 @@ ${FRAMER_CSS || ''}
 .step-media.is-loaded .step-media-fallback{display:none}
 .step-media.is-broken .step-media-fallback{display:flex}
 .step-media.is-broken img{display:none}
-/* Steps 02–04: w-full h-full object-contain rounded-lg */
+/* All steps: w-full h-full object-contain rounded-lg */
 .step-media img,
 .step-media video{
   position:relative;z-index:1;
   width:100%;height:100%;object-fit:contain;border-radius:0.5rem;display:block;
-}
-/* Step 01: w-full h-auto object-contain max-h-[280px] rounded-lg p-2 */
-.step-media[data-asset="step-01"]{
-  aspect-ratio:auto;min-height:12rem;
-}
-.step-media[data-asset="step-01"] img{
-  width:100%;height:auto;max-height:280px;object-fit:contain;
-  border-radius:0.5rem;padding:0.5rem;box-sizing:border-box;
 }
 .cta-band{
   background:#020617;color:#fff;text-align:center;padding:3.5rem 1.25rem;
@@ -130,11 +122,12 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <h1>How AuraFlux Turns Stream Peaks Into Viral Shorts</h1>
   <p>From raw stream VOD to fully styled 9:16 short-form video in minutes—without manual editing or scrubbing timeline files.</p>
 
-  <!-- Hero demo: set DEMO_EMBED_SRC to a Loom/YouTube embed URL, or drop /assets/system-demo.mp4 -->
+  <!-- Hero: 30s stream URL → chat peak → 9:16 Short. Set DEMO_EMBED_SRC or use /assets/streamer-demo.mp4 -->
   <div class="hero-video" id="af-hero-demo">
     <iframe
       id="af-demo-iframe"
-      title="AuraFlux 60-Sec Demo"
+      class="hero-video-frame"
+      title="AuraFlux Live Stream VOD to 9:16 Short Demo"
       src=""
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       allowfullscreen
@@ -142,9 +135,9 @@ ${FRAMER_NAV || FALLBACK_NAV}
       hidden
     ></iframe>
     <video id="af-demo-video" controls playsinline preload="metadata" hidden>
-      <source src="/assets/system-demo.mp4" type="video/mp4">
+      <source src="/assets/streamer-demo.mp4" type="video/mp4">
     </video>
-    <div class="hero-video-fallback" id="af-demo-fallback">▶ Play 60-Sec System Demo</div>
+    <div class="hero-video-fallback" id="af-demo-fallback">▶ Stream URL → Peak → 9:16 Short (30s)</div>
   </div>
 </div>
 
@@ -160,11 +153,11 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-01">
-        <div class="step-media-fallback" aria-hidden="true">Peak Detection</div>
+        <div class="step-media-fallback" aria-hidden="true">Chat Velocity · Most Replayed</div>
         <img
-          class="step-media-img step-media-img--peak"
-          src="/assets/peak-detection-demo.gif"
-          alt="Peak Detection"
+          class="step-media-img"
+          src="/assets/twitch-chat-velocity-heatmap.gif"
+          alt="Twitch Chat Emote Spikes and YouTube Most Replayed Curve"
           width="1280"
           height="720"
           loading="lazy"
@@ -184,11 +177,11 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-02">
-        <div class="step-media-fallback" aria-hidden="true">9:16 Auto-Framing</div>
+        <div class="step-media-fallback" aria-hidden="true">9:16 Facecam Layout</div>
         <img
           class="step-media-img"
-          src="/assets/auto-crop-framing.gif"
-          alt="Smart 9:16 Facecam &amp; Gameplay Framing"
+          src="/assets/vertical-916-facecam-crop.gif"
+          alt="9:16 Vertical Facecam &amp; Gameplay Layout"
           width="1280"
           height="720"
           loading="lazy"
@@ -211,8 +204,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <div class="step-media-fallback" aria-hidden="true">Kinetic Captions</div>
         <img
           class="step-media-img"
-          src="/assets/kinetic-captions-preview.gif"
-          alt="Kinetic Captions and Brand Overlays"
+          src="/assets/kinetic-captions-overlay.gif"
+          alt="Animated Word-by-Word Kinetic Subtitles"
           width="1280"
           height="720"
           loading="lazy"
@@ -232,11 +225,11 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-04">
-        <div class="step-media-fallback" aria-hidden="true">Multi-Platform Publish</div>
+        <div class="step-media-fallback" aria-hidden="true">TikTok · Shorts · Reels</div>
         <img
           class="step-media-img"
-          src="/assets/dashboard-publishing-preview.jpg"
-          alt="AuraFlux Dashboard Publishing to TikTok, Shorts, and Reels"
+          src="/assets/social-dispatch-dashboard.jpg"
+          alt="One-Click Publishing to TikTok, Shorts, and Reels"
           width="1280"
           height="720"
           loading="lazy"
@@ -255,8 +248,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
 <script>
 (function () {
-  // Replace with Loom / YouTube embed URL when ready, e.g.:
-  // 'https://www.youtube.com/embed/YOUR_VIDEO_ID'
+  // Replace with YouTube/Loom embed when ready, e.g.:
+  // 'https://www.youtube.com/embed/YOUR_STREAMER_DEMO_ID'
   var DEMO_EMBED_SRC = '';
 
   var root = document.getElementById('af-hero-demo');
@@ -271,8 +264,8 @@ ${FRAMER_FOOTER || FALLBACK_FOOTER}
     return;
   }
 
-  // Prefer local MP4: /assets/system-demo.mp4 or /assets/demo.mp4
-  var sources = ['/assets/system-demo.mp4', '/assets/demo.mp4'];
+  // Prefer streamer 30s demo, then legacy aliases
+  var sources = ['/assets/streamer-demo.mp4', '/assets/system-demo.mp4', '/assets/demo.mp4'];
   (function tryNext(i) {
     if (i >= sources.length) return;
     fetch(sources[i], { method: 'HEAD' }).then(function (res) {

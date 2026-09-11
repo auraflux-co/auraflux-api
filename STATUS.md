@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — How it works step media: contain + shadow + broken-image fallbacks.
+**Last Updated:** 2026-09-11 — How it works streamer-workflow assets (chat heatmap, 9:16, captions, social dispatch).
 
 
 
