@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Why AuraFlux compare list: red-300 / emerald-400 !important over card ink.
+**Last Updated:** 2026-09-11 — Why AuraFlux compare: red-600/emerald-700 on light cards.
 
 
 
