@@ -84,6 +84,8 @@ export interface Job {
   portalReports?:      PortalReport[];
   outputUrl?:          string;
   thumbnailUrl?:       string;
+  topic?:              string | null;
+  brandName?:          string | null;
   publishCopy?: {
     youtube?:   { title?: string; description?: string; tags?: string[] };
     tiktok?:    { caption?: string; hashtags?: string[] };
