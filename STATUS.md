@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Blog: pure white canvas, slate-50 featured card, stronger date contrast.
+**Last Updated:** 2026-09-11 — Blog: brand-blue card outlines, featured left accent, CTA/meta contrast.
 
 
 
@@ -190,6 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(marketing): blog brand-blue card borders** — featured left accent + blue outlines; blue category/Read More; CTA restored. | blog.html, page-base.css, STATUS.md | pending | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog white canvas + card contrast** — white page bg; slate-50 featured; slate-500 meta. | blog.html, page-base.css, STATUS.md | 195de333 | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog agency layout** — hero/pills/featured banner/3-col grid; CMS inject updated; twitch-clip alias → peaks-to-short. | blog.html, blog.json, inject_content.py, vercel.json, STATUS.md | 18b5d277 | 2026-09-11 ET |
 | Cursor | **fix(marketing): contact SLA meta contrast** — direct-card meta text slate-300 medium. | contact-content.html, STATUS.md | 36df7659 | 2026-09-11 ET |
