@@ -278,16 +278,20 @@ type AuthFormMode = 'sign-in' | 'sign-up' | 'forgot' | 'otp';
 export function SignIn({
   routing: _routing,
   forceRedirectUrl,
-  signUpUrl = '/sign-up',
+  signUpUrl = 'https://auraflux.co/pricing',
   mode: initialMode = 'sign-in',
+  defaultEmail = '',
+  lockEmail = false,
 }: {
   routing?: string;
   forceRedirectUrl?: string;
   signUpUrl?: string;
   mode?: 'sign-in' | 'sign-up';
+  defaultEmail?: string;
+  lockEmail?: boolean;
 }) {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -296,6 +300,10 @@ export function SignIn({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const { isSignedIn, isLoaded } = useAuth();
+
+  useEffect(() => {
+    if (defaultEmail) setEmail(defaultEmail);
+  }, [defaultEmail]);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -443,8 +451,9 @@ export function SignIn({
             required
             autoComplete="email"
             value={email}
+            readOnly={lockEmail && mode === 'sign-up'}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm read-only:opacity-80"
           />
         </label>
         {mode === 'sign-in' || mode === 'sign-up' ? (
@@ -512,15 +521,9 @@ export function SignIn({
           </p>
           <p>
             No account?{' '}
-            <button type="button" className="underline" onClick={() => switchMode('sign-up')}>
-              Sign up
-            </button>
-            {signUpUrl ? (
-              <>
-                {' '}
-                or <Link href={signUpUrl} className="underline">sign-up page</Link>
-              </>
-            ) : null}
+            <a href={signUpUrl} className="underline">
+              Purchase a plan first
+            </a>
           </p>
         </div>
       ) : (

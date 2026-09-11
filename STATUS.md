@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — HIW media: system-demo.mp4 (60s) + peak/crop/captions GIFs + publish JPG from repo art.
+**Last Updated:** 2026-09-11 — Paywall-before-access (checkout→signup→claim); pricing claims aligned to deliverable Operate (credits, 720p30, Managed sales-only).
 
 
 

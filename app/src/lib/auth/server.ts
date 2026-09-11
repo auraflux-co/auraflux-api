@@ -1,9 +1,11 @@
 import { betterAuth } from 'better-auth';
 import { nextCookies } from 'better-auth/next-js';
 import { emailOTP } from 'better-auth/plugins';
+import { APIError } from 'better-auth/api';
 import { Pool } from 'pg';
 import { hashPassword, verifyPassword } from '@/lib/auth/password';
 import { sendAuthEmail } from '@/lib/auth/send-email';
+import { isSuperadminEmail } from '@/lib/auth/superadmin-emails';
 
 export const AUTH_BASE_PATH = '/api/id';
 
@@ -29,12 +31,38 @@ function authSecret(): string {
 
 /** Google OAuth credentials — infrastructure only; omit provider when unset. */
 export function googleSocialProviderFromEnv():
-  | { clientId: string; clientSecret: string; prompt: 'select_account' }
+  | {
+      clientId: string;
+      clientSecret: string;
+      prompt: 'select_account';
+      disableImplicitSignUp: true;
+    }
   | null {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
   if (!clientId || !clientSecret) return null;
-  return { clientId, clientSecret, prompt: 'select_account' };
+  return {
+    clientId,
+    clientSecret,
+    prompt: 'select_account',
+    disableImplicitSignUp: true,
+  };
+}
+
+async function emailMayCreateAccount(email: string | undefined | null): Promise<boolean> {
+  if (!email) return false;
+  if (isSuperadminEmail(email)) return true;
+  const pool = getPool();
+  if (!pool) return false;
+  const { rows } = await pool.query(
+    `SELECT 1 FROM pending_subscriptions
+     WHERE lower(email) = lower($1)
+       AND claimed_by IS NULL
+       AND expires_at > NOW()
+     LIMIT 1`,
+    [email],
+  );
+  return rows.length > 0;
 }
 
 export function createAurafluxAuth() {
@@ -62,13 +90,13 @@ export function createAurafluxAuth() {
     ],
     emailAndPassword: {
       enabled: true,
+      disableSignUp: false,
       minPasswordLength: 8,
       password: {
         hash: hashPassword,
         verify: verifyPassword,
       },
       sendResetPassword: async ({ user, url }) => {
-        // Fire-and-forget to avoid timing leaks; Vercel keeps the isolate warm enough for SMTP.
         void sendAuthEmail({
           to: user.email,
           subject: 'Reset your AuraFlux password',
@@ -78,7 +106,22 @@ export function createAurafluxAuth() {
         });
       },
     },
-    // Migration 036 uses snake_case; Better Auth defaults to camelCase columns.
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user) => {
+            const allowed = await emailMayCreateAccount(user.email);
+            if (!allowed) {
+              throw new APIError('FORBIDDEN', {
+                message:
+                  'Purchase a plan on auraflux.co/pricing before creating an account. Use the same email as your Stripe checkout.',
+              });
+            }
+            return { data: user };
+          },
+        },
+      },
+    },
     user: {
       fields: {
         emailVerified: 'email_verified',

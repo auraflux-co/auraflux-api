@@ -44,7 +44,7 @@ export default function LandingPage() {
                 <Link href="/sign-in" className={cn(buttonVariants())}>
                   Sign in
                 </Link>
-                <Link href="/sign-up" className={cn(buttonVariants({ variant: 'outline' }))}>
+                <Link href="https://auraflux.co/pricing" className={cn(buttonVariants({ variant: 'outline' }))}>
                   Get started
                 </Link>
               </>
