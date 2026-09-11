@@ -213,7 +213,7 @@ def patch_footer(html, data):
         links_html = '\n'.join(
             f'          <a href="{lk["url"]}">{lk["label"]}</a>' for lk in platform_links)
         html = re.sub(
-            r'(<div class="af-footer-col">\s*<span class="af-footer-col-label">Platform</span>)'
+            r'(<div class="af-footer-col">\s*<span class="af-footer-col-label">(?:Platform|Explore)</span>)'
             r'([\s\S]*?)(</div>)',
             lambda m: m.group(1) + '\n' + links_html + '\n        ' + m.group(3),
             html, count=1)
@@ -249,9 +249,15 @@ def patch_nav(html, data):
     if links:
         links_html = '\n'.join(
             f'      <a href="{lk["url"]}">{lk["label"]}</a>' for lk in links)
+        # Desktop primary nav
         html = re.sub(
-            r'(<div id="af-nav-links">)([\s\S]*?)(</div>)',
+            r'(<nav id="af-nav-links"[^>]*>)([\s\S]*?)(</nav>)',
             lambda m: m.group(1) + '\n' + links_html + '\n    ' + m.group(3),
+            html, count=1)
+        # Mobile strip
+        html = re.sub(
+            r'(<nav class="af-nav-mobile"[^>]*>)([\s\S]*?)(</nav>)',
+            lambda m: m.group(1) + '\n' + links_html + '\n  ' + m.group(3),
             html, count=1)
 
     cta_url   = data.get('cta_url')
