@@ -190,7 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **feat(marketing): Cal.com AuraFlux demo booking** — blog Book a Demo → cal.com; /contact calendar+message tabs. | blog posts, contact-content, STATUS.md | pending | 2026-09-11 ET |
+| Cursor | **feat(marketing): Cal.com AuraFlux demo booking** — blog Book a Demo → cal.com; /contact calendar+message tabs. | blog posts, contact-content, STATUS.md | c3c5b674 | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog post template Book a Demo** — no free-trial CTA; pt-36; amber tag; prose contrast. | blog-*-*.html, template, page-base.css, STATUS.md | b308409d | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog pt-36 header clearance** — body pad 0 on blog; .blog-page pt-36 (!important); mobile 11rem. | blog.html, page-base.css, STATUS.md | 919560b6 | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog nav clearance + hero order** — pt-36; hero/filters above featured; excerpt contrast. | blog.html, page-base.css, STATUS.md | a1ff363c | 2026-09-11 ET |
