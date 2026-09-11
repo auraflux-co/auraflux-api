@@ -34,84 +34,113 @@ ${FRAMER_CSS || ''}
 }
 
 .plans-wrap{
-  max-width:72rem;margin:0 auto;padding:1.25rem 1.25rem 2rem;
-  overflow:visible;
+  max-width:72rem;margin:0 auto;padding:1.5rem 1.25rem 2rem;
+  overflow:visible;background:transparent !important;
 }
 .plans{
   display:grid;grid-template-columns:1fr;gap:1.75rem;
   max-width:56rem;margin:0 auto;
-  overflow:visible;padding-top:0.5rem;
+  overflow:visible;padding-top:0.75rem;align-items:stretch;
 }
 @media (min-width:900px){
-  .plans{grid-template-columns:1fr 1fr;align-items:stretch}
+  .plans{grid-template-columns:1fr 1fr}
 }
 
-.plan{
+/* Both cards — white, equal flex column, buttons pin to bottom */
+.plans .plan{
   position:relative;
-  background:#fff;border:2px solid #e2e8f0;border-radius:1rem;
-  padding:1.5rem 1.5rem 1.5rem;display:flex;flex-direction:column;gap:0.65rem;
-  box-shadow:0 10px 28px rgba(15,23,42,.08);
-  overflow:visible;
+  display:flex;flex-direction:column;justify-content:space-between;
+  background:#fff !important;
+  border:2px solid #e2e8f0 !important;
+  border-radius:1rem !important;
+  padding:2rem !important;
+  box-shadow:0 10px 28px rgba(15,23,42,.08) !important;
+  overflow:visible !important;
+  color:#0f172a !important;
+  gap:0;
 }
-.plan.popular{
+.plans .plan.popular{
   margin-top:1rem;
-  padding-top:2rem;padding-bottom:1.5rem;padding-left:1.5rem;padding-right:1.5rem;
-  border:2px solid #fbbf24;
-  box-shadow:0 20px 40px rgba(15,23,42,.14);
-  overflow:visible;
+  border:2px solid #fbbf24 !important;
+  box-shadow:0 20px 40px rgba(15,23,42,.14) !important;
+  overflow:visible !important;
 }
-.plan-badge{
+.plans .plan:hover{
+  box-shadow:0 12px 32px rgba(15,23,42,.12) !important;
+}
+.plans .plan.popular:hover{
+  box-shadow:0 22px 44px rgba(15,23,42,.16) !important;
+}
+
+.plans .plan-badge{
   position:absolute;top:-0.75rem;left:50%;transform:translateX(-50%);
-  white-space:nowrap;z-index:10;
+  white-space:nowrap;z-index:20;
   font-size:0.75rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  background:#fbbf24;color:#020617;padding:0.25rem 0.75rem;border-radius:9999px;
-  box-shadow:0 1px 2px rgba(15,23,42,.12);
+  background:#fbbf24;color:#020617;padding:0.25rem 1rem;border-radius:9999px;
+  box-shadow:0 4px 12px rgba(15,23,42,.15);
 }
-.plan-name{
+
+.plans .plan-top{display:flex;flex-direction:column;text-align:left}
+.plans .plan-name{
   font-size:0.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-  color:#64748b !important;margin:0.15rem 0 0;
+  color:#64748b !important;margin:0 0 0.35rem;
 }
-.plan.popular .plan-name{color:#b45309 !important}
-.plan-title{
-  font-size:1.45rem;font-weight:800;color:#0f172a !important;letter-spacing:-.02em;margin:0;line-height:1.2;
+.plans .plan.popular .plan-name{color:#b45309 !important}
+.plans .plan-title{
+  font-size:1.5rem;font-weight:700;color:#0f172a !important;
+  letter-spacing:-.02em;margin:0 0 0.35rem;line-height:1.2;
 }
-.plan-sub{
-  font-size:0.92rem;color:#475569 !important;line-height:1.55;margin:0;
+.plans .plan-sub{
+  font-size:0.92rem;color:#475569 !important;line-height:1.55;margin:0 0 0.75rem;
 }
-.price{
-  font-size:2.6rem;font-weight:800;color:#0f172a !important;letter-spacing:-.03em;line-height:1.1;margin:0.35rem 0 0;
+.plans .price{
+  font-size:2.25rem;font-weight:800;color:#0f172a !important;
+  letter-spacing:-.03em;line-height:1.1;margin:0;
 }
-.price .period{font-size:1rem;font-weight:500;color:#64748b !important;letter-spacing:0}
-.price-note{
+.plans .price .period{
+  font-size:1rem;font-weight:500;color:#64748b !important;letter-spacing:0;
+}
+.plans .price-note{
+  display:block;min-height:32px;
   font-size:0.75rem;font-weight:500;color:#475569 !important;
-  margin:0.25rem 0 1rem;line-height:1.45;
+  margin:0.25rem 0 0;line-height:1.45;
 }
-.features{
-  list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0.55rem;flex:1;
+
+/* Dedicated list class — avoids global .features section mist background */
+.plans .plan-features{
+  list-style:none;margin:1.5rem 0;padding:0;
+  display:flex;flex-direction:column;gap:1rem;
+  text-align:left;background:transparent !important;
+  flex:1;
 }
-.features li{
+.plans .plan-features li{
+  display:flex;align-items:center;gap:0.75rem;
   font-size:0.875rem;font-weight:500;color:#1e293b !important;
-  display:flex;align-items:center;gap:0.5rem;line-height:1.625;
+  line-height:1.5;background:transparent !important;
+  border-radius:0;padding:0;
 }
-.features li::before{
-  content:"✓";color:#0f172a !important;font-weight:800;flex-shrink:0;
+.plans .plan-features li::before{
+  content:"✓";
+  color:#f59e0b !important;font-weight:800;font-size:1rem;
+  flex-shrink:0;line-height:1;
 }
-.cta{
+
+.plans .cta{
   display:block;width:100%;text-align:center;
-  padding:0.75rem 1rem;margin-top:1.5rem;
+  padding:0.875rem 1rem;margin-top:auto;
   border-radius:0.75rem;font-weight:700;font-size:0.95rem;
   text-decoration:none !important;transition:background .15s,box-shadow .15s;
-  box-sizing:border-box;border:none;
+  box-sizing:border-box;border:none !important;
 }
-.cta-primary{
+.plans .cta-secondary{
+  background:#0f172a !important;color:#fff !important;
+}
+.plans .cta-secondary:hover{background:#1e293b !important}
+.plans .cta-primary{
   background:#fbbf24 !important;color:#020617 !important;
   box-shadow:0 4px 12px rgba(251,191,36,.35);
 }
-.cta-primary:hover{background:#f59e0b !important}
-.cta-secondary{
-  background:#0f172a !important;color:#fff !important;
-}
-.cta-secondary:hover{background:#1e293b !important}
+.plans .cta-primary:hover{background:#f59e0b !important}
 
 .enterprise{
   max-width:56rem;margin:1.5rem auto 0;padding:0 1.25rem;
@@ -155,36 +184,40 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <div class="plans-wrap">
   <div class="plans" aria-label="Pricing tiers">
     <article class="plan">
-      <p class="plan-name">For solo streamers</p>
-      <h2 class="plan-title">Growth / Creator</h2>
-      <p class="plan-sub">Solo streamers shipping daily content.</p>
-      <div class="price">$299<span class="period">/mo</span></div>
-      <p class="price-note">or custom starter — talk to us if you need a lighter seat</p>
-      <ul class="features">
-        <li>Up to 40 hours of VOD processing / mo</li>
-        <li>3 Connected channels (YouTube, Twitch, Kick)</li>
-        <li>Auto 9:16 framing &amp; kinetic captions</li>
-        <li>1080p60 vertical exports</li>
-        <li>Direct dispatch to TikTok, Shorts &amp; Reels</li>
-      </ul>
+      <div class="plan-top">
+        <p class="plan-name">For solo streamers</p>
+        <h2 class="plan-title">Growth / Creator</h2>
+        <p class="plan-sub">Solo streamers shipping daily content.</p>
+        <div class="price">$299<span class="period">/mo</span></div>
+        <p class="price-note">or custom starter — talk to us if you need a lighter seat</p>
+        <ul class="plan-features">
+          <li>Up to 40 hours of VOD processing / mo</li>
+          <li>3 Connected channels (YouTube, Twitch, Kick)</li>
+          <li>Auto 9:16 framing &amp; kinetic captions</li>
+          <li>1080p60 vertical exports</li>
+          <li>Direct dispatch to TikTok, Shorts &amp; Reels</li>
+        </ul>
+      </div>
       <a href="/contact" class="cta cta-secondary" data-cta="growth_cta">Start Growth</a>
     </article>
 
     <article class="plan popular">
       <span class="plan-badge">Most Popular for Agencies</span>
-      <p class="plan-name">For agencies &amp; high volume</p>
-      <h2 class="plan-title">Pro Operator / Agency</h2>
-      <p class="plan-sub">High-volume streamers, esports orgs &amp; clip networks.</p>
-      <div class="price">$999<span class="period">/mo</span></div>
-      <p class="price-note">Full platform seat with priority queue &amp; team access</p>
-      <ul class="features">
-        <li>Unlimited VOD processing &amp; peak detection</li>
-        <li>Unlimited connected channels &amp; social dispatch</li>
-        <li>Custom caption font uploads &amp; brand templates</li>
-        <li>Priority render queue (&lt; 2 min processing)</li>
-        <li>Team workspace seats &amp; API key access</li>
-        <li>Dedicated Account Manager</li>
-      </ul>
+      <div class="plan-top">
+        <p class="plan-name">For agencies &amp; high volume</p>
+        <h2 class="plan-title">Pro Operator / Agency</h2>
+        <p class="plan-sub">High-volume streamers, esports orgs &amp; clip networks.</p>
+        <div class="price">$999<span class="period">/mo</span></div>
+        <p class="price-note">Full platform seat with priority queue &amp; team access</p>
+        <ul class="plan-features">
+          <li>Unlimited VOD processing &amp; peak detection</li>
+          <li>Unlimited connected channels &amp; social dispatch</li>
+          <li>Custom caption font uploads &amp; brand templates</li>
+          <li>Priority render queue (&lt; 2 min processing)</li>
+          <li>Team workspace seats &amp; API key access</li>
+          <li>Dedicated Account Manager</li>
+        </ul>
+      </div>
       <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Start Pro Operator</a>
     </article>
   </div>

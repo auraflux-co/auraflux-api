@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Pricing: fixed .plan overflow:hidden clipping popular badge; white cards + contrast.
+**Last Updated:** 2026-09-11 — Pricing cards: rename plan-features (kill nested mist box), unify padding/buttons, badge z-20.
 
 
 
