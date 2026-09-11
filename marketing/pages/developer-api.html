@@ -18,145 +18,176 @@
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{line-height:1.6}
+/* Scoped — beat Framer global code/color/position rules */
+.dev-page,.dev-page *{box-sizing:border-box;}
+.dev-page{max-width:64rem;margin:0 auto;padding:7rem 1rem 4rem;position:relative;z-index:1;}
+.dev-page .dev-hero{margin-bottom:2rem;}
+.dev-page .dev-hero h1{letter-spacing:-.03em;margin:0 0 12px;font-size:clamp(1.75rem,4vw,2.5rem);font-weight:800;color:#fff !important;}
+.dev-page .dev-hero p{color:#94a3b8 !important;font-size:1.05rem;line-height:1.65;max-width:42rem;margin:0;}
 
-.dev-wrap{max-width:64rem;margin:0 auto;padding:7rem 1rem 4rem;}
-.dev-hero{margin-bottom:2rem;}
-.dev-hero h1{letter-spacing:-.03em;margin-bottom:12px;font-size:clamp(1.75rem,4vw,2.5rem);font-weight:800;color:#fff;}
-.dev-hero p{color:#94a3b8;font-size:1.05rem;line-height:1.65;max-width:42rem;}
-
-/* Base URL + Auth banner */
-.dev-auth-banner{
+.dev-page .dev-auth-banner{
   background:#0f172a;border:1px solid #1e293b;border-radius:1rem;
   padding:1.5rem;margin:2rem 0;color:#fff;
   box-shadow:0 20px 40px rgba(15,23,42,.35);
 }
-.dev-auth-banner-top{
+.dev-page .dev-auth-banner-top{
   display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;
   border-bottom:1px solid #1e293b;padding-bottom:1rem;margin-bottom:1rem;
 }
-.dev-auth-banner-base{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
-.dev-base-pill{
-  font-size:.7rem;font-weight:800;letter-spacing:.04em;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  background:rgba(251,191,36,.2);color:#fbbf24;border:1px solid rgba(251,191,36,.3);
+.dev-page .dev-auth-banner-base{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+.dev-page .dev-base-pill{
+  font-size:.7rem;font-weight:800;font-family:ui-monospace,Menlo,monospace;
+  background:rgba(251,191,36,.2);color:#fbbf24 !important;border:1px solid rgba(251,191,36,.3);
   padding:.25rem .75rem;border-radius:9999px;
 }
-.dev-auth-banner code{font-size:.875rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#e2e8f0;}
-.dev-auth-cta{
-  font-size:.75rem;font-weight:800;background:#fbbf24;color:#020617;
-  padding:.5rem 1rem;border-radius:.5rem;text-decoration:none;transition:background .15s;
+.dev-page .dev-auth-banner code{font-size:.875rem;font-family:ui-monospace,Menlo,monospace;color:#e2e8f0 !important;background:transparent !important;}
+.dev-page .dev-auth-cta{
+  font-size:.75rem;font-weight:800;background:#fbbf24;color:#020617 !important;
+  padding:.5rem 1rem;border-radius:.5rem;text-decoration:none !important;
 }
-.dev-auth-cta:hover{background:#f59e0b;text-decoration:none;color:#020617;}
-.dev-auth-banner-meta{font-size:.75rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#cbd5e1;line-height:1.7;}
-.dev-auth-banner-meta .k{color:#fbbf24;font-weight:700;}
+.dev-page .dev-auth-cta:hover{background:#f59e0b;color:#020617 !important;}
+.dev-page .dev-auth-banner-meta{font-size:.75rem;font-family:ui-monospace,Menlo,monospace;color:#cbd5e1 !important;line-height:1.7;}
+.dev-page .dev-auth-banner-meta .k{color:#fbbf24 !important;font-weight:700;}
 
-/* Section headers */
-.dev-section{margin-bottom:40px;}
-.dev-section-title{
+.dev-page .dev-section{margin-bottom:2.5rem;}
+.dev-page .dev-section-title{
   font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
-  color:#94a3b8;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#94a3b8 !important;font-family:ui-monospace,Menlo,monospace;
   padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07);
-  margin-bottom:16px;
+  margin:0 0 1rem;
 }
-.dev-endpoint-list{display:flex;flex-direction:column;gap:.75rem;margin:1.5rem 0;}
+.dev-page .dev-section-heading{
+  font-size:1.25rem;font-weight:800;color:#f8fafc !important;margin:3rem 0 1.5rem;letter-spacing:-.02em;
+}
 
-/* Endpoint rows — light high-contrast cards */
-.dev-endpoint{
-  background:#fff;border:1px solid #e2e8f0;
-  border-radius:.75rem;overflow:hidden;margin-bottom:.75rem;
-  box-shadow:0 1px 2px rgba(15,23,42,.06);
-  transition:border-color .15s,box-shadow .15s;
+/* Light endpoint cards — force readable path text */
+.dev-page .dev-endpoint{
+  background:#fff !important;border:1px solid #e2e8f0;
+  border-radius:.75rem;overflow:hidden;margin:0 0 .75rem;
+  box-shadow:0 1px 2px rgba(15,23,42,.06);position:relative;
 }
-.dev-endpoint:hover{border-color:#cbd5e1;box-shadow:0 4px 12px rgba(15,23,42,.08);}
-.dev-endpoint-header{
+.dev-page .dev-endpoint:hover{border-color:#cbd5e1;}
+.dev-page .dev-endpoint-header{
   display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;
-  padding:1rem;cursor:pointer;background:#fff;
+  padding:1rem;cursor:pointer;background:#fff !important;position:static;
 }
-.dev-endpoint-left{display:flex;align-items:center;gap:1rem;min-width:0;}
-.dev-method{
-  font-size:.7rem;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
-  padding:.25rem .65rem;border-radius:.375rem;
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;
+.dev-page .dev-endpoint-left{display:flex;align-items:center;gap:1rem;min-width:0;position:static;}
+.dev-page .dev-method{
+  font-size:.7rem;font-weight:800;text-transform:uppercase;
+  padding:.25rem .75rem;border-radius:.375rem;
+  font-family:ui-monospace,Menlo,monospace;flex-shrink:0;
+  background:#fbbf24 !important;color:#020617 !important;border:none !important;
 }
-.m-get{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;}
-.m-post{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;}
-.m-delete{background:#ffe4e6;color:#9f1239;border:1px solid #fecdd3;}
-.m-patch{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
-.dev-path{font-size:.875rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#0f172a;font-weight:600;}
-.dev-endpoint-title{font-size:.875rem;color:#475569;font-weight:500;}
-.dev-credits-badge{
-  font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:4px;
-  background:#fef3c7;color:#92400e;border:1px solid #fde68a;
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;
+.dev-page .dev-path{
+  font-size:.875rem !important;font-family:ui-monospace,Menlo,monospace !important;
+  color:#0f172a !important;font-weight:600 !important;background:transparent !important;
+  opacity:1 !important;-webkit-text-fill-color:#0f172a !important;
 }
-.dev-endpoint-body{
-  display:none;border-top:1px solid #e2e8f0;
-  padding:1.25rem;background:#0f172a;
+.dev-page .dev-endpoint-title{font-size:.875rem;color:#475569 !important;font-weight:500;}
+.dev-page .dev-endpoint-body{
+  display:none;border-top:1px solid #e2e8f0;padding:1.25rem;background:#0f172a;position:static;
 }
-.dev-endpoint-body.open{display:block;}
-.dev-desc{font-size:.88rem;color:#94a3b8;line-height:1.65;margin-bottom:20px;}
-.dev-code-label{
+.dev-page .dev-endpoint-body.open{display:block;}
+.dev-page .dev-desc{font-size:.88rem;color:#94a3b8 !important;line-height:1.65;margin:0 0 1rem;}
+.dev-page .dev-code-label{
   font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:#64748b;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-bottom:6px;
+  color:#64748b !important;font-family:ui-monospace,Menlo,monospace;margin:0 0 6px;
 }
-.dev-code{
-  background:#020617;border:1px solid #1e293b;
-  border-radius:8px;padding:16px;overflow-x:auto;
-  font-size:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  color:#cbd5e1;line-height:1.7;position:relative;margin-bottom:16px;white-space:pre-wrap;
+.dev-page .dev-code{
+  background:#020617;border:1px solid #1e293b;border-radius:8px;padding:2.5rem 16px 16px;
+  overflow-x:auto;font-size:.8rem;font-family:ui-monospace,Menlo,monospace;
+  color:#fcd34d !important;line-height:1.7;position:relative;margin:0 0 1rem;white-space:pre-wrap;
 }
-.dev-code-copy{
-  position:absolute;top:8px;right:8px;
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);
-  color:#94a3b8;font-size:.65rem;font-weight:700;
-  padding:3px 10px;border-radius:6px;cursor:pointer;
-  font-family:inherit;transition:background .15s;
+.dev-page .dev-code-copy{
+  position:absolute;top:8px;right:8px;z-index:2;
+  background:#1e293b;border:1px solid #334155;color:#cbd5e1 !important;
+  font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:6px;cursor:pointer;
 }
-.dev-code-copy:hover{background:rgba(255,255,255,.15);}
-.dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-.dev-jobs-ref{display:grid;grid-template-columns:1.2fr .8fr;gap:1rem;align-items:start;}
-@media(max-width:800px){.dev-grid,.dev-jobs-ref{grid-template-columns:1fr;}}
-.dev-jobs-ref-table{background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;overflow:hidden;}
-.dev-jobs-ref-table .dev-table th{color:#64748b;border-bottom:1px solid #e2e8f0;}
-.dev-jobs-ref-table .dev-table td{color:#475569;border-bottom:1px solid #f1f5f9;}
-.dev-jobs-ref-table .dev-table td:first-child{color:#0f172a;}
-.dev-jobs-ref-table .dev-table td:nth-child(2){color:#1d4ed8;}
-.dev-jobs-ref-sample{background:#0f172a;border:1px solid #1e293b;border-radius:.75rem;padding:1.25rem;}
-.dev-jobs-ref-sample .dev-code{margin-bottom:0;}
+/* Kill any leftover method-tint classes — all methods use amber badge */
+.dev-page .dev-method.m-get,
+.dev-page .dev-method.m-post,
+.dev-page .dev-method.m-patch,
+.dev-page .dev-method.m-delete{
+  background:#fbbf24 !important;color:#020617 !important;
+}
+.dev-page .dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:700px){.dev-page .dev-grid{grid-template-columns:1fr;}}
 
-/* Field table */
-.dev-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px;}
-.dev-table th{text-align:left;padding:8px 12px;color:#64748b;font-weight:700;
-  font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;
-  border-bottom:1px solid rgba(255,255,255,.07);}
-.dev-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);
-  color:#94a3b8;vertical-align:top;}
-.dev-table td:first-child{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#e2e8f0;font-weight:500;}
-.dev-table td:nth-child(2){color:#60a5fa;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;}
-.dev-table tr:last-child td{border-bottom:none;}
+/* Jobs ref — true side-by-side, no overlap */
+.dev-page .dev-jobs-ref{
+  display:grid;
+  grid-template-columns:minmax(0,7fr) minmax(0,5fr);
+  gap:2rem;
+  align-items:start;
+  margin-top:0;
+}
+@media(max-width:1024px){
+  .dev-page .dev-jobs-ref{grid-template-columns:minmax(0,1fr);}
+}
+.dev-page .dev-jobs-ref-table{
+  background:#fff !important;border:1px solid #e2e8f0;border-radius:1rem;
+  box-shadow:0 1px 2px rgba(15,23,42,.06);overflow:hidden;min-width:0;
+}
+.dev-page .dev-jobs-ref-table .dev-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.dev-page .dev-jobs-ref-table table{width:100%;border-collapse:collapse;font-size:.75rem;margin:0;}
+.dev-page .dev-jobs-ref-table thead{background:#f1f5f9;}
+.dev-page .dev-jobs-ref-table th{
+  text-align:left;padding:.75rem;color:#0f172a !important;font-weight:800;
+  font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;
+  border-bottom:1px solid #e2e8f0;
+}
+.dev-page .dev-jobs-ref-table td{
+  padding:.75rem;color:#334155 !important;vertical-align:top;
+  border-bottom:1px solid #e2e8f0;
+}
+.dev-page .dev-jobs-ref-table td:first-child{
+  font-family:ui-monospace,Menlo,monospace;font-weight:700;color:#0f172a !important;
+}
+.dev-page .dev-jobs-ref-table td:nth-child(2){
+  font-family:ui-monospace,Menlo,monospace;color:#475569 !important;
+}
+.dev-page .dev-jobs-ref-table tr:last-child td{border-bottom:none;}
 
-/* Get started CTA */
-.dev-cta{
+.dev-page .dev-jobs-ref-sample{
+  background:#0f172a;border:1px solid #1e293b;border-radius:1rem;
+  padding:1.25rem;box-shadow:0 20px 40px rgba(15,23,42,.25);min-width:0;position:static;
+}
+.dev-page .dev-jobs-ref-sample-top{
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid #1e293b;padding-bottom:.75rem;margin-bottom:1rem;
+}
+.dev-page .dev-jobs-ref-sample-top span{
+  font-size:.7rem;font-family:ui-monospace,Menlo,monospace;font-weight:700;color:#94a3b8 !important;
+}
+.dev-page .dev-jobs-ref-sample-top button{
+  position:static !important;font-size:.7rem;font-family:ui-monospace,Menlo,monospace;
+  background:#1e293b;border:1px solid #334155;color:#cbd5e1 !important;
+  padding:.25rem .65rem;border-radius:.375rem;cursor:pointer;
+}
+.dev-page .dev-jobs-ref-sample pre{
+  margin:0;font-size:.75rem;font-family:ui-monospace,Menlo,monospace;
+  color:#fcd34d !important;line-height:1.7;overflow-x:auto;white-space:pre;
+  background:transparent;border:none;padding:0;position:static;
+}
+
+.dev-page .dev-cta{
   background:#0f172a;border:1px solid rgba(199,175,79,.2);
   border-radius:16px;padding:32px;display:flex;
   align-items:center;justify-content:space-between;gap:24px;
   margin-top:56px;flex-wrap:wrap;
 }
-.dev-cta-text h3{font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:6px;}
-.dev-cta-text p{font-size:.88rem;color:#94a3b8;}
-.dev-cta a{
-  background:#fbbf24;color:#0b1220;padding:11px 24px;
-  border-radius:8px;font-size:.9rem;font-weight:700;
-  text-decoration:none;white-space:nowrap;transition:opacity .15s;
+.dev-page .dev-cta-text h3{font-size:1.1rem;font-weight:700;color:#fff !important;margin:0 0 6px;}
+.dev-page .dev-cta-text p{font-size:.88rem;color:#94a3b8 !important;margin:0;}
+.dev-page .dev-cta a{
+  background:#fbbf24;color:#0b1220 !important;padding:11px 24px;
+  border-radius:8px;font-size:.9rem;font-weight:700;text-decoration:none !important;
 }
-.dev-cta a:hover{opacity:.88;text-decoration:none;}
 </style>
 </head>
 <body>
 ${FRAMER_NAV || FALLBACK_NAV}
 
-<div class="dev-wrap">
+<div class="dev-page">
 
   <div class="dev-hero">
     <h1>AuraFlux Developer API</h1>
@@ -568,30 +599,39 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
   <!-- FIELD REFERENCE -->
   <div class="dev-section">
-    <div class="dev-section-title">POST /jobs — Field Reference &amp; Example</div>
+    <h3 class="dev-section-heading">POST /jobs — Field Reference &amp; Example</h3>
     <div class="dev-jobs-ref">
       <div class="dev-jobs-ref-table">
-        <table class="dev-table">
-          <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td>entry</td><td>"fetch"|"upload"|"compose"|"generate"</td><td>No (default: fetch)</td><td>How the source is provided. fetch=URL, upload=file, compose=script-only, generate=generated video</td></tr>
-            <tr><td>url</td><td>string</td><td>If entry=fetch</td><td>Source video URL (Twitch clip, YouTube, direct MP4)</td></tr>
-            <tr><td>urls</td><td>string[]</td><td>No</td><td>Multiple source URLs for multi-clip jobs</td></tr>
-            <tr><td>fileId</td><td>string</td><td>If entry=upload</td><td>File ID from POST /upload</td></tr>
-            <tr><td>topic</td><td>string</td><td>No</td><td>Topic for the video (max 500 chars). Used for script generation and metadata.</td></tr>
-            <tr><td>tone</td><td>string</td><td>No</td><td>Voiceover tone e.g. "hype", "calm", "educational"</td></tr>
-            <tr><td>format</td><td>"short"|"long"</td><td>No (default: short)</td><td>Short-form (≤60s) or long-form video</td></tr>
-            <tr><td>durationMins</td><td>number</td><td>No (default: 1)</td><td>Target duration in minutes (1-120)</td></tr>
-            <tr><td>platforms</td><td>string[]</td><td>No</td><td>"tiktok", "youtube", "instagram" - platforms to publish to</td></tr>
-            <tr><td>publishMode</td><td>"immediate"|"scheduled"|"manual"</td><td>No (default: immediate)</td><td>When to publish after production</td></tr>
-            <tr><td>staging</td><td>boolean</td><td>No</td><td>If true, job stops before publish for your review</td></tr>
-            <tr><td>fromTemplateId</td><td>string</td><td>No</td><td>Start from a saved template. Body fields override template values.</td></tr>
-          </tbody>
-        </table>
+        <div class="dev-table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>entry</td><td>string</td><td>No</td><td>How source is provided (fetch, upload, compose, generate)</td></tr>
+              <tr><td>url</td><td>string</td><td>If entry=fetch</td><td>Source video URL (Twitch clip, YouTube, VOD)</td></tr>
+              <tr><td>urls</td><td>string[]</td><td>No</td><td>Multiple source URLs for multi-clip jobs</td></tr>
+              <tr><td>fileId</td><td>string</td><td>If entry=upload</td><td>File ID from POST /upload</td></tr>
+              <tr><td>platforms</td><td>string[]</td><td>No</td><td>Target platforms (tiktok, youtube, instagram)</td></tr>
+              <tr><td>publishMode</td><td>string</td><td>No</td><td>immediate | scheduled | manual</td></tr>
+              <tr><td>format</td><td>string</td><td>No</td><td>short or long</td></tr>
+              <tr><td>staging</td><td>boolean</td><td>No</td><td>If true, stop before publish for review</td></tr>
+              <tr><td>fromTemplateId</td><td>string</td><td>No</td><td>Start from a saved template</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="dev-jobs-ref-sample">
-        <div class="dev-code-label">Example request</div>
-        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X POST https://api.auraflux.co/v1/jobs \
+        <div class="dev-jobs-ref-sample-top">
+          <span>EXAMPLE REQUEST</span>
+          <button type="button" onclick="copyJobsExample(this)">Copy</button>
+        </div>
+        <pre id="jobs-curl-example">curl -X POST https://api.auraflux.co/v1/jobs \
   -H "Authorization: Bearer af_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -599,7 +639,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
     "url": "https://www.twitch.tv/videos/123456789",
     "platforms": ["tiktok", "youtube"],
     "publishMode": "immediate"
-  }'</div>
+  }'</pre>
       </div>
     </div>
   </div>
@@ -647,6 +687,14 @@ ${FRAMER_NAV || FALLBACK_NAV}
 function copyCode(btn) {
   var code = btn.parentElement.textContent.replace('Copy','').replace('Copied!','').trim();
   navigator.clipboard.writeText(code).then(function(){
+    btn.textContent = 'Copied!';
+    setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+  });
+}
+function copyJobsExample(btn) {
+  var el = document.getElementById('jobs-curl-example');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(function(){
     btn.textContent = 'Copied!';
     setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
   });

@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Developer API: light endpoint cards, stronger auth banner, jobs curl beside field table.
+**Last Updated:** 2026-09-11 — Developer API layout fix: 7/5 jobs table+curl grid (no overlap), amber method badges, dark readable paths.
 
 
 
