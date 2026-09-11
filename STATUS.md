@@ -1,24 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 20:51 UTC  
+**Last Updated:** 2026-09-11 20:57 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-HSKRG board mapping: `cwn-production` / C0 / API → org \`auraflux\` (product). Org \`cwn\` reserved for ClipzWorld YouTube channel only. Portal ticket/wiki refiled under auraflux.
-
-
-## Last Agent Action
-App portal: inline system-ui font stack on `/` + `/login` wrappers so Geist/Tailwind cannot override entry typography.
-
-
-## Last Agent Action
-App portal typography: force `font-sans antialiased` wrapper, solid white brand H1, uppercase tagline, stronger card/button sans classes, footer `/privacy` + `/terms`.
-
-
-## Last Agent Action
-Login/root portal typography: brand H1 white→slate gradient, softer Request Access secondary button, footer slate-400 + amber hover linking to auraflux.co legal pages.
-
+Customer member portal direction locked: Pavilion member-portal design base → AuraFlux adaptations. Phases Design → Dev → QA → functional test. Legacy dark sidebar is not the target. Rule: `.cursor/rules/member-portal-pavilion-base.mdc`. Board: auraflux wiki HOME/member-portal-pavilion-base.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

@@ -1,0 +1,44 @@
+---
+description: AuraFlux customer member portal — Pavilion design base, design-first
+alwaysApply: true
+---
+
+# Member portal — Pavilion base (AuraFlux customers)
+
+## Product focus (current)
+
+We are **only** focused on the **customer member portal** (Operate / Guided customers), not admin/operator chrome and not polishing the legacy dark sidebar dashboard as the long-term design.
+
+## Design source of truth
+
+**Base UI/UX comes from Pavilion’s member portal**, then we adapt for AuraFlux customer needs (Peaks, Jobs, Channels, Social, Billing, Settings).
+
+| Source (Pavilion) | Use for AuraFlux |
+|-------------------|------------------|
+| `MemberShell` + hub / `PortalQuadrant` cards | Customer home, settings/billing-like panels, section density |
+| `StaffShell` (AF staff surface patterns) | Product workspace nav patterns when a tabbed topbar fits better than family hub |
+| `frontend/app/globals.css` tokens (cream canvas, white cards, brand accents) | Visual language — **re-token for AuraFlux brand**, do not keep ClipzWorld/legacy slate-sidebar as the target look |
+| Docs: `PLATFORM-STAFF.md`, `PARENT-PORTAL-PLAN.md`, `PAVILION-BUYER-VS-SCHOOL-SURFACES.md` | Surface boundaries |
+
+**Not the target:** the previous AuraFlux app design (Geist + dark left sidebar shell in `app/src/components/layout/sidebar.tsx`) as the permanent customer experience. That shell may remain until the Pavilion-based redesign ships; do not invest in “making the old design nicer” as the roadmap.
+
+## Phase order (do not skip)
+
+1. **Design** — IA + chrome + key screens (home, Peaks, Jobs, Channels, Billing, Settings) against Pavilion patterns; AuraFlux-specific copy/flows only where customers need them.
+2. **Dev** — implement against the approved design (ticket + wiki HOW).
+3. **QA** — browser QA / screenshots on `app.auraflux.co` with a real paid customer session.
+4. **Functional test** — Peaks → job → publish path after UI is accepted.
+
+No “code the old dashboard while design is unfinished.” Questions-only and design artifacts first.
+
+## Board / org
+
+- HSKRG org: **`auraflux`** (product). Not `cwn` (ClipzWorld YouTube).
+- Primary ticket: search `Member portal` / Peaks customer UX.
+- Wiki: keep HOW under `HOME/` with Audience: product.
+
+## Auth for review (when design is ready to click through)
+
+- https://app.auraflux.co/sign-in → `/home`
+- Real paid customer or warp — no mock passwords in repo
+- Superadmin/admin nav is out of scope for this customer-portal effort unless needed to unblock
