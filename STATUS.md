@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Blog: subtle blue-500 card outlines (amber tags kept).
+**Last Updated:** 2026-09-11 — Blog: pt-36 clearance; hero+filters above featured.
 
 
 
@@ -190,6 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(marketing): blog nav clearance + hero order** — pt-36; hero/filters above featured; excerpt contrast. | blog.html, page-base.css, STATUS.md | pending | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog subtle blue card outlines** — blue-500/α borders; blue title/Read More hover; amber tags. | blog.html, page-base.css, STATUS.md | 6bb5d330 | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog card contrast** — slate-300 borders; card hover slate-900; darker excerpt/meta. | blog.html, page-base.css, STATUS.md | c81507fa | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog slate/amber card chrome** — remove blue borders; slate outlines; amber pill/category/links. | blog.html, page-base.css, STATUS.md | c6f6d3d3 | 2026-09-11 ET |

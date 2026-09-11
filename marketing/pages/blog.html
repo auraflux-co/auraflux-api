@@ -22,14 +22,14 @@ body{
   background:#fff !important;
 }
 .blog-page{
-  max-width:72rem;margin:0 auto;padding:7rem 1rem 4rem;position:relative;z-index:1;
+  max-width:72rem;margin:0 auto;padding:9rem 1rem 4rem;position:relative;z-index:1;
   background:#fff !important;color:#0f172a !important;min-height:100vh;
   overflow:visible;
 }
-.blog-hero{margin-bottom:0;background:#fff;overflow:visible;}
+.blog-hero{margin-bottom:2rem;background:#fff;overflow:visible;}
 .blog-hero h1{
   font-size:clamp(1.85rem,4vw,2.25rem);font-weight:800;letter-spacing:-.025em;
-  color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;margin:0 0 .75rem;
+  color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;margin:0 0 .5rem;
   line-height:1.2;overflow:visible;
 }
 .blog-hero p{
@@ -40,7 +40,7 @@ body{
 /* Category pills */
 .blog-cats{
   display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;
-  margin:2rem 0;padding-bottom:1.5rem;border-bottom:1px solid #e2e8f0;
+  margin:1.5rem 0 0;padding-bottom:.5rem;border-bottom:1px solid #f1f5f9;
 }
 .blog-cat{
   font-size:.75rem;font-weight:500;padding:.5rem 1rem;border-radius:.5rem;border:none;
@@ -156,15 +156,15 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <div class="blog-page">
   <div class="blog-hero">
-    <h1 >AuraFlux Insights & Engineering</h1>
-    <p >Guides, API strategies, and automation playbooks for streamers and content teams.</p>
-  </div>
+    <h1>AuraFlux Insights &amp; Engineering</h1>
+    <p>Guides, API strategies, and automation playbooks for streamers and content teams.</p>
 
-  <div class="blog-cats" role="tablist" aria-label="Post categories">
-    <button type="button" class="blog-cat is-active" data-filter="all">All Posts</button>
-    <button type="button" class="blog-cat" data-filter="automation">Automation</button>
-    <button type="button" class="blog-cat" data-filter="monetization">Monetization</button>
-    <button type="button" class="blog-cat" data-filter="platform">Platform</button>
+    <div class="blog-cats" role="tablist" aria-label="Post categories">
+      <button type="button" class="blog-cat is-active" data-filter="all">All Posts</button>
+      <button type="button" class="blog-cat" data-filter="automation">Automation</button>
+      <button type="button" class="blog-cat" data-filter="monetization">Monetization</button>
+      <button type="button" class="blog-cat" data-filter="platform">Platform</button>
+    </div>
   </div>
 
   <!--BLOG_FEATURED-->

@@ -409,12 +409,22 @@ body:has(.blog-page) {
 .blog-wrap,
 .blog-page {
   background: #fff !important;
+  padding-top: 9rem !important;
+  min-height: 100vh;
+}
+.blog-hero {
+  margin-bottom: 2rem !important;
 }
 .blog-hero h1 {
   color: #0f172a !important;
 }
 .blog-hero p {
   color: #475569 !important;
+  font-weight: 500 !important;
+}
+.blog-cats {
+  margin-top: 1.5rem !important;
+  border-bottom-color: #f1f5f9 !important;
 }
 .blog-featured {
   background: #fff !important;
