@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Features page at /features: 4 pillars + unified CTA; /our-system redirects.
+**Last Updated:** 2026-09-11 — Features: text+visual pillar cards, Platform Technical Specs table, footer Explore cleanup.
 
 
 

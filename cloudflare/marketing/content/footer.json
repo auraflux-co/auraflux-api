@@ -2,17 +2,15 @@
   "tagline": "Peaks (Most Replayed, chat spikes, CCV) to Shorts. Member portal for YouTube, Twitch, and Kick.",
   "copyright": "© 2026 AuraFlux. All rights reserved",
   "platform_links": [
-    { "label": "Our Story", "url": "/our-story" },
-    { "label": "Our System", "url": "/features" },
-    { "label": "Work", "url": "/work" },
+    { "label": "Home", "url": "/" },
+    { "label": "How it works", "url": "/how-it-works" },
+    { "label": "Features", "url": "/features" },
+    { "label": "Pricing", "url": "/plans" },
     { "label": "API", "url": "/developer-api" },
+    { "label": "Blog", "url": "/blog" },
     { "label": "Contact", "url": "/contact" }
   ],
-  "resource_links": [
-    { "label": "How it works", "url": "/how-it-works" },
-    { "label": "Plans", "url": "/plans" },
-    { "label": "Blog", "url": "/blog" }
-  ],
+  "resource_links": [],
   "social_links": [
     {
       "platform": "LinkedIn",

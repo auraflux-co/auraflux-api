@@ -6,26 +6,40 @@
       "title": "Automated Peak Detection",
       "subhead": "Multi-Signal Peak Tracking",
       "body": "Scans chat velocity, emote surges, YouTube Most Replayed heatmaps, and audio amplitude to catch top moments instantly.",
-      "badges": ["Twitch API", "YouTube Heatmaps", "Kick CCV"]
+      "badges": ["Twitch API", "YouTube Heatmaps", "Kick CCV"],
+      "visual": "/assets/feature-peak-detection.jpg",
+      "visual_alt": "Peak Detection Analytics UI"
     },
     {
       "title": "Intelligent 9:16 Framing",
       "subhead": "Smart Composition & Facecam Tracking",
       "body": "Auto-detects active facecams and locks game focus. Apply preset templates for facecam-top, full-screen, or split-screen layouts.",
-      "badges": ["9:16 Auto-Crop", "Facecam Lock", "Custom Presets"]
+      "badges": ["9:16 Auto-Crop", "Facecam Lock", "Custom Presets"],
+      "visual": "/assets/feature-916-framing.jpg",
+      "visual_alt": "9:16 Facecam Framing UI"
     },
     {
       "title": "Kinetic Caption Engine",
       "subhead": "Word-by-Word Animated Subtitles",
       "body": "Generate high-accuracy subtitles with dynamic word highlights, custom font uploads, and brand color presets.",
-      "badges": ["98%+ Accuracy", "Custom Fonts", "Word Highlights"]
+      "badges": ["98%+ Accuracy", "Custom Fonts", "Word Highlights"],
+      "visual": "/assets/feature-kinetic-captions.jpg",
+      "visual_alt": "Kinetic Captions Overlay UI"
     },
     {
       "title": "Multi-Account Dispatch",
       "subhead": "Automated Social Publishing",
       "body": "Schedule and push clips directly to TikTok, YouTube Shorts, and Instagram Reels with custom title & hashtag presets.",
-      "badges": ["TikTok", "YouTube Shorts", "IG Reels"]
+      "badges": ["TikTok", "YouTube Shorts", "IG Reels"],
+      "visual": "/assets/feature-multi-account-dispatch.jpg",
+      "visual_alt": "Multi-Account Social Dispatch Dashboard"
     }
+  ],
+  "specs": [
+    { "label": "Export Quality", "value": "Up to 1080p60 Vertical (9:16)" },
+    { "label": "Processing Time", "value": "< 3 minutes per 2-hour VOD peak scan" },
+    { "label": "Captions Support", "value": "Custom fonts (.TTF/.OTF), animated kinetic styles, 20+ languages" },
+    { "label": "Direct Dispatch", "value": "TikTok, YouTube Shorts, Instagram Reels" }
   ],
   "bottom_cta_label": "View Plans & Pricing",
   "bottom_cta_url": "/pricing",

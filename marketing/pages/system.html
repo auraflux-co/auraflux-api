@@ -28,32 +28,68 @@ ${FRAMER_CSS || ''}
   color:#cbd5e1 !important;max-width:40rem;margin:0 auto;line-height:1.65;font-size:1.05rem;font-weight:400;
 }
 .pillars{
-  max-width:72rem;margin:0 auto;padding:1.5rem 1.25rem 4rem;
-  display:grid;grid-template-columns:1fr;gap:1.25rem;
-}
-@media (min-width:720px){
-  .pillars{grid-template-columns:1fr 1fr}
+  max-width:72rem;margin:0 auto;padding:1.5rem 1.25rem 0;
+  display:flex;flex-direction:column;gap:1.5rem;
 }
 .pillar{
+  display:grid;grid-template-columns:1fr;gap:1.5rem;
   background:#0f172a;border:1px solid #1e293b;border-radius:1rem;
-  padding:1.75rem 1.5rem;box-shadow:0 4px 16px rgba(15,23,42,.12);
-  display:flex;flex-direction:column;gap:0.65rem;
+  padding:1.5rem;box-shadow:0 4px 16px rgba(15,23,42,.12);
+}
+@media (min-width:1024px){
+  .pillar{grid-template-columns:1fr 1fr;gap:1.5rem}
+  .pillar:nth-child(even) .pillar-copy{order:2}
+  .pillar:nth-child(even) .pillar-visual{order:1}
+}
+.pillar-copy{
+  display:flex;flex-direction:column;justify-content:center;gap:0.75rem;min-width:0;
 }
 .pillar-title{
-  font-size:1.2rem;font-weight:800;color:#fff !important;letter-spacing:-.02em;margin:0;line-height:1.25;
+  font-size:1.25rem;font-weight:800;color:#fff !important;letter-spacing:-.02em;margin:0;line-height:1.25;
 }
 .pillar-sub{
-  font-size:0.92rem;font-weight:700;color:#fbbf24 !important;margin:0;letter-spacing:.01em;
+  font-size:0.875rem;font-weight:600;color:#fbbf24 !important;margin:0;letter-spacing:.01em;
 }
 .pillar-body{
-  font-size:1rem;color:#cbd5e1 !important;line-height:1.625;margin:0;font-weight:400;flex:1;
+  font-size:0.9375rem;color:#cbd5e1 !important;line-height:1.625;margin:0;font-weight:400;
 }
-.pillar-badges{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.35rem}
+.pillar-badges{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.25rem}
 .pillar-badge{
   display:inline-flex;align-items:center;
-  font-size:0.72rem;font-weight:700;letter-spacing:.04em;
-  color:#f5c542;background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);
-  padding:0.35rem 0.75rem;border-radius:9999px;
+  font-size:0.75rem;font-weight:500;letter-spacing:.02em;
+  color:#cbd5e1;background:#1e293b;border:1px solid #334155;
+  padding:0.25rem 0.75rem;border-radius:9999px;
+}
+.pillar-visual{
+  aspect-ratio:16/9;background:#020617;border:1px solid #1e293b;border-radius:0.75rem;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;padding:0.5rem;min-height:12rem;
+}
+.pillar-visual img{
+  width:100%;height:100%;object-fit:contain;border-radius:0.5rem;display:block;
+}
+.specs{
+  max-width:56rem;margin:4rem auto 0;padding:0 1.25rem 4rem;
+}
+.specs h2{
+  font-size:1.5rem;font-weight:800;color:#fff !important;text-align:center;margin:0 0 2rem;letter-spacing:-.02em;
+}
+.specs-table-wrap{
+  background:#0f172a;border:1px solid #1e293b;border-radius:0.75rem;overflow:hidden;
+}
+.specs-table{
+  width:100%;border-collapse:collapse;text-align:left;font-size:0.875rem;color:#cbd5e1;
+}
+.specs-table tr{border-bottom:1px solid #1e293b}
+.specs-table tr:last-child{border-bottom:none}
+.specs-table td{padding:1rem;vertical-align:top}
+.specs-table td:first-child{font-weight:700;color:#fff;white-space:nowrap;width:34%}
+.specs-table td:last-child{color:#94a3b8;font-weight:400}
+@media (max-width:560px){
+  .specs-table,.specs-table tbody,.specs-table tr,.specs-table td{display:block;width:100%}
+  .specs-table tr{padding:0.75rem 0}
+  .specs-table td{padding:0.35rem 1rem}
+  .specs-table td:first-child{padding-top:0.85rem;white-space:normal}
+  .specs-table td:last-child{padding-bottom:0.85rem}
 }
 .cta-band{
   background:#020617;color:#fff;text-align:center;padding:3.5rem 1.25rem;
@@ -81,48 +117,94 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <section class="pillars" aria-label="Feature pillars">
   <article class="pillar">
-    <h2 class="pillar-title">Automated Peak Detection</h2>
-    <p class="pillar-sub">Multi-Signal Peak Tracking</p>
-    <p class="pillar-body">Scans chat velocity, emote surges, YouTube Most Replayed heatmaps, and audio amplitude to catch top moments instantly.</p>
-    <div class="pillar-badges">
-      <span class="pillar-badge">Twitch API</span>
-      <span class="pillar-badge">YouTube Heatmaps</span>
-      <span class="pillar-badge">Kick CCV</span>
+    <div class="pillar-copy">
+      <h2 class="pillar-title">Automated Peak Detection</h2>
+      <p class="pillar-sub">Multi-Signal Peak Tracking</p>
+      <p class="pillar-body">Scans chat velocity, emote surges, YouTube Most Replayed heatmaps, and audio amplitude to catch top moments instantly.</p>
+      <div class="pillar-badges">
+        <span class="pillar-badge">Twitch API</span>
+        <span class="pillar-badge">YouTube Heatmaps</span>
+        <span class="pillar-badge">Kick CCV</span>
+      </div>
+    </div>
+    <div class="pillar-visual">
+      <img src="/assets/feature-peak-detection.jpg" alt="Peak Detection Analytics UI" width="960" height="540" loading="lazy">
     </div>
   </article>
 
   <article class="pillar">
-    <h2 class="pillar-title">Intelligent 9:16 Framing</h2>
-    <p class="pillar-sub">Smart Composition &amp; Facecam Tracking</p>
-    <p class="pillar-body">Auto-detects active facecams and locks game focus. Apply preset templates for facecam-top, full-screen, or split-screen layouts.</p>
-    <div class="pillar-badges">
-      <span class="pillar-badge">9:16 Auto-Crop</span>
-      <span class="pillar-badge">Facecam Lock</span>
-      <span class="pillar-badge">Custom Presets</span>
+    <div class="pillar-copy">
+      <h2 class="pillar-title">Intelligent 9:16 Framing</h2>
+      <p class="pillar-sub">Smart Composition &amp; Facecam Tracking</p>
+      <p class="pillar-body">Auto-detects active facecams and locks game focus. Apply preset templates for facecam-top, full-screen, or split-screen layouts.</p>
+      <div class="pillar-badges">
+        <span class="pillar-badge">9:16 Auto-Crop</span>
+        <span class="pillar-badge">Facecam Lock</span>
+        <span class="pillar-badge">Custom Presets</span>
+      </div>
+    </div>
+    <div class="pillar-visual">
+      <img src="/assets/feature-916-framing.jpg" alt="9:16 Facecam Framing UI" width="960" height="540" loading="lazy">
     </div>
   </article>
 
   <article class="pillar">
-    <h2 class="pillar-title">Kinetic Caption Engine</h2>
-    <p class="pillar-sub">Word-by-Word Animated Subtitles</p>
-    <p class="pillar-body">Generate high-accuracy subtitles with dynamic word highlights, custom font uploads, and brand color presets.</p>
-    <div class="pillar-badges">
-      <span class="pillar-badge">98%+ Accuracy</span>
-      <span class="pillar-badge">Custom Fonts</span>
-      <span class="pillar-badge">Word Highlights</span>
+    <div class="pillar-copy">
+      <h2 class="pillar-title">Kinetic Caption Engine</h2>
+      <p class="pillar-sub">Word-by-Word Animated Subtitles</p>
+      <p class="pillar-body">Generate high-accuracy subtitles with dynamic word highlights, custom font uploads, and brand color presets.</p>
+      <div class="pillar-badges">
+        <span class="pillar-badge">98%+ Accuracy</span>
+        <span class="pillar-badge">Custom Fonts</span>
+        <span class="pillar-badge">Word Highlights</span>
+      </div>
+    </div>
+    <div class="pillar-visual">
+      <img src="/assets/feature-kinetic-captions.jpg" alt="Kinetic Captions Overlay UI" width="960" height="540" loading="lazy">
     </div>
   </article>
 
   <article class="pillar">
-    <h2 class="pillar-title">Multi-Account Dispatch</h2>
-    <p class="pillar-sub">Automated Social Publishing</p>
-    <p class="pillar-body">Schedule and push clips directly to TikTok, YouTube Shorts, and Instagram Reels with custom title &amp; hashtag presets.</p>
-    <div class="pillar-badges">
-      <span class="pillar-badge">TikTok</span>
-      <span class="pillar-badge">YouTube Shorts</span>
-      <span class="pillar-badge">IG Reels</span>
+    <div class="pillar-copy">
+      <h2 class="pillar-title">Multi-Account Dispatch</h2>
+      <p class="pillar-sub">Automated Social Publishing</p>
+      <p class="pillar-body">Schedule and push clips directly to TikTok, YouTube Shorts, and Instagram Reels with custom title &amp; hashtag presets.</p>
+      <div class="pillar-badges">
+        <span class="pillar-badge">TikTok</span>
+        <span class="pillar-badge">YouTube Shorts</span>
+        <span class="pillar-badge">IG Reels</span>
+      </div>
+    </div>
+    <div class="pillar-visual">
+      <img src="/assets/feature-multi-account-dispatch.jpg" alt="Multi-Account Social Dispatch Dashboard" width="960" height="540" loading="lazy">
     </div>
   </article>
+</section>
+
+<section class="specs" aria-label="Platform technical specifications">
+  <h2>Platform Technical Specs</h2>
+  <div class="specs-table-wrap">
+    <table class="specs-table">
+      <tbody>
+        <tr>
+          <td>Export Quality</td>
+          <td>Up to 1080p60 Vertical (9:16)</td>
+        </tr>
+        <tr>
+          <td>Processing Time</td>
+          <td>&lt; 3 minutes per 2-hour VOD peak scan</td>
+        </tr>
+        <tr>
+          <td>Captions Support</td>
+          <td>Custom fonts (.TTF/.OTF), animated kinetic styles, 20+ languages</td>
+        </tr>
+        <tr>
+          <td>Direct Dispatch</td>
+          <td>TikTok, YouTube Shorts, Instagram Reels</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <div class="cta-band">
