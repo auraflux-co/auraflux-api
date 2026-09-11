@@ -16,6 +16,7 @@ import { Suspense } from 'react';
 import { tierLabel } from '@/lib/tier-labels';
 
 const TIER_BADGE: Record<string, string> = {
+  growth: 'bg-amber-50 text-amber-900 border border-amber-200',
   operate: 'bg-slate-100 text-slate-700 border border-slate-200',
   guided: 'bg-blue-50 text-blue-800 border border-blue-200',
   managed: 'bg-violet-50 text-violet-800 border border-violet-200',

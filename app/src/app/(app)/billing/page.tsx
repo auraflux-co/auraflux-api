@@ -32,73 +32,91 @@ import {
   type CreditPack,
 } from '@/lib/api';
 
-/** Tier ordering — lower index = lower tier */
-const TIER_ORDER = ['operate', 'guided', 'managed'];
+/** Tier ordering — lower index = lower tier (marketing: Growth → Pro Operator → Managed) */
+const TIER_ORDER = ['growth', 'operate', 'managed'];
 
-// C6: credits removed from highlights — the accurate count comes from the API
-// (plan?.credits) and is shown directly on each card, so the hardcoded line
-// created two conflicting numbers on the same card.
-// Price is intentionally NOT hardcoded here — it comes from plan.price_usd (live Stripe).
-// Changing price in Stripe → invalidates cache → next /plans fetch → reflected here.
+/** Fallback display prices when Stripe /plans has no row yet */
+const FALLBACK_PRICE_USD: Record<string, number> = {
+  growth: 299,
+  operate: 999,
+};
+
+function displayPriceUsd(plan: Plan | undefined, tier: string): number | null {
+  if (plan?.price_usd != null && plan.price_usd > 0) return plan.price_usd;
+  return FALLBACK_PRICE_USD[tier] ?? null;
+}
+
+// Credits come from plan?.credits / entitlements — not hardcoded in highlights.
 const PLAN_META: Record<string, {
   label: string; sub: string; valueMetric: string; highlights: string[];
   cta: string; contactSales: boolean;
 }> = {
-  operate: {
-    label:       'AuraFlux Operate',
-    sub:         'Total Control & Custom Integration',
-    valueMetric: '100% Internal Execution',
+  growth: {
+    label:       'Growth / Creator',
+    sub:         'Solo streamers shipping daily content',
+    valueMetric: 'Self-serve Peaks → Short → publish',
     highlights: [
-      'Full API access & raw endpoints',
-      'Comprehensive developer documentation',
-      'Self-hosted integration control',
-      'Community & standard support channels',
+      'Up to 40 hours of VOD processing / mo',
+      '3 connected channels (YouTube, Twitch, Kick)',
+      'Auto 9:16 framing & kinetic captions',
+      'Direct dispatch to TikTok, Shorts & Reels',
     ],
-    cta:          'Get API Access',
+    cta:          'Start Growth',
+    contactSales: false,
+  },
+  operate: {
+    label:       'Pro Operator / Agency',
+    sub:         'High-volume streamers, orgs & clip networks',
+    valueMetric: 'Full platform seat · priority queue · team',
+    highlights: [
+      'Unlimited VOD processing & peak detection',
+      'Unlimited channels & social dispatch',
+      'Custom caption fonts & brand templates',
+      'Team workspace seats & API key access',
+    ],
+    cta:          'Start Pro Operator',
     contactSales: false,
   },
   guided: {
-    label:       'AuraFlux Guided',
-    sub:         'Build & Optimize with Collab Guidance',
-    valueMetric: 'Shared Execution + Tooling',
+    label:       'Guided',
+    sub:         'Operator monitoring and guidance',
+    valueMetric: 'Same platform · higher support',
     highlights: [
-      'Interactive in-app flows',
-      'Collab-powered live visual guidance',
-      'Visual drag-and-drop workflow builders',
-      'Automated operational threshold alerts',
+      'Everything in Pro Operator',
+      'Operator monitoring and guidance',
+      'Collab-assisted setup',
     ],
-    cta:          'Start Guided Setup',
-    contactSales: false,
+    cta:          'Contact us',
+    contactSales: true,
   },
   managed: {
-    label:       'AuraFlux Managed',
-    sub:         'Fully Managed Workflows by Experts',
-    valueMetric: '100% Outsourced Operations',
+    label:       'Managed',
+    sub:         'Done-for-you production & custom infrastructure',
+    valueMetric: 'We run production with you',
     highlights: [
-      'Everything in Guided, plus:',
-      'Dedicated Account Managers',
+      'Dedicated account managers',
       'Custom end-to-end workflow builds',
       'Priority support with custom SLAs',
     ],
-    cta:          'Request Managed Plan',
+    cta:          'Talk to Enterprise Sales',
     contactSales: true,
   },
 };
 
 const FEATURE_COMPARISON: Array<{
   feature: string;
+  growth: boolean | string;
   operate: boolean | string;
-  guided:  boolean | string;
   managed: boolean | string;
 }> = [
-  { feature: 'Core Infrastructure & API Access',    operate: true,       guided: true,       managed: true             },
-  { feature: 'Developer Documentation & SDKs',      operate: true,       guided: true,       managed: true             },
-  { feature: 'In-App Visual Flow Builders',         operate: false,      guided: true,       managed: true             },
-  { feature: 'Collab (Branded Guide Assistance)',   operate: false,      guided: true,       managed: true             },
-  { feature: 'Automated Threshold Notifications',  operate: false,      guided: true,       managed: true             },
-  { feature: 'Custom Flow Construction by Experts', operate: false,     guided: false,      managed: true             },
-  { feature: 'Dedicated Account Management',        operate: false,      guided: false,      managed: true             },
-  { feature: 'Support SLA',                         operate: 'Standard', guided: 'Standard', managed: 'Priority 24/7' },
+  { feature: 'Peaks → Short → publish',           growth: true,       operate: true,       managed: true             },
+  { feature: 'VOD hours / mo',                    growth: '40 hrs',   operate: 'Unlimited', managed: 'Unlimited'     },
+  { feature: 'Connected channels',                growth: '3',        operate: 'Unlimited', managed: 'Unlimited'     },
+  { feature: 'Team seats & API keys',             growth: false,      operate: true,       managed: true             },
+  { feature: 'Priority render queue',             growth: false,      operate: true,       managed: true             },
+  { feature: 'Dedicated account management',      growth: false,      operate: true,       managed: true             },
+  { feature: 'Done-for-you production',           growth: false,      operate: false,      managed: true             },
+  { feature: 'Support',                           growth: 'Standard', operate: 'Priority',  managed: 'Custom SLA'    },
 ];
 
 // C1: skeleton while data loads
@@ -201,7 +219,7 @@ function BillingPageInner() {
         const origin = window.location.origin;
         // CPD-401: first-time subscribers (no current subscription) land on /home
         // with a welcome banner. Existing subscribers upgrading stay on /billing.
-        const isFirstSubscription = currentTier === 'operate' && !balance?.stripe_subscription_id;
+        const isFirstSubscription = (currentTier === 'growth' || currentTier === 'operate') && !balance?.stripe_subscription_id;
         const successUrl = isFirstSubscription
           ? `${origin}/home?checkout=success`
           : `${origin}/billing?success=1`;
@@ -247,9 +265,9 @@ function BillingPageInner() {
   // C1: show skeleton while data loads — prevents wrong upgrade cards flashing
   if (loading) return <BillingSkeleton />;
 
-  const currentTier  = balance?.tier ?? 'operate';
-  const currentIdx   = TIER_ORDER.indexOf(currentTier);
-  const upgradeTiers = TIER_ORDER.slice(currentIdx + 1) as ('operate' | 'guided' | 'managed')[];
+  const currentTier  = balance?.tier ?? 'growth';
+  const currentIdx   = Math.max(0, TIER_ORDER.indexOf(currentTier));
+  const upgradeTiers = TIER_ORDER.slice(currentIdx + 1) as ('growth' | 'operate' | 'managed')[];
 
   const creditUsed  = balance ? (balance.included_total - balance.included_remaining) : 0;
   const creditTotal = balance?.included_total ?? 0;
@@ -259,7 +277,7 @@ function BillingPageInner() {
     <PageShell maxWidth="3xl">
       <PageHeader
         title="Subscription & Plans"
-        subtitle="Choose the implementation path that fits your current operational setup. Plans represent a progression of control and support — from self-serve execution to fully managed expert operations."
+        subtitle="Growth for solo creators. Pro Operator for agencies. Managed by inquiry when you want us to run production with you."
       />
 
       {/* C8: pre-redirect state while navigating to Stripe checkout */}
@@ -317,9 +335,10 @@ function BillingPageInner() {
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="af-metric text-primary">
-                  {plans.find(p => p.id === currentTier)?.price_usd
-                    ? `$${plans.find(p => p.id === currentTier)!.price_usd.toLocaleString()}`
-                    : '—'}
+                  {(() => {
+                    const n = displayPriceUsd(plans.find(p => p.id === currentTier), currentTier);
+                    return n != null ? `$${n.toLocaleString()}` : '—';
+                  })()}
                 </span>
                 <span className="af-label text-muted-foreground">/month</span>
               </div>
@@ -353,7 +372,7 @@ function BillingPageInner() {
       )}
 
       {/* Downgrade link — visible for non-entry-tier customers */}
-      {balance && currentTier !== 'operate' && (
+      {balance && currentTier !== 'growth' && currentTier !== 'operate' && (
         <p className="af-caption text-muted-foreground">
           Looking to downgrade?{' '}
           <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">
@@ -394,7 +413,10 @@ function BillingPageInner() {
                     </div>
                     <div className="flex items-baseline gap-1">
                       <span className={cn('af-metric', isFeatured ? 'text-primary' : '')}>
-                        {plan?.price_usd ? `$${plan.price_usd.toLocaleString()}` : '—'}
+                        {(() => {
+                          const n = displayPriceUsd(plan, tier);
+                          return n != null ? `$${n.toLocaleString()}` : '—';
+                        })()}
                       </span>
                       <span className="af-caption text-muted-foreground">/mo</span>
                     </div>
@@ -450,12 +472,12 @@ function BillingPageInner() {
               <thead>
                 <tr className="bg-muted/40 border-b border-border">
                   <th className="text-left py-3 px-4 font-semibold text-foreground w-1/2">Feature</th>
-                  {(['operate', 'guided', 'managed'] as const).map((t) => (
+                  {(['growth', 'operate', 'managed'] as const).map((t) => (
                     <th key={t} className={cn(
                       'text-center py-3 px-3 font-semibold',
                       t === 'managed' ? 'text-primary' : 'text-foreground',
                     )}>
-                      {PLAN_META[t].label.replace('AuraFlux ', '')}
+                      {PLAN_META[t].label}
                     </th>
                   ))}
                 </tr>
@@ -464,7 +486,7 @@ function BillingPageInner() {
                 {FEATURE_COMPARISON.map((row, i) => (
                   <tr key={row.feature} className={cn('border-t border-border/50', i % 2 === 0 ? '' : 'bg-muted/20')}>
                     <td className="py-2.5 px-4 text-muted-foreground">{row.feature}</td>
-                    {(['operate', 'guided', 'managed'] as const).map((t) => {
+                    {(['growth', 'operate', 'managed'] as const).map((t) => {
                       const val = row[t];
                       return (
                         <td key={t} className="text-center py-2.5 px-3">

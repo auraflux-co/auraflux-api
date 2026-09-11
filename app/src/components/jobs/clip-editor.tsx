@@ -616,25 +616,28 @@ function CompactEditor({
 }) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  // Seed clips from sourceClips on mount or when sourceClips first arrives
+  // Seed / re-seed when sourceClips arrives or grows (do not stick on empty compact state)
   useEffect(() => {
-    if (clips.length === 0 && sourceClips && sourceClips.length > 0) {
-      setClips(
-        sourceClips.map((s, i) => ({
-          id:               uid(),
-          url:              s.url,
-          title:            s.title || `Clip ${i + 1}`,
-          order:            i,
-          trimStart:        0,
-          trimEnd:          null,
-          durationHint:     s.duration,
-          thumbnailUrl:     s.thumbnailUrl,
-          featureOverrides: {},
-        })),
-      );
-    }
-  // sourceClips is the dependency — re-seed if the prop arrives after mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!sourceClips || sourceClips.length === 0) return;
+    setClips((prev) => {
+      const prevUrls = new Set(prev.map((c) => c.url));
+      const needsReseed =
+        prev.length === 0
+        || prev.length !== sourceClips.length
+        || sourceClips.some((s) => !prevUrls.has(s.url));
+      if (!needsReseed) return prev;
+      return sourceClips.map((s, i) => ({
+        id:               uid(),
+        url:              s.url,
+        title:            s.title || `Clip ${i + 1}`,
+        order:            i,
+        trimStart:        0,
+        trimEnd:          null,
+        durationHint:     s.duration,
+        thumbnailUrl:     s.thumbnailUrl,
+        featureOverrides: {},
+      }));
+    });
   }, [sourceClips]);
 
   function handleDragEnd(event: DragEndEvent) {

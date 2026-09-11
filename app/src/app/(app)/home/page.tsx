@@ -9,6 +9,7 @@ import { MemberHomeHub } from '@/components/member-portal/member-home-hub';
 import { tierLabel } from '@/lib/tier-labels';
 
 const TIER_BADGE_COLORS: Record<string, string> = {
+  growth: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
   operate: 'bg-slate-800/60 text-slate-300 border border-slate-700',
   guided: 'bg-blue-900/40 text-blue-300 border border-blue-700/50',
   managed: 'bg-violet-900/40 text-violet-300 border border-violet-700/50',

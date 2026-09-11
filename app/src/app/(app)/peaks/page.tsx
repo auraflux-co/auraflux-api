@@ -128,7 +128,7 @@ function PeaksPageInner() {
       if (!rows.length) {
         setHint(res.hint || 'No Kick CCV peaks yet. Save Kick under My Channels, go live once, then refresh.');
       } else {
-        setHint('Open VOD at peak (integer ?t=), trim locally, Upload clip — same Short path as YouTube/Twitch.');
+        setHint('Peaks found from live CCV. Open at peak → trim → Upload clip — same Short path as YouTube/Twitch.');
       }
     } catch (e) {
       setError(formatUserError(e instanceof Error ? e.message : 'Failed to load Kick peaks'));
@@ -215,8 +215,8 @@ function PeaksPageInner() {
       else {
         setHint(
           plat === 'twitch'
-            ? 'Open the peak on Twitch, download/trim that window on your device, then Upload clip. Staging uses your upload — no server Twitch pull.'
-            : 'Open the peak on YouTube, download/trim that window on your device, then Upload clip. Staging uses your upload — no server YouTube download.',
+            ? 'Peaks found. Open at peak → trim that window on your device → Upload clip. AuraFlux stages it for compose.'
+            : 'Peaks found. Open at peak → trim that window on your device → Upload clip. AuraFlux stages it for compose.',
         );
       }
     } catch (e) {
@@ -307,7 +307,7 @@ function PeaksPageInner() {
         startSec: res.startSec ?? peak?.start_sec,
         endSec: res.endSec ?? peak?.end_sec,
       });
-      setHint('Clip staged to R2 — pick a preset and create your Short.');
+      setHint('Clip staged — scrub the preview, pick a C1–C11 preset (or Custom in Jobs), then create your Short.');
     } catch (e) {
       setError(formatUserError(e instanceof Error ? e.message : 'Upload stage failed'));
     } finally {
@@ -367,12 +367,44 @@ function PeaksPageInner() {
     }
   }
 
+  const stepConnect = true;
+  const stepFetch = sourcePlatform === 'kick' ? kickPeaks.length > 0 || !!hint : vods.length > 0;
+  const stepPeaks = peaks.length > 0;
+  const stepStaged = !!staged?.mp4Url;
+
   return (
     <PageShell maxWidth="4xl">
       <PageHeader
         title="Peaks"
-        subtitle="VODs → peaks (YouTube Most Replayed, Twitch chat, or Kick live CCV) → upload your trim → Short (C1–C11)."
+        subtitle="AuraFlux fetches your VODs and finds the peaks — you trim the window, pick a C1–C11 preset (or custom), preview, then create your Short."
       />
+
+      {/* Creator happy-path strip */}
+      <ol className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-2">
+        {[
+          { n: 1, label: 'Connect', done: stepConnect },
+          { n: 2, label: 'Fetch VODs', done: stepFetch },
+          { n: 3, label: 'Find peaks', done: stepPeaks },
+          { n: 4, label: 'Trim / upload', done: stepStaged },
+          { n: 5, label: 'Preset + preview', done: stepStaged },
+        ].map((s) => (
+          <li
+            key={s.n}
+            className={cn(
+              'rounded-xl border px-3 py-2 text-center',
+              s.done ? 'border-primary/40 bg-primary/5' : 'border-border bg-card',
+            )}
+          >
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Step {s.n}</p>
+            <p className={cn('text-xs font-semibold', s.done ? 'text-primary' : 'text-foreground')}>{s.label}</p>
+          </li>
+        ))}
+      </ol>
+      <p className="af-caption text-muted-foreground mb-2">
+        You do not need to hunt for peaks yourself — pick a VOD, tap <strong>Find peaks</strong>, then open the timestamp and upload your trim.
+        {' '}<a href="/settings/channels" className="underline underline-offset-2 hover:text-foreground">My Channels</a>
+        {' '}if Fetch is empty.
+      </p>
 
       <input
         ref={fileInputRef}
@@ -395,7 +427,7 @@ function PeaksPageInner() {
       )}
       {hint && !error && <p className="af-caption text-muted-foreground">{hint}</p>}
       {analyzeMode && (
-        <p className="af-caption">Analyze mode: <strong>{analyzeMode}</strong></p>
+        <p className="af-caption text-muted-foreground">Signal: <strong>{analyzeMode}</strong></p>
       )}
 
       <Card>
@@ -473,18 +505,16 @@ function PeaksPageInner() {
               onClick={() => loadVods(handle, sourcePlatform)}
               disabled={!!busy}
             >
-              {sourcePlatform === 'kick' ? 'Load CCV peaks' : 'Fetch VODs'}
+              {sourcePlatform === 'kick' ? 'Find peaks (CCV)' : 'Fetch VODs'}
             </Button>
             <Button variant="outline" onClick={onUploadAny} disabled={!!busy}>
-              Upload any clip
+              Upload a trim
             </Button>
           </div>
           <p className="af-caption text-muted-foreground">
             {sourcePlatform === 'kick'
-              ? 'Kick peaks come from live CCV we captured on My Channels — open the VOD at peak, trim locally, upload.'
-              : sourcePlatform === 'twitch'
-                ? 'Upload skips Twitch download on our servers — trim locally, then stage to R2.'
-                : 'Upload skips YouTube download on our servers — same idea as staging a local file on localhost.'}
+              ? 'AuraFlux polls Kick CCV while you are live, then maps the peak to your VOD — open, trim, upload.'
+              : 'AuraFlux lists your VODs and finds peaks (Most Replayed / chat). You only trim the window and upload.'}
           </p>
         </CardContent>
       </Card>
@@ -500,8 +530,8 @@ function PeaksPageInner() {
                   {v.views ? ` · ${v.views.toLocaleString()} views` : ''}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => onAnalyze(v)} disabled={!!busy}>
-                    Analyze peaks
+                  <Button size="sm" onClick={() => onAnalyze(v)} disabled={!!busy}>
+                    Find peaks
                   </Button>
                   {v.url && (
                     <a
@@ -523,10 +553,10 @@ function PeaksPageInner() {
       {peaks.length > 0 && (
         <div className="space-y-3">
           <h2 className="af-label font-medium">
-            {sourcePlatform === 'kick' ? 'Kick CCV peaks' : 'Peaks'}
+            {sourcePlatform === 'kick' ? 'Peaks AuraFlux found (Kick CCV)' : 'Peaks AuraFlux found'}
           </h2>
           <p className="af-caption text-muted-foreground">
-            For each peak: open the VOD at that timestamp, trim/download locally, then Upload clip.
+            Open at peak → trim that window on your device → Upload clip. We stage it for C1–C11 compose.
           </p>
           {peaks.map((p, i) => {
             const kickRow = sourcePlatform === 'kick' ? kickPeaks[i] : undefined;
@@ -564,33 +594,71 @@ function PeaksPageInner() {
       )}
 
       {staged?.mp4Url && (
-        <Card>
+        <Card className="border-primary/30">
           <CardContent className="pt-5 space-y-4">
-            <h2 className="af-label font-medium">Staged · ready for compose</h2>
-            <p className="af-caption">
-              {staged.title}
-              {staged.startSec != null && staged.endSec != null
-                ? ` · ${formatClock(staged.startSec)}–${formatClock(staged.endSec)}`
-                : ''}
+            <h2 className="af-subhead">Preview · pick preset · create Short</h2>
+            <p className="af-caption text-muted-foreground">
+              Scrub your staged trim below before assembly. This is your near-final check before credits burn.
             </p>
-            <video src={staged.mp4Url} controls className="w-full max-w-md rounded-md bg-black" />
-            <div className="space-y-2">
-              <Label>Compose preset</Label>
-              <select
-                className="flex h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-sm"
-                value={presetKey}
-                onChange={(e) => setPresetKey(e.target.value)}
-              >
-                {(presets.length ? presets : [
-                  { code: 'C9', key: 'fableflow_speed', label: 'FableFlow Speed' },
-                ]).map((p) => (
-                  <option key={p.key} value={p.key}>{p.code} · {p.label}</option>
-                ))}
-              </select>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-2">
+                <p className="af-caption font-medium text-foreground">
+                  {staged.title}
+                  {staged.startSec != null && staged.endSec != null
+                    ? ` · ${formatClock(staged.startSec)}–${formatClock(staged.endSec)}`
+                    : ''}
+                </p>
+                <video
+                  src={staged.mp4Url}
+                  controls
+                  playsInline
+                  className="w-full aspect-[9/16] max-h-[70vh] rounded-xl bg-black object-contain"
+                />
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Compose preset (C1–C11)</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    value={presetKey}
+                    onChange={(e) => setPresetKey(e.target.value)}
+                  >
+                    {(presets.length ? presets : [
+                      { code: 'C9', key: 'fableflow_speed', label: 'Speed cut Short' },
+                    ]).map((p) => (
+                      <option key={p.key} value={p.key}>{p.code} · {p.label}</option>
+                    ))}
+                  </select>
+                  <p className="af-caption text-muted-foreground">
+                    Or build a custom job with this clip prefilled in the job builder.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button onClick={onCreateJob} disabled={!!busy} className="flex-1">
+                    Create Short job
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    disabled={!!busy}
+                    onClick={() => {
+                      try {
+                        sessionStorage.setItem('peaks_staged_handoff', JSON.stringify({
+                          mp4Url: staged.mp4Url,
+                          title: staged.title,
+                          duration: staged.duration,
+                          presetKey,
+                        }));
+                      } catch { /* ignore */ }
+                      router.push('/myjobs/new?from=peaks');
+                    }}
+                  >
+                    Custom in Jobs
+                  </Button>
+                </div>
+              </div>
             </div>
-            <Button onClick={onCreateJob} disabled={!!busy}>
-              Create Short job (YouTube)
-            </Button>
           </CardContent>
         </Card>
       )}

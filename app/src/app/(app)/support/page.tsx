@@ -179,7 +179,7 @@ function SessionHistory({
               <div className="space-y-0.5">
                 <p className="af-label font-medium">{fmtSessionDate(s.created_at)}</p>
                 <p className="af-caption text-muted-foreground">
-                  {s.message_count} message{s.message_count !== 1 ? 's' : ''}
+                  {s.message_count} {Number(s.message_count) === 1 ? 'message' : 'messages'}
                   {s.resolved ? ' · Resolved' : ' · Open'}
                 </p>
               </div>

@@ -948,7 +948,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
             <polyline points="20 6 9 17 4 12" />
           </svg>
           <p className="flex-1 text-xs font-semibold text-foreground">
-            {selected.size} clip{selected.size !== 1 ? 's' : ''} added — continue to next step
+            {selected.size} {selected.size === 1 ? 'clip' : 'clips'} added — continue to next step
           </p>
           <button
             type="button"
@@ -1043,7 +1043,7 @@ export function SourceLibraryPicker({ onSelect, maxSelect = 10, contentTypeFilte
                 disabled={selected.size === 0}
                 className="px-4 h-8 text-xs rounded-lg border font-semibold transition-colors shrink-0 bg-primary text-primary-foreground border-primary hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {selected.size === 0 ? 'Select clips' : `Add ${selected.size} clip${selected.size !== 1 ? 's' : ''}`}
+                {selected.size === 0 ? 'Select clips' : `Add ${selected.size} ${selected.size === 1 ? 'clip' : 'clips'}`}
               </button>
             </div>
           )}

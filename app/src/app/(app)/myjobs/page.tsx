@@ -72,7 +72,8 @@ export default function JobsHubPage() {
   const { activeBrand }        = useBrand();
   const { isSuperAdmin }       = useRole();
   const activeBrandId          = activeBrand?.id;
-  const isOperate              = planTier === 'operate' || planTier === null;
+  // API keys / developer seat = Pro Operator only (Growth is creator self-serve)
+  const isOperate              = planTier === 'operate';
   const [jobs, setJobs]        = useState<Job[] | null>(null);
   const [error, setError]      = useState<string | null>(null);
 
@@ -203,21 +204,21 @@ export default function JobsHubPage() {
       {/* Status legend */}
       {jobs !== null && jobs.length > 0 && (
         <div className="flex flex-wrap gap-4 af-caption">
-          {[
-            { s: 'running',  label: 'Running',        color: 'bg-blue-500' },
-            { s: 'queued',   label: 'Queued',         color: 'bg-muted/40' },
-            { s: 'held',     label: 'Held',           color: 'bg-yellow-500' },
-            { s: 'failed',   label: 'Failed',         color: 'bg-destructive' },
-            { s: 'staged',   label: 'Ready to review', color: 'bg-green-500 animate-pulse' },
-            { s: 'complete', label: 'Complete',       color: 'bg-green-500' },
-            { s: 'published',label: 'Published',      color: 'bg-emerald-600' },
-          ].map(({ s, label, color }) => (
+          {([
+            { s: 'running',  label: 'Running',        color: 'bg-blue-500', count: undefined as number | undefined },
+            { s: 'queued',   label: 'Queued',         color: 'bg-muted/40', count: undefined },
+            { s: 'held',     label: 'Held',           color: 'bg-yellow-500', count: undefined },
+            { s: 'failed',   label: 'Failed',         color: 'bg-destructive', count: undefined },
+            { s: 'staged',   label: 'Ready to review', color: 'bg-green-500 animate-pulse', count: staged.length },
+            { s: 'complete', label: 'Complete',       color: 'bg-green-500', count: undefined },
+            { s: 'published',label: 'Published',      color: 'bg-emerald-600', count: undefined },
+          ] as Array<{ s: string; label: string; color: string; count?: number }>).map(({ s, label, color, count }) => (
             <span key={s} className="flex items-center gap-1">
               <span className={cn('w-2 h-2 rounded-full', color)} />
               {label}
               {jobs && (
                 <Badge variant="outline" className="text-[9px] px-1 ml-0.5">
-                  {jobs.filter((j) => j.status === s).length}
+                  {count != null ? count : jobs.filter((j) => j.status === s).length}
                 </Badge>
               )}
             </span>

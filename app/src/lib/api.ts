@@ -19,7 +19,7 @@ export class ApiError extends Error {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type UserRole = 'customer' | 'superadmin';
-export type PlanTier = 'operate' | 'guided' | 'managed' | 'custom';
+export type PlanTier = 'growth' | 'operate' | 'guided' | 'managed' | 'custom';
 
 export type PortalStatus = 'pending' | 'running' | 'pass' | 'hold' | 'failed' | 'skipped';
 

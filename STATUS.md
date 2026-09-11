@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 21:32 UTC  
+**Last Updated:** 2026-09-11 22:15 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Pay-first flow consolidated: Stripe success → /sign-in (create account or log in) → /home claim. /sign-up redirects to /sign-in. No separate public sign-up page required.
+Creator Growth + Peaks UX: plan labels Growth / Creator + Pro Operator / Agency; test account `growth` (30 credits); Collab closed by default; Peaks linear creator path + staged preview + Jobs handoff. Migration `044_growth_tier.sql` applied.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

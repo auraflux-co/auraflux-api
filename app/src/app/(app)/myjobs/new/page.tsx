@@ -52,7 +52,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type PlanTier    = 'operate' | 'guided' | 'managed' | 'custom';
+type PlanTier    = 'growth' | 'operate' | 'guided' | 'managed' | 'custom';
 type FormFactor  = 'long' | 'short';
 type SourceMode  = 'source' | 'upload';
 
@@ -769,9 +769,39 @@ function JobBuilderPageInner() {
   // ─── Guide ─────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    openWithContext('Job builder — Ask me about templates, source options, or features.');
+    // Keep Collab closed by default — set context only so open is useful when user clicks Collab
     setContextHint('Job builder — single page. Ask me anything about configuration.');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Peaks → Jobs handoff (staged trim + preset)
+  useEffect(() => {
+    if (searchParams.get('from') !== 'peaks') return;
+    try {
+      const raw = sessionStorage.getItem('peaks_staged_handoff');
+      if (!raw) return;
+      sessionStorage.removeItem('peaks_staged_handoff');
+      const data = JSON.parse(raw) as {
+        mp4Url?: string; title?: string; duration?: number; presetKey?: string;
+      };
+      if (!data.mp4Url) return;
+      setTemplatePicked(true);
+      setTemplateId('scratch');
+      setFormFactor('short');
+      setSourceIntent('clips');
+      setSourceMode('source');
+      setFormat('portrait');
+      setSourceItems([{
+        url: data.mp4Url,
+        title: data.title || 'Peaks trim',
+        duration: data.duration,
+        platform: 'youtube',
+        contentType: 'vod_peak',
+      } as SourceItem]);
+      setShowClipEditor(true);
+      setOpenSections(['source', 'editing']);
+      setTemplateBanner('From Peaks — staged trim ready');
+    } catch { /* ignore bad handoff */ }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Feature helpers ───────────────────────────────────────────────────────
 
@@ -1174,7 +1204,7 @@ function JobBuilderPageInner() {
                       {sourceItems.length > 0 && (
                         <p className={`text-xs font-medium ${clipCountMet && !clipCountExceeded ? 'text-primary' : 'text-amber-500'}`}>
                           {clipCountMet && !clipCountExceeded ? '✓' : '⚠'}
-                          {' '}{sourceItems.length} clip{sourceItems.length !== 1 ? 's' : ''} selected
+                          {' '}{sourceItems.length} {sourceItems.length === 1 ? 'clip' : 'clips'} selected
                           {totalSecs > 0 ? ` · ${fmtSecs(totalSecs)} total` : ''}
                         </p>
                       )}
