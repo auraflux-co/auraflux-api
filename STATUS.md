@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Pricing cards: white high-contrast, badge overflow fix, CTA visibility.
+**Last Updated:** 2026-09-11 — Pricing: fixed .plan overflow:hidden clipping popular badge; white cards + contrast.
 
 
 

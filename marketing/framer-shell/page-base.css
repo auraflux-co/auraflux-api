@@ -221,7 +221,7 @@ a:hover { text-decoration: underline; }
 
 .plan {
   border-radius: 1rem !important;
-  overflow: hidden;
+  overflow: visible;
 }
 .plan.featured {
   border: 2px solid var(--slate-900) !important;
