@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Pricing SVG checks + hero pt; nav Start Free Trial → app sign-up, Log in → app login.
+**Last Updated:** 2026-09-11 — Nav CTA: Get Started → /pricing (purchase first; app login after).
 
 
 
