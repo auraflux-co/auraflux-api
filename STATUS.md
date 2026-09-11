@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 21:27 UTC  
+**Last Updated:** 2026-09-11 21:29 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Sign-in: input pr-10 for password-manager icons; back-to-portal link slate-400/amber hover + mt-6.
+Reset-password page matched to dark system-ui auth card (amber CTA, slate inputs, back to sign-in).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
