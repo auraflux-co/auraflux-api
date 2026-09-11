@@ -3,8 +3,11 @@
 import Link from 'next/link';
 import { useUser } from '@/lib/clerk-compat';
 
-/** Soft landing at app.auraflux.co/ — same portal card language as /login. */
-export default function LandingPage() {
+/**
+ * Portal gate at /login (marketing deep-links here).
+ * Actual credentials form remains at /sign-in.
+ */
+export default function LoginPortalPage() {
   const { isSignedIn, isLoaded } = useUser();
 
   return (

@@ -1,0 +1,11 @@
+{
+  "slug": "why-peaks",
+  "published": true,
+  "title": "Why Peaks Beat Scrubbing VODs",
+  "description": "Platform signal beats manual VOD scrubbing for Short production.",
+  "tag": "Platform",
+  "author": "AuraFlux",
+  "date": "Sep 8, 2026",
+  "cover_image": "",
+  "body_html": "<p>Manual clip hunting scales with hours watched. Peaks scales with platform signal: heat maps, chat density, and live CCV already tell you where the energy was.</p>\n<p>AuraFlux wraps that signal with edits (compose presets, captions, brand, QA) and publish — so the product is Peaks plus production, not a single-feature clip tool.</p>"
+}

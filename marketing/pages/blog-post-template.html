@@ -49,9 +49,12 @@ body:has(.art){padding-top:0 !important;background:#fff !important;}
 .art .post-prose{
   max-width:48rem;margin:0 auto;
   display:flex;flex-direction:column;gap:1.5rem;
-  color:#1e293b !important;font-size:1rem;line-height:1.625;
+  color:#334155 !important;font-size:1rem;line-height:1.625;
 }
-.art .post-prose p{margin:0;color:#1e293b !important;font-size:1rem;line-height:1.625;}
+.art .post-prose > p{margin:0;color:#334155 !important;font-size:1rem;line-height:1.625;}
+.art .post-prose .lead{
+  font-size:1.125rem;font-weight:500;color:#1e293b !important;line-height:1.625;
+}
 .art .post-prose h2{
   font-size:1.5rem;font-weight:700;color:#0f172a !important;
   margin:2rem 0 1rem;letter-spacing:-.02em;
@@ -59,10 +62,28 @@ body:has(.art){padding-top:0 !important;background:#fff !important;}
 .art .post-prose h3{
   font-size:1.25rem;font-weight:700;color:#0f172a !important;margin:1.5rem 0 .75rem;
 }
-.art .post-prose a{font-weight:700;color:#0f172a !important;}
-.art .post-prose a:hover{color:#d97706 !important;}
-.art .post-prose ul,.art .post-prose ol{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.5rem;color:#1e293b;}
-.art .post-prose strong{color:#0f172a;font-weight:700;}
+.art .post-prose a{font-weight:700;color:#d97706 !important;text-decoration:none;}
+.art .post-prose a:hover{text-decoration:underline;}
+.art .post-prose ul,.art .post-prose ol{
+  margin:0;padding-left:1.5rem;list-style:disc;
+  display:flex;flex-direction:column;gap:.5rem;color:#334155 !important;
+}
+.art .post-prose li{margin:0;line-height:1.625;}
+.art .post-prose strong{color:#0f172a !important;font-weight:700;}
+.art .post-callout{
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:1rem;
+  padding:1.5rem;margin:1.5rem 0;display:flex;flex-direction:column;gap:.5rem;
+}
+.art .post-callout-title{
+  margin:0;font-size:.875rem;font-weight:700;color:#0f172a !important;
+}
+.art .post-callout-body{
+  margin:0;font-size:.75rem;color:#475569 !important;line-height:1.625;
+}
+.art .post-prose code{
+  background:#e2e8f0;color:#0f172a;padding:.125rem .375rem;border-radius:.25rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;
+}
 .art .post-cta-wrap{
   max-width:48rem;margin:4rem auto 0;padding-top:2.5rem;
   border-top:1px solid #e2e8f0;

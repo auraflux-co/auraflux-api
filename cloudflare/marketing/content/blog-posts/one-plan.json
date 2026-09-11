@@ -1,0 +1,11 @@
+{
+  "slug": "one-plan",
+  "published": true,
+  "title": "One Plan, Managed by Inquiry",
+  "description": "AuraFlux self-serve plan vs Managed inquiry and fair-use limits.",
+  "tag": "Monetization",
+  "author": "AuraFlux",
+  "date": "Sep 10, 2026",
+  "cover_image": "",
+  "body_html": "<p class=\"lead\">AuraFlux operates on a focused, single-tier self-serve structure designed specifically for media teams, high-volume creators, and growth agencies.</p>\n\n<h2>The $999/mo Self-Serve Plan</h2>\n<p>Our core plan provides complete access to the clip generation pipeline for a single active brand. You get automated stream peak detection, portal-driven Short production, and direct publishing workflow tools out of the box.</p>\n\n<ul>\n  <li><strong>Peak Detection:</strong> Automated tracking for YouTube Most Replayed data, Twitch chat velocity, and CCV spikes.</li>\n  <li><strong>Short Production:</strong> Spec-driven portals for vertical reframing, captioning, brand, and QA — only the stages your job needs.</li>\n  <li><strong>Multi-Platform Publishing:</strong> Direct push to YouTube Shorts, TikTok, and Instagram Reels.</li>\n</ul>\n\n<h2>Managed Production &amp; API Access</h2>\n<p>For agencies managing multiple creator networks or enterprises needing custom video volumes, AuraFlux offers hands-on managed workflows:</p>\n\n<div class=\"post-callout\">\n  <h4 class=\"post-callout-title\">Managed Inquiries &amp; Enterprise API</h4>\n  <p class=\"post-callout-body\">Need our production team to co-manage your editing pipelines or require dedicated <code>/v1/peaks</code> API access? Reach out directly via our <a href=\"/contact\">Contact Form</a> to build a custom allocation.</p>\n</div>"
+}

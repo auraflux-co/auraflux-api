@@ -4,6 +4,7 @@ import { getSessionCookie } from 'better-auth/cookies';
 
 const isPublicPath = (pathname: string) => {
   if (pathname === '/') return true;
+  if (pathname.startsWith('/login')) return true;
   if (pathname.startsWith('/sign-in')) return true;
   if (pathname.startsWith('/sign-up')) return true;
   if (pathname.startsWith('/reset-password')) return true;

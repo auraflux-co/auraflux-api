@@ -64,6 +64,110 @@ def write_route(route: str, html: str) -> None:
     print(f"  ✓ {route or '/'} → {out.relative_to(DIST)}")
 
 
+def md_to_html(md: str) -> str:
+    """Minimal markdown → HTML for blog_posts body field."""
+    lines = md.split("\n")
+    out: list[str] = []
+    in_list = False
+    for line in lines:
+        s = line.rstrip()
+        if s.startswith("### "):
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            out.append(f"<h3>{s[4:]}</h3>")
+        elif s.startswith("## "):
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            out.append(f"<h2>{s[3:]}</h2>")
+        elif s.startswith("# "):
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            out.append(f"<h2>{s[2:]}</h2>")
+        elif s.startswith("- ") or s.startswith("* "):
+            if not in_list:
+                out.append("<ul>")
+                in_list = True
+            out.append(f"<li>{s[2:]}</li>")
+        elif s.strip() == "":
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+        else:
+            if in_list:
+                out.append("</ul>")
+                in_list = False
+            s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
+            s = re.sub(r"\*(.+?)\*", r"<em>\1</em>", s)
+            s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+            s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', s)
+            out.append(f"<p>{s}</p>")
+    if in_list:
+        out.append("</ul>")
+    return "\n".join(out)
+
+
+def compile_blog_posts(fonts: str, nav: str, footer: str, css: str, base: str) -> int:
+    """Fill blog-post-template.html from content/blog-posts/*.json → /blog/<slug>/."""
+    import json
+
+    template_path = PAGES / "blog-post-template.html"
+    posts_dir = CONTENT / "blog-posts"
+    if not template_path.is_file() or not posts_dir.is_dir():
+        print("  – skip blog CMS posts (template or blog-posts/ missing)")
+        return 0
+
+    template = read(template_path)
+    count = 0
+    for fpath in sorted(posts_dir.glob("*.json")):
+        try:
+            post = json.loads(fpath.read_text(encoding="utf-8"))
+        except Exception as exc:
+            print(f"  ✗ blog post JSON {fpath.name}: {exc}")
+            continue
+        if not post.get("published"):
+            continue
+        slug = post.get("slug") or fpath.stem
+        title = post.get("title") or "Untitled"
+        desc = post.get("description") or ""
+        tag = post.get("tag") or ""
+        author = post.get("author") or "AuraFlux"
+        date = post.get("date") or ""
+        og_img = post.get("cover_image") or "https://auraflux.co/favicon.png"
+        cover = (
+            f'<img class="post-cover" src="{og_img}" alt="{title}">'
+            if post.get("cover_image")
+            else ""
+        )
+        body = post.get("body_html") or ""
+        if not body and post.get("body"):
+            body = md_to_html(post["body"])
+        if not body:
+            body = "<p>Coming soon.</p>"
+
+        html = template
+        for key, val in {
+            "__POST_TITLE__": title,
+            "__POST_DESC__": desc,
+            "__POST_SLUG__": slug,
+            "__POST_TAG__": tag,
+            "__POST_AUTHOR__": author,
+            "__POST_DATE__": date,
+            "__POST_COVER__": cover,
+            "__POST_BODY__": body,
+            "__POST_OG_IMAGE__": og_img,
+        }.items():
+            html = html.replace(key, str(val))
+
+        write_route(f"/blog/{slug}", inject_shell(html, fonts, nav, footer, css, base))
+        count += 1
+    if count:
+        print(f"  ✓ {count} blog post(s) from content/blog-posts/")
+    return count
+
+
 def main() -> int:
     if not PAGES.is_dir():
         print(f"ERROR: missing source pages at {PAGES}", file=sys.stderr)
@@ -94,9 +198,6 @@ def main() -> int:
     page_map = {
         "/": "home.html",
         "/blog": "blog.html",
-        "/blog/peaks-to-short": "blog-peaks-to-short.html",
-        "/blog/why-peaks": "blog-why-peaks.html",
-        "/blog/one-plan": "blog-one-plan.html",
         "/pricing": "pricing.html",
         "/our-story": "about.html",
         "/features": "system.html",
@@ -119,6 +220,9 @@ def main() -> int:
             )
         html = inject_shell(raw, fonts, nav, footer, css, base)
         write_route(route, html)
+
+    # Blog articles from shared template + content/blog-posts/*.json
+    compile_blog_posts(fonts, nav, footer, css, base)
 
     # Legal + contact/roadmap shells
     contact_body = read(PAGES / "contact-content.html")
