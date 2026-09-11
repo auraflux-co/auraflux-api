@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Blog: pt-36 clearance; hero+filters above featured.
+**Last Updated:** 2026-09-11 — Blog: pt-36 clearance on wrapper; body nav-pad zeroed for blog.
 
 
 
@@ -190,6 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(marketing): blog pt-36 header clearance** — body pad 0 on blog; .blog-page pt-36 (!important); mobile 11rem. | blog.html, page-base.css, STATUS.md | pending | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog nav clearance + hero order** — pt-36; hero/filters above featured; excerpt contrast. | blog.html, page-base.css, STATUS.md | a1ff363c | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog subtle blue card outlines** — blue-500/α borders; blue title/Read More hover; amber tags. | blog.html, page-base.css, STATUS.md | 6bb5d330 | 2026-09-11 ET |
 | Cursor | **fix(marketing): blog card contrast** — slate-300 borders; card hover slate-900; darker excerpt/meta. | blog.html, page-base.css, STATUS.md | c81507fa | 2026-09-11 ET |

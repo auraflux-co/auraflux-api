@@ -405,12 +405,21 @@ tr:hover td { background: var(--paper-deep) !important; }
 /* ── Blog index — pure white canvas + light cards ───────────────────────── */
 body:has(.blog-page) {
   background: #fff !important;
+  /* Clearance lives on .blog-page (pt-36) — don't double-stack with body nav pad */
+  padding-top: 0 !important;
 }
 .blog-wrap,
 .blog-page {
   background: #fff !important;
-  padding-top: 9rem !important;
+  padding: 9rem 1rem 4rem !important; /* pt-36 — clears fixed navbar */
   min-height: 100vh;
+}
+@media (max-width: 899px) {
+  /* Mobile nav stacks brand + link row; give extra clearance beyond pt-36 */
+  .blog-wrap,
+  .blog-page {
+    padding-top: 11rem !important;
+  }
 }
 .blog-hero {
   margin-bottom: 2rem !important;
