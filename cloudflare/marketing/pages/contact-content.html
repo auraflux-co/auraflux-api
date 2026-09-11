@@ -109,6 +109,47 @@
 .ct-form-msg.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;}
 .ct-form-msg.err{background:#fff1f2;color:#9f1239;border:1px solid #fecdd3;}
 
+/* Schedule tabs — Book Live Calendar / Send a Message (BR/Pavilion pattern) */
+.ct-schedule-title{
+  font-size:1.5rem;font-weight:800;color:#0f172a !important;letter-spacing:-.02em;margin:0;
+}
+.ct-schedule-sub{
+  font-size:.875rem;font-weight:500;color:#334155 !important;line-height:1.6;margin:.35rem 0 0;
+}
+.ct-tabs{
+  display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:1.5rem;
+  background:#f1f5f9;border-radius:.75rem;padding:.25rem;
+}
+.ct-tab{
+  border:none;border-radius:.5rem;padding:.65rem .75rem;cursor:pointer;font-family:inherit;
+  font-size:.875rem;font-weight:600;color:#475569;background:transparent;transition:background .15s,color .15s,box-shadow .15s;
+}
+.ct-tab:hover{color:#0f172a;}
+.ct-tab.is-active{
+  background:#fff !important;color:#0f172a !important;box-shadow:0 1px 2px rgba(15,23,42,.08);
+}
+.ct-panel{margin-top:1.5rem;}
+.ct-panel[hidden]{display:none !important;}
+.ct-cal-head{
+  display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:.75rem;margin-bottom:1rem;
+}
+.ct-cal-eyebrow{
+  font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b !important;margin:0 0 .25rem;
+}
+.ct-cal-head h3{
+  font-size:1.125rem;font-weight:700;color:#0f172a !important;margin:0;letter-spacing:-.015em;
+}
+.ct-cal-open{
+  font-size:.875rem;font-weight:600;color:#0f172a !important;text-decoration:underline;text-underline-offset:2px;
+}
+.ct-cal-open:hover{color:#d97706 !important;}
+.ct-cal-frame-wrap{
+  width:100%;min-height:680px;overflow:hidden;border-radius:.75rem;border:1px solid #e2e8f0;background:#fff;
+}
+.ct-cal-frame{
+  width:100%;min-height:650px;height:100%;border:0;background:#fff;display:block;
+}
+
 /* FAQ — keep below */
 .ct-faq-section{border-top:1px solid #e2e8f0;padding-top:3.5rem;}
 .ct-faq-header{text-align:center;margin-bottom:2.5rem;}
@@ -175,8 +216,36 @@
       </div>
     </div>
 
-    <!-- RIGHT: Form -->
+    <!-- RIGHT: Schedule a Demo (calendar embed + message form) -->
     <div class="ct-form-card">
+      <h2 class="ct-schedule-title">Schedule a Demo</h2>
+      <p class="ct-schedule-sub">Book live on the calendar, or send a message if you prefer email first.</p>
+
+      <div class="ct-tabs" role="tablist" aria-label="Schedule a demo options">
+        <button type="button" class="ct-tab is-active" role="tab" id="ct-tab-calendar" aria-selected="true" aria-controls="ct-panel-calendar" data-tab="calendar">Book Live Calendar</button>
+        <button type="button" class="ct-tab" role="tab" id="ct-tab-message" aria-selected="false" aria-controls="ct-panel-message" data-tab="message">Send a Message</button>
+      </div>
+
+      <div class="ct-panel" role="tabpanel" id="ct-panel-calendar" aria-labelledby="ct-tab-calendar">
+        <div class="ct-cal-head">
+          <div>
+            <p class="ct-cal-eyebrow">Live calendar</p>
+            <h3>Pick a 60-minute AuraFlux demo</h3>
+          </div>
+          <a class="ct-cal-open" href="https://cal.com/auraflux-demo/60min" target="_blank" rel="noopener noreferrer">Open in new tab →</a>
+        </div>
+        <div class="ct-cal-frame-wrap">
+          <iframe
+            class="ct-cal-frame"
+            title="Book a 60-minute AuraFlux demo"
+            src="https://cal.com/auraflux-demo/60min?embed=true&amp;theme=light"
+            loading="lazy"
+            allow="camera; microphone; fullscreen"
+          ></iframe>
+        </div>
+      </div>
+
+      <div class="ct-panel" role="tabpanel" id="ct-panel-message" aria-labelledby="ct-tab-message" hidden>
       <form class="ct-form" id="contact-form">
         <div class="ct-form-row">
           <div>
@@ -212,14 +281,38 @@
         <button type="submit" id="cf-submit">Send Message</button>
         <div id="cf-msg" style="display:none" class="ct-form-msg"></div>
       </form>
+      </div>
       <script>
       (function() {
+        var tabs = document.querySelectorAll('.ct-tab');
+        var panels = {
+          calendar: document.getElementById('ct-panel-calendar'),
+          message: document.getElementById('ct-panel-message')
+        };
+        tabs.forEach(function(btn){
+          btn.addEventListener('click', function(){
+            var id = btn.getAttribute('data-tab');
+            tabs.forEach(function(t){
+              var on = t === btn;
+              t.classList.toggle('is-active', on);
+              t.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            Object.keys(panels).forEach(function(key){
+              if (!panels[key]) return;
+              panels[key].hidden = key !== id;
+            });
+          });
+        });
+
         var params = new URLSearchParams(window.location.search);
         var topic = params.get('topic');
         var sel = document.getElementById('cf-topic');
         if (sel && topic) {
           if (topic === 'api_invite') sel.value = 'enterprise';
           else if (['enterprise','agency','support','other'].indexOf(topic) >= 0) sel.value = topic;
+          // Deep-link to message tab when coming from API invite / topic query
+          var msgTab = document.getElementById('ct-tab-message');
+          if (msgTab) msgTab.click();
         }
       })();
       document.getElementById('contact-form').addEventListener('submit', async function(e) {
