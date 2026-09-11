@@ -1,10 +1,11 @@
-# CWN Production — Status & Task Tracker
+# AuraFlux Production Status
 
-**Deploy Mode:** dev
+**Last Updated:** 2026-09-11 20:24 UTC  
+**Branch:** `production`  
+**Deploy Mode:** `dev`
 
-**Last Updated:** 2026-09-11 — Blog CMS template wired; app /login portal card.
-
-
+## Last Agent Action
+Login/root portal typography: brand H1 white→slate gradient, softer Request Access secondary button, footer slate-400 + amber hover linking to auraflux.co legal pages.
 
 
 ## Worker Memory — C0 vs Render (all agents: read every session)

@@ -15,7 +15,9 @@ export default function LandingPage() {
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             Portal v1.0
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">AuraFlux</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300">
+            AuraFlux
+          </h1>
           <p className="text-sm text-slate-400">Content Operations Platform</p>
         </div>
 
@@ -41,25 +43,25 @@ export default function LandingPage() {
           )}
           <a
             href="https://auraflux.co/contact"
-            className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold py-3 px-4 rounded-xl transition-all text-sm"
+            className="w-full flex items-center justify-center bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 font-semibold py-3 px-4 rounded-xl transition-all text-xs tracking-wide"
           >
             Request Access / Demo
           </a>
         </div>
       </main>
 
-      <footer className="w-full max-w-md py-4 text-center text-xs text-slate-500 space-x-4">
-        <a href="https://auraflux.co" className="hover:text-slate-300 transition-colors">
+      <footer className="w-full max-w-md py-6 text-center text-xs text-slate-400 font-medium space-x-4">
+        <a href="https://auraflux.co" className="hover:text-amber-400 transition-colors">
           auraflux.co
         </a>
-        <span>•</span>
-        <Link href="/privacy" className="hover:text-slate-300 transition-colors">
+        <span className="text-slate-600">•</span>
+        <a href="https://auraflux.co/privacy" className="hover:text-amber-400 transition-colors">
           Privacy Policy
-        </Link>
-        <span>•</span>
-        <Link href="/terms" className="hover:text-slate-300 transition-colors">
+        </a>
+        <span className="text-slate-600">•</span>
+        <a href="https://auraflux.co/terms" className="hover:text-amber-400 transition-colors">
           Terms of Service
-        </Link>
+        </a>
       </footer>
     </div>
   );
