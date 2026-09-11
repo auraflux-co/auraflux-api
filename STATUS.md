@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — /blog/one-plan: remove vague AI claim; portal/Peaks language.
+**Last Updated:** 2026-09-11 — Sitewide marketing: remove AI product framing (Peaks/portal language).
 
 
 
@@ -190,6 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(marketing): remove AI product framing sitewide** — Automated 9:16; Imagen as optional Managed extension; no AI CTAs. | our-system, system, roadmap, admin, STATUS.md | pending | 2026-09-11 ET |
 | Cursor | **fix(marketing): one-plan copy — no vague AI** — Peaks/portal pipeline wording instead of AI-driven. | blog-one-plan.html, STATUS.md | 239e83a8 | 2026-09-11 ET |
 | Cursor | **content(marketing): expand /blog/one-plan article** — full self-serve + managed sections, callout. | blog-one-plan.html, page-base.css, STATUS.md | 10c89fcf | 2026-09-11 ET |
 | Cursor | **feat(marketing): replace Start Free Trial with Book a Demo** — nav CTA → Cal.com 60-min; sitewide. | nav.json, nav.html, inject_content.py, STATUS.md | 3d186804 | 2026-09-11 ET |

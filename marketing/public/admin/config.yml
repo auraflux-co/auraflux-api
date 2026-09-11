@@ -259,7 +259,7 @@ collections:
             name: posts
             widget: list
             fields:
-              - { label: Tag, name: tag, widget: string, hint: "e.g. Guide, Platform, AI" }
+              - { label: Tag, name: tag, widget: string, hint: "e.g. Guide, Platform, Automation" }
               - { label: Title, name: title, widget: string }
               - { label: Description, name: description, widget: text }
               - { label: Status, name: status, widget: string, default: "Coming soon" }

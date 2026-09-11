@@ -11,8 +11,8 @@
       "visual_alt": "Peak Detection Analytics UI"
     },
     {
-      "title": "Intelligent 9:16 Framing",
-      "subhead": "Smart Composition & Facecam Tracking",
+      "title": "Automated 9:16 Framing",
+      "subhead": "Facecam Composition & Tracking",
       "body": "Auto-detects active facecams and locks game focus. Apply preset templates for facecam-top, full-screen, or split-screen layouts.",
       "badges": ["9:16 Auto-Crop", "Facecam Lock", "Custom Presets"],
       "visual": "/assets/feature-916-framing.jpg",
