@@ -116,7 +116,7 @@ export function ThumbnailFramePicker({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={c.url} alt={`Frame ${c.index}`} className="w-full aspect-video object-cover" />
             <span className="absolute bottom-1 left-1 text-[10px] bg-black/70 text-white px-1 rounded">
-              {c.method || 'frame'} · {Math.round(c.offsetSeconds)}s
+              {c.method || 'frame'} · {Math.round(c.offsetSeconds ?? 0)}s
             </span>
           </button>
         ))}

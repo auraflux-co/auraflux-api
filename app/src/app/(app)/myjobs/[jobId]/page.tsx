@@ -559,7 +559,7 @@ export default function JobDetailPage() {
                     try {
                       await scanJobSponsors(jobId, {
                         appendSponsorOverlay: e.target.checked,
-                        brandName: (job as { brandName?: string }).brandName || undefined,
+                        brandName: job.brandName || undefined,
                       }, authTok);
                     } catch { /* soft */ }
                   }}

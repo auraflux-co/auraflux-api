@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 23:10 UTC  
+**Last Updated:** 2026-09-11 23:20 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator pipeline extensions epic: peak thumb picker, sponsor markers, brand creative profiles, guest review share links, playlist strategy — gates + migration 045 + Review/Peaks/Brand UI.
+Creator pipeline extensions shipped (`c4c45f70`+): peak thumbs, sponsor markers, brand creative profiles, guest review links, playlist strategy. Fixing Vercel TS null-safe picker.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
