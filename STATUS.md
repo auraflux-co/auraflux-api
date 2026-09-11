@@ -1,8 +1,12 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 20:47 UTC  
+**Last Updated:** 2026-09-11 20:51 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
+
+## Last Agent Action
+HSKRG board mapping: `cwn-production` / C0 / API → org \`auraflux\` (product). Org \`cwn\` reserved for ClipzWorld YouTube channel only. Portal ticket/wiki refiled under auraflux.
+
 
 ## Last Agent Action
 App portal: inline system-ui font stack on `/` + `/login` wrappers so Geist/Tailwind cannot override entry typography.

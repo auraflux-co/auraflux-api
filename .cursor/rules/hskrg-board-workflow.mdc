@@ -16,12 +16,14 @@ Use the **git repo you are coding in** to pick the org slug, then `GET /api/orgs
 | Code repo / folder | HSKRG org slug | Board project |
 |--------------------|----------------|---------------|
 | `hskrg-work` | `hskrg` | Platform |
-| `auraflux-api`, `auraflux-e2e-tests` | `auraflux` | Platform (CPD) |
-| `cwn-production`, `cwn-c0`, `ClipzWorld` | `cwn` | Platform |
+| `cwn-production`, `auraflux-api`, `auraflux-e2e-tests`, `cwn-c0` | `auraflux` | Platform (CPD) |
+| ClipzWorld YouTube channel ops only | `cwn` | Channel (not product) |
 | `businessrocket` | `hskrg` | Platform |
 | Pavilion / commons apps | `pavilion` | Platform |
 
-When unsure, match folder name to slug or default `auraflux`.
+**AuraFlux vs ClipzWorld:** Product work (app.auraflux.co, auraflux.co, Render API, C0 proving ground) → org **`auraflux`**. Org **`cwn`** is only for ClipzWorld YouTube channel work — not this production repo.
+
+When unsure, default `auraflux` for anything in this workspace.
 
 ## Tickets (what + when)
 
