@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Marketing: slim nav (4 links), hero/pricing copy, contrast fixes.
+**Last Updated:** 2026-09-11 — Homepage contrast: proof attr slate-300, compare red/emerald-300.
 
 
 
