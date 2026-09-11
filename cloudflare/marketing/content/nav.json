@@ -4,7 +4,7 @@
   "links": [
     { "label": "Home", "url": "/" },
     { "label": "How it works", "url": "/how-it-works" },
-    { "label": "Features", "url": "/our-system" },
+    { "label": "Features", "url": "/features" },
     { "label": "Pricing", "url": "/plans" },
     { "label": "API", "url": "/developer-api" },
     { "label": "Contact", "url": "/contact" },

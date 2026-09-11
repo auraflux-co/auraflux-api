@@ -1,80 +1,36 @@
 {
-  "hero_headline": "From Peak to Published Short",
-  "hero_sub": "AuraFlux is a spec-driven production environment. Peaks finds the moment using YouTube Most Replayed, Twitch chat spikes, and Kick CCV. The pipeline runs only the portals that job needs. Then you publish from the member portal.",
-  "portals": [
+  "hero_headline": "Built for High-Volume Streamers & Media Teams",
+  "hero_sub": "The complete technical pipeline designed to turn hours of live VODs into high-converting Shorts without timeline editing.",
+  "pillars": [
     {
-      "badge": "P0",
-      "name": "Intake & intelligence",
-      "description": "Source analysis and job setup. For Peaks, this starts from YouTube Most Replayed, Twitch chat, or Kick CCV windows you select.",
-      "tag": "ALWAYS ON"
+      "title": "Automated Peak Detection",
+      "subhead": "Multi-Signal Peak Tracking",
+      "body": "Scans chat velocity, emote surges, YouTube Most Replayed heatmaps, and audio amplitude to catch top moments instantly.",
+      "badges": ["Twitch API", "YouTube Heatmaps", "Kick CCV"]
     },
     {
-      "badge": "P1",
-      "name": "Script & voice",
-      "description": "Optional. Runs when the job spec orders script or TTS. Not required for every Short.",
-      "tag": "OPTIONAL"
+      "title": "Intelligent 9:16 Framing",
+      "subhead": "Smart Composition & Facecam Tracking",
+      "body": "Auto-detects active facecams and locks game focus. Apply preset templates for facecam-top, full-screen, or split-screen layouts.",
+      "badges": ["9:16 Auto-Crop", "Facecam Lock", "Custom Presets"]
     },
     {
-      "badge": "P2",
-      "name": "Edit & assembly",
-      "description": "Cutting, reframing, captions, and timeline assembly for the Short.",
-      "tag": "ALWAYS ON"
+      "title": "Kinetic Caption Engine",
+      "subhead": "Word-by-Word Animated Subtitles",
+      "body": "Generate high-accuracy subtitles with dynamic word highlights, custom font uploads, and brand color presets.",
+      "badges": ["98%+ Accuracy", "Custom Fonts", "Word Highlights"]
     },
     {
-      "badge": "P3",
-      "name": "Quality assurance",
-      "description": "Portal QA marks compliant or non-compliant before the job advances.",
-      "tag": "QA"
-    },
-    {
-      "badge": "P4",
-      "name": "Brand & polish",
-      "description": "Brand chrome and effects from your presets when the job includes them.",
-      "tag": "OPTIONAL"
-    },
-    {
-      "badge": "P5",
-      "name": "Publish",
-      "description": "Publish to connected accounts (YouTube, TikTok, and more) with job metadata. Skipped when the job is preview-only.",
-      "tag": "PUBLISH"
+      "title": "Multi-Account Dispatch",
+      "subhead": "Automated Social Publishing",
+      "body": "Schedule and push clips directly to TikTok, YouTube Shorts, and Instagram Reels with custom title & hashtag presets.",
+      "badges": ["TikTok", "YouTube Shorts", "IG Reels"]
     }
   ],
-  "content_types": [
-    {
-      "icon": "📈",
-      "name": "Peaks Shorts",
-      "description": "High-signal moments from YouTube Most Replayed, Twitch chat peaks, and Kick CCV peaks, produced as Shorts."
-    },
-    {
-      "icon": "✨",
-      "name": "Captions, brand, QA",
-      "description": "The Short pipeline polishes and checks before publish from the member portal."
-    },
-    {
-      "icon": "📤",
-      "name": "Direct publish",
-      "description": "Connect accounts once. Ship from the job instead of re-uploading by hand."
-    },
-    {
-      "icon": "🧰",
-      "name": "More in the portal",
-      "description": "Extra job tools stay in-app. Managed add-ons are available by inquiry when ordered for your workflow."
-    }
-  ],
-  "pipeline_title": "The production pipeline",
-  "pipeline_sub": "Portals run when the job spec says so. Skipped is not failed.",
-  "content_types_title": "What you can produce",
-  "content_types_sub": "Peaks means Most Replayed, chat spikes, and CCV first. Extra tools live in the member portal.",
-  "features_title": "Inside the member portal",
-  "features_sub": "Peaks (Most Replayed, chat, CCV), jobs, channels, social accounts, review queue, and billing at app.auraflux.co.",
-  "credits_title": "How credits work",
-  "credits_body": "The AuraFlux plan is unlimited Peaks-to-publish for one brand, subject to fair-use rate limits in the Terms (job starts, concurrent jobs, and Peaks analyses per hour). Managed capacity is scoped when you inquire.",
-  "publish_title": "Where AuraFlux publishes",
-  "publish_sub": "Connect accounts in the app. Publish from the job instead of re-uploading by hand.",
-  "hero_cta_label": "View Plans",
-  "hero_cta_url": "/plans",
-  "hero_cta_style": "primary",
   "bottom_cta_label": "View Plans & Pricing",
   "bottom_cta_url": "/pricing",
-  "bottom_cta_style": "primary"
+  "bottom_cta_style": "primary",
+  "bottom_cta_secondary_label": "Talk to Sales",
+  "bottom_cta_secondary_url": "/contact",
+  "bottom_cta_secondary_style": "secondary"
 }

@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Marketing CTAs unified: Get Started→/pricing, bottom View Plans + Talk to Sales.
+**Last Updated:** 2026-09-11 — Features page at /features: 4 pillars + unified CTA; /our-system redirects.
 
 
 

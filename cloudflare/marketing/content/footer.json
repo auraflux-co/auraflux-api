@@ -3,7 +3,7 @@
   "copyright": "© 2026 AuraFlux. All rights reserved",
   "platform_links": [
     { "label": "Our Story", "url": "/our-story" },
-    { "label": "Our System", "url": "/our-system" },
+    { "label": "Our System", "url": "/features" },
     { "label": "Work", "url": "/work" },
     { "label": "API", "url": "/developer-api" },
     { "label": "Contact", "url": "/contact" }

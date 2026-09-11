@@ -99,7 +99,7 @@ def main() -> int:
         "/blog/one-plan": "blog-one-plan.html",
         "/plans": "pricing.html",
         "/our-story": "about.html",
-        "/our-system": "system.html",
+        "/features": "system.html",
         "/developer-api": "developer-api.html",
         "/work": "work.html",
         "/how-it-works": "how-it-works.html",
@@ -135,7 +135,8 @@ def main() -> int:
     aliases = {
         "/pricing": "/plans",
         "/about": "/our-story",
-        "/system": "/our-system",
+        "/system": "/features",
+        "/our-system": "/features",
         "/contact-us": "/contact",
         "/process": "/how-it-works",
     }
