@@ -260,13 +260,14 @@ export default function JobDetailPage() {
         title:            reviewTitle.trim()     || undefined,
         description:      reviewDesc.trim()      || undefined,
         tags:             reviewTags.trim() ? reviewTags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
-        privacyStatus:    reviewPrivacy          || undefined,
+        privacyStatus:    reviewPrivacy || 'private',
         tiktokCaption:    reviewTiktok.trim()    || undefined,
         instagramCaption: reviewInstagram.trim() || undefined,
       };
+      const platforms = Array.from(new Set([...(job?.platforms || []), 'youtube']));
       const res = await approveAndPublish(
         jobId,
-        { platforms: job?.platforms, publishMeta },
+        { platforms, publishMeta },
         token ?? undefined,
       );
       setApproveResult(res.platforms);
@@ -334,7 +335,7 @@ export default function JobDetailPage() {
         setReviewTitle(pm.title || pc?.youtube?.title || '');
         setReviewDesc(pm.description || pc?.youtube?.description || '');
         setReviewTags((pm.tags?.join(', ')) || (pc?.youtube?.tags?.join(', ')) || '');
-        setReviewPrivacy((pm.privacyStatus as 'public'|'unlisted'|'private') || 'public');
+        setReviewPrivacy((pm.privacyStatus as 'public'|'unlisted'|'private') || 'private');
         setReviewTiktok(pm.tiktokCaption || pc?.tiktok?.caption || '');
         setReviewInstagram(pm.instagramCaption || pc?.instagram?.caption || '');
         setReviewEdited(false);
@@ -576,7 +577,7 @@ export default function JobDetailPage() {
                   onClick={handleApprovePublish}
                   disabled={approving}
                 >
-                  {approving ? 'Publishing…' : '✓ Publish now'}
+                  {approving ? 'Publishing…' : '✓ Publish now (private)'}
                 </Button>
               </div>
 

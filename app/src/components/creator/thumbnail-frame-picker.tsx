@@ -2,9 +2,10 @@
 
 /**
  * Thumbnail Frame Picker — 3 peak candidates + optional headline overlay.
+ * Auto-initiates peak frames from R2 when stage was never run.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import {
   getThumbnailCandidates,
   approveThumbnail,
   previewThumbnailOverlay,
+  initiateThumbnailStage,
   type ThumbnailCandidate,
 } from '@/lib/api';
 
@@ -33,20 +35,28 @@ export function ThumbnailFramePicker({
   const [error, setError] = useState<string | null>(null);
   const [approved, setApproved] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await getThumbnailCandidates(jobId, token);
-        if (cancelled) return;
-        setCandidates((res.candidates || []).slice(0, 3));
-        if (res.status === 'approved') setApproved(true);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'No candidates yet');
+  const loadCandidates = useCallback(async (force = false) => {
+    setBusy(force ? 'Re-extracting peak frames…' : 'Loading peak frames…');
+    setError(null);
+    try {
+      const res = force
+        ? await initiateThumbnailStage(jobId, { framesOnly: true, force: true }, token)
+        : await getThumbnailCandidates(jobId, token);
+      setCandidates((res.candidates || []).filter((c) => typeof c.index === 'number').slice(0, 3));
+      if (res.status === 'approved') setApproved(true);
+      if (!(res.candidates || []).length) {
+        setError('No frames extracted — video may be missing from storage.');
       }
-    })();
-    return () => { cancelled = true; };
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load thumbnail candidates');
+    } finally {
+      setBusy(null);
+    }
   }, [jobId, token]);
+
+  useEffect(() => {
+    void loadCandidates(false);
+  }, [loadCandidates]);
 
   async function onSelect(c: ThumbnailCandidate) {
     setSelected(c.index);
@@ -117,70 +127,78 @@ export function ThumbnailFramePicker({
     }
   }
 
-  if (error && !candidates.length) {
-    return (
-      <div className="rounded-lg border border-border p-4 space-y-1">
-        <p className="text-sm font-medium">Thumbnail Frame Picker</p>
-        <p className="af-caption text-muted-foreground">{error}</p>
-      </div>
-    );
-  }
-
-  if (!candidates.length) return null;
-
   return (
     <div className="rounded-lg border border-border p-4 space-y-3">
-      <div>
-        <p className="text-sm font-medium">Thumbnail Frame Picker</p>
-        <p className="af-caption text-muted-foreground">
-          3 peak-aware frames — click one to set the Shorts/Reels/TikTok cover.
-          {approved ? ' Cover set.' : ''}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium">Thumbnail Frame Picker</p>
+          <p className="af-caption text-muted-foreground">
+            3 peak-aware frames — click one to set the Shorts/Reels/TikTok cover.
+            {approved ? ' Cover set.' : ''}
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={!!busy}
+          onClick={() => loadCandidates(true)}
+        >
+          {candidates.length ? 'Re-extract frames' : 'Extract peak frames'}
+        </Button>
       </div>
-      <div className="grid grid-cols-3 gap-2">
-        {candidates.map((c) => (
-          <button
-            key={c.index}
-            type="button"
-            onClick={() => onSelect(c)}
-            className={`relative rounded-md overflow-hidden border-2 ${selected === c.index ? 'border-primary' : 'border-transparent'}`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={c.url} alt={`Frame ${c.index}`} className="w-full aspect-video object-cover" />
-            <span className="absolute bottom-1 left-1 text-[10px] bg-black/70 text-white px-1 rounded">
-              {c.method || 'frame'} · {Math.round(c.offsetSeconds ?? 0)}s
-            </span>
-          </button>
-        ))}
-      </div>
+
+      {candidates.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {candidates.map((c) => (
+            <button
+              key={c.index}
+              type="button"
+              onClick={() => onSelect(c)}
+              className={`relative rounded-md overflow-hidden border-2 ${selected === c.index ? 'border-primary' : 'border-transparent'}`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={c.url} alt={`Frame ${c.index}`} className="w-full aspect-video object-cover" />
+              <span className="absolute bottom-1 left-1 text-[10px] bg-black/70 text-white px-1 rounded">
+                {c.method || 'frame'} · {Math.round(c.offsetSeconds ?? 0)}s
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {previewUrl && (overlayOn || approved) && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={previewUrl} alt="Cover preview" className="w-full max-w-sm rounded-md border" />
       )}
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={overlayOn}
-            onChange={(e) => onToggleOverlay(e.target.checked)}
-          />
-          Headline overlay
-        </label>
-        {overlayOn && (
-          <div className="flex-1 min-w-[160px] space-y-1">
-            <Label>Headline</Label>
-            <Input value={hookText} onChange={(e) => setHookText(e.target.value)} />
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="outline" disabled={!!busy} onClick={() => onToggleOverlay(true)}>
-                Refresh preview
-              </Button>
-              <Button type="button" size="sm" disabled={!!busy || selected == null} onClick={onApproveOverlay}>
-                Save overlay as cover
-              </Button>
+
+      {candidates.length > 0 && (
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={overlayOn}
+              onChange={(e) => onToggleOverlay(e.target.checked)}
+            />
+            Headline overlay
+          </label>
+          {overlayOn && (
+            <div className="flex-1 min-w-[160px] space-y-1">
+              <Label>Headline</Label>
+              <Input value={hookText} onChange={(e) => setHookText(e.target.value)} />
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" size="sm" variant="outline" disabled={!!busy} onClick={() => onToggleOverlay(true)}>
+                  Refresh preview
+                </Button>
+                <Button type="button" size="sm" disabled={!!busy || selected == null} onClick={onApproveOverlay}>
+                  Save overlay as cover
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+
       {busy && <p className="af-caption text-muted-foreground">{busy}</p>}
       {error && <p className="af-caption text-destructive">{error}</p>}
     </div>

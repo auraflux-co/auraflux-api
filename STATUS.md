@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 00:05 UTC  
+**Last Updated:** 2026-09-12 00:25 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Hardening creator portal (not MVP): overlay thumb approve + R2 rehydrate, sponsor boundary apply + Review UI, brand creative merge into jobs/near-final, guest approve → real publish queue, playlist auto-match on approve-publish + miss reasons; external copy → Creator.
+Creator thumbs + private publish: R2-backed peak frame initiate on Review, default private YouTube (@clipzworldnews) on approve-publish.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

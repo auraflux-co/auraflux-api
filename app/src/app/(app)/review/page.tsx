@@ -550,15 +550,18 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
         {
           method: 'POST',
           body: JSON.stringify({
-            platforms: assets.input.platforms,
+            platforms: Array.from(new Set([...(assets.input.platforms || []), 'youtube'])),
             youtubePlaylistId: playlistMatch?.playlistId || undefined,
             youtubePlaylistTitle: playlistMatch?.playlistTitle || undefined,
             playlistStrategyBadge: playlistMatch?.playlistId ? 'Auto-matched by strategy rule' : undefined,
-            publishMeta: playlistMatch?.playlistId ? {
-              youtubePlaylistId: playlistMatch.playlistId,
-              youtubePlaylistTitle: playlistMatch.playlistTitle,
-              playlistStrategyBadge: 'Auto-matched by strategy rule',
-            } : undefined,
+            publishMeta: {
+              privacyStatus: 'private',
+              ...(playlistMatch?.playlistId ? {
+                youtubePlaylistId: playlistMatch.playlistId,
+                youtubePlaylistTitle: playlistMatch.playlistTitle,
+                playlistStrategyBadge: 'Auto-matched by strategy rule',
+              } : {}),
+            },
           }),
           token: token ?? undefined,
         }
@@ -907,7 +910,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
               disabled={!canPublish || publishing}
               onClick={handleApprovePublish}
             >
-              {publishing ? 'Publishing…' : 'Approve & Publish'}
+              {publishing ? 'Publishing…' : 'Approve & Publish (private)'}
             </Button>
           )}
 

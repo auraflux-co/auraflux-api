@@ -1069,7 +1069,19 @@ export async function getThumbnailCandidates(
   jobId: string,
   token?: string,
 ): Promise<ThumbnailCandidatesResponse> {
-  return apiFetch(`/jobs/${jobId}/thumbnail/candidates`, { token });
+  return apiFetch(`/jobs/${jobId}/thumbnail/candidates?ensure=1`, { token });
+}
+
+export async function initiateThumbnailStage(
+  jobId: string,
+  opts: { framesOnly?: boolean; force?: boolean } = {},
+  token?: string,
+): Promise<ThumbnailCandidatesResponse & { ok: boolean; reused?: boolean }> {
+  return apiFetch(`/jobs/${jobId}/thumbnail/initiate`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ framesOnly: opts.framesOnly !== false, force: opts.force === true }),
+  });
 }
 
 export async function approveThumbnail(
