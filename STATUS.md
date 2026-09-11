@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Deliver pricing claims: Growth $299 (40h VOD, 3 channels, 1080p60) + Pro/Operate entitlements (unlimited VOD, fonts, priority queue); Managed stays sales.
+**Last Updated:** 2026-09-11 — Pricing SEO meta aligned to Growth $299 / Pro $999 claims (post ship).
 
 
 
