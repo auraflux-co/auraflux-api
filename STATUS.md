@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Pricing SEO meta aligned to Growth $299 / Pro $999 claims (post ship).
+**Last Updated:** 2026-09-11 — Stripe Growth price ID live; schema_migrations now records applied versions (042/043 backfilled).
 
 
 
