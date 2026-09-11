@@ -428,15 +428,19 @@ tr:hover td { background: var(--paper-deep) !important; }
   color: var(--brand-accent) !important;
 }
 
-/* ── API docs: mist page + dark endpoint rows ───────────────────────────── */
-.dev-wrap {
+/* ── API docs: mist page + light endpoint rows (high contrast) ──────────── */
+.dev-wrap,
+.dev-page {
   padding-top: 2.5rem;
 }
 .dev-hero h1 {
-  color: var(--ink) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
 }
 .dev-hero p {
-  color: var(--ink-muted) !important;
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+  font-weight: 500;
 }
 .dev-base {
   background: var(--slate-900) !important;
@@ -446,7 +450,24 @@ tr:hover td { background: var(--paper-deep) !important; }
   color: var(--on-dark-muted) !important;
 }
 .dev-base code {
-  color: var(--brand-accent) !important;
+  color: #fff !important;
+}
+.dev-auth-banner {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+.dev-auth-banner code {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: transparent !important;
+}
+.dev-auth-banner-meta,
+.dev-auth-banner-meta p {
+  color: #cbd5e1 !important;
+}
+.dev-auth-banner-meta .k {
+  color: #fbbf24 !important;
 }
 .dev-auth-card {
   background: #fffbeb !important;
@@ -465,24 +486,31 @@ tr:hover td { background: var(--paper-deep) !important; }
   font-weight: 600;
 }
 .dev-section-title {
-  color: var(--ink-faint) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
   border-bottom-color: var(--line) !important;
 }
 .dev-endpoint {
-  background: var(--slate-900) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: #fff !important;
+  border-color: #e2e8f0 !important;
 }
-.dev-path,
+.dev-path {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 700 !important;
+}
 .dev-endpoint-title {
-  color: var(--on-dark) !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  font-weight: 500 !important;
 }
-.dev-desc,
+.dev-endpoint-body .dev-desc,
 .dev-endpoint-body p {
   color: var(--on-dark-muted) !important;
 }
 .dev-code {
   background: #060b14 !important;
-  color: var(--on-dark-muted) !important;
+  color: #fcd34d !important;
 }
 
 /* ── 404 ────────────────────────────────────────────────────────────────── */
