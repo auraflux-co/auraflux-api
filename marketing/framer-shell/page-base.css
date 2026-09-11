@@ -488,7 +488,29 @@ tr:hover td { background: var(--paper-deep) !important; }
 .dev-section-title {
   color: #0f172a !important;
   -webkit-text-fill-color: #0f172a !important;
-  border-bottom-color: var(--line) !important;
+  border-bottom: none !important;
+  letter-spacing: 0.1em !important;
+  font-weight: 700 !important;
+}
+.dev-method.m-get {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+.dev-method.m-post {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+}
+.dev-method.m-delete {
+  background: #ffe4e6 !important;
+  color: #9f1239 !important;
+  border: 1px solid #fecdd3 !important;
+}
+.dev-method.m-patch {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
 }
 .dev-endpoint {
   background: #fff !important;

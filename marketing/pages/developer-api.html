@@ -68,14 +68,14 @@ ${FRAMER_CSS || ''}
 
 .dev-page .dev-section{margin-bottom:2.5rem;}
 .dev-page .dev-section-title{
-  display:block;font-size:.75rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  display:block;font-size:.75rem;font-weight:700 !important;letter-spacing:.1em;text-transform:uppercase;
   color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
-  font-family:ui-monospace,Menlo,monospace;
-  padding-bottom:10px;border-bottom:1px solid #e2e8f0;
+  font-family:ui-sans-serif,system-ui,sans-serif;
+  padding-bottom:0;border-bottom:none;
   margin:2.5rem 0 1rem;
 }
 .dev-page .dev-section-heading{
-  font-size:1.25rem;font-weight:800;color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
+  font-size:1.25rem;font-weight:700 !important;color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
   margin:3rem 0 1.5rem;letter-spacing:-.02em;
 }
 
@@ -92,10 +92,23 @@ ${FRAMER_CSS || ''}
 }
 .dev-page .dev-endpoint-left{display:flex;align-items:center;gap:1rem;min-width:0;position:static;}
 .dev-page .dev-method{
-  font-size:.7rem;font-weight:800;text-transform:uppercase;
-  padding:.25rem .75rem;border-radius:.375rem;
+  font-size:.75rem;font-weight:700;text-transform:uppercase;
+  padding:.25rem .625rem;border-radius:.375rem;
   font-family:ui-monospace,Menlo,monospace;flex-shrink:0;
-  background:#fbbf24 !important;color:#020617 !important;border:none !important;
+  border:1px solid transparent;
+}
+/* Color-coded method badges */
+.dev-page .dev-method.m-get{
+  background:#d1fae5 !important;color:#065f46 !important;border-color:#a7f3d0 !important;
+}
+.dev-page .dev-method.m-post{
+  background:#dbeafe !important;color:#1e40af !important;border-color:#bfdbfe !important;
+}
+.dev-page .dev-method.m-delete{
+  background:#ffe4e6 !important;color:#9f1239 !important;border-color:#fecdd3 !important;
+}
+.dev-page .dev-method.m-patch{
+  background:#fef3c7 !important;color:#92400e !important;border-color:#fde68a !important;
 }
 .dev-page .dev-path{
   font-size:.875rem !important;font-family:ui-monospace,Menlo,monospace !important;
@@ -127,21 +140,14 @@ ${FRAMER_CSS || ''}
   background:#1e293b;border:1px solid #334155;color:#cbd5e1 !important;
   font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:6px;cursor:pointer;
 }
-/* Kill any leftover method-tint classes — all methods use amber badge */
-.dev-page .dev-method.m-get,
-.dev-page .dev-method.m-post,
-.dev-page .dev-method.m-patch,
-.dev-page .dev-method.m-delete{
-  background:#fbbf24 !important;color:#020617 !important;
-}
 .dev-page .dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
 @media(max-width:700px){.dev-page .dev-grid{grid-template-columns:1fr;}}
 
-/* Jobs ref — true side-by-side, no overlap */
+/* Jobs ref — 7/5 side-by-side grid */
 .dev-page .dev-jobs-ref{
   display:grid;
   grid-template-columns:minmax(0,7fr) minmax(0,5fr);
-  gap:2rem;
+  gap:1.5rem;
   align-items:start;
   margin-top:0;
 }
@@ -149,14 +155,14 @@ ${FRAMER_CSS || ''}
   .dev-page .dev-jobs-ref{grid-template-columns:minmax(0,1fr);}
 }
 .dev-page .dev-jobs-ref-table{
-  background:#fff !important;border:1px solid #e2e8f0;border-radius:1rem;
+  background:#fff !important;border:1px solid #e2e8f0;border-radius:.75rem;
   box-shadow:0 1px 2px rgba(15,23,42,.06);overflow:hidden;min-width:0;
 }
 .dev-page .dev-jobs-ref-table .dev-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.dev-page .dev-jobs-ref-table table{width:100%;border-collapse:collapse;font-size:.75rem;margin:0;}
+.dev-page .dev-jobs-ref-table table{width:100%;border-collapse:collapse;font-size:.75rem;margin:0;color:#334155;}
 .dev-page .dev-jobs-ref-table thead{background:#f1f5f9;}
 .dev-page .dev-jobs-ref-table th{
-  text-align:left;padding:.75rem;color:#0f172a !important;font-weight:800;
+  text-align:left;padding:.75rem;color:#0f172a !important;font-weight:700;
   font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;
   border-bottom:1px solid #e2e8f0;
 }
@@ -170,15 +176,16 @@ ${FRAMER_CSS || ''}
 .dev-page .dev-jobs-ref-table td:nth-child(2){
   font-family:ui-monospace,Menlo,monospace;color:#475569 !important;
 }
+.dev-page .dev-jobs-ref-table td:nth-child(3){color:#64748b !important;}
 .dev-page .dev-jobs-ref-table tr:last-child td{border-bottom:none;}
 
 .dev-page .dev-jobs-ref-sample{
-  background:#0f172a;border:1px solid #1e293b;border-radius:1rem;
-  padding:1.25rem;box-shadow:0 20px 40px rgba(15,23,42,.25);min-width:0;position:static;
+  background:#0f172a !important;border:1px solid #1e293b;border-radius:.75rem;
+  padding:1.25rem;box-shadow:0 10px 25px rgba(15,23,42,.2);min-width:0;position:static;color:#fff;
 }
 .dev-page .dev-jobs-ref-sample-top{
   display:flex;align-items:center;justify-content:space-between;
-  border-bottom:1px solid #1e293b;padding-bottom:.75rem;margin-bottom:1rem;
+  border-bottom:1px solid #1e293b;padding-bottom:.5rem;margin-bottom:.75rem;
 }
 .dev-page .dev-jobs-ref-sample-top span{
   font-size:.7rem;font-family:ui-monospace,Menlo,monospace;font-weight:700;color:#94a3b8 !important;
@@ -623,7 +630,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
   <!-- FIELD REFERENCE -->
   <div class="dev-section">
-    <h3 class="dev-section-heading">POST /jobs — Field Reference &amp; Example</h3>
+    <h2 class="dev-section-heading">POST /jobs — Field Reference &amp; Example</h2>
     <div class="dev-jobs-ref">
       <div class="dev-jobs-ref-table">
         <div class="dev-table-scroll">
