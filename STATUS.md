@@ -1,8 +1,12 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 20:24 UTC  
+**Last Updated:** 2026-09-11 20:30 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
+
+## Last Agent Action
+App portal typography: force `font-sans antialiased` wrapper, solid white brand H1, uppercase tagline, stronger card/button sans classes, footer `/privacy` + `/terms`.
+
 
 ## Last Agent Action
 Login/root portal typography: brand H1 white→slate gradient, softer Request Access secondary button, footer slate-400 + amber hover linking to auraflux.co legal pages.
