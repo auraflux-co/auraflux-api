@@ -25,6 +25,9 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { updateJobSchedule, getSchedulePrefs, type SchedulePrefs, type ScheduleSlot, requestJobRevision, operatorJobAction } from '@/lib/api';
+import { ThumbnailFramePicker } from '@/components/creator/thumbnail-frame-picker';
+import { GenerateReviewLinkButton } from '@/components/creator/generate-review-link-button';
+import { PlaylistStrategyBadge } from '@/components/creator/playlist-strategy-badge';
 import { Separator } from '@/components/ui/separator';
 import { apiFetch, listJobs, type Job } from '@/lib/api';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
@@ -511,11 +514,14 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
   const [scheduling, setScheduling]       = useState(false);
   const [scheduleResult, setScheduleResult] = useState<{ ok?: boolean; at?: string; error?: string } | null>(null);
   const [savedPrefs, setSavedPrefs]       = useState<SchedulePrefs>({});
+  const [authToken, setAuthToken]         = useState<string | null>(null);
+  const [playlistMatch, setPlaylistMatch] = useState<{ playlistId: string | null; playlistTitle: string | null } | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
         const token = await getToken();
+        setAuthToken(token);
         const [data, { prefs }] = await Promise.all([
           apiFetch<StagingAssets & { ok?: boolean }>(
             `/jobs/${jobId}/staging-assets`,
@@ -542,7 +548,17 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
         `/jobs/${jobId}/approve-publish`,
         {
           method: 'POST',
-          body: JSON.stringify({ platforms: assets.input.platforms }),
+          body: JSON.stringify({
+            platforms: assets.input.platforms,
+            youtubePlaylistId: playlistMatch?.playlistId || undefined,
+            youtubePlaylistTitle: playlistMatch?.playlistTitle || undefined,
+            playlistStrategyBadge: playlistMatch?.playlistId ? 'Auto-matched by strategy rule' : undefined,
+            publishMeta: playlistMatch?.playlistId ? {
+              youtubePlaylistId: playlistMatch.playlistId,
+              youtubePlaylistTitle: playlistMatch.playlistTitle,
+              playlistStrategyBadge: 'Auto-matched by strategy rule',
+            } : undefined,
+          }),
           token: token ?? undefined,
         }
       );
@@ -552,7 +568,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
     } finally {
       setPublishing(false);
     }
-  }, [assets, jobId, getToken]);
+  }, [assets, jobId, getToken, playlistMatch]);
 
   const handleApproveSchedule = useCallback(async () => {
     if (!scheduleAt) return;
@@ -862,6 +878,18 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
                 Cancel
               </Button>
             </div>
+          </div>
+        )}
+
+        {authToken && (
+          <div className="space-y-3">
+            <ThumbnailFramePicker jobId={jobId} token={authToken} topic={assets.input.topic || undefined} />
+            <GenerateReviewLinkButton jobId={jobId} token={authToken} />
+            <PlaylistStrategyBadge
+              jobId={jobId}
+              token={authToken}
+              onMatch={(m) => setPlaylistMatch(m)}
+            />
           </div>
         )}
 

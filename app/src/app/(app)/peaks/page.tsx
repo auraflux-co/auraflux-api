@@ -369,6 +369,7 @@ function PeaksPageInner() {
       if (!token) throw new Error('Session not ready');
       const preset = presets.find((p) => p.key === presetKey);
       const plat = resolvePlatform();
+      const cp = (activeBrand as { creative_profile?: { captionStyle?: string; audioBed?: string } } | null)?.creative_profile;
       const result = await createJob({
         contentType: 'clips',
         entryType: 'fetch',
@@ -395,6 +396,8 @@ function PeaksPageInner() {
             presetCode: preset?.code || 'C9',
             peakStartSec: String(staged.startSec ?? ''),
             peakEndSec: String(staged.endSec ?? ''),
+            ...(cp?.captionStyle ? { captionStyle: cp.captionStyle } : {}),
+            ...(cp?.audioBed ? { audioBed: cp.audioBed } : {}),
           },
         },
         staging: true,
@@ -644,6 +647,14 @@ function PeaksPageInner() {
                 ? 'Scrub the burned near-final (layout + look + FX). Credits burn only when you Create Short.'
                 : 'Scrub your staged trim, pick a preset, then Review near-final before Create Short.'}
             </p>
+            {activeBrand && (
+              <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 space-y-1">
+                <p className="af-caption font-medium">Brand Profile · {activeBrand.name}</p>
+                <p className="af-caption text-muted-foreground">
+                  Switch brands in the header to swap creative defaults. Peak thumbnails and sponsor overlay land on Review after your Short finishes.
+                </p>
+              </div>
+            )}
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-2">
                 <p className="af-caption font-medium text-foreground">

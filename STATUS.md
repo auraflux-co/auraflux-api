@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 22:30 UTC  
+**Last Updated:** 2026-09-11 23:10 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-C0 graduation (`iss_tY3Ii28wvWBK`): port Compose near-final preview stack into Render — `/composition/timeline-preview` + Peaks **Review near-final** before Create Short. Discarded C0 operator chrome (templates/moment-finder/EXECUTE/broadcast).
+Creator pipeline extensions epic: peak thumb picker, sponsor markers, brand creative profiles, guest review share links, playlist strategy — gates + migration 045 + Review/Peaks/Brand UI.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

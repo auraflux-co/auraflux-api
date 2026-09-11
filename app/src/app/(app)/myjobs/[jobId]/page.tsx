@@ -19,10 +19,13 @@ import { formatUserError, platformLabel } from '@/lib/job-labels';
 import {
   getJobDetail, operatorJobAction, saveJobAsTemplate, approveAndPublish,
   getThumbnailCandidates, approveThumbnail, getStagingAssets, listConnectedAccounts,
+  scanJobSponsors,
   type Job, type OperatorAction, type ThumbnailCandidate, type StagingAssets,
   type ConnectedAccount,
 } from '@/lib/api';
 import { SaveTemplateDialog, type SaveTemplateOptions } from '@/components/jobs/save-template-dialog';
+import { ThumbnailFramePicker } from '@/components/creator/thumbnail-frame-picker';
+import { GenerateReviewLinkButton } from '@/components/creator/generate-review-link-button';
 import { labelForContentType } from '@/lib/content-types';
 import { useRole } from '@/hooks/use-role';
 
@@ -221,6 +224,11 @@ export default function JobDetailPage() {
   const [reviewInstagram,   setReviewInstagram]    = useState('');
   const [reviewEdited,      setReviewEdited]       = useState(false);
   const [scriptExpanded,    setScriptExpanded]     = useState(false);
+  const [authTok, setAuthTok] = useState<string | null>(null);
+
+  useEffect(() => {
+    getToken().then((t) => setAuthTok(t)).catch(() => setAuthTok(null));
+  }, [getToken]);
 
   async function handleSaveAsTemplate(opts: SaveTemplateOptions) {
     if (!job) return;
@@ -531,39 +539,33 @@ export default function JobDetailPage() {
             className="w-full rounded-lg border bg-black aspect-video object-contain"
           />
 
-          {/* Thumbnail picker (CPD-512) */}
-          {thumbCandidates && thumbCandidates.length > 0 && !thumbApproved && (
-            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Choose a thumbnail</p>
-              <div className="grid grid-cols-3 gap-2">
-                {thumbCandidates.map((c) => (
-                  <button
-                    key={c.index}
-                    disabled={thumbApproving}
-                    onClick={() => handleSelectThumbnail(c)}
-                    className="relative rounded overflow-hidden border-2 border-transparent hover:border-primary focus:border-primary transition-colors focus:outline-none disabled:opacity-50"
-                  >
-                    <img src={c.url} alt={`Thumbnail ${c.index + 1}`} className="w-full aspect-video object-cover" />
-                    {c.method === 'imagen' && (
-                      <span className="absolute top-1 left-1 text-[8px] font-bold bg-purple-600/90 text-white rounded px-1 py-0.5 leading-none">
-                        Imagen 3
-                      </span>
-                    )}
-                    {c.score != null && (
-                      <span className="absolute bottom-1 right-1 text-[9px] font-bold bg-black/70 text-white rounded px-1">
-                        {c.score}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] text-muted-foreground">Click to set as your video thumbnail before publishing.</p>
-            </div>
+          {/* Thumbnail Frame Picker — peak candidates + overlay */}
+          {authTok && (
+            <ThumbnailFramePicker jobId={jobId} token={authTok} topic={job.topic || undefined} />
           )}
           {thumbApproved && (
             <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2">
               <img src={thumbApproved} alt="Approved thumbnail" className="w-12 h-7 object-cover rounded shrink-0" />
               <p className="text-xs text-emerald-700 dark:text-emerald-300">✓ Thumbnail selected</p>
+            </div>
+          )}
+          {authTok && (
+            <div className="flex flex-wrap gap-3 items-start">
+              <GenerateReviewLinkButton jobId={jobId} token={authTok} />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  onChange={async (e) => {
+                    try {
+                      await scanJobSponsors(jobId, {
+                        appendSponsorOverlay: e.target.checked,
+                        brandName: job.brandName || undefined,
+                      }, authTok);
+                    } catch { /* soft */ }
+                  }}
+                />
+                Append Sponsor Overlay
+              </label>
             </div>
           )}
 

@@ -1082,6 +1082,88 @@ export async function approveThumbnail(
   });
 }
 
+export async function previewThumbnailOverlay(
+  jobId: string,
+  opts: { candidateIndex?: number; hookText?: string; enabled?: boolean },
+  token?: string,
+): Promise<{ ok: boolean; url?: string | null; overlay?: boolean; hookText?: string }> {
+  return apiFetch(`/jobs/${jobId}/thumbnail/preview-overlay`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify(opts),
+  });
+}
+
+export async function createReviewShareLink(
+  jobId: string,
+  token?: string,
+  ttlDays = 7,
+): Promise<{ ok: boolean; url: string; urlPath: string; expiresAt: string }> {
+  return apiFetch(`/jobs/${jobId}/review-share`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ ttlDays }),
+  });
+}
+
+export async function getPublicReviewShare(shareToken: string): Promise<{
+  ok: boolean;
+  jobId: string;
+  title: string;
+  videoUrl: string | null;
+  thumbnailUrl: string | null;
+  captionsEnabled?: boolean;
+  audioBed?: string | null;
+  permissions?: { approve?: boolean; revise?: boolean; comment?: boolean };
+  status?: string;
+}> {
+  return apiFetch(`/public/review-share/${encodeURIComponent(shareToken)}`);
+}
+
+export async function publicReviewApprove(shareToken: string): Promise<{ ok: boolean }> {
+  return apiFetch(`/public/review-share/${encodeURIComponent(shareToken)}/approve`, { method: 'POST', body: '{}' });
+}
+
+export async function publicReviewRevise(
+  shareToken: string,
+  body: { comment?: string; categories?: string[] },
+): Promise<{ ok: boolean }> {
+  return apiFetch(`/public/review-share/${encodeURIComponent(shareToken)}/revise`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function publicReviewComment(
+  shareToken: string,
+  comment: string,
+): Promise<{ ok: boolean }> {
+  return apiFetch(`/public/review-share/${encodeURIComponent(shareToken)}/comment`, {
+    method: 'POST',
+    body: JSON.stringify({ comment }),
+  });
+}
+
+export async function scanJobSponsors(
+  jobId: string,
+  body: { appendSponsorOverlay?: boolean; brandName?: string; trimStart?: number; trimEnd?: number } = {},
+  token?: string,
+): Promise<{ ok: boolean; markers: unknown[]; boundaries?: unknown; lowerThird?: unknown }> {
+  return apiFetch(`/jobs/${jobId}/sponsor-scan`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify(body),
+  });
+}
+
+export async function getPlaylistStrategyMatch(
+  jobId: string,
+  token?: string,
+  platform = 'youtube',
+): Promise<{ ok: boolean; matched: boolean; playlistId?: string | null; playlistTitle?: string | null; badge?: string; gated?: boolean }> {
+  return apiFetch(`/jobs/${jobId}/playlist-strategy?platform=${encodeURIComponent(platform)}`, { token });
+}
+
 // ─── Support (CPD-115) ───────────────────────────────────────────────────────
 
 export interface SupportMessage {
@@ -1677,6 +1759,19 @@ export interface CanvaSaveResult {
 
 // ─── Brand API (CPD-329) ──────────────────────────────────────────────────────
 
+export interface BrandCreativeProfile {
+  fonts?: Record<string, string>;
+  colors?: Record<string, string>;
+  logoWatermarkUrl?: string | null;
+  captionStyle?: string | null;
+  audioBed?: string | null;
+}
+
+export interface PublishStrategyRule {
+  match?: { tag?: string; audioBed?: string };
+  destination?: { platform?: string; playlistId?: string; playlistTitle?: string };
+}
+
 export interface Brand {
   id:                     string;
   account_id:             string;
@@ -1692,6 +1787,8 @@ export interface Brand {
   description:            string | null;
   intro_card_url:         string | null;
   outro_card_url:         string | null;
+  creative_profile?:      BrandCreativeProfile | null;
+  publish_strategy_rules?: PublishStrategyRule[] | null;
 }
 
 export interface BrandSubscription {
@@ -1735,6 +1832,8 @@ export async function updateBrandApi(
     description?:    string | null;
     intro_card_url?: string | null;
     outro_card_url?: string | null;
+    creative_profile?: BrandCreativeProfile;
+    publish_strategy_rules?: PublishStrategyRule[];
   },
   token?: string,
 ): Promise<Brand> {

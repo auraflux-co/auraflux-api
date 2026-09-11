@@ -184,6 +184,15 @@ export default function BrandSettingsPage() {
   const [loadErr,  setLoadErr]  = useState<string | null>(null);
   const [noBrand,  setNoBrand]  = useState(false);
   const [token,    setToken]    = useState<string>('');
+  const [captionStyle, setCaptionStyle] = useState('');
+  const [audioBed, setAudioBed] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#0EA5E9');
+  const [accentColor, setAccentColor] = useState('#F59E0B');
+  const [ruleTag, setRuleTag] = useState('');
+  const [ruleBed, setRuleBed] = useState('');
+  const [rulePlaylistId, setRulePlaylistId] = useState('');
+  const [rulePlaylistTitle, setRulePlaylistTitle] = useState('');
+  const [strategyRules, setStrategyRules] = useState<import('@/lib/api').PublishStrategyRule[]>([]);
 
   // Load token + active brand
   useEffect(() => {
@@ -203,7 +212,16 @@ export default function BrandSettingsPage() {
       .then((all) => {
         if (!all || all.length === 0) { setNoBrand(true); return; }
         const match = activeBrand ? all.find((b) => b.id === activeBrand.id) ?? all[0] : all[0];
-        if (match) { setBrand(match); setName(match.name); }
+        if (match) {
+          setBrand(match);
+          setName(match.name);
+          const cp = match.creative_profile || {};
+          setCaptionStyle(cp.captionStyle || '');
+          setAudioBed(cp.audioBed || '');
+          setPrimaryColor(cp.colors?.primary || '#0EA5E9');
+          setAccentColor(cp.colors?.accent || '#F59E0B');
+          setStrategyRules(Array.isArray(match.publish_strategy_rules) ? match.publish_strategy_rules : []);
+        }
         else setNoBrand(true);
       })
       .catch((e) => setLoadErr(e.message));
@@ -348,6 +366,108 @@ export default function BrandSettingsPage() {
           onUploaded={(url) => handleAssetUploaded('outro_card_url', url)}
           isVideo
         />
+
+        {/* ── Creative profile ── */}
+        <div className="rounded-xl border border-border bg-card p-5 flex flex-col gap-4">
+          <div>
+            <p className="text-sm font-semibold text-foreground">Creative profile</p>
+            <p className="af-caption text-muted-foreground mt-0.5">
+              Defaults applied when this brand is selected in Composer / Peaks.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label>Caption style</Label>
+              <Input value={captionStyle} onChange={(e) => setCaptionStyle(e.target.value)} placeholder="word_karaoke / default" />
+            </div>
+            <div className="space-y-1">
+              <Label>Audio bed</Label>
+              <Input value={audioBed} onChange={(e) => setAudioBed(e.target.value)} placeholder="low_trap / off" />
+            </div>
+            <div className="space-y-1">
+              <Label>Primary color</Label>
+              <Input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Accent color</Label>
+              <Input value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
+            </div>
+          </div>
+          <Button
+            size="sm"
+            className="w-fit"
+            disabled={saving}
+            onClick={async () => {
+              if (!brand || !token) return;
+              setSaving(true);
+              try {
+                const updated = await updateBrandApi(brand.id, {
+                  creative_profile: {
+                    captionStyle: captionStyle || null,
+                    audioBed: audioBed || null,
+                    colors: { primary: primaryColor, accent: accentColor },
+                    logoWatermarkUrl: brand.image_url,
+                    fonts: {},
+                  },
+                }, token);
+                setBrand(updated);
+                setSaved(true);
+                setTimeout(() => setSaved(false), 2500);
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            Save creative profile
+          </Button>
+        </div>
+
+        {/* ── Playlist strategy rules ── */}
+        <div className="rounded-xl border border-border bg-card p-5 flex flex-col gap-4">
+          <div>
+            <p className="text-sm font-semibold text-foreground">Playlist strategy rules</p>
+            <p className="af-caption text-muted-foreground mt-0.5">
+              Auto-match YouTube playlists from tag or audio bed on the publish screen.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Input value={ruleTag} onChange={(e) => setRuleTag(e.target.value)} placeholder="Match tag e.g. Gaming" />
+            <Input value={ruleBed} onChange={(e) => setRuleBed(e.target.value)} placeholder="Match audio bed e.g. Low Trap" />
+            <Input value={rulePlaylistId} onChange={(e) => setRulePlaylistId(e.target.value)} placeholder="YouTube playlist ID" />
+            <Input value={rulePlaylistTitle} onChange={(e) => setRulePlaylistTitle(e.target.value)} placeholder="Playlist title" />
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-fit"
+            onClick={async () => {
+              if (!brand || !token || (!ruleTag && !ruleBed) || !rulePlaylistId) return;
+              const next = [
+                ...strategyRules,
+                {
+                  match: { tag: ruleTag || undefined, audioBed: ruleBed || undefined },
+                  destination: { platform: 'youtube', playlistId: rulePlaylistId, playlistTitle: rulePlaylistTitle || undefined },
+                },
+              ];
+              const updated = await updateBrandApi(brand.id, { publish_strategy_rules: next }, token);
+              setBrand(updated);
+              setStrategyRules(next);
+              setRuleTag(''); setRuleBed(''); setRulePlaylistId(''); setRulePlaylistTitle('');
+            }}
+          >
+            Add rule
+          </Button>
+          {strategyRules.length > 0 && (
+            <ul className="space-y-1 af-caption text-muted-foreground">
+              {strategyRules.map((r, i) => (
+                <li key={i}>
+                  {r.match?.tag ? `tag=${r.match.tag}` : ''}{r.match?.tag && r.match?.audioBed ? ' · ' : ''}{r.match?.audioBed ? `bed=${r.match.audioBed}` : ''}
+                  {' → '}{r.destination?.playlistTitle || r.destination?.playlistId}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         {/* ── Info strip ── */}
         <div className="rounded-lg bg-muted/50 border border-border px-4 py-3 flex gap-3">
