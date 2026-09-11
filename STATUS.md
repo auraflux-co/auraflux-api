@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Marketing favicon: AF gold-on-navy mark (was 404).
+**Last Updated:** 2026-09-11 — Drop accidental home.html.bak; confirm favicon live.
 
 
 
