@@ -9,7 +9,7 @@
     { "label": "Contact", "url": "/contact" }
   ],
   "resource_links": [
-    { "label": "How it works", "url": "/process" },
+    { "label": "How it works", "url": "/how-it-works" },
     { "label": "Plans", "url": "/plans" },
     { "label": "Blog", "url": "/blog" }
   ],

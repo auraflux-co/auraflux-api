@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Who it is for bullets: slate-800 text, amber-500 dots.
+**Last Updated:** 2026-09-11 — /how-it-works page overhaul (peak→publish pipeline); /process redirects.
 
 
 

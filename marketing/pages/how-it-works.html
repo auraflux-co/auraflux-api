@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How It Works. AuraFlux</title>
+<meta name="description" content="From stream VOD peaks to viral 9:16 Shorts — automated detection, framing, captions, and multi-platform publish.">
+<link rel="canonical" href="https://auraflux.co/how-it-works">
+<link rel="icon" type="image/png" href="/favicon.png?v=3">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MBS26S2W6E"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MBS26S2W6E');</script>
+${FRAMER_FONTS || ''}
+${FRAMER_CSS || ''}
+<style>
+.hero{text-align:center;padding:3.75rem 1.25rem 3.25rem}
+.hero h1{
+  font-size:clamp(1.85rem,4vw,2.85rem);font-weight:800;color:#fff !important;
+  letter-spacing:-.03em;margin-bottom:14px;line-height:1.15;max-width:42rem;margin-left:auto;margin-right:auto;
+}
+.hero p{
+  color:#cbd5e1 !important;max-width:38rem;margin:0 auto;line-height:1.65;font-size:1.05rem;font-weight:400;
+}
+.pipeline{max-width:52rem;margin:0 auto;padding:2rem 1.25rem 4.5rem;display:flex;flex-direction:column;gap:1.25rem}
+.step-block{
+  background:#0f172a;border:1px solid #1e293b;border-radius:1rem;padding:1.75rem 1.5rem;
+  box-shadow:0 4px 16px rgba(15,23,42,.12);
+}
+.step-num{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  font-size:1.125rem;font-weight:700;color:#fbbf24 !important;margin-bottom:0.75rem;letter-spacing:.04em;
+}
+.step-block h2{
+  font-size:1.25rem;font-weight:700;color:#fff !important;margin:0 0 0.5rem;line-height:1.3;letter-spacing:-.02em;
+}
+.step-block p{
+  font-size:1rem;color:#cbd5e1 !important;line-height:1.625;margin:0 0 1rem;font-weight:400;
+}
+.step-pills{display:flex;flex-wrap:wrap;gap:0.5rem}
+.step-pill{
+  display:inline-flex;align-items:center;
+  font-size:0.72rem;font-weight:700;letter-spacing:.04em;
+  color:#f5c542;background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);
+  padding:0.35rem 0.75rem;border-radius:9999px;
+}
+.cta-band{
+  background:#020617;color:#fff;text-align:center;padding:3.5rem 1.25rem;
+  border-top:1px solid #1e293b;
+}
+.cta-band h2{color:#fff !important;font-size:1.6rem;font-weight:800;margin-bottom:10px}
+.cta-band p{color:#cbd5e1 !important;max-width:28rem;margin:0 auto 1.25rem;line-height:1.6}
+.cta-band a{
+  display:inline-flex;margin:0 6px 8px;padding:12px 20px;border-radius:8px;font-weight:700;
+  text-decoration:none !important
+}
+.cta-band .p{background:#f5c542;color:#0b1220 !important}
+.cta-band .g{border:1px solid rgba(255,255,255,.4);color:#fff !important}
+</style>
+</head>
+<body>
+${FRAMER_NAV || FALLBACK_NAV}
+<div class="hero">
+  <h1>How AuraFlux Turns Stream Peaks Into Viral Shorts</h1>
+  <p>From raw stream VOD to fully styled 9:16 short-form video in minutes—without manual editing or scrubbing timeline files.</p>
+</div>
+
+<div class="pipeline">
+  <article class="step-block">
+    <div class="step-num">01</div>
+    <h2>1. Real-Time Signal &amp; VOD Ingestion</h2>
+    <p>Connect YouTube, Twitch, or Kick. AuraFlux continuously scans chat velocity, emote spikes, YouTube Most Replayed curves, and CCV surges to flag viral moments automatically.</p>
+    <div class="step-pills">
+      <span class="step-pill">Chat Spikes · Heatmaps · CCV Surges</span>
+    </div>
+  </article>
+
+  <article class="step-block">
+    <div class="step-num">02</div>
+    <h2>2. Smart 9:16 Composition &amp; Tracking</h2>
+    <p>Our composition engine centers your facecam and gameplay automatically. Apply layout presets tailored to your stream style without manual keyframing.</p>
+    <div class="step-pills">
+      <span class="step-pill">Facecam Detection · 9:16 Auto-Framing</span>
+    </div>
+  </article>
+
+  <article class="step-block">
+    <div class="step-num">03</div>
+    <h2>3. Auto-Captions &amp; Brand Presets</h2>
+    <p>Generate high-accuracy animated subtitles, custom color highlights, and brand logos automatically applied before rendering.</p>
+    <div class="step-pills">
+      <span class="step-pill">Dynamic Captions · Brand Presets</span>
+    </div>
+  </article>
+
+  <article class="step-block">
+    <div class="step-num">04</div>
+    <h2>4. Multi-Account Social Publishing</h2>
+    <p>Review and publish instantly to TikTok, YouTube Shorts, and Instagram Reels directly from your member portal dashboard.</p>
+    <div class="step-pills">
+      <span class="step-pill">TikTok · YouTube Shorts · IG Reels</span>
+    </div>
+  </article>
+</div>
+
+<div class="cta-band">
+  <h2>Ready to ship Peak Shorts?</h2>
+  <p>Open Peaks in the app, or talk to us about Managed and API access.</p>
+  <a class="p" href="https://app.auraflux.co/peaks">Open Peaks</a>
+  <a class="g" href="/contact">Talk to us</a>
+</div>
+${FRAMER_FOOTER || FALLBACK_FOOTER}
+</body>
+</html>

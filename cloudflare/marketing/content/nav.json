@@ -3,7 +3,7 @@
   "cta_url": "https://app.auraflux.co/peaks",
   "links": [
     { "label": "Home", "url": "/" },
-    { "label": "How it works", "url": "/process" },
+    { "label": "How it works", "url": "/how-it-works" },
     { "label": "Features", "url": "/our-system" },
     { "label": "Pricing", "url": "/plans" },
     { "label": "Contact", "url": "/contact" },
