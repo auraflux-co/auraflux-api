@@ -1,6 +1,7 @@
 {
-  "cta_label": "Start Free Trial",
-  "cta_url": "https://app.auraflux.co/signup",
+  "cta_label": "Book a Demo",
+  "cta_url": "https://cal.com/auraflux-demo/60min",
+  "cta_external": true,
   "links": [
     { "label": "Home", "url": "/" },
     { "label": "How it works", "url": "/how-it-works" },

@@ -256,10 +256,20 @@ def patch_nav(html, data):
 
     cta_url   = data.get('cta_url')
     cta_label = data.get('cta_label')
+    cta_external = data.get('cta_external')
+    if cta_external is None and cta_url:
+        # External booking links (Cal.com, etc.) open in a new tab
+        cta_external = bool(re.search(r'cal\.com|calendly\.com', cta_url or '', re.I))
     if cta_url:
-        html = re.sub(
-            r'(<a id="af-nav-cta" href=")[^"]*(")',
-            rf'\g<1>{cta_url}\g<2>', html)
+        if cta_external:
+            html = re.sub(
+                r'<a id="af-nav-cta"[^>]*>',
+                f'<a id="af-nav-cta" href="{cta_url}" target="_blank" rel="noopener noreferrer">',
+                html, count=1)
+        else:
+            html = re.sub(
+                r'(<a id="af-nav-cta" href=")[^"]*(")',
+                rf'\g<1>{cta_url}\g<2>', html)
     if cta_label:
         html = re.sub(
             r'(<a id="af-nav-cta"[^>]*>)[^<]*(</a>)',
