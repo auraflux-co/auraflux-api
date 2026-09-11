@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Stripe Growth price ID live; schema_migrations now records applied versions (042/043 backfilled).
+**Last Updated:** 2026-09-11 — Growth price note: “Self-serve · cancel anytime” (dropped confusing custom-starter hedge).
 
 
 
