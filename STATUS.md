@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Pricing dual tiers (Growth $299 / Pro $999), enterprise CTA, trust badges; /plans → /pricing.
+**Last Updated:** 2026-09-11 — Pricing cards: white high-contrast, badge overflow fix, CTA visibility.
 
 
 
