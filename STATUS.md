@@ -1,8 +1,12 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 20:30 UTC  
+**Last Updated:** 2026-09-11 20:47 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
+
+## Last Agent Action
+App portal: inline system-ui font stack on `/` + `/login` wrappers so Geist/Tailwind cannot override entry typography.
+
 
 ## Last Agent Action
 App portal typography: force `font-sans antialiased` wrapper, solid white brand H1, uppercase tagline, stronger card/button sans classes, footer `/privacy` + `/terms`.

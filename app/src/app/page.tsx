@@ -8,23 +8,34 @@ export default function LandingPage() {
   const { isSignedIn, isLoaded } = useUser();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between items-center p-6 font-sans">
+    <div
+      className="min-h-screen bg-slate-950 text-white flex flex-col justify-between items-center p-6 antialiased"
+      style={{
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      }}
+    >
       <main className="w-full max-w-md my-auto bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6 text-center">
+        {/* Brand Header */}
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-mono text-amber-400 mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700/80 text-xs font-mono font-semibold text-amber-400 mb-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             Portal v1.0
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300">
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">
             AuraFlux
           </h1>
-          <p className="text-sm text-slate-400">Content Operations Platform</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Content Operations Platform
+          </p>
         </div>
 
-        <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/50 p-3.5 rounded-xl border border-slate-800/80">
+        {/* Subtitle Box */}
+        <p className="text-xs font-medium text-slate-300 leading-relaxed bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
           Produce broadcast-ready video content at scale — from fetch to publish.
         </p>
 
+        {/* Actions */}
         <div className="space-y-3 pt-2">
           {isLoaded && isSignedIn ? (
             <Link
@@ -42,26 +53,26 @@ export default function LandingPage() {
             </Link>
           )}
           <a
-            href="https://auraflux.co/contact"
-            className="w-full flex items-center justify-center bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 font-semibold py-3 px-4 rounded-xl transition-all text-xs tracking-wide"
+            href="https://auraflux.co"
+            className="w-full flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold py-3.5 px-4 rounded-xl transition-all text-xs tracking-wide"
           >
             Request Access / Demo
           </a>
         </div>
       </main>
 
-      <footer className="w-full max-w-md py-6 text-center text-xs text-slate-400 font-medium space-x-4">
+      <footer className="w-full max-w-md py-6 text-center text-xs font-medium text-slate-400 space-x-3">
         <a href="https://auraflux.co" className="hover:text-amber-400 transition-colors">
           auraflux.co
         </a>
         <span className="text-slate-600">•</span>
-        <a href="https://auraflux.co/privacy" className="hover:text-amber-400 transition-colors">
+        <Link href="/privacy" className="hover:text-amber-400 transition-colors">
           Privacy Policy
-        </a>
+        </Link>
         <span className="text-slate-600">•</span>
-        <a href="https://auraflux.co/terms" className="hover:text-amber-400 transition-colors">
+        <Link href="/terms" className="hover:text-amber-400 transition-colors">
           Terms of Service
-        </a>
+        </Link>
       </footer>
     </div>
   );
