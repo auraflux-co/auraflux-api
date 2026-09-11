@@ -2,14 +2,9 @@
   "cta_label": "Open App",
   "cta_url": "https://app.auraflux.co/peaks",
   "links": [
-    { "label": "Home", "url": "/" },
-    { "label": "Our System", "url": "/our-system" },
     { "label": "How it works", "url": "/process" },
-    { "label": "Plans", "url": "/plans" },
-    { "label": "Work", "url": "/work" },
-    { "label": "Our Story", "url": "/our-story" },
-    { "label": "Blog", "url": "/blog" },
-    { "label": "API", "url": "/developer-api" },
-    { "label": "Contact", "url": "/contact" }
+    { "label": "Features", "url": "/our-system" },
+    { "label": "Pricing", "url": "/plans" },
+    { "label": "Blog", "url": "/blog" }
   ]
 }

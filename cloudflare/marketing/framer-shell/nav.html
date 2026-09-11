@@ -47,17 +47,16 @@
   #af-nav-links {
     display: none;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
     margin: 0;
     padding: 0;
-    flex-wrap: wrap;
   }
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
     #af-nav-links { display: flex; }
   }
   #af-nav-links a {
     color: #334155 !important;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     font-weight: 500;
     text-decoration: none !important;
     white-space: nowrap;
@@ -66,36 +65,18 @@
   .af-nav-actions {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
     flex-shrink: 0;
   }
   .af-nav-login {
-    display: none;
+    display: inline-flex;
     color: #475569 !important;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     font-weight: 500;
     text-decoration: none !important;
-    padding: 0.45rem 0.65rem;
-  }
-  @media (min-width: 640px) {
-    .af-nav-login { display: inline-flex; }
+    padding: 0.5rem 0.75rem;
   }
   .af-nav-login:hover { color: #0f172a !important; }
-  .af-nav-talk {
-    display: none;
-    color: #0b1220 !important;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    text-decoration: none !important;
-    padding: 0.45rem 0.75rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.5rem;
-    background: #fff;
-  }
-  @media (min-width: 640px) {
-    .af-nav-talk { display: inline-flex; }
-  }
-  .af-nav-talk:hover { background: #f1f5f9 !important; text-decoration: none !important; }
   #af-nav-cta {
     display: inline-flex;
     align-items: center;
@@ -103,7 +84,7 @@
     color: #fff !important;
     font-size: 0.8125rem;
     font-weight: 600;
-    padding: 0.5rem 0.9rem;
+    padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     text-decoration: none !important;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
@@ -112,10 +93,9 @@
     background: #050a12 !important;
     text-decoration: none !important;
   }
-  /* Mobile / tablet scroll strip (BR pattern) */
   .af-nav-mobile {
     display: flex;
-    gap: 0.25rem;
+    gap: 0.35rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     padding: 0 1.25rem 0.65rem;
@@ -123,7 +103,7 @@
     border-top: 1px solid rgba(15, 23, 42, 0.06);
   }
   .af-nav-mobile::-webkit-scrollbar { display: none; }
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
     .af-nav-mobile { display: none; }
   }
   .af-nav-mobile a {
@@ -132,15 +112,15 @@
     font-size: 0.78rem;
     font-weight: 500;
     text-decoration: none !important;
-    padding: 0.4rem 0.7rem;
+    padding: 0.4rem 0.75rem;
     border-radius: 9999px;
     background: #f1f5f9;
     border: 1px solid #e2e8f0;
   }
   .af-nav-mobile a:hover { color: #0b1220 !important; background: #e2e8f0; }
   :root { --nav-h: 64px; }
-  @media (max-width: 1023px) {
-    :root { --nav-h: 108px; }
+  @media (max-width: 767px) {
+    :root { --nav-h: 104px; }
   }
 </style>
 <header class="af-nav" role="banner">
@@ -150,30 +130,20 @@
       AuraFlux
     </a>
     <nav id="af-nav-links" aria-label="Primary">
-      <a href="/">Home</a>
-      <a href="/our-system">Our System</a>
       <a href="/process">How it works</a>
-      <a href="/plans">Plans</a>
-      <a href="/work">Work</a>
-      <a href="/our-story">Our Story</a>
+      <a href="/our-system">Features</a>
+      <a href="/plans">Pricing</a>
       <a href="/blog">Blog</a>
-      <a href="/developer-api">API</a>
-      <a href="/contact">Contact</a>
     </nav>
     <div class="af-nav-actions">
       <a class="af-nav-login" href="https://app.auraflux.co/login">Log in</a>
-      <a class="af-nav-talk" href="/contact">Talk to us</a>
       <a id="af-nav-cta" href="https://app.auraflux.co/peaks">Open App</a>
     </div>
   </div>
   <nav class="af-nav-mobile" aria-label="Mobile">
-    <a href="/our-system">System</a>
-    <a href="/process">Process</a>
-    <a href="/plans">Plans</a>
-    <a href="/work">Work</a>
-    <a href="/our-story">Story</a>
+    <a href="/process">How it works</a>
+    <a href="/our-system">Features</a>
+    <a href="/plans">Pricing</a>
     <a href="/blog">Blog</a>
-    <a href="/developer-api">API</a>
-    <a href="/contact">Contact</a>
   </nav>
 </header>

@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Drop accidental home.html.bak; confirm favicon live.
+**Last Updated:** 2026-09-11 — Marketing: slim nav (4 links), hero/pricing copy, contrast fixes.
 
 
 
