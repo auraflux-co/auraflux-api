@@ -39,7 +39,7 @@ body{line-height:1.6}
 .dev-auth-banner-base{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
 .dev-base-pill{
   font-size:.7rem;font-weight:800;letter-spacing:.04em;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2);
+  background:rgba(251,191,36,.2);color:#fbbf24;border:1px solid rgba(251,191,36,.3);
   padding:.25rem .75rem;border-radius:9999px;
 }
 .dev-auth-banner code{font-size:.875rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#e2e8f0;}
@@ -48,47 +48,51 @@ body{line-height:1.6}
   padding:.5rem 1rem;border-radius:.5rem;text-decoration:none;transition:background .15s;
 }
 .dev-auth-cta:hover{background:#f59e0b;text-decoration:none;color:#020617;}
-.dev-auth-banner-meta{font-size:.75rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#94a3b8;line-height:1.7;}
-.dev-auth-banner-meta .k{color:#fbbf24;}
+.dev-auth-banner-meta{font-size:.75rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#cbd5e1;line-height:1.7;}
+.dev-auth-banner-meta .k{color:#fbbf24;font-weight:700;}
 
 /* Section headers */
 .dev-section{margin-bottom:40px;}
 .dev-section-title{
   font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
-  color:#8f9bb7;font-family:'Satoshi','Inter',monospace;
+  color:#94a3b8;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07);
   margin-bottom:16px;
 }
+.dev-endpoint-list{display:flex;flex-direction:column;gap:.75rem;margin:1.5rem 0;}
 
-/* Endpoint rows — high contrast list */
+/* Endpoint rows — light high-contrast cards */
 .dev-endpoint{
-  background:transparent;border:1px solid #1e293b;
-  border-radius:12px;overflow:hidden;margin-bottom:10px;
+  background:#fff;border:1px solid #e2e8f0;
+  border-radius:.75rem;overflow:hidden;margin-bottom:.75rem;
+  box-shadow:0 1px 2px rgba(15,23,42,.06);
+  transition:border-color .15s,box-shadow .15s;
 }
+.dev-endpoint:hover{border-color:#cbd5e1;box-shadow:0 4px 12px rgba(15,23,42,.08);}
 .dev-endpoint-header{
-  display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;
-  transition:background .15s;background:rgba(15,23,42,.6);
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;
+  padding:1rem;cursor:pointer;background:#fff;
 }
-.dev-endpoint-header:hover{background:rgba(30,41,59,.7);}
+.dev-endpoint-left{display:flex;align-items:center;gap:1rem;min-width:0;}
 .dev-method{
-  font-size:.7rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  font-size:.7rem;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
   padding:.25rem .65rem;border-radius:.375rem;
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;
 }
-.m-get{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2);}
-.m-post{background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.2);}
-.m-delete{background:rgba(244,63,94,.1);color:#fb7185;border:1px solid rgba(244,63,94,.2);}
-.m-patch{background:rgba(245,197,66,.12);color:#f5c542;border:1px solid rgba(245,197,66,.25);}
-.dev-path{font-size:.88rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#e2e8f0;flex:1;}
-.dev-endpoint-title{font-size:.85rem;color:#94a3b8;}
+.m-get{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;}
+.m-post{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;}
+.m-delete{background:#ffe4e6;color:#9f1239;border:1px solid #fecdd3;}
+.m-patch{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
+.dev-path{font-size:.875rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#0f172a;font-weight:600;}
+.dev-endpoint-title{font-size:.875rem;color:#475569;font-weight:500;}
 .dev-credits-badge{
   font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:4px;
-  background:rgba(245,197,66,.1);color:#f5c542;border:1px solid rgba(245,197,66,.2);
-  font-family:'Satoshi','Inter',monospace;flex-shrink:0;
+  background:#fef3c7;color:#92400e;border:1px solid #fde68a;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;
 }
 .dev-endpoint-body{
-  display:none;border-top:1px solid #1e293b;
-  padding:20px;background:#0f172a;
+  display:none;border-top:1px solid #e2e8f0;
+  padding:1.25rem;background:#0f172a;
 }
 .dev-endpoint-body.open{display:block;}
 .dev-desc{font-size:.88rem;color:#94a3b8;line-height:1.65;margin-bottom:20px;}
@@ -111,7 +115,15 @@ body{line-height:1.6}
 }
 .dev-code-copy:hover{background:rgba(255,255,255,.15);}
 .dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-@media(max-width:600px){.dev-grid{grid-template-columns:1fr;}}
+.dev-jobs-ref{display:grid;grid-template-columns:1.2fr .8fr;gap:1rem;align-items:start;}
+@media(max-width:800px){.dev-grid,.dev-jobs-ref{grid-template-columns:1fr;}}
+.dev-jobs-ref-table{background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;overflow:hidden;}
+.dev-jobs-ref-table .dev-table th{color:#64748b;border-bottom:1px solid #e2e8f0;}
+.dev-jobs-ref-table .dev-table td{color:#475569;border-bottom:1px solid #f1f5f9;}
+.dev-jobs-ref-table .dev-table td:first-child{color:#0f172a;}
+.dev-jobs-ref-table .dev-table td:nth-child(2){color:#1d4ed8;}
+.dev-jobs-ref-sample{background:#0f172a;border:1px solid #1e293b;border-radius:.75rem;padding:1.25rem;}
+.dev-jobs-ref-sample .dev-code{margin-bottom:0;}
 
 /* Field table */
 .dev-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px;}
@@ -171,8 +183,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/peaks/vods</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/peaks/vods</code>
+        </div>
         <span class="dev-endpoint-title">List VODs</span>
       </div>
       <div class="dev-endpoint-body">
@@ -185,8 +199,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-post">POST</span>
-        <code class="dev-path">/peaks/analyze</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-post">POST</span>
+          <code class="dev-path">/peaks/analyze</code>
+        </div>
         <span class="dev-endpoint-title">Analyze VOD peaks</span>
       </div>
       <div class="dev-endpoint-body">
@@ -212,8 +228,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/peaks/sessions/:id/segments</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/peaks/sessions/:id/segments</code>
+        </div>
         <span class="dev-endpoint-title">List segments</span>
       </div>
       <div class="dev-endpoint-body">
@@ -223,8 +241,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-post">POST</span>
-        <code class="dev-path">/peaks/stage</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-post">POST</span>
+          <code class="dev-path">/peaks/stage</code>
+        </div>
         <span class="dev-endpoint-title">Stage VOD window</span>
       </div>
       <div class="dev-endpoint-body">
@@ -234,8 +254,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/peaks/kick</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/peaks/kick</code>
+        </div>
         <span class="dev-endpoint-title">Kick CCV peaks</span>
       </div>
       <div class="dev-endpoint-body">
@@ -245,8 +267,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/peaks/twitch-ccv</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/peaks/twitch-ccv</code>
+        </div>
         <span class="dev-endpoint-title">Twitch CCV peaks</span>
       </div>
       <div class="dev-endpoint-body">
@@ -256,8 +280,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/peaks/presets</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/peaks/presets</code>
+        </div>
         <span class="dev-endpoint-title">C1–C11 edit presets</span>
       </div>
       <div class="dev-endpoint-body">
@@ -282,10 +308,11 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-post">POST</span>
-        <code class="dev-path">/jobs</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-post">POST</span>
+          <code class="dev-path">/jobs</code>
+        </div>
         <span class="dev-endpoint-title">Submit a job</span>
-
       </div>
       <div class="dev-endpoint-body">
         <p class="dev-desc">Submit a new video production job (including Short compile after Peaks stage). Returns immediately with a <code>jobId</code> — poll <code>GET /jobs/:id</code> to track progress. Subject to fair-use job-start limits.</p>
@@ -324,8 +351,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/jobs/:id</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/jobs/:id</code>
+        </div>
         <span class="dev-endpoint-title">Get job status</span>
       </div>
       <div class="dev-endpoint-body">
@@ -347,8 +376,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/jobs/:id/result</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/jobs/:id/result</code>
+        </div>
         <span class="dev-endpoint-title">Get full job result</span>
       </div>
       <div class="dev-endpoint-body">
@@ -367,8 +398,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/jobs</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/jobs</code>
+        </div>
         <span class="dev-endpoint-title">List jobs</span>
       </div>
       <div class="dev-endpoint-body">
@@ -381,8 +414,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-delete">DELETE</span>
-        <code class="dev-path">/jobs/:id</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-delete">DELETE</span>
+          <code class="dev-path">/jobs/:id</code>
+        </div>
         <span class="dev-endpoint-title">Cancel a job</span>
       </div>
       <div class="dev-endpoint-body">
@@ -395,8 +430,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-post">POST</span>
-        <code class="dev-path">/jobs/:id/approve-publish</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-post">POST</span>
+          <code class="dev-path">/jobs/:id/approve-publish</code>
+        </div>
         <span class="dev-endpoint-title">Approve staged job</span>
       </div>
       <div class="dev-endpoint-body">
@@ -413,8 +450,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <div class="dev-section-title">Upload</div>
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-post">POST</span>
-        <code class="dev-path">/upload</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-post">POST</span>
+          <code class="dev-path">/upload</code>
+        </div>
         <span class="dev-endpoint-title">Upload a video file</span>
       </div>
       <div class="dev-endpoint-body">
@@ -432,8 +471,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <div class="dev-section-title">Templates</div>
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/templates</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/templates</code>
+        </div>
         <span class="dev-endpoint-title">List templates</span>
       </div>
       <div class="dev-endpoint-body">
@@ -445,8 +486,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
     </div>
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-post">POST</span>
-        <code class="dev-path">/templates</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-post">POST</span>
+          <code class="dev-path">/templates</code>
+        </div>
         <span class="dev-endpoint-title">Create a template</span>
       </div>
       <div class="dev-endpoint-body">
@@ -460,8 +503,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
     </div>
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-delete">DELETE</span>
-        <code class="dev-path">/templates/:id</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-delete">DELETE</span>
+          <code class="dev-path">/templates/:id</code>
+        </div>
         <span class="dev-endpoint-title">Delete a template</span>
       </div>
       <div class="dev-endpoint-body">
@@ -478,8 +523,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <div class="dev-section-title">Scheduling</div>
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-patch">PATCH</span>
-        <code class="dev-path">/jobs/:id/schedule</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-patch">PATCH</span>
+          <code class="dev-path">/jobs/:id/schedule</code>
+        </div>
         <span class="dev-endpoint-title">Schedule a job</span>
       </div>
       <div class="dev-endpoint-body">
@@ -498,8 +545,10 @@ ${FRAMER_NAV || FALLBACK_NAV}
     <div class="dev-section-title">Account</div>
     <div class="dev-endpoint">
       <div class="dev-endpoint-header" onclick="this.nextElementSibling.classList.toggle('open')">
-        <span class="dev-method m-get">GET</span>
-        <code class="dev-path">/account</code>
+        <div class="dev-endpoint-left">
+          <span class="dev-method m-get">GET</span>
+          <code class="dev-path">/account</code>
+        </div>
         <span class="dev-endpoint-title">Get account info</span>
       </div>
       <div class="dev-endpoint-body">
@@ -519,25 +568,39 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
   <!-- FIELD REFERENCE -->
   <div class="dev-section">
-    <div class="dev-section-title">POST /jobs - Field Reference</div>
-    <div style="background:#0f172a;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;">
-      <table class="dev-table">
-        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
-        <tbody>
-          <tr><td>entry</td><td>"fetch"|"upload"|"compose"|"generate"</td><td>No (default: fetch)</td><td>How the source is provided. fetch=URL, upload=file, compose=script-only, generate=generated video</td></tr>
-          <tr><td>url</td><td>string</td><td>If entry=fetch</td><td>Source video URL (Twitch clip, YouTube, direct MP4)</td></tr>
-          <tr><td>urls</td><td>string[]</td><td>No</td><td>Multiple source URLs for multi-clip jobs</td></tr>
-          <tr><td>fileId</td><td>string</td><td>If entry=upload</td><td>File ID from POST /upload</td></tr>
-          <tr><td>topic</td><td>string</td><td>No</td><td>Topic for the video (max 500 chars). Used for script generation and metadata.</td></tr>
-          <tr><td>tone</td><td>string</td><td>No</td><td>Voiceover tone e.g. "hype", "calm", "educational"</td></tr>
-          <tr><td>format</td><td>"short"|"long"</td><td>No (default: short)</td><td>Short-form (≤60s) or long-form video</td></tr>
-          <tr><td>durationMins</td><td>number</td><td>No (default: 1)</td><td>Target duration in minutes (1-120)</td></tr>
-          <tr><td>platforms</td><td>string[]</td><td>No</td><td>"tiktok", "youtube", "instagram" - platforms to publish to</td></tr>
-          <tr><td>publishMode</td><td>"immediate"|"scheduled"|"manual"</td><td>No (default: immediate)</td><td>When to publish after production</td></tr>
-          <tr><td>staging</td><td>boolean</td><td>No</td><td>If true, job stops before publish for your review</td></tr>
-          <tr><td>fromTemplateId</td><td>string</td><td>No</td><td>Start from a saved template. Body fields override template values.</td></tr>
-        </tbody>
-      </table>
+    <div class="dev-section-title">POST /jobs — Field Reference &amp; Example</div>
+    <div class="dev-jobs-ref">
+      <div class="dev-jobs-ref-table">
+        <table class="dev-table">
+          <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>entry</td><td>"fetch"|"upload"|"compose"|"generate"</td><td>No (default: fetch)</td><td>How the source is provided. fetch=URL, upload=file, compose=script-only, generate=generated video</td></tr>
+            <tr><td>url</td><td>string</td><td>If entry=fetch</td><td>Source video URL (Twitch clip, YouTube, direct MP4)</td></tr>
+            <tr><td>urls</td><td>string[]</td><td>No</td><td>Multiple source URLs for multi-clip jobs</td></tr>
+            <tr><td>fileId</td><td>string</td><td>If entry=upload</td><td>File ID from POST /upload</td></tr>
+            <tr><td>topic</td><td>string</td><td>No</td><td>Topic for the video (max 500 chars). Used for script generation and metadata.</td></tr>
+            <tr><td>tone</td><td>string</td><td>No</td><td>Voiceover tone e.g. "hype", "calm", "educational"</td></tr>
+            <tr><td>format</td><td>"short"|"long"</td><td>No (default: short)</td><td>Short-form (≤60s) or long-form video</td></tr>
+            <tr><td>durationMins</td><td>number</td><td>No (default: 1)</td><td>Target duration in minutes (1-120)</td></tr>
+            <tr><td>platforms</td><td>string[]</td><td>No</td><td>"tiktok", "youtube", "instagram" - platforms to publish to</td></tr>
+            <tr><td>publishMode</td><td>"immediate"|"scheduled"|"manual"</td><td>No (default: immediate)</td><td>When to publish after production</td></tr>
+            <tr><td>staging</td><td>boolean</td><td>No</td><td>If true, job stops before publish for your review</td></tr>
+            <tr><td>fromTemplateId</td><td>string</td><td>No</td><td>Start from a saved template. Body fields override template values.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="dev-jobs-ref-sample">
+        <div class="dev-code-label">Example request</div>
+        <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X POST https://api.auraflux.co/v1/jobs \
+  -H "Authorization: Bearer af_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "entry": "fetch",
+    "url": "https://www.twitch.tv/videos/123456789",
+    "platforms": ["tiktok", "youtube"],
+    "publishMode": "immediate"
+  }'</div>
+      </div>
     </div>
   </div>
 

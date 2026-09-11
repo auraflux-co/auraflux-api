@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Developer API page: nav clearance, auth banner, high-contrast method badges, jobs curl example.
+**Last Updated:** 2026-09-11 — Developer API: light endpoint cards, stronger auth banner, jobs curl beside field table.
 
 
 
