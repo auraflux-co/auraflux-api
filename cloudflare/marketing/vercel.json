@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "framework": null,
   "redirects": [
-    { "source": "/pricing", "destination": "/plans", "permanent": true },
+    { "source": "/plans", "destination": "/pricing", "permanent": true },
     { "source": "/about", "destination": "/our-story", "permanent": true },
     { "source": "/system", "destination": "/features", "permanent": true },
     { "source": "/our-system", "destination": "/features", "permanent": true },

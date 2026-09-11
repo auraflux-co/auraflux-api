@@ -1,32 +1,46 @@
 {
-  "hero_headline": "One Plan. Unlimited Peaks to Publish.",
-  "hero_sub": "Member portal with Peaks (Most Replayed, chat spikes, CCV), the Short production pipeline, and publish to connected accounts. One brand. Fair-use rate limits apply (see Terms). Need us to run it for you? Inquire about Managed.",
-  "plan": {
-    "name": "AuraFlux",
-    "title": "Peaks + publish",
-    "subtitle": "Unlimited Peaks, Short production, and publish for one brand. You run it from app.auraflux.co. Fair-use rate limits protect the platform (see Terms).",
-    "price": "$999",
-    "credits": "Unlimited · one brand · self-serve checkout",
+  "hero_headline": "Predictable Pricing for Streamers & Media Agencies",
+  "hero_sub": "Turn raw VODs into daily short-form content at 1/3 the cost of a full-time editor seat.",
+  "growth": {
+    "name": "Growth / Creator",
+    "title": "Creator",
+    "subtitle": "Solo streamers shipping daily content.",
+    "price": "$299",
+    "price_note": "or custom starter — talk to us if you need a lighter seat",
     "features": [
-      "Unlimited Peaks: YouTube Most Replayed, Twitch chat spikes, Kick CCV",
-      "Unlimited Short production with C1–C11 edit presets (fair use)",
-      "Direct publish to connected platforms",
-      "One brand on the self-serve plan",
-      "Member portal: jobs, channels, review, billing",
-      "Developer API by invite (Peaks + publish)"
+      "Up to 40 hours of VOD processing / mo",
+      "3 Connected channels (YouTube, Twitch, Kick)",
+      "Auto 9:16 framing & kinetic captions",
+      "1080p60 vertical exports",
+      "Direct dispatch to TikTok, Shorts & Reels"
     ],
-    "cta_label": "Start AuraFlux",
-    "image_url": "/images/plan-auraflux-peaks-publish.png?v=4",
+    "cta_label": "Start Growth",
+    "cta_url": "/contact",
+    "cta_style": "cta cta-secondary"
+  },
+  "plan": {
+    "name": "Pro Operator / Agency",
+    "title": "Pro Operator",
+    "subtitle": "High-volume streamers, esports orgs & clip networks.",
+    "badge": "MOST POPULAR FOR AGENCIES",
+    "price": "$999",
+    "price_note": "Full platform seat with priority queue & team access",
+    "features": [
+      "Unlimited VOD processing & peak detection",
+      "Unlimited connected channels & social dispatch",
+      "Custom caption font uploads & brand templates",
+      "Priority render queue (< 2 min processing)",
+      "Team workspace seats & API key access",
+      "Dedicated Account Manager"
+    ],
+    "cta_label": "Start Pro Operator",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=operate",
     "cta_style": "cta cta-primary"
   },
-  "managed": {
-    "eyebrow": "Need more hands on?",
-    "title": "Inquire about Managed",
-    "body": "Done-for-you production, dedicated account management, and Managed-tier add-ons when your workflow needs them. Tell us how you ship Shorts today.",
-    "cta_label": "Contact us",
-    "cta_url": "/contact",
-    "cta_style": "cta-managed"
+  "enterprise": {
+    "body": "Need custom API limits, white-label clip rendering, or dedicated server infrastructure?",
+    "cta_label": "Talk to Enterprise Sales",
+    "cta_url": "/contact"
   },
-  "credit_note": "Fair-use rate limits apply so the platform stays fast for everyone. Details are in the Terms of Service."
+  "trust_badges": ["Cancel Anytime", "Instant Activation", "Dedicated Support"]
 }

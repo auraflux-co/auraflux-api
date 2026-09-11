@@ -97,7 +97,7 @@ def main() -> int:
         "/blog/peaks-to-short": "blog-peaks-to-short.html",
         "/blog/why-peaks": "blog-why-peaks.html",
         "/blog/one-plan": "blog-one-plan.html",
-        "/plans": "pricing.html",
+        "/pricing": "pricing.html",
         "/our-story": "about.html",
         "/features": "system.html",
         "/developer-api": "developer-api.html",
@@ -133,7 +133,7 @@ def main() -> int:
 
     # Aliases as duplicate static files (vercel redirects also cover these)
     aliases = {
-        "/pricing": "/plans",
+        "/plans": "/pricing",
         "/about": "/our-story",
         "/system": "/features",
         "/our-system": "/features",

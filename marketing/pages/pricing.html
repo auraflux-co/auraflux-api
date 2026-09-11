@@ -4,7 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Plans. AuraFlux</title>
 <meta name="description" content="One AuraFlux plan: unlimited Peaks and publish for one brand. Fair-use rate limits in Terms. Inquire about Managed.">
-<link rel="canonical" href="https://auraflux.co/plans">
+<link rel="canonical" href="https://auraflux.co/pricing">
 <link rel="icon" type="image/png" href="/favicon.png?v=4">
 <link rel="icon" href="/favicon.ico?v=4" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4">
@@ -18,218 +18,177 @@
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{line-height:1.6}
-
-.hero{text-align:center;padding:60px 24px 48px}
-.hero h1{
-  font-size:clamp(2.25rem,4vw,3.5rem);font-weight:800;margin-bottom:16px;
-  color:#fff !important;line-height:1.1;letter-spacing:-.04em;
+.hero{
+  text-align:center;
+  padding:3rem 1.25rem 2.5rem !important;
 }
-.hero p{font-size:1.05rem;color:#cbd5e1 !important;max-width:40rem;margin:0 auto;line-height:1.65;}
+@media (min-width:768px){
+  .hero{padding:4rem 1.25rem 3rem !important}
+}
+.hero h1{
+  font-size:clamp(1.85rem,4vw,2.85rem);font-weight:800;color:#fff !important;
+  letter-spacing:-.03em;margin:0 auto 14px;line-height:1.15;max-width:44rem;
+}
+.hero > p{
+  color:#cbd5e1 !important;max-width:38rem;margin:0 auto;line-height:1.65;font-size:1.05rem;font-weight:400;
+}
 
 .plans-wrap{
-  background:#f4f4f5;
-  padding:48px 24px 32px;
+  max-width:72rem;margin:0 auto;padding:0.5rem 1.25rem 2rem;
 }
 .plans{
-  display:grid;
-  grid-template-columns:1fr;
-  max-width:520px;
-  margin:0 auto;
-  gap:24px;
+  display:grid;grid-template-columns:1fr;gap:1.5rem;
+  max-width:56rem;margin:0 auto;
 }
+@media (min-width:900px){
+  .plans{grid-template-columns:1fr 1fr;align-items:stretch}
+}
+
 .plan{
-  background:#fff;border:2px solid #0f172a;
-  border-radius:16px;overflow:hidden;
-  display:flex;flex-direction:column;
+  background:#0f172a;border:1px solid #1e293b;border-radius:1rem;
+  padding:1.75rem 1.5rem;display:flex;flex-direction:column;gap:0.85rem;
+  position:relative;box-shadow:0 4px 16px rgba(15,23,42,.12);
 }
-.plan-img{
-  width:100%;display:block;height:auto;
-  aspect-ratio:4/3;
-  border-bottom:1px solid #e4e4e7;
-  object-fit:contain;object-position:center;
-  background:#0b1426;
+.plan.popular{
+  border-color:#fbbf24;
+  box-shadow:0 0 0 1px rgba(251,191,36,.35),0 8px 28px rgba(15,23,42,.35);
 }
-.plan-body{padding:28px 28px 24px;display:flex;flex-direction:column;flex:1;}
+.plan-badge{
+  position:absolute;top:-0.7rem;left:50%;transform:translateX(-50%);
+  white-space:nowrap;
+  font-size:0.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  background:#fbbf24;color:#020617;padding:0.35rem 0.85rem;border-radius:9999px;
+}
 .plan-name{
-  font-size:.68rem;font-weight:800;letter-spacing:.14em;
-  text-transform:uppercase;color:#0b1220;margin-bottom:6px;
+  font-size:0.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:#94a3b8;margin:0.35rem 0 0;
 }
+.plan.popular .plan-name{color:#fbbf24}
 .plan-title{
-  font-size:1.5rem;font-weight:700;color:#18181b;
-  letter-spacing:-.02em;margin-bottom:4px;
+  font-size:1.45rem;font-weight:800;color:#fff !important;letter-spacing:-.02em;margin:0;line-height:1.2;
 }
-.plan-sub{font-size:.9rem;color:#3f3f46;margin-bottom:20px;line-height:1.55;}
+.plan-sub{
+  font-size:0.92rem;color:#94a3b8 !important;line-height:1.55;margin:0;
+}
 .price{
-  font-size:2.8rem;font-weight:800;color:#18181b;
-  letter-spacing:-.02em;line-height:1.15;margin-bottom:10px;
+  font-size:2.6rem;font-weight:800;color:#fff !important;letter-spacing:-.03em;line-height:1.1;margin:0.35rem 0 0;
 }
-.price .period{font-size:1rem;font-weight:400;color:#71717a;letter-spacing:0;}
-.credits{
-  font-size:.8rem;color:#3f3f46;
-  margin-bottom:24px;padding-bottom:20px;margin-top:2px;
-  border-bottom:1px solid #e4e4e7;
-  line-height:1.5;
-  background:transparent !important;
+.price .period{font-size:1rem;font-weight:500;color:#94a3b8;letter-spacing:0}
+.price-note{
+  font-size:0.8rem;color:#64748b !important;margin:0;line-height:1.45;
 }
-.features{list-style:none;flex:1;margin-bottom:28px;display:flex;flex-direction:column;gap:4px;}
+.features{
+  list-style:none;margin:0.5rem 0 0;padding:0;display:flex;flex-direction:column;gap:0.55rem;flex:1;
+}
 .features li{
-  font-size:.88rem;color:#3f3f46;padding:5px 0;
-  display:flex;gap:10px;line-height:1.55;
+  font-size:0.9rem;color:#cbd5e1 !important;display:flex;gap:0.65rem;line-height:1.5;
 }
-.features li::before{content:"✓";color:#0b1220;font-weight:700;flex-shrink:0;}
+.features li::before{
+  content:"✓";color:#fbbf24;font-weight:800;flex-shrink:0;
+}
 .cta{
-  display:block;text-align:center;padding:13px;
-  border-radius:10px;font-weight:700;font-size:.9rem;
-  transition:opacity .2s;text-decoration:none;
+  display:block;text-align:center;padding:0.85rem 1rem;margin-top:0.75rem;
+  border-radius:0.625rem;font-weight:700;font-size:0.95rem;
+  text-decoration:none !important;transition:background .15s,border-color .15s,opacity .15s;
 }
-.cta-primary{background:#0b1220;color:#fff;}
-.cta:hover{opacity:.85;text-decoration:none;}
+.cta-primary{
+  background:#fbbf24;color:#020617 !important;
+}
+.cta-primary:hover{background:#f59e0b}
+.cta-secondary{
+  background:transparent;color:#fff !important;border:1px solid #334155;
+}
+.cta-secondary:hover{border-color:#64748b}
 
-.credit-note{
-  max-width:720px;margin:0 auto;padding:0 24px 40px;
-  background:#f4f4f5;
+.enterprise{
+  max-width:56rem;margin:1.5rem auto 0;padding:0 1.25rem;
 }
-.credit-note-inner{
-  border:1px solid #e4e4e7;border-radius:12px;
-  padding:18px 24px;text-align:center;
-  background:#fff;
+.enterprise-inner{
+  background:#020617;border:1px solid #1e293b;border-radius:0.875rem;
+  padding:1.25rem 1.5rem;text-align:center;
 }
-.credit-note-inner p{font-size:.88rem;color:#3f3f46;line-height:1.65;}
+.enterprise-inner p{
+  margin:0;font-size:0.95rem;color:#cbd5e1 !important;line-height:1.6;
+}
+.enterprise-inner a{
+  color:#fbbf24 !important;font-weight:700;text-decoration:underline;text-underline-offset:3px;
+}
+.enterprise-inner a:hover{color:#fde68a !important}
 
-.managed-band{
-  background:#fff;
-  padding:24px 24px 80px;
+.trust{
+  max-width:56rem;margin:0 auto;padding:2.25rem 1.25rem 3.5rem;
+  display:flex;flex-wrap:wrap;justify-content:center;gap:0.75rem 1rem;
 }
-.managed-card{
-  max-width:720px;margin:0 auto;
-  background:#0f172a;color:#fff;
-  border-radius:16px;padding:2.5rem 2rem;
-  text-align:center;
-  border:1px solid #1e293b;
+.trust-badge{
+  display:inline-flex;align-items:center;
+  font-size:0.8rem;font-weight:700;letter-spacing:.04em;
+  color:#cbd5e1;background:#0f172a;border:1px solid #1e293b;
+  padding:0.55rem 1rem;border-radius:9999px;
 }
-.managed-eyebrow{
-  font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-  color:#f5c542;margin-bottom:12px;
+.trust-badge::before{
+  content:"";width:0.45rem;height:0.45rem;border-radius:50%;
+  background:#fbbf24;margin-right:0.55rem;flex-shrink:0;
 }
-.managed-card h2{
-  font-size:clamp(1.5rem,3vw,2rem);font-weight:800;color:#fff !important;
-  margin-bottom:12px;letter-spacing:-.03em;
-}
-.managed-card p{
-  font-size:1rem;color:#cbd5e1 !important;max-width:32rem;
-  margin:0 auto 1.75rem;line-height:1.6;
-}
-.managed-card a.cta-managed{
-  display:inline-flex;align-items:center;justify-content:center;
-  background:#f5c542;color:#0b1220;font-weight:700;font-size:.9rem;
-  padding:12px 24px;border-radius:8px;text-decoration:none;
-}
-.managed-card a.cta-managed:hover{opacity:.9;text-decoration:none;}
-
-.plans-faq{max-width:640px;margin:0 auto;padding:0 24px 64px;background:#f4f4f5;}
-.plans-faq h2{font-size:1.35rem;font-weight:800;color:#0f172a;text-align:center;margin-bottom:1.25rem;letter-spacing:-.02em}
-.faq-item{background:#fff;border:1px solid #e4e4e7;border-radius:12px;margin-bottom:10px;overflow:hidden}
-.faq-item summary{
-  cursor:pointer;padding:14px 18px;font-weight:700;font-size:.92rem;color:#0f172a;
-  list-style:none;display:flex;justify-content:space-between;gap:12px;
-}
-.faq-item summary::-webkit-details-marker{display:none}
-.faq-item summary::after{content:"+";color:#64748b;font-weight:700}
-.faq-item[open] summary::after{content:"–"}
-.faq-item p{padding:0 18px 16px;margin:0;font-size:.88rem;color:#475569;line-height:1.6}
-
-.price-loading .price-val{opacity:.3;animation:ppulse 1.2s ease-in-out infinite;}
-@keyframes ppulse{0%,100%{opacity:.15}50%{opacity:.5}}
 </style>
 </head>
 <body>
 ${FRAMER_NAV || FALLBACK_NAV}
 
 <div class="hero">
-  <h1>One Plan. Unlimited Peaks to Publish.</h1>
-  <p>Member portal with Peaks (Most Replayed, chat spikes, CCV), the Short production pipeline, and publish to connected accounts. One brand. Fair-use rate limits apply (see Terms). Need us to run it for you? Inquire about Managed.</p>
+  <h1>Predictable Pricing for Streamers &amp; Media Agencies</h1>
+  <p>Turn raw VODs into daily short-form content at 1/3 the cost of a full-time editor seat.</p>
 </div>
 
 <div class="plans-wrap">
-<div class="plans">
-  <div class="plan">
-    <img class="plan-img" src="/images/plan-auraflux-peaks-publish.png?v=4" alt="AuraFlux Peaks + publish plan">
-    <div class="plan-body">
-      <div class="plan-name">AuraFlux</div>
-      <div class="plan-title">Peaks + publish</div>
-      <div class="plan-sub">Unlimited Peaks, Short production, and publish for one brand. You run it from app.auraflux.co. Fair-use rate limits protect the platform (see Terms).</div>
-      <div class="price price-loading" id="price-operate"><span class="price-val">$999</span><span class="period">/mo</span></div>
-      <div class="credits">Unlimited · one brand · self-serve checkout</div>
+  <div class="plans" aria-label="Pricing tiers">
+    <article class="plan">
+      <p class="plan-name">For solo streamers</p>
+      <h2 class="plan-title">Growth / Creator</h2>
+      <p class="plan-sub">Solo streamers shipping daily content.</p>
+      <div class="price">$299<span class="period">/mo</span></div>
+      <p class="price-note">or custom starter — talk to us if you need a lighter seat</p>
       <ul class="features">
-        <li>Unlimited Peaks: YouTube Most Replayed, Twitch chat spikes, Kick CCV</li>
-        <li>Unlimited Short production pipeline (fair use)</li>
-        <li>Direct publish to connected platforms</li>
-        <li>One brand on the self-serve plan</li>
-        <li>Member portal: jobs, channels, review, billing</li>
-        <li>Developer API by invite (Peaks + publish)</li>
+        <li>Up to 40 hours of VOD processing / mo</li>
+        <li>3 Connected channels (YouTube, Twitch, Kick)</li>
+        <li>Auto 9:16 framing &amp; kinetic captions</li>
+        <li>1080p60 vertical exports</li>
+        <li>Direct dispatch to TikTok, Shorts &amp; Reels</li>
       </ul>
-      <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Start AuraFlux</a>
-    </div>
+      <a href="/contact" class="cta cta-secondary" data-cta="growth_cta">Start Growth</a>
+    </article>
+
+    <article class="plan popular">
+      <span class="plan-badge">Most Popular for Agencies</span>
+      <p class="plan-name">For agencies &amp; high volume</p>
+      <h2 class="plan-title">Pro Operator / Agency</h2>
+      <p class="plan-sub">High-volume streamers, esports orgs &amp; clip networks.</p>
+      <div class="price">$999<span class="period">/mo</span></div>
+      <p class="price-note">Full platform seat with priority queue &amp; team access</p>
+      <ul class="features">
+        <li>Unlimited VOD processing &amp; peak detection</li>
+        <li>Unlimited connected channels &amp; social dispatch</li>
+        <li>Custom caption font uploads &amp; brand templates</li>
+        <li>Priority render queue (&lt; 2 min processing)</li>
+        <li>Team workspace seats &amp; API key access</li>
+        <li>Dedicated Account Manager</li>
+      </ul>
+      <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Start Pro Operator</a>
+    </article>
   </div>
 </div>
-</div>
 
-<div class="credit-note" style="width:100%;max-width:none;">
-  <div class="credit-note-inner" style="max-width:420px;margin:0 auto;">
-    <p>Fair-use rate limits apply so the platform stays fast for everyone. Details are in the <a href="/terms" style="color:#0b1220;font-weight:600;text-decoration:underline;">Terms of Service</a>.</p>
+<section class="enterprise" aria-label="Enterprise">
+  <div class="enterprise-inner">
+    <p>Need custom API limits, white-label clip rendering, or dedicated server infrastructure? <a href="/contact">Talk to Enterprise Sales</a></p>
   </div>
-</div>
+</section>
 
-<div class="managed-band">
-  <div class="managed-card">
-    <div class="managed-eyebrow">Need more hands on?</div>
-    <h2>Inquire about Managed</h2>
-    <p>Done-for-you production, dedicated account management, and Managed-tier add-ons when your workflow needs them. Tell us how you ship Shorts today.</p>
-    <a href="/contact" class="cta-managed" data-cta="managed_cta">Contact us</a>
-  </div>
-</div>
-
-<div class="plans-faq">
-  <h2>Plans FAQ</h2>
-  <details class="faq-item">
-    <summary>What does “unlimited” mean?</summary>
-    <p>Self-serve includes unlimited Peaks analysis and Short production for one brand, subject to fair-use rate limits in the Terms (concurrent jobs, hourly starts, Peaks analyses). Limits protect platform speed for everyone.</p>
-  </details>
-  <details class="faq-item">
-    <summary>Can I cancel anytime?</summary>
-    <p>Yes. Cancel via Settings → Billing or email support@auraflux.co. See Refunds and Terms for billing details.</p>
-  </details>
-  <details class="faq-item">
-    <summary>What’s the difference vs Managed?</summary>
-    <p>Self-serve: you run Peaks → pipeline → publish in the member portal. Managed: we operate production with you — inquire via Contact. Same product surfaces; different service level.</p>
-  </details>
-  <details class="faq-item">
-    <summary>Is API included?</summary>
-    <p>API access is invite-gated for tech buyers. Request access from Contact or Settings → API Keys after approval. See Developer API for Peaks + edit endpoints.</p>
-  </details>
+<div class="trust" aria-label="Guarantees">
+  <span class="trust-badge">Cancel Anytime</span>
+  <span class="trust-badge">Instant Activation</span>
+  <span class="trust-badge">Dedicated Support</span>
 </div>
 
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
-<script>
-(function() {
-  fetch('/api/public/plans')
-    .then(function(r) { return r.json(); })
-    .then(function(plans) {
-      var el = document.querySelector('#price-operate .price-val');
-      if (el && plans.operate) {
-        el.textContent = plans.operate.replace('/mo','').trim();
-      }
-      var container = document.getElementById('price-operate');
-      if (container) container.classList.remove('price-loading');
-    })
-    .catch(function() {
-      document.querySelectorAll('.price-loading').forEach(function(el) {
-        el.classList.remove('price-loading');
-      });
-    });
-})();
-</script>
 </body>
 </html>
