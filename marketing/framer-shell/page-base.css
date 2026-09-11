@@ -160,6 +160,11 @@ a:hover { text-decoration: underline; }
   box-shadow: var(--shadow-sm) !important;
   color: var(--ink) !important;
 }
+/* Why AuraFlux compare list colors must beat card ink !important */
+.compare-card.bad .compare-item { color: #fca5a5 !important; font-weight: 500 !important; }
+.compare-card.good .compare-item { color: #34d399 !important; font-weight: 600 !important; }
+.compare-card.bad .compare-label { color: #f87171 !important; }
+.compare-card.good .compare-label { color: #34d399 !important; }
 .af-card:hover,
 .value-card:hover,
 .step-card:hover,

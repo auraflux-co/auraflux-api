@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Homepage contrast: proof attr slate-300, compare red/emerald-300.
+**Last Updated:** 2026-09-11 — Why AuraFlux compare list: red-300 / emerald-400 !important over card ink.
 
 
 
