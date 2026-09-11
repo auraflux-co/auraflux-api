@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Contact page: nav clearance, 2-col direct-info + qualified form layout.
+**Last Updated:** 2026-09-11 — Contact form polish: input focus ring, softer field bg, button hover lift.
 
 
 
@@ -190,6 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(marketing): contact form visual polish** — space-y-6; slate-50/50 inputs + amber focus ring; submit hover lift. | contact-content.html, STATUS.md | pending | 2026-09-11 ET |
 | Cursor | **fix(marketing): contact page 2-col layout** — hero clearance; dark direct-contact card; light qualified form (name/email/type/URL/message). | contact-content.html, legal/contact.html, STATUS.md | 20e223ec | 2026-09-11 ET |
 | Cursor | **fix(marketing): developer-api field table contrast** — slate-900 headers/fields; slate-700/800 body cols; crisp white card border. | developer-api.html, STATUS.md | d9045360 | 2026-09-11 ET |
 | Cursor | **fix(marketing): jobs field/curl non-overlap layout** — force static positioning; stack under 1100px; 7/5 grid on wide. | developer-api.html, STATUS.md | e375edb1 | 2026-09-11 ET |
