@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Hide Roadmap from marketing nav/footer (Peaks-aligned IA).
+**Last Updated:** 2026-09-11 — Marketing favicon: AF gold-on-navy mark (was 404).
 
 
 
