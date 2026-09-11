@@ -74,7 +74,7 @@
   "hero_cta_label": "View Plans",
   "hero_cta_url": "/plans",
   "hero_cta_style": "primary",
-  "bottom_cta_label": "Open Peaks",
-  "bottom_cta_url": "https://app.auraflux.co/peaks",
+  "bottom_cta_label": "View Plans & Pricing",
+  "bottom_cta_url": "/pricing",
   "bottom_cta_style": "primary"
 }

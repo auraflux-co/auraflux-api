@@ -30,10 +30,12 @@ ${FRAMER_CSS || ''}
 .work-meta{font-size:.78rem;font-weight:600;color:#64748b;letter-spacing:.04em;text-transform:uppercase}
 .work-cta{text-align:center;padding:2rem 1.25rem 4rem}
 .work-cta a{
-  display:inline-flex;background:#0b1220;color:#fff !important;font-weight:700;padding:12px 22px;
+  display:inline-flex;background:#fbbf24;color:#020617 !important;font-weight:700;padding:12px 22px;
   border-radius:8px;text-decoration:none !important;margin:0 6px 8px
 }
-.work-cta a.alt{background:#f5c542;color:#0b1220 !important}
+.work-cta a:hover{background:#f59e0b}
+.work-cta a.alt{background:transparent;border:1px solid #334155;color:#0f172a !important;font-weight:500}
+.work-cta a.alt:hover{border-color:#64748b}
 </style>
 </head>
 <body>
@@ -71,8 +73,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
   </div>
 </div>
 <div class="work-cta">
-  <a href="https://app.auraflux.co/peaks">Open Peaks</a>
-  <a class="alt" href="/contact">Talk to us</a>
+  <a href="/pricing">View Plans &amp; Pricing</a>
+  <a class="alt" href="/contact">Talk to Sales</a>
 </div>
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
 </body>

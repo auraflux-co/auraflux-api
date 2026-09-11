@@ -1,8 +1,8 @@
 {
   "hero_headline": "Turn Stream Peaks Into Published Shorts.",
   "hero_sub": "Peaks is AuraFlux for the moments that already chart: YouTube Most Replayed, Twitch chat spikes, and Kick CCV peaks. Stage a trim, run the pipeline, publish the Short.",
-  "cta_primary_label": "Open Peaks",
-  "cta_primary_url": "https://app.auraflux.co/peaks",
+  "cta_primary_label": "View Plans & Pricing",
+  "cta_primary_url": "/pricing",
   "trusted_by": [
     {
       "platform": "YouTube",
@@ -48,10 +48,10 @@
       "body": "Connect YouTube and TikTok (and more via your social accounts). Metadata and format go out with the job."
     }
   ],
-  "final_cta_headline": "Start With Peaks. Ship Shorts Faster.",
-  "final_cta_sub": "Most Replayed, chat spikes, and CCV in the member portal. One plan for Peaks and publish. Inquire about Managed if you want done-for-you.",
-  "final_cta_label": "Go to App",
-  "og_image": "https://auraflux.co/favicon.png",
+  "final_cta_headline": "Ready to Automate Your Stream Clips?",
+  "final_cta_sub": "Choose a plan to start turning VODs into viral Shorts, or contact us for custom enterprise setups.",
+  "final_cta_label": "View Plans & Pricing",
+  "og_image": "https://auraflux.co/brand/logo-512.png",
   "trusted_by_label": "Built for creators on",
   "value_eyebrow": "What you get",
   "value_title": "Peaks In. Shorts Out.<br><span class=\"gold\">Pipeline In Between.</span>",
@@ -66,6 +66,6 @@
   "compare_title": "Production software. Not another editor seat.",
   "compare_sub": "One AuraFlux plan for Peaks and publish. Inquire about Managed when you want us to run production with you.",
   "cta_primary_style": "primary",
-  "final_cta_url": "https://app.auraflux.co/peaks",
+  "final_cta_url": "/pricing",
   "final_cta_style": "primary"
 }

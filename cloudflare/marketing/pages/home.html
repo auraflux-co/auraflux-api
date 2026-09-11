@@ -331,13 +331,19 @@ body{
 }
 .final-cta h2 .gold{font-style:normal;color:#f5c542;}
 .final-cta p{font-size:1rem;color:#94a3b8 !important;max-width:480px;margin:0 auto 2rem;font-weight:400;}
+.final-cta .btn-ghost{
+  border:1px solid #334155 !important;color:#fff !important;background:transparent !important;
+  padding:0.75rem 1.5rem;border-radius:0.5rem;font-weight:500;font-size:0.9375rem;
+  text-decoration:none !important;display:inline-flex;align-items:center;
+}
+.final-cta .btn-ghost:hover{border-color:#64748b !important;background:rgba(255,255,255,.04) !important;}
 .final-cta .primary,
 .final-cta a.primary{
-  background:#f5c542 !important;color:#0b1220 !important;
+  background:#fbbf24 !important;color:#020617 !important;
   padding:0.75rem 1.5rem;border-radius:0.5rem;font-weight:700;font-size:0.9375rem;
   text-decoration:none !important;display:inline-flex;align-items:center;
 }
-.final-cta .primary:hover{opacity:.9;text-decoration:none !important;}
+.final-cta .primary:hover{background:#f59e0b !important;opacity:1;text-decoration:none !important;}
 
 /* Job Templates */
 .tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2.5rem;max-width:1000px;margin-left:auto;margin-right:auto;}
@@ -420,11 +426,6 @@ body{
 .home-price-link{display:block;text-align:center;margin-top:1.25rem;font-size:.9rem;font-weight:600;color:#0b1220;}
 
 .final-cta .cta-row{display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center;}
-.final-cta .btn-ghost{
-  color:#fff !important;border:1px solid rgba(255,255,255,.4);border-radius:0.5rem;
-  padding:0.75rem 1.25rem;font-weight:600;text-decoration:none !important;display:inline-flex;
-}
-.final-cta .btn-ghost:hover{background:rgba(255,255,255,.08) !important;}
 </style>
 </head>
 <body>
@@ -439,8 +440,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <h1>Turn Stream Peaks Into <span class="gold">Published Shorts.</span></h1>
       <p class="hero-sub">Automatically capture YouTube Most Replayed moments, Twitch chat spikes, and Kick CCV surges. Edit, caption, brand, and post viral vertical Shorts without hiring an editing team.</p>
       <div class="hero-cta">
-        <a href="https://app.auraflux.co/peaks" class="primary" data-cta="hero_cta">Open Peaks</a>
-        <a href="/contact" class="btn-ghost" data-cta="hero_talk">Talk to us</a>
+        <a href="/pricing" class="primary" data-cta="hero_cta">View Plans &amp; Pricing</a>
+        <a href="/contact" class="btn-ghost" data-cta="hero_talk">Talk to Sales</a>
       </div>
       <div class="hero-features">
         <div class="hero-feat">⚡ Chat &amp; Heatmap Peak Detection</div>
@@ -687,7 +688,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <h3>Managed</h3>
         <div class="home-price-amt" style="font-size:1.5rem;padding:.5rem 0;">By inquiry</div>
         <p>We run production with you — dedicated ops and Managed-tier add-ons when your workflow needs them.</p>
-        <a href="/contact" data-cta="home_price_managed">Talk to us</a>
+        <a href="/contact" data-cta="home_price_managed">Talk to Sales</a>
       </div>
     </div>
     <a class="home-price-link" href="/plans">See full plans →</a>
@@ -772,11 +773,11 @@ ${FRAMER_NAV || FALLBACK_NAV}
 
 <!-- ── Final CTA ──────────────────────────────────────────────────────────── -->
 <div class="final-cta surface-dark">
-  <h2>Start With Peaks. Ship Shorts Faster.</h2>
-  <p>Most Replayed, chat spikes, and CCV in the member portal. One plan for Peaks and publish. Inquire about Managed if you want done-for-you.</p>
+  <h2>Ready to Automate Your Stream Clips?</h2>
+  <p>Choose a plan to start turning VODs into viral Shorts, or contact us for custom enterprise setups.</p>
   <div class="cta-row">
-    <a href="https://app.auraflux.co/peaks" class="primary" data-cta="final_cta">Go to App</a>
-    <a href="/contact" class="btn-ghost" data-cta="final_talk">Talk to us</a>
+    <a href="/pricing" class="primary" data-cta="final_cta">View Plans &amp; Pricing</a>
+    <a href="/contact" class="btn-ghost" data-cta="final_talk">Talk to Sales</a>
   </div>
 </div>
 

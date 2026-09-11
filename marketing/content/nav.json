@@ -1,6 +1,6 @@
 {
-  "cta_label": "Open App",
-  "cta_url": "https://app.auraflux.co/peaks",
+  "cta_label": "Get Started",
+  "cta_url": "/pricing",
   "links": [
     { "label": "Home", "url": "/" },
     { "label": "How it works", "url": "/how-it-works" },

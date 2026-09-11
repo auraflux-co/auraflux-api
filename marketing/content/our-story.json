@@ -41,8 +41,8 @@
       "body": "Tech buyers who want platform-signal Peaks programmatically can request API access for review. Most creators start with Peaks in the dashboard."
     }
   ],
-  "cta_headline": "Ready to ship Shorts from Peaks?",
-  "cta_sub": "Open Peaks for Most Replayed, chat spikes, and CCV in the member portal.",
+  "cta_headline": "Ready to Automate Your Stream Clips?",
+  "cta_sub": "Choose a plan to start turning VODs into viral Shorts, or contact us for custom enterprise setups.",
   "founder_photo": "/cf-assets/marketing/images/founder-rob-gregory.jpg",
   "founder_name": "Rob Gregory",
   "founder_role": "Founder & CEO",
@@ -59,10 +59,10 @@
   "hero_cta_secondary_label": "",
   "hero_cta_secondary_url": "",
   "hero_cta_secondary_style": "secondary",
-  "bottom_cta_label": "View Plans",
-  "bottom_cta_url": "/plans",
+  "bottom_cta_label": "View Plans & Pricing",
+  "bottom_cta_url": "/pricing",
   "bottom_cta_style": "primary",
-  "bottom_cta_secondary_label": "",
-  "bottom_cta_secondary_url": "",
+  "bottom_cta_secondary_label": "Talk to Sales",
+  "bottom_cta_secondary_url": "/contact",
   "bottom_cta_secondary_style": "secondary"
 }
