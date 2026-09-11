@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Developer API — Peaks by invite. AuraFlux</title>
-<meta name="description" content="AuraFlux Developer API: platform-signal Peaks (YouTube Most Replayed, Twitch chat, Kick CCV), Short pipeline, and publish. Access by invite.">
+<title>AuraFlux Developer API</title>
+<meta name="description" content="Access platform-signal Peaks (YouTube Most Replayed, Twitch Chat Spikes, Kick CCV) and automated 9:16 rendering via programmatic endpoints.">
 <link rel="canonical" href="https://auraflux.co/developer-api">
 <link rel="icon" type="image/png" href="/favicon.png?v=4">
 <link rel="icon" href="/favicon.ico?v=4" sizes="any">
@@ -21,27 +21,35 @@ ${FRAMER_CSS || ''}
 *{box-sizing:border-box;margin:0;padding:0}
 body{line-height:1.6}
 
-.dev-wrap{max-width:900px;margin:0 auto;padding:0 24px 120px;}
-.dev-hero{margin-bottom:48px;}
-.dev-hero h1{letter-spacing:-.03em;margin-bottom:10px;}
-.dev-hero p{color:#8f9bb7;font-size:1rem;line-height:1.65;max-width:600px;}
-.dev-base{
-  display:inline-flex;align-items:center;gap:8px;
-  background:#0f172a;border:1px solid rgba(199,175,79,.25);
-  border-radius:8px;padding:10px 16px;margin-bottom:48px;
-  font-size:.88rem;font-family:'Satoshi','Inter',monospace;
-}
-.dev-base-label{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8f9bb7;}
-.dev-base code{color:#f5c542;font-weight:700;}
+.dev-wrap{max-width:64rem;margin:0 auto;padding:7rem 1rem 4rem;}
+.dev-hero{margin-bottom:2rem;}
+.dev-hero h1{letter-spacing:-.03em;margin-bottom:12px;font-size:clamp(1.75rem,4vw,2.5rem);font-weight:800;color:#fff;}
+.dev-hero p{color:#94a3b8;font-size:1.05rem;line-height:1.65;max-width:42rem;}
 
-/* Auth notice */
-.dev-auth-card{
-  background:rgba(245,197,66,.06);border:1px solid rgba(245,197,66,.2);
-  border-radius:12px;padding:20px 24px;margin-bottom:40px;
-  display:flex;gap:16px;align-items:flex-start;
+/* Base URL + Auth banner */
+.dev-auth-banner{
+  background:#0f172a;border:1px solid #1e293b;border-radius:1rem;
+  padding:1.5rem;margin:2rem 0;color:#fff;
+  box-shadow:0 20px 40px rgba(15,23,42,.35);
 }
-.dev-auth-card p{font-size:.88rem;color:#a0a0b8;line-height:1.6;}
-.dev-auth-card strong{color:#fff;}
+.dev-auth-banner-top{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;
+  border-bottom:1px solid #1e293b;padding-bottom:1rem;margin-bottom:1rem;
+}
+.dev-auth-banner-base{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+.dev-base-pill{
+  font-size:.7rem;font-weight:800;letter-spacing:.04em;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2);
+  padding:.25rem .75rem;border-radius:9999px;
+}
+.dev-auth-banner code{font-size:.875rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#e2e8f0;}
+.dev-auth-cta{
+  font-size:.75rem;font-weight:800;background:#fbbf24;color:#020617;
+  padding:.5rem 1rem;border-radius:.5rem;text-decoration:none;transition:background .15s;
+}
+.dev-auth-cta:hover{background:#f59e0b;text-decoration:none;color:#020617;}
+.dev-auth-banner-meta{font-size:.75rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#94a3b8;line-height:1.7;}
+.dev-auth-banner-meta .k{color:#fbbf24;}
 
 /* Section headers */
 .dev-section{margin-bottom:40px;}
@@ -52,51 +60,52 @@ body{line-height:1.6}
   margin-bottom:16px;
 }
 
-/* Endpoint rows */
+/* Endpoint rows — high contrast list */
 .dev-endpoint{
-  background:#0f172a;border:1px solid rgba(255,255,255,.07);
+  background:transparent;border:1px solid #1e293b;
   border-radius:12px;overflow:hidden;margin-bottom:10px;
 }
 .dev-endpoint-header{
   display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;
-  transition:background .15s;
+  transition:background .15s;background:rgba(15,23,42,.6);
 }
-.dev-endpoint-header:hover{background:rgba(255,255,255,.03);}
+.dev-endpoint-header:hover{background:rgba(30,41,59,.7);}
 .dev-method{
-  font-size:.65rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
-  padding:2px 8px;border-radius:4px;font-family:'Satoshi','Inter',monospace;flex-shrink:0;
+  font-size:.7rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  padding:.25rem .65rem;border-radius:.375rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;
 }
-.m-get{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25);}
-.m-post{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.25);}
-.m-delete{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);}
+.m-get{background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2);}
+.m-post{background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.2);}
+.m-delete{background:rgba(244,63,94,.1);color:#fb7185;border:1px solid rgba(244,63,94,.2);}
 .m-patch{background:rgba(245,197,66,.12);color:#f5c542;border:1px solid rgba(245,197,66,.25);}
-.dev-path{font-size:.88rem;font-family:'Satoshi','Inter',monospace;color:#e4e4f0;flex:1;}
-.dev-endpoint-title{font-size:.85rem;color:#8f9bb7;}
+.dev-path{font-size:.88rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#e2e8f0;flex:1;}
+.dev-endpoint-title{font-size:.85rem;color:#94a3b8;}
 .dev-credits-badge{
   font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:4px;
   background:rgba(245,197,66,.1);color:#f5c542;border:1px solid rgba(245,197,66,.2);
   font-family:'Satoshi','Inter',monospace;flex-shrink:0;
 }
 .dev-endpoint-body{
-  display:none;border-top:1px solid rgba(255,255,255,.06);
-  padding:20px;
+  display:none;border-top:1px solid #1e293b;
+  padding:20px;background:#0f172a;
 }
 .dev-endpoint-body.open{display:block;}
-.dev-desc{font-size:.88rem;color:#8f9bb7;line-height:1.65;margin-bottom:20px;}
+.dev-desc{font-size:.88rem;color:#94a3b8;line-height:1.65;margin-bottom:20px;}
 .dev-code-label{
   font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:#555580;font-family:'Satoshi','Inter',monospace;margin-bottom:6px;
+  color:#64748b;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-bottom:6px;
 }
 .dev-code{
-  background:#060b14;border:1px solid rgba(255,255,255,.07);
+  background:#020617;border:1px solid #1e293b;
   border-radius:8px;padding:16px;overflow-x:auto;
-  font-size:.8rem;font-family:'Satoshi','Inter',monospace;
-  color:#a0a0b8;line-height:1.7;position:relative;margin-bottom:16px;
+  font-size:.8rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#cbd5e1;line-height:1.7;position:relative;margin-bottom:16px;white-space:pre-wrap;
 }
 .dev-code-copy{
   position:absolute;top:8px;right:8px;
   background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);
-  color:#8f9bb7;font-size:.65rem;font-weight:700;
+  color:#94a3b8;font-size:.65rem;font-weight:700;
   padding:3px 10px;border-radius:6px;cursor:pointer;
   font-family:inherit;transition:background .15s;
 }
@@ -106,13 +115,13 @@ body{line-height:1.6}
 
 /* Field table */
 .dev-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px;}
-.dev-table th{text-align:left;padding:8px 12px;color:#555580;font-weight:700;
+.dev-table th{text-align:left;padding:8px 12px;color:#64748b;font-weight:700;
   font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;
   border-bottom:1px solid rgba(255,255,255,.07);}
 .dev-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);
-  color:#a0a0b8;vertical-align:top;}
-.dev-table td:first-child{font-family:'Satoshi','Inter',monospace;color:#e4e4f0;font-weight:500;}
-.dev-table td:nth-child(2){color:#60a5fa;font-family:'Satoshi','Inter',monospace;font-size:.75rem;}
+  color:#94a3b8;vertical-align:top;}
+.dev-table td:first-child{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#e2e8f0;font-weight:500;}
+.dev-table td:nth-child(2){color:#60a5fa;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;}
 .dev-table tr:last-child td{border-bottom:none;}
 
 /* Get started CTA */
@@ -123,9 +132,9 @@ body{line-height:1.6}
   margin-top:56px;flex-wrap:wrap;
 }
 .dev-cta-text h3{font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:6px;}
-.dev-cta-text p{font-size:.88rem;color:#8f9bb7;}
+.dev-cta-text p{font-size:.88rem;color:#94a3b8;}
 .dev-cta a{
-  background:#f5c542;color:#0b1220;padding:11px 24px;
+  background:#fbbf24;color:#0b1220;padding:11px 24px;
   border-radius:8px;font-size:.9rem;font-weight:700;
   text-decoration:none;white-space:nowrap;transition:opacity .15s;
 }
@@ -138,18 +147,22 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <div class="dev-wrap">
 
   <div class="dev-hero">
-    <h1>Developer API</h1>
-    <p>AuraFlux is two parts in one API: <strong>Peaks</strong> (real platform signal — YouTube Most Replayed, Twitch chat, Kick CCV) and <strong>Short edits</strong> (C1–C11 compose presets plus captions, grade, effects, audio, branding, TTS). Not AI-guessed viral moments.</p>
+    <h1>AuraFlux Developer API</h1>
+    <p>Access platform-signal Peaks (YouTube Most Replayed, Twitch Chat Spikes, Kick CCV) and automated 9:16 rendering via programmatic endpoints.</p>
   </div>
 
-  <div class="dev-base">
-    <span class="dev-base-label">Base URL</span>
-    <code>https://api.auraflux.co/v1</code>
-  </div>
-
-  <div class="dev-auth-card">
-    <div style="font-size:1.2rem;flex-shrink:0;">✉</div>
-    <p><strong>Invite only.</strong> API access is reviewed for tech buyers who need platform-signal Peaks. <a href="/contact?topic=api_invite" style="color:#f5c542;">Request API access</a>, then create keys at <a href="https://app.auraflux.co/settings/api-keys" style="color:#f5c542;">Settings → API Keys</a> once approved. Authenticate with <code style="background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;color:#f5c542;">Authorization: Bearer af_live_YOUR_KEY</code>. Optional brand scope: <code style="background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;color:#f5c542;">X-Brand-Id</code>.</p>
+  <div class="dev-auth-banner">
+    <div class="dev-auth-banner-top">
+      <div class="dev-auth-banner-base">
+        <span class="dev-base-pill">BASE URL</span>
+        <code>https://api.auraflux.co/v1</code>
+      </div>
+      <a class="dev-auth-cta" href="/contact">Request API Key</a>
+    </div>
+    <div class="dev-auth-banner-meta">
+      <p><span class="k">Authorization:</span> Bearer af_live_YOUR_KEY</p>
+      <p><span class="k">X-Brand-Id:</span> optional_brand_scope_id</p>
+    </div>
   </div>
 
   <!-- PEAKS -->
@@ -281,12 +294,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
             <div class="dev-code-label">Request body</div>
             <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>{
   "entry": "fetch",
-  "url": "https://clips.twitch.tv/your-clip",
-  "topic": "Best CS2 plays this week",
-  "tone": "hype",
-  "format": "short",
-  "durationMins": 1,
-  "platforms": ["tiktok"],
+  "url": "https://www.twitch.tv/videos/123456789",
+  "platforms": ["tiktok", "youtube"],
   "publishMode": "immediate"
 }</div>
           </div>
@@ -304,7 +313,12 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <div class="dev-code"><button class="dev-code-copy" onclick="copyCode(this)">Copy</button>curl -X POST https://api.auraflux.co/v1/jobs \
   -H "Authorization: Bearer af_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"entry":"fetch","url":"https://clips.twitch.tv/clip","topic":"Best plays","format":"short","platforms":["tiktok"]}'</div>
+  -d '{
+    "entry": "fetch",
+    "url": "https://www.twitch.tv/videos/123456789",
+    "platforms": ["tiktok", "youtube"],
+    "publishMode": "immediate"
+  }'</div>
       </div>
     </div>
 

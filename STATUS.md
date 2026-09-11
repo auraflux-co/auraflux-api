@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Growth price note: “Self-serve · cancel anytime” (dropped confusing custom-starter hedge).
+**Last Updated:** 2026-09-11 — Developer API page: nav clearance, auth banner, high-contrast method badges, jobs curl example.
 
 
 
