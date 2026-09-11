@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Developer API contrast: dark slate hero, bright auth banner text, dark section titles + endpoint paths.
+**Last Updated:** 2026-09-11 — Developer API contrast polish: extrabold hero + brighter auth value text.
 
 
 
