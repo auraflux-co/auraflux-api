@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Unhide Roadmap in site nav + footer.
+**Last Updated:** 2026-09-11 — /blog/one-plan managed callout: slate-50 rounded-2xl card.
 
 
 
@@ -190,6 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
+| Cursor | **fix(marketing): one-plan managed callout card** — slate-50 rounded-2xl p-6 light card. | blog-one-plan.html, page-base.css, STATUS.md | pending | 2026-09-11 ET |
 | Cursor | **feat(marketing): unhide Roadmap in nav/footer** — link /roadmap sitewide. | nav.json, footer.json, nav.html, footer.html, inject, STATUS.md | 647af00f | 2026-09-11 ET |
 | Cursor | **fix(marketing): remove AI product framing sitewide** — Automated 9:16; Imagen as optional Managed extension; no AI CTAs. | our-system, system, roadmap, admin, STATUS.md | 8c894732 | 2026-09-11 ET |
 | Cursor | **fix(marketing): one-plan copy — no vague AI** — Peaks/portal pipeline wording instead of AI-driven. | blog-one-plan.html, STATUS.md | 239e83a8 | 2026-09-11 ET |
