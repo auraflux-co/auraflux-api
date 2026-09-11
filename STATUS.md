@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Marketing brand logo + real favicons (nav/footer/icons from app/public/brand).
+**Last Updated:** 2026-09-11 — How it works media slots: hero iframe/MP4 + step GIF/JPG containers under /assets/.
 
 
 

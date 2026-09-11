@@ -21,23 +21,30 @@ ${FRAMER_CSS || ''}
 .hero > p{
   color:#cbd5e1 !important;max-width:38rem;margin:0 auto;line-height:1.65;font-size:1.05rem;font-weight:400;
 }
-/* aspect-video w-full max-w-4xl mx-auto rounded-xl bg-slate-800 border border-slate-700 mt-8 overflow-hidden */
+/* aspect-video w-full max-w-4xl mx-auto rounded-xl bg-slate-900 border border-slate-700/80 mt-8 overflow-hidden shadow-2xl */
 .hero-video{
   aspect-ratio:16/9;width:100%;max-width:56rem;margin:2rem auto 0;
-  border-radius:0.75rem;background:#1e293b;border:1px solid #334155;
+  border-radius:0.75rem;background:#0f172a;border:1px solid rgba(51,65,85,.8);
   overflow:hidden;position:relative;
+  box-shadow:0 25px 50px -12px rgba(0,0,0,.55);
 }
-.hero-video-placeholder{
+.hero-video iframe,
+.hero-video video{
+  position:absolute;inset:0;width:100%;height:100%;border:0;display:block;
+  background:#0f172a;
+}
+.hero-video-fallback{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   color:#e2e8f0 !important;font-size:1.05rem;font-weight:700;letter-spacing:.01em;
-  background:linear-gradient(160deg,rgba(15,23,42,.35),rgba(15,23,42,.65));
+  background:linear-gradient(160deg,rgba(15,23,42,.45),rgba(15,23,42,.75));
+  pointer-events:none;
 }
+.hero-video.is-ready .hero-video-fallback{display:none}
 .pipeline{max-width:64rem;margin:0 auto;padding:1.5rem 1.25rem 4.5rem;display:flex;flex-direction:column;gap:1.5rem}
 .step-block{
   background:#0f172a;border:1px solid #1e293b;border-radius:1rem;padding:1.75rem 1.5rem;
   box-shadow:0 4px 16px rgba(15,23,42,.12);
 }
-/* grid grid-cols-1 lg:grid-cols-2 gap-8 items-center */
 .step-grid{
   display:grid;grid-template-columns:1fr;gap:2rem;align-items:center;
 }
@@ -61,18 +68,16 @@ ${FRAMER_CSS || ''}
   color:#f5c542;background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);
   padding:0.35rem 0.75rem;border-radius:9999px;
 }
-/* aspect-video rounded-lg bg-slate-800/80 border border-slate-700/50 p-4 */
+/* aspect-video rounded-xl bg-slate-900 border border-slate-800 p-2 overflow-hidden shadow-lg */
 .step-media{
-  aspect-ratio:16/9;border-radius:0.5rem;
-  background:rgba(30,41,59,.8);border:1px solid rgba(51,65,85,.5);
-  padding:1rem;display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
+  aspect-ratio:16/9;border-radius:0.75rem;
+  background:#0f172a;border:1px solid #1e293b;
+  padding:0.5rem;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;box-shadow:0 10px 25px -8px rgba(0,0,0,.45);
 }
-.step-media-label{
-  color:#94a3b8 !important;font-size:0.85rem;font-weight:600;text-align:center;letter-spacing:.02em;
-}
-.step-media img,.step-media video{
-  width:100%;height:100%;object-fit:cover;border-radius:0.35rem;
+.step-media img,
+.step-media video{
+  width:100%;height:100%;object-fit:cover;border-radius:0.5rem;display:block;
 }
 .cta-band{
   background:#020617;color:#fff;text-align:center;padding:3.5rem 1.25rem;
@@ -93,8 +98,22 @@ ${FRAMER_NAV || FALLBACK_NAV}
 <div class="hero">
   <h1>How AuraFlux Turns Stream Peaks Into Viral Shorts</h1>
   <p>From raw stream VOD to fully styled 9:16 short-form video in minutes—without manual editing or scrubbing timeline files.</p>
-  <div class="hero-video" role="img" aria-label="System demo video placeholder">
-    <div class="hero-video-placeholder">▶ Play 60-Sec System Demo</div>
+
+  <!-- Hero demo: set DEMO_EMBED_SRC to a Loom/YouTube embed URL, or drop /assets/system-demo.mp4 -->
+  <div class="hero-video" id="af-hero-demo">
+    <iframe
+      id="af-demo-iframe"
+      title="AuraFlux 60-Sec Demo"
+      src=""
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      loading="lazy"
+      hidden
+    ></iframe>
+    <video id="af-demo-video" controls playsinline preload="metadata" hidden>
+      <source src="/assets/system-demo.mp4" type="video/mp4">
+    </video>
+    <div class="hero-video-fallback" id="af-demo-fallback">▶ Play 60-Sec System Demo</div>
   </div>
 </div>
 
@@ -110,7 +129,13 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-01">
-        <span class="step-media-label">Visual · Peak detection</span>
+        <img
+          src="/assets/peak-detection-demo.gif"
+          alt="Twitch Chat &amp; Heatmap Peak Detection"
+          width="1280"
+          height="720"
+          loading="lazy"
+        >
       </div>
     </div>
   </article>
@@ -126,7 +151,13 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-02">
-        <span class="step-media-label">Visual · 9:16 framing</span>
+        <img
+          src="/assets/auto-crop-framing.gif"
+          alt="Smart 9:16 Facecam &amp; Gameplay Framing"
+          width="1280"
+          height="720"
+          loading="lazy"
+        >
       </div>
     </div>
   </article>
@@ -142,7 +173,13 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-03">
-        <span class="step-media-label">Visual · Captions &amp; brand</span>
+        <img
+          src="/assets/kinetic-captions-preview.gif"
+          alt="Kinetic Captions and Brand Overlays"
+          width="1280"
+          height="720"
+          loading="lazy"
+        >
       </div>
     </div>
   </article>
@@ -158,7 +195,13 @@ ${FRAMER_NAV || FALLBACK_NAV}
         </div>
       </div>
       <div class="step-media" data-asset="step-04">
-        <span class="step-media-label">Visual · Multi-platform publish</span>
+        <img
+          src="/assets/dashboard-publishing-preview.jpg"
+          alt="AuraFlux Dashboard Publishing to TikTok, Shorts, and Reels"
+          width="1280"
+          height="720"
+          loading="lazy"
+        >
       </div>
     </div>
   </article>
@@ -171,5 +214,33 @@ ${FRAMER_NAV || FALLBACK_NAV}
   <a class="g" href="/contact">Talk to us</a>
 </div>
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
+<script>
+(function () {
+  // Replace with Loom / YouTube embed URL when ready, e.g.:
+  // 'https://www.youtube.com/embed/YOUR_VIDEO_ID'
+  var DEMO_EMBED_SRC = '';
+
+  var root = document.getElementById('af-hero-demo');
+  var iframe = document.getElementById('af-demo-iframe');
+  var video = document.getElementById('af-demo-video');
+  if (!root || !iframe || !video) return;
+
+  if (DEMO_EMBED_SRC) {
+    iframe.src = DEMO_EMBED_SRC;
+    iframe.hidden = false;
+    root.classList.add('is-ready');
+    return;
+  }
+
+  // Prefer local MP4 when present under /assets/system-demo.mp4
+  var probe = new Image(); // unused — use fetch HEAD for mp4
+  fetch('/assets/system-demo.mp4', { method: 'HEAD' }).then(function (res) {
+    if (res.ok) {
+      video.hidden = false;
+      root.classList.add('is-ready');
+    }
+  }).catch(function () {});
+})();
+</script>
 </body>
 </html>

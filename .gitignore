@@ -171,6 +171,18 @@ video_generation_custom_*.csv
 !marketing/public/*.ico
 !marketing/public/**/*.png
 !marketing/public/**/*.ico
+!marketing/public/assets/*.png
+!marketing/public/assets/**/*.png
+!marketing/public/assets/*.jpg
+!marketing/public/assets/**/*.jpg
+!marketing/public/assets/*.jpeg
+!marketing/public/assets/**/*.jpeg
+!marketing/public/assets/*.gif
+!marketing/public/assets/**/*.gif
+!marketing/public/assets/*.mp4
+!marketing/public/assets/**/*.mp4
+!marketing/public/assets/*.webm
+!marketing/public/assets/**/*.webm
 
 # Debug ingest logs (per-session; do not commit)
 .cursor/debug-*.log
