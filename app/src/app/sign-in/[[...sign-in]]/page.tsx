@@ -3,7 +3,7 @@
 import { SignIn } from '@/lib/clerk-compat';
 import { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
+import Link from 'next/link';
 
 const ALLOWED_ORIGIN = 'https://app.auraflux.co';
 
@@ -36,35 +36,41 @@ function SignInInner() {
   }, [searchParams, router]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6 bg-background">
-      <Image
-        src="/brand/logo.png"
-        alt="AuraFlux"
-        width={64}
-        height={64}
-        className="rounded-xl"
-      />
-      {sessionExpired ? (
-        <p className="text-sm text-amber-600 dark:text-amber-400 text-center max-w-sm">
-          Your session expired. Sign in again to continue.
+    <div
+      className="min-h-screen bg-slate-950 text-white flex flex-col justify-center items-center p-6 antialiased"
+      style={{
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      }}
+    >
+      <div className="w-full max-w-md space-y-4">
+        {sessionExpired ? (
+          <p className="text-sm text-amber-400 text-center">
+            Your session expired. Sign in again to continue.
+          </p>
+        ) : null}
+        {googleError ? (
+          <p className="text-sm text-red-400 text-center">
+            Google sign-in failed. Try again or use email and password.
+          </p>
+        ) : null}
+        <SignIn
+          forceRedirectUrl={isSafeRedirect(redirectUrl) ? redirectUrl : '/home'}
+          signUpUrl="/sign-up"
+        />
+        <p className="text-center text-xs text-slate-500">
+          <Link href="/login" className="hover:text-amber-400 transition-colors no-underline">
+            ← Back to portal
+          </Link>
         </p>
-      ) : null}
-      {googleError ? (
-        <p className="text-sm text-red-500 text-center max-w-sm">
-          Google sign-in failed. Try again or use email and password.
-        </p>
-      ) : null}
-      <SignIn
-        forceRedirectUrl={isSafeRedirect(redirectUrl) ? redirectUrl : '/home'}
-        signUpUrl="/sign-up"
-      />
+      </div>
     </div>
   );
 }
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen" />}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
       <SignInInner />
     </Suspense>
   );

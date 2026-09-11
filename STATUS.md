@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 21:09 UTC  
+**Last Updated:** 2026-09-11 21:21 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-PaidAccessGate: unpaid members stay on-app with Sign in as customer / View plans choices — no hard redirect to auraflux.co/pricing.
+Sign-in: dark portal shell + system-ui stack; Better Auth form restyled (amber CTA, slate inputs); globals.css [data-better-auth] overrides.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

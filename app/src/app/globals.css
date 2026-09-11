@@ -330,3 +330,28 @@
   color-scheme: light;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
+
+/* Force Better Auth / sign-in card to use sans-serif and dark theme */
+[data-better-auth],
+.ba-card {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+[data-better-auth] a,
+.ba-card a {
+  text-decoration: none !important;
+  color: #94a3b8 !important;
+}
+
+[data-better-auth] a:hover,
+.ba-card a:hover {
+  color: #fbbf24 !important;
+}
+
+[data-better-auth] input,
+.ba-card input {
+  font-family: inherit !important;
+  background-color: #020617 !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
+}

@@ -419,32 +419,39 @@ export function SignIn({
           : 'Sign in';
 
   return (
-    <div className="w-full max-w-sm mx-auto rounded-xl border border-border bg-card p-6 shadow-sm">
-      <h1 className="text-xl font-semibold mb-1">{title}</h1>
-      <p className="text-sm text-muted-foreground mb-4">AuraFlux</p>
+    <div
+      data-better-auth
+      className="ba-card w-full max-w-md mx-auto rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-2xl space-y-6 font-sans text-white"
+    >
+      <div className="space-y-1 text-center mb-2">
+        <h1 className="text-2xl font-extrabold tracking-tight text-white">{title}</h1>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          AuraFlux
+        </p>
+      </div>
       {mode === 'sign-in' || mode === 'sign-up' ? (
         <>
           <button
             type="button"
             disabled={busy}
             onClick={() => void continueWithGoogle()}
-            className="w-full mb-4 flex items-center justify-center gap-2 rounded-md border border-border bg-background py-2 text-sm font-medium hover:bg-muted disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 py-3 text-sm font-semibold text-slate-200 transition-all disabled:opacity-60"
           >
             <GoogleMark />
             Continue with Google
           </button>
-          <div className="relative mb-4">
+          <div className="relative">
             <div className="absolute inset-0 flex items-center" aria-hidden>
-              <div className="w-full border-t border-border" />
+              <div className="w-full border-t border-slate-800" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">or</span>
+            <div className="relative flex justify-center text-xs uppercase tracking-wider">
+              <span className="bg-slate-900 px-2 text-slate-400">or</span>
             </div>
           </div>
         </>
       ) : null}
       <form onSubmit={submit} className="space-y-3">
-        <label className="block text-sm">
+        <label className="block text-xs font-medium text-slate-400 space-y-1">
           Email
           <input
             type="email"
@@ -453,11 +460,11 @@ export function SignIn({
             value={email}
             readOnly={lockEmail && mode === 'sign-up'}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm read-only:opacity-80"
+            className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-all read-only:opacity-80"
           />
         </label>
         {mode === 'sign-in' || mode === 'sign-up' ? (
-          <label className="block text-sm">
+          <label className="block text-xs font-medium text-slate-400 space-y-1">
             Password
             <input
               type="password"
@@ -466,12 +473,12 @@ export function SignIn({
               autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-all"
             />
           </label>
         ) : null}
         {mode === 'otp' && otpSent ? (
-          <label className="block text-sm">
+          <label className="block text-xs font-medium text-slate-400 space-y-1">
             One-time code
             <input
               type="text"
@@ -483,52 +490,67 @@ export function SignIn({
               autoComplete="one-time-code"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\s/g, ''))}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm tracking-widest"
+              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white tracking-widest focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-all"
             />
           </label>
         ) : null}
         {mode === 'forgot' ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-400">
             We&apos;ll email a link to set a new password. Google sign-in users
             should continue with Google instead.
           </p>
         ) : null}
         {mode === 'otp' && !otpSent ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-400">
             For email/password accounts (non-Google). We&apos;ll send a 6-digit
             code — no password needed.
           </p>
         ) : null}
-        {info ? <p className="text-sm text-emerald-600 dark:text-emerald-400">{info}</p> : null}
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
+        {info ? <p className="text-sm text-emerald-400">{info}</p> : null}
+        {error ? <p className="text-sm text-red-400">{error}</p> : null}
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-md bg-primary text-primary-foreground py-2 text-sm font-medium disabled:opacity-60"
+          className="w-full rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold py-3.5 text-sm shadow-md transition-all disabled:opacity-60"
         >
           {busy ? 'Please wait…' : submitLabel}
         </button>
       </form>
       {mode === 'sign-in' ? (
-        <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-          <p className="flex flex-wrap gap-x-3 gap-y-1">
-            <button type="button" className="underline" onClick={() => switchMode('forgot')}>
+        <div className="pt-2 space-y-2 text-xs text-slate-400 text-center">
+          <p className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+            <button
+              type="button"
+              className="font-medium no-underline hover:text-amber-400 transition-colors"
+              onClick={() => switchMode('forgot')}
+            >
               Forgot password?
             </button>
-            <button type="button" className="underline" onClick={() => switchMode('otp')}>
+            <button
+              type="button"
+              className="font-medium no-underline hover:text-amber-400 transition-colors"
+              onClick={() => switchMode('otp')}
+            >
               Email me a code
             </button>
           </p>
           <p>
             No account?{' '}
-            <a href={signUpUrl} className="underline">
+            <a
+              href={signUpUrl}
+              className="font-semibold no-underline text-slate-300 hover:text-amber-400 transition-colors"
+            >
               Purchase a plan first
             </a>
           </p>
         </div>
       ) : (
-        <p className="mt-4 text-sm text-muted-foreground">
-          <button type="button" className="underline" onClick={() => switchMode('sign-in')}>
+        <p className="pt-2 text-xs text-slate-400 text-center">
+          <button
+            type="button"
+            className="font-medium no-underline hover:text-amber-400 transition-colors"
+            onClick={() => switchMode('sign-in')}
+          >
             Back to sign in
           </button>
         </p>
