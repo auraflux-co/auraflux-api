@@ -418,12 +418,12 @@ body:has(.blog-page) {
 }
 .blog-featured {
   background: #fff !important;
-  border: 1px solid #cbd5e1 !important;
-  border-left: 1px solid #cbd5e1 !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  border-left: 1px solid rgba(59, 130, 246, 0.3) !important;
 }
 .blog-featured:hover {
-  border-color: #94a3b8 !important;
-  border-left-color: #94a3b8 !important;
+  border-color: rgba(59, 130, 246, 0.6) !important;
+  border-left-color: rgba(59, 130, 246, 0.6) !important;
 }
 .blog-featured-badge {
   background: #fbbf24 !important;
@@ -438,7 +438,7 @@ body:has(.blog-page) {
   font-weight: 500 !important;
 }
 .blog-featured-meta {
-  color: #475569 !important;
+  color: #64748b !important;
   font-weight: 600 !important;
 }
 .blog-featured-cta {
@@ -447,12 +447,12 @@ body:has(.blog-page) {
 }
 .blog-card {
   background: #fff !important;
-  border: 1px solid #cbd5e1 !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
   color: #0f172a !important;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
 }
 .blog-card:hover {
-  border-color: #0f172a !important;
+  border-color: rgba(59, 130, 246, 0.7) !important;
 }
 .blog-card-cat {
   color: #d97706 !important;
@@ -462,23 +462,23 @@ body:has(.blog-page) {
   color: #0f172a !important;
 }
 .blog-card h3 a:hover {
-  color: #d97706 !important;
+  color: #2563eb !important;
 }
 .blog-card-body {
   color: #334155 !important;
   font-weight: 500 !important;
 }
 .blog-card-foot {
-  color: #475569 !important;
+  color: #64748b !important;
   font-weight: 600 !important;
-  border-top-color: #e2e8f0 !important;
+  border-top-color: #f1f5f9 !important;
 }
 .blog-card-foot a {
   color: #0f172a !important;
   font-weight: 700 !important;
 }
 .blog-card-foot a:hover {
-  color: #d97706 !important;
+  color: #2563eb !important;
 }
 /* legacy dark post-card — keep harmless if old markup appears */
 .post-card {
