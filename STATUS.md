@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-11 21:01 UTC  
+**Last Updated:** 2026-09-11 21:09 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Customer member portal v1: Pavilion-style MemberShell + hub home for non-superadmin; legacy dark sidebar kept for superadmin only. Warm canvas + navy/gold tokens under `.member-portal`.
+PaidAccessGate: unpaid members stay on-app with Sign in as customer / View plans choices — no hard redirect to auraflux.co/pricing.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
