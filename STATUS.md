@@ -190,7 +190,7 @@ Long-form notes on **gate readiness** end-to-end (fetch → upload), synthetic a
 > **Every agent must update this table before committing code. The pre-commit hook will block commits that skip this.**
 
 | Agent | Task Completed | Files Changed | Commit | Timestamp |
-| Cursor | **fix(marketing): blog agency layout** — hero/pills/featured banner/3-col grid; CMS inject updated; twitch-clip alias → peaks-to-short. | blog.html, blog.json, inject_content.py, vercel.json, STATUS.md | pending | 2026-09-11 ET |
+| Cursor | **fix(marketing): blog agency layout** — hero/pills/featured banner/3-col grid; CMS inject updated; twitch-clip alias → peaks-to-short. | blog.html, blog.json, inject_content.py, vercel.json, STATUS.md | 18b5d277 | 2026-09-11 ET |
 | Cursor | **fix(marketing): contact SLA meta contrast** — direct-card meta text slate-300 medium. | contact-content.html, STATUS.md | 36df7659 | 2026-09-11 ET |
 | Cursor | **fix(marketing): contact form visual polish** — space-y-6; slate-50/50 inputs + amber focus ring; submit hover lift. | contact-content.html, STATUS.md | a872df31 | 2026-09-11 ET |
 | Cursor | **fix(marketing): contact page 2-col layout** — hero clearance; dark direct-contact card; light qualified form (name/email/type/URL/message). | contact-content.html, legal/contact.html, STATUS.md | 20e223ec | 2026-09-11 ET |
