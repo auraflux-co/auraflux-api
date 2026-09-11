@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — How it works: hero H1 clear of nav + step media object-contain.
+**Last Updated:** 2026-09-11 — How it works layout: nav-h mobile sync + hero padding !important + media contain.
 
 
 
