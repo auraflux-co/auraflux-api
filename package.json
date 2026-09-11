@@ -1,6 +1,6 @@
 {
   "name": "cwn-production",
-  "version": "1.0.440",
+  "version": "1.0.441",
   "description": "ClipzWorld News - AI-powered news and reaction show production system",
   "main": "server.js",
   "scripts": {
