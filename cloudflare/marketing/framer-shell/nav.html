@@ -32,17 +32,12 @@
     flex-shrink: 0;
   }
   .af-nav-brand:hover { text-decoration: none !important; }
-  .af-nav-mark {
-    width: 28px;
-    height: 28px;
+  .af-nav-logo {
+    height: 32px;
+    width: auto;
+    display: block;
     border-radius: 8px;
-    background: var(--brand-primary, #0b1220);
-    color: var(--brand-accent, #f5c542);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 800;
+    object-fit: contain;
   }
   #af-nav-links {
     display: none;
@@ -126,8 +121,8 @@
 <header class="af-nav" role="banner">
   <div class="af-nav-inner">
     <a class="af-nav-brand" href="/">
-      <span class="af-nav-mark" aria-hidden="true">AF</span>
-      AuraFlux
+      <img class="af-nav-logo" src="/brand/logo.png" width="56" height="34" alt="AuraFlux">
+      <span>AuraFlux</span>
     </a>
     <nav id="af-nav-links" aria-label="Primary">
       <a href="/">Home</a>

@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — How it works: hero video + 2-col step media slots.
+**Last Updated:** 2026-09-11 — Marketing brand logo + real favicons (nav/footer/icons from app/public/brand).
 
 
 

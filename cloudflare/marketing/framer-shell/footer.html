@@ -34,17 +34,12 @@
     letter-spacing: -0.02em;
   }
   .af-footer-logo:hover { text-decoration: none !important; }
-  .af-footer-mark {
-    width: 28px;
-    height: 28px;
+  .af-footer-logo-img {
+    height: 32px;
+    width: auto;
+    display: block;
     border-radius: 8px;
-    background: var(--brand-accent, #f5c542);
-    color: #0b1220;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 800;
+    object-fit: contain;
   }
   #af-footer-tagline {
     color: #94a3b8 !important;
@@ -111,8 +106,8 @@
     <div class="af-footer-grid">
       <div class="af-footer-brand">
         <a class="af-footer-logo" href="/">
-          <span class="af-footer-mark" aria-hidden="true">AF</span>
-          AuraFlux
+          <img class="af-footer-logo-img" src="/brand/logo.png" width="56" height="34" alt="AuraFlux">
+          <span>AuraFlux</span>
         </a>
         <p id="af-footer-tagline">Peaks (Most Replayed, chat spikes, CCV) to Shorts. Member portal for YouTube, Twitch, and Kick.</p>
         <p class="af-footer-entity">A product of HSKRG LLC.</p>
