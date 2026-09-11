@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Nav CTA: Get Started → /pricing (purchase first; app login after).
+**Last Updated:** 2026-09-11 — Pricing: pt-28 page wrap, equal-height cards, flex-grow checklists, aligned CTAs.
 
 
 

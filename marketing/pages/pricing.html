@@ -18,13 +18,16 @@
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
+/* Page wrapper: max-w-6xl + pt-28 clears fixed navbar */
+.pricing-page{
+  max-width:72rem;margin:0 auto;padding:7rem 1rem 4rem;
+  overflow:visible;
+}
 .hero{
   text-align:center;
-  /* pt-16 equivalent — clears fixed header / avoids clipping */
-  padding:4rem 1.25rem 2.5rem !important;
-}
-@media (min-width:768px){
-  .hero{padding:5rem 1.25rem 3rem !important}
+  padding:0 0 0 !important;
+  background:transparent !important;
+  max-width:none;
 }
 .hero h1{
   font-size:clamp(1.85rem,4vw,2.85rem);font-weight:800;color:#fff !important;
@@ -35,39 +38,41 @@ ${FRAMER_CSS || ''}
 }
 
 .plans-wrap{
-  max-width:72rem;margin:0 auto;padding:1.5rem 1.25rem 2rem;
+  max-width:none;margin:0;padding:0;
   overflow:visible;background:transparent !important;
 }
 .plans{
-  display:grid;grid-template-columns:1fr;gap:1.75rem;
-  max-width:56rem;margin:0 auto;
-  overflow:visible;padding-top:0.75rem;align-items:stretch;
+  display:grid;grid-template-columns:1fr;gap:2rem;
+  max-width:56rem;margin:3rem auto 0;
+  overflow:visible;align-items:stretch;
+  padding-top:0.75rem; /* room for popular badge */
 }
-@media (min-width:900px){
+@media (min-width:768px){
   .plans{grid-template-columns:1fr 1fr}
 }
 
-/* Both cards — white, equal flex column, buttons pin to bottom */
+/* Equal-height cards */
 .plans .plan{
   position:relative;
   display:flex;flex-direction:column;justify-content:space-between;
+  height:100%;
   background:#fff !important;
-  border:2px solid #e2e8f0 !important;
+  border:1px solid #e2e8f0 !important;
   border-radius:1rem !important;
   padding:2rem !important;
-  box-shadow:0 10px 28px rgba(15,23,42,.08) !important;
+  box-shadow:0 4px 16px rgba(15,23,42,.08) !important;
   overflow:visible !important;
   color:#0f172a !important;
   gap:0;
+  margin:0 !important;
 }
 .plans .plan.popular{
-  margin-top:1rem;
   border:2px solid #fbbf24 !important;
   box-shadow:0 20px 40px rgba(15,23,42,.14) !important;
   overflow:visible !important;
 }
 .plans .plan:hover{
-  box-shadow:0 12px 32px rgba(15,23,42,.12) !important;
+  box-shadow:0 8px 24px rgba(15,23,42,.12) !important;
 }
 .plans .plan.popular:hover{
   box-shadow:0 22px 44px rgba(15,23,42,.16) !important;
@@ -81,7 +86,9 @@ ${FRAMER_CSS || ''}
   box-shadow:0 4px 12px rgba(15,23,42,.15);
 }
 
-.plans .plan-top{display:flex;flex-direction:column;text-align:left}
+.plans .plan-top{
+  display:flex;flex-direction:column;text-align:left;flex-shrink:0;
+}
 .plans .plan-name{
   font-size:0.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
   color:#64748b !important;margin:0 0 0.35rem;
@@ -102,17 +109,21 @@ ${FRAMER_CSS || ''}
   font-size:1rem;font-weight:500;color:#64748b !important;letter-spacing:0;
 }
 .plans .price-note{
-  display:block;min-height:32px;
-  font-size:0.75rem;font-weight:500;color:#475569 !important;
-  margin:0.25rem 0 0;line-height:1.45;
+  display:flex;align-items:center;min-height:36px;
+  font-size:0.75rem;font-weight:500;color:#64748b !important;
+  margin:0.25rem 0 1.5rem;line-height:1.45;
 }
 
-/* Dedicated list class — avoids global .features mist box */
+/* Checklist grows so CTAs share a baseline */
+.plans .plan-features-wrap{
+  flex:1;display:flex;flex-direction:column;justify-content:flex-start;
+  margin-bottom:2rem;background:transparent !important;
+}
 .plans .plan-features{
-  list-style:none;margin:1.5rem 0;padding:0 0.5rem;
+  list-style:none;margin:0;padding:0;
   display:flex;flex-direction:column;gap:0.75rem;
   text-align:left;background:transparent !important;
-  flex:1;box-shadow:none !important;border:none !important;
+  box-shadow:none !important;border:none !important;
 }
 .plans .plan-features li{
   display:flex;align-items:flex-start;gap:0.75rem;
@@ -132,7 +143,7 @@ ${FRAMER_CSS || ''}
   padding:0.875rem 1rem;margin-top:auto;
   border-radius:0.75rem;font-weight:700;font-size:0.95rem;
   text-decoration:none !important;transition:background .15s,box-shadow .15s;
-  box-sizing:border-box;border:none !important;
+  box-sizing:border-box;border:none !important;flex-shrink:0;
 }
 .plans .cta-secondary{
   background:#0f172a !important;color:#fff !important;
@@ -145,7 +156,7 @@ ${FRAMER_CSS || ''}
 .plans .cta-primary:hover{background:#f59e0b !important}
 
 .enterprise{
-  max-width:56rem;margin:1.5rem auto 0;padding:0 1.25rem;
+  max-width:56rem;margin:2rem auto 0;padding:0;
 }
 .enterprise-inner{
   background:#020617;border:1px solid #1e293b;border-radius:0.875rem;
@@ -160,7 +171,7 @@ ${FRAMER_CSS || ''}
 .enterprise-inner a:hover{color:#fde68a !important}
 
 .trust{
-  max-width:56rem;margin:0 auto;padding:2.25rem 1.25rem 3.5rem;
+  max-width:56rem;margin:0 auto;padding:2.25rem 0 0;
   display:flex;flex-wrap:wrap;justify-content:center;gap:0.75rem 1rem;
 }
 .trust-badge{
@@ -178,96 +189,102 @@ ${FRAMER_CSS || ''}
 <body>
 ${FRAMER_NAV || FALLBACK_NAV}
 
-<div class="hero">
-  <h1>Predictable Pricing for Streamers &amp; Media Agencies</h1>
-  <p>Turn raw VODs into daily short-form content at 1/3 the cost of a full-time editor seat.</p>
-</div>
-
-<div class="plans-wrap">
-  <div class="plans" aria-label="Pricing tiers">
-    <article class="plan">
-      <div class="plan-top">
-        <p class="plan-name">For solo streamers</p>
-        <h2 class="plan-title">Growth / Creator</h2>
-        <p class="plan-sub">Solo streamers shipping daily content.</p>
-        <div class="price">$299<span class="period">/mo</span></div>
-        <p class="price-note">or custom starter — talk to us if you need a lighter seat</p>
-        <ul class="plan-features">
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>Up to 40 hours of VOD processing / mo</span>
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>3 Connected channels (YouTube, Twitch, Kick)</span>
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>Auto 9:16 framing &amp; kinetic captions</span>
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>1080p60 vertical exports</span>
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>Direct dispatch to TikTok, Shorts &amp; Reels</span>
-          </li>
-        </ul>
-      </div>
-      <a href="/contact" class="cta cta-secondary" data-cta="growth_cta">Start Growth</a>
-    </article>
-
-    <article class="plan popular">
-      <span class="plan-badge">Most Popular for Agencies</span>
-      <div class="plan-top">
-        <p class="plan-name">For agencies &amp; high volume</p>
-        <h2 class="plan-title">Pro Operator / Agency</h2>
-        <p class="plan-sub">High-volume streamers, esports orgs &amp; clip networks.</p>
-        <div class="price">$999<span class="period">/mo</span></div>
-        <p class="price-note">Full platform seat with priority queue &amp; team access</p>
-        <ul class="plan-features">
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>Unlimited VOD processing &amp; peak detection</span>
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>Unlimited connected channels &amp; social dispatch</span>
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>Custom caption font uploads &amp; brand templates</span>
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>Priority render queue (&lt; 2 min processing)</span>
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>Team workspace seats &amp; API key access</span>
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <span>Dedicated Account Manager</span>
-          </li>
-        </ul>
-      </div>
-      <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Start Pro Operator</a>
-    </article>
+<div class="pricing-page">
+  <div class="hero">
+    <h1>Predictable Pricing for Streamers &amp; Media Agencies</h1>
+    <p>Turn raw VODs into daily short-form content at 1/3 the cost of a full-time editor seat.</p>
   </div>
-</div>
 
-<section class="enterprise" aria-label="Enterprise">
-  <div class="enterprise-inner">
-    <p>Need custom API limits, white-label clip rendering, or dedicated server infrastructure? <a href="/contact">Talk to Enterprise Sales</a></p>
+  <div class="plans-wrap">
+    <div class="plans" aria-label="Pricing tiers">
+      <article class="plan">
+        <div class="plan-top">
+          <p class="plan-name">For solo streamers</p>
+          <h2 class="plan-title">Growth / Creator</h2>
+          <p class="plan-sub">Solo streamers shipping daily content.</p>
+          <div class="price">$299<span class="period">/mo</span></div>
+          <p class="price-note">or custom starter — talk to us if you need a lighter seat</p>
+        </div>
+        <div class="plan-features-wrap">
+          <ul class="plan-features">
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Up to 40 hours of VOD processing / mo</span>
+            </li>
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>3 Connected channels (YouTube, Twitch, Kick)</span>
+            </li>
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Auto 9:16 framing &amp; kinetic captions</span>
+            </li>
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>1080p60 vertical exports</span>
+            </li>
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Direct dispatch to TikTok, Shorts &amp; Reels</span>
+            </li>
+          </ul>
+        </div>
+        <a href="/contact" class="cta cta-secondary" data-cta="growth_cta">Start Growth</a>
+      </article>
+
+      <article class="plan popular">
+        <span class="plan-badge">Most Popular for Agencies</span>
+        <div class="plan-top">
+          <p class="plan-name">For agencies &amp; high volume</p>
+          <h2 class="plan-title">Pro Operator / Agency</h2>
+          <p class="plan-sub">High-volume streamers, esports orgs &amp; clip networks.</p>
+          <div class="price">$999<span class="period">/mo</span></div>
+          <p class="price-note">Full platform seat with priority queue &amp; team access</p>
+        </div>
+        <div class="plan-features-wrap">
+          <ul class="plan-features">
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Unlimited VOD processing &amp; peak detection</span>
+            </li>
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Unlimited connected channels &amp; social dispatch</span>
+            </li>
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Custom caption font uploads &amp; brand templates</span>
+            </li>
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Priority render queue (&lt; 2 min processing)</span>
+            </li>
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Team workspace seats &amp; API key access</span>
+            </li>
+            <li>
+              <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              <span>Dedicated Account Manager</span>
+            </li>
+          </ul>
+        </div>
+        <a href="https://api.auraflux.co/api/public/checkout?plan=operate" class="cta cta-primary" data-cta="operate_cta">Start Pro Operator</a>
+      </article>
+    </div>
   </div>
-</section>
 
-<div class="trust" aria-label="Guarantees">
-  <span class="trust-badge">Cancel Anytime</span>
-  <span class="trust-badge">Instant Activation</span>
-  <span class="trust-badge">Dedicated Support</span>
+  <section class="enterprise" aria-label="Enterprise">
+    <div class="enterprise-inner">
+      <p>Need custom API limits, white-label clip rendering, or dedicated server infrastructure? <a href="/contact">Talk to Enterprise Sales</a></p>
+    </div>
+  </section>
+
+  <div class="trust" aria-label="Guarantees">
+    <span class="trust-badge">Cancel Anytime</span>
+    <span class="trust-badge">Instant Activation</span>
+    <span class="trust-badge">Dedicated Support</span>
+  </div>
 </div>
 
 ${FRAMER_FOOTER || FALLBACK_FOOTER}
