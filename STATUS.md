@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Developer API jobs table+curl: harden grid, kill absolute, stack under 1100px.
+**Last Updated:** 2026-09-11 — Developer API jobs field+curl always stacked (no side-by-side collision).
 
 
 

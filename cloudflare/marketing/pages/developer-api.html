@@ -143,7 +143,7 @@ ${FRAMER_CSS || ''}
 .dev-page .dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
 @media(max-width:700px){.dev-page .dev-grid{grid-template-columns:1fr;}}
 
-/* Jobs ref wrap — stacked by default so table + curl never collide */
+/* Jobs ref wrap — ALWAYS stacked (table then curl) so panels never collide */
 .dev-page .dev-jobs-wrap{
   max-width:72rem;margin:3rem auto 0;width:100%;
   position:relative !important;isolation:isolate;
@@ -169,19 +169,6 @@ ${FRAMER_CSS || ''}
   max-width:100% !important;
   overflow:hidden !important;
   flex:none !important;
-}
-/* Side-by-side only on wide viewports with room for both panels */
-@media(min-width:1100px){
-  .dev-page .dev-jobs-ref{
-    display:grid !important;
-    grid-template-columns:minmax(0,7fr) minmax(0,5fr) !important;
-    gap:1.5rem !important;
-    align-items:start !important;
-  }
-  .dev-page .dev-jobs-ref-table,
-  .dev-page .dev-jobs-ref-sample{
-    width:auto !important;
-  }
 }
 .dev-page .dev-jobs-ref-table{
   background:#fff !important;border:1px solid #e2e8f0;border-radius:.75rem;
