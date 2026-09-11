@@ -6,6 +6,7 @@
     { "label": "How it works", "url": "/how-it-works" },
     { "label": "Features", "url": "/our-system" },
     { "label": "Pricing", "url": "/plans" },
+    { "label": "API", "url": "/developer-api" },
     { "label": "Contact", "url": "/contact" },
     { "label": "Blog", "url": "/blog" }
   ]
