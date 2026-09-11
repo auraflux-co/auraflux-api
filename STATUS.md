@@ -2,7 +2,7 @@
 
 **Deploy Mode:** dev
 
-**Last Updated:** 2026-09-11 — Why AuraFlux compare: red-600/emerald-700 on light cards.
+**Last Updated:** 2026-09-11 — Nav: Home, How it works, Features, Pricing, Contact, Blog + Log in/Open App.
 
 
 
