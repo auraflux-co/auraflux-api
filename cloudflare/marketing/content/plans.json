@@ -6,13 +6,14 @@
     "title": "Creator",
     "subtitle": "Solo streamers shipping daily Shorts from stream peaks.",
     "price": "$299",
-    "price_note": "Self-serve · cancel anytime",
+    "price_note": "Assist chat included",
     "features": [
       "Peaks from VODs (Most Replayed, chat spikes, CCV) → Short",
       "Review before anything goes live",
       "Schedule + Stats for YouTube, TikTok & Instagram",
       "Up to 40 hours of VOD / mo · 3 channels",
-      "Direct publish to TikTok, Shorts & Reels"
+      "Direct publish to TikTok, Shorts & Reels",
+      "Assist chat"
     ],
     "cta_label": "Start Creator Plan",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=growth",
@@ -50,5 +51,5 @@
     "cta_url": "/contact",
     "cta_style": "enterprise-cta"
   },
-  "trust_badges": ["Cancel Anytime", "Instant Activation", "Dedicated Support"]
+  "trust_badges": ["Instant Activation", "Dedicated Support"]
 }

@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 22:05 UTC  
+**Last Updated:** 2026-09-12 22:15 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Pricing Managed footer refactored to high-contrast call-out (White-Glove / $1,499 / Add Managed Ops). Live on Vercel `auraflux-co` — `iss_huqkzyNOXG5y`.
+Pricing: Managed body contrast (#e2e8f0); Creator includes Assist chat (no self-serve/cancel-anytime). `iss_Z3My4dSEn9q3`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
