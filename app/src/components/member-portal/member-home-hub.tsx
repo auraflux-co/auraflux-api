@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Activity,
+  BarChart3,
   Clapperboard,
   CreditCard,
   FolderOpen,
@@ -166,6 +167,25 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           <StatBadge>Roster → clips → Short</StatBadge>
           <Link href="/library" className={PRIMARY_BTN}>
             Open Library
+          </Link>
+        </PortalQuadrant>
+
+        <PortalQuadrant
+          id="stats"
+          title="Stats"
+          icon={BarChart3}
+          action={
+            <Link href="/stats" className={CORNER_LINK}>
+              Open →
+            </Link>
+          }
+        >
+          <p className="text-sm text-slate-400 leading-relaxed flex-1">
+            Post-publish performance across YouTube, TikTok, and Instagram for this brand.
+          </p>
+          <StatBadge>Views · engagement · recent posts</StatBadge>
+          <Link href="/stats" className={PRIMARY_BTN}>
+            View Stats
           </Link>
         </PortalQuadrant>
 

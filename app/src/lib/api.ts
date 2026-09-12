@@ -2107,3 +2107,71 @@ export async function deleteAppContent(
 ): Promise<{ ok: boolean; reset: boolean }> {
   return apiFetch(`/api/admin/app-content/${pageKey}/${encodeURIComponent(key)}`, { method: 'DELETE', token });
 }
+
+// ── Creator Stats (post-publish) ──────────────────────────────────────────────
+
+export interface StatsPlatformRollup {
+  followers: number | null;
+  views: number | null;
+  impressions: number | null;
+  likes: number | null;
+  comments: number | null;
+  shares: number | null;
+}
+
+export interface StatsSummaryResponse {
+  ok: boolean;
+  brandId?: string;
+  connected?: Array<{ platform: string; handle: string | null; source?: string }>;
+  uploadPost?: {
+    ok: boolean;
+    reason?: string;
+    message?: string;
+    platforms?: Record<string, StatsPlatformRollup | null>;
+  };
+  youtube?: {
+    ok: boolean;
+    available?: boolean;
+    reason?: string;
+    source?: string;
+    handle?: string | null;
+    note?: string | null;
+    summary?: Record<string, number>;
+  };
+  error?: string;
+}
+
+export interface StatsPostRow {
+  jobId: string;
+  title: string;
+  publishedAt: string | null;
+  platforms: Array<{
+    platform: string;
+    url: string | null;
+    status: string;
+    requestId: string | null;
+    platformJobId: string | null;
+  }>;
+  requestId: string | null;
+  metrics: Record<string, {
+    views: number | null;
+    impressions: number | null;
+    likes: number | null;
+    comments: number | null;
+    shares: number | null;
+    reach: number | null;
+    averageWatchSec: number | null;
+  }> | null;
+  metricsNote: string | null;
+}
+
+export async function fetchStatsSummary(token?: string): Promise<StatsSummaryResponse> {
+  return apiFetch('/stats/summary', { token });
+}
+
+export async function fetchStatsPosts(
+  limit = 20,
+  token?: string,
+): Promise<{ ok: boolean; posts: StatsPostRow[]; error?: string }> {
+  return apiFetch(`/stats/posts?limit=${limit}`, { token });
+}

@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 02:55 UTC  
+**Last Updated:** 2026-09-12 03:15 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator nav P3: add Schedule + Templates links in MemberShell (`/schedule`, `/templates` already existed). Ticket iss_zy1kd_hfcBe-.
+Creator Stats V1: `/stats` page + nav, Upload-Post rollup + posts, YouTube lite, persist `request_id` on publish_results. Ticket iss_1whxE0pPdxlI.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

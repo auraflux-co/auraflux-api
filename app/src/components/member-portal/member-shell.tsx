@@ -22,6 +22,7 @@ const NAV = [
   { href: '/myjobs', label: 'Jobs' },
   { href: '/schedule', label: 'Schedule' },
   { href: '/templates', label: 'Templates' },
+  { href: '/stats', label: 'Stats' },
   { href: '/review', label: 'Review' },
   { href: '/billing', label: 'Billing' },
   { href: '/settings', label: 'Settings' },
