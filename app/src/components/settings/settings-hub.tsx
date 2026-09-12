@@ -119,9 +119,10 @@ const SECTIONS: SectionDef[] = [
 ];
 
 function statusBadge(sectionId: SectionId, status: HubStatus, pending: boolean) {
+  const nowrap = 'whitespace-nowrap inline-flex items-center gap-1 text-[10px]';
   if (pending) {
     return (
-      <Badge variant="outline" className="text-slate-400 border-slate-700 bg-slate-800/50 text-[10px]">
+      <Badge variant="outline" className={cn(nowrap, 'text-slate-400 border-slate-700 bg-slate-800/50')}>
         Checking…
       </Badge>
     );
@@ -132,13 +133,13 @@ function statusBadge(sectionId: SectionId, status: HubStatus, pending: boolean) 
       <Badge
         variant="outline"
         className={cn(
-          'text-[10px]',
+          nowrap,
           ok
             ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
             : 'text-amber-400 border-amber-500/30 bg-amber-500/10',
         )}
       >
-        {status.brandReady} / {status.brandTotal} assets
+        {`${status.brandReady} / ${status.brandTotal} assets`}
       </Badge>
     );
   }
@@ -148,21 +149,21 @@ function statusBadge(sectionId: SectionId, status: HubStatus, pending: boolean) 
       <Badge
         variant="outline"
         className={cn(
-          'text-[10px]',
+          nowrap,
           ok
             ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
             : 'text-slate-400 border-slate-700 bg-slate-800/50',
         )}
       >
-        {status.channelsReady} / {status.channelsTotal} set
+        {`${status.channelsReady} / ${status.channelsTotal} set`}
       </Badge>
     );
   }
   if (sectionId === 'social') {
     if (status.socialExpired > 0) {
       return (
-        <Badge variant="outline" className="text-[10px] text-red-400 border-red-500/30 bg-red-500/10">
-          {status.socialExpired} token expired
+        <Badge variant="outline" className={cn(nowrap, 'text-red-400 border-red-500/30 bg-red-500/10')}>
+          {`${status.socialExpired} token expired`}
         </Badge>
       );
     }
@@ -171,7 +172,7 @@ function statusBadge(sectionId: SectionId, status: HubStatus, pending: boolean) 
       <Badge
         variant="outline"
         className={cn(
-          'text-[10px]',
+          nowrap,
           ok
             ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
             : status.socialReady > 0
@@ -179,19 +180,20 @@ function statusBadge(sectionId: SectionId, status: HubStatus, pending: boolean) 
               : 'text-slate-400 border-slate-700 bg-slate-800/50',
         )}
       >
-        {status.socialReady} / {status.socialTotal} Connected
+        {`${status.socialReady} / ${status.socialTotal} Connected`}
       </Badge>
     );
   }
   if (sectionId === 'team') {
+    const label = status.teamCount === 1 ? '1 member' : `${status.teamCount} members`;
     return (
-      <Badge variant="outline" className="text-[10px] text-slate-300 border-slate-700 bg-slate-800/50">
-        {status.teamCount} member{status.teamCount === 1 ? '' : 's'}
+      <Badge variant="outline" className={cn(nowrap, 'text-slate-300 border-slate-700 bg-slate-800/50')}>
+        {label}
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="text-[10px] text-slate-400 border-slate-700 bg-slate-800/50">
+    <Badge variant="outline" className={cn(nowrap, 'text-slate-400 border-slate-700 bg-slate-800/50')}>
       Developer
     </Badge>
   );
@@ -307,12 +309,12 @@ export function SettingsHub({ showApiKeys }: { showApiKeys: boolean }) {
                 <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
                   {s.icon}
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
                   {statusBadge(s.id, status, statusPending)}
                   {isDrawer && (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] uppercase tracking-wide text-slate-500 group-hover:text-amber-400 transition-colors">
+                    <span className="inline-flex items-center gap-0.5 text-[10px] uppercase tracking-wide text-slate-500 group-hover:text-amber-400 transition-colors whitespace-nowrap">
                       Open
-                      <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
                     </span>
                   )}
                   {!isDrawer && (

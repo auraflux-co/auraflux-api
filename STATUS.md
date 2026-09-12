@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 20:15 UTC  
+**Last Updated:** 2026-09-12 20:25 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Settings hub (iss_-4uuqIyHeTcK / CPD-55): status badges on cards, Sheet drawers for Brand/Channels/Social/Team, max-w-6xl + API health footer.
+Settings hub polish (iss_vN012wyDz7L3 / CPD-56): status badge fallbacks, amber hover + Open cue, health footer Refresh button.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
