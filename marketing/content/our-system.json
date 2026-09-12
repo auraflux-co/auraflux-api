@@ -31,8 +31,8 @@
       "subhead": "Automated Social Publishing",
       "body": "Schedule and push clips directly to TikTok, YouTube Shorts, and Instagram Reels with custom title & hashtag presets.",
       "badges": ["TikTok", "YouTube Shorts", "IG Reels"],
-      "visual": "/assets/feature-multi-account-dispatch.jpg",
-      "visual_alt": "Multi-Account Social Dispatch Dashboard"
+      "visual": "html:dispatch-mock",
+      "visual_alt": "Publish Peak Short — TikTok, YouTube Shorts, Instagram Reels"
     }
   ],
   "specs": [

@@ -70,6 +70,45 @@ ${FRAMER_CSS || ''}
 .pillar-visual img{
   width:100%;height:100%;max-width:100%;object-fit:contain;border-radius:0.5rem;display:block;
 }
+.pillar-visual--mock{
+  aspect-ratio:auto;min-height:20rem;padding:1.5rem;align-items:stretch;justify-content:center;
+}
+.dispatch-mock{
+  width:100%;max-width:22rem;margin:0 auto;
+  background:#0f172a;border:1px solid #1e293b;border-radius:0.75rem;
+  padding:1.25rem;box-shadow:0 20px 40px rgba(0,0,0,.4);
+  display:flex;flex-direction:column;gap:1rem;
+}
+.dispatch-mock-head{
+  display:flex;align-items:center;justify-content:space-between;gap:0.75rem;
+  border-bottom:1px solid #1e293b;padding-bottom:0.75rem;
+}
+.dispatch-mock-title{
+  margin:0;font-size:0.875rem;font-weight:700;color:#fff !important;letter-spacing:-.01em;
+}
+.dispatch-mock-status{
+  margin:0;font-size:0.75rem;font-weight:600;color:#fbbf24 !important;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;white-space:nowrap;
+}
+.dispatch-mock-rows{display:flex;flex-direction:column;gap:0.75rem}
+.dispatch-mock-row{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  font-size:0.875rem;font-weight:500;color:#e2e8f0 !important;
+}
+.dispatch-toggle{
+  width:2rem;height:1rem;border-radius:9999px;background:#f59e0b;
+  display:inline-flex;align-items:center;justify-content:flex-end;padding:0 0.125rem;
+  flex-shrink:0;
+}
+.dispatch-toggle-knob{
+  width:0.75rem;height:0.75rem;border-radius:9999px;background:#020617;display:block;
+}
+.dispatch-mock-cta{
+  display:block;width:100%;box-sizing:border-box;text-align:center;
+  padding:0.55rem 0.75rem;border-radius:0.5rem;border:none;
+  background:#f59e0b;color:#020617 !important;font-weight:800;font-size:0.75rem;
+  letter-spacing:.02em;text-transform:uppercase;cursor:default;
+}
 /* Full-bleed dark band — beats page-base paper/table !important on light canvas */
 section.specs{
   width:100%;max-width:none;margin:4rem 0 0;padding:4rem 1.5rem;
@@ -191,8 +230,28 @@ ${FRAMER_NAV || FALLBACK_NAV}
         <span class="pillar-badge">IG Reels</span>
       </div>
     </div>
-    <div class="pillar-visual">
-      <img src="/assets/feature-multi-account-dispatch.jpg" alt="Multi-Account Social Dispatch Dashboard" width="960" height="540" loading="lazy">
+    <div class="pillar-visual pillar-visual--mock" aria-label="Publish Peak Short preview">
+      <div class="dispatch-mock">
+        <div class="dispatch-mock-head">
+          <p class="dispatch-mock-title">Publish Peak Short</p>
+          <p class="dispatch-mock-status">Ready to sync</p>
+        </div>
+        <div class="dispatch-mock-rows">
+          <div class="dispatch-mock-row">
+            <span>TikTok</span>
+            <span class="dispatch-toggle" aria-hidden="true"><span class="dispatch-toggle-knob"></span></span>
+          </div>
+          <div class="dispatch-mock-row">
+            <span>YouTube Shorts</span>
+            <span class="dispatch-toggle" aria-hidden="true"><span class="dispatch-toggle-knob"></span></span>
+          </div>
+          <div class="dispatch-mock-row">
+            <span>Instagram Reels</span>
+            <span class="dispatch-toggle" aria-hidden="true"><span class="dispatch-toggle-knob"></span></span>
+          </div>
+        </div>
+        <div class="dispatch-mock-cta">Publish Now</div>
+      </div>
     </div>
   </article>
 </section>
