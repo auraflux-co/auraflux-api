@@ -213,7 +213,7 @@ def patch_footer(html, data):
         links_html = '\n'.join(
             f'          <a href="{lk["url"]}">{lk["label"]}</a>' for lk in platform_links)
         html = re.sub(
-            r'(<div class="af-footer-col">\s*<span class="af-footer-col-label">(?:Platform|Explore)</span>)'
+            r'(<div class="af-footer-col">\s*<span class="af-footer-col-label">(?:Platform|Explore|Product)</span>)'
             r'([\s\S]*?)(</div>)',
             lambda m: m.group(1) + '\n' + links_html + '\n        ' + m.group(3),
             html, count=1)

@@ -1,22 +1,40 @@
 <style>
   .af-footer {
+    width: 100%;
     background: #020617;
     color: #e2e8f0;
-    padding: 3.5rem 0 2rem;
-    margin-top: 0;
+    border-top: 1px solid rgba(30, 41, 59, 0.9);
+    padding: 3rem 0 2rem;
+    margin-top: 5rem;
+    position: relative;
+  }
+  .af-footer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.35), transparent);
+    pointer-events: none;
   }
   .af-footer-inner {
     max-width: 72rem;
     margin: 0 auto;
-    padding: 0 1.25rem;
+    padding: 0 1.5rem;
   }
   .af-footer-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 2.5rem;
+    gap: 2rem;
+    margin-bottom: 3rem;
   }
-  @media (min-width: 720px) {
-    .af-footer-grid { grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 2rem; }
+  @media (min-width: 768px) {
+    .af-footer-grid {
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
   }
   .af-footer-brand {
     display: flex;
@@ -29,9 +47,9 @@
     gap: 0.5rem;
     color: #fff !important;
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 1.125rem;
     text-decoration: none !important;
-    letter-spacing: -0.02em;
+    letter-spacing: 0.02em;
   }
   .af-footer-logo:hover { text-decoration: none !important; }
   .af-footer-logo-img {
@@ -44,9 +62,9 @@
   #af-footer-tagline {
     color: #94a3b8 !important;
     font-size: 0.875rem;
-    line-height: 1.6;
+    line-height: 1.65;
     margin: 0;
-    max-width: 18rem;
+    max-width: 24rem;
   }
   .af-footer-entity {
     color: #64748b !important;
@@ -55,50 +73,102 @@
   }
   .af-footer-col-label {
     display: block;
-    color: #e2e8f0 !important;
+    color: #cbd5e1 !important;
     font-size: 0.75rem !important;
     font-weight: 600 !important;
     letter-spacing: 0.08em !important;
     text-transform: uppercase;
-    margin: 0 0 1rem !important;
+    margin: 0 0 0.75rem !important;
   }
   .af-footer-col {
     display: flex;
     flex-direction: column;
-    gap: 0.625rem;
+    gap: 0.5rem;
   }
   .af-footer-col a {
     color: #94a3b8 !important;
     font-size: 0.875rem;
     text-decoration: none !important;
+    transition: color 0.15s ease;
   }
-  .af-footer-col a:hover { color: #f8fafc !important; }
+  .af-footer-col a:hover { color: #fbbf24 !important; }
+  .af-footer-platforms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .af-footer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #cbd5e1 !important;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 0.375rem;
+    letter-spacing: 0.01em;
+  }
+  .af-footer-pill-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+  }
+  .af-footer-pill-dot.twitch { background: #9146ff; }
+  .af-footer-pill-dot.youtube { background: #ff0033; }
+  .af-footer-pill-dot.kick { background: #53fc18; }
   .af-footer-social {
     display: flex;
     gap: 0.75rem;
-    margin-top: 0.5rem;
+    margin-top: 0.35rem;
     flex-wrap: wrap;
   }
   .af-social {
     color: #94a3b8 !important;
     font-size: 0.8125rem;
     text-decoration: none !important;
+    transition: color 0.15s ease;
   }
-  .af-social:hover { color: var(--brand-accent, #f5c542) !important; }
+  .af-social:hover { color: var(--brand-accent, #fbbf24) !important; }
   .af-footer-bottom {
-    margin-top: 2.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid rgba(51, 65, 85, 0.8);
+    border-top: 1px solid #0f172a;
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.5rem;
+    flex-direction: column;
+    gap: 1rem;
     justify-content: space-between;
     align-items: center;
+  }
+  @media (min-width: 768px) {
+    .af-footer-bottom {
+      flex-direction: row;
+    }
   }
   #af-footer-copy {
     margin: 0;
     color: #64748b !important;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
+  }
+  .af-footer-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #94a3b8 !important;
+    font-size: 0.75rem;
+  }
+  .af-footer-status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: #10b981;
+    flex-shrink: 0;
+    animation: af-footer-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes af-footer-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.85); }
   }
 </style>
 <footer class="af-footer" role="contentinfo">
@@ -109,31 +179,29 @@
           <img class="af-footer-logo-img" src="/brand/logo.png" width="56" height="34" alt="AuraFlux">
           <span>AuraFlux</span>
         </a>
-        <p id="af-footer-tagline">Stream highlights (chat spikes, peak CCV, key plays) to Shorts. Multi-platform sync for YouTube, Twitch, and Kick.</p>
+        <p id="af-footer-tagline">Turn stream highlights (chat spikes, peak CCV, key plays) into Shorts. Multi-platform sync for YouTube, Twitch, and Kick.</p>
         <p class="af-footer-entity">A product of HSKRG LLC.</p>
         <div class="af-footer-social">
-          <a class="af-social" href="https://www.linkedin.com/in/aura-flux-930b86413">LinkedIn</a>
-          <a class="af-social" href="https://www.instagram.com/aurafluxco/">Instagram</a>
-          <a class="af-social" href="https://www.tiktok.com/@aurafluxco">TikTok</a>
-          <a class="af-social" href="https://youtube.com/@auraflux">YouTube</a>
+          <a class="af-social af-social-li" href="https://www.linkedin.com/in/aura-flux-930b86413">LinkedIn</a>
+          <a class="af-social af-social-ig" href="https://www.instagram.com/aurafluxco/">Instagram</a>
+          <a class="af-social af-social-tt" href="https://www.tiktok.com/@aurafluxco?_r=1&_t=ZS-96xfObJOkbN">TikTok</a>
+          <a class="af-social af-social-yt" href="https://youtube.com/@auraflux">YouTube</a>
         </div>
       </div>
       <div class="af-footer-col">
-        <span class="af-footer-col-label">Explore</span>
-          <a href="/">Home</a>
-          <a href="/how-it-works">How it works</a>
-          <a href="/features">Features</a>
-          <a href="/roadmap">Roadmap</a>
+        <span class="af-footer-col-label">Product</span>
           <a href="/pricing">Pricing</a>
-          <a href="/developer-api">API</a>
-          <a href="/blog">Blog</a>
-          <a href="/contact">Contact</a>
+          <a href="/features">Features</a>
+          <a href="/how-it-works">How it works</a>
+          <a href="/contact">Managed Ops</a>
         </div>
       <div class="af-footer-col">
-        <span class="af-footer-col-label">Contact</span>
-        <a href="tel:+15716002835">+1 (571) 600-2835</a>
-        <a href="mailto:support@auraflux.co">support@auraflux.co</a>
-        <a href="/contact">Contact form</a>
+        <span class="af-footer-col-label">Platforms</span>
+        <div class="af-footer-platforms" aria-label="Supported platforms">
+          <span class="af-footer-pill"><span class="af-footer-pill-dot twitch" aria-hidden="true"></span>Twitch</span>
+          <span class="af-footer-pill"><span class="af-footer-pill-dot youtube" aria-hidden="true"></span>YouTube</span>
+          <span class="af-footer-pill"><span class="af-footer-pill-dot kick" aria-hidden="true"></span>Kick</span>
+        </div>
       </div>
       <div class="af-footer-col">
         <span class="af-footer-col-label">Legal</span>
@@ -145,7 +213,11 @@
       </div>
     </div>
     <div class="af-footer-bottom">
-      <p id="af-footer-copy">© 2026 AuraFlux. All rights reserved</p>
+      <p id="af-footer-copy">© 2026 AuraFlux. All rights reserved.</p>
+      <div class="af-footer-status" role="status">
+        <span class="af-footer-status-dot" aria-hidden="true"></span>
+        <span>Systems Operational</span>
+      </div>
     </div>
   </div>
 </footer>
