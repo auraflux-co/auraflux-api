@@ -4,7 +4,7 @@
   "growth": {
     "name": "For solo streamers",
     "title": "Creator",
-    "subtitle": "Solo streamers shipping daily Shorts from stream peaks.",
+    "subtitle": "Solo streamers shipping daily short-form content.",
     "price": "$299",
     "features": [
       "Peaks from VODs (Most Replayed, chat spikes, CCV) → Short",
@@ -21,7 +21,7 @@
   "plan": {
     "name": "For high volume & teams",
     "title": "Studio",
-    "subtitle": "High-volume streamers, clip networks, media teams & agencies.",
+    "subtitle": "High-volume streamers, media teams & clip networks.",
     "badge": "Most Popular",
     "price": "$999",
     "features": [

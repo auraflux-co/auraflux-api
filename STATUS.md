@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 22:20 UTC  
+**Last Updated:** 2026-09-12 22:25 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Pricing: drop price-note under Creator/Studio; features sit under price. `iss_Oe2pZ904cxWx`.
+Pricing Creator/Studio subtitle copy update.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

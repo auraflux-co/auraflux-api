@@ -82,7 +82,7 @@ const PLAN_META: Record<string, {
   growth: {
     label:       'Creator',
     audience:    'For solo streamers',
-    sub:         'Solo streamers shipping daily content.',
+    sub:         'Solo streamers shipping daily short-form content.',
     valueMetric: 'Peaks → Short → publish · Assist chat',
     highlights: [
       'Peaks from VODs (Most Replayed, chat, CCV) → Short',
@@ -98,7 +98,7 @@ const PLAN_META: Record<string, {
   operate: {
     label:       'Studio',
     audience:    'For high volume & teams',
-    sub:         'High-volume streamers, clip networks, media teams & agencies.',
+    sub:         'High-volume streamers, media teams & clip networks.',
     valueMetric: 'Full platform seat · priority queue · team',
     highlights: [
       'Unlimited Peaks, VOD & Short production',
