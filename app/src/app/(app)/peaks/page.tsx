@@ -428,58 +428,28 @@ function PeaksPageInner() {
     }
   }
 
-  const stepConnect = true;
-  const stepFetch = sourcePlatform === 'kick' ? kickPeaks.length > 0 || !!hint : vods.length > 0;
-  const stepPeaks = peaks.length > 0;
-  const stepStaged = !!staged?.mp4Url;
-
-  const peakSteps = [
-    { n: 1, label: 'Connect', done: stepConnect },
-    { n: 2, label: 'Fetch VODs', done: stepFetch },
-    { n: 3, label: 'Find peaks', done: stepPeaks },
-    { n: 4, label: 'Trim / upload', done: stepStaged },
-    { n: 5, label: 'Style + preview', done: stepStaged },
-  ];
-  const activeStep = peakSteps.find((s) => !s.done)?.n ?? peakSteps[peakSteps.length - 1]!.n;
+  function clearPeaksSelection() {
+    setPeaks([]);
+    setKickPeaks([]);
+    setSelectedVod(null);
+    setAnalyzeMode(null);
+    setStaged(null);
+    setNearFinalUrl(null);
+    setNearFinalMeta(null);
+    setHint(null);
+    setError(null);
+  }
 
   return (
     <PageShell maxWidth="4xl">
       <PageHeader
         title="Peaks"
-        subtitle="AuraFlux finds the peaks in your VODs — you trim the window, pick an edit style, preview, then create your Short."
+        subtitle="Pick a VOD, find peaks, trim & upload, preview your edit style, then create your Short."
       />
 
-      {/* Creator happy-path strip */}
-      <ol className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-2">
-        {peakSteps.map((s) => {
-          const active = s.n === activeStep;
-          return (
-            <li
-              key={s.n}
-              className={cn(
-                'rounded-xl border px-3 py-2 text-center',
-                active
-                  ? 'border-amber-400 bg-amber-400/10 text-amber-400'
-                  : 'border-slate-800 text-slate-500',
-              )}
-            >
-              <p
-                className={cn(
-                  'text-[10px] font-bold uppercase tracking-wider',
-                  active ? 'text-amber-400' : 'text-slate-500',
-                )}
-              >
-                Step {s.n}
-              </p>
-              <p className={cn('text-xs font-semibold', active ? 'text-amber-400' : 'text-slate-500')}>{s.label}</p>
-            </li>
-          );
-        })}
-      </ol>
-      <p className="af-caption text-muted-foreground mb-2">
-        You do not need to hunt for peaks yourself — pick a VOD, tap <strong>Find peaks</strong>, then open the timestamp and upload your trim.
-        {' '}<a href="/settings/channels" className="underline underline-offset-2 hover:text-foreground">My Channels</a>
-        {' '}if Fetch is empty.
+      <p className="af-caption text-muted-foreground mb-4">
+        Need a channel first?{' '}
+        <a href="/settings/channels" className="underline underline-offset-2 hover:text-foreground">My Channels</a>
       </p>
 
       <input
@@ -638,9 +608,21 @@ function PeaksPageInner() {
 
       {peaks.length > 0 && (
         <div className="space-y-3">
-          <h2 className="af-label font-medium">
-            {sourcePlatform === 'kick' ? 'Peaks AuraFlux found (Kick CCV)' : 'Peaks AuraFlux found'}
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="af-label font-medium">
+              {sourcePlatform === 'kick' ? 'Peaks found (Kick CCV)' : 'Peaks found'}
+            </h2>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200"
+              onClick={clearPeaksSelection}
+              disabled={!!busy}
+            >
+              {sourcePlatform === 'kick' ? 'Clear peaks' : 'Back to VODs'}
+            </Button>
+          </div>
           <p className="af-caption text-muted-foreground">
             Open at peak → trim that window on your device → Upload clip. We’ll prepare it with your edit style.
           </p>
