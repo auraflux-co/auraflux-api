@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Activity,
@@ -9,11 +10,19 @@ import {
   Settings2,
   Sparkles,
 } from 'lucide-react';
+import { useAuth } from '@/lib/clerk-compat';
 import { PortalQuadrant } from '@/components/member-portal/portal-quadrant';
 import { SetupChecklist } from '@/components/dashboard/setup-checklist';
 import { CheckoutWelcomeBanner } from '@/components/dashboard/checkout-welcome-banner';
 import { Suspense } from 'react';
 import { tierLabel } from '@/lib/tier-labels';
+import { isReviewQueueJob } from '@/lib/job-labels';
+import {
+  listJobs,
+  listConnectedAccounts,
+  getCreditBalance,
+  getBrands,
+} from '@/lib/api';
 
 const CORNER_LINK =
   'text-xs font-semibold text-slate-400 hover:text-amber-400 transition-colors';
@@ -22,6 +31,22 @@ const SECONDARY_BTN =
 const PRIMARY_BTN =
   'w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-xl transition-all text-sm text-center block';
 
+function StatBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-md border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-xs font-semibold text-amber-400">
+      {children}
+    </span>
+  );
+}
+
+type HubStats = {
+  pendingReview: number | null;
+  activeJobs: number | null;
+  accountsLinked: number | null;
+  creditsRemaining: number | null;
+  brandCount: number | null;
+};
+
 type Props = {
   firstName: string;
   planTier: string;
@@ -29,6 +54,51 @@ type Props = {
 };
 
 export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
+  const { getToken } = useAuth();
+  const [stats, setStats] = useState<HubStats>({
+    pendingReview: null,
+    activeJobs: null,
+    accountsLinked: null,
+    creditsRemaining: null,
+    brandCount: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const [jobsRes, accountsRes, creditsRes, brands] = await Promise.all([
+          listJobs(token).catch(() => ({ jobs: [] })),
+          listConnectedAccounts(token).catch(() => ({ ok: false, accounts: [] })),
+          getCreditBalance(token).catch(() => null),
+          getBrands(token).catch(() => []),
+        ]);
+        if (cancelled) return;
+        const jobs = jobsRes.jobs || [];
+        const pendingReview = jobs.filter(isReviewQueueJob).length;
+        const activeJobs = jobs.filter((j) =>
+          ['queued', 'running', 'processing', 'held', 'credit_paused'].includes(j.status || ''),
+        ).length;
+        const accountsLinked = accountsRes.accounts?.length ?? 0;
+        const creditsRemaining = creditsRes
+          ? (creditsRes.included_remaining || 0) + (creditsRes.pack_remaining || 0)
+          : null;
+        setStats({
+          pendingReview,
+          activeJobs,
+          accountsLinked,
+          creditsRemaining,
+          brandCount: Array.isArray(brands) ? brands.length : 0,
+        });
+      } catch {
+        /* soft — badges stay empty */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [getToken]);
+
   return (
     <div className="space-y-8 text-white antialiased">
       <div className="space-y-2">
@@ -73,6 +143,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           <p className="text-sm text-slate-400 leading-relaxed flex-1">
             Find high-signal moments from your live and VOD sources, then send them into production.
           </p>
+          <StatBadge>Trim → preview → Short</StatBadge>
           <Link href="/peaks" className={PRIMARY_BTN}>
             Browse Peaks
           </Link>
@@ -91,6 +162,13 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           <p className="text-sm text-slate-400 leading-relaxed flex-1">
             Track active pipeline work, history, and start a new compose run.
           </p>
+          {stats.activeJobs != null && (
+            <StatBadge>
+              {stats.activeJobs === 0
+                ? 'No jobs in progress'
+                : `${stats.activeJobs} in progress`}
+            </StatBadge>
+          )}
           <div className="flex flex-wrap gap-2">
             <Link href="/myjobs/new" className={SECONDARY_BTN}>
               New job
@@ -111,9 +189,19 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
             </Link>
           }
         >
-          <p className="text-sm text-slate-400 leading-relaxed">
+          <p className="text-sm text-slate-400 leading-relaxed flex-1">
             Approve staged outputs before they publish to your social accounts.
           </p>
+          {stats.pendingReview != null && (
+            <StatBadge>
+              {stats.pendingReview === 0
+                ? 'Queue clear'
+                : `${stats.pendingReview} pending approval${stats.pendingReview === 1 ? '' : 's'}`}
+            </StatBadge>
+          )}
+          <Link href="/review" className={SECONDARY_BTN}>
+            Open review
+          </Link>
         </PortalQuadrant>
 
         <PortalQuadrant
@@ -129,6 +217,13 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           <p className="text-sm text-slate-400 leading-relaxed flex-1">
             Connect source channels and destination social accounts for fetch and publish.
           </p>
+          {stats.accountsLinked != null && (
+            <StatBadge>
+              {stats.accountsLinked === 0
+                ? 'No accounts linked'
+                : `${stats.accountsLinked} account${stats.accountsLinked === 1 ? '' : 's'} linked`}
+            </StatBadge>
+          )}
           <div className="flex flex-wrap gap-2 items-center">
             <Link href="/settings/channels" className={SECONDARY_BTN}>
               My Channels
@@ -149,9 +244,17 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
             </Link>
           }
         >
-          <p className="text-sm text-slate-400 leading-relaxed">
+          <p className="text-sm text-slate-400 leading-relaxed flex-1">
             Subscription, invoices, and credit balance for pipeline runs.
           </p>
+          {stats.creditsRemaining != null && (
+            <StatBadge>
+              {stats.creditsRemaining.toLocaleString()} credit{stats.creditsRemaining === 1 ? '' : 's'} left
+            </StatBadge>
+          )}
+          <Link href="/billing" className={SECONDARY_BTN}>
+            View billing
+          </Link>
         </PortalQuadrant>
 
         <PortalQuadrant
@@ -164,9 +267,19 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
             </Link>
           }
         >
-          <p className="text-sm text-slate-400 leading-relaxed">
+          <p className="text-sm text-slate-400 leading-relaxed flex-1">
             Brand identity, team access, and profile preferences.
           </p>
+          {stats.brandCount != null && (
+            <StatBadge>
+              {stats.brandCount === 0
+                ? 'No brands yet'
+                : `${stats.brandCount} brand${stats.brandCount === 1 ? '' : 's'}`}
+            </StatBadge>
+          )}
+          <Link href="/settings/brand" className={SECONDARY_BTN}>
+            Brand profile
+          </Link>
         </PortalQuadrant>
       </div>
     </div>

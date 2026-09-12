@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 01:20 UTC  
+**Last Updated:** 2026-09-12 01:30 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator `/home` dark theme: slate-950 canvas, amber accents, dark hub cards + nav (MemberShell + MemberHomeHub + PortalQuadrant + mp tokens).
+Creator home UX polish: hub stat badges (pending review, accounts, credits, brands) + amber active nav pill/underline.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
