@@ -6,6 +6,7 @@ import {
   Activity,
   Clapperboard,
   CreditCard,
+  FolderOpen,
   Radio,
   Settings2,
   Sparkles,
@@ -114,7 +115,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           </span>
         </div>
         <p className="text-sm text-slate-400 max-w-2xl">
-          Produce and publish from Peaks through Jobs — set up channels, review outputs, and manage billing
+          Produce and publish from Peaks and Library through Jobs — set up channels, review outputs, and manage billing
           in one place.
         </p>
       </div>
@@ -146,6 +147,25 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           <StatBadge>Trim → preview → Short</StatBadge>
           <Link href="/peaks" className={PRIMARY_BTN}>
             Browse Peaks
+          </Link>
+        </PortalQuadrant>
+
+        <PortalQuadrant
+          id="library"
+          title="Library"
+          icon={FolderOpen}
+          action={
+            <Link href="/library" className={CORNER_LINK}>
+              Open →
+            </Link>
+          }
+        >
+          <p className="text-sm text-slate-400 leading-relaxed flex-1">
+            Save creators you clip from, load multi-creator clips, filter by duration and Score, paste a URL.
+          </p>
+          <StatBadge>Roster → clips → Short</StatBadge>
+          <Link href="/library" className={PRIMARY_BTN}>
+            Open Library
           </Link>
         </PortalQuadrant>
 

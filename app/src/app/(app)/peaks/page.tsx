@@ -229,6 +229,8 @@ function PeaksPageInner() {
     // and a late empty response can overwrite a good one.
     if (!isLoaded || brandLoading) return;
     void loadPresets();
+    // Library paste → peaks handoff: skip auto VOD fetch so we keep pasted segments.
+    if (searchParams.get('from') === 'library') return;
     void loadVods(undefined, sourcePlatform);
   }, [isLoaded, brandLoading, activeBrand?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -238,6 +240,47 @@ function PeaksPageInner() {
     if (!hasFetchedVodsRef.current) return;
     void loadVods(undefined, sourcePlatform);
   }, [vodWindow, vodSort]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Library → Peaks handoff (paste URL analyze)
+  useEffect(() => {
+    if (searchParams.get('from') !== 'library') return;
+    try {
+      const raw = sessionStorage.getItem('library_peaks_handoff');
+      if (!raw) return;
+      sessionStorage.removeItem('library_peaks_handoff');
+      const data = JSON.parse(raw) as {
+        url?: string;
+        platform?: string;
+        segments?: ContentLibraryPeak[];
+        mode?: string;
+      };
+      if (!data.url) return;
+      const plat = (
+        data.platform === 'twitch' || data.platform === 'kick' || data.platform === 'youtube'
+          ? data.platform
+          : 'youtube'
+      ) as SourcePlatform;
+      setSourcePlatform(plat);
+      setSelectedVod({
+        platform: plat,
+        streamer: 'library',
+        vodId: data.url,
+        title: 'Pasted from Library',
+        url: data.url,
+        duration: 0,
+      });
+      const segments = data.segments || [];
+      setPeaks(segments);
+      setAnalyzeMode(data.mode || 'library_paste');
+      setStaged(null);
+      hasFetchedVodsRef.current = true;
+      setHint(
+        segments.length
+          ? `From Library — ${segments.length} peak${segments.length === 1 ? '' : 's'} ready. Pick one to trim & upload.`
+          : 'From Library — URL opened here. Fetch VODs or upload a trim to continue.',
+      );
+    } catch { /* ignore bad handoff */ }
+  }, [searchParams]);
 
   async function onAnalyze(vod: ContentLibraryVod) {
     setSelectedVod(vod);

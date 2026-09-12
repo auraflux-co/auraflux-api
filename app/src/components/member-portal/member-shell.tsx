@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 const NAV = [
   { href: '/home', label: 'Home' },
   { href: '/peaks', label: 'Peaks' },
+  { href: '/library', label: 'Library' },
   { href: '/myjobs', label: 'Jobs' },
   { href: '/review', label: 'Review' },
   { href: '/billing', label: 'Billing' },

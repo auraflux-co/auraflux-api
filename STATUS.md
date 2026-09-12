@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 02:40 UTC  
+**Last Updated:** 2026-09-12 02:45 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Peaks VOD discovery filters (C0→prod Phase 1): window pills, min/max duration, recent/popular sort on GET /content-library/vods + /peaks UI. Ticket iss_8XnXykmMZN5J.
+Creator Clip Library (P1 parity): `/library` nav + page, multi-creator roster, duration/window/Score filters, paste URL→Peaks, Create Short→job wizard. Ticket iss_CLsWeGKEqyYP. P2 Compose lite filed iss_qvRufB7mos59.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

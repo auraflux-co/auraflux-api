@@ -803,6 +803,44 @@ function JobBuilderPageInner() {
     } catch { /* ignore bad handoff */ }
   }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Library → Jobs handoff (multi-clip picks)
+  useEffect(() => {
+    if (searchParams.get('from') !== 'library') return;
+    try {
+      const raw = sessionStorage.getItem('library_clip_handoff');
+      if (!raw) return;
+      sessionStorage.removeItem('library_clip_handoff');
+      const data = JSON.parse(raw) as {
+        clips?: Array<{
+          url: string; title?: string; duration?: number; thumbnailUrl?: string | null;
+          platform?: string; viewCount?: number; contentType?: string;
+        }>;
+      };
+      const clips = data.clips || [];
+      if (!clips.length) return;
+      setTemplatePicked(true);
+      setTemplateId('scratch');
+      setFormFactor('short');
+      setSourceIntent('clips');
+      setSourceMode('source');
+      setFormat('portrait');
+      setSourceItems(clips.map((c, i) => ({
+        id: c.url || `lib-${i}`,
+        url: c.url,
+        title: c.title || 'Library clip',
+        duration: c.duration || 0,
+        thumbnailUrl: c.thumbnailUrl || null,
+        platform: (c.platform as SourceItem['platform']) || undefined,
+        viewCount: c.viewCount || 0,
+        type: 'clip' as const,
+        contentType: c.contentType || 'clip',
+      })));
+      setShowClipEditor(true);
+      setOpenSections(['source', 'editing']);
+      setTemplateBanner(`From Library — ${clips.length} clip${clips.length === 1 ? '' : 's'} ready`);
+    } catch { /* ignore bad handoff */ }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ─── Feature helpers ───────────────────────────────────────────────────────
 
   function toggleFeature(id: string) {
