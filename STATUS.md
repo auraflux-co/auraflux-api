@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 23:15 UTC  
+**Last Updated:** 2026-09-12 23:35 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Pricing hero sub: Turn stream highlights into published shorts…
+Footer tagline: Stream highlights → Shorts + multi-platform sync.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
