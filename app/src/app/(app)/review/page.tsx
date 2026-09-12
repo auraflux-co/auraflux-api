@@ -26,7 +26,8 @@ import { Badge } from '@/components/ui/badge';
 import { JobStatusBadge } from '@/components/ui/job-status-badge';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { Button } from '@/components/ui/button';
-import { updateJobSchedule, getSchedulePrefs, type SchedulePrefs, type ScheduleSlot, requestJobRevision, operatorJobAction } from '@/lib/api';
+import { updateJobSchedule, getSchedulePrefs, approveAndPublish, type SchedulePrefs, type ScheduleSlot, requestJobRevision, operatorJobAction } from '@/lib/api';
+import { toast } from 'sonner';
 import { ThumbnailFramePicker } from '@/components/creator/thumbnail-frame-picker';
 import { GenerateReviewLinkButton } from '@/components/creator/generate-review-link-button';
 import { PlaylistStrategyBadge } from '@/components/creator/playlist-strategy-badge';
@@ -142,36 +143,47 @@ const BEST_PRACTICES: Record<string, {
 };
 
 function PublishBestPractices({ platforms }: { platforms: string[] }) {
+  const [open, setOpen] = useState(false);
   const relevant = platforms.filter((p) => BEST_PRACTICES[p]);
   if (relevant.length === 0) return null;
   return (
-    <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-3">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        Best times to publish
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {relevant.map((p) => {
-          const bp = BEST_PRACTICES[p];
-          return (
-            <div key={p} className={`rounded-lg border p-3 space-y-1.5 ${bp.color}`}>
-              <p className="text-xs font-semibold">
-                {bp.icon} {{ youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram' }[p] ?? (p.charAt(0).toUpperCase() + p.slice(1))}
-              </p>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px]">
-                <span className="text-muted-foreground">Best days</span>
-                <span>{bp.bestDays}</span>
-                <span className="text-muted-foreground">Best times</span>
-                <span>{bp.bestTimes}</span>
-                <span className="text-muted-foreground">Frequency</span>
-                <span>{bp.frequency}</span>
+    <div className="rounded-lg border border-border/40 bg-muted/5">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
+        aria-expanded={open}
+      >
+        <span className="text-xs font-medium text-muted-foreground">
+          View Best Publishing Times
+        </span>
+        <span className="text-[10px] text-muted-foreground">{open ? 'Hide ▲' : 'Show ▼'}</span>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 border-t border-border/40 pt-3">
+          {relevant.map((p) => {
+            const bp = BEST_PRACTICES[p];
+            return (
+              <div key={p} className={`rounded-md border p-2.5 space-y-1 ${bp.color}`}>
+                <p className="text-xs font-semibold">
+                  {bp.icon}{' '}
+                  {{ youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram' }[p]
+                    ?? (p.charAt(0).toUpperCase() + p.slice(1))}
+                </p>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px]">
+                  <span className="text-muted-foreground">Best days</span>
+                  <span>{bp.bestDays}</span>
+                  <span className="text-muted-foreground">Best times</span>
+                  <span>{bp.bestTimes}</span>
+                  <span className="text-muted-foreground">Frequency</span>
+                  <span>{bp.frequency}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground/70 leading-relaxed">{bp.tip}</p>
               </div>
-              <p className="text-[10px] text-muted-foreground/70 pt-0.5 border-t border-border/30 leading-relaxed">
-                {bp.tip}
-              </p>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -584,7 +596,19 @@ const REVISION_CATEGORIES = [
   { id: 'other',      label: 'Other' },
 ] as const;
 
-function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: string; platforms: string[]; getToken: () => Promise<string | null>; isSuperAdmin: boolean }) {
+function StagingPanel({
+  jobId,
+  platforms,
+  getToken,
+  isSuperAdmin,
+  initialShowScheduler = false,
+}: {
+  jobId: string;
+  platforms: string[];
+  getToken: () => Promise<string | null>;
+  isSuperAdmin: boolean;
+  initialShowScheduler?: boolean;
+}) {
   const [assets, setAssets]     = useState<StagingAssets | null>(null);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
@@ -597,7 +621,10 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
   const [revisionFeedback, setRevisionFeedback] = useState('');
   const [revisionCategories, setRevisionCategories] = useState<string[]>([]);
   const [sendingRevision, setSendingRevision] = useState(false);
-  const [showScheduler, setShowScheduler] = useState(false);
+  const [showScheduler, setShowScheduler] = useState(initialShowScheduler);
+  useEffect(() => {
+    if (initialShowScheduler) setShowScheduler(true);
+  }, [initialShowScheduler]);
   const [scheduleAt, setScheduleAt]       = useState('');
   const [scheduling, setScheduling]       = useState(false);
   const [scheduleResult, setScheduleResult] = useState<{ ok?: boolean; at?: string; error?: string } | null>(null);
@@ -1157,6 +1184,11 @@ export default function StagingPage() {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [openScheduleFor, setOpenScheduleFor] = useState<string | null>(null);
+  const [platformFilter, setPlatformFilter] = useState<'all' | 'youtube' | 'tiktok' | 'instagram'>('all');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [batchAt, setBatchAt] = useState('');
+  const [batchBusy, setBatchBusy] = useState(false);
 
   useEffect(() => {
     if (!roleLoaded) return;
@@ -1192,12 +1224,112 @@ export default function StagingPage() {
     return isNaN(d.getTime()) ? String(ts) : d.toLocaleString();
   }
 
-  // Collect all platforms across queued jobs to show relevant best practices
   const activePlatforms = [...new Set(jobs.flatMap((j) => j.platforms ?? []))];
 
+  const filteredJobs = jobs.filter((j) => {
+    if (platformFilter === 'all') return true;
+    return (j.platforms ?? []).includes(platformFilter);
+  });
+
+  const filterCounts = {
+    all: jobs.length,
+    youtube: jobs.filter((j) => (j.platforms ?? []).includes('youtube')).length,
+    tiktok: jobs.filter((j) => (j.platforms ?? []).includes('tiktok')).length,
+    instagram: jobs.filter((j) => (j.platforms ?? []).includes('instagram')).length,
+  };
+
+  function toggleSelected(jobId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(jobId)) next.delete(jobId);
+      else next.add(jobId);
+      return next;
+    });
+  }
+
+  function toggleSelectAllVisible() {
+    const ids = filteredJobs.map((j) => j.jobId);
+    const allOn = ids.length > 0 && ids.every((id) => selected.has(id));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOn) ids.forEach((id) => next.delete(id));
+      else ids.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  async function batchScheduleSelected() {
+    if (!selected.size || !batchAt) return;
+    setBatchBusy(true);
+    const token = await getToken();
+    const iso = new Date(batchAt).toISOString();
+    let ok = 0;
+    let fail = 0;
+    for (const jobId of selected) {
+      try {
+        await updateJobSchedule(jobId, 'scheduled', iso, token ?? undefined);
+        ok += 1;
+      } catch {
+        fail += 1;
+      }
+    }
+    setBatchBusy(false);
+    if (ok) {
+      toast.success(`Scheduled ${ok} job${ok === 1 ? '' : 's'}`);
+      try {
+        const data = isSuperAdmin
+          ? await apiFetch<{ jobs: Job[] }>('/jobs?all=true', { token: token ?? undefined })
+          : await listJobs(token ?? undefined);
+        setJobs((data.jobs ?? []).filter(isReviewQueueJob));
+      } catch { /* keep local */ }
+      setSelected(new Set());
+      setBatchAt('');
+    }
+    if (fail) toast.error(`${fail} job${fail === 1 ? '' : 's'} failed to schedule`);
+  }
+
+  async function batchPublishSelected() {
+    if (!selected.size) return;
+    setBatchBusy(true);
+    const token = await getToken();
+    let ok = 0;
+    let fail = 0;
+    for (const jobId of selected) {
+      try {
+        await approveAndPublish(jobId, { platforms: ['youtube'], publishMeta: { privacyStatus: 'private' } }, token ?? undefined);
+        ok += 1;
+      } catch {
+        fail += 1;
+      }
+    }
+    setBatchBusy(false);
+    if (ok) toast.success(`Published ${ok} job${ok === 1 ? '' : 's'}`);
+    if (fail) toast.error(`${fail} publish failure${fail === 1 ? '' : 's'}`);
+    try {
+      const data = isSuperAdmin
+        ? await apiFetch<{ jobs: Job[] }>('/jobs?all=true', { token: token ?? undefined })
+        : await listJobs(token ?? undefined);
+      setJobs((data.jobs ?? []).filter(isReviewQueueJob));
+    } catch { /* keep */ }
+    setSelected(new Set());
+  }
+
+  function openApproveSchedule(jobId: string) {
+    setExpanded(jobId);
+    setOpenScheduleFor(jobId);
+  }
+
+  const FILTERS: { id: typeof platformFilter; label: string }[] = [
+    { id: 'all', label: `All (${filterCounts.all})` },
+    { id: 'tiktok', label: `TikTok (${filterCounts.tiktok})` },
+    { id: 'youtube', label: `YouTube (${filterCounts.youtube})` },
+    { id: 'instagram', label: `Instagram (${filterCounts.instagram})` },
+  ];
+
   return (
-    <PageShell maxWidth="full">
+    <PageShell maxWidth="full" className="!space-y-4 pt-0">
       <PageHeader
+        className="!mb-0"
         title="Review Queue"
         subtitle={isSuperAdmin
           ? `Platform-wide — all accounts. ${jobs.length > 0 ? `${jobs.length} job${jobs.length === 1 ? '' : 's'} awaiting review.` : ''}`
@@ -1207,9 +1339,66 @@ export default function StagingPage() {
       />
 
       {(loading || !roleLoaded) && <PageSkeleton rows={3} />}
-      {error   && <p className="af-body text-destructive">{formatUserError(error)}</p>}
+      {error && <p className="af-body text-destructive">{formatUserError(error)}</p>}
 
-      {/* Platform publish best practices */}
+      {!loading && !error && jobs.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setPlatformFilter(f.id)}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors',
+                platformFilter === f.id
+                  ? 'bg-amber-400/15 border-amber-400/40 text-amber-300'
+                  : 'bg-transparent border-border text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selected.size > 0 && (
+        <div className="sticky top-14 z-30 rounded-xl border border-amber-400/30 bg-background/95 backdrop-blur px-3 py-2.5 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-foreground">{selected.size} selected</span>
+          <input
+            type="datetime-local"
+            className="h-10 rounded-md border border-border bg-background px-2 text-xs font-medium"
+            value={batchAt}
+            onChange={(e) => setBatchAt(e.target.value)}
+            min={(() => {
+              const d = new Date(); d.setMinutes(d.getMinutes() + 30);
+              return d.toISOString().slice(0, 16);
+            })()}
+          />
+          <Button
+            className="h-10 font-medium"
+            disabled={batchBusy || !batchAt}
+            onClick={() => void batchScheduleSelected()}
+          >
+            {batchBusy ? 'Working…' : 'Approve All Selected'}
+          </Button>
+          <Button
+            className="h-10 font-medium"
+            variant="outline"
+            disabled={batchBusy}
+            onClick={() => void batchPublishSelected()}
+          >
+            Publish selected now
+          </Button>
+          <button
+            type="button"
+            className="text-xs text-muted-foreground hover:text-foreground ml-auto"
+            onClick={() => setSelected(new Set())}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {!loading && !isSuperAdmin && (
         <PublishBestPractices platforms={activePlatforms.length > 0 ? activePlatforms : ['youtube', 'tiktok', 'instagram']} />
       )}
@@ -1222,53 +1411,108 @@ export default function StagingPage() {
         />
       )}
 
-      {jobs.map((job) => {
+      {!loading && !error && jobs.length > 0 && filteredJobs.length === 0 && (
+        <EmptyState
+          size="sm"
+          title="No jobs for this platform"
+          description="Try All, or clear the filter to see the full queue."
+        />
+      )}
+
+      {filteredJobs.length > 0 && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <label className="inline-flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filteredJobs.length > 0 && filteredJobs.every((j) => selected.has(j.jobId))}
+              onChange={toggleSelectAllVisible}
+              className="rounded border-border"
+            />
+            Select all visible
+          </label>
+        </div>
+      )}
+
+      {filteredJobs.map((job) => {
         const isOpen = expanded === job.jobId;
         const primaryPlatform = job.platforms?.[0];
         const accentBorder: Record<string, string> = {
           youtube: 'border-l-red-500', tiktok: 'border-l-cyan-400',
           instagram: 'border-l-purple-500',
         };
+        const checked = selected.has(job.jobId);
         return (
           <div
             key={job.jobId}
-            className={`rounded-xl border bg-card overflow-hidden border-l-4 ${accentBorder[primaryPlatform ?? ''] ?? 'border-l-indigo-500'} ${isOpen ? 'ring-1 ring-primary/20' : ''}`}
+            className={cn(
+              'rounded-xl border bg-card overflow-hidden border-l-4',
+              accentBorder[primaryPlatform ?? ''] ?? 'border-l-indigo-500',
+              isOpen && 'ring-1 ring-primary/20',
+              checked && 'border-amber-400/40',
+            )}
           >
-            <div className="px-4 pt-4 pb-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-foreground">
-                      {jobDisplayTitle(job)}
+            <div className="px-3 py-3 flex flex-wrap items-center gap-3">
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => toggleSelected(job.jobId)}
+                className="rounded border-border shrink-0"
+                aria-label={`Select ${jobDisplayTitle(job)}`}
+              />
+              <div className="w-16 h-16 rounded-md overflow-hidden bg-muted shrink-0 border border-border/50">
+                {job.thumbnailUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={job.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">No thumb</div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-semibold text-foreground line-clamp-1">
+                    {jobDisplayTitle(job)}
+                  </span>
+                  <StatusBadge status={job.status} />
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {job.platforms?.map((p) => (
+                    <span key={p} className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-muted/60 text-muted-foreground border border-border/60">
+                      {PLATFORM_ICONS[p] ?? '●'} {PLATFORM_DISPLAY[p] ?? p}
                     </span>
-                    <StatusBadge status={job.status} />
-                    {job.platforms?.map((p) => (
-                      <span key={p} className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-muted/60 text-muted-foreground border border-border/60">
-                        {PLATFORM_ICONS[p] ?? '●'} {PLATFORM_DISPLAY[p] ?? p}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {isSuperAdmin && (job.customerName || job.customerId) && (
-                      <span className="mr-1">{job.customerName ?? job.customerId!.slice(0, 12) + '…'} · </span>
-                    )}
-                    {formatDate(job.createdAt)}
-                    {(job.templateName || job.wizardConfig?.templateName) && (
-                      <span className="ml-1">· {job.templateName || job.wizardConfig?.templateName}</span>
-                    )}
-                  </p>
+                  ))}
                 </div>
-                <div className="flex gap-2 shrink-0">
-                  <Link href={`/myjobs/${job.jobId}`} className="text-xs text-muted-foreground hover:text-foreground">
-                    Detail
-                  </Link>
-                  <button
-                    className="text-xs font-medium text-primary hover:underline"
-                    onClick={() => setExpanded(isOpen ? null : job.jobId)}
-                  >
-                    {isOpen ? 'Collapse ▲' : 'Review ▼'}
-                  </button>
-                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {isSuperAdmin && (job.customerName || job.customerId) && (
+                    <span className="mr-1">{job.customerName ?? job.customerId!.slice(0, 12) + '…'} · </span>
+                  )}
+                  {formatDate(job.createdAt)}
+                  {(job.templateName || job.wizardConfig?.templateName) && (
+                    <span className="ml-1">· {job.templateName || job.wizardConfig?.templateName}</span>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-9 font-medium"
+                  onClick={() => setExpanded(isOpen ? null : job.jobId)}
+                >
+                  {isOpen ? 'Collapse' : 'Edit'}
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-9 font-medium"
+                  onClick={() => openApproveSchedule(job.jobId)}
+                >
+                  Approve & Schedule
+                </Button>
+                <Link
+                  href={`/myjobs/${job.jobId}`}
+                  className="text-xs text-muted-foreground hover:text-foreground px-1"
+                >
+                  Detail
+                </Link>
               </div>
             </div>
 
@@ -1281,7 +1525,13 @@ export default function StagingPage() {
                     contentType={job.contentType}
                   />
                 )}
-                <StagingPanel jobId={job.jobId} platforms={job.platforms ?? []} getToken={getToken} isSuperAdmin={isSuperAdmin} />
+                <StagingPanel
+                  jobId={job.jobId}
+                  platforms={job.platforms ?? []}
+                  getToken={getToken}
+                  isSuperAdmin={isSuperAdmin}
+                  initialShowScheduler={openScheduleFor === job.jobId}
+                />
               </div>
             )}
           </div>

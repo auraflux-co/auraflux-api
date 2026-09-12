@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 04:15 UTC  
+**Last Updated:** 2026-09-12 04:45 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator UX audit deltas (non-redundant): Review inline schedule calendar + sticky Save Draft / Request AI Edits / Approve & Schedule; Support hides gated chat for self-serve; Badge status tokens + h-10 CTAs.
+Review Queue UX: demote Best Publishing Times to collapsible; inline card thumb/actions; platform filter tabs + batch Approve All Selected.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
