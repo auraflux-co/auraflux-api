@@ -11,7 +11,8 @@
  * Payment method & invoices: /billing/payment page.
  */
 
-import { useEffect, useRef, useState, useTransition, Suspense } from 'react';
+import { useEffect, useOptimistic, useRef, useState, useTransition, Suspense, memo } from 'react';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/lib/clerk-compat';
@@ -189,6 +190,103 @@ function DismissibleBanner({
   );
 }
 
+type BrandRowProps = {
+  brand: Brand;
+  isActive: boolean;
+  isSwitching: boolean;
+  switchDisabled: boolean;
+  planName: string;
+  subtitle: string;
+  onSwitch: (brand: Brand) => void;
+  onManageChannels: () => void;
+  onOperatePlan: () => void;
+};
+
+const BrandRow = memo(function BrandRow({
+  brand,
+  isActive,
+  isSwitching,
+  switchDisabled,
+  planName,
+  subtitle,
+  onSwitch,
+  onManageChannels,
+  onOperatePlan,
+}: BrandRowProps) {
+  return (
+    <div
+      className={cn(
+        'flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border transition-colors',
+        isActive
+          ? 'border-amber-400/40 bg-amber-400/5 ring-1 ring-amber-400/20'
+          : 'border-border bg-card',
+      )}
+    >
+      <div className="min-w-0 space-y-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-foreground">{brand.name}</span>
+          <Badge
+            variant="outline"
+            status={isActive ? 'published' : 'draft'}
+            className="capitalize"
+          >
+            {planName}
+          </Badge>
+          {brand.is_primary && (
+            <span className="text-[10px] uppercase tracking-wider text-slate-400">Primary</span>
+          )}
+          {isActive && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">Active</span>
+          )}
+        </div>
+        <p className="text-xs text-slate-400">{subtitle}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {isSwitching ? (
+          <Button
+            size="sm"
+            variant="default"
+            className="h-9 font-medium gap-2"
+            disabled
+          >
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            Switching…
+          </Button>
+        ) : isActive ? (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 font-medium"
+              onClick={onManageChannels}
+            >
+              Manage Channels
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-9 font-medium"
+              onClick={onOperatePlan}
+            >
+              Operate Plan
+            </Button>
+          </>
+        ) : (
+          <Button
+            size="sm"
+            variant="default"
+            className="h-9 font-medium"
+            disabled={switchDisabled}
+            onClick={() => onSwitch(brand)}
+          >
+            Switch to Brand
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+});
+
 function BillingPageInner() {
   const { getToken, isLoaded } = useAuth();
   const { user } = useUser();
@@ -200,6 +298,7 @@ function BillingPageInner() {
   const [brandSearch, setBrandSearch] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [brandRefreshing, setBrandRefreshing] = useState(false);
+  const [pendingSwitchId, setPendingSwitchId] = useState<string | null>(null);
   // C2: distinguish in-place upgrade (?upgraded=1) from new checkout (?success=1)
   const stripeSuccess   = searchParams.get('success')       === '1';
   const stripeUpgraded  = searchParams.get('upgraded')      === '1';
@@ -207,7 +306,11 @@ function BillingPageInner() {
   const packSuccess     = searchParams.get('pack_success')  === '1';
   const packCancelled   = searchParams.get('pack_cancelled') === '1';
   const [isPending, start] = useTransition();
-  const [isBrandPending, startBrandTransition] = useTransition();
+  const [, startBrandTransition] = useTransition();
+  const [optimisticActiveId, setOptimisticActiveId] = useOptimistic(
+    activeBrand?.id ?? null,
+    (_current: string | null, nextId: string) => nextId,
+  );
   const [redirecting, setRedirecting] = useState(false); // C8
 
   // U6: clear transient query params from URL so banners don't re-appear on refresh
@@ -264,7 +367,7 @@ function BillingPageInner() {
     lastBrandIdRef.current = activeBrand.id;
     let cancelled = false;
     setBrandRefreshing(true);
-    setChannelCount(null);
+    // Keep prior channel/credit metrics visible — mutate keys only, no list wipe
     (async () => {
       try {
         const token = await getToken();
@@ -278,7 +381,10 @@ function BillingPageInner() {
       } catch {
         // Keep prior balance visible; brand switch already applied optimistically
       } finally {
-        if (!cancelled) setBrandRefreshing(false);
+        if (!cancelled) {
+          setBrandRefreshing(false);
+          setPendingSwitchId(null);
+        }
       }
     })();
     return () => { cancelled = true; };
@@ -346,16 +452,42 @@ function BillingPageInner() {
   const creditTotal = balance?.included_total ?? 0;
   const usagePct    = creditTotal > 0 ? Math.min((creditUsed / creditTotal) * 100, 100) : 0;
 
+  const displayActiveId = optimisticActiveId ?? activeBrand?.id ?? null;
+
   function brandPlanLabel(brand: Brand) {
-    const t = brand.tier || (brand.id === activeBrand?.id ? currentTier : null);
+    const t = brand.tier || (brand.id === displayActiveId ? currentTier : null);
     return t ? (PLAN_META[t]?.label ?? tierLabel(t)) : 'No plan';
   }
 
   function switchToBrand(brand: Brand) {
-    if (brand.id === activeBrand?.id) return;
+    if (brand.id === displayActiveId) return;
+    setPendingSwitchId(brand.id);
+    // useOptimistic + transition: gold ACTIVE shifts this frame; metrics soft-refresh in background
     startBrandTransition(() => {
+      setOptimisticActiveId(brand.id);
       setActiveBrand(brand);
     });
+  }
+
+  function brandSubtitle(brand: Brand, isActive: boolean) {
+    const creditsIncluded = isActive
+      ? creditTotal
+      : (brand.credits_included ?? null);
+    if (!isActive) {
+      return creditsIncluded != null
+        ? `${creditsIncluded.toLocaleString()} credits/mo`
+        : brandPlanLabel(brand);
+    }
+    const channelPart = channelCount != null
+      ? `${channelCount} channel${channelCount === 1 ? '' : 's'} connected`
+      : 'Channels…';
+    const creditPart = creditsIncluded != null
+      ? (brandRefreshing
+        ? ` · ${creditsIncluded.toLocaleString()} credits/mo`
+        : ` · ${creditUsed.toLocaleString()}/${creditsIncluded.toLocaleString()} credits used`)
+      : '';
+    const updating = brandRefreshing || pendingSwitchId === brand.id ? ' · updating…' : '';
+    return `${channelPart}${creditPart}${updating}`;
   }
 
   const billingEmail =
@@ -379,13 +511,13 @@ function BillingPageInner() {
       />
 
       {/* Billing summary — payment CTAs with card + cycle context */}
-      <div className="rounded-xl border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="min-w-0 space-y-1">
-          <p className="text-sm font-medium text-foreground">
+          <p className="text-sm font-medium text-white">
             {paymentSummary}
             {nextInvoiceLabel ? ` · Next invoice ${nextInvoiceLabel}` : ''}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-400">
             {billingEmail
               ? `Primary billing email: ${billingEmail}`
               : 'Update payment method or download invoices anytime.'}
@@ -397,13 +529,19 @@ function BillingPageInner() {
         <div className="flex flex-wrap gap-2 shrink-0">
           <Link
             href="/billing/payment"
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-9 font-medium')}
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'sm' }),
+              'h-9 font-medium border-slate-600 bg-transparent text-slate-100 hover:bg-slate-800 hover:text-white',
+            )}
           >
             Update Payment Method
           </Link>
           <Link
             href="/billing/payment"
-            className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'h-9 font-medium')}
+            className={cn(
+              buttonVariants({ variant: 'secondary', size: 'sm' }),
+              'h-9 font-medium bg-slate-100 text-slate-900 hover:bg-white',
+            )}
           >
             Download Invoices &amp; History
           </Link>
@@ -457,8 +595,8 @@ function BillingPageInner() {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h2 className="af-subhead font-semibold">Your brands</h2>
-            {(isBrandPending || brandRefreshing) && (
-              <span className="text-xs text-muted-foreground animate-pulse">Updating active brand…</span>
+            {brandRefreshing && (
+              <span className="text-xs text-slate-400 animate-pulse">Refreshing active metrics…</span>
             )}
           </div>
           <div className="sticky top-0 z-10 -mx-1 px-1 py-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/60">
@@ -467,7 +605,7 @@ function BillingPageInner() {
                 placeholder={`Filter ${brands.length} brand${brands.length === 1 ? '' : 's'}…`}
                 value={brandSearch}
                 onChange={(e) => setBrandSearch(e.target.value)}
-                className="max-w-xs h-9"
+                className="h-9 w-full max-w-xs min-w-0"
                 aria-label="Filter brands"
               />
               <Button
@@ -482,98 +620,27 @@ function BillingPageInner() {
           </div>
           <div className="grid grid-cols-1 gap-3">
             {filteredBrands.length === 0 && (
-              <p className="text-sm text-muted-foreground py-6 text-center">
+              <p className="text-sm text-slate-400 py-6 text-center">
                 No brands match “{brandSearch.trim()}”.
               </p>
             )}
             {filteredBrands.map((brand) => {
-              const isActive = brand.id === activeBrand.id;
-              const planName = brandPlanLabel(brand);
-              const creditsIncluded = isActive
-                ? creditTotal
-                : (brand.credits_included ?? null);
-              const creditsUsed = isActive && !brandRefreshing ? creditUsed : null;
-              const channels = isActive ? channelCount : null;
+              const isActive = brand.id === displayActiveId;
               return (
-                <div
+                <BrandRow
                   key={brand.id}
-                  className={cn(
-                    'flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border transition-colors',
-                    isActive
-                      ? 'border-amber-400/30 bg-amber-400/5'
-                      : 'border-border bg-card',
-                    isBrandPending && isActive && 'opacity-90',
-                  )}
-                >
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-foreground">{brand.name}</span>
-                      <Badge
-                        variant="outline"
-                        status={isActive ? 'published' : 'draft'}
-                        className="capitalize"
-                      >
-                        {planName}
-                      </Badge>
-                      {brand.is_primary && (
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Primary</span>
-                      )}
-                      {isActive && (
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">Active</span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {isActive
-                        ? (channels != null
-                          ? `${channels} channel${channels === 1 ? '' : 's'} connected`
-                          : (brandRefreshing || isBrandPending)
-                            ? 'Loading channels…'
-                            : 'Channels loading…')
-                        : (creditsIncluded != null
-                          ? `${creditsIncluded.toLocaleString()} credits/mo`
-                          : planName)}
-                      {isActive && creditsUsed != null && creditsIncluded != null
-                        ? ` · ${creditsUsed.toLocaleString()}/${creditsIncluded.toLocaleString()} credits used`
-                        : isActive && creditsIncluded != null && brandRefreshing
-                          ? ` · ${creditsIncluded.toLocaleString()} credits/mo`
-                          : ''}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {isActive ? (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-9 font-medium"
-                          onClick={() => router.push('/settings/channels')}
-                        >
-                          Manage Channels
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="h-9 font-medium"
-                          onClick={() => {
-                            document.getElementById('active-plan')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }}
-                        >
-                          Operate Plan
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="h-9 font-medium"
-                        disabled={isBrandPending}
-                        onClick={() => switchToBrand(brand)}
-                      >
-                        Switch to Brand
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                  brand={brand}
+                  isActive={isActive}
+                  isSwitching={pendingSwitchId === brand.id}
+                  switchDisabled={pendingSwitchId != null && pendingSwitchId !== brand.id}
+                  planName={brandPlanLabel(brand)}
+                  subtitle={brandSubtitle(brand, isActive)}
+                  onSwitch={switchToBrand}
+                  onManageChannels={() => router.push('/settings/channels')}
+                  onOperatePlan={() => {
+                    document.getElementById('active-plan')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                />
               );
             })}
           </div>
