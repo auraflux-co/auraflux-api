@@ -111,7 +111,7 @@ const PLAN_META: Record<string, {
     highlights: [
       'Everything in Pro Operator',
       'Operator monitoring and guidance',
-      'Collab-assisted setup',
+      'Assist-guided setup help',
     ],
     cta:          'Contact us',
     contactSales: true,

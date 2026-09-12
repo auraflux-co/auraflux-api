@@ -27,7 +27,7 @@ interface ConciergeChatProps {
 const WELCOME_MESSAGE: ChatMessage = {
   role: 'assistant',
   content:
-    'Hi! I\'m Collab. I can help you configure your video job, explain what each option does, and guide you toward a ready-to-submit setup.\n\nWhat would you like help with today?',
+    'Hi! I\'m Assist. I can help you configure your video job, explain what each option does, and guide you toward a ready-to-submit setup.\n\nWhat would you like help with today?',
 };
 
 export function ConciergeChat({ currentSpec, planTier, className, embedded = false }: ConciergeChatProps) {
@@ -69,9 +69,9 @@ export function ConciergeChat({ currentSpec, planTier, className, embedded = fal
         const label = err instanceof ApiError ? err.label : undefined;
         const msg   = err instanceof ApiError ? err.message : '';
         if (label === 'CLERK_INSTANCE_MISMATCH' || label === 'GEMINI_NOT_CONFIGURED') {
-          setError(msg || 'Collab is temporarily unavailable. Please try again shortly.');
+          setError(msg || 'Assist is temporarily unavailable. Please try again shortly.');
         } else if (label === 'PLAN_GATE') {
-          setError('Collab requires an Operate plan or higher.');
+          setError('Assist requires an Operate plan or higher.');
         } else {
           setError('Something went wrong. Please try again.');
         }
@@ -93,7 +93,7 @@ export function ConciergeChat({ currentSpec, planTier, className, embedded = fal
     <Card className={cn('flex flex-col h-full', className)}>
       {!embedded && (
         <CardHeader className="pb-2 border-b border-border flex-shrink-0">
-          <CardTitle className="text-base">Collab</CardTitle>
+          <CardTitle className="text-base">Assist</CardTitle>
         </CardHeader>
       )}
 

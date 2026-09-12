@@ -496,7 +496,7 @@ function PeaksPageInner() {
       }, token);
       const jobId = result.jobId || result.job?.jobId;
       if (jobId) router.push(`/myjobs/${jobId}`);
-      else setHint(result.message || 'Job created — check My Jobs.');
+      else setHint(result.message || 'Job created — check Jobs.');
     } catch (e) {
       setError(formatUserError(e instanceof Error ? e.message : 'Create job failed'));
     } finally {

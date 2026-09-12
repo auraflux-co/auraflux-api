@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 20:25 UTC  
+**Last Updated:** 2026-09-12 20:30 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Settings hub polish (iss_vN012wyDz7L3 / CPD-56): status badge fallbacks, amber hover + Open cue, health footer Refresh button.
+Settings micro-polish: badge nowrap (no member/s wrap), Sheet footer p-4/p-5 padding.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

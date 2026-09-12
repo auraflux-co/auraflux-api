@@ -2,7 +2,7 @@
 /**
  * TopBar — dashboard top bar (CPD-111, CPD-117).
  * Left:  hamburger (mobile only)
- * Right: notifications bell | AuraFlux Collab toggle | UserButton
+ * Right: notifications bell | AuraFlux Assist toggle | UserButton
  */
 
 import { UserButton, useAuth } from '@/lib/clerk-compat';
@@ -12,7 +12,7 @@ import { NotificationsBell } from '@/components/notifications/notifications-bell
 import { useBrand } from '@/contexts/brand-context';
 import { cn } from '@/lib/utils';
 
-const COLLAB_LABEL = 'Collab';
+const COLLAB_LABEL = 'Assist';
 
 export function TopBar() {
   const { toggle, isOpen } = useGuide();
@@ -87,7 +87,7 @@ export function TopBar() {
               ? 'bg-primary text-primary-foreground border-primary'
               : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent/50',
           )}
-          aria-label={isOpen ? 'Close Collab' : 'Open Collab'}
+          aria-label={isOpen ? 'Close Assist' : 'Open Assist'}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />

@@ -144,7 +144,7 @@ const CUSTOMER_NAV_BASE: NavItem[] = [
   },
   {
     href: '/myjobs',
-    label: 'My Jobs',
+    label: 'Jobs',
     children: [
       { href: '/myjobs/active',  label: 'In Progress'  },
       { href: '/myjobs/history', label: 'History' },

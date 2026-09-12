@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { CollabChat } from '@/components/collab/collab-chat';
 
 export const metadata: Metadata = {
-  title: 'Collab — AuraFlux',
+  title: 'Assist — AuraFlux',
   description: 'Job assistant — configure your video job with guided help.',
 };
 

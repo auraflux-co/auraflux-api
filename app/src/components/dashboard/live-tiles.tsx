@@ -450,7 +450,7 @@ export function LiveTiles() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <TileCard icon={ICONS.jobs}      title="My Jobs"      titleHref="/myjobs">
+      <TileCard icon={ICONS.jobs}      title="Jobs"      titleHref="/myjobs">
         <JobsTileBody data={data} isSuperAdmin={isSuperAdmin} />
       </TileCard>
       <TileCard icon={ICONS.review}    title="Review Queue" titleHref="/review">

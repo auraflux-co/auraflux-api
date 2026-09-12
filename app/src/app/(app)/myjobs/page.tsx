@@ -100,7 +100,7 @@ export default function JobsHubPage() {
   return (
     <PageShell maxWidth="3xl">
       <PageHeader
-        title="My Jobs"
+        title="Jobs"
         subtitle="Create, monitor, and review your production jobs"
       >
         <div className="flex items-center gap-2">

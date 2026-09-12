@@ -191,7 +191,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
 
         <PortalQuadrant
           id="jobs"
-          title="My Jobs"
+          title="Jobs"
           icon={Clapperboard}
           action={
             <Link href="/myjobs" className={CORNER_LINK}>
