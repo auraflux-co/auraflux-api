@@ -3,8 +3,8 @@
  * /billing/add-brand — Add a new brand to the account (CPD-333)
  *
  * Step 1: Enter brand name
- * Step 2: Choose plan (Operate / Guided / Managed)
- * Step 3: Confirm → Stripe Checkout
+ * Step 2: Choose plan (Creator / Studio) + optional Managed add-on
+ * Step 3: Confirm → Stripe Checkout (Managed add-on → contact)
  */
 
 import { useState, useEffect } from 'react';
@@ -13,33 +13,28 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createBrandApi, subscribeToPlan, type Brand } from '@/lib/api';
 import { useBrand } from '@/contexts/brand-context';
+import Link from 'next/link';
 
 const PLAN_META: Record<string, { label: string; sub: string; price: string; image: string }> = {
+  growth: {
+    label: 'Creator',
+    sub:   'Solo streamers shipping daily content',
+    price: '$299/mo',
+    image: '/brand/plans/operate.png',
+  },
   operate: {
-    label: 'AuraFlux Studio',
+    label: 'Studio',
     sub:   'High volume & teams — full platform seat',
     price: '$999/mo',
     image: '/brand/plans/operate.png',
   },
-  guided: {
-    label: 'AuraFlux Guided',
-    sub:   'Studio platform + operator guidance',
-    price: '$1,999/mo',
-    image: '/brand/plans/guided.png',
-  },
-  managed: {
-    label: 'AuraFlux Managed',
-    sub:   'Full done-for-you',
-    price: '$4,999/mo',
-    image: '/brand/plans/managed.png',
-  },
 };
 
-const PLANS = ['operate', 'guided', 'managed'] as const;
+const PLANS = ['growth', 'operate'] as const;
 type PlanId = typeof PLANS[number];
 
 function AddBrandInner() {
@@ -50,7 +45,8 @@ function AddBrandInner() {
 
   const [step, setStep]         = useState<1 | 2>(1);
   const [name, setName]         = useState('');
-  const [planId, setPlanId]     = useState<PlanId>('guided');
+  const [planId, setPlanId]     = useState<PlanId>('operate');
+  const [wantManaged, setWantManaged] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [draftBrand, setDraftBrand] = useState<Brand | null>(null);
@@ -66,6 +62,11 @@ function AddBrandInner() {
 
   async function handleSubscribe() {
     if (!name.trim()) { setError('Please enter a brand name.'); return; }
+    // Managed is sales-led — send them to Support with context; they can subscribe to base plan first if needed
+    if (wantManaged) {
+      router.push(`/support?topic=managed&plan=${planId}&brand=${encodeURIComponent(name.trim())}`);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -147,16 +148,18 @@ function AddBrandInner() {
                 <span className="mr-2 inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold border bg-primary text-primary-foreground border-primary">2</span>
                 Choose a plan for <em className="not-italic font-semibold">{name}</em>
               </CardTitle>
+              <CardDescription>Two plans: Creator or Studio. Optionally add Managed (done-for-you) next.</CardDescription>
             </CardHeader>
           </Card>
 
-          <div className="grid gap-4 sm:grid-cols-3 max-w-3xl">
+          <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
             {PLANS.map((p) => {
               const meta = PLAN_META[p];
               const selected = planId === p;
               return (
                 <button
                   key={p}
+                  type="button"
                   onClick={() => setPlanId(p)}
                   className={cn(
                     'text-left rounded-lg border overflow-hidden transition-all',
@@ -183,13 +186,43 @@ function AddBrandInner() {
             })}
           </div>
 
+          <label className={cn(
+            'flex items-start gap-3 max-w-2xl rounded-lg border p-4 cursor-pointer transition-colors',
+            wantManaged ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/40',
+          )}>
+            <input
+              type="checkbox"
+              checked={wantManaged}
+              onChange={(e) => setWantManaged(e.target.checked)}
+              className="mt-1"
+            />
+            <span className="space-y-1">
+              <span className="block font-semibold text-sm">Add Managed</span>
+              <span className="block text-xs text-muted-foreground">
+                Done-for-you production on {PLAN_META[planId].label}. We&apos;ll follow up to attach Managed — no self-serve checkout for the add-on yet.
+              </span>
+            </span>
+          </label>
+
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Button variant="outline" onClick={() => setStep(1)} size="sm">Back</Button>
             <Button onClick={handleSubscribe} disabled={loading} size="sm">
-              {loading ? 'Setting up…' : `Subscribe — ${PLAN_META[planId].label}`}
+              {loading
+                ? 'Setting up…'
+                : wantManaged
+                  ? `Contact us — ${PLAN_META[planId].label} + Managed`
+                  : `Subscribe — ${PLAN_META[planId].label}`}
             </Button>
+            {wantManaged && (
+              <Link
+                href="/billing"
+                className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-muted-foreground')}
+              >
+                Or subscribe to {PLAN_META[planId].label} only first
+              </Link>
+            )}
           </div>
         </div>
       )}

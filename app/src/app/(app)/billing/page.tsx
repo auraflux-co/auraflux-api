@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
-import { tierLabel } from '@/lib/tier-labels';
+import { tierLabel, canAddManaged } from '@/lib/tier-labels';
 import { formatUserError } from '@/lib/job-labels';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -59,8 +59,8 @@ function formatBillingDate(iso: string | null | undefined) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-/** Tier ordering — lower index = lower tier (Creator → Studio → Managed) */
-const TIER_ORDER = ['growth', 'operate', 'managed'];
+/** Base plan ladder only — Managed is an add-on, not a third plan. */
+const TIER_ORDER = ['growth', 'operate'];
 
 /** Fallback display prices when Stripe /plans has no row yet */
 const FALLBACK_PRICE_USD: Record<string, number> = {
@@ -106,32 +106,19 @@ const PLAN_META: Record<string, {
     cta:          'Start Studio Plan',
     contactSales: false,
   },
-  guided: {
-    label:       'Guided',
-    audience:    'For teams that want operator guidance',
-    sub:         'Operator monitoring and guidance',
-    valueMetric: 'Same platform · higher support',
-    highlights: [
-      'Everything in Studio',
-      'Operator monitoring and guidance',
-      'Assist-guided setup help',
-    ],
-    cta:          'Contact us',
-    contactSales: true,
-  },
-  managed: {
-    label:       'Managed',
-    audience:    'For done-for-you production',
-    sub:         'Done-for-you production & custom infrastructure',
-    valueMetric: 'We run production with you',
-    highlights: [
-      'Dedicated account managers',
-      'Custom end-to-end workflow builds',
-      'Priority support with custom SLAs',
-    ],
-    cta:          'Talk to Enterprise Sales',
-    contactSales: true,
-  },
+};
+
+const MANAGED_ADDON = {
+  label:    'Managed',
+  audience: 'Add-on for Creator or Studio',
+  sub:      'Our team runs production with you — attach to either plan.',
+  highlights: [
+    'Works on Creator or Studio',
+    'Dedicated account managers',
+    'Custom end-to-end workflow builds',
+    'Priority support with custom SLAs',
+  ],
+  cta: 'Add Managed',
 };
 
 const FEATURE_COMPARISON: Array<{
@@ -145,7 +132,6 @@ const FEATURE_COMPARISON: Array<{
   { feature: 'Connected channels',                growth: '3',        operate: 'Unlimited', managed: 'Unlimited'     },
   { feature: 'Team seats & API keys',             growth: false,      operate: true,       managed: true             },
   { feature: 'Priority render queue',             growth: false,      operate: true,       managed: true             },
-  { feature: 'Dedicated account management',      growth: false,      operate: true,       managed: true             },
   { feature: 'Done-for-you production',           growth: false,      operate: false,      managed: true             },
   { feature: 'Support',                           growth: 'Standard', operate: 'Priority',  managed: 'Custom SLA'    },
 ];
@@ -449,8 +435,11 @@ function BillingPageInner() {
   if (loading) return <BillingSkeleton />;
 
   const currentTier  = balance?.tier ?? 'growth';
-  const currentIdx   = Math.max(0, TIER_ORDER.indexOf(currentTier));
-  const upgradeTiers = TIER_ORDER.slice(currentIdx + 1) as ('growth' | 'operate' | 'managed')[];
+  // Legacy guided maps to Studio on the ladder; Managed is an add-on, not a ladder step.
+  const ladderTier   = currentTier === 'guided' ? 'operate' : currentTier;
+  const currentIdx   = TIER_ORDER.indexOf(ladderTier);
+  const upgradeTiers = (currentIdx >= 0 ? TIER_ORDER.slice(currentIdx + 1) : []) as ('growth' | 'operate')[];
+  const showManagedAddon = canAddManaged(currentTier);
 
   const creditUsed  = balance ? (balance.included_total - balance.included_remaining) : 0;
   const creditTotal = balance?.included_total ?? 0;
@@ -700,10 +689,10 @@ function BillingPageInner() {
         </div>
       )}
 
-      {/* Downgrade link — visible for non-entry-tier customers */}
-      {balance && currentTier !== 'growth' && currentTier !== 'operate' && (
+      {/* Downgrade link — Studio / Managed / legacy Guided */}
+      {balance && currentTier !== 'growth' && (
         <p className="af-caption text-muted-foreground">
-          Looking to downgrade?{' '}
+          Looking to change plans?{' '}
           <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">
             Contact us
           </a>{' '}
@@ -711,105 +700,128 @@ function BillingPageInner() {
         </p>
       )}
 
-      {/* ── Upgrade options (secondary) ────────────────────────────────────── */}
-      {upgradeTiers.length > 0 && (
-        <div id="plans" className="scroll-mt-24">
-          <h2 className="af-subhead mb-1">Upgrade options</h2>
-          <p className="af-label mb-4 text-muted-foreground">Unlock more support and tooling when you need it.</p>
-          <div className={cn('grid grid-cols-1 gap-4', upgradeTiers.length > 1 && 'sm:grid-cols-2')}>
-            {upgradeTiers.map((tier) => {
-              const plan = plans.find((p) => p.id === tier);
-              const meta = PLAN_META[tier];
-              const canCheckout = !!plan?.priceConfigured;
-              const isFeatured = tier === 'managed';
-              return (
-                <div key={tier} className={cn(
-                  'rounded-xl border flex flex-col overflow-hidden',
-                  isFeatured
-                    ? 'border-primary/40 bg-gradient-to-b from-primary/5 to-card'
-                    : 'border-border bg-card',
-                )}>
-                  {isFeatured && (
-                    <div className="bg-primary/10 border-b border-primary/20 px-4 py-1.5 flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Most powerful</span>
+      {/* ── Upgrade options + Managed add-on ───────────────────────────────── */}
+      {(upgradeTiers.length > 0 || showManagedAddon) && (
+        <div id="plans" className="scroll-mt-24 space-y-6">
+          {upgradeTiers.length > 0 && (
+            <div>
+              <h2 className="af-subhead mb-1">Upgrade your plan</h2>
+              <p className="af-label mb-4 text-muted-foreground">Creator and Studio are the two plans. Managed is an add-on below.</p>
+              <div className={cn('grid grid-cols-1 gap-4', upgradeTiers.length > 1 && 'sm:grid-cols-2')}>
+                {upgradeTiers.map((tier) => {
+                  const plan = plans.find((p) => p.id === tier);
+                  const meta = PLAN_META[tier];
+                  if (!meta) return null;
+                  const canCheckout = !!plan?.priceConfigured;
+                  return (
+                    <div key={tier} className="rounded-xl border border-border bg-card flex flex-col overflow-hidden">
+                      {tier === 'operate' && (
+                        <div className="bg-amber-500 text-slate-950 text-[10px] font-bold px-3 py-1.5 uppercase tracking-wide text-center">
+                          Most popular
+                        </div>
+                      )}
+                      <div className="p-4 flex-1 flex flex-col gap-3">
+                        <div>
+                          <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">{meta.audience}</p>
+                          <p className="text-lg font-bold text-foreground mt-1">{meta.label}</p>
+                          <p className="af-caption text-muted-foreground mt-0.5">{meta.sub}</p>
+                          <p className="af-caption font-medium text-primary/80 mt-1">{meta.valueMetric}</p>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="af-metric">
+                            {(() => {
+                              const n = displayPriceUsd(plan, tier);
+                              return n != null ? `$${n.toLocaleString()}` : '—';
+                            })()}
+                          </span>
+                          <span className="af-caption text-muted-foreground">/mo</span>
+                        </div>
+                        <p className="af-caption text-muted-foreground">
+                          {plan?.credits?.toLocaleString() ?? '—'} credits/month
+                          <span className="text-primary/60 ml-1">· no rollover</span>
+                        </p>
+                        <ul className="space-y-1.5 flex-1">
+                          {meta.highlights.map((h) => (
+                            <li key={h} className="af-label flex gap-2">
+                              <span className="text-primary shrink-0 mt-0.5">✓</span>
+                              <span>{h}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {canCheckout ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full mt-1"
+                            disabled={isPending}
+                            onClick={() => handleUpgrade(tier)}
+                          >
+                            {isPending ? 'Processing…' : meta.cta}
+                          </Button>
+                        ) : (
+                          <a
+                            href="/support"
+                            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full text-center mt-1')}
+                          >
+                            {meta.cta}
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  {tier === 'operate' && !isFeatured && (
-                    <div className="bg-amber-500 text-slate-950 text-[10px] font-bold px-3 py-1.5 uppercase tracking-wide text-center">
-                      Most popular
-                    </div>
-                  )}
-                  <div className="p-4 flex-1 flex flex-col gap-3">
-                    <div>
-                      <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">{meta.audience}</p>
-                      <p className="text-lg font-bold text-foreground mt-1">{meta.label}</p>
-                      <p className="af-caption text-muted-foreground mt-0.5">{meta.sub}</p>
-                      <p className="af-caption font-medium text-primary/80 mt-1">{meta.valueMetric}</p>
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className={cn('af-metric', isFeatured ? 'text-primary' : '')}>
-                        {(() => {
-                          const n = displayPriceUsd(plan, tier);
-                          return n != null ? `$${n.toLocaleString()}` : '—';
-                        })()}
-                      </span>
-                      <span className="af-caption text-muted-foreground">/mo</span>
-                    </div>
-                    <p className="af-caption text-muted-foreground">
-                      {plan?.credits?.toLocaleString() ?? '—'} credits/month
-                      <span className="text-primary/60 ml-1">· no rollover</span>
-                    </p>
-                    <ul className="space-y-1.5 flex-1">
-                      {meta.highlights.map((h) => (
-                        <li key={h} className="af-label flex gap-2">
-                          <span className="text-primary shrink-0 mt-0.5">✓</span>
-                          <span>{h}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    {meta.contactSales ? (
-                      <a
-                        href="/support"
-                        className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'w-full text-center mt-1')}
-                      >
-                        {meta.cta}
-                      </a>
-                    ) : canCheckout ? (
-                      <Button
-                        size="sm"
-                        variant={isFeatured ? 'default' : 'outline'}
-                        className="w-full mt-1"
-                        disabled={isPending}
-                        onClick={() => handleUpgrade(tier)}
-                      >
-                        {isPending ? 'Processing…' : meta.cta}
-                      </Button>
-                    ) : (
-                      <a
-                        href="/support"
-                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'w-full text-center mt-1')}
-                      >
-                        {meta.cta}
-                      </a>
-                    )}
-                  </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {showManagedAddon && (
+            <div>
+              <h2 className="af-subhead mb-1">Add Managed</h2>
+              <p className="af-label mb-4 text-muted-foreground">
+                Done-for-you production — attach to Creator or Studio. Contact us to add it to your current plan.
+              </p>
+              <div className="rounded-xl border border-primary/40 bg-gradient-to-b from-primary/5 to-card flex flex-col overflow-hidden max-w-xl">
+                <div className="bg-primary/10 border-b border-primary/20 px-4 py-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Add-on · works on either plan</span>
                 </div>
-              );
-            })}
-          </div>
-          <p className="af-caption mt-3 text-muted-foreground">
-            Monthly subscriptions. To change or cancel your plan, <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">contact us</a>.
+                <div className="p-4 flex-1 flex flex-col gap-3">
+                  <div>
+                    <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">{MANAGED_ADDON.audience}</p>
+                    <p className="text-lg font-bold text-foreground mt-1">{MANAGED_ADDON.label}</p>
+                    <p className="af-caption text-muted-foreground mt-0.5">{MANAGED_ADDON.sub}</p>
+                  </div>
+                  <ul className="space-y-1.5 flex-1">
+                    {MANAGED_ADDON.highlights.map((h) => (
+                      <li key={h} className="af-label flex gap-2">
+                        <span className="text-primary shrink-0 mt-0.5">✓</span>
+                        <span>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href="/support"
+                    className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'w-full text-center mt-1')}
+                  >
+                    {MANAGED_ADDON.cta}
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <p className="af-caption text-muted-foreground">
+            Monthly subscriptions. To change or cancel, <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">contact us</a>.
           </p>
 
           {/* Feature matrix — collapsed by default */}
-          <div className="mt-4 rounded-xl border border-border overflow-hidden">
+          <div className="rounded-xl border border-border overflow-hidden">
             <button
               type="button"
               onClick={() => setCompareOpen((v) => !v)}
               className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left bg-muted/20 hover:bg-muted/30 transition-colors"
               aria-expanded={compareOpen}
             >
-              <span className="text-sm font-semibold">Compare All Plans</span>
+              <span className="text-sm font-semibold">Compare Creator, Studio &amp; Managed add-on</span>
               <span className="text-xs text-muted-foreground">{compareOpen ? 'Hide ▲' : 'Show ▼'}</span>
             </button>
             {compareOpen && (
@@ -818,14 +830,9 @@ function BillingPageInner() {
               <thead>
                 <tr className="bg-muted/40 border-b border-border">
                   <th className="text-left py-3 px-4 font-semibold text-foreground w-1/2">Feature</th>
-                  {(['growth', 'operate', 'managed'] as const).map((t) => (
-                    <th key={t} className={cn(
-                      'text-center py-3 px-3 font-semibold',
-                      t === 'managed' ? 'text-primary' : 'text-foreground',
-                    )}>
-                      {PLAN_META[t].label}
-                    </th>
-                  ))}
+                  <th className="text-center py-3 px-3 font-semibold text-foreground">{PLAN_META.growth.label}</th>
+                  <th className="text-center py-3 px-3 font-semibold text-foreground">{PLAN_META.operate.label}</th>
+                  <th className="text-center py-3 px-3 font-semibold text-primary">+ {MANAGED_ADDON.label}</th>
                 </tr>
               </thead>
               <tbody>
@@ -858,7 +865,7 @@ function BillingPageInner() {
 
       {currentTier === 'managed' && (
         <p className="af-body text-muted-foreground">
-          You&apos;re on our highest plan. To discuss custom or enterprise terms, <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">contact us</a>.
+          You have Managed on your account. To discuss custom or enterprise terms, <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">contact us</a>.
         </p>
       )}
 

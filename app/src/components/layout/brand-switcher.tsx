@@ -66,7 +66,7 @@ function BrandAvatar({ brand, size = 'md' }: { brand: Brand; size?: 'sm' | 'md' 
 const TIER_LABELS: Record<string, string> = {
   growth:  'Creator',
   operate: 'Studio',
-  guided:  'Guided',
+  guided:  'Studio', // legacy
   managed: 'Managed',
   custom:  'Custom',
 };

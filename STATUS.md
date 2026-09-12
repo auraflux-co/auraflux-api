@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 21:15 UTC  
+**Last Updated:** 2026-09-12 21:30 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Plan naming (iss_0SsNRL-igGBk / CPD-58): growth→Creator, operate→Studio across app + marketing; Guided/Managed unchanged.
+Plans model (iss_pFwZYCypFcdK): Creator + Studio only; Managed is an add-on for either plan; Guided retired from customer plan UI (legacy `guided` → Studio labels).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

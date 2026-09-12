@@ -2,30 +2,28 @@
  * Tier label mapping — internal tier IDs → user-facing display names.
  *
  * Customer-facing SSoT (2026-09):
- *   growth  → Creator   (solo streamers)
- *   operate → Studio    (high volume & teams / agencies)
- *   guided  → Guided    (same platform + operator support)
- *   managed → Managed   (done-for-you)
+ *   Two plans:  Creator (growth) · Studio (operate)
+ *   Add-on:     Managed — can be added to either plan (done-for-you ops)
  *
- * Stripe / API ids stay growth | operate | guided | managed.
+ * Legacy `guided` displays as Studio (same platform seat; not a separate plan).
+ * Stripe / API ids stay growth | operate | guided | managed for compatibility.
  */
 
 export const TIER_LABELS: Record<string, string> = {
   growth:     'Creator',
   operate:    'Studio',
-  guided:     'Guided',
+  guided:     'Studio', // legacy — not a customer-facing plan
   managed:    'Managed',
   custom:     'Enterprise',
-  // Legacy aliases — diy/dwy/dfy were the old internal keys
   diy:        'Studio',
-  dwy:        'Guided',
+  dwy:        'Studio',
   dfy:        'Managed',
 };
 
 export const TIER_LABEL_LOWER: Record<string, string> = {
   growth:     'creator',
   operate:    'studio',
-  guided:     'guided',
+  guided:     'studio',
   managed:    'managed',
   custom:     'enterprise',
 };
@@ -33,9 +31,15 @@ export const TIER_LABEL_LOWER: Record<string, string> = {
 export const TIER_AUDIENCE: Record<string, string> = {
   growth:  'For solo streamers',
   operate: 'For high volume & teams',
-  guided:  'For teams that want operator guidance',
-  managed: 'For done-for-you production',
+  guided:  'For high volume & teams',
+  managed: 'Add-on — done-for-you on Creator or Studio',
 };
+
+/** True when the account is on a base plan that can take Managed. */
+export function canAddManaged(tier: string | null | undefined): boolean {
+  const t = tier ?? '';
+  return t === 'growth' || t === 'operate' || t === 'guided';
+}
 
 /** Returns the display name for a tier ID (e.g. "growth" → "Creator"). */
 export function tierLabel(tier: string | null | undefined): string {
@@ -47,8 +51,9 @@ export function tierLabelLower(tier: string | null | undefined): string {
   return TIER_LABEL_LOWER[tier ?? ''] ?? 'creator';
 }
 
-/** Returns the display name with "plan" appended. */
+/** Returns the display name with "plan" appended (Managed = "Managed add-on"). */
 export function tierPlanLabel(tier: string | null | undefined): string {
+  if (tier === 'managed') return 'Managed add-on';
   return `${tierLabel(tier)} plan`;
 }
 

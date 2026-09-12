@@ -3,9 +3,9 @@
  * /support — AuraFlux Support (CPD-115 / CPD-57)
  *
  * Tier-gated support:
- *   Operate (≤30 days): Assist chat + guides
- *   Operate (>30 days): Guides + upgrade prompt (no live chat)
- *   Guided / Managed:   Assist chat + guides + escalation
+ *   Creator (growth, ≤30 days): Assist chat trial + guides
+ *   Creator (>30 days): Guides + upgrade to Studio
+ *   Studio (operate + legacy guided) / Managed: Assist chat + guides + escalation
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -82,7 +82,7 @@ function GuidesPanel() {
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 space-y-2">
         <h2 className="text-sm font-semibold text-white">Need more help?</h2>
         <p className="text-sm text-slate-400">
-          Need direct assistance? Submit a ticket above or upgrade to the Guided plan to unlock live chat support.
+          Need direct assistance? Submit a ticket above or upgrade to Studio for ongoing Assist chat. You can also add Managed to Creator or Studio.
         </p>
       </div>
     </div>
@@ -295,8 +295,9 @@ export default function SupportPage() {
 
   const plan = planTier || 'operate';
   const ageDays = getAccountAgeDays(user);
-  const canChat = plan === 'guided' || plan === 'managed' || (plan === 'operate' && ageDays <= 30);
-  const canEsc = plan === 'guided' || plan === 'managed';
+  // Studio (operate + legacy guided) and Managed get chat; Creator (growth) does not — Studio first-month trial kept for operate.
+  const canChat = plan === 'guided' || plan === 'managed' || plan === 'operate' || (plan === 'growth' && ageDays <= 30);
+  const canEsc = plan === 'guided' || plan === 'managed' || plan === 'operate';
 
   const [messages, setMessages] = useState<ChatMsg[]>([
     { role: 'assistant', content: "Hi! I'm Assist. What issue are you running into today?" },
@@ -428,10 +429,10 @@ export default function SupportPage() {
     } catch { /* non-fatal */ }
   }
 
-  const supportSubtitle = plan === 'operate' && ageDays <= 30
-    ? `Support chat is available during your first month (${30 - ageDays} days remaining). Upgrade to Guided for ongoing Assist chat.`
-    : plan === 'operate'
-      ? 'Your trial support period has ended. Browse guides below or upgrade to Guided for ongoing Assist chat.'
+  const supportSubtitle = plan === 'growth' && ageDays <= 30
+    ? `Support chat is available during your first month (${30 - ageDays} days remaining). Upgrade to Studio for ongoing Assist chat, or add Managed to either plan.`
+    : plan === 'growth'
+      ? 'Browse guides below, or upgrade to Studio for ongoing Assist chat. Managed can be added to Creator or Studio.'
       : 'Chat with Assist or browse the guides.';
 
   const selfServe = (
@@ -439,7 +440,7 @@ export default function SupportPage() {
       <div className="space-y-2">
         <h2 className="text-base font-semibold text-white">Self-serve help</h2>
         <p className="text-sm text-slate-400">
-          Live Assist chat is not on your current plan. Browse documentation, submit a ticket, or upgrade to Guided for chat.
+          Live Assist chat is not on your current plan. Browse documentation, submit a ticket, or upgrade to Studio for chat. Managed is an add-on for Creator or Studio.
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -447,7 +448,7 @@ export default function SupportPage() {
           href="/billing#plans"
           className={cn(buttonVariants({ variant: 'default' }), 'h-10 font-medium')}
         >
-          Upgrade to Guided Plan
+          Upgrade to Studio
         </Link>
         <a
           href="#guides"

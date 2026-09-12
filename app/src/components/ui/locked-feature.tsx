@@ -8,7 +8,7 @@
  * and an upgrade tooltip. Creates an upsell surface rather than an invisible wall.
  *
  * Usage:
- *   <LockedFeature minPlan="managed" label="Available on Managed plan">
+ *   <LockedFeature minPlan="managed" label="Available with Managed add-on">
  *     <AvatarOption />
  *   </LockedFeature>
  */
@@ -24,10 +24,14 @@ const TIER_RANK: Record<string, number> = {
 };
 
 const PLAN_LABELS: Record<string, string> = {
-  diy:    'Operate',
-  dwy:    'Guided',
+  diy:    'Studio',
+  dwy:    'Studio',
   dfy:    'Managed',
   custom: 'Custom',
+  growth: 'Creator',
+  operate: 'Studio',
+  guided: 'Studio',
+  managed: 'Managed',
 };
 
 interface LockedFeatureProps {
