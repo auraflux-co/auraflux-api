@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 02:00 UTC  
+**Last Updated:** 2026-09-12 02:40 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator copy scrub: remove C1–C11 / portal P-codes / R2 / pipeline / near-final / Portal v1.0 from customer-facing UI.
+Peaks VOD discovery filters (C0→prod Phase 1): window pills, min/max duration, recent/popular sort on GET /content-library/vods + /peaks UI. Ticket iss_8XnXykmMZN5J.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

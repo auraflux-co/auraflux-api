@@ -1545,21 +1545,39 @@ export interface ComposePreset {
 
 export async function listContentLibraryVods(
   token?: string,
-  opts: { handle?: string; limit?: number; platform?: 'youtube' | 'twitch' | string } = {},
+  opts: {
+    handle?: string;
+    limit?: number;
+    platform?: 'youtube' | 'twitch' | string;
+    window?: string;
+    minDurationSec?: number;
+    maxDurationSec?: number | null;
+    sort?: 'recent' | 'popular' | string;
+  } = {},
 ): Promise<{
   ok: boolean;
   handle?: string;
   channelTitle?: string | null;
   platform?: string;
+  window?: string;
+  windowLabel?: string;
+  sort?: string;
   scanned?: number;
   shortsSkipped?: number;
   minDurationSec?: number;
+  maxDurationSec?: number | null;
   vods: ContentLibraryVod[];
 }> {
   const qs = new URLSearchParams();
   if (opts.handle) qs.set('handle', opts.handle);
   if (opts.limit) qs.set('limit', String(opts.limit));
   if (opts.platform) qs.set('platform', opts.platform);
+  if (opts.window) qs.set('window', opts.window);
+  if (opts.minDurationSec != null) qs.set('minDurationSec', String(opts.minDurationSec));
+  if (opts.maxDurationSec != null) {
+    qs.set('maxDurationSec', String(opts.maxDurationSec));
+  }
+  if (opts.sort) qs.set('sort', opts.sort);
   const q = qs.toString();
   return apiFetch(`/content-library/vods${q ? `?${q}` : ''}`, { token });
 }

@@ -40,6 +40,18 @@ function formatClock(sec: number) {
 }
 
 type SourcePlatform = 'youtube' | 'twitch' | 'kick';
+type VodWindow = 'last24h' | 'last7d' | 'last30d' | '7d' | '30d' | 'all' | 'any';
+type VodSort = 'recent' | 'popular';
+
+const VOD_WINDOW_PILLS: { id: VodWindow; label: string }[] = [
+  { id: 'last24h', label: 'Last 24H' },
+  { id: 'last7d', label: 'Last 7D' },
+  { id: 'last30d', label: 'Last 30D' },
+  { id: '7d', label: '24H–7D' },
+  { id: '30d', label: '7D–30D' },
+  { id: 'all', label: '30D+' },
+  { id: 'any', label: 'All time' },
+];
 
 export default function PeaksPage() {
   return (
@@ -80,6 +92,11 @@ function PeaksPageInner() {
   const [uploadPct, setUploadPct] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+  const [vodWindow, setVodWindow] = useState<VodWindow>('last7d');
+  const [minDurationSec, setMinDurationSec] = useState(180);
+  const [maxDurationSec, setMaxDurationSec] = useState('');
+  const [vodSort, setVodSort] = useState<VodSort>('recent');
+  const hasFetchedVodsRef = useRef(false);
 
   const loadPresets = useCallback(async () => {
     const token = await getToken();
@@ -162,12 +179,19 @@ function PeaksPageInner() {
     try {
       const token = await getToken();
       if (!token) throw new Error('Session not ready');
+      const maxDur = maxDurationSec.trim() === '' ? null : Math.max(0, parseInt(maxDurationSec, 10) || 0);
+      const listLimit = vodWindow === 'any' || vodWindow === 'all' ? 200 : 40;
       const res = await listContentLibraryVods(token, {
         handle: overrideHandle || handle || undefined,
-        limit: 40,
+        limit: listLimit,
         platform,
+        window: vodWindow,
+        minDurationSec,
+        maxDurationSec: maxDur,
+        sort: vodSort,
       });
       if (gen !== loadVodsGenRef.current) return; // stale response — brand switched mid-flight
+      hasFetchedVodsRef.current = true;
       setVods(res.vods || []);
       const resolvedHandle = res.handle
         ? (platform === 'youtube' ? `@${res.handle.replace(/^@/, '')}` : res.handle.replace(/^@/, ''))
@@ -175,16 +199,18 @@ function PeaksPageInner() {
       if (res.handle) setHandle(resolvedHandle);
       if (!(res.vods || []).length) {
         const skipped = res.shortsSkipped ?? null;
+        const winLabel = res.windowLabel || vodWindow;
+        const minLabel = `${minDurationSec}s`;
         if (platform === 'twitch') {
           setHint(
             resolvedHandle
-              ? `No Twitch archives ≥3 min found for ${resolvedHandle}. Connect Twitch under My Channels or try another login.`
+              ? `No Twitch archives ≥${minLabel} in ${winLabel} for ${resolvedHandle}. Try All time, lower min duration, or another login.`
               : 'No long Twitch archives found. Connect Twitch under My Channels or enter a login.',
           );
         } else {
           setHint(
             resolvedHandle
-              ? `No YouTube VODs ≥3 min found for ${resolvedHandle}${skipped ? ` (skipped ${skipped} recent Shorts/under-3-min)` : ''}. Confirm the handle under My Channels, or enter @handle and Fetch again.`
+              ? `No YouTube VODs ≥${minLabel} in ${winLabel} for ${resolvedHandle}${skipped ? ` (skipped ${skipped} Shorts/under-min)` : ''}. Try All time or lower min duration.`
               : 'No long VODs found. Connect YouTube under My Channels or enter @handle.',
           );
         }
@@ -196,7 +222,7 @@ function PeaksPageInner() {
     } finally {
       if (gen === loadVodsGenRef.current) setBusy(null);
     }
-  }, [getToken, handle, sourcePlatform, loadKickCcvPeaks]);
+  }, [getToken, handle, sourcePlatform, loadKickCcvPeaks, vodWindow, minDurationSec, maxDurationSec, vodSort]);
 
   useEffect(() => {
     // Wait for brand context — early fetch without X-Brand-Id can resolve the wrong channel
@@ -205,6 +231,13 @@ function PeaksPageInner() {
     void loadPresets();
     void loadVods(undefined, sourcePlatform);
   }, [isLoaded, brandLoading, activeBrand?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // After first fetch, window/sort pill changes re-fetch (duration applies on Fetch).
+  useEffect(() => {
+    if (!isLoaded || brandLoading || sourcePlatform === 'kick') return;
+    if (!hasFetchedVodsRef.current) return;
+    void loadVods(undefined, sourcePlatform);
+  }, [vodWindow, vodSort]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function onAnalyze(vod: ContentLibraryVod) {
     setSelectedVod(vod);
@@ -567,6 +600,83 @@ function PeaksPageInner() {
               Upload a trim
             </Button>
           </div>
+
+          {sourcePlatform !== 'kick' && (
+            <div className="space-y-3 pt-1 border-t border-slate-800">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">When</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {VOD_WINDOW_PILLS.map((w) => (
+                    <button
+                      key={w.id}
+                      type="button"
+                      disabled={!!busy}
+                      onClick={() => setVodWindow(w.id)}
+                      className={cn(
+                        'rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors',
+                        vodWindow === w.id
+                          ? 'border-amber-400 bg-amber-400/10 text-amber-400'
+                          : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300',
+                      )}
+                    >
+                      {w.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-end gap-3">
+                <div>
+                  <Label htmlFor="peaks-min-dur" className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Min duration (s)</Label>
+                  <Input
+                    id="peaks-min-dur"
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={minDurationSec}
+                    onChange={(e) => setMinDurationSec(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                    className="w-24 mt-1"
+                    disabled={!!busy}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="peaks-max-dur" className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Max duration (s)</Label>
+                  <Input
+                    id="peaks-max-dur"
+                    type="number"
+                    min={0}
+                    step={1}
+                    placeholder="any"
+                    value={maxDurationSec}
+                    onChange={(e) => setMaxDurationSec(e.target.value)}
+                    className="w-24 mt-1"
+                    disabled={!!busy}
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Sort</p>
+                  <div className="flex gap-1.5">
+                    {(["recent", "popular"] as VodSort[]).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        disabled={!!busy}
+                        onClick={() => setVodSort(s)}
+                        className={cn(
+                          'rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold capitalize transition-colors',
+                          vodSort === s
+                            ? 'border-amber-400 bg-amber-400/10 text-amber-400'
+                            : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300',
+                        )}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <p className="af-caption text-muted-foreground">
             {sourcePlatform === 'kick'
               ? 'AuraFlux polls Kick CCV while you are live, then maps the peak to your VOD — open, trim, upload.'
