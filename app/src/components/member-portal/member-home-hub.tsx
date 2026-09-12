@@ -15,13 +15,12 @@ import { CheckoutWelcomeBanner } from '@/components/dashboard/checkout-welcome-b
 import { Suspense } from 'react';
 import { tierLabel } from '@/lib/tier-labels';
 
-const TIER_BADGE: Record<string, string> = {
-  growth: 'bg-amber-50 text-amber-900 border border-amber-200',
-  operate: 'bg-slate-100 text-slate-700 border border-slate-200',
-  guided: 'bg-blue-50 text-blue-800 border border-blue-200',
-  managed: 'bg-violet-50 text-violet-800 border border-violet-200',
-  custom: 'bg-amber-50 text-amber-900 border border-amber-200',
-};
+const CORNER_LINK =
+  'text-xs font-semibold text-slate-400 hover:text-amber-400 transition-colors';
+const SECONDARY_BTN =
+  'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-semibold px-4 py-2 rounded-xl text-xs transition-colors inline-flex items-center justify-center';
+const PRIMARY_BTN =
+  'w-full bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold py-3 rounded-xl transition-all text-sm text-center block';
 
 type Props = {
   firstName: string;
@@ -31,22 +30,20 @@ type Props = {
 
 export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-white antialiased">
       <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--mp-muted)]">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
           Creator portal
         </p>
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--mp-text)]">
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
             Welcome back, {firstName}
           </h1>
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold tracking-widest uppercase ${TIER_BADGE[planTier] ?? TIER_BADGE.operate}`}
-          >
+          <span className="bg-amber-400/10 text-amber-400 border border-amber-400/20 text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wide">
             {tierLabel(planTier)}
           </span>
         </div>
-        <p className="text-sm text-[var(--mp-muted)] max-w-2xl">
+        <p className="text-sm text-slate-400 max-w-2xl">
           Produce and publish from Peaks through Jobs — set up channels, review outputs, and manage billing
           in one place.
         </p>
@@ -57,7 +54,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
       </Suspense>
 
       {!setupDismissed && (
-        <div className="rounded-2xl border border-[var(--mp-border)] bg-[var(--mp-card)] p-1 shadow-sm">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-1 shadow-xl">
           <SetupChecklist setupDismissed={setupDismissed} planTier={planTier} />
         </div>
       )}
@@ -68,18 +65,15 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           title="Peaks"
           icon={Sparkles}
           action={
-            <Link href="/peaks" className="text-xs font-semibold text-[var(--mp-accent-ink)] hover:underline">
+            <Link href="/peaks" className={CORNER_LINK}>
               Open →
             </Link>
           }
         >
-          <p className="text-sm text-[var(--mp-muted)] leading-relaxed flex-1">
+          <p className="text-sm text-slate-400 leading-relaxed flex-1">
             Find high-signal moments from your live and VOD sources, then send them into production.
           </p>
-          <Link
-            href="/peaks"
-            className="mt-4 inline-flex items-center justify-center rounded-xl bg-[var(--mp-accent)] text-[var(--mp-accent-fg)] font-bold text-sm px-4 py-2.5 hover:opacity-90 transition"
-          >
+          <Link href="/peaks" className={PRIMARY_BTN}>
             Browse Peaks
           </Link>
         </PortalQuadrant>
@@ -89,25 +83,19 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           title="My Jobs"
           icon={Clapperboard}
           action={
-            <Link href="/myjobs" className="text-xs font-semibold text-[var(--mp-accent-ink)] hover:underline">
+            <Link href="/myjobs" className={CORNER_LINK}>
               All jobs →
             </Link>
           }
         >
-          <p className="text-sm text-[var(--mp-muted)] leading-relaxed flex-1">
+          <p className="text-sm text-slate-400 leading-relaxed flex-1">
             Track active pipeline work, history, and start a new compose run.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href="/myjobs/new"
-              className="inline-flex items-center justify-center rounded-xl bg-[var(--mp-navy)] text-white font-bold text-sm px-4 py-2.5 hover:opacity-90 transition"
-            >
+          <div className="flex flex-wrap gap-2">
+            <Link href="/myjobs/new" className={SECONDARY_BTN}>
               New job
             </Link>
-            <Link
-              href="/myjobs/active"
-              className="inline-flex items-center justify-center rounded-xl border border-[var(--mp-border)] text-[var(--mp-text)] font-semibold text-sm px-4 py-2.5 hover:bg-[var(--mp-soft)] transition"
-            >
+            <Link href="/myjobs/active" className={SECONDARY_BTN}>
               In progress
             </Link>
           </div>
@@ -118,12 +106,12 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           title="Review Queue"
           icon={Activity}
           action={
-            <Link href="/review" className="text-xs font-semibold text-[var(--mp-accent-ink)] hover:underline">
+            <Link href="/review" className={CORNER_LINK}>
               Review →
             </Link>
           }
         >
-          <p className="text-sm text-[var(--mp-muted)] leading-relaxed">
+          <p className="text-sm text-slate-400 leading-relaxed">
             Approve staged outputs before they publish to your social accounts.
           </p>
         </PortalQuadrant>
@@ -133,29 +121,19 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           title="Channels & Social"
           icon={Radio}
           action={
-            <Link
-              href="/settings/channels"
-              className="text-xs font-semibold text-[var(--mp-accent-ink)] hover:underline"
-            >
+            <Link href="/settings/channels" className={CORNER_LINK}>
               Manage →
             </Link>
           }
         >
-          <p className="text-sm text-[var(--mp-muted)] leading-relaxed flex-1">
+          <p className="text-sm text-slate-400 leading-relaxed flex-1">
             Connect source channels and destination social accounts for fetch and publish.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href="/settings/channels"
-              className="text-sm font-semibold text-[var(--mp-accent-ink)] hover:underline"
-            >
+          <div className="flex flex-wrap gap-2 items-center">
+            <Link href="/settings/channels" className={SECONDARY_BTN}>
               My Channels
             </Link>
-            <span className="text-[var(--mp-border)]">·</span>
-            <Link
-              href="/settings/social"
-              className="text-sm font-semibold text-[var(--mp-accent-ink)] hover:underline"
-            >
+            <Link href="/settings/social" className={SECONDARY_BTN}>
               Social accounts
             </Link>
           </div>
@@ -166,12 +144,12 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           title="Billing & Credits"
           icon={CreditCard}
           action={
-            <Link href="/billing" className="text-xs font-semibold text-[var(--mp-accent-ink)] hover:underline">
+            <Link href="/billing" className={CORNER_LINK}>
               Billing →
             </Link>
           }
         >
-          <p className="text-sm text-[var(--mp-muted)] leading-relaxed">
+          <p className="text-sm text-slate-400 leading-relaxed">
             Subscription, invoices, and credit balance for pipeline runs.
           </p>
         </PortalQuadrant>
@@ -181,12 +159,12 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           title="Settings"
           icon={Settings2}
           action={
-            <Link href="/settings" className="text-xs font-semibold text-[var(--mp-accent-ink)] hover:underline">
+            <Link href="/settings" className={CORNER_LINK}>
               Settings →
             </Link>
           }
         >
-          <p className="text-sm text-[var(--mp-muted)] leading-relaxed">
+          <p className="text-sm text-slate-400 leading-relaxed">
             Brand identity, team access, and profile preferences.
           </p>
         </PortalQuadrant>

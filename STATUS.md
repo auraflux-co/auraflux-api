@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 00:25 UTC  
+**Last Updated:** 2026-09-12 01:20 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator thumbs + private publish: R2-backed peak frame initiate on Review, default private YouTube (@clipzworldnews) on approve-publish.
+Creator `/home` dark theme: slate-950 canvas, amber accents, dark hub cards + nav (MemberShell + MemberHomeHub + PortalQuadrant + mp tokens).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

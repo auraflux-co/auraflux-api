@@ -12,11 +12,11 @@ type Props = {
   id?: string;
 };
 
-/** Pavilion-style hub card — white panel on warm member-portal canvas. */
+/** Creator hub card — dark slate panel + amber accents. */
 export function PortalQuadrant({
   title,
   icon: Icon,
-  accent = 'var(--mp-accent)',
+  accent = '#fbbf24',
   action,
   children,
   className,
@@ -26,23 +26,20 @@ export function PortalQuadrant({
     <section
       id={id}
       className={cn(
-        'bg-[var(--mp-card)] rounded-2xl border border-[var(--mp-border)] shadow-sm flex flex-col min-h-[240px] scroll-mt-28',
+        'bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 hover:border-slate-700 transition-colors flex flex-col min-h-[240px] scroll-mt-28',
         className,
       )}
     >
-      <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[var(--mp-border-soft)]">
+      <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ backgroundColor: 'var(--mp-soft)' }}
-          >
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-slate-800 border border-slate-700">
             <Icon className="size-[18px]" style={{ color: accent }} />
           </div>
-          <h2 className="font-bold text-[var(--mp-text)] text-base truncate">{title}</h2>
+          <h2 className="font-bold text-white text-base truncate">{title}</h2>
         </div>
         {action}
       </header>
-      <div className="px-5 py-4 flex-1 flex flex-col">{children}</div>
+      <div className="flex-1 flex flex-col space-y-4">{children}</div>
     </section>
   );
 }
