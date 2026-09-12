@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 21:55 UTC  
+**Last Updated:** 2026-09-12 22:05 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Marketing plan bullets aligned to shipped product (Peaks → Review → Schedule/Stats → publish; Assist on Studio; Managed as $1,499 add-on). Sync `marketing/` + Billing PLAN_META highlights; deploy Vercel `auraflux-co`.
+Pricing Managed footer refactored to high-contrast call-out (White-Glove / $1,499 / Add Managed Ops). Live on Vercel `auraflux-co` — `iss_huqkzyNOXG5y`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

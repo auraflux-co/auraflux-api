@@ -38,9 +38,17 @@
     "cta_style": "cta cta-primary"
   },
   "enterprise": {
-    "body": "Add Managed to Creator or Studio ($1,499/mo) — we run production with you: dedicated ops, custom workflows, and SLA support.",
-    "cta_label": "Add Managed",
-    "cta_url": "/contact"
+    "eyebrow": "White-Glove Operations",
+    "headline": "Add Managed Services for $1,499/mo",
+    "body": "Get a dedicated ops strategist to manage clipping workflows, daily pipeline curation, channel syncs, and custom clip distribution. Available for Creator and Studio plans.",
+    "cta_label": "Add Managed Ops",
+    "cta_url": "/contact",
+    "cta_style": "enterprise-cta"
+  },
+  "managed": {
+    "cta_label": "Add Managed Ops",
+    "cta_url": "/contact",
+    "cta_style": "enterprise-cta"
   },
   "trust_badges": ["Cancel Anytime", "Instant Activation", "Dedicated Support"]
 }

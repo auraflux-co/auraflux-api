@@ -47,10 +47,20 @@ ${FRAMER_CSS || ''}
 .plans .cta-secondary:hover{background:#1e293b !important}
 .plans .cta-primary{background:#fbbf24 !important;color:#020617 !important;box-shadow:0 4px 12px rgba(251,191,36,.35)}
 .plans .cta-primary:hover{background:#f59e0b !important}
-.enterprise{max-width:56rem;margin:2rem auto 0}
-.enterprise-inner{background:#020617;border:1px solid #1e293b;border-radius:0.875rem;padding:1.25rem 1.5rem;text-align:center}
-.enterprise-inner p{margin:0;font-size:0.95rem;color:#cbd5e1 !important;line-height:1.6}
-.enterprise-inner a{color:#fbbf24 !important;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.enterprise{max-width:64rem;margin:3rem auto 0}
+.enterprise-inner{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:1.5rem;background:rgba(15,23,42,.9);border:1px solid rgba(245,158,11,.3);border-radius:1rem;padding:1.5rem;text-align:center}
+@media (min-width:768px){.enterprise-inner{flex-direction:row;padding:2rem;text-align:left}}
+.enterprise-copy{display:flex;flex-direction:column;gap:0.5rem;max-width:42rem}
+.enterprise-eyebrow{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;font-size:0.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f59e0b}
+@media (min-width:768px){.enterprise-eyebrow{justify-content:flex-start}}
+.enterprise-pulse{width:0.5rem;height:0.5rem;border-radius:9999px;background:#f59e0b;flex-shrink:0;animation:enterprise-pulse 1.5s ease-in-out infinite}
+@keyframes enterprise-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.85)}}
+.enterprise-title{margin:0;font-size:clamp(1.25rem,2.5vw,1.5rem);font-weight:800;line-height:1.25;letter-spacing:-.02em;color:#fff !important}
+.enterprise-title .price{color:#fbbf24 !important;font-size:inherit;font-weight:inherit;letter-spacing:inherit}
+.enterprise-body{margin:0;font-size:0.875rem;line-height:1.6;color:#94a3b8 !important;max-width:42rem}
+.enterprise-cta{display:inline-flex;align-items:center;justify-content:center;width:100%;white-space:nowrap;box-sizing:border-box;padding:0.75rem 1.5rem;border-radius:0.75rem;font-weight:800;font-size:0.95rem;text-decoration:none !important;background:#f59e0b !important;color:#020617 !important;border:none !important;flex-shrink:0}
+@media (min-width:768px){.enterprise-cta{width:auto}}
+.enterprise-cta:hover{background:#fbbf24 !important}
 .trust{max-width:56rem;margin:0 auto;padding:2.25rem 0 0;display:flex;flex-wrap:wrap;justify-content:center;gap:0.75rem 1rem}
 .trust-badge{display:inline-flex;align-items:center;font-size:0.8rem;font-weight:700;letter-spacing:.04em;color:#cbd5e1;background:#0f172a;border:1px solid #1e293b;padding:0.55rem 1rem;border-radius:9999px}
 .trust-badge::before{content:"";width:0.45rem;height:0.45rem;border-radius:50%;background:#fbbf24;margin-right:0.55rem}
@@ -108,9 +118,17 @@ ${FRAMER_NAV || FALLBACK_NAV}
       </article>
     </div>
   </div>
-  <section class="enterprise" aria-label="Managed">
+  <section class="enterprise" aria-label="Managed Services">
     <div class="enterprise-inner">
-      <p><strong style="color:#fff">Add Managed to Creator or Studio ($1,499/mo)</strong> — we run production with you: dedicated ops, custom workflows, and SLA support. <a href="/contact">Add Managed</a></p>
+      <div class="enterprise-copy">
+        <div class="enterprise-eyebrow">
+          <span class="enterprise-pulse" aria-hidden="true"></span>
+          White-Glove Operations
+        </div>
+        <h3 class="enterprise-title">Add Managed Services for <span class="price">$1,499</span>/mo</h3>
+        <p class="enterprise-body">Get a dedicated ops strategist to manage clipping workflows, daily pipeline curation, channel syncs, and custom clip distribution. Available for Creator and Studio plans.</p>
+      </div>
+      <a href="/contact" class="enterprise-cta" data-cta="managed_cta">Add Managed Ops</a>
     </div>
   </section>
   <div class="trust" aria-label="Guarantees">
