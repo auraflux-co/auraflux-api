@@ -306,11 +306,11 @@ function BillingPageInner() {
   const packSuccess     = searchParams.get('pack_success')  === '1';
   const packCancelled   = searchParams.get('pack_cancelled') === '1';
   const [isPending, start] = useTransition();
-  const [, startBrandTransition] = useTransition();
   const [optimisticActiveId, setOptimisticActiveId] = useOptimistic(
     activeBrand?.id ?? null,
     (_current: string | null, nextId: string) => nextId,
   );
+  const [, startOptimistic] = useTransition();
   const [redirecting, setRedirecting] = useState(false); // C8
 
   // U6: clear transient query params from URL so banners don't re-appear on refresh
@@ -462,11 +462,11 @@ function BillingPageInner() {
   function switchToBrand(brand: Brand) {
     if (brand.id === displayActiveId) return;
     setPendingSwitchId(brand.id);
-    // useOptimistic + transition: gold ACTIVE shifts this frame; metrics soft-refresh in background
-    startBrandTransition(() => {
+    // Optimistic ACTIVE highlight this frame; soft-refresh metrics in background (button stays Switching…)
+    startOptimistic(() => {
       setOptimisticActiveId(brand.id);
-      setActiveBrand(brand);
     });
+    setActiveBrand(brand);
   }
 
   function brandSubtitle(brand: Brand, isActive: boolean) {
@@ -511,13 +511,13 @@ function BillingPageInner() {
       />
 
       {/* Billing summary — payment CTAs with card + cycle context */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="min-w-0 space-y-1">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="min-w-0 w-full sm:w-auto space-y-1.5">
           <p className="text-sm font-medium text-white">
             {paymentSummary}
             {nextInvoiceLabel ? ` · Next invoice ${nextInvoiceLabel}` : ''}
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-400 leading-relaxed">
             {billingEmail
               ? `Primary billing email: ${billingEmail}`
               : 'Update payment method or download invoices anytime.'}
@@ -599,7 +599,7 @@ function BillingPageInner() {
               <span className="text-xs text-slate-400 animate-pulse">Refreshing active metrics…</span>
             )}
           </div>
-          <div className="sticky top-0 z-10 -mx-1 px-1 py-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/60">
+          <div className="sticky top-0 z-10 -mx-1 px-1 py-2 mb-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/60">
             <div className="flex items-center justify-between gap-4">
               <Input
                 placeholder={`Filter ${brands.length} brand${brands.length === 1 ? '' : 's'}…`}
@@ -611,7 +611,7 @@ function BillingPageInner() {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-9 font-medium shrink-0"
+                className="h-9 font-medium shrink-0 self-center"
                 onClick={() => router.push('/billing/add-brand')}
               >
                 + Add brand
