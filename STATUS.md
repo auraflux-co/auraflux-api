@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 22:15 UTC  
+**Last Updated:** 2026-09-12 22:20 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Pricing: Managed body contrast (#e2e8f0); Creator includes Assist chat (no self-serve/cancel-anytime). `iss_Z3My4dSEn9q3`.
+Pricing: drop price-note under Creator/Studio; features sit under price. `iss_Oe2pZ904cxWx`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

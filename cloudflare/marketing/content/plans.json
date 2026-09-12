@@ -6,7 +6,6 @@
     "title": "Creator",
     "subtitle": "Solo streamers shipping daily Shorts from stream peaks.",
     "price": "$299",
-    "price_note": "Assist chat included",
     "features": [
       "Peaks from VODs (Most Replayed, chat spikes, CCV) → Short",
       "Review before anything goes live",
@@ -25,7 +24,6 @@
     "subtitle": "High-volume streamers, clip networks, media teams & agencies.",
     "badge": "Most Popular",
     "price": "$999",
-    "price_note": "Full platform seat with priority queue & team access",
     "features": [
       "Unlimited Peaks, VOD processing & Short production",
       "Unlimited channels, brands & social dispatch",
