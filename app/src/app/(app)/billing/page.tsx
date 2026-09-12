@@ -517,7 +517,7 @@ function BillingPageInner() {
             {paymentSummary}
             {nextInvoiceLabel ? ` · Next invoice ${nextInvoiceLabel}` : ''}
           </p>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-300 leading-relaxed">
             {billingEmail
               ? `Primary billing email: ${billingEmail}`
               : 'Update payment method or download invoices anytime.'}
