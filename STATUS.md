@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 21:30 UTC  
+**Last Updated:** 2026-09-12 21:45 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Plans model (iss_pFwZYCypFcdK): Creator + Studio only; Managed is an add-on for either plan; Guided retired from customer plan UI (legacy `guided` → Studio labels).
+iss_05nin1trEmPm: Stripe Managed add-on (`STRIPE_PRICE_MANAGED_ADDON`) + checkout plumbing; CPD-1046 health regex fix (`isClipComp`); developer_peaks mount warning; job_grader portal4 comment.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

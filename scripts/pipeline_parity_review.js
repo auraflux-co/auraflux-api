@@ -115,7 +115,7 @@ function checkClipPortal4Qa() {
   const routingSrc = readFile('lib/pipeline_routing.js') || '';
   const portal5Src = readFile('lib/portals/portal5.js') || '';
   const results = [];
-  results.push(/isClips\)[\s\S]{0,120}defaults\.portal4\s*=\s*true/.test(jobSpecSrc)
+  results.push(/if\s*\(isClipComp\)\s*defaults\.portal4\s*=\s*true/.test(jobSpecSrc)
     ? pass('job_spec.js: clip jobs activate portal4 (CPD-1046)')
     : fail('job_spec.js: clip jobs still skip portal4 — bad pixels can ship (CPD-1046)'));
   const paths = ['tiktok_clutch', 'youtube_deep_dive'];
@@ -236,6 +236,7 @@ const ROUTE_MOUNT_EXCLUSIONS = new Set([
   'assembly_routes', // C0-only: Google Drive / Canva / ticker routes (not on Render)
   'concierge',       // Renamed to collab; /concierge* redirect is inline in server.js
   'publish',         // Inline in server.js; lib/routes/publish.js is a pending refactor
+  'developer_peaks', // Mounted via lib/routes/developer_api.js (router.use), not server.js directly
 ]);
 
 function checkRouteMounting() {
@@ -247,8 +248,23 @@ function checkRouteMounting() {
     if (ROUTE_MOUNT_EXCLUSIONS.has(name)) {
       return pass(`lib/routes/${f}: excluded (C0-only or pending refactor — not required on Render)`);
     }
-    return serverSrc.includes(`routes/${name}`) || serverSrc.includes(`'${name}'`) || serverSrc.includes(`"${name}"`)
-      ? pass(`lib/routes/${f}: mounted in server.js`)
+    const mountedDirect = serverSrc.includes(`routes/${name}`) || serverSrc.includes(`'${name}'`) || serverSrc.includes(`"${name}"`);
+    // Nested mounts (e.g. developer_peaks via developer_api) — check sibling route files
+    let mountedNested = false;
+    if (!mountedDirect) {
+      for (const other of fs.readdirSync(routeDir).filter((x) => x.endsWith('.js') && x !== f)) {
+        const otherSrc = readFile(`lib/routes/${other}`) || '';
+        if (otherSrc.includes(`./${name}`) || otherSrc.includes(`'./${name}'`) || otherSrc.includes(`"./${name}"`)) {
+          const otherName = other.replace('.js', '');
+          if (serverSrc.includes(`routes/${otherName}`) || ROUTE_MOUNT_EXCLUSIONS.has(otherName)) {
+            mountedNested = true;
+            break;
+          }
+        }
+      }
+    }
+    return (mountedDirect || mountedNested)
+      ? pass(`lib/routes/${f}: mounted in server.js${mountedNested ? ' (via nested router)' : ''}`)
       : warn(`lib/routes/${f}: not found in server.js — may be unmounted`);
   });
 }

@@ -736,6 +736,8 @@ export interface CreditBalance {
   overage_cap:            number | null;
   overage_price_cents:    number;
   tier:                   PlanTier;
+  /** True when Managed DFY add-on is attached to Creator/Studio (or legacy managed tier). */
+  managed_addon?:         boolean;
   period_start:           string;
   period_end:             string;
   stripe_subscription_id: string | null;
@@ -802,6 +804,19 @@ export async function subscribeToPlan(
   return apiFetch('/plans/subscribe', {
     method: 'POST',
     body:   JSON.stringify({ planId, successUrl, cancelUrl, ...(brandId ? { brandId } : {}) }),
+    token,
+  });
+}
+
+/** Attach Managed add-on to Creator or Studio (Stripe subscription item). */
+export async function subscribeManagedAddon(
+  successUrl: string,
+  cancelUrl: string,
+  token?: string,
+): Promise<{ ok: boolean; url?: string; attached?: boolean; alreadyAttached?: boolean; error?: string }> {
+  return apiFetch('/plans/managed-addon', {
+    method: 'POST',
+    body:   JSON.stringify({ successUrl, cancelUrl }),
     token,
   });
 }

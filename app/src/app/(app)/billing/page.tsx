@@ -30,6 +30,7 @@ import {
   getCreditPacks,
   getPaymentMethod,
   subscribeToPlan,
+  subscribeManagedAddon,
   purchasePack,
   listConnectedAccounts,
   type CreditBalance,
@@ -112,6 +113,7 @@ const MANAGED_ADDON = {
   label:    'Managed',
   audience: 'Add-on for Creator or Studio',
   sub:      'Our team runs production with you — attach to either plan.',
+  priceUsd: 1499,
   highlights: [
     'Works on Creator or Studio',
     'Dedicated account managers',
@@ -412,6 +414,33 @@ function BillingPageInner() {
     });
   }
 
+  async function handleAddManaged() {
+    setError(null);
+    start(async () => {
+      try {
+        const token = await getToken();
+        const origin = window.location.origin;
+        const res = await subscribeManagedAddon(
+          `${origin}/billing?managed=1`,
+          `${origin}/billing?cancelled=1`,
+          token ?? undefined,
+        );
+        if (res.alreadyAttached || res.attached) {
+          window.location.href = `${origin}/billing?managed=1`;
+          return;
+        }
+        if (res.url) {
+          setRedirecting(true);
+          window.location.href = res.url;
+          return;
+        }
+        setError(res.error || "Couldn't add Managed. Subscribe to Creator or Studio first.");
+      } catch {
+        setError("Couldn't add Managed. Please try again or contact support.");
+      }
+    });
+  }
+
   async function handleBuyPack(packId: string) {
     setError(null);
     start(async () => {
@@ -439,7 +468,8 @@ function BillingPageInner() {
   const ladderTier   = currentTier === 'guided' ? 'operate' : currentTier;
   const currentIdx   = TIER_ORDER.indexOf(ladderTier);
   const upgradeTiers = (currentIdx >= 0 ? TIER_ORDER.slice(currentIdx + 1) : []) as ('growth' | 'operate')[];
-  const showManagedAddon = canAddManaged(currentTier);
+  const hasManagedAddon = !!(balance?.managed_addon || currentTier === 'managed');
+  const showManagedAddon = canAddManaged(currentTier) && !hasManagedAddon;
 
   const creditUsed  = balance ? (balance.included_total - balance.included_remaining) : 0;
   const creditTotal = balance?.included_total ?? 0;
@@ -778,7 +808,7 @@ function BillingPageInner() {
             <div>
               <h2 className="af-subhead mb-1">Add Managed</h2>
               <p className="af-label mb-4 text-muted-foreground">
-                Done-for-you production — attach to Creator or Studio. Contact us to add it to your current plan.
+                {`Done-for-you production — attach to your Creator or Studio subscription ($${MANAGED_ADDON.priceUsd.toLocaleString()}/mo).`}
               </p>
               <div className="rounded-xl border border-primary/40 bg-gradient-to-b from-primary/5 to-card flex flex-col overflow-hidden max-w-xl">
                 <div className="bg-primary/10 border-b border-primary/20 px-4 py-1.5">
@@ -790,6 +820,10 @@ function BillingPageInner() {
                     <p className="text-lg font-bold text-foreground mt-1">{MANAGED_ADDON.label}</p>
                     <p className="af-caption text-muted-foreground mt-0.5">{MANAGED_ADDON.sub}</p>
                   </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="af-metric text-primary">{`$${MANAGED_ADDON.priceUsd.toLocaleString()}`}</span>
+                    <span className="af-caption text-muted-foreground">/mo add-on</span>
+                  </div>
                   <ul className="space-y-1.5 flex-1">
                     {MANAGED_ADDON.highlights.map((h) => (
                       <li key={h} className="af-label flex gap-2">
@@ -798,15 +832,23 @@ function BillingPageInner() {
                       </li>
                     ))}
                   </ul>
-                  <a
-                    href="/support"
-                    className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'w-full text-center mt-1')}
+                  <Button
+                    size="sm"
+                    className="w-full mt-1"
+                    disabled={isPending}
+                    onClick={() => handleAddManaged()}
                   >
-                    {MANAGED_ADDON.cta}
-                  </a>
+                    {isPending ? 'Processing…' : MANAGED_ADDON.cta}
+                  </Button>
                 </div>
               </div>
             </div>
+          )}
+
+          {hasManagedAddon && currentTier !== 'managed' && (
+            <p className="af-body text-muted-foreground">
+              Managed add-on is active on your {tierLabel(currentTier)} plan.
+            </p>
           )}
 
           <p className="af-caption text-muted-foreground">
