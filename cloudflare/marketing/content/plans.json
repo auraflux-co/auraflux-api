@@ -1,18 +1,18 @@
 {
   "hero_headline": "Predictable Pricing for Streamers & Media Agencies",
-  "hero_sub": "Turn raw VODs into daily short-form content at 1/3 the cost of a full-time editor seat. Buy here first — then create your app login.",
+  "hero_sub": "Peaks → Short → publish at a fraction of a full-time editor seat. Buy here first — then create your app login.",
   "growth": {
     "name": "For solo streamers",
     "title": "Creator",
-    "subtitle": "Solo streamers shipping daily content.",
+    "subtitle": "Solo streamers shipping daily Shorts from stream peaks.",
     "price": "$299",
     "price_note": "Self-serve · cancel anytime",
     "features": [
-      "Up to 40 hours of VOD processing / mo",
-      "3 Connected channels (YouTube, Twitch, Kick)",
-      "Auto 9:16 framing & kinetic captions",
-      "1080p60 vertical exports",
-      "Direct dispatch to TikTok, Shorts & Reels"
+      "Peaks from VODs (Most Replayed, chat spikes, CCV) → Short",
+      "Review before anything goes live",
+      "Schedule + Stats for YouTube, TikTok & Instagram",
+      "Up to 40 hours of VOD / mo · 3 channels",
+      "Direct publish to TikTok, Shorts & Reels"
     ],
     "cta_label": "Start Creator Plan",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=growth",
@@ -26,19 +26,19 @@
     "price": "$999",
     "price_note": "Full platform seat with priority queue & team access",
     "features": [
-      "Unlimited VOD processing & peak detection",
-      "Unlimited connected channels & social dispatch",
-      "Custom caption font uploads & brand templates",
-      "Priority render queue (< 2 min processing)",
-      "Team workspace seats & API key access",
-      "Dedicated Account Manager"
+      "Unlimited Peaks, VOD processing & Short production",
+      "Unlimited channels, brands & social dispatch",
+      "Review, Schedule & Stats at scale",
+      "Priority render queue",
+      "Team seats, brand templates & API keys",
+      "Assist chat & priority support"
     ],
     "cta_label": "Start Studio Plan",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=operate",
     "cta_style": "cta cta-primary"
   },
   "enterprise": {
-    "body": "Add Managed to Creator or Studio — done-for-you production, dedicated account management, and custom infrastructure.",
+    "body": "Add Managed to Creator or Studio ($1,499/mo) — we run production with you: dedicated ops, custom workflows, and SLA support.",
     "cta_label": "Add Managed",
     "cta_url": "/contact"
   },

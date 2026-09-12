@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 21:50 UTC  
+**Last Updated:** 2026-09-12 21:55 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Marketing pricing live on Vercel `auraflux-co` (Creator/Studio + Add Managed). Note: auraflux.co is Vercel, not CF Pages — CF workflow deploys do not update production.
+Marketing plan bullets aligned to shipped product (Peaks → Review → Schedule/Stats → publish; Assist on Studio; Managed as $1,499 add-on). Sync `marketing/` + Billing PLAN_META highlights; deploy Vercel `auraflux-co`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
