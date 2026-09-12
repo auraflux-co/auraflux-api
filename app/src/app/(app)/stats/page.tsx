@@ -11,6 +11,8 @@ import { useBrand } from '@/contexts/brand-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageHeader, PageShell } from '@/components/ui/page-shell';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { cn } from '@/lib/utils';
 import { formatUserError } from '@/lib/job-labels';
 import {
@@ -93,7 +95,7 @@ export default function StatsPage() {
   return (
     <PageShell maxWidth="5xl">
       <PageHeader
-        title="Stats"
+        title="Analytics"
         subtitle="Post-publish performance for this brand. Metrics vary by platform — we only show what each network returns."
       />
 
@@ -123,19 +125,16 @@ export default function StatsPage() {
           {error}
         </div>
       )}
-      {busy && <p className="af-caption text-muted-foreground mb-4">Loading stats…</p>}
+      {busy && <PageSkeleton rows={3} className="mb-4" />}
 
       {!busy && !connected.length && (
-        <Card className="mb-4 border-slate-800 bg-slate-900/50">
-          <CardContent className="pt-5 space-y-3">
-            <p className="text-sm text-slate-300">
-              Connect YouTube, TikTok, or Instagram under Social to see post-publish stats.
-            </p>
-            <Link href="/settings/social" className="text-sm font-semibold text-amber-400 hover:underline">
-              Open Social settings →
-            </Link>
-          </CardContent>
-        </Card>
+        <EmptyState
+          size="sm"
+          className="mb-4"
+          title="Connect a channel to see analytics"
+          description="Link YouTube, TikTok, or Instagram under Social to unlock post-publish metrics."
+          action={{ label: 'Open Social settings', href: '/settings/social' }}
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
@@ -194,7 +193,12 @@ export default function StatsPage() {
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-slate-200">Recent published posts</h2>
         {!busy && !visiblePosts.length && (
-          <p className="text-sm text-slate-500">No published posts found for this brand yet.</p>
+          <EmptyState
+            size="sm"
+            title="No published posts yet"
+            description="When jobs publish to connected platforms, they show up here with performance metrics."
+            action={{ label: 'Go to Jobs', href: '/myjobs' }}
+          />
         )}
         {visiblePosts.map((post) => (
           <Card key={post.jobId} className="border-slate-800 bg-slate-900/40">

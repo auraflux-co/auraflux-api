@@ -9,7 +9,7 @@
  *     ... page body
  *   </PageShell>
  *
- * Width: defaults to max-w-5xl. Pass maxWidth="7xl" for wider admin pages.
+ * Width: defaults to full (MemberShell already applies max-w-7xl). Pass maxWidth="5xl" to narrow.
  */
 
 import { cn } from '@/lib/utils';
@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 
 interface PageShellProps {
   children: React.ReactNode;
-  /** Tailwind max-width token. Defaults to "5xl" (~1024px). */
+  /** Tailwind max-width token. Defaults to "full" (shell constrains width). */
   maxWidth?: '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'full';
   className?: string;
 }
@@ -32,7 +32,7 @@ const MAX_WIDTH_MAP: Record<NonNullable<PageShellProps['maxWidth']>, string> = {
   'full': 'w-full',
 };
 
-export function PageShell({ children, maxWidth = '5xl', className }: PageShellProps) {
+export function PageShell({ children, maxWidth = 'full', className }: PageShellProps) {
   return (
     <div className={cn('space-y-8', MAX_WIDTH_MAP[maxWidth], className)}>
       {children}

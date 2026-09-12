@@ -66,7 +66,7 @@ function GuidesPanel() {
   return (
     <aside className="w-full lg:w-72 shrink-0 space-y-4">
       <div className="rounded-lg border border-border p-4">
-        <h2 className="af-subhead mb-3">Guides</h2>
+        <h2 id="guides" className="af-subhead mb-3 scroll-mt-24">Guides</h2>
         <ul className="space-y-1.5">
           {GUIDE_LINKS.map((g) => (
             <li key={g.label}>
@@ -225,7 +225,7 @@ export default function SupportPage() {
   const canEsc  = plan === 'guided' || plan === 'managed';
 
   const [messages,   setMessages]   = useState<ChatMsg[]>([
-    { role: 'assistant', content: "Hi! I'm Collab. What issue are you running into today?" },
+    { role: 'assistant', content: "Hi! I'm Assist. What issue are you running into today?" },
   ]);
   const [input,      setInput]      = useState('');
   const [loading,    setLoading]    = useState(false);
@@ -312,7 +312,7 @@ export default function SupportPage() {
     : 'Chat with our team or browse the guides below.';
 
   return (
-    <PageShell maxWidth="4xl">
+    <PageShell maxWidth="full">
       <PageHeader title="Support" subtitle={supportSubtitle} />
 
       {/* ── Past sessions (above chat) ── */}
@@ -353,14 +353,36 @@ export default function SupportPage() {
             {/* Input */}
             <div className="border-t border-border p-3">
               {!canChat ? (
-                <div className="text-center af-body py-2">
-                  Support chat is not available on your current plan.{' '}
-                  <Link href="/billing" className="text-primary underline">Upgrade to Guided</Link>
+                <div className="rounded-lg border border-amber-500/30 bg-amber-950/20 px-4 py-4 space-y-3 text-left">
+                  <p className="text-sm font-semibold text-foreground">Chat unlocks on Guided</p>
+                  <p className="af-body text-muted-foreground">
+                    Your current plan uses guides and email. Upgrade for live Support chat, or use the help paths below.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href="/billing"
+                      className="inline-flex items-center px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
+                    >
+                      Upgrade to Guided
+                    </Link>
+                    <a
+                      href="mailto:support@auraflux.co"
+                      className="inline-flex items-center px-3 py-1.5 rounded-md border border-border text-xs font-semibold hover:bg-accent"
+                    >
+                      Email support
+                    </a>
+                    <a
+                      href="#guides"
+                      className="inline-flex items-center px-3 py-1.5 rounded-md border border-border text-xs font-semibold hover:bg-accent"
+                    >
+                      Browse guides
+                    </a>
+                  </div>
                 </div>
               ) : resolved ? (
                 <div className="text-center af-body py-2">
                   This session is resolved.{' '}
-                  <button onClick={() => { setMessages([{ role: 'assistant', content: "Hi! I'm Collab. What issue are you running into today?" }]); setSessionId(null); setResolved(false); setEscalated(false); }} className="text-primary underline">Start a new session</button>
+                  <button onClick={() => { setMessages([{ role: 'assistant', content: "Hi! I'm Assist. What issue are you running into today?" }]); setSessionId(null); setResolved(false); setEscalated(false); }} className="text-primary underline">Start a new session</button>
                 </div>
               ) : (
                 <div className="flex gap-2">

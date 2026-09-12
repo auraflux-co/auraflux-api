@@ -22,11 +22,11 @@ const NAV = [
   { href: '/myjobs', label: 'Jobs' },
   { href: '/schedule', label: 'Schedule' },
   { href: '/templates', label: 'Templates' },
-  { href: '/stats', label: 'Stats' },
+  { href: '/stats', label: 'Analytics' },
   { href: '/review', label: 'Review' },
   { href: '/billing', label: 'Billing' },
   { href: '/settings', label: 'Settings' },
-  { href: '/support', label: 'Help' },
+  { href: '/support', label: 'Support' },
 ] as const;
 
 function navActive(pathname: string, href: string) {
@@ -105,7 +105,7 @@ export function MemberShell({ children }: { children: React.ReactNode }) {
                     : 'border-slate-700 text-slate-300 hover:text-amber-400',
                 )}
               >
-                Collab
+                Assist
               </button>
               <UserButton />
               <button

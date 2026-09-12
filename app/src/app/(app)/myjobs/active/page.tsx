@@ -19,6 +19,7 @@ import { useRole } from '@/hooks/use-role';
 import { useBrand } from '@/contexts/brand-context';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { EmptyState } from '@/components/ui/empty-state';
+import { JobStatusBadge } from '@/components/ui/job-status-badge';
 import { jobStatusLabel, jobDisplayTitle, platformListLabel, formatUserError } from '@/lib/job-labels';
 import { labelForContentType } from '@/lib/content-types';
 
@@ -44,18 +45,7 @@ function statusCardStyle(s: string): string {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const cls =
-    status === 'failed'        ? 'bg-red-950/60 text-red-400 border border-red-800/60'   :
-    status === 'held'          ? 'bg-yellow-950/60 text-yellow-400 border border-yellow-800/60' :
-    status === 'credit_paused' ? 'bg-orange-950/60 text-orange-400 border border-orange-800/60' :
-    status === 'running'       ? 'bg-blue-950/60 text-blue-400 border border-blue-800/60' :
-    'bg-muted/60 text-muted-foreground border border-border';
-  return (
-    <span className={cn('inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded', cls)}>
-      <span className={cn('w-1.5 h-1.5 rounded-full inline-block', statusColor(status))} />
-      {jobStatusLabel(status)}
-    </span>
-  );
+  return <JobStatusBadge status={status} label={jobStatusLabel(status)} />;
 }
 
 function fmtJobTime(iso: string) {

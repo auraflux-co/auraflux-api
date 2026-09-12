@@ -38,7 +38,7 @@ export function GuidePanel() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
             <div>
-              <p className="text-sm font-semibold">Collab</p>
+              <p className="text-sm font-semibold">Assist</p>
               <p className="text-[10px] text-muted-foreground">Your guided setup assistant</p>
             </div>
             <button

@@ -4,7 +4,10 @@
  * Clip from — multi-creator clip browse (third-party handles), not My Library.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFormDraft, loadFormDraft, clearFormDraft } from '@/hooks/use-form-draft';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/clerk-compat';
@@ -92,6 +95,9 @@ export function ClipLibrary({ embedded = false }: { embedded?: boolean } = {}) {
   const [hint, setHint] = useState<string | null>(null);
 
   const [pasteUrl, setPasteUrl] = useState('');
+  const [draftReady, setDraftReady] = useState(false);
+  const draftRestoredFor = useRef<string | null>(null);
+  const draftKey = `clip-from:${brandId || 'none'}`;
 
   useEffect(() => {
     if (brandLoading) return;
@@ -99,6 +105,45 @@ export function ClipLibrary({ embedded = false }: { embedded?: boolean } = {}) {
     setRoster(list);
     setSelectedIds(new Set(list.map((e) => e.id)));
   }, [brandId, brandLoading]);
+
+  useEffect(() => {
+    if (!brandId || brandLoading) return;
+    if (draftRestoredFor.current === brandId) return;
+    draftRestoredFor.current = brandId;
+    const d = loadFormDraft<{
+      selectedIds?: string[];
+      dateRange?: SourceDateRange;
+      minDuration?: number;
+      maxDuration?: string;
+      sort?: ClipSort;
+      picked?: SourceItem[];
+      pasteUrl?: string;
+    }>(draftKey);
+    if (d) {
+      if (d.selectedIds?.length) setSelectedIds(new Set(d.selectedIds));
+      if (d.dateRange) setDateRange(d.dateRange);
+      if (d.minDuration != null) setMinDuration(d.minDuration);
+      if (d.maxDuration != null) setMaxDuration(d.maxDuration);
+      if (d.sort) setSort(d.sort);
+      if (d.picked) setPicked(d.picked);
+      if (d.pasteUrl != null) setPasteUrl(d.pasteUrl);
+    }
+    setDraftReady(true);
+  }, [brandId, brandLoading, draftKey]);
+
+  useFormDraft({
+    key: draftKey,
+    enabled: draftReady && !!brandId,
+    value: {
+      selectedIds: Array.from(selectedIds),
+      dateRange,
+      minDuration,
+      maxDuration,
+      sort,
+      picked,
+      pasteUrl,
+    },
+  });
 
   const persistRoster = useCallback((next: ClipRosterEntry[]) => {
     setRoster(next);
@@ -244,6 +289,7 @@ export function ClipLibrary({ embedded = false }: { embedded?: boolean } = {}) {
         }),
       );
     } catch { /* ignore */ }
+    clearFormDraft(draftKey);
     router.push('/myjobs/new?from=library');
   }
 
@@ -326,7 +372,12 @@ export function ClipLibrary({ embedded = false }: { embedded?: boolean } = {}) {
           {hint}
         </div>
       )}
-      {busy && <p className="af-caption text-muted-foreground mb-3">{busy}</p>}
+      {busy && (
+        <div className="mb-3 space-y-2">
+          <p className="af-caption text-muted-foreground">{busy}</p>
+          <PageSkeleton rows={2} />
+        </div>
+      )}
 
       <Card className="mb-4 border-slate-800 bg-slate-900/50">
         <CardContent className="pt-5 space-y-4">
@@ -520,6 +571,15 @@ export function ClipLibrary({ embedded = false }: { embedded?: boolean } = {}) {
         </div>
       </div>
 
+      {!busy && !items.length && !error && (
+        <EmptyState
+          size="sm"
+          className="mb-4"
+          title="No clips loaded"
+          description="Add creators, set filters, then Load clips — or paste a URL below."
+        />
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => {
           const selected = picked.some((p) => p.url === item.url);
@@ -563,5 +623,5 @@ export function ClipLibrary({ embedded = false }: { embedded?: boolean } = {}) {
   );
 
   if (embedded) return <div className="space-y-1">{body}</div>;
-  return <PageShell maxWidth="5xl">{body}</PageShell>;
+  return <PageShell maxWidth="full">{body}</PageShell>;
 }

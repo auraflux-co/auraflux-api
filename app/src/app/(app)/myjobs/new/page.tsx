@@ -21,7 +21,7 @@
  *   - Step 3 order review (replaced by sticky right summary)
  */
 
-import { useState, useTransition, useEffect, Suspense } from 'react';
+import { useState, useTransition, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/clerk-compat';
 import { toast } from 'sonner';
@@ -37,6 +37,7 @@ import { LockedFeature } from '@/components/ui/locked-feature';
 import { useGuide } from '@/contexts/guide-context';
 import { usePlan } from '@/contexts/plan-context';
 import { useBrand } from '@/contexts/brand-context';
+import { useFormDraft, loadFormDraft, clearFormDraft } from '@/hooks/use-form-draft';
 import { SourceLibraryPicker } from '@/components/jobs/source-library-picker';
 import { ClipEditor, type ClipSpec, type CompactClip, type ExtractClip } from '@/components/jobs/clip-editor';
 import type { SourceItem } from '@/lib/api';
@@ -628,6 +629,126 @@ function JobBuilderPageInner() {
   const [shoppableCtaUrl,  setShoppableCtaUrl]  = useState('');
   const [pipVideoFile,   setPipVideoFile]   = useState<File | null>(null);
   const [durationMins,   setDurationMins]   = useState(3);
+  const [draftReady, setDraftReady] = useState(false);
+  const draftRestoredFor = useRef<string | null>(null);
+
+  const draftKey = `new-job:${activeBrandId || 'none'}`;
+
+  // Restore brand-scoped draft once (skips File blobs).
+  useEffect(() => {
+    if (!activeBrandId) return;
+    if (draftRestoredFor.current === activeBrandId) return;
+    draftRestoredFor.current = activeBrandId;
+    setDraftReady(false);
+    const d = loadFormDraft<{
+      templateId?: string;
+      templatePicked?: boolean;
+      formFactor?: FormFactor | null;
+      sourceIntent?: 'clips' | 'longform' | 'show_film' | null;
+      sourceMode?: SourceMode;
+      sourceItems?: SourceItem[];
+      fileKeys?: string;
+      clipSpec?: ClipSpec | null;
+      format?: string;
+      duration?: string;
+      platforms?: string[];
+      captions?: boolean;
+      voiceover?: boolean;
+      grade?: string;
+      effects?: string[];
+      audioOpts?: string[];
+      features?: string[];
+      featureConfig?: Record<string, Record<string, string>>;
+      scheduledStart?: 'now' | 'scheduled';
+      scheduledAt?: string;
+      publishMode?: 'immediate' | 'review';
+      pubTitle?: string;
+      pubDescription?: string;
+      pubTags?: string;
+      pubPrivacy?: 'public' | 'unlisted' | 'private';
+      pubTiktokCaption?: string;
+      pubInstagramCaption?: string;
+      tone?: string;
+      shoppableCtaText?: string;
+      shoppableCtaUrl?: string;
+      durationMins?: number;
+      openSections?: string[];
+    }>(draftKey);
+    if (d) {
+      if (d.templateId != null) setTemplateId(d.templateId);
+      if (d.templatePicked != null) setTemplatePicked(d.templatePicked);
+      if (d.formFactor !== undefined) setFormFactor(d.formFactor);
+      if (d.sourceIntent !== undefined) setSourceIntent(d.sourceIntent);
+      if (d.sourceMode) setSourceMode(d.sourceMode);
+      if (d.sourceItems) setSourceItems(d.sourceItems);
+      if (d.fileKeys != null) setFileKeys(d.fileKeys);
+      if (d.clipSpec !== undefined) setClipSpec(d.clipSpec);
+      if (d.format) setFormat(d.format);
+      if (d.duration) setDuration(d.duration);
+      if (d.platforms) setPlatforms(d.platforms);
+      if (d.captions != null) setCaptions(d.captions);
+      if (d.voiceover != null) setVoiceover(d.voiceover);
+      if (d.grade) setGrade(d.grade);
+      if (d.effects) setEffects(d.effects);
+      if (d.audioOpts) setAudioOpts(d.audioOpts);
+      if (d.features) setFeatures(new Set(d.features));
+      if (d.featureConfig) setFeatureConfig(d.featureConfig);
+      if (d.scheduledStart) setScheduledStart(d.scheduledStart);
+      if (d.scheduledAt != null) setScheduledAt(d.scheduledAt);
+      if (d.publishMode) setPublishMode(d.publishMode);
+      if (d.pubTitle != null) setPubTitle(d.pubTitle);
+      if (d.pubDescription != null) setPubDescription(d.pubDescription);
+      if (d.pubTags != null) setPubTags(d.pubTags);
+      if (d.pubPrivacy) setPubPrivacy(d.pubPrivacy);
+      if (d.pubTiktokCaption != null) setPubTiktokCaption(d.pubTiktokCaption);
+      if (d.pubInstagramCaption != null) setPubInstagramCaption(d.pubInstagramCaption);
+      if (d.tone) setTone(d.tone);
+      if (d.shoppableCtaText != null) setShoppableCtaText(d.shoppableCtaText);
+      if (d.shoppableCtaUrl != null) setShoppableCtaUrl(d.shoppableCtaUrl);
+      if (d.durationMins != null) setDurationMins(d.durationMins);
+      if (d.openSections) setOpenSections(d.openSections);
+    }
+    setDraftReady(true);
+  }, [activeBrandId, draftKey]);
+
+  useFormDraft({
+    key: draftKey,
+    enabled: draftReady && !!activeBrandId,
+    value: {
+      templateId,
+      templatePicked,
+      formFactor,
+      sourceIntent,
+      sourceMode,
+      sourceItems,
+      fileKeys,
+      clipSpec,
+      format,
+      duration,
+      platforms,
+      captions,
+      voiceover,
+      grade,
+      effects,
+      audioOpts,
+      features: Array.from(features),
+      featureConfig,
+      scheduledStart,
+      scheduledAt,
+      publishMode,
+      pubTitle,
+      pubDescription,
+      pubTags,
+      pubPrivacy,
+      pubTiktokCaption,
+      pubInstagramCaption,
+      tone,
+      shoppableCtaText,
+      shoppableCtaUrl,
+      durationMins,
+      openSections,
+    },
+  });
 
   // ── Derived ──
   const inferredMultiClip  = sourceIntent === 'clips' && formFactor === 'long';
@@ -1036,6 +1157,7 @@ function JobBuilderPageInner() {
             duration: 5000,
           });
         }
+        clearFormDraft(draftKey);
         if (res.jobId) router.push(`/myjobs/${res.jobId}`);
         else           router.push('/myjobs/active');
       } catch {
@@ -1070,7 +1192,7 @@ function JobBuilderPageInner() {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-5xl space-y-0">
+    <div className="w-full space-y-0">
 
       {/* Submitting overlay */}
       {isPending && (

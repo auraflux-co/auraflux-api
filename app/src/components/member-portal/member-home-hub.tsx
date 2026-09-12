@@ -116,8 +116,8 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           </span>
         </div>
         <p className="text-sm text-slate-400 max-w-2xl">
-          Produce and publish from Peaks and Library through Jobs — set up channels, review outputs, and manage billing
-          in one place.
+          Discover trend signals in Peaks, pull assets from Library, run Jobs, then Review and publish — channels,
+          analytics, and billing stay in one Creator workspace.
         </p>
       </div>
 
@@ -143,9 +143,9 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           }
         >
           <p className="text-sm text-slate-400 leading-relaxed flex-1">
-            Find high-signal moments from your live and VOD sources, then send them into production.
+            Trend signals and high-signal moments from your live and VOD sources — trim, preview, then send into production.
           </p>
-          <StatBadge>Trim → preview → Short</StatBadge>
+          <StatBadge>Signals → trim → Short</StatBadge>
           <Link href="/peaks" className={PRIMARY_BTN}>
             Browse Peaks
           </Link>
@@ -162,9 +162,9 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           }
         >
           <p className="text-sm text-slate-400 leading-relaxed flex-1">
-            Your AuraFlux publishes plus catalogs from channels you connect and publish to — or Clip from other creators.
+            One library: Mine (your publishes), Channels (connected catalogs), and Clip from other creators.
           </p>
-          <StatBadge>Mine · connected · Clip from</StatBadge>
+          <StatBadge>Mine · Channels · Clip from</StatBadge>
           <Link href="/library" className={PRIMARY_BTN}>
             Open Library
           </Link>
@@ -172,7 +172,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
 
         <PortalQuadrant
           id="stats"
-          title="Stats"
+          title="Analytics"
           icon={BarChart3}
           action={
             <Link href="/stats" className={CORNER_LINK}>
@@ -185,7 +185,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           </p>
           <StatBadge>Views · engagement · recent posts</StatBadge>
           <Link href="/stats" className={PRIMARY_BTN}>
-            View Stats
+            View Analytics
           </Link>
         </PortalQuadrant>
 

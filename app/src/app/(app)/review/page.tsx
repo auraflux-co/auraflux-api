@@ -23,6 +23,8 @@ import { useAuth } from '@/lib/clerk-compat';
 import { useRole } from '@/hooks/use-role';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { JobStatusBadge } from '@/components/ui/job-status-badge';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { Button } from '@/components/ui/button';
 import { updateJobSchedule, getSchedulePrefs, type SchedulePrefs, type ScheduleSlot, requestJobRevision, operatorJobAction } from '@/lib/api';
 import { ThumbnailFramePicker } from '@/components/creator/thumbnail-frame-picker';
@@ -202,21 +204,7 @@ const PLATFORM_DISPLAY: Record<string, string> = {
 // ── Status badge ──────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
-  const variants: Record<string, string> = {
-    complete:        'bg-green-950/60 text-green-400 border border-green-800/60',
-    staged:            'bg-blue-950/60 text-blue-400 border border-blue-800/60',
-    operator_review:   'bg-blue-950/60 text-blue-400 border border-blue-800/60',
-    processing:        'bg-blue-950/60 text-blue-400 border border-blue-800/60',
-    running:   'bg-yellow-950/60 text-yellow-400 border border-yellow-800/60',
-    queued:    'bg-muted/60 text-muted-foreground border border-border/60',
-    failed:    'bg-red-950/60 text-red-400 border border-red-800/60',
-    published: 'bg-violet-950/60 text-violet-400 border border-violet-800/60',
-  };
-  return (
-    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${variants[status] ?? 'bg-muted/60 text-muted-foreground border border-border/60'}`}>
-      {jobStatusLabel(status)}
-    </span>
-  );
+  return <JobStatusBadge status={status} label={jobStatusLabel(status)} />;
 }
 
 // ── Portal timeline ───────────────────────────────────────────────────────────
@@ -789,7 +777,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
           <div className="rounded-lg border border-amber-500/40 bg-amber-950/20 p-4 space-y-3">
             <p className="text-xs font-semibold">What needs to change?</p>
             <p className="text-[11px] text-muted-foreground">
-              Describe the issue — your team (or Collab on Guided/Managed plans) will revise and notify you when it&apos;s ready to review again.
+              Describe the issue — your team (or Assist on Guided/Managed plans) will revise and notify you when it&apos;s ready to review again.
             </p>
             <textarea
               value={revisionFeedback}
@@ -904,18 +892,18 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
         )}
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Approve & Publish */}
+          {/* Publish Now */}
           {!publishResult && !scheduleResult && (
             <Button
               size="sm"
               disabled={!canPublish || publishing}
               onClick={handleApprovePublish}
             >
-              {publishing ? 'Publishing…' : 'Approve & Publish (private)'}
+              {publishing ? 'Publishing…' : 'Publish Now'}
             </Button>
           )}
 
-          {/* Schedule for later */}
+          {/* Approve & Schedule */}
           {!publishResult && !scheduleResult && !showScheduler && (
             <Button
               size="sm"
@@ -923,7 +911,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
               disabled={!canPublish}
               onClick={() => setShowScheduler(true)}
             >
-              Schedule for later
+              Approve & Schedule
             </Button>
           )}
 
@@ -975,6 +963,30 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
             <p className="text-xs text-green-600">Already published.</p>
           )}
         </div>
+
+        {canPublish && !publishResult && !scheduleResult && (
+          <div className="sticky bottom-0 z-20 mt-4 -mx-1 border-t border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 px-3 py-3 flex flex-wrap items-center gap-2 rounded-b-xl">
+            <Button
+              size="sm"
+              disabled={publishing}
+              onClick={handleApprovePublish}
+            >
+              {publishing ? 'Publishing…' : 'Publish Now'}
+            </Button>
+            {!showScheduler && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowScheduler(true)}
+              >
+                Approve & Schedule
+              </Button>
+            )}
+            <Link href="/schedule" className="text-xs text-muted-foreground hover:text-foreground ml-auto">
+              Open Schedule →
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1030,7 +1042,7 @@ export default function StagingPage() {
   const activePlatforms = [...new Set(jobs.flatMap((j) => j.platforms ?? []))];
 
   return (
-    <PageShell maxWidth="4xl">
+    <PageShell maxWidth="full">
       <PageHeader
         title="Review Queue"
         subtitle={isSuperAdmin
@@ -1040,7 +1052,7 @@ export default function StagingPage() {
             : 'Videos ready for your review before publishing to social platforms.'}
       />
 
-      {(loading || !roleLoaded) && <p className="af-body text-muted-foreground">Loading jobs…</p>}
+      {(loading || !roleLoaded) && <PageSkeleton rows={3} />}
       {error   && <p className="af-body text-destructive">{formatUserError(error)}</p>}
 
       {/* Platform publish best practices */}

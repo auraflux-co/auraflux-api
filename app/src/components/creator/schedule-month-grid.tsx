@@ -11,6 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { formatUserError } from '@/lib/job-labels';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { JobStatusBadge } from '@/components/ui/job-status-badge';
 import {
   fetchScheduleMonth,
   saveScheduleMonthDay,
@@ -219,7 +222,7 @@ export function ScheduleMonthGrid({
       </div>
 
       {busy && !view ? (
-        <p className="text-sm text-slate-500">Loading month…</p>
+        <PageSkeleton rows={2} />
       ) : view ? (
         <div className="grid grid-cols-7 gap-1.5">
           {WEEKDAYS.map((d) => (
@@ -285,10 +288,21 @@ export function ScheduleMonthGrid({
 
           <div className="border-t border-slate-800 pt-3 space-y-2">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Jobs this day</p>
-            {!selected.jobs.length && <p className="text-xs text-slate-500">No published or scheduled jobs yet.</p>}
+            {!selected.jobs.length && (
+              <EmptyState
+                size="sm"
+                className="!py-4"
+                title="No jobs on this day"
+                description="Publish or schedule a job onto this date."
+                action={{ label: 'New job', href: '/myjobs/new' }}
+              />
+            )}
             {selected.jobs.map((j) => (
               <div key={j.jobId} className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-slate-300 truncate">{j.title || j.jobId}</span>
+                <span className="text-slate-300 truncate flex items-center gap-2">
+                  <JobStatusBadge status={j.status} className="shrink-0" />
+                  {j.title || j.jobId}
+                </span>
                 <Link href={`/myjobs/${j.jobId}`} className="text-amber-400 hover:underline shrink-0">Open</Link>
               </div>
             ))}
