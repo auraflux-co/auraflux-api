@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 21:45 UTC  
+**Last Updated:** 2026-09-12 21:50 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-iss_05nin1trEmPm: Stripe Managed add-on (`STRIPE_PRICE_MANAGED_ADDON`) + checkout plumbing; CPD-1046 health regex fix (`isClipComp`); developer_peaks mount warning; job_grader portal4 comment.
+Marketing pricing live on Vercel `auraflux-co` (Creator/Studio + Add Managed). Note: auraflux.co is Vercel, not CF Pages — CF workflow deploys do not update production.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

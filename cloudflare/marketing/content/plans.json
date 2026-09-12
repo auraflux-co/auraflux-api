@@ -38,8 +38,8 @@
     "cta_style": "cta cta-primary"
   },
   "enterprise": {
-    "body": "Managed stays Managed — done-for-you production, dedicated account management, and custom infrastructure.",
-    "cta_label": "Talk to Enterprise Sales",
+    "body": "Add Managed to Creator or Studio — done-for-you production, dedicated account management, and custom infrastructure.",
+    "cta_label": "Add Managed",
     "cta_url": "/contact"
   },
   "trust_badges": ["Cancel Anytime", "Instant Activation", "Dedicated Support"]
