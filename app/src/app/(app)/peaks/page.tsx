@@ -51,11 +51,12 @@ export default function PeaksPage() {
 
 function PeaksPageInner() {
   const { getToken, isLoaded } = useAuth();
-  const { activeBrand } = useBrand();
+  const { activeBrand, isLoading: brandLoading } = useBrand();
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingPeakRef = useRef<ContentLibraryPeak | null>(null);
+  const loadVodsGenRef = useRef(0);
 
   const initialPlatform = ((): SourcePlatform => {
     const p = (searchParams.get('platform') || '').toLowerCase();
@@ -149,6 +150,7 @@ function PeaksPageInner() {
       await loadKickCcvPeaks();
       return;
     }
+    const gen = ++loadVodsGenRef.current;
     setBusy(platform === 'twitch' ? 'Loading Twitch VODs…' : 'Loading VODs…');
     setError(null);
     setHint(null);
@@ -165,31 +167,44 @@ function PeaksPageInner() {
         limit: 40,
         platform,
       });
+      if (gen !== loadVodsGenRef.current) return; // stale response — brand switched mid-flight
       setVods(res.vods || []);
-      if (res.handle) {
-        const h = res.handle.replace(/^@/, '');
-        setHandle(platform === 'youtube' ? `@${h}` : h);
-      }
+      const resolvedHandle = res.handle
+        ? (platform === 'youtube' ? `@${res.handle.replace(/^@/, '')}` : res.handle.replace(/^@/, ''))
+        : (overrideHandle || handle || '');
+      if (res.handle) setHandle(resolvedHandle);
       if (!(res.vods || []).length) {
-        setHint(
-          platform === 'twitch'
-            ? 'No long Twitch archives found. Connect Twitch under My Channels or enter a login.'
-            : 'No long VODs found. Connect YouTube under My Channels or enter @handle.',
-        );
+        const skipped = res.shortsSkipped ?? null;
+        if (platform === 'twitch') {
+          setHint(
+            resolvedHandle
+              ? `No Twitch archives ≥3 min found for ${resolvedHandle}. Connect Twitch under My Channels or try another login.`
+              : 'No long Twitch archives found. Connect Twitch under My Channels or enter a login.',
+          );
+        } else {
+          setHint(
+            resolvedHandle
+              ? `No YouTube VODs ≥3 min found for ${resolvedHandle}${skipped ? ` (skipped ${skipped} recent Shorts/under-3-min)` : ''}. Confirm the handle under My Channels, or enter @handle and Fetch again.`
+              : 'No long VODs found. Connect YouTube under My Channels or enter @handle.',
+          );
+        }
       }
     } catch (e) {
+      if (gen !== loadVodsGenRef.current) return;
       setError(formatUserError(e instanceof Error ? e.message : 'Failed to load VODs'));
       setVods([]);
     } finally {
-      setBusy(null);
+      if (gen === loadVodsGenRef.current) setBusy(null);
     }
   }, [getToken, handle, sourcePlatform, loadKickCcvPeaks]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    // Wait for brand context — early fetch without X-Brand-Id can resolve the wrong channel
+    // and a late empty response can overwrite a good one.
+    if (!isLoaded || brandLoading) return;
     void loadPresets();
     void loadVods(undefined, sourcePlatform);
-  }, [isLoaded, activeBrand?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoaded, brandLoading, activeBrand?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function onAnalyze(vod: ContentLibraryVod) {
     setSelectedVod(vod);

@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 01:40 UTC  
+**Last Updated:** 2026-09-12 01:55 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Fix brand_access_denied (stale X-Brand-Id race) + skip PaidAccessGate flash on refresh via session paid cache.
+Peaks VOD empty-state fix: wait for brand before Fetch, ignore stale responses, list long YouTube VODs via uploads playlist (oversample past Shorts).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
