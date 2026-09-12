@@ -1,6 +1,6 @@
 /**
  * Creators I clip from — per-brand roster (localStorage).
- * Not ClipzWorld ops roster; SaaS creator list of handles to pull clips from.
+ * Per-brand SaaS list of handles to pull clips from (not ops competitor benches).
  */
 
 import type { SourcePlatform } from '@/lib/api';
