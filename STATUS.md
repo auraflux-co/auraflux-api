@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 04:00 UTC  
+**Last Updated:** 2026-09-12 04:15 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator UX epic WS1–WS4: Assist nav, Library Mine|Channels|Clip from, PageShell/full + JobStatusBadge, Review sticky Publish Now / Approve & Schedule, Support upgrade path, skeletons/empty + New Job/Clip drafts. Tickets iss_acSkM6sibaYJ … iss_ugbvl-hAA3Vw (epic iss_JGuydclrTRC-).
+Creator UX audit deltas (non-redundant): Review inline schedule calendar + sticky Save Draft / Request AI Edits / Approve & Schedule; Support hides gated chat for self-serve; Badge status tokens + h-10 CTAs.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

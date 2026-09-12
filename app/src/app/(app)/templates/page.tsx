@@ -160,7 +160,7 @@ function TemplatesPageContent() {
         title="My Templates"
         subtitle="Reusable job configurations. Save from any completed job and schedule recurring runs."
       >
-        <Link href="/myjobs/history" className={cn(buttonVariants({ size: 'sm', variant: 'outline' }))}>
+        <Link href="/myjobs/history" className={cn(buttonVariants({ variant: 'outline' }), 'h-10 font-medium')}>
           From job history
         </Link>
       </PageHeader>
@@ -232,7 +232,7 @@ function TemplatesPageContent() {
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <Link
                     href={`/myjobs/new?templateId=${tpl.id}`}
-                    className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), 'text-xs h-8')}
+                    className={cn(buttonVariants({ variant: 'outline' }), 'h-10 font-medium text-xs')}
                   >
                     Run once
                   </Link>
@@ -315,7 +315,7 @@ function TemplatesPageContent() {
                       type="button"
                       onClick={() => saveRecurrence(tpl)}
                       disabled={saving === tpl.id}
-                      className={cn(buttonVariants({ size: 'sm' }), 'text-xs h-8')}
+                      className={cn(buttonVariants(), 'h-10 font-medium text-xs')}
                     >
                       {saving === tpl.id ? 'Saving…' : 'Save cadence'}
                     </button>

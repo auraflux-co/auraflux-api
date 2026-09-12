@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
@@ -20,6 +20,22 @@ const badgeVariants = cva(
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
       },
+      status: {
+        pending:
+          "border-amber-500/30 bg-amber-500/15 text-amber-300 capitalize",
+        draft:
+          "border-slate-600 bg-slate-800/60 text-slate-300 capitalize",
+        reviewing:
+          "border-violet-500/30 bg-violet-500/15 text-violet-300 capitalize",
+        scheduled:
+          "border-indigo-500/30 bg-indigo-500/15 text-indigo-300 capitalize",
+        published:
+          "border-emerald-500/30 bg-emerald-500/15 text-emerald-300 capitalize",
+        failed:
+          "border-red-500/30 bg-red-500/15 text-red-300 capitalize",
+        running:
+          "border-sky-500/30 bg-sky-500/15 text-sky-300 capitalize",
+      },
     },
     defaultVariants: {
       variant: "default",
@@ -27,17 +43,27 @@ const badgeVariants = cva(
   }
 )
 
+type BadgeProps = useRender.ComponentProps<"span"> &
+  VariantProps<typeof badgeVariants>
+
 function Badge({
   className,
   variant = "default",
+  status,
   render,
   ...props
-}: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
+}: BadgeProps) {
   return useRender({
     defaultTagName: "span",
     props: mergeProps<"span">(
       {
-        className: cn(badgeVariants({ variant }), className),
+        className: cn(
+          badgeVariants({
+            variant: status ? "outline" : variant,
+            status,
+          }),
+          className
+        ),
       },
       props
     ),
@@ -45,6 +71,7 @@ function Badge({
     state: {
       slot: "badge",
       variant,
+      status,
     },
   })
 }

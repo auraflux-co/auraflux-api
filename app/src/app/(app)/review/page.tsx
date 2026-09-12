@@ -476,6 +476,105 @@ function toDatetimeLocal(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/** Mini month grid so creators pick a schedule date without leaving Review. */
+function InlineScheduleCalendar({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const selected = value ? new Date(value) : null;
+  const anchor = selected && !Number.isNaN(selected.getTime()) ? selected : new Date();
+  const [viewYear, setViewYear] = useState(anchor.getFullYear());
+  const [viewMonth, setViewMonth] = useState(anchor.getMonth());
+
+  useEffect(() => {
+    if (!selected || Number.isNaN(selected.getTime())) return;
+    setViewYear(selected.getFullYear());
+    setViewMonth(selected.getMonth());
+  }, [value]);
+
+  const first = new Date(viewYear, viewMonth, 1);
+  const startPad = (first.getDay() + 6) % 7; // Mon-first
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const cells: (number | null)[] = [
+    ...Array.from({ length: startPad }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  function pickDay(day: number) {
+    const d = new Date(viewYear, viewMonth, day, 12, 0, 0, 0);
+    if (d < today) return;
+    const existing = value ? new Date(value) : null;
+    if (existing && !Number.isNaN(existing.getTime())) {
+      d.setHours(existing.getHours(), existing.getMinutes(), 0, 0);
+    } else {
+      d.setHours(12, 0, 0, 0);
+    }
+    onChange(toDatetimeLocal(d));
+  }
+
+  function shift(delta: number) {
+    const d = new Date(viewYear, viewMonth + delta, 1);
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+  }
+
+  const label = new Date(viewYear, viewMonth, 1).toLocaleString(undefined, {
+    month: 'long',
+    year: 'numeric',
+  });
+
+  return (
+    <div className="rounded-md border border-border/60 bg-background p-3 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <button type="button" className="text-xs px-2 py-1 rounded border border-border hover:bg-accent" onClick={() => shift(-1)}>Prev</button>
+        <p className="text-xs font-semibold">{label}</p>
+        <button type="button" className="text-xs px-2 py-1 rounded border border-border hover:bg-accent" onClick={() => shift(1)}>Next</button>
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((d) => (
+          <div key={d} className="text-[10px] text-center text-muted-foreground font-semibold py-0.5">{d}</div>
+        ))}
+        {cells.map((day, idx) => {
+          if (day == null) return <div key={`pad-${idx}`} className="h-8" />;
+          const cellDate = new Date(viewYear, viewMonth, day);
+          cellDate.setHours(0, 0, 0, 0);
+          const disabled = cellDate < today;
+          const isSelected =
+            selected &&
+            !Number.isNaN(selected.getTime()) &&
+            selected.getFullYear() === viewYear &&
+            selected.getMonth() === viewMonth &&
+            selected.getDate() === day;
+          return (
+            <button
+              key={`${viewYear}-${viewMonth}-${day}`}
+              type="button"
+              disabled={disabled}
+              onClick={() => pickDay(day)}
+              className={cn(
+                'h-8 rounded text-xs font-medium transition-colors',
+                disabled && 'opacity-30 cursor-not-allowed',
+                isSelected
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-accent border border-transparent hover:border-border',
+              )}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const REVISION_CATEGORIES = [
   { id: 'script',     label: 'Script / voiceover' },
   { id: 'thumbnail',  label: 'Thumbnail' },
@@ -505,6 +604,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
   const [savedPrefs, setSavedPrefs]       = useState<SchedulePrefs>({});
   const [authToken, setAuthToken]         = useState<string | null>(null);
   const [playlistMatch, setPlaylistMatch] = useState<{ playlistId: string | null; playlistTitle: string | null } | null>(null);
+  const [draftMsg, setDraftMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -520,6 +620,19 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
         ]);
         setAssets(data);
         setSavedPrefs(prefs ?? {});
+        try {
+          const raw = localStorage.getItem(`af-draft:review-notes:${jobId}`);
+          if (raw) {
+            const d = JSON.parse(raw) as {
+              revisionFeedback?: string;
+              revisionCategories?: string[];
+              scheduleAt?: string;
+            };
+            if (d.revisionFeedback) setRevisionFeedback(d.revisionFeedback);
+            if (d.revisionCategories) setRevisionCategories(d.revisionCategories);
+            if (d.scheduleAt) setScheduleAt(d.scheduleAt);
+          }
+        } catch { /* ignore */ }
       } catch (e: unknown) {
         setError('Failed to load review assets. Please refresh and try again.');
       } finally {
@@ -556,6 +669,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
         }
       );
       setPublishResult(result);
+      try { localStorage.removeItem(`af-draft:review-notes:${jobId}`); } catch { /* ignore */ }
     } catch {
       setPublishResult({ error: 'Publish failed. Please try again.' });
     } finally {
@@ -572,6 +686,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
       await updateJobSchedule(jobId, 'scheduled', iso, token ?? undefined);
       setScheduleResult({ ok: true, at: iso });
       setShowScheduler(false);
+      try { localStorage.removeItem(`af-draft:review-notes:${jobId}`); } catch { /* ignore */ }
     } catch {
       setScheduleResult({ error: 'Schedule failed. Please try again.' });
     } finally {
@@ -764,6 +879,10 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
           </div>
         )}
 
+        {draftMsg && (
+          <div className="rounded-md border p-3 text-xs text-green-600">{draftMsg}</div>
+        )}
+
         {/* Revision / redo result */}
         {redoResult && (
           <div className="rounded-md border p-3 text-xs">
@@ -815,10 +934,20 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
           </div>
         )}
 
-        {/* Schedule date picker */}
+        {/* Inline schedule calendar drawer (stay on Review — no Schedule tab hop) */}
         {showScheduler && !scheduleResult && (
           <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-3">
-            <p className="text-xs font-semibold">Choose a publish date and time</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold">Approve &amp; Schedule — pick a date</p>
+              <Link href="/schedule" className="text-[11px] text-muted-foreground hover:text-foreground">
+                Full Schedule →
+              </Link>
+            </div>
+
+            <InlineScheduleCalendar
+              value={scheduleAt}
+              onChange={setScheduleAt}
+            />
 
             {/* Saved slot chips — only for platforms on this job */}
             {(() => {
@@ -835,6 +964,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
                       return (
                         <button
                           key={i}
+                          type="button"
                           onClick={() => setScheduleAt(toDatetimeLocal(next))}
                           className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-background px-2.5 py-1 text-xs hover:border-primary/60 hover:bg-accent transition-colors"
                         >
@@ -849,25 +979,28 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
               );
             })()}
 
-            <input
-              type="datetime-local"
-              className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              min={(() => {
-                const d = new Date(); d.setMinutes(d.getMinutes() + 30);
-                return d.toISOString().slice(0, 16);
-              })()}
-              value={scheduleAt}
-              onChange={(e) => setScheduleAt(e.target.value)}
-            />
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[10rem]">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1">Time</p>
+                <input
+                  type="datetime-local"
+                  className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                  min={(() => {
+                    const d = new Date(); d.setMinutes(d.getMinutes() + 30);
+                    return d.toISOString().slice(0, 16);
+                  })()}
+                  value={scheduleAt}
+                  onChange={(e) => setScheduleAt(e.target.value)}
+                />
+              </div>
               <Button
-                size="sm"
+                className="h-10 font-medium"
                 disabled={!scheduleAt || scheduling}
                 onClick={handleApproveSchedule}
               >
                 {scheduling ? 'Scheduling…' : 'Confirm schedule'}
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => { setShowScheduler(false); setScheduleAt(''); }}>
+              <Button className="h-10 font-medium" variant="ghost" onClick={() => { setShowScheduler(false); setScheduleAt(''); }}>
                 Cancel
               </Button>
             </div>
@@ -892,10 +1025,9 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
         )}
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Publish Now */}
           {!publishResult && !scheduleResult && (
             <Button
-              size="sm"
+              className="h-10 font-medium"
               disabled={!canPublish || publishing}
               onClick={handleApprovePublish}
             >
@@ -903,10 +1035,9 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
             </Button>
           )}
 
-          {/* Approve & Schedule */}
           {!publishResult && !scheduleResult && !showScheduler && (
             <Button
-              size="sm"
+              className="h-10 font-medium"
               variant="outline"
               disabled={!canPublish}
               onClick={() => setShowScheduler(true)}
@@ -915,14 +1046,13 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
             </Button>
           )}
 
-          {/* Download */}
           {output.videoUrl && (
             <a
               href={output.videoUrl}
               target="_blank"
               rel="noreferrer"
               download
-              className="inline-flex items-center gap-1.5 text-xs font-medium border border-border rounded-md px-3 py-1.5 hover:bg-accent transition-colors"
+              className="inline-flex h-10 items-center gap-1.5 text-xs font-medium border border-border rounded-md px-3 hover:bg-accent transition-colors"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -931,21 +1061,19 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
             </a>
           )}
 
-          {/* Send back for changes (customer) / operator redo */}
           {!redoResult?.ok && assets.status !== 'published' && !scheduleResult && !showSendBack && (
             <>
               <Button
-                size="sm"
+                className="h-10 font-medium"
                 variant="outline"
                 onClick={() => setShowSendBack(true)}
               >
-                Send back for changes
+                Request AI Edits
               </Button>
               {isSuperAdmin && (
                 <Button
-                  size="sm"
+                  className="h-10 font-medium text-muted-foreground"
                   variant="ghost"
-                  className="text-muted-foreground"
                   disabled={redoing}
                   onClick={handleOperatorRedo}
                 >
@@ -967,24 +1095,50 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
         {canPublish && !publishResult && !scheduleResult && (
           <div className="sticky bottom-0 z-20 mt-4 -mx-1 border-t border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 px-3 py-3 flex flex-wrap items-center gap-2 rounded-b-xl">
             <Button
-              size="sm"
-              disabled={publishing}
-              onClick={handleApprovePublish}
+              className="h-10 font-medium"
+              variant="outline"
+              onClick={() => {
+                try {
+                  localStorage.setItem(
+                    `af-draft:review-notes:${jobId}`,
+                    JSON.stringify({
+                      revisionFeedback,
+                      revisionCategories,
+                      scheduleAt,
+                      savedAt: new Date().toISOString(),
+                    }),
+                  );
+                } catch { /* ignore */ }
+                setDraftMsg('Draft saved on this device. Your job stays in the Review queue.');
+              }}
             >
-              {publishing ? 'Publishing…' : 'Publish Now'}
+              Save Draft
             </Button>
+            {!showSendBack && (
+              <Button
+                className="h-10 font-medium"
+                variant="outline"
+                onClick={() => setShowSendBack(true)}
+              >
+                Request AI Edits
+              </Button>
+            )}
             {!showScheduler && (
               <Button
-                size="sm"
-                variant="outline"
+                className="h-10 font-medium"
                 onClick={() => setShowScheduler(true)}
               >
                 Approve & Schedule
               </Button>
             )}
-            <Link href="/schedule" className="text-xs text-muted-foreground hover:text-foreground ml-auto">
-              Open Schedule →
-            </Link>
+            <Button
+              className="h-10 font-medium"
+              variant="secondary"
+              disabled={publishing}
+              onClick={handleApprovePublish}
+            >
+              {publishing ? 'Publishing…' : 'Publish Now'}
+            </Button>
           </div>
         )}
       </div>

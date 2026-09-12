@@ -321,10 +321,39 @@ export default function SupportPage() {
       )}
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* ── Chat panel ── */}
+        {/* ── Chat panel OR gated self-serve (no fake disabled chat) ── */}
         <div className="flex-1 flex flex-col min-h-0">
+          {!canChat ? (
+            <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+              <div className="space-y-2">
+                <h2 className="af-h3">Self-serve help</h2>
+                <p className="af-body text-muted-foreground">
+                  Live Support chat is not on your current plan. Use documentation, email, or upgrade to Guided for chat.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/billing#plans"
+                  className="inline-flex h-10 items-center px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
+                >
+                  Upgrade to Guided Plan
+                </Link>
+                <a
+                  href="#guides"
+                  className="inline-flex h-10 items-center px-4 rounded-md border border-border text-sm font-medium hover:bg-accent"
+                >
+                  Browse Documentation
+                </a>
+                <a
+                  href="mailto:support@auraflux.co?subject=AuraFlux%20support%20request"
+                  className="inline-flex h-10 items-center px-4 rounded-md border border-border text-sm font-medium hover:bg-accent"
+                >
+                  Submit Ticket
+                </a>
+              </div>
+            </div>
+          ) : (
           <div className="rounded-lg border border-border flex flex-col min-h-[300px] h-[50vh] max-h-[480px]">
-            {/* Messages — scrollable */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((m, i) => (
                 <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
@@ -350,36 +379,8 @@ export default function SupportPage() {
               <div ref={bottomRef} />
             </div>
 
-            {/* Input */}
             <div className="border-t border-border p-3">
-              {!canChat ? (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-950/20 px-4 py-4 space-y-3 text-left">
-                  <p className="text-sm font-semibold text-foreground">Chat unlocks on Guided</p>
-                  <p className="af-body text-muted-foreground">
-                    Your current plan uses guides and email. Upgrade for live Support chat, or use the help paths below.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      href="/billing"
-                      className="inline-flex items-center px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
-                    >
-                      Upgrade to Guided
-                    </Link>
-                    <a
-                      href="mailto:support@auraflux.co"
-                      className="inline-flex items-center px-3 py-1.5 rounded-md border border-border text-xs font-semibold hover:bg-accent"
-                    >
-                      Email support
-                    </a>
-                    <a
-                      href="#guides"
-                      className="inline-flex items-center px-3 py-1.5 rounded-md border border-border text-xs font-semibold hover:bg-accent"
-                    >
-                      Browse guides
-                    </a>
-                  </div>
-                </div>
-              ) : resolved ? (
+              {resolved ? (
                 <div className="text-center af-body py-2">
                   This session is resolved.{' '}
                   <button onClick={() => { setMessages([{ role: 'assistant', content: "Hi! I'm Assist. What issue are you running into today?" }]); setSessionId(null); setResolved(false); setEscalated(false); }} className="text-primary underline">Start a new session</button>
@@ -396,7 +397,7 @@ export default function SupportPage() {
                   <button
                     onClick={send}
                     disabled={loading || !input.trim()}
-                    className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
+                    className="h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
                   >
                     Send
                   </button>
@@ -404,6 +405,7 @@ export default function SupportPage() {
               )}
             </div>
           </div>
+          )}
 
           {/* Action row */}
           {canChat && !resolved && (

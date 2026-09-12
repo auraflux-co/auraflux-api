@@ -386,7 +386,7 @@ function BillingPageInner() {
       {upgradeTiers.length > 0 && (
         <div>
           <h2 className="af-subhead mb-1">Plan Comparison</h2>
-          <p className="af-label mb-4 text-muted-foreground">Upgrade your plan to unlock more support and tooling.</p>
+          <p id="plans" className="af-label mb-4 text-muted-foreground scroll-mt-24">Upgrade your plan to unlock more support and tooling.</p>
           <div className={cn('grid grid-cols-1 gap-4', upgradeTiers.length > 1 && 'sm:grid-cols-2')}>
             {upgradeTiers.map((tier) => {
               const plan = plans.find((p) => p.id === tier);
