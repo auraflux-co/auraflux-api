@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 19:55 UTC  
+**Last Updated:** 2026-09-12 20:15 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Billing banner subtitle contrast → text-slate-300 on dark summary card.
+Settings hub (iss_-4uuqIyHeTcK / CPD-55): status badges on cards, Sheet drawers for Brand/Channels/Social/Team, max-w-6xl + API health footer.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import { cn } from '@/lib/utils';
 import {
@@ -28,6 +30,17 @@ type HubStatus = {
   socialTotal: number;
   socialExpired: number;
   teamCount: number;
+};
+
+const FALLBACK_STATUS: HubStatus = {
+  brandReady: 0,
+  brandTotal: 3,
+  channelsReady: 0,
+  channelsTotal: 3,
+  socialReady: 0,
+  socialTotal: 3,
+  socialExpired: 0,
+  teamCount: 1,
 };
 
 type HealthState = {
@@ -105,8 +118,8 @@ const SECTIONS: SectionDef[] = [
   },
 ];
 
-function statusBadge(sectionId: SectionId, status: HubStatus | null) {
-  if (!status) {
+function statusBadge(sectionId: SectionId, status: HubStatus, pending: boolean) {
+  if (pending) {
     return (
       <Badge variant="outline" className="text-slate-400 border-slate-700 bg-slate-800/50 text-[10px]">
         Checking…
@@ -188,35 +201,39 @@ export function SettingsHub({ showApiKeys }: { showApiKeys: boolean }) {
   const { getToken, isLoaded } = useAuth();
   const { activeBrand } = useBrand();
   const [drawer, setDrawer] = useState<DrawerKey>(null);
-  const [status, setStatus] = useState<HubStatus | null>(null);
+  const [status, setStatus] = useState<HubStatus>(FALLBACK_STATUS);
+  const [statusPending, setStatusPending] = useState(true);
   const [health, setHealth] = useState<HealthState>({ api: 'loading' });
 
   const loadStatus = useCallback(async () => {
     if (!isLoaded) return;
+    setStatusPending(true);
     try {
       const token = await getToken();
       const [social, sources, connections, team, brands] = await Promise.all([
         listConnectedAccounts(token ?? undefined).catch(() => ({ accounts: [] as ConnectedAccount[] })),
         getSourceChannels(token ?? undefined).catch(() => ({ ok: false as const, sourceChannels: {} as import('@/lib/api').SourceChannels })),
         getChannelConnections(token ?? undefined).catch(() => ({ connections: [] as unknown[] })),
-        apiFetch<{ members: unknown[] }>('/team', { token: token ?? undefined }).catch(() => ({ members: [] })),
-        getBrands(token ?? undefined).catch(() => []),
+        apiFetch<{ members: unknown[] }>('/team', { token: token ?? undefined }).catch(() => ({ members: [] as unknown[] })),
+        getBrands(token ?? undefined).catch(() => [] as import('@/lib/api').Brand[]),
       ]);
 
-      const accounts = social.accounts ?? [];
+      const accounts = Array.isArray(social?.accounts) ? social.accounts : [];
       const expired = accounts.filter((a) => {
-        if (!a.tokenExpiry || a.hasRefreshToken) return false;
+        if (!a?.tokenExpiry || a.hasRefreshToken) return false;
         const exp = new Date(a.tokenExpiry).getTime();
         return !Number.isNaN(exp) && exp < Date.now();
       }).length;
 
-      const brand = brands.find((b) => b.id === activeBrand?.id) ?? brands[0] ?? activeBrand;
+      const brandList = Array.isArray(brands) ? brands : [];
+      const brand = brandList.find((b) => b.id === activeBrand?.id) ?? brandList[0] ?? activeBrand;
       const brandReady = [brand?.image_url, brand?.intro_card_url, brand?.outro_card_url]
         .filter(Boolean).length;
 
-      const src = (sources.sourceChannels ?? {}) as import('@/lib/api').SourceChannels;
+      const src = (sources?.sourceChannels ?? {}) as import('@/lib/api').SourceChannels;
       const channelVals = [src.twitchLogin, src.kickUsername, src.youtubeHandle].filter(Boolean).length;
-      const oauth = connections.connections?.length ?? 0;
+      const oauth = Array.isArray(connections?.connections) ? connections.connections.length : 0;
+      const members = Array.isArray(team?.members) ? team.members : [];
 
       setStatus({
         brandReady,
@@ -226,10 +243,13 @@ export function SettingsHub({ showApiKeys }: { showApiKeys: boolean }) {
         socialReady: accounts.length,
         socialTotal: 3,
         socialExpired: expired,
-        teamCount: team.members?.length ?? 0,
+        // At least the signed-in member — never leave team at "Checking…"
+        teamCount: Math.max(1, members.length),
       });
     } catch {
-      // keep prior status
+      setStatus(FALLBACK_STATUS);
+    } finally {
+      setStatusPending(false);
     }
   }, [getToken, isLoaded, activeBrand]);
 
@@ -276,17 +296,29 @@ export function SettingsHub({ showApiKeys }: { showApiKeys: boolean }) {
 
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {sections.map((s) => {
+          const isDrawer = !!s.drawer;
           const cardClass = cn(
             'group rounded-xl border border-slate-800 bg-slate-900 p-6 flex flex-col gap-3',
-            'hover:border-slate-700 transition-colors cursor-pointer text-left w-full',
+            'hover:border-amber-500/50 hover:bg-slate-900/80 transition-all cursor-pointer text-left w-full',
           );
           const body = (
             <>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between gap-3 mb-1">
                 <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
                   {s.icon}
                 </div>
-                {statusBadge(s.id, status)}
+                <div className="flex items-center gap-2 shrink-0">
+                  {statusBadge(s.id, status, statusPending)}
+                  {isDrawer && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] uppercase tracking-wide text-slate-500 group-hover:text-amber-400 transition-colors">
+                      Open
+                      <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                    </span>
+                  )}
+                  {!isDrawer && (
+                    <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-amber-400 transition-colors" aria-hidden />
+                  )}
+                </div>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">{s.title}</h3>
@@ -317,10 +349,10 @@ export function SettingsHub({ showApiKeys }: { showApiKeys: boolean }) {
       </div>
 
       <footer className="mt-10 rounded-xl border border-slate-800 bg-slate-900/80 p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-white">System Status / API Health</p>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-300 mt-1">
               Live check against AuraFlux API
               {health.apiVersion ? ` · v${health.apiVersion}` : ''}
               {health.checkedAt
@@ -328,11 +360,11 @@ export function SettingsHub({ showApiKeys }: { showApiKeys: boolean }) {
                 : ''}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 shrink-0">
             <Badge
               variant="outline"
               className={cn(
-                'text-[11px]',
+                'text-[11px] h-8 px-3 inline-flex items-center',
                 health.api === 'ok'
                   ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
                   : health.api === 'loading'
@@ -342,13 +374,15 @@ export function SettingsHub({ showApiKeys }: { showApiKeys: boolean }) {
             >
               {health.api === 'ok' ? 'API Healthy' : health.api === 'loading' ? 'Checking…' : 'API Unreachable'}
             </Badge>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 border-slate-700 text-slate-200 hover:bg-slate-800"
               onClick={() => { void loadHealth(); void loadStatus(); }}
-              className="text-xs text-slate-400 hover:text-slate-200 underline-offset-2 hover:underline"
             >
               Refresh
-            </button>
+            </Button>
           </div>
         </div>
       </footer>
