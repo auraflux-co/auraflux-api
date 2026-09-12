@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 19:45 UTC  
+**Last Updated:** 2026-09-12 19:50 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Billing optimistic brand switch (iss_jMonWWp8YhEv / CPD-54): useOptimistic ACTIVE highlight, Switching spinner, banner slate-400 contrast, memo BrandRow + soft metrics refresh.
+Billing polish (CPD-54 follow-up): banner p-6 + items-center, slate-400 subtitle, sync setActiveBrand + useOptimistic, search row mb-4 baseline align.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
