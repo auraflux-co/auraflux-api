@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 03:15 UTC  
+**Last Updated:** 2026-09-12 03:25 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator Stats V1: `/stats` page + nav, Upload-Post rollup + posts, YouTube lite, persist `request_id` on publish_results. Ticket iss_1whxE0pPdxlI.
+Creator Schedule month grid: `/schedule` Month tab (plan vs published), brand `calendar_plan`, Social copy clarifying Upload-Post (no partner-add for Stats). Ticket iss_mnR60g68_GUn.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

@@ -1441,6 +1441,81 @@ export async function saveSchedulePrefs(
   });
 }
 
+// ── Creator Schedule month grid ───────────────────────────────────────────────
+
+export interface ScheduleMonthDayCell {
+  date: string;
+  planned: { short: number; longform: number; live: number; note: string; custom: boolean };
+  actual: { short: number; longform: number; live: number; total: number };
+  jobs: Array<{ jobId: string; title: string; form: string; status: string; at: string }>;
+  status: string;
+}
+
+export interface ScheduleMonthView {
+  ok: boolean;
+  month: string;
+  year: number;
+  monthNum: number;
+  defaults: { short: number; longform: number; live: number };
+  weeks: Array<Array<string | null>>;
+  daysByDate: Record<string, ScheduleMonthDayCell>;
+  days: ScheduleMonthDayCell[];
+  summary: { plannedDays: number; metDays: number; dayCount: number };
+  error?: string;
+}
+
+export interface ScheduleEligibleJob {
+  jobId: string;
+  title: string;
+  status: string;
+  form: string;
+  scheduledPublishAt: string | null;
+}
+
+export async function fetchScheduleMonth(month: string, token?: string): Promise<ScheduleMonthView> {
+  return apiFetch(`/schedule/month?month=${encodeURIComponent(month)}`, { token });
+}
+
+export async function saveScheduleMonthDay(
+  payload: { date: string; short?: number; longform?: number; live?: number; note?: string },
+  token?: string,
+): Promise<{ ok: boolean; day?: ScheduleMonthDayCell; month?: ScheduleMonthView }> {
+  return apiFetch('/schedule/month/day', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    token,
+  });
+}
+
+export async function saveScheduleMonthDefaults(
+  payload: { month: string; short?: number; longform?: number; live?: number },
+  token?: string,
+): Promise<ScheduleMonthView> {
+  return apiFetch('/schedule/month/defaults', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    token,
+  });
+}
+
+export async function fetchScheduleEligibleJobs(
+  token?: string,
+): Promise<{ ok: boolean; jobs: ScheduleEligibleJob[] }> {
+  return apiFetch('/schedule/month/eligible-jobs', { token });
+}
+
+export async function scheduleJobOnMonth(
+  jobId: string,
+  scheduledPublishAt: string,
+  token?: string,
+): Promise<{ ok: boolean; jobId: string; scheduledPublishAt: string }> {
+  return apiFetch('/schedule/month/schedule-job', {
+    method: 'POST',
+    body: JSON.stringify({ jobId, scheduledPublishAt }),
+    token,
+  });
+}
+
 export interface SourceChannelOAuthConnection {
   platform:       string;
   handle:         string | null;

@@ -12,10 +12,11 @@ import {
   type Job, type JobTemplate, type ScheduleSlot, type SchedulePrefs,
 } from '@/lib/api';
 import { jobDisplayTitle, jobStatusLabel, platformListLabel, formatUserError } from '@/lib/job-labels';
+import { ScheduleMonthGrid } from '@/components/creator/schedule-month-grid';
 
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-type Tab = 'upcoming' | 'recurring' | 'history' | 'mySchedule';
+type Tab = 'month' | 'upcoming' | 'recurring' | 'history' | 'mySchedule';
 
 const PLATFORMS_DISPLAY: Record<string, string> = {
   youtube: 'YouTube', tiktok: 'TikTok', instagram: 'Instagram',
@@ -30,7 +31,7 @@ export default function SchedulePage() {
   const { getToken, isLoaded } = useAuth();
   const { activeBrand } = useBrand();
   const activeBrandId = activeBrand?.id;
-  const [tab, setTab]               = useState<Tab>('upcoming');
+  const [tab, setTab]               = useState<Tab>('month');
   const [jobs, setJobs]             = useState<Job[]>([]);
   const [templates, setTemplates]   = useState<JobTemplate[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -193,6 +194,7 @@ export default function SchedulePage() {
 
   const totalPrefsSlots = ALL_PLATFORMS.reduce((n, p) => n + (prefs[p]?.length ?? 0), 0);
   const tabs: { id: Tab; label: string; count: number }[] = [
+    { id: 'month',      label: 'Month',       count: 0 },
     { id: 'upcoming',   label: 'Upcoming',    count: upcoming.length },
     { id: 'recurring',  label: 'Recurring',   count: recurringActive.length + recurringInactive.length },
     { id: 'history',    label: 'History',     count: history.length },
@@ -200,10 +202,10 @@ export default function SchedulePage() {
   ];
 
   return (
-    <PageShell maxWidth="3xl">
+    <PageShell maxWidth="5xl">
       <PageHeader
         title="Schedule"
-        subtitle="Upcoming job starts and deferred publishes. Jobs start within a few minutes of their scheduled time."
+        subtitle="Plan your monthly cadence, then manage upcoming publishes, recurring templates, and preferred times."
         badge={<FlowNetwork size={20} className="text-primary shrink-0" />}
       />
 
@@ -250,10 +252,14 @@ export default function SchedulePage() {
         ))}
       </div>
 
-      {loading ? (
+      {loading && tab !== 'month' ? (
         <p className="af-body text-muted-foreground">Loading…</p>
       ) : (
         <>
+          {tab === 'month' && (
+            <ScheduleMonthGrid getToken={getToken} brandId={activeBrandId} />
+          )}
+
           {/* Upcoming tab */}
           {tab === 'upcoming' && (
             upcoming.length === 0 ? (

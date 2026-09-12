@@ -52,7 +52,7 @@ const PLATFORMS: PlatformDef[] = [
     id: 'tiktok',
     label: 'TikTok',
     icon: <TikTokIcon size={48} />,
-    hint: 'Publish directly to TikTok. Available on all plans.',
+    hint: 'Connect via our publishing partner. Stats and publish use that link — no API key for you to paste.',
     connectedCard: 'border-zinc-300/30 bg-zinc-900/30 dark:border-zinc-300/20 dark:bg-zinc-900/40',
     connectedGlow: 'ring-2 ring-zinc-400/40 rounded-xl',
     dimmedGlow: 'opacity-40 grayscale rounded-xl',
@@ -61,7 +61,7 @@ const PLATFORMS: PlatformDef[] = [
     id: 'instagram',
     label: 'Instagram',
     icon: <InstagramIcon size={48} />,
-    hint: 'Publish directly to Instagram Reels. Available on all plans.',
+    hint: 'Connect via our publishing partner for Reels publish + Stats. Available on all plans.',
     connectedCard: 'border-pink-500/50 bg-gradient-to-br from-yellow-500/5 via-pink-500/5 to-purple-600/5',
     connectedGlow: 'ring-2 ring-pink-500/40 rounded-xl',
     dimmedGlow: 'opacity-40 grayscale rounded-xl',
@@ -210,7 +210,7 @@ export default function SocialConnectPage() {
     <PageShell maxWidth="3xl">
       <PageHeader
         title="My Social Accounts"
-        subtitle="Connect your publishing channels. AuraFlux posts directly — no third-party proxy."
+        subtitle="Connect once — AuraFlux publishes and reads performance via our publishing partner. You don’t share passwords or API keys. Partner / Business Manager invites are for human agency access, not required for Creator Stats."
       />
 
       {error && (
