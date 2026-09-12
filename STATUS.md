@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 23:55 UTC  
+**Last Updated:** 2026-09-13 00:00 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Features: HTML Publish Peak Short mock (high contrast, no annotation arrow). `iss_smOUnvxuohrD`.
+How it works: drop duplicate 1–4 from step h2s; keep 01–04 badges.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
