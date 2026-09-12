@@ -30,11 +30,13 @@ ${FRAMER_CSS || ''}
 .pillars{
   max-width:72rem;margin:0 auto;padding:1.5rem 1.25rem 0;
   display:flex;flex-direction:column;gap:1.5rem;
+  overflow-x:clip;width:100%;box-sizing:border-box;
 }
 .pillar{
   display:grid;grid-template-columns:1fr;gap:1.5rem;
   background:#0f172a;border:1px solid #1e293b;border-radius:1rem;
   padding:1.5rem;box-shadow:0 4px 16px rgba(15,23,42,.12);
+  min-width:0;overflow:hidden;box-sizing:border-box;
 }
 @media (min-width:1024px){
   .pillar{grid-template-columns:1fr 1fr;gap:1.5rem}
@@ -63,33 +65,47 @@ ${FRAMER_CSS || ''}
 .pillar-visual{
   aspect-ratio:16/9;background:#020617;border:1px solid #1e293b;border-radius:0.75rem;
   overflow:hidden;display:flex;align-items:center;justify-content:center;padding:0.5rem;min-height:12rem;
+  min-width:0;max-width:100%;width:100%;box-sizing:border-box;
 }
 .pillar-visual img{
-  width:100%;height:100%;object-fit:contain;border-radius:0.5rem;display:block;
+  width:100%;height:100%;max-width:100%;object-fit:contain;border-radius:0.5rem;display:block;
 }
-.specs{
-  max-width:56rem;margin:4rem auto 0;padding:0 1.25rem 4rem;
+/* Full-bleed dark band — beats page-base paper/table !important on light canvas */
+section.specs{
+  width:100%;max-width:none;margin:4rem 0 0;padding:4rem 1.5rem;
+  background:#020617 !important;color:#fff !important;border-top:1px solid #1e293b;
+  box-sizing:border-box;
 }
-.specs h2{
-  font-size:1.5rem;font-weight:800;color:#fff !important;text-align:center;margin:0 0 2rem;letter-spacing:-.02em;
+.specs-inner{max-width:56rem;margin:0 auto}
+section.specs h2{
+  font-size:clamp(1.35rem,3vw,1.75rem);font-weight:800;color:#fff !important;
+  -webkit-text-fill-color:#fff !important;text-align:center;margin:0 0 2rem;letter-spacing:-.02em;
 }
 .specs-table-wrap{
-  background:#0f172a;border:1px solid #1e293b;border-radius:0.75rem;overflow:hidden;
+  background:rgba(15,23,42,.85) !important;border:1px solid #1e293b;border-radius:0.875rem;
+  overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,.35);
 }
 .specs-table{
-  width:100%;border-collapse:collapse;text-align:left;font-size:0.875rem;color:#cbd5e1;
+  width:100%;border-collapse:collapse;text-align:left;font-size:0.9375rem;color:#e2e8f0 !important;
 }
 .specs-table tr{border-bottom:1px solid #1e293b}
 .specs-table tr:last-child{border-bottom:none}
-.specs-table td{padding:1rem;vertical-align:top}
-.specs-table td:first-child{font-weight:700;color:#fff;white-space:nowrap;width:34%}
-.specs-table td:last-child{color:#94a3b8;font-weight:400}
+.specs-table td{padding:1rem 1.5rem;vertical-align:top}
+section.specs .specs-table td:first-child{
+  font-weight:600;color:#cbd5e1 !important;-webkit-text-fill-color:#cbd5e1 !important;
+  white-space:nowrap;width:34%;background:transparent !important;
+}
+section.specs .specs-table td:last-child{
+  color:#f1f5f9 !important;-webkit-text-fill-color:#f1f5f9 !important;font-weight:500;
+  background:transparent !important;
+}
+section.specs .specs-table tr:hover td{background:#0f172a !important}
 @media (max-width:560px){
   .specs-table,.specs-table tbody,.specs-table tr,.specs-table td{display:block;width:100%}
   .specs-table tr{padding:0.75rem 0}
-  .specs-table td{padding:0.35rem 1rem}
-  .specs-table td:first-child{padding-top:0.85rem;white-space:normal}
-  .specs-table td:last-child{padding-bottom:0.85rem}
+  .specs-table td{padding:0.35rem 1.25rem}
+  section.specs .specs-table td:first-child{padding-top:0.85rem;white-space:normal;width:auto}
+  section.specs .specs-table td:last-child{padding-bottom:0.85rem}
 }
 .cta-band{
   background:#020617;color:#fff;text-align:center;padding:3.5rem 1.25rem;
@@ -181,29 +197,31 @@ ${FRAMER_NAV || FALLBACK_NAV}
   </article>
 </section>
 
-<section class="specs" aria-label="Platform technical specifications">
-  <h2>Platform Technical Specs</h2>
-  <div class="specs-table-wrap">
-    <table class="specs-table">
-      <tbody>
-        <tr>
-          <td>Export Quality</td>
-          <td>Up to 1080p60 Vertical (9:16)</td>
-        </tr>
-        <tr>
-          <td>Processing Time</td>
-          <td>&lt; 3 minutes per 2-hour VOD peak scan</td>
-        </tr>
-        <tr>
-          <td>Captions Support</td>
-          <td>Custom fonts (.TTF/.OTF), animated kinetic styles, 20+ languages</td>
-        </tr>
-        <tr>
-          <td>Direct Dispatch</td>
-          <td>TikTok, YouTube Shorts, Instagram Reels</td>
-        </tr>
-      </tbody>
-    </table>
+<section class="specs surface-dark" aria-label="Platform technical specifications">
+  <div class="specs-inner">
+    <h2>Platform Technical Specs</h2>
+    <div class="specs-table-wrap">
+      <table class="specs-table">
+        <tbody>
+          <tr>
+            <td>Export Quality</td>
+            <td>Up to 1080p60 Vertical (9:16)</td>
+          </tr>
+          <tr>
+            <td>Processing Time</td>
+            <td>&lt; 3 minutes per 2-hour VOD peak scan</td>
+          </tr>
+          <tr>
+            <td>Captions Support</td>
+            <td>Custom fonts (.TTF/.OTF), animated kinetic styles, 20+ languages</td>
+          </tr>
+          <tr>
+            <td>Direct Dispatch</td>
+            <td>TikTok, YouTube Shorts, Instagram Reels</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
 

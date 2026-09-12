@@ -382,6 +382,33 @@ table .yes { color: var(--brand-primary) !important; }
 table .no-val { color: #94a3b8 !important; }
 tr:hover td { background: var(--paper-deep) !important; }
 
+/* Features /specs — dark band must beat paper table ink */
+section.specs,
+section.specs.surface-dark {
+  background: #020617 !important;
+  color: #fff !important;
+}
+section.specs h2 {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+section.specs .specs-table td,
+section.specs .specs-table th {
+  background: transparent !important;
+  border-bottom-color: #1e293b !important;
+}
+section.specs .specs-table td:first-child {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+section.specs .specs-table td:last-child {
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+}
+section.specs .specs-table tr:hover td {
+  background: #0f172a !important;
+}
+
 .portal-badge {
   background: rgba(245, 197, 66, 0.15) !important;
   border: 1px solid rgba(245, 197, 66, 0.4) !important;
