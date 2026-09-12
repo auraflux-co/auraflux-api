@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState, useTransition, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
@@ -27,9 +28,11 @@ import {
   getCreditPacks,
   subscribeToPlan,
   purchasePack,
+  listConnectedAccounts,
   type CreditBalance,
   type Plan,
   type CreditPack,
+  type Brand,
 } from '@/lib/api';
 
 /** Tier ordering — lower index = lower tier (marketing: Growth → Pro Operator → Managed) */
@@ -165,9 +168,11 @@ function DismissibleBanner({
 
 function BillingPageInner() {
   const { getToken, isLoaded } = useAuth();
-  const { brands, activeBrand } = useBrand();
+  const { brands, activeBrand, setActiveBrand } = useBrand();
   const searchParams    = useSearchParams();
   const router          = useRouter();
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [channelCount, setChannelCount] = useState<number | null>(null);
   // C2: distinguish in-place upgrade (?upgraded=1) from new checkout (?success=1)
   const stripeSuccess   = searchParams.get('success')       === '1';
   const stripeUpgraded  = searchParams.get('upgraded')      === '1';
@@ -195,21 +200,23 @@ function BillingPageInner() {
     (async () => {
       try {
         const token = await getToken();
-        const [b, p, pk] = await Promise.all([
+        const [b, p, pk, accounts] = await Promise.all([
           getCreditBalance(token ?? undefined),
           getPlans(token ?? undefined),
           getCreditPacks(token ?? undefined),
+          listConnectedAccounts(token ?? undefined).catch(() => ({ accounts: [] })),
         ]);
         setBalance(b);
         setPlans(p.plans ?? []);
         setPacks(pk.packs ?? []);
+        setChannelCount(accounts.accounts?.length ?? 0);
       } catch {
         setError("Couldn't load billing info. Refresh to try again.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [getToken, isLoaded]);
+  }, [getToken, isLoaded, activeBrand?.id]);
 
   async function handleUpgrade(planId: string) {
     setError(null);
@@ -273,12 +280,36 @@ function BillingPageInner() {
   const creditTotal = balance?.included_total ?? 0;
   const usagePct    = creditTotal > 0 ? Math.min((creditUsed / creditTotal) * 100, 100) : 0;
 
+  function brandPlanLabel(brand: Brand) {
+    const t = brand.tier || (brand.id === activeBrand?.id ? currentTier : null);
+    return t ? (PLAN_META[t]?.label ?? tierLabel(t)) : 'No plan';
+  }
+
+  function switchToBrand(brand: Brand) {
+    setActiveBrand(brand);
+  }
+
   return (
-    <PageShell maxWidth="3xl">
+    <PageShell maxWidth="full" className="!space-y-5">
       <PageHeader
-        title="Subscription & Plans"
-        subtitle="Growth for solo creators. Pro Operator for agencies. Managed by inquiry when you want us to run production with you."
-      />
+        title="Billing & Brands"
+        subtitle="Active subscription, brands, and payment — plan comparison stays secondary."
+      >
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/billing/payment"
+            className={cn(buttonVariants({ variant: 'default' }), 'h-10 font-medium')}
+          >
+            Update Payment Method
+          </Link>
+          <Link
+            href="/billing/payment"
+            className={cn(buttonVariants({ variant: 'outline' }), 'h-10 font-medium')}
+          >
+            Download Invoices &amp; History
+          </Link>
+        </div>
+      </PageHeader>
 
       {/* C8: pre-redirect state while navigating to Stripe checkout */}
       {redirecting && (
@@ -322,13 +353,100 @@ function BillingPageInner() {
         <DismissibleBanner variant="destructive">{formatUserError(error)}</DismissibleBanner>
       )}
 
-      {/* ── 1. Current plan summary ─────────────────────────────────────────── */}
+      {/* ── Your brands (above the fold) ──────────────────────────────────── */}
+      {activeBrand?.is_primary && brands.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="af-subhead font-semibold">Your brands</h2>
+            <Button size="sm" variant="outline" className="h-9 font-medium" onClick={() => router.push('/billing/add-brand')}>
+              + Add brand
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {brands.map((brand) => {
+              const isActive = brand.id === activeBrand.id;
+              const planName = brandPlanLabel(brand);
+              const creditsIncluded = isActive
+                ? creditTotal
+                : (brand.credits_included ?? null);
+              const creditsUsed = isActive ? creditUsed : null;
+              const channels = isActive ? channelCount : null;
+              return (
+                <div
+                  key={brand.id}
+                  className={cn(
+                    'flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border',
+                    isActive
+                      ? 'border-amber-400/30 bg-amber-400/5'
+                      : 'border-border bg-card',
+                  )}
+                >
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-foreground">{brand.name}</span>
+                      <Badge
+                        variant="outline"
+                        status={isActive ? 'published' : 'draft'}
+                        className="capitalize"
+                      >
+                        {planName}
+                      </Badge>
+                      {brand.is_primary && (
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Primary</span>
+                      )}
+                      {isActive && (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">Active</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {channels != null
+                        ? `${channels} channel${channels === 1 ? '' : 's'} connected`
+                        : 'Switch brand to see channels'}
+                      {creditsUsed != null && creditsIncluded != null
+                        ? ` · ${creditsUsed.toLocaleString()}/${creditsIncluded.toLocaleString()} credits used`
+                        : creditsIncluded != null
+                          ? ` · ${creditsIncluded.toLocaleString()} credits/mo`
+                          : ''}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 font-medium"
+                      onClick={() => {
+                        if (!isActive) switchToBrand(brand);
+                        router.push('/settings/channels');
+                      }}
+                    >
+                      Manage Channels
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={isActive ? 'secondary' : 'default'}
+                      className="h-9 font-medium"
+                      onClick={() => {
+                        if (!isActive) switchToBrand(brand);
+                        document.getElementById('active-plan')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                    >
+                      {isActive ? 'Operate Plan' : 'Switch & manage plan'}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Active plan overview ──────────────────────────────────────────── */}
       {balance && (
-        <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-5 space-y-4">
+        <div id="active-plan" className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-5 space-y-4 scroll-mt-24">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="af-subhead text-muted-foreground">Current plan</span>
+                <span className="af-subhead text-muted-foreground">Active plan</span>
                 <span className="text-[11px] font-bold uppercase tracking-wide bg-primary/15 text-primary border border-primary/30 px-2 py-0.5 rounded">
                   {PLAN_META[currentTier]?.label ?? tierLabel(currentTier)}
                 </span>
@@ -382,11 +500,11 @@ function BillingPageInner() {
         </p>
       )}
 
-      {/* ── 2. Upgrade options ──────────────────────────────────────────────── */}
+      {/* ── Upgrade options (secondary) ────────────────────────────────────── */}
       {upgradeTiers.length > 0 && (
-        <div>
-          <h2 className="af-subhead mb-1">Plan Comparison</h2>
-          <p id="plans" className="af-label mb-4 text-muted-foreground scroll-mt-24">Upgrade your plan to unlock more support and tooling.</p>
+        <div id="plans" className="scroll-mt-24">
+          <h2 className="af-subhead mb-1">Upgrade options</h2>
+          <p className="af-label mb-4 text-muted-foreground">Unlock more support and tooling when you need it.</p>
           <div className={cn('grid grid-cols-1 gap-4', upgradeTiers.length > 1 && 'sm:grid-cols-2')}>
             {upgradeTiers.map((tier) => {
               const plan = plans.find((p) => p.id === tier);
@@ -466,8 +584,19 @@ function BillingPageInner() {
             Monthly subscriptions. To change or cancel your plan, <a href="/support" className="underline underline-offset-2 hover:text-foreground transition-colors">contact us</a>.
           </p>
 
-          {/* Feature comparison table */}
-          <div className="mt-6 overflow-x-auto rounded-xl border border-border overflow-hidden">
+          {/* Feature matrix — collapsed by default */}
+          <div className="mt-4 rounded-xl border border-border overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setCompareOpen((v) => !v)}
+              className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left bg-muted/20 hover:bg-muted/30 transition-colors"
+              aria-expanded={compareOpen}
+            >
+              <span className="text-sm font-semibold">Compare All Plans</span>
+              <span className="text-xs text-muted-foreground">{compareOpen ? 'Hide ▲' : 'Show ▼'}</span>
+            </button>
+            {compareOpen && (
+            <div className="overflow-x-auto border-t border-border">
             <table className="w-full af-caption border-collapse">
               <thead>
                 <tr className="bg-muted/40 border-b border-border">
@@ -504,6 +633,8 @@ function BillingPageInner() {
                 ))}
               </tbody>
             </table>
+            </div>
+            )}
           </div>
         </div>
       )}
@@ -549,46 +680,6 @@ function BillingPageInner() {
         </div>
       )}
 
-      {/* ── Brands ──────────────────────────────────────────────────────── */}
-      {activeBrand?.is_primary && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="af-subhead font-semibold">Your brands</h3>
-            <Button size="sm" variant="outline" onClick={() => router.push('/billing/add-brand')}>
-              + Add brand
-            </Button>
-          </div>
-          <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-            {brands.map((brand) => (
-              <div key={brand.id} className="flex items-center gap-3 px-4 py-3 bg-card">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{brand.name}</p>
-                  {brand.is_primary && (
-                    <p className="text-xs text-muted-foreground">Primary</p>
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground capitalize shrink-0">
-                  {brand.tier ? `${brand.tier} plan` : 'No plan'}
-                </span>
-                {brand.id === activeBrand.id && (
-                  <span className="text-[10px] font-semibold text-primary uppercase tracking-wider shrink-0">Active</span>
-                )}
-              </div>
-            ))}
-          </div>
-          <p className="af-caption text-muted-foreground">
-            Each brand has its own plan, credits, channels, and job history.
-          </p>
-        </div>
-      )}
-
-      {/* Payment method lives at /billing/payment */}
-      <p className="af-caption text-muted-foreground">
-        To update your card or download invoices, visit{' '}
-        <a href="/billing/payment" className="underline underline-offset-2 hover:text-foreground transition-colors">
-          Payment method &amp; invoices
-        </a>.
-      </p>
     </PageShell>
   );
 }

@@ -162,9 +162,9 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           }
         >
           <p className="text-sm text-slate-400 leading-relaxed flex-1">
-            One library: Mine (your publishes), Channels (connected catalogs), and Clip from other creators.
+            One library: Mine (your publishes) and Channels (connected catalogs).
           </p>
-          <StatBadge>Mine · Channels · Clip from</StatBadge>
+          <StatBadge>Mine · Channels</StatBadge>
           <Link href="/library" className={PRIMARY_BTN}>
             Open Library
           </Link>

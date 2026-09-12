@@ -1,8 +1,7 @@
 'use client';
 
 /**
- * Library — unified Mine | Channels | Clip from.
- * Mine = AuraFlux publishes; Channels = connected YT/TT/IG; Clip from = third-party roster.
+ * Library — Mine | Channels (Clip from tab hidden).
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -17,15 +16,14 @@ import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { cn } from '@/lib/utils';
 import { formatUserError } from '@/lib/job-labels';
 import { fetchMyLibrary, type MyLibraryResponse, type MyLibraryItem } from '@/lib/api';
-import { ClipLibrary } from '@/components/creator/clip-library';
 
-type PrimaryTab = 'mine' | 'channels' | 'clipfrom';
+type PrimaryTab = 'mine' | 'channels';
 type ChannelPlatform = 'youtube' | 'tiktok' | 'instagram';
 
 const PRIMARY_TABS: { id: PrimaryTab; label: string }[] = [
   { id: 'mine', label: 'Mine' },
   { id: 'channels', label: 'Channels' },
-  { id: 'clipfrom', label: 'Clip from' },
+  // Clip from hidden from Library IA (still available via dedicated flows elsewhere)
 ];
 
 const CHANNEL_CHIPS: { id: ChannelPlatform; label: string }[] = [
@@ -55,7 +53,6 @@ export function MyLibrary() {
   const apiPlatform = primary === 'mine' ? 'auraflux' : channel;
 
   const load = useCallback(async () => {
-    if (primary === 'clipfrom') return;
     if (!isLoaded || brandLoading) return;
     setBusy(true);
     setError(null);
@@ -73,7 +70,6 @@ export function MyLibrary() {
   }, [getToken, isLoaded, brandLoading, activeBrand?.id, primary, apiPlatform]);
 
   useEffect(() => {
-    if (primary === 'clipfrom') return;
     void load();
   }, [primary, channel, load]);
 
@@ -92,7 +88,7 @@ export function MyLibrary() {
     <PageShell maxWidth="full">
       <PageHeader
         title="Library"
-        subtitle="Your publishes, connected channel catalogs, and Clip from other creators — one place."
+        subtitle="Your publishes and connected channel catalogs — one place."
       />
 
       <div className="flex flex-wrap gap-2 mb-3">
@@ -111,11 +107,9 @@ export function MyLibrary() {
             {t.label}
           </button>
         ))}
-        {primary !== 'clipfrom' && (
-          <Button type="button" variant="outline" size="sm" className="ml-auto" onClick={() => void load()} disabled={busy}>
-            Refresh
-          </Button>
-        )}
+        <Button type="button" variant="outline" size="sm" className="ml-auto" onClick={() => void load()} disabled={busy}>
+          Refresh
+        </Button>
       </div>
 
       {primary === 'channels' && (
@@ -138,114 +132,108 @@ export function MyLibrary() {
         </div>
       )}
 
-      {primary === 'clipfrom' ? (
-        <ClipLibrary embedded />
-      ) : (
-        <>
-          {error && (
+      {error && (
             <div className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive mb-4">
               {error}
             </div>
           )}
-          {busy && <PageSkeleton rows={3} className="mb-4" />}
+      {busy && <PageSkeleton rows={3} className="mb-4" />}
 
-          {primary === 'mine' && !busy && (
-            <p className="text-xs text-slate-500 mb-3">
-              AuraFlux jobs published for this brand.
-            </p>
-          )}
-          {primary === 'channels' && channel === 'youtube' && (
-            <p className="text-xs text-slate-500 mb-3">
-              {handles?.youtube
-                ? `YouTube catalog for ${handles.youtube} · plus AuraFlux posts to YouTube.`
-                : 'Connect YouTube under Social (or set a handle under My Channels) to load your channel catalog.'}
-              {!handles?.youtube && (
-                <>
-                  {' '}
-                  <Link href="/settings/social" className="text-amber-400 hover:underline">Social settings</Link>
-                </>
-              )}
-            </p>
-          )}
-          {primary === 'channels' && channel === 'tiktok' && (
-            <p className="text-xs text-slate-500 mb-3">
-              {data?.notes?.tiktok}{' '}
-              {handles?.tiktok ? `Connected: ${handles.tiktok}.` : (
-                <Link href="/settings/social" className="text-amber-400 hover:underline">Connect TikTok</Link>
-              )}
-            </p>
-          )}
-          {primary === 'channels' && channel === 'instagram' && (
-            <p className="text-xs text-slate-500 mb-3">
-              {data?.notes?.instagram}{' '}
-              {handles?.instagram ? `Connected: ${handles.instagram}.` : (
-                <Link href="/settings/social" className="text-amber-400 hover:underline">Connect Instagram</Link>
-              )}
-            </p>
-          )}
-          {data?.catalogNote && primary === 'channels' && channel === 'youtube' && (
-            <p className="text-xs text-amber-300/80 mb-3">{data.catalogNote}</p>
-          )}
-
-          {!busy && !items.length && (
-            <EmptyState
-              size="sm"
-              title="Nothing here yet"
-              description={
-                primary === 'mine'
-                  ? 'Publish a Short from Jobs to see it here.'
-                  : 'Connect the channel under Social, or publish to it from a job.'
-              }
-              action={{ label: 'New job', href: '/myjobs/new' }}
-            />
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {items.map((item) => (
-              <Card key={`${item.kind}-${item.id}`} className="border-slate-800 bg-slate-900/40 overflow-hidden">
-                {item.thumbnailUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.thumbnailUrl} alt="" className="w-full aspect-video object-cover bg-slate-950" />
-                ) : (
-                  <div className="w-full aspect-video bg-slate-950 flex items-center justify-center text-xs text-slate-600">
-                    No thumb
-                  </div>
-                )}
-                <CardContent className="pt-3 space-y-2">
-                  <p className="text-sm font-medium text-slate-100 line-clamp-2">{item.title || 'Untitled'}</p>
-                  <p className="text-[11px] text-slate-500">
-                    {item.kind === 'auraflux' ? 'AuraFlux' : item.platform || item.kind}
-                    {item.publishedAt ? ` · ${fmtDate(item.publishedAt)}` : ''}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {item.kind === 'auraflux' && (
-                      <Link href={`/myjobs/${item.id}`} className="text-[11px] font-semibold text-amber-400 hover:underline">
-                        Job
-                      </Link>
-                    )}
-                    {item.url && (
-                      <a href={item.url} target="_blank" rel="noreferrer" className="text-[11px] font-semibold text-slate-300 hover:underline">
-                        Open live
-                      </a>
-                    )}
-                    {(item.platforms || []).filter((p) => p.url).map((p) => (
-                      <a
-                        key={`${item.id}-${p.platform}`}
-                        href={p.url!}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[11px] font-semibold text-slate-400 hover:underline capitalize"
-                      >
-                        {p.platform}
-                      </a>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </>
+      {primary === 'mine' && !busy && (
+        <p className="text-xs text-slate-500 mb-3">
+          AuraFlux jobs published for this brand.
+        </p>
       )}
+      {primary === 'channels' && channel === 'youtube' && (
+        <p className="text-xs text-slate-500 mb-3">
+          {handles?.youtube
+            ? `YouTube catalog for ${handles.youtube} · plus AuraFlux posts to YouTube.`
+            : 'Connect YouTube under Social (or set a handle under My Channels) to load your channel catalog.'}
+          {!handles?.youtube && (
+            <>
+              {' '}
+              <Link href="/settings/social" className="text-amber-400 hover:underline">Social settings</Link>
+            </>
+          )}
+        </p>
+      )}
+      {primary === 'channels' && channel === 'tiktok' && (
+        <p className="text-xs text-slate-500 mb-3">
+          {data?.notes?.tiktok}{' '}
+          {handles?.tiktok ? `Connected: ${handles.tiktok}.` : (
+            <Link href="/settings/social" className="text-amber-400 hover:underline">Connect TikTok</Link>
+          )}
+        </p>
+      )}
+      {primary === 'channels' && channel === 'instagram' && (
+        <p className="text-xs text-slate-500 mb-3">
+          {data?.notes?.instagram}{' '}
+          {handles?.instagram ? `Connected: ${handles.instagram}.` : (
+            <Link href="/settings/social" className="text-amber-400 hover:underline">Connect Instagram</Link>
+          )}
+        </p>
+      )}
+      {data?.catalogNote && primary === 'channels' && channel === 'youtube' && (
+        <p className="text-xs text-amber-300/80 mb-3">{data.catalogNote}</p>
+      )}
+
+      {!busy && !items.length && (
+        <EmptyState
+          size="sm"
+          title="Nothing here yet"
+          description={
+            primary === 'mine'
+              ? 'Publish a Short from Jobs to see it here.'
+              : 'Connect the channel under Social, or publish to it from a job.'
+          }
+          action={{ label: 'New job', href: '/myjobs/new' }}
+        />
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {items.map((item) => (
+          <Card key={`${item.kind}-${item.id}`} className="border-slate-800 bg-slate-900/40 overflow-hidden">
+            {item.thumbnailUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={item.thumbnailUrl} alt="" className="w-full aspect-video object-cover bg-slate-950" />
+            ) : (
+              <div className="w-full aspect-video bg-slate-950 flex items-center justify-center text-xs text-slate-600">
+                No thumb
+              </div>
+            )}
+            <CardContent className="pt-3 space-y-2">
+              <p className="text-sm font-medium text-slate-100 line-clamp-2">{item.title || 'Untitled'}</p>
+              <p className="text-[11px] text-slate-500">
+                {item.kind === 'auraflux' ? 'AuraFlux' : item.platform || item.kind}
+                {item.publishedAt ? ` · ${fmtDate(item.publishedAt)}` : ''}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {item.kind === 'auraflux' && (
+                  <Link href={`/myjobs/${item.id}`} className="text-[11px] font-semibold text-amber-400 hover:underline">
+                    Job
+                  </Link>
+                )}
+                {item.url && (
+                  <a href={item.url} target="_blank" rel="noreferrer" className="text-[11px] font-semibold text-slate-300 hover:underline">
+                    Open live
+                  </a>
+                )}
+                {(item.platforms || []).filter((p) => p.url).map((p) => (
+                  <a
+                    key={`${item.id}-${p.platform}`}
+                    href={p.url!}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] font-semibold text-slate-400 hover:underline capitalize"
+                  >
+                    {p.platform}
+                  </a>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </PageShell>
   );
 }
