@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 19:35 UTC  
+**Last Updated:** 2026-09-12 19:45 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Billing & Brands (iss_5NBe8yA8c4fw / CPD-53): inactive brands single Switch CTA; sticky brand filter; payment summary banner; optimistic brand switch + soft refresh.
+Billing optimistic brand switch (iss_jMonWWp8YhEv / CPD-54): useOptimistic ACTIVE highlight, Switching spinner, banner slate-400 contrast, memo BrandRow + soft metrics refresh.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
