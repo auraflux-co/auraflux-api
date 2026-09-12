@@ -162,9 +162,9 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           }
         >
           <p className="text-sm text-slate-400 leading-relaxed flex-1">
-            Save creators you clip from, load multi-creator clips, filter by duration and Score, paste a URL.
+            Your AuraFlux publishes plus catalogs from channels you connect and publish to — or Clip from other creators.
           </p>
-          <StatBadge>Roster → clips → Short</StatBadge>
+          <StatBadge>Mine · connected · Clip from</StatBadge>
           <Link href="/library" className={PRIMARY_BTN}>
             Open Library
           </Link>

@@ -1,8 +1,7 @@
 'use client';
 
 /**
- * Creator Clip Library — multi-creator clip browse, filters, paste URL, Create Short.
- * Elevates Source Library patterns out of New Job into a first-class Creator surface.
+ * Clip from — multi-creator clip browse (third-party handles), not My Library.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -70,7 +69,7 @@ function detectPlatformFromUrl(url: string): SourcePlatform | null {
   return null;
 }
 
-export function ClipLibrary() {
+export function ClipLibrary({ embedded = false }: { embedded?: boolean } = {}) {
   const { getToken, isLoaded } = useAuth();
   const { activeBrand, isLoading: brandLoading } = useBrand();
   const router = useRouter();
@@ -303,12 +302,19 @@ export function ClipLibrary() {
     [roster, selectedIds],
   );
 
-  return (
-    <PageShell maxWidth="5xl">
-      <PageHeader
-        title="Library"
-        subtitle="Save creators you clip from, load clips, filter and sort, then start a Short — or paste a URL."
-      />
+  const body = (
+    <>
+      {!embedded && (
+        <PageHeader
+          title="Clip from"
+          subtitle="Save creators you clip from, load their clips, filter and sort, then start a Short — or paste a URL."
+        />
+      )}
+      {embedded && (
+        <p className="text-sm text-slate-400 mb-4">
+          Save creators you clip from, load their clips, filter and sort, then start a Short — or paste a URL.
+        </p>
+      )}
 
       {error && (
         <div className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive mb-3">
@@ -553,6 +559,9 @@ export function ClipLibrary() {
           );
         })}
       </div>
-    </PageShell>
+    </>
   );
+
+  if (embedded) return <div className="space-y-1">{body}</div>;
+  return <PageShell maxWidth="5xl">{body}</PageShell>;
 }

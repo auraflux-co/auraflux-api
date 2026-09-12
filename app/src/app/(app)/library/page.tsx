@@ -1,7 +1,7 @@
 'use client';
 
-import { ClipLibrary } from '@/components/creator/clip-library';
+import { MyLibrary } from '@/components/creator/my-library';
 
 export default function LibraryPage() {
-  return <ClipLibrary />;
+  return <MyLibrary />;
 }

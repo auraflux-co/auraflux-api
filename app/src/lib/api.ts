@@ -2250,3 +2250,41 @@ export async function fetchStatsPosts(
 ): Promise<{ ok: boolean; posts: StatsPostRow[]; error?: string }> {
   return apiFetch(`/stats/posts?limit=${limit}`, { token });
 }
+
+// ── My Library ────────────────────────────────────────────────────────────────
+
+export interface MyLibraryItem {
+  id: string;
+  kind: string;
+  title?: string;
+  thumbnailUrl?: string | null;
+  url?: string | null;
+  publishedAt?: string | null;
+  duration?: number;
+  viewCount?: number;
+  platform?: string;
+  platforms?: Array<{ platform: string; url: string | null; status?: string }>;
+}
+
+export interface MyLibraryResponse {
+  ok: boolean;
+  platform?: string;
+  connected?: Array<{ platform: string; handle: string | null }>;
+  handles?: {
+    youtube?: string | null;
+    tiktok?: string | null;
+    instagram?: string | null;
+  };
+  auraflux?: MyLibraryItem[];
+  channelCatalog?: MyLibraryItem[];
+  catalogNote?: string | null;
+  notes?: { tiktok?: string; instagram?: string };
+  error?: string;
+}
+
+export async function fetchMyLibrary(
+  platform: 'all' | 'auraflux' | 'youtube' | 'tiktok' | 'instagram' = 'auraflux',
+  token?: string,
+): Promise<MyLibraryResponse> {
+  return apiFetch(`/library/mine?platform=${encodeURIComponent(platform)}`, { token });
+}
