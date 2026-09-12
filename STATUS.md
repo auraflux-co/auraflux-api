@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 05:15 UTC  
+**Last Updated:** 2026-09-12 19:35 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Review Queue: Today/This Week/date range filters; active-only queue (no published); Published History sheet with Create Template.
+Billing & Brands (iss_5NBe8yA8c4fw / CPD-53): inactive brands single Switch CTA; sticky brand filter; payment summary banner; optimistic brand switch + soft refresh.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

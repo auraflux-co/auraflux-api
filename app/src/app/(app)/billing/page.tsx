@@ -11,21 +11,23 @@
  * Payment method & invoices: /billing/payment page.
  */
 
-import { useEffect, useState, useTransition, Suspense } from 'react';
+import { useEffect, useRef, useState, useTransition, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/clerk-compat';
+import { useAuth, useUser } from '@/lib/clerk-compat';
 import { useBrand } from '@/contexts/brand-context';
 import { tierLabel } from '@/lib/tier-labels';
 import { formatUserError } from '@/lib/job-labels';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { PageShell, PageHeader } from '@/components/ui/page-shell';
 import {
   getCreditBalance,
   getPlans,
   getCreditPacks,
+  getPaymentMethod,
   subscribeToPlan,
   purchasePack,
   listConnectedAccounts,
@@ -33,7 +35,28 @@ import {
   type Plan,
   type CreditPack,
   type Brand,
+  type PaymentMethod,
 } from '@/lib/api';
+
+function cardBrandLabel(brand: string) {
+  const map: Record<string, string> = {
+    visa: 'Visa',
+    mastercard: 'Mastercard',
+    amex: 'Amex',
+    discover: 'Discover',
+    jcb: 'JCB',
+    unionpay: 'UnionPay',
+    diners: 'Diners',
+  };
+  return map[brand.toLowerCase()] ?? brand.charAt(0).toUpperCase() + brand.slice(1);
+}
+
+function formatBillingDate(iso: string | null | undefined) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 /** Tier ordering — lower index = lower tier (marketing: Growth → Pro Operator → Managed) */
 const TIER_ORDER = ['growth', 'operate', 'managed'];
@@ -168,11 +191,15 @@ function DismissibleBanner({
 
 function BillingPageInner() {
   const { getToken, isLoaded } = useAuth();
+  const { user } = useUser();
   const { brands, activeBrand, setActiveBrand } = useBrand();
   const searchParams    = useSearchParams();
   const router          = useRouter();
   const [compareOpen, setCompareOpen] = useState(false);
   const [channelCount, setChannelCount] = useState<number | null>(null);
+  const [brandSearch, setBrandSearch] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [brandRefreshing, setBrandRefreshing] = useState(false);
   // C2: distinguish in-place upgrade (?upgraded=1) from new checkout (?success=1)
   const stripeSuccess   = searchParams.get('success')       === '1';
   const stripeUpgraded  = searchParams.get('upgraded')      === '1';
@@ -180,6 +207,7 @@ function BillingPageInner() {
   const packSuccess     = searchParams.get('pack_success')  === '1';
   const packCancelled   = searchParams.get('pack_cancelled') === '1';
   const [isPending, start] = useTransition();
+  const [isBrandPending, startBrandTransition] = useTransition();
   const [redirecting, setRedirecting] = useState(false); // C8
 
   // U6: clear transient query params from URL so banners don't re-appear on refresh
@@ -195,28 +223,66 @@ function BillingPageInner() {
   const [loading, setLoading]     = useState(true); // C1
   const [error, setError]         = useState<string | null>(null);
 
+  // Initial catalog + payment method (not tied to active brand)
   useEffect(() => {
     if (!isLoaded) return;
+    let cancelled = false;
     (async () => {
       try {
         const token = await getToken();
-        const [b, p, pk, accounts] = await Promise.all([
+        const [b, p, pk, accounts, pm] = await Promise.all([
           getCreditBalance(token ?? undefined),
           getPlans(token ?? undefined),
           getCreditPacks(token ?? undefined),
           listConnectedAccounts(token ?? undefined).catch(() => ({ accounts: [] })),
+          getPaymentMethod(token ?? undefined).catch(() => ({ ok: false, paymentMethod: null })),
         ]);
+        if (cancelled) return;
         setBalance(b);
         setPlans(p.plans ?? []);
         setPacks(pk.packs ?? []);
         setChannelCount(accounts.accounts?.length ?? 0);
+        setPaymentMethod(pm.paymentMethod ?? null);
       } catch {
-        setError("Couldn't load billing info. Refresh to try again.");
+        if (!cancelled) setError("Couldn't load billing info. Refresh to try again.");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-  }, [getToken, isLoaded, activeBrand?.id]);
+    return () => { cancelled = true; };
+  }, [getToken, isLoaded]);
+
+  // Soft refresh balance + channels when active brand changes (no full-page skeleton)
+  const lastBrandIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isLoaded || loading || !activeBrand?.id) return;
+    if (lastBrandIdRef.current === null) {
+      lastBrandIdRef.current = activeBrand.id;
+      return;
+    }
+    if (lastBrandIdRef.current === activeBrand.id) return;
+    lastBrandIdRef.current = activeBrand.id;
+    let cancelled = false;
+    setBrandRefreshing(true);
+    setChannelCount(null);
+    (async () => {
+      try {
+        const token = await getToken();
+        const [b, accounts] = await Promise.all([
+          getCreditBalance(token ?? undefined),
+          listConnectedAccounts(token ?? undefined).catch(() => ({ accounts: [] })),
+        ]);
+        if (cancelled) return;
+        setBalance(b);
+        setChannelCount(accounts.accounts?.length ?? 0);
+      } catch {
+        // Keep prior balance visible; brand switch already applied optimistically
+      } finally {
+        if (!cancelled) setBrandRefreshing(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activeBrand?.id, getToken, isLoaded, loading]);
 
   async function handleUpgrade(planId: string) {
     setError(null);
@@ -286,30 +352,63 @@ function BillingPageInner() {
   }
 
   function switchToBrand(brand: Brand) {
-    setActiveBrand(brand);
+    if (brand.id === activeBrand?.id) return;
+    startBrandTransition(() => {
+      setActiveBrand(brand);
+    });
   }
+
+  const billingEmail =
+    user?.primaryEmailAddress?.emailAddress
+    ?? (user as { email?: string } | null | undefined)?.email
+    ?? null;
+  const nextInvoiceLabel = formatBillingDate(balance?.period_end);
+  const paymentSummary = paymentMethod
+    ? `${cardBrandLabel(paymentMethod.brand)} ending in ${paymentMethod.last4}`
+    : 'No card on file';
+  const filteredBrands = brands.filter((b) =>
+    !brandSearch.trim()
+      || b.name.toLowerCase().includes(brandSearch.trim().toLowerCase()),
+  );
 
   return (
     <PageShell maxWidth="full" className="!space-y-5">
       <PageHeader
         title="Billing & Brands"
         subtitle="Active subscription, brands, and payment — plan comparison stays secondary."
-      >
-        <div className="flex flex-wrap gap-2">
+      />
+
+      {/* Billing summary — payment CTAs with card + cycle context */}
+      <div className="rounded-xl border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0 space-y-1">
+          <p className="text-sm font-medium text-foreground">
+            {paymentSummary}
+            {nextInvoiceLabel ? ` · Next invoice ${nextInvoiceLabel}` : ''}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {billingEmail
+              ? `Primary billing email: ${billingEmail}`
+              : 'Update payment method or download invoices anytime.'}
+            {creditTotal > 0
+              ? ` · ${creditUsed.toLocaleString()}/${creditTotal.toLocaleString()} credits used this period`
+              : ''}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 shrink-0">
           <Link
             href="/billing/payment"
-            className={cn(buttonVariants({ variant: 'default' }), 'h-10 font-medium')}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-9 font-medium')}
           >
             Update Payment Method
           </Link>
           <Link
             href="/billing/payment"
-            className={cn(buttonVariants({ variant: 'outline' }), 'h-10 font-medium')}
+            className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'h-9 font-medium')}
           >
             Download Invoices &amp; History
           </Link>
         </div>
-      </PageHeader>
+      </div>
 
       {/* C8: pre-redirect state while navigating to Stripe checkout */}
       {redirecting && (
@@ -358,27 +457,52 @@ function BillingPageInner() {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h2 className="af-subhead font-semibold">Your brands</h2>
-            <Button size="sm" variant="outline" className="h-9 font-medium" onClick={() => router.push('/billing/add-brand')}>
-              + Add brand
-            </Button>
+            {(isBrandPending || brandRefreshing) && (
+              <span className="text-xs text-muted-foreground animate-pulse">Updating active brand…</span>
+            )}
+          </div>
+          <div className="sticky top-0 z-10 -mx-1 px-1 py-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/60">
+            <div className="flex items-center justify-between gap-4">
+              <Input
+                placeholder={`Filter ${brands.length} brand${brands.length === 1 ? '' : 's'}…`}
+                value={brandSearch}
+                onChange={(e) => setBrandSearch(e.target.value)}
+                className="max-w-xs h-9"
+                aria-label="Filter brands"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 font-medium shrink-0"
+                onClick={() => router.push('/billing/add-brand')}
+              >
+                + Add brand
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-1 gap-3">
-            {brands.map((brand) => {
+            {filteredBrands.length === 0 && (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                No brands match “{brandSearch.trim()}”.
+              </p>
+            )}
+            {filteredBrands.map((brand) => {
               const isActive = brand.id === activeBrand.id;
               const planName = brandPlanLabel(brand);
               const creditsIncluded = isActive
                 ? creditTotal
                 : (brand.credits_included ?? null);
-              const creditsUsed = isActive ? creditUsed : null;
+              const creditsUsed = isActive && !brandRefreshing ? creditUsed : null;
               const channels = isActive ? channelCount : null;
               return (
                 <div
                   key={brand.id}
                   className={cn(
-                    'flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border',
+                    'flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border transition-colors',
                     isActive
                       ? 'border-amber-400/30 bg-amber-400/5'
                       : 'border-border bg-card',
+                    isBrandPending && isActive && 'opacity-90',
                   )}
                 >
                   <div className="min-w-0 space-y-1">
@@ -399,39 +523,55 @@ function BillingPageInner() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {channels != null
-                        ? `${channels} channel${channels === 1 ? '' : 's'} connected`
-                        : 'Switch brand to see channels'}
-                      {creditsUsed != null && creditsIncluded != null
+                      {isActive
+                        ? (channels != null
+                          ? `${channels} channel${channels === 1 ? '' : 's'} connected`
+                          : (brandRefreshing || isBrandPending)
+                            ? 'Loading channels…'
+                            : 'Channels loading…')
+                        : (creditsIncluded != null
+                          ? `${creditsIncluded.toLocaleString()} credits/mo`
+                          : planName)}
+                      {isActive && creditsUsed != null && creditsIncluded != null
                         ? ` · ${creditsUsed.toLocaleString()}/${creditsIncluded.toLocaleString()} credits used`
-                        : creditsIncluded != null
+                        : isActive && creditsIncluded != null && brandRefreshing
                           ? ` · ${creditsIncluded.toLocaleString()} credits/mo`
                           : ''}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-9 font-medium"
-                      onClick={() => {
-                        if (!isActive) switchToBrand(brand);
-                        router.push('/settings/channels');
-                      }}
-                    >
-                      Manage Channels
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={isActive ? 'secondary' : 'default'}
-                      className="h-9 font-medium"
-                      onClick={() => {
-                        if (!isActive) switchToBrand(brand);
-                        document.getElementById('active-plan')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }}
-                    >
-                      {isActive ? 'Operate Plan' : 'Switch & manage plan'}
-                    </Button>
+                    {isActive ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-9 font-medium"
+                          onClick={() => router.push('/settings/channels')}
+                        >
+                          Manage Channels
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="h-9 font-medium"
+                          onClick={() => {
+                            document.getElementById('active-plan')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }}
+                        >
+                          Operate Plan
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-9 font-medium"
+                        disabled={isBrandPending}
+                        onClick={() => switchToBrand(brand)}
+                      >
+                        Switch to Brand
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
