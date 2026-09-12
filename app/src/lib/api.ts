@@ -315,6 +315,7 @@ export function getActiveBrandId(): string | null {
 export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string } = {},
+  retriedBrand = false,
 ): Promise<T> {
   const { token, ...init } = options;
   const headers: Record<string, string> = {
@@ -328,6 +329,18 @@ export async function apiFetch<T>(
   const body = await res.json().catch(() => ({})) as { ok: boolean; error?: string; label?: string } & T;
 
   if (!res.ok) {
+    // Stale brand from another account (localStorage) — clear and retry once without X-Brand-Id
+    if (
+      !retriedBrand
+      && res.status === 403
+      && body.error === 'brand_access_denied'
+    ) {
+      setActiveBrandId(null);
+      if (typeof window !== 'undefined') {
+        try { localStorage.removeItem('auraflux_active_brand_id'); } catch { /* ignore */ }
+      }
+      return apiFetch<T>(path, options, true);
+    }
     throw new ApiError(
       body.error ?? `HTTP ${res.status}`,
       res.status,

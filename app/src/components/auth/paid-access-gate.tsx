@@ -14,15 +14,36 @@ import { useAuth, useUser } from '@/lib/clerk-compat';
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? 'https://auraflux-api.onrender.com';
 
+const PAID_CACHE_KEY = 'auraflux_paid_access';
+
+function readPaidCache(): 'ok' | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return sessionStorage.getItem(PAID_CACHE_KEY) === 'paid' ? 'ok' : null;
+  } catch {
+    return null;
+  }
+}
+
+function writePaidCache(paid: boolean) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (paid) sessionStorage.setItem(PAID_CACHE_KEY, 'paid');
+    else sessionStorage.removeItem(PAID_CACHE_KEY);
+  } catch { /* ignore */ }
+}
+
 export function PaidAccessGate({ children }: { children: React.ReactNode }) {
   const { getToken, isSignedIn, isLoaded, signOut } = useAuth();
   const { user } = useUser();
   const searchParams = useSearchParams();
-  const [state, setState] = useState<'checking' | 'ok' | 'blocked'>('checking');
+  // Optimistic: if this tab already confirmed paid, skip the full-screen wait on refresh
+  const [state, setState] = useState<'checking' | 'ok' | 'blocked'>(() => readPaidCache() ?? 'checking');
 
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) {
+      writePaidCache(false);
       setState('ok');
       return;
     }
@@ -47,8 +68,10 @@ export function PaidAccessGate({ children }: { children: React.ReactNode }) {
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (data.paid) {
+          writePaidCache(true);
           setState('ok');
         } else {
+          writePaidCache(false);
           setState('blocked');
         }
       } catch {

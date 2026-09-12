@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 01:35 UTC  
+**Last Updated:** 2026-09-12 01:40 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Peaks UX polish: amber active stepper step, empty-state amber alert banner, secondary "Upload a trim" button hierarchy.
+Fix brand_access_denied (stale X-Brand-Id race) + skip PaidAccessGate flash on refresh via session paid cache.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

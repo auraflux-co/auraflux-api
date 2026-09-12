@@ -24,7 +24,7 @@ import {
   ReactNode,
 } from 'react';
 import { useAuth } from '@/lib/clerk-compat';
-import { getBrands, setActiveBrandId, type Brand } from '@/lib/api';
+import { getActiveBrandId, getBrands, setActiveBrandId, type Brand } from '@/lib/api';
 
 const LS_KEY = 'auraflux_active_brand_id';
 
@@ -56,9 +56,9 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   // Track whether the user has manually set a brand so load() won't overwrite it
   const userSelectedRef = useRef(false);
 
-  // Sync LS → apiFetch header synchronously on mount (before first fetch).
-  // Also handle warp_brand_id query param — set after an admin warp sign-in
-  // to pre-select a specific sub-brand, then redirect to warp_redirect path.
+  // Warp: pre-select brand after admin warp sign-in, then strip query params.
+  // Do NOT hydrate X-Brand-Id from localStorage until getBrands validates ownership —
+  // a leftover id from another account causes brand_access_denied on the first fetches.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -67,13 +67,16 @@ export function BrandProvider({ children }: { children: ReactNode }) {
     if (warpBrandId) {
       localStorage.setItem(LS_KEY, warpBrandId);
       setActiveBrandId(warpBrandId);
-      // Strip warp params and redirect
       const clean = warpRedirect || '/settings/social';
       window.history.replaceState({}, '', clean);
-      return;
     }
-    const saved = localStorage.getItem(LS_KEY);
-    if (saved) setActiveBrandId(saved);
+  }, []);
+
+  const persistActiveBrand = useCallback((brand: Brand | null) => {
+    setActiveBrandId(brand?.id ?? null);
+    if (typeof window === 'undefined') return;
+    if (brand?.id) localStorage.setItem(LS_KEY, brand.id);
+    else localStorage.removeItem(LS_KEY);
   }, []);
 
   const load = useCallback(async () => {
@@ -84,16 +87,24 @@ export function BrandProvider({ children }: { children: ReactNode }) {
       const list  = await getBrands(token ?? undefined);
       setBrands(list);
 
-      // Only update activeBrand from the list if the user hasn't manually switched
       if (!userSelectedRef.current) {
         const savedId  = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null;
         const match    = savedId ? list.find((b) => b.id === savedId) : null;
         const resolved = match ?? list[0] ?? null;
         setActive(resolved);
-        setActiveBrandId(resolved?.id ?? null);
+        persistActiveBrand(resolved);
       } else {
-        // Refresh the active brand object to pick up updated fields (tier, name)
-        setActive((prev) => list.find((b) => b.id === prev?.id) ?? prev);
+        // Manual selection — keep if still owned; otherwise fall back (account switch)
+        const currentId = getActiveBrandId();
+        const stillOwns = currentId ? list.find((b) => b.id === currentId) ?? null : null;
+        if (stillOwns) {
+          setActive(stillOwns);
+        } else {
+          userSelectedRef.current = false;
+          const resolved = list[0] ?? null;
+          setActive(resolved);
+          persistActiveBrand(resolved);
+        }
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load brands');
@@ -101,18 +112,15 @@ export function BrandProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoaded, getToken]);
+  }, [isLoaded, getToken, persistActiveBrand]);
 
   useEffect(() => { load(); }, [load]);
 
   const setActiveBrand = useCallback((brand: Brand) => {
     userSelectedRef.current = true;
     setActive(brand);
-    setActiveBrandId(brand.id);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LS_KEY, brand.id);
-    }
-  }, []);
+    persistActiveBrand(brand);
+  }, [persistActiveBrand]);
 
   return (
     <BrandContext.Provider value={{ brands, activeBrand, setActiveBrand, isLoading, error, refresh: load }}>
