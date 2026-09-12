@@ -72,7 +72,7 @@ export default function JobsHubPage() {
   const { activeBrand }        = useBrand();
   const { isSuperAdmin }       = useRole();
   const activeBrandId          = activeBrand?.id;
-  // API keys / developer seat = Pro Operator only (Growth is creator self-serve)
+  // API keys / developer seat = Studio only (Creator is self-serve)
   const isOperate              = planTier === 'operate';
   const [jobs, setJobs]        = useState<Job[] | null>(null);
   const [error, setError]      = useState<string | null>(null);
@@ -127,7 +127,7 @@ export default function JobsHubPage() {
         <StatCard href="/myjobs/history" label="Completed"        count={jobs === null ? null : complete.length} sub="all time" />
       </div>
 
-      {/* Operate plan: API access info */}
+      {/* Studio plan: API access info */}
       {isOperate && (
         <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/20 p-5 space-y-3">
           <div className="flex items-start gap-3">

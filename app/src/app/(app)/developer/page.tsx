@@ -3,7 +3,7 @@
 /**
  * /developer — In-app API reference (CPD-337)
  *
- * Shows every endpoint available on the Operate plan with request/response
+ * Shows every endpoint available on the Studio plan with request/response
  * shapes, cURL examples pre-filled with the customer's actual API key,
  * and a quick-start guide.
  */

@@ -1,41 +1,50 @@
 /**
  * Tier label mapping — internal tier IDs → user-facing display names.
  *
- * Marketing SSoT (auraflux.co/pricing):
- *   growth  → Growth / Creator
- *   operate → Pro Operator / Agency
- *   managed → Managed (inquiry)
- * Guided remains a support/service tier, not a checkout card.
+ * Customer-facing SSoT (2026-09):
+ *   growth  → Creator   (solo streamers)
+ *   operate → Studio    (high volume & teams / agencies)
+ *   guided  → Guided    (same platform + operator support)
+ *   managed → Managed   (done-for-you)
+ *
+ * Stripe / API ids stay growth | operate | guided | managed.
  */
 
 export const TIER_LABELS: Record<string, string> = {
-  growth:     'Growth / Creator',
-  operate:    'Pro Operator / Agency',
+  growth:     'Creator',
+  operate:    'Studio',
   guided:     'Guided',
   managed:    'Managed',
   custom:     'Enterprise',
   // Legacy aliases — diy/dwy/dfy were the old internal keys
-  diy:        'Pro Operator / Agency',
+  diy:        'Studio',
   dwy:        'Guided',
   dfy:        'Managed',
 };
 
 export const TIER_LABEL_LOWER: Record<string, string> = {
-  growth:     'growth / creator',
-  operate:    'pro operator / agency',
+  growth:     'creator',
+  operate:    'studio',
   guided:     'guided',
   managed:    'managed',
   custom:     'enterprise',
 };
 
-/** Returns the display name for a tier ID (e.g. "growth" → "Growth / Creator"). */
+export const TIER_AUDIENCE: Record<string, string> = {
+  growth:  'For solo streamers',
+  operate: 'For high volume & teams',
+  guided:  'For teams that want operator guidance',
+  managed: 'For done-for-you production',
+};
+
+/** Returns the display name for a tier ID (e.g. "growth" → "Creator"). */
 export function tierLabel(tier: string | null | undefined): string {
-  return TIER_LABELS[tier ?? ''] ?? 'Growth / Creator';
+  return TIER_LABELS[tier ?? ''] ?? 'Creator';
 }
 
 /** Returns the display name, lowercased, for use in sentences. */
 export function tierLabelLower(tier: string | null | undefined): string {
-  return TIER_LABEL_LOWER[tier ?? ''] ?? 'growth / creator';
+  return TIER_LABEL_LOWER[tier ?? ''] ?? 'creator';
 }
 
 /** Returns the display name with "plan" appended. */

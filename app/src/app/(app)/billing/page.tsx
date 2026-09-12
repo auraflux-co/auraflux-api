@@ -59,7 +59,7 @@ function formatBillingDate(iso: string | null | undefined) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-/** Tier ordering — lower index = lower tier (marketing: Growth → Pro Operator → Managed) */
+/** Tier ordering — lower index = lower tier (Creator → Studio → Managed) */
 const TIER_ORDER = ['growth', 'operate', 'managed'];
 
 /** Fallback display prices when Stripe /plans has no row yet */
@@ -75,12 +75,13 @@ function displayPriceUsd(plan: Plan | undefined, tier: string): number | null {
 
 // Credits come from plan?.credits / entitlements — not hardcoded in highlights.
 const PLAN_META: Record<string, {
-  label: string; sub: string; valueMetric: string; highlights: string[];
+  label: string; audience: string; sub: string; valueMetric: string; highlights: string[];
   cta: string; contactSales: boolean;
 }> = {
   growth: {
-    label:       'Growth / Creator',
-    sub:         'Solo streamers shipping daily content',
+    label:       'Creator',
+    audience:    'For solo streamers',
+    sub:         'Solo streamers shipping daily content.',
     valueMetric: 'Self-serve Peaks → Short → publish',
     highlights: [
       'Up to 40 hours of VOD processing / mo',
@@ -88,12 +89,13 @@ const PLAN_META: Record<string, {
       'Auto 9:16 framing & kinetic captions',
       'Direct dispatch to TikTok, Shorts & Reels',
     ],
-    cta:          'Start Growth',
+    cta:          'Start Creator Plan',
     contactSales: false,
   },
   operate: {
-    label:       'Pro Operator / Agency',
-    sub:         'High-volume streamers, orgs & clip networks',
+    label:       'Studio',
+    audience:    'For high volume & teams',
+    sub:         'High-volume streamers, clip networks, media teams & agencies.',
     valueMetric: 'Full platform seat · priority queue · team',
     highlights: [
       'Unlimited VOD processing & peak detection',
@@ -101,15 +103,16 @@ const PLAN_META: Record<string, {
       'Custom caption fonts & brand templates',
       'Team workspace seats & API key access',
     ],
-    cta:          'Start Pro Operator',
+    cta:          'Start Studio Plan',
     contactSales: false,
   },
   guided: {
     label:       'Guided',
+    audience:    'For teams that want operator guidance',
     sub:         'Operator monitoring and guidance',
     valueMetric: 'Same platform · higher support',
     highlights: [
-      'Everything in Pro Operator',
+      'Everything in Studio',
       'Operator monitoring and guidance',
       'Assist-guided setup help',
     ],
@@ -118,6 +121,7 @@ const PLAN_META: Record<string, {
   },
   managed: {
     label:       'Managed',
+    audience:    'For done-for-you production',
     sub:         'Done-for-you production & custom infrastructure',
     valueMetric: 'We run production with you',
     highlights: [
@@ -268,7 +272,7 @@ const BrandRow = memo(function BrandRow({
               className="h-9 font-medium"
               onClick={onOperatePlan}
             >
-              Operate Plan
+              Manage Plan
             </Button>
           </>
         ) : (
@@ -730,9 +734,15 @@ function BillingPageInner() {
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Most powerful</span>
                     </div>
                   )}
+                  {tier === 'operate' && !isFeatured && (
+                    <div className="bg-amber-500 text-slate-950 text-[10px] font-bold px-3 py-1.5 uppercase tracking-wide text-center">
+                      Most popular
+                    </div>
+                  )}
                   <div className="p-4 flex-1 flex flex-col gap-3">
                     <div>
-                      <p className="text-sm font-bold text-foreground">{meta.label}</p>
+                      <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">{meta.audience}</p>
+                      <p className="text-lg font-bold text-foreground mt-1">{meta.label}</p>
                       <p className="af-caption text-muted-foreground mt-0.5">{meta.sub}</p>
                       <p className="af-caption font-medium text-primary/80 mt-1">{meta.valueMetric}</p>
                     </div>

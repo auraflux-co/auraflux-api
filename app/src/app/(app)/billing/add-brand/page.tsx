@@ -20,14 +20,14 @@ import { useBrand } from '@/contexts/brand-context';
 
 const PLAN_META: Record<string, { label: string; sub: string; price: string; image: string }> = {
   operate: {
-    label: 'AuraFlux Operate',
-    sub:   'API access — developer plan',
+    label: 'AuraFlux Studio',
+    sub:   'High volume & teams — full platform seat',
     price: '$999/mo',
     image: '/brand/plans/operate.png',
   },
   guided: {
     label: 'AuraFlux Guided',
-    sub:   'Done-with-you plan',
+    sub:   'Studio platform + operator guidance',
     price: '$1,999/mo',
     image: '/brand/plans/guided.png',
   },

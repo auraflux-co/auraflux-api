@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 20:30 UTC  
+**Last Updated:** 2026-09-12 21:15 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Settings micro-polish: badge nowrap (no member/s wrap), Sheet footer p-4/p-5 padding.
+Plan naming (iss_0SsNRL-igGBk / CPD-58): growth→Creator, operate→Studio across app + marketing; Guided/Managed unchanged.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

@@ -199,7 +199,7 @@ export default function CanvaGeneratePage() {
           {/* Quick prompt chips */}
           <div className="flex flex-wrap gap-2">
             {[
-              'AuraFlux Operate plan — navy & gold, modern minimal',
+              'AuraFlux Studio plan — navy & gold, modern minimal',
               'AuraFlux Guided plan — professional, trust-building tone',
               'AuraFlux Managed plan — premium enterprise feel',
               'Extra Credits add-on — energetic, reward-style visual',

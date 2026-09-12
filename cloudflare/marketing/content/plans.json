@@ -3,7 +3,7 @@
   "hero_sub": "Turn raw VODs into daily short-form content at 1/3 the cost of a full-time editor seat. Buy here first — then create your app login.",
   "growth": {
     "name": "For solo streamers",
-    "title": "Growth / Creator",
+    "title": "Creator",
     "subtitle": "Solo streamers shipping daily content.",
     "price": "$299",
     "price_note": "Self-serve · cancel anytime",
@@ -14,15 +14,15 @@
       "1080p60 vertical exports",
       "Direct dispatch to TikTok, Shorts & Reels"
     ],
-    "cta_label": "Start Growth",
+    "cta_label": "Start Creator Plan",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=growth",
     "cta_style": "cta cta-secondary"
   },
   "plan": {
-    "name": "For agencies & high volume",
-    "title": "Pro Operator / Agency",
-    "subtitle": "High-volume streamers, esports orgs & clip networks.",
-    "badge": "Most Popular for Agencies",
+    "name": "For high volume & teams",
+    "title": "Studio",
+    "subtitle": "High-volume streamers, clip networks, media teams & agencies.",
+    "badge": "Most Popular",
     "price": "$999",
     "price_note": "Full platform seat with priority queue & team access",
     "features": [
@@ -33,7 +33,7 @@
       "Team workspace seats & API key access",
       "Dedicated Account Manager"
     ],
-    "cta_label": "Start Pro Operator",
+    "cta_label": "Start Studio Plan",
     "cta_url": "https://api.auraflux.co/api/public/checkout?plan=operate",
     "cta_style": "cta cta-primary"
   },

@@ -315,7 +315,7 @@ export default function CrmAccountPage() {
                   className="flex-1 text-xs border border-border rounded px-2 py-1 bg-background"
                 >
                   <option value="">Change plan…</option>
-                  <option value="operate">Operate</option>
+                  <option value="operate">Studio</option>
                   <option value="guided">Guided</option>
                   <option value="managed">Managed</option>
                   <option value="custom">Enterprise</option>

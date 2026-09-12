@@ -71,7 +71,7 @@ export function ConciergeChat({ currentSpec, planTier, className, embedded = fal
         if (label === 'CLERK_INSTANCE_MISMATCH' || label === 'GEMINI_NOT_CONFIGURED') {
           setError(msg || 'Assist is temporarily unavailable. Please try again shortly.');
         } else if (label === 'PLAN_GATE') {
-          setError('Assist requires an Operate plan or higher.');
+          setError('Assist requires a Studio plan or higher.');
         } else {
           setError('Something went wrong. Please try again.');
         }
