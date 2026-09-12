@@ -149,7 +149,7 @@ export default function DeveloperPage() {
     <PageShell maxWidth="4xl">
       <PageHeader
         title="API Reference"
-        subtitle={`Peaks + C1–C11 edits → publish. Base URL: ${BASE_URL}. Access is invite-only.`}
+        subtitle={`Peaks → edit styles → publish. Base URL: ${BASE_URL}. Access is invite-only.`}
       />
 
       <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
@@ -176,7 +176,7 @@ export default function DeveloperPage() {
         <CardHeader className="pb-2"><CardTitle className="text-sm">Quick start</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Authenticate with Bearer af_live_…. Optional brand header: X-Brand-Id. Flow: analyze → stage → pick C1–C11 preset → short_compile_clips job → approve-publish. Keys at{' '}
+            Authenticate with Bearer af_live_…. Optional brand header: X-Brand-Id. Flow: analyze → upload trim → pick edit style → create Short → approve-publish. Keys at{' '}
             <a href="/settings/api-keys" className="text-primary hover:underline">Settings → API Keys</a>.
           </p>
           <CodeBlock code={`curl ${BASE_URL}/account \\\n  -H "${authHeader}"`} />
@@ -215,7 +215,7 @@ export default function DeveloperPage() {
         />
         <Endpoint
           method="POST" path="/peaks/stage" title="Stage VOD window"
-          description="Stage a trimmed VOD window to R2 for Short compile."
+          description="Upload a trimmed VOD window for Short compile."
           request={JSON.stringify({ vodUrl: 'https://www.youtube.com/watch?v=…', startSec: 120, endSec: 165 }, null, 2)}
           response={JSON.stringify({ ok: true, stagedAssetId: '…' }, null, 2)}
           curl={curl('POST', '/peaks/stage', JSON.stringify({ vodUrl: 'https://www.youtube.com/watch?v=…', startSec: 120, endSec: 165 }))}
@@ -233,7 +233,7 @@ export default function DeveloperPage() {
           curl={curl('GET', '/peaks/twitch-ccv')}
         />
         <Endpoint
-          method="GET" path="/peaks/presets" title="C1–C11 edit presets"
+          method="GET" path="/peaks/presets" title="Edit style presets"
           description="Part 2 of AuraFlux: Short compose presets after Peaks stage. Default Peaks Short: fableflow_speed (C9)."
           response={JSON.stringify({ ok: true, defaultKey: 'fableflow_speed', presets: [{ code: 'C9', key: 'fableflow_speed', label: 'FableFlow Speed' }] }, null, 2)}
           curl={curl('GET', '/peaks/presets')}
@@ -243,7 +243,7 @@ export default function DeveloperPage() {
       <Section title="Short compile (after Peaks)">
         <Endpoint
           method="POST" path="/jobs" title="Compile staged peak with preset"
-          description="Pass productionPath short_compile_clips and featureConfig.compose.preset (C1–C11 key). Use the staged R2 URL from /peaks/stage. Also see GET /feature-inputs for captions, grade, effects, audio, branding, TTS."
+          description="Pass productionPath short_compile_clips and featureConfig.compose.preset (edit style key). Use the staged media URL from /peaks/stage. Also see GET /feature-inputs for captions, grade, effects, audio, branding, TTS."
           request={JSON.stringify({
             entry: 'fetch',
             url: 'https://r2…/staged.mp4',
@@ -307,7 +307,7 @@ export default function DeveloperPage() {
 
         <Endpoint
           method="POST" path="/jobs/:id/approve-publish" title="Approve staged job for publish"
-          description="When a job is submitted with staging: true, it stops before Portal 5 (publish) for your review. Call this endpoint to approve and publish it."
+          description="When a job is submitted with staging: true, it stops before publish for your review. Call this endpoint to approve and publish it."
           response={JSON.stringify({ jobId: 'job_abc123', status: 'publishing' }, null, 2)}
           curl={curl('POST', '/jobs/job_abc123/approve-publish')}
         />

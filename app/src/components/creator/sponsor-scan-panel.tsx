@@ -103,7 +103,7 @@ export function SponsorScanPanel({
           ))}
         </ul>
       ) : (
-        !busy && <p className="af-caption text-muted-foreground">No markers yet — run scan after assembly has a transcript.</p>
+        !busy && <p className="af-caption text-muted-foreground">No markers yet — run scan after the video has a transcript.</p>
       )}
       {boundaries?.adjusted && (
         <p className="af-caption text-amber-700 dark:text-amber-400">

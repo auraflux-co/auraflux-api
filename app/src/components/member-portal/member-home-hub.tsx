@@ -103,7 +103,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
     <div className="space-y-8 text-white antialiased">
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-          Creator portal
+          Creator
         </p>
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-3xl font-extrabold text-white tracking-tight">
@@ -160,7 +160,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           }
         >
           <p className="text-sm text-slate-400 leading-relaxed flex-1">
-            Track active pipeline work, history, and start a new compose run.
+            Track jobs in progress, history, and start a new Short.
           </p>
           {stats.activeJobs != null && (
             <StatBadge>
@@ -245,7 +245,7 @@ export function MemberHomeHub({ firstName, planTier, setupDismissed }: Props) {
           }
         >
           <p className="text-sm text-slate-400 leading-relaxed flex-1">
-            Subscription, invoices, and credit balance for pipeline runs.
+            Subscription, invoices, and credit balance for your Shorts.
           </p>
           {stats.creditsRemaining != null && (
             <StatBadge>

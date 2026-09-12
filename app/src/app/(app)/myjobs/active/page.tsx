@@ -144,7 +144,7 @@ export default function ActiveJobsPage() {
     <PageShell maxWidth="4xl">
       <PageHeader
         title="In Progress"
-        subtitle="Jobs still in the pipeline. When output is ready, they move to Review Queue."
+        subtitle="Jobs still in progress. When output is ready, they move to Review Queue."
       >
         <button
           onClick={fetchJobs}

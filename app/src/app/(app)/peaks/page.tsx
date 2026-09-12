@@ -234,8 +234,8 @@ function PeaksPageInner() {
       else {
         setHint(
           plat === 'twitch'
-            ? 'Peaks found. Open at peak → trim that window on your device → Upload clip. AuraFlux stages it for compose.'
-            : 'Peaks found. Open at peak → trim that window on your device → Upload clip. AuraFlux stages it for compose.',
+            ? 'Peaks found. Open at peak → trim that window on your device → Upload clip.'
+            : 'Peaks found. Open at peak → trim that window on your device → Upload clip.',
         );
       }
     } catch (e) {
@@ -328,9 +328,9 @@ function PeaksPageInner() {
       });
       setNearFinalUrl(null);
       setNearFinalMeta(null);
-      setHint('Clip staged — pick a preset, Review near-final (burns layout/look), then Create Short.');
+      setHint('Clip uploaded — pick an edit style, build a preview, then Create Short.');
     } catch (e) {
-      setError(formatUserError(e instanceof Error ? e.message : 'Upload stage failed'));
+      setError(formatUserError(e instanceof Error ? e.message : 'Upload failed'));
     } finally {
       setBusy(null);
       setUploadPct(null);
@@ -341,7 +341,7 @@ function PeaksPageInner() {
 
   async function onReviewNearFinal() {
     if (!staged?.mp4Url) return;
-    setBusy('Burning near-final preview…');
+    setBusy('Building preview…');
     setError(null);
     setNearFinalUrl(null);
     setNearFinalMeta(null);
@@ -362,15 +362,15 @@ function PeaksPageInner() {
         deliveryAspect: '9:16',
       }, token);
       const rel = res.previewVideoAbsoluteUrl || res.previewVideoUrl;
-      if (!rel) throw new Error(res.error || 'Near-final encode returned no video');
+      if (!rel) throw new Error(res.error || 'Preview encode returned no video');
       setNearFinalUrl(compositionPreviewFileUrl(rel));
       setNearFinalMeta({
         applied: res.nearFinalApplied || [],
         missing: res.nearFinalMissing || [],
       });
-      setHint('Near-final ready — scrub the burned preview, then Create Short when it looks right.');
+      setHint('Preview ready — review it, then Create Short when it looks right.');
     } catch (e) {
-      setError(formatUserError(e instanceof Error ? e.message : 'Near-final preview failed'));
+      setError(formatUserError(e instanceof Error ? e.message : 'Preview failed'));
     } finally {
       setBusy(null);
     }
@@ -438,7 +438,7 @@ function PeaksPageInner() {
     { n: 2, label: 'Fetch VODs', done: stepFetch },
     { n: 3, label: 'Find peaks', done: stepPeaks },
     { n: 4, label: 'Trim / upload', done: stepStaged },
-    { n: 5, label: 'Preset + preview', done: stepStaged },
+    { n: 5, label: 'Style + preview', done: stepStaged },
   ];
   const activeStep = peakSteps.find((s) => !s.done)?.n ?? peakSteps[peakSteps.length - 1]!.n;
 
@@ -446,7 +446,7 @@ function PeaksPageInner() {
     <PageShell maxWidth="4xl">
       <PageHeader
         title="Peaks"
-        subtitle="AuraFlux fetches your VODs and finds the peaks — you trim the window, pick a C1–C11 preset (or custom), preview, then create your Short."
+        subtitle="AuraFlux finds the peaks in your VODs — you trim the window, pick an edit style, preview, then create your Short."
       />
 
       {/* Creator happy-path strip */}
@@ -642,7 +642,7 @@ function PeaksPageInner() {
             {sourcePlatform === 'kick' ? 'Peaks AuraFlux found (Kick CCV)' : 'Peaks AuraFlux found'}
           </h2>
           <p className="af-caption text-muted-foreground">
-            Open at peak → trim that window on your device → Upload clip. We stage it for C1–C11 compose.
+            Open at peak → trim that window on your device → Upload clip. We’ll prepare it with your edit style.
           </p>
           {peaks.map((p, i) => {
             const kickRow = sourcePlatform === 'kick' ? kickPeaks[i] : undefined;
@@ -682,11 +682,11 @@ function PeaksPageInner() {
       {staged?.mp4Url && (
         <Card className="border-primary/30">
           <CardContent className="pt-5 space-y-4">
-            <h2 className="af-subhead">Preview · Review near-final · create Short</h2>
+            <h2 className="af-subhead">Preview · create Short</h2>
             <p className="af-caption text-muted-foreground">
               {nearFinalUrl
-                ? 'Scrub the burned near-final (layout + look + FX). Credits burn only when you Create Short.'
-                : 'Scrub your staged trim, pick a preset, then Review near-final before Create Short.'}
+                ? 'Review the preview (layout, look, and effects). Credits are used only when you Create Short.'
+                : 'Review your trim, pick an edit style, then preview before Create Short.'}
             </p>
             {activeBrand && (
               <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 space-y-1">
@@ -707,7 +707,7 @@ function PeaksPageInner() {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-2">
                 <p className="af-caption font-medium text-foreground">
-                  {nearFinalUrl ? 'Near-final · ' : 'Staged · '}{staged.title}
+                  {nearFinalUrl ? 'Preview · ' : 'Uploaded · '}{staged.title}
                   {staged.startSec != null && staged.endSec != null
                     ? ` · ${formatClock(staged.startSec)}–${formatClock(staged.endSec)}`
                     : ''}
@@ -728,7 +728,7 @@ function PeaksPageInner() {
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Compose preset (C1–C11)</Label>
+                  <Label>Edit style</Label>
                   <select
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                     value={presetKey}
@@ -756,7 +756,7 @@ function PeaksPageInner() {
                     disabled={!!busy}
                     className="w-full"
                   >
-                    {nearFinalUrl ? 'Re-burn near-final' : 'Review near-final'}
+                    {nearFinalUrl ? 'Refresh preview' : 'Build preview'}
                   </Button>
                   <Button onClick={onCreateJob} disabled={!!busy} className="w-full">
                     Create Short job

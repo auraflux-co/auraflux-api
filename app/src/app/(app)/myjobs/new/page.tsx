@@ -799,7 +799,7 @@ function JobBuilderPageInner() {
       } as SourceItem]);
       setShowClipEditor(true);
       setOpenSections(['source', 'editing']);
-      setTemplateBanner('From Peaks — staged trim ready');
+      setTemplateBanner('From Peaks — trim ready to create');
     } catch { /* ignore bad handoff */ }
   }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 

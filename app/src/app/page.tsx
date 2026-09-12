@@ -20,7 +20,7 @@ export default function LandingPage() {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700/80 text-xs font-mono font-semibold text-amber-400 mb-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Portal v1.0
+            Creator
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">
             AuraFlux

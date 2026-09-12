@@ -169,7 +169,7 @@ export function ClipOrderTray({ items, onReorder, onRemove, className }: Props) 
 
       {items.length > 1 && (
         <p className="text-[10px] text-muted-foreground px-0.5">
-          Clips are stitched together in this exact order during assembly.
+          Clips are stitched together in this exact order when we build your video.
         </p>
       )}
     </div>

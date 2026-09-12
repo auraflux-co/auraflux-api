@@ -48,14 +48,14 @@ const PLATFORM_BADGE_CLASSES: Record<string, string> = {
 };
 
 const PORTAL_LABELS: Record<string, string> = {
-  portal0:  'P0 — Source validation',
-  portal1:  'P1 — Script generation',
-  portal1b: 'P1b — Script QA',
-  portal2:  'P2 — Video assembly',
-  portal3a: 'P3a — Assembly review',
-  portal3b: 'P3b — Commitment check',
-  portal4:  'P4 — Broadcast QA',
-  portal5:  'P5 — Delivery',
+  portal0:  'Source check',
+  portal1:  'Script',
+  portal1b: 'Script review',
+  portal2:  'Building video',
+  portal3a: 'Build review',
+  portal3b: 'Quality check',
+  portal4:  'Final check',
+  portal5:  'Delivery',
 };
 
 const ACTIVE_STATUSES = new Set(['queued', 'running']);
@@ -703,7 +703,7 @@ export default function JobDetailPage() {
                 <div className="rounded-lg border bg-muted/20 p-3 space-y-1.5">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Production QA scores</p>
-                    <p className="text-[10px] text-muted-foreground/70 mt-0.5">How closely your video matched the order. 90+ is excellent. Below 70 goes to operator review.</p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-0.5">How closely your video matched the order. 90+ is excellent. Below 70 gets a human review before publish.</p>
                   </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     {stagingAssets.portalReports.filter((r) => r.score != null).map((r) => (

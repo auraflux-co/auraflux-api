@@ -344,7 +344,7 @@ export default function BrandSettingsPage() {
         {/* ── Intro card ── */}
         <AssetUploader
           label="Intro card"
-          hint="MP4 clip prepended to the start of every assembled video. Keep it under 5 seconds. 16:9, 1920×1080 recommended."
+          hint="MP4 clip added at the start of every video. Keep it under 5 seconds. 16:9, 1920×1080 recommended."
           accept="video/mp4,video/quicktime"
           assetType="intro_card"
           currentUrl={brand.intro_card_url}
@@ -357,7 +357,7 @@ export default function BrandSettingsPage() {
         {/* ── Outro card ── */}
         <AssetUploader
           label="Outro card"
-          hint="MP4 clip appended to the end of every assembled video. Keep it under 10 seconds. 16:9, 1920×1080 recommended."
+          hint="MP4 clip added at the end of every video. Keep it under 10 seconds. 16:9, 1920×1080 recommended."
           accept="video/mp4,video/quicktime"
           assetType="outro_card"
           currentUrl={brand.outro_card_url}
@@ -475,8 +475,8 @@ export default function BrandSettingsPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
           </svg>
           <p className="af-caption text-muted-foreground">
-            Assets are stored in R2 and applied to new jobs. Existing completed jobs are not retroactively updated.
-            Intro and outro cards are applied during the assembly stage of each job.
+            Assets are stored securely and applied to new jobs. Existing completed jobs are not updated automatically.
+            Intro and outro cards are added when we build each video.
           </p>
         </div>
 

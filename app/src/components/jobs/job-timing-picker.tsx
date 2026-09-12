@@ -116,7 +116,7 @@ export function JobTimingPicker({ platforms, value, onChange, className }: JobTi
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            When the pipeline begins processing your content. Scheduled starts charge credits at fire time.
+            When we start processing your content. Scheduled starts charge credits when the job begins.
           </p>
           <div className="flex gap-2">
             <button

@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 01:55 UTC  
+**Last Updated:** 2026-09-12 02:00 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Peaks VOD empty-state fix: wait for brand before Fetch, ignore stale responses, list long YouTube VODs via uploads playlist (oversample past Shorts).
+Creator copy scrub: remove C1–C11 / portal P-codes / R2 / pipeline / near-final / Portal v1.0 from customer-facing UI.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

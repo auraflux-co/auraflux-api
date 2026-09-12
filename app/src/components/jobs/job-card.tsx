@@ -41,13 +41,13 @@ const PLATFORM_LABELS: Record<string, string> = {
 };
 
 const PORTAL_STEP_LABELS: Record<string, string> = {
-  portal0:  'Source validation',
-  portal1:  'Script generation',
+  portal0:  'Source check',
+  portal1:  'Script',
   portal1b: 'Script review',
-  portal2:  'Video assembly',
-  portal3a: 'Assembly review',
+  portal2:  'Building video',
+  portal3a: 'Build review',
   portal3b: 'Quality check',
-  portal4:  'Broadcast QA',
+  portal4:  'Final check',
   portal5:  'Delivery',
 };
 

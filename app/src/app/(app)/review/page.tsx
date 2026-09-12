@@ -177,13 +177,13 @@ function PublishBestPractices({ platforms }: { platforms: string[] }) {
 // ── Portal labels ─────────────────────────────────────────────────────────────
 
 const PORTAL_LABELS: Record<string, string> = {
-  portal0:  'Source validation',
-  portal1:  'Script generation',
+  portal0:  'Source check',
+  portal1:  'Script',
   portal1b: 'Script review',
-  portal2:  'Video assembly',
-  portal3a: 'Assembly review',
+  portal2:  'Building video',
+  portal3a: 'Build review',
   portal3b: 'Quality check',
-  portal4:  'Broadcast QA',
+  portal4:  'Final check',
   portal5:  'Delivery',
 };
 
@@ -222,7 +222,7 @@ function StatusBadge({ status }: { status: string }) {
 // ── Portal timeline ───────────────────────────────────────────────────────────
 
 function PortalTimeline({ reports }: { reports: PortalReport[] }) {
-  if (!reports.length) return <p className="text-xs text-muted-foreground">No portal data yet.</p>;
+  if (!reports.length) return <p className="text-xs text-muted-foreground">No production progress yet.</p>;
 
   return (
     <div className="flex flex-col gap-1">
@@ -745,7 +745,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
       {/* Production steps — superadmin only */}
       {isSuperAdmin && (
         <div>
-          <p className="text-xs font-semibold mb-2 text-muted-foreground">Production pipeline</p>
+          <p className="text-xs font-semibold mb-2 text-muted-foreground">Production steps</p>
           <PortalTimeline reports={portalReports} />
         </div>
       )}
@@ -969,7 +969,7 @@ function StagingPanel({ jobId, platforms, getToken, isSuperAdmin }: { jobId: str
 
           {/* Status messages */}
           {!hasOutput && (
-            <p className="text-xs text-muted-foreground">No output yet — wait for pipeline to complete.</p>
+            <p className="text-xs text-muted-foreground">No output yet — wait for the video to finish building.</p>
           )}
           {assets.status === 'published' && !publishResult && (
             <p className="text-xs text-green-600">Already published.</p>
