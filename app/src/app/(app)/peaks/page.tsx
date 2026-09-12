@@ -418,6 +418,15 @@ function PeaksPageInner() {
   const stepPeaks = peaks.length > 0;
   const stepStaged = !!staged?.mp4Url;
 
+  const peakSteps = [
+    { n: 1, label: 'Connect', done: stepConnect },
+    { n: 2, label: 'Fetch VODs', done: stepFetch },
+    { n: 3, label: 'Find peaks', done: stepPeaks },
+    { n: 4, label: 'Trim / upload', done: stepStaged },
+    { n: 5, label: 'Preset + preview', done: stepStaged },
+  ];
+  const activeStep = peakSteps.find((s) => !s.done)?.n ?? peakSteps[peakSteps.length - 1]!.n;
+
   return (
     <PageShell maxWidth="4xl">
       <PageHeader
@@ -427,24 +436,30 @@ function PeaksPageInner() {
 
       {/* Creator happy-path strip */}
       <ol className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-2">
-        {[
-          { n: 1, label: 'Connect', done: stepConnect },
-          { n: 2, label: 'Fetch VODs', done: stepFetch },
-          { n: 3, label: 'Find peaks', done: stepPeaks },
-          { n: 4, label: 'Trim / upload', done: stepStaged },
-          { n: 5, label: 'Preset + preview', done: stepStaged },
-        ].map((s) => (
-          <li
-            key={s.n}
-            className={cn(
-              'rounded-xl border px-3 py-2 text-center',
-              s.done ? 'border-primary/40 bg-primary/5' : 'border-border bg-card',
-            )}
-          >
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Step {s.n}</p>
-            <p className={cn('text-xs font-semibold', s.done ? 'text-primary' : 'text-foreground')}>{s.label}</p>
-          </li>
-        ))}
+        {peakSteps.map((s) => {
+          const active = s.n === activeStep;
+          return (
+            <li
+              key={s.n}
+              className={cn(
+                'rounded-xl border px-3 py-2 text-center',
+                active
+                  ? 'border-amber-400 bg-amber-400/10 text-amber-400'
+                  : 'border-slate-800 text-slate-500',
+              )}
+            >
+              <p
+                className={cn(
+                  'text-[10px] font-bold uppercase tracking-wider',
+                  active ? 'text-amber-400' : 'text-slate-500',
+                )}
+              >
+                Step {s.n}
+              </p>
+              <p className={cn('text-xs font-semibold', active ? 'text-amber-400' : 'text-slate-500')}>{s.label}</p>
+            </li>
+          );
+        })}
       </ol>
       <p className="af-caption text-muted-foreground mb-2">
         You do not need to hunt for peaks yourself — pick a VOD, tap <strong>Find peaks</strong>, then open the timestamp and upload your trim.
@@ -471,9 +486,14 @@ function PeaksPageInner() {
           {uploadPct != null ? ` (${uploadPct}%)` : ''}
         </p>
       )}
-      {hint && !error && <p className="af-caption text-muted-foreground">{hint}</p>}
       {analyzeMode && (
         <p className="af-caption text-muted-foreground">Signal: <strong>{analyzeMode}</strong></p>
+      )}
+
+      {hint && !error && (
+        <div className="bg-amber-400/10 border border-amber-400/20 text-amber-300 rounded-xl p-3 text-xs font-medium mb-4">
+          {hint}
+        </div>
       )}
 
       <Card>
@@ -553,7 +573,12 @@ function PeaksPageInner() {
             >
               {sourcePlatform === 'kick' ? 'Find peaks (CCV)' : 'Fetch VODs'}
             </Button>
-            <Button variant="outline" onClick={onUploadAny} disabled={!!busy}>
+            <Button
+              variant="outline"
+              onClick={onUploadAny}
+              disabled={!!busy}
+              className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors"
+            >
               Upload a trim
             </Button>
           </div>

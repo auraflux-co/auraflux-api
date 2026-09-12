@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 01:30 UTC  
+**Last Updated:** 2026-09-12 01:35 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Creator home UX polish: hub stat badges (pending review, accounts, credits, brands) + amber active nav pill/underline.
+Peaks UX polish: amber active stepper step, empty-state amber alert banner, secondary "Upload a trim" button hierarchy.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
