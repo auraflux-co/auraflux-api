@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { JobStatusBadge } from '@/components/ui/job-status-badge';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { Button } from '@/components/ui/button';
-import { updateJobSchedule, getSchedulePrefs, approveAndPublish, type SchedulePrefs, type ScheduleSlot, requestJobRevision, operatorJobAction } from '@/lib/api';
+import { updateJobSchedule, getSchedulePrefs, approveAndPublish, createTemplate, type SchedulePrefs, type ScheduleSlot, requestJobRevision, operatorJobAction } from '@/lib/api';
 import { toast } from 'sonner';
 import { ThumbnailFramePicker } from '@/components/creator/thumbnail-frame-picker';
 import { GenerateReviewLinkButton } from '@/components/creator/generate-review-link-button';
@@ -1173,6 +1173,43 @@ function StagingPanel({
   );
 }
 
+// ── Main page helpers ─────────────────────────────────────────────────────────
+
+function jobCreatedMs(job: Job): number {
+  const v = job.createdAt as string | number | undefined;
+  if (v == null) return 0;
+  const n = typeof v === 'number' ? v : Number(v);
+  if (!Number.isNaN(n) && n > 0) return n < 1e12 ? n * 1000 : n;
+  const d = Date.parse(String(v));
+  return Number.isNaN(d) ? 0 : d;
+}
+
+function isActiveQueueJob(job: Job): boolean {
+  const s = (job.status || '').toLowerCase();
+  if (s === 'published' || s === 'archived' || s === 'cancelled') return false;
+  return isReviewQueueJob(job);
+}
+
+function isHistoryJob(job: Job): boolean {
+  const s = (job.status || '').toLowerCase();
+  return s === 'published' || s === 'archived';
+}
+
+function startOfTodayMs(): number {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function startOfWeekMs(): number {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? 6 : day - 1; // Monday-first
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - diff);
+  return d.getTime();
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function StagingPage() {
@@ -1181,6 +1218,7 @@ export default function StagingPage() {
   const { activeBrand }          = useBrand();
   const activeBrandId            = activeBrand?.id;
   const [jobs, setJobs]         = useState<Job[]>([]);
+  const [historyJobs, setHistoryJobs] = useState<Job[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -1189,27 +1227,29 @@ export default function StagingPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [batchAt, setBatchAt] = useState('');
   const [batchBusy, setBatchBusy] = useState(false);
+  const [datePreset, setDatePreset] = useState<'all' | 'today' | 'this_week' | 'custom'>('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [templateBusyId, setTemplateBusyId] = useState<string | null>(null);
+
+  async function reloadJobs(token?: string | null) {
+    const data = isSuperAdmin
+      ? await apiFetch<{ jobs: Job[] }>('/jobs?all=true', { token: token ?? undefined })
+      : await listJobs(token ?? undefined);
+    const all = data.jobs ?? [];
+    const active = all.filter(isActiveQueueJob).sort((a, b) => jobCreatedMs(b) - jobCreatedMs(a));
+    const history = all.filter(isHistoryJob).sort((a, b) => jobCreatedMs(b) - jobCreatedMs(a));
+    setJobs(active);
+    setHistoryJobs(history);
+  }
 
   useEffect(() => {
     if (!roleLoaded) return;
     (async () => {
       try {
         const token = await getToken();
-        const data = isSuperAdmin
-          ? await apiFetch<{ jobs: Job[] }>('/jobs?all=true', { token: token ?? undefined })
-          : await listJobs(token ?? undefined);
-        const withOutput = (data.jobs ?? []).filter(isReviewQueueJob);
-        withOutput.sort((a, b) => {
-          const toMs = (v: string | number | undefined) => {
-            if (v == null) return 0;
-            const n = typeof v === 'number' ? v : Number(v);
-            if (!Number.isNaN(n) && n > 0) return n > 1e12 ? n : n;
-            const d = Date.parse(String(v));
-            return Number.isNaN(d) ? 0 : d;
-          };
-          return toMs(b.createdAt) - toMs(a.createdAt);
-        });
-        setJobs(withOutput);
+        await reloadJobs(token);
       } catch {
         setError('Failed to load jobs. Refresh to try again.');
       } finally {
@@ -1226,17 +1266,61 @@ export default function StagingPage() {
 
   const activePlatforms = [...new Set(jobs.flatMap((j) => j.platforms ?? []))];
 
-  const filteredJobs = jobs.filter((j) => {
+  function inDateRange(job: Job): boolean {
+    const ms = jobCreatedMs(job);
+    if (!ms) return datePreset === 'all' && !dateFrom && !dateTo;
+    if (datePreset === 'today') return ms >= startOfTodayMs();
+    if (datePreset === 'this_week') return ms >= startOfWeekMs();
+    if (datePreset === 'custom' || dateFrom || dateTo) {
+      if (dateFrom) {
+        const from = new Date(dateFrom); from.setHours(0, 0, 0, 0);
+        if (ms < from.getTime()) return false;
+      }
+      if (dateTo) {
+        const to = new Date(dateTo); to.setHours(23, 59, 59, 999);
+        if (ms > to.getTime()) return false;
+      }
+      return true;
+    }
+    return true;
+  }
+
+  const datedJobs = jobs.filter(inDateRange);
+
+  const filteredJobs = datedJobs.filter((j) => {
     if (platformFilter === 'all') return true;
     return (j.platforms ?? []).includes(platformFilter);
   });
 
   const filterCounts = {
-    all: jobs.length,
-    youtube: jobs.filter((j) => (j.platforms ?? []).includes('youtube')).length,
-    tiktok: jobs.filter((j) => (j.platforms ?? []).includes('tiktok')).length,
-    instagram: jobs.filter((j) => (j.platforms ?? []).includes('instagram')).length,
+    all: datedJobs.length,
+    youtube: datedJobs.filter((j) => (j.platforms ?? []).includes('youtube')).length,
+    tiktok: datedJobs.filter((j) => (j.platforms ?? []).includes('tiktok')).length,
+    instagram: datedJobs.filter((j) => (j.platforms ?? []).includes('instagram')).length,
   };
+
+  async function handleCreateTemplateFromJob(job: Job) {
+    setTemplateBusyId(job.jobId);
+    try {
+      const token = await getToken();
+      const jobSpec = (job.wizardConfig as Record<string, unknown> | undefined) || {
+        contentType: job.contentType,
+        platforms: job.platforms,
+      };
+      await createTemplate({
+        name: `${jobDisplayTitle(job)} · template`,
+        description: `Created from published job ${job.jobId}`,
+        contentType: job.contentType || undefined,
+        platforms: job.platforms ?? [],
+        jobSpec,
+      }, token ?? undefined);
+      toast.success('Template created — open Templates to edit recurrence.');
+    } catch {
+      toast.error("Couldn't create template from this job.");
+    } finally {
+      setTemplateBusyId(null);
+    }
+  }
 
   function toggleSelected(jobId: string) {
     setSelected((prev) => {
@@ -1277,10 +1361,7 @@ export default function StagingPage() {
     if (ok) {
       toast.success(`Scheduled ${ok} job${ok === 1 ? '' : 's'}`);
       try {
-        const data = isSuperAdmin
-          ? await apiFetch<{ jobs: Job[] }>('/jobs?all=true', { token: token ?? undefined })
-          : await listJobs(token ?? undefined);
-        setJobs((data.jobs ?? []).filter(isReviewQueueJob));
+        await reloadJobs(token);
       } catch { /* keep local */ }
       setSelected(new Set());
       setBatchAt('');
@@ -1306,10 +1387,7 @@ export default function StagingPage() {
     if (ok) toast.success(`Published ${ok} job${ok === 1 ? '' : 's'}`);
     if (fail) toast.error(`${fail} publish failure${fail === 1 ? '' : 's'}`);
     try {
-      const data = isSuperAdmin
-        ? await apiFetch<{ jobs: Job[] }>('/jobs?all=true', { token: token ?? undefined })
-        : await listJobs(token ?? undefined);
-      setJobs((data.jobs ?? []).filter(isReviewQueueJob));
+      await reloadJobs(token);
     } catch { /* keep */ }
     setSelected(new Set());
   }
@@ -1332,32 +1410,84 @@ export default function StagingPage() {
         className="!mb-0"
         title="Review Queue"
         subtitle={isSuperAdmin
-          ? `Platform-wide — all accounts. ${jobs.length > 0 ? `${jobs.length} job${jobs.length === 1 ? '' : 's'} awaiting review.` : ''}`
+          ? `Platform-wide — all accounts. ${filteredJobs.length > 0 ? `${filteredJobs.length} job${filteredJobs.length === 1 ? '' : 's'} awaiting review.` : 'Active queue is clear.'}`
           : activeBrand
-            ? `${activeBrand.name}${activeBrand.is_primary === false ? ' sub-brand' : ''} — ${jobs.length > 0 ? `${jobs.length} job${jobs.length === 1 ? '' : 's'} ready to approve and publish.` : 'Videos ready for your review before publishing.'}`
-            : 'Videos ready for your review before publishing to social platforms.'}
-      />
+            ? `${activeBrand.name}${activeBrand.is_primary === false ? ' sub-brand' : ''} — ${filteredJobs.length > 0 ? `${filteredJobs.length} job${filteredJobs.length === 1 ? '' : 's'} ready to approve and publish.` : 'Videos ready for your review before publishing.'}`
+            : 'Pending approvals only — published jobs live in history.'}
+      >
+        <Button
+          variant="outline"
+          className="h-10 font-medium"
+          onClick={() => setHistoryOpen(true)}
+        >
+          View Published History &amp; Templates
+          {historyJobs.length > 0 ? ` (${historyJobs.length})` : ''}
+        </Button>
+      </PageHeader>
 
       {(loading || !roleLoaded) && <PageSkeleton rows={3} />}
       {error && <p className="af-body text-destructive">{formatUserError(error)}</p>}
 
-      {!loading && !error && jobs.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setPlatformFilter(f.id)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors',
-                platformFilter === f.id
-                  ? 'bg-amber-400/15 border-amber-400/40 text-amber-300'
-                  : 'bg-transparent border-border text-muted-foreground hover:text-foreground',
-              )}
+      {!loading && !error && (
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setPlatformFilter(f.id)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors',
+                  platformFilter === f.id
+                    ? 'bg-amber-400/15 border-amber-400/40 text-amber-300'
+                    : 'bg-transparent border-border text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn('h-8', datePreset === 'today' && 'bg-muted')}
+              onClick={() => { setDatePreset('today'); setDateFrom(''); setDateTo(''); }}
             >
-              {f.label}
-            </button>
-          ))}
+              Today
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn('h-8', datePreset === 'this_week' && 'bg-muted')}
+              onClick={() => { setDatePreset('this_week'); setDateFrom(''); setDateTo(''); }}
+            >
+              This Week
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn('h-8', datePreset === 'all' && !dateFrom && !dateTo && 'bg-muted')}
+              onClick={() => { setDatePreset('all'); setDateFrom(''); setDateTo(''); }}
+            >
+              All dates
+            </Button>
+            <input
+              type="date"
+              aria-label="From date"
+              value={dateFrom}
+              onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); }}
+              className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+            />
+            <span className="text-xs text-muted-foreground">to</span>
+            <input
+              type="date"
+              aria-label="To date"
+              value={dateTo}
+              onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); }}
+              className="h-8 rounded-md border border-border bg-background px-2 text-xs"
+            />
+          </div>
         </div>
       )}
 
@@ -1406,16 +1536,17 @@ export default function StagingPage() {
       {!loading && !error && jobs.length === 0 && (
         <EmptyState
           title="Queue is clear"
-          description="Once a job finishes processing, it will appear here for review before publishing."
+          description="Only pending approvals show here. Published jobs are in History & Templates."
           size="md"
+          action={{ label: 'View published history', onClick: () => setHistoryOpen(true) }}
         />
       )}
 
       {!loading && !error && jobs.length > 0 && filteredJobs.length === 0 && (
         <EmptyState
           size="sm"
-          title="No jobs for this platform"
-          description="Try All, or clear the filter to see the full queue."
+          title="No jobs match these filters"
+          description="Try All platforms, All dates, or clear the date range."
         />
       )}
 
@@ -1537,6 +1668,81 @@ export default function StagingPage() {
           </div>
         );
       })}
+
+      {historyOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-labelledby="history-title">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setHistoryOpen(false)} />
+          <div className="relative z-10 h-full w-full max-w-lg bg-card border-l border-border shadow-xl flex flex-col">
+            <div className="flex items-start justify-between gap-3 px-4 py-4 border-b border-border">
+              <div>
+                <h2 id="history-title" className="text-base font-semibold">Published History &amp; Templates</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Past publishes — create a template to reuse settings.
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setHistoryOpen(false)}>Close</Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {historyJobs.length === 0 && (
+                <EmptyState
+                  size="sm"
+                  title="No published jobs yet"
+                  description="After you publish from Review, items appear here."
+                />
+              )}
+              {historyJobs.map((job) => (
+                <div key={job.jobId} className="rounded-xl border border-border bg-background p-3 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0 border border-border/50">
+                      {job.thumbnailUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={job.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">—</div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold line-clamp-2">{jobDisplayTitle(job)}</p>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <StatusBadge status={job.status} />
+                        {job.platforms?.map((p) => (
+                          <span key={p} className="text-[10px] text-muted-foreground capitalize">{p}</span>
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1">{formatDate(job.createdAt)}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 font-medium"
+                      disabled={templateBusyId === job.jobId}
+                      onClick={() => void handleCreateTemplateFromJob(job)}
+                    >
+                      {templateBusyId === job.jobId ? 'Creating…' : 'Create Template'}
+                    </Button>
+                    <Link
+                      href={`/myjobs/new?fromJob=${encodeURIComponent(job.jobId)}`}
+                      className={cn('inline-flex h-9 items-center px-3 rounded-md border border-border text-xs font-medium hover:bg-accent')}
+                    >
+                      Duplicate Settings
+                    </Link>
+                    <Link href={`/myjobs/${job.jobId}`} className="text-xs text-muted-foreground hover:text-foreground self-center px-1">
+                      Detail
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-border px-4 py-3">
+              <Link href="/templates" className="text-xs font-semibold text-primary hover:underline">
+                Open Templates →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </PageShell>
   );
 }

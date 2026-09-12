@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-12 04:45 UTC  
+**Last Updated:** 2026-09-12 05:15 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Review Queue UX: demote Best Publishing Times to collapsible; inline card thumb/actions; platform filter tabs + batch Approve All Selected.
+Review Queue: Today/This Week/date range filters; active-only queue (no published); Published History sheet with Create Template.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
