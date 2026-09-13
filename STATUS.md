@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 01:05 UTC  
+**Last Updated:** 2026-09-13 01:20 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Developer API: dark canvas + rate/credit/fair-use contrast. `iss_ZKnsaRM_Uks6`.
+Developer API dark hero + dark endpoint rows. `iss_qb5GpZVrtSxV`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

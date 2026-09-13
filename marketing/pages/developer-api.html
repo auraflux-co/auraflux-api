@@ -27,15 +27,18 @@ body{
 /* Scoped — beat injected Framer/theme global color rules */
 .dev-page,.dev-page *{box-sizing:border-box;}
 .dev-page{max-width:72rem;margin:0 auto;padding:7rem 1rem 0;position:relative;z-index:1;}
-.dev-page .dev-hero{margin-bottom:2rem;}
+.dev-page .dev-hero{
+  margin:0 0 2rem;padding:1.75rem 1.5rem 1.5rem;
+  background:#020617 !important;border:1px solid #1e293b;border-radius:1rem;
+}
 .dev-page .dev-hero h1{
   letter-spacing:-.025em;margin:0 0 1rem;
   font-size:clamp(2rem,4vw,2.25rem);font-weight:800 !important;
-  color:#f8fafc !important;-webkit-text-fill-color:#f8fafc !important;
+  color:#fff !important;-webkit-text-fill-color:#fff !important;
 }
 .dev-page .dev-hero p{
   color:#cbd5e1 !important;-webkit-text-fill-color:#cbd5e1 !important;
-  font-size:1.125rem;font-weight:500;line-height:1.7;max-width:42rem;margin:0 0 2rem;
+  font-size:1.125rem;font-weight:500;line-height:1.7;max-width:42rem;margin:0;
 }
 
 .dev-page .dev-auth-banner{
@@ -85,16 +88,16 @@ body{
   margin:0 0 1.5rem;letter-spacing:-.02em;
 }
 
-/* Light endpoint cards — force readable path text */
+/* Dark endpoint cards — slate-900 rows on slate-950 canvas */
 .dev-page .dev-endpoint{
-  background:#fff !important;border:1px solid #e2e8f0;
+  background:#0f172a !important;border:1px solid #1e293b;
   border-radius:.75rem;overflow:hidden;margin:0 0 .75rem;
-  box-shadow:0 1px 2px rgba(15,23,42,.06);position:relative;
+  box-shadow:0 8px 20px rgba(0,0,0,.25);position:relative;
 }
-.dev-page .dev-endpoint:hover{border-color:#cbd5e1;}
+.dev-page .dev-endpoint:hover{border-color:#334155;}
 .dev-page .dev-endpoint-header{
   display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;
-  padding:1rem;cursor:pointer;background:#fff !important;position:static;
+  padding:1rem;cursor:pointer;background:#0f172a !important;position:static;
 }
 .dev-page .dev-endpoint-left{display:flex;align-items:center;gap:1rem;min-width:0;position:static;}
 .dev-page .dev-method{
@@ -103,29 +106,29 @@ body{
   font-family:ui-monospace,Menlo,monospace;flex-shrink:0;
   border:1px solid transparent;
 }
-/* Color-coded method badges */
+/* Color-coded method badges — readable on dark cards */
 .dev-page .dev-method.m-get{
-  background:#d1fae5 !important;color:#065f46 !important;border-color:#a7f3d0 !important;
+  background:rgba(16,185,129,.18) !important;color:#6ee7b7 !important;border-color:rgba(52,211,153,.35) !important;
 }
 .dev-page .dev-method.m-post{
-  background:#dbeafe !important;color:#1e40af !important;border-color:#bfdbfe !important;
+  background:rgba(59,130,246,.18) !important;color:#93c5fd !important;border-color:rgba(96,165,250,.35) !important;
 }
 .dev-page .dev-method.m-delete{
-  background:#ffe4e6 !important;color:#9f1239 !important;border-color:#fecdd3 !important;
+  background:rgba(244,63,94,.18) !important;color:#fda4af !important;border-color:rgba(251,113,133,.35) !important;
 }
 .dev-page .dev-method.m-patch{
-  background:#fef3c7 !important;color:#92400e !important;border-color:#fde68a !important;
+  background:rgba(251,191,36,.15) !important;color:#fbbf24 !important;border-color:rgba(251,191,36,.35) !important;
 }
 .dev-page .dev-path{
   font-size:.875rem !important;font-family:ui-monospace,Menlo,monospace !important;
-  color:#0f172a !important;font-weight:700 !important;background:transparent !important;
-  opacity:1 !important;-webkit-text-fill-color:#0f172a !important;
+  color:#fbbf24 !important;font-weight:700 !important;background:transparent !important;
+  opacity:1 !important;-webkit-text-fill-color:#fbbf24 !important;
 }
 .dev-page .dev-endpoint-title{
-  font-size:.875rem;color:#334155 !important;-webkit-text-fill-color:#334155 !important;font-weight:500;
+  font-size:.875rem;color:#cbd5e1 !important;-webkit-text-fill-color:#cbd5e1 !important;font-weight:500;
 }
 .dev-page .dev-endpoint-body{
-  display:none;border-top:1px solid #e2e8f0;padding:1.25rem;background:#0f172a;position:static;
+  display:none;border-top:1px solid #1e293b;padding:1.25rem;background:#020617;position:static;
 }
 .dev-page .dev-endpoint-body.open{display:block;}
 .dev-page .dev-desc{font-size:.88rem;color:#cbd5e1 !important;line-height:1.65;margin:0 0 1rem;}
