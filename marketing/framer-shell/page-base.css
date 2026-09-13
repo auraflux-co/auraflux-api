@@ -642,6 +642,10 @@ body.blog-body {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
 }
+.blog-card h3 {
+  margin-top: 0.5rem !important;
+  line-height: 1.4 !important;
+}
 .blog-card h3 a:hover {
   color: #fbbf24 !important;
   -webkit-text-fill-color: #fbbf24 !important;
@@ -658,13 +662,13 @@ body.blog-body {
   border-top-color: #1e293b !important;
 }
 .blog-card-foot a {
-  color: #e2e8f0 !important;
-  -webkit-text-fill-color: #e2e8f0 !important;
-  font-weight: 700 !important;
-}
-.blog-card-foot a:hover {
   color: #fbbf24 !important;
   -webkit-text-fill-color: #fbbf24 !important;
+  font-weight: 600 !important;
+}
+.blog-card-foot a:hover {
+  color: #fde68a !important;
+  -webkit-text-fill-color: #fde68a !important;
 }
 /* legacy dark post-card — keep harmless if old markup appears */
 .post-card {

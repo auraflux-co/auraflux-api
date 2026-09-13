@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 02:15 UTC  
+**Last Updated:** 2026-09-13 02:20 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Blog index full dark canvas + dark cards/filters. `iss_qe1feOoAR_Gn`.
+Blog cards: title mt + amber Read More. `iss_7ro01a6kkTli`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
