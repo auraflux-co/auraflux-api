@@ -685,8 +685,8 @@ body.dev-api-page p {
   -webkit-text-fill-color: #f8fafc !important;
 }
 .dev-auth-banner-meta .v-muted {
-  color: #94a3b8 !important;
-  -webkit-text-fill-color: #94a3b8 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
 }
 .dev-auth-card {
   background: #0f172a !important;
@@ -761,8 +761,8 @@ body.dev-api-page p {
   font-weight: 700 !important;
 }
 .dev-endpoint-title {
-  color: #cbd5e1 !important;
-  -webkit-text-fill-color: #cbd5e1 !important;
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
   font-weight: 500 !important;
 }
 .dev-endpoint-body {
@@ -775,17 +775,18 @@ body.dev-api-page p {
   -webkit-text-fill-color: #cbd5e1 !important;
 }
 .dev-code-label {
-  color: #94a3b8 !important;
-  -webkit-text-fill-color: #94a3b8 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
 }
 .dev-code {
   background: #060b14 !important;
   color: #fcd34d !important;
 }
 /* Field reference table stays light for dense readability */
-body.dev-api-page .dev-jobs-ref-table,
-body.dev-api-page .dev-jobs-ref-table th,
-body.dev-api-page .dev-jobs-ref-table td {
+body.dev-api-page .dev-jobs-ref-table td,
+body.dev-api-page .dev-jobs-ref-table td:nth-child(2),
+body.dev-api-page .dev-jobs-ref-table td:nth-child(3),
+body.dev-api-page .dev-jobs-ref-table td:nth-child(4) {
   color: #1e293b !important;
   -webkit-text-fill-color: #1e293b !important;
 }
@@ -797,6 +798,11 @@ body.dev-api-page .dev-jobs-ref-table th {
 body.dev-api-page .dev-jobs-ref-table td:first-child {
   color: #0f172a !important;
   -webkit-text-fill-color: #0f172a !important;
+}
+body.dev-api-page .dev-code-copy,
+body.dev-api-page .dev-jobs-ref-sample-top button {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
 }
 body.dev-api-page .dev-fair-use,
 body.dev-api-page .dev-limit-list--rates li,
