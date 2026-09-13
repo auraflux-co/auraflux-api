@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 00:50 UTC  
+**Last Updated:** 2026-09-13 00:55 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Hide Roadmap from marketing nav (desktop + mobile). `iss_-7sK6oHv-7cN`.
+How it works Step 02 dual-zone + Step 03 centered kinetic captions. `iss__xHmSj66wUep`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
