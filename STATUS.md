@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 01:00 UTC  
+**Last Updated:** 2026-09-13 01:05 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Redeploy marketing with clean nav — Roadmap link removed again (dirty shell had reintroduced it).
+Developer API: dark canvas + rate/credit/fair-use contrast. `iss_ZKnsaRM_Uks6`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

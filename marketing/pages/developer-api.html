@@ -18,17 +18,23 @@
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
+/* Full-page dark canvas — beats page-base mist paper-deep */
+body{
+  background:#020617 !important;
+  background-image:none !important;
+  color:#e2e8f0 !important;
+}
 /* Scoped — beat injected Framer/theme global color rules */
 .dev-page,.dev-page *{box-sizing:border-box;}
-.dev-page{max-width:72rem;margin:0 auto;padding:7rem 1rem 4rem;position:relative;z-index:1;}
+.dev-page{max-width:72rem;margin:0 auto;padding:7rem 1rem 0;position:relative;z-index:1;}
 .dev-page .dev-hero{margin-bottom:2rem;}
 .dev-page .dev-hero h1{
   letter-spacing:-.025em;margin:0 0 1rem;
   font-size:clamp(2rem,4vw,2.25rem);font-weight:800 !important;
-  color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
+  color:#f8fafc !important;-webkit-text-fill-color:#f8fafc !important;
 }
 .dev-page .dev-hero p{
-  color:#475569 !important;-webkit-text-fill-color:#475569 !important;
+  color:#cbd5e1 !important;-webkit-text-fill-color:#cbd5e1 !important;
   font-size:1.125rem;font-weight:500;line-height:1.7;max-width:42rem;margin:0 0 2rem;
 }
 
@@ -69,13 +75,13 @@ ${FRAMER_CSS || ''}
 .dev-page .dev-section{margin-bottom:2.5rem;}
 .dev-page .dev-section-title{
   display:block;font-size:.75rem;font-weight:700 !important;letter-spacing:.1em;text-transform:uppercase;
-  color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
+  color:#f8fafc !important;-webkit-text-fill-color:#f8fafc !important;
   font-family:ui-sans-serif,system-ui,sans-serif;
   padding-bottom:0;border-bottom:none;
   margin:2.5rem 0 1rem;
 }
 .dev-page .dev-section-heading{
-  font-size:1.25rem;font-weight:700 !important;color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
+  font-size:1.25rem;font-weight:700 !important;color:#f8fafc !important;-webkit-text-fill-color:#f8fafc !important;
   margin:0 0 1.5rem;letter-spacing:-.02em;
 }
 
@@ -124,7 +130,10 @@ ${FRAMER_CSS || ''}
 .dev-page .dev-endpoint-body.open{display:block;}
 .dev-page .dev-desc{font-size:.88rem;color:#cbd5e1 !important;line-height:1.65;margin:0 0 1rem;}
 .dev-page .dev-section > .dev-desc{
-  color:#334155 !important;-webkit-text-fill-color:#334155 !important;
+  color:#cbd5e1 !important;-webkit-text-fill-color:#cbd5e1 !important;
+}
+.dev-page .dev-section > .dev-desc a{
+  color:#fbbf24 !important;-webkit-text-fill-color:#fbbf24 !important;
 }
 .dev-page .dev-code-label{
   font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
@@ -229,14 +238,55 @@ ${FRAMER_CSS || ''}
   max-width:100%;
 }
 
+/* Closing band: Rate Limits / Fair Use / API Access — full-bleed slate-950 */
+.dev-closing-band{
+  width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
+  background:#020617 !important;border-top:1px solid #1e293b;
+  padding:2.5rem 0 4rem;margin-top:2rem;
+}
+.dev-closing-inner{max-width:72rem;margin:0 auto;padding:0 1rem;}
+.dev-closing-band .dev-section-title{
+  color:#f8fafc !important;-webkit-text-fill-color:#f8fafc !important;
+}
+.dev-limit-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:16px;
+}
+@media(max-width:700px){.dev-limit-grid{grid-template-columns:1fr;}}
+.dev-limit-card{
+  background:#0f172a !important;border:1px solid #1e293b;border-radius:12px;padding:24px;
+}
+.dev-limit-card .dev-code-label{
+  margin-bottom:12px;color:#94a3b8 !important;-webkit-text-fill-color:#94a3b8 !important;
+}
+.dev-limit-list{
+  display:flex;flex-direction:column;gap:8px;list-style:none;margin:0;padding:0;
+}
+.dev-limit-list--rates li{
+  font-size:.88rem;font-weight:500;
+  color:#e2e8f0 !important;-webkit-text-fill-color:#e2e8f0 !important;
+}
+.dev-limit-list--credits li{
+  font-size:.88rem;font-weight:500;
+  color:#cbd5e1 !important;-webkit-text-fill-color:#cbd5e1 !important;
+}
+.dev-limit-list--credits strong{
+  color:#fbbf24 !important;-webkit-text-fill-color:#fbbf24 !important;font-weight:800;
+}
+.dev-closing-band .dev-fair-use{
+  margin:0;font-size:.88rem;line-height:1.7;
+  color:#cbd5e1 !important;-webkit-text-fill-color:#cbd5e1 !important;
+}
+.dev-closing-band .dev-fair-use a{
+  color:#fbbf24 !important;-webkit-text-fill-color:#fbbf24 !important;text-decoration:underline;
+}
 .dev-page .dev-cta{
-  background:#0f172a;border:1px solid rgba(199,175,79,.2);
+  background:#0f172a;border:1px solid rgba(251,191,36,.25);
   border-radius:16px;padding:32px;display:flex;
   align-items:center;justify-content:space-between;gap:24px;
-  margin-top:56px;flex-wrap:wrap;
+  margin-top:2rem;flex-wrap:wrap;
 }
 .dev-page .dev-cta-text h3{font-size:1.1rem;font-weight:700;color:#fff !important;margin:0 0 6px;}
-.dev-page .dev-cta-text p{font-size:.88rem;color:#94a3b8 !important;margin:0;}
+.dev-page .dev-cta-text p{font-size:.88rem;color:#cbd5e1 !important;margin:0;}
 .dev-page .dev-cta a{
   background:#fbbf24;color:#0b1220 !important;padding:11px 24px;
   border-radius:8px;font-size:.9rem;font-weight:700;text-decoration:none !important;
@@ -703,41 +753,45 @@ ${FRAMER_NAV || FALLBACK_NAV}
     </div>
   </div>
 
-  <!-- RATE LIMITS -->
-  <div class="dev-section">
-    <div class="dev-section-title">Rate Limits &amp; Credit Costs</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div style="background:#0f172a;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:24px;">
-        <div class="dev-code-label" style="margin-bottom:12px;">Rate limits</div>
-        <ul style="display:flex;flex-direction:column;gap:8px;list-style:none;">
-          <li style="font-size:.88rem;color:#a0a0b8;">60 API requests / minute</li>
-          <li style="font-size:.88rem;color:#a0a0b8;">10 concurrent job submissions</li>
-          <li style="font-size:.88rem;color:#a0a0b8;">500MB max upload size</li>
-        </ul>
+  <div class="dev-closing-band">
+    <div class="dev-closing-inner">
+      <!-- RATE LIMITS -->
+      <div class="dev-section">
+        <div class="dev-section-title">Rate Limits &amp; Credit Costs</div>
+        <div class="dev-limit-grid">
+          <div class="dev-limit-card">
+            <div class="dev-code-label">Rate limits</div>
+            <ul class="dev-limit-list dev-limit-list--rates">
+              <li>60 API requests / minute</li>
+              <li>10 concurrent job submissions</li>
+              <li>500MB max upload size</li>
+            </ul>
+          </div>
+          <div class="dev-limit-card">
+            <div class="dev-code-label">Credit costs per job</div>
+            <ul class="dev-limit-list dev-limit-list--credits">
+              <li>Short-form, single clip - <strong>1 credit</strong></li>
+              <li>Long-form or multi-clip - <strong>2 credits</strong></li>
+              <li>Video generation - <strong>3 credits</strong></li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <div style="background:#0f172a;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:24px;">
-        <div class="dev-code-label" style="margin-bottom:12px;">Credit costs per job</div>
-        <ul style="display:flex;flex-direction:column;gap:8px;list-style:none;">
-          <li style="font-size:.88rem;color:#a0a0b8;">Short-form, single clip - <strong style="color:#f5c542;">1 credit</strong></li>
-          <li style="font-size:.88rem;color:#a0a0b8;">Long-form or multi-clip - <strong style="color:#f5c542;">2 credits</strong></li>
-          <li style="font-size:.88rem;color:#a0a0b8;">Video generation - <strong style="color:#f5c542;">3 credits</strong></li>
-        </ul>
+
+      <div class="dev-section">
+        <div class="dev-section-title">Fair use</div>
+        <p class="dev-fair-use">Self-serve is unlimited Peaks+publish for one brand, with rate limits in the <a href="/terms">Terms</a> (concurrent jobs, hourly job starts, Peaks analyses). API RPM limits also apply per key.</p>
+      </div>
+
+      <!-- CTA -->
+      <div class="dev-cta">
+        <div class="dev-cta-text">
+          <h3>Request API access</h3>
+          <p>Tell us your brand, stack, and Peaks use case. We review invites for platform-signal buyers.</p>
+        </div>
+        <a href="/contact?topic=api_invite">Request access</a>
       </div>
     </div>
-  </div>
-
-  <div class="dev-section">
-    <div class="dev-section-title">Fair use</div>
-    <p class="dev-desc" style="margin:0;">Self-serve is unlimited Peaks+publish for one brand, with rate limits in the <a href="/terms" style="color:#f5c542;">Terms</a> (concurrent jobs, hourly job starts, Peaks analyses). API RPM limits also apply per key.</p>
-  </div>
-
-  <!-- CTA -->
-  <div class="dev-cta">
-    <div class="dev-cta-text">
-      <h3>Request API access</h3>
-      <p>Tell us your brand, stack, and Peaks use case. We review invites for platform-signal buyers.</p>
-    </div>
-    <a href="/contact?topic=api_invite">Request access</a>
   </div>
 
 </div>
