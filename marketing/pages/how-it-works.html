@@ -190,6 +190,50 @@ body{
 .phone-caption-bar{
   width:42%;height:0.2rem;border-radius:9999px;background:rgba(251,191,36,.55);
 }
+.phone-stage--captions .phone-gameplay{
+  background:
+    linear-gradient(180deg,#1e293b 0%,#0f172a 45%,#020617 100%);
+}
+.phone-stage--captions .phone-gameplay::after{display:none}
+.dispatch-mock{
+  width:100%;max-width:22rem;margin:0 auto;
+  background:#0f172a;border:1px solid #1e293b;border-radius:0.75rem;
+  padding:1.25rem;box-shadow:0 20px 40px rgba(0,0,0,.4);
+  display:flex;flex-direction:column;gap:1rem;
+}
+.dispatch-mock-head{
+  display:flex;align-items:center;justify-content:space-between;gap:0.75rem;
+  border-bottom:1px solid #1e293b;padding-bottom:0.75rem;
+}
+.dispatch-mock-title{
+  margin:0;font-size:0.875rem;font-weight:700;color:#fff !important;letter-spacing:-.01em;
+}
+.dispatch-mock-status{
+  margin:0;font-size:0.75rem;font-weight:600;color:#fbbf24 !important;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;white-space:nowrap;
+}
+.dispatch-mock-rows{display:flex;flex-direction:column;gap:0.75rem}
+.dispatch-mock-row{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  font-size:0.875rem;font-weight:500;color:#e2e8f0 !important;
+}
+.dispatch-toggle{
+  width:2rem;height:1rem;border-radius:9999px;background:#f59e0b;
+  display:inline-flex;align-items:center;justify-content:flex-end;padding:0 0.125rem;
+  flex-shrink:0;
+}
+.dispatch-toggle-knob{
+  width:0.75rem;height:0.75rem;border-radius:9999px;background:#020617;display:block;
+}
+.dispatch-mock-cta{
+  display:block;width:100%;box-sizing:border-box;text-align:center;
+  padding:0.55rem 0.75rem;border-radius:0.5rem;border:none;
+  background:#f59e0b;color:#020617 !important;font-weight:800;font-size:0.75rem;
+  letter-spacing:.02em;text-transform:uppercase;cursor:default;
+}
+.step-media--dispatch{
+  padding:1.25rem;
+}
 .cta-band{
   background:#020617;color:#fff;text-align:center;padding:3.5rem 1.25rem;
   border-top:1px solid #1e293b;
@@ -243,12 +287,12 @@ ${FRAMER_NAV || FALLBACK_NAV}
           <span class="step-pill">Chat Spikes · Heatmaps · CCV Surges</span>
         </div>
       </div>
-      <div class="step-media" data-asset="step-01">
+      <div class="step-media" data-asset="step-01" aria-label="Peak detection waveform chart">
         <div class="step-media-fallback" aria-hidden="true">Chat Velocity · Most Replayed</div>
         <img
           class="step-media-img"
           src="/assets/peak-detection-demo.gif"
-          alt="Engagement Peak Detection Chart"
+          alt="Peak detection waveform and chat velocity chart"
           width="1280"
           height="720"
           loading="lazy"
@@ -295,9 +339,8 @@ ${FRAMER_NAV || FALLBACK_NAV}
       <div class="step-media step-media--mock" data-asset="step-03" aria-label="Kinetic captions mock">
         <div class="phone-frame">
           <div class="phone-notch" aria-hidden="true"></div>
-          <div class="phone-stage">
+          <div class="phone-stage phone-stage--captions">
             <div class="phone-gameplay" aria-hidden="true"></div>
-            <div class="phone-facecam" aria-hidden="true" style="opacity:.85"></div>
             <div class="phone-captions">
               <p class="phone-caption-line">That peak was <em>insane</em></p>
               <p class="phone-caption-line">Chat went <em>wild</em></p>
@@ -319,16 +362,28 @@ ${FRAMER_NAV || FALLBACK_NAV}
           <span class="step-pill">TikTok · YouTube Shorts · IG Reels</span>
         </div>
       </div>
-      <div class="step-media" data-asset="step-04">
-        <div class="step-media-fallback" aria-hidden="true">TikTok · Shorts · Reels</div>
-        <img
-          class="step-media-img"
-          src="/assets/dashboard-publishing-preview.jpg"
-          alt="Publishing Preview to YouTube Shorts"
-          width="1280"
-          height="720"
-          loading="lazy"
-        >
+      <div class="step-media step-media--mock step-media--dispatch" data-asset="step-04" aria-label="Multi-account publish dispatch mock">
+        <div class="dispatch-mock">
+          <div class="dispatch-mock-head">
+            <p class="dispatch-mock-title">Publish Peak Short</p>
+            <p class="dispatch-mock-status">Ready to sync</p>
+          </div>
+          <div class="dispatch-mock-rows">
+            <div class="dispatch-mock-row">
+              <span>TikTok</span>
+              <span class="dispatch-toggle" aria-hidden="true"><span class="dispatch-toggle-knob"></span></span>
+            </div>
+            <div class="dispatch-mock-row">
+              <span>YouTube Shorts</span>
+              <span class="dispatch-toggle" aria-hidden="true"><span class="dispatch-toggle-knob"></span></span>
+            </div>
+            <div class="dispatch-mock-row">
+              <span>Instagram Reels</span>
+              <span class="dispatch-toggle" aria-hidden="true"><span class="dispatch-toggle-knob"></span></span>
+            </div>
+          </div>
+          <div class="dispatch-mock-cta">Publish Now</div>
+        </div>
       </div>
     </div>
   </article>

@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 00:20 UTC  
+**Last Updated:** 2026-09-13 00:25 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-How it works: step 02/03 dark 9:16 phone mocks (no white photo cutouts). `iss_cMOMnq9zzCL6`.
+How it works: unique step visuals — chart / facecam / captions / dispatch. `iss_leeIqIR6B96R`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
