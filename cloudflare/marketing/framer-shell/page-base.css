@@ -509,8 +509,20 @@ body.contact-page .ct-faq-card {
 body.contact-page .ct-faq-card dt {
   color: #fff !important;
 }
-body.contact-page .ct-faq-card dd {
-  color: #cbd5e1 !important;
+body.contact-page .ct-cal-frame-wrap {
+  min-height: 720px !important;
+  height: 720px !important;
+  overflow: hidden !important;
+}
+body.contact-page .ct-cal-frame {
+  min-height: 720px !important;
+  height: 720px !important;
+  overflow: hidden !important;
+}
+body.contact-page .ct-chat-btn {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  font-weight: 600 !important;
 }
 
 .rdm-col {

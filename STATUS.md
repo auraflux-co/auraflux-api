@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 02:00 UTC  
+**Last Updated:** 2026-09-13 02:05 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Contact page dark canvas + Schedule a Demo card. `iss_dPpadXf7NSrX`.
+Contact: taller Cal embed (720px) + brighter Chat with Us. `iss_STr-ySVhaz3i`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
