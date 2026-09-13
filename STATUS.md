@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 00:00 UTC  
+**Last Updated:** 2026-09-13 00:10 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-How it works: drop duplicate 1–4 from step h2s; keep 01–04 badges.
+How it works: full-bleed dark pipeline band (no mist gap behind steps).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

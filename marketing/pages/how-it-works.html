@@ -13,10 +13,16 @@
 ${FRAMER_FONTS || ''}
 ${FRAMER_CSS || ''}
 <style>
+/* Full-page dark canvas — body defaults to mist paper-deep in page-base */
+body{
+  background:#020617 !important;
+  color:#e2e8f0 !important;
+}
 /* pt-12 md:pt-16 — clear fixed nav so H1 is fully visible (!important beats page-base) */
 .hero{
   text-align:center;
   padding:3rem 1.25rem 2.5rem !important;
+  background:#020617 !important;
 }
 @media (min-width:768px){
   .hero{padding:4rem 1.25rem 2.5rem !important}
@@ -51,7 +57,14 @@ ${FRAMER_CSS || ''}
   pointer-events:none;
 }
 .hero-video.is-ready .hero-video-fallback{display:none}
-.pipeline{max-width:64rem;margin:0 auto;padding:1.5rem 1.25rem 4.5rem;display:flex;flex-direction:column;gap:1.5rem}
+.pipeline-band{
+  width:100%;
+  background:#020617 !important;
+  color:#fff !important;
+  padding:4rem 0;
+  box-sizing:border-box;
+}
+.pipeline{max-width:64rem;margin:0 auto;padding:0 1.5rem;display:flex;flex-direction:column;gap:1.5rem}
 .step-block{
   background:#0f172a;border:1px solid #1e293b;border-radius:1rem;padding:1.75rem 1.5rem;
   box-shadow:0 4px 16px rgba(15,23,42,.12);
@@ -143,6 +156,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
   </div>
 </div>
 
+<section class="pipeline-band" aria-label="How AuraFlux works">
 <div class="pipeline">
   <article class="step-block">
     <div class="step-grid">
@@ -240,6 +254,7 @@ ${FRAMER_NAV || FALLBACK_NAV}
     </div>
   </article>
 </div>
+</section>
 
 <div class="cta-band">
   <h2>Ready to Automate Your Stream Clips?</h2>
