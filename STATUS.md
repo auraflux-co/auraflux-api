@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 00:10 UTC  
+**Last Updated:** 2026-09-13 00:20 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-How it works: full-bleed dark pipeline band (no mist gap behind steps).
+How it works: step 02/03 dark 9:16 phone mocks (no white photo cutouts). `iss_cMOMnq9zzCL6`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
