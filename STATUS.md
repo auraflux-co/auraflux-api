@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 00:55 UTC  
+**Last Updated:** 2026-09-13 01:00 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-How it works Step 02 dual-zone + Step 03 centered kinetic captions. `iss__xHmSj66wUep`.
+Redeploy marketing with clean nav — Roadmap link removed again (dirty shell had reintroduced it).
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
