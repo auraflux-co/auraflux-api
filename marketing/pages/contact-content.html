@@ -1,5 +1,5 @@
 <style>
-/* Page shell — clear fixed nav; light mist canvas */
+/* Contact — dark canvas (page-base may still force mist; body.contact-page wins) */
 .wrap{
   max-width:64rem !important;
   margin:0 auto !important;
@@ -10,10 +10,10 @@
 .ct-hero{margin-bottom:2.5rem;}
 .ct-hero h1{
   font-size:clamp(1.75rem,4vw,2.25rem);font-weight:800;letter-spacing:-.03em;
-  color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;margin:0 0 1rem;
+  color:#fff !important;-webkit-text-fill-color:#fff !important;margin:0 0 1rem;
 }
 .ct-hero p{
-  color:#475569 !important;-webkit-text-fill-color:#475569 !important;
+  color:#cbd5e1 !important;-webkit-text-fill-color:#cbd5e1 !important;
   font-size:1.05rem;font-weight:500;line-height:1.7;max-width:40rem;margin:0;
 }
 
@@ -58,37 +58,37 @@
   display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;
 }
 
-/* Right — light form card */
+/* Right — dark Schedule a Demo card */
 .ct-form-card{
-  background:#fff !important;border:1px solid #e2e8f0;border-radius:1rem;
-  padding:2rem;box-shadow:0 1px 2px rgba(15,23,42,.06);
+  background:#0f172a !important;border:1px solid #1e293b;border-radius:.75rem;
+  padding:1.5rem;box-shadow:0 20px 40px rgba(0,0,0,.35);color:#e2e8f0 !important;
 }
 .ct-form{display:flex;flex-direction:column;gap:1.5rem;}
 .ct-form-row{display:grid;grid-template-columns:1fr;gap:1rem;}
 @media(min-width:768px){.ct-form-row{grid-template-columns:1fr 1fr;}}
 .ct-form label{
   display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
-  color:#0f172a !important;margin:0 0 .5rem;
+  color:#e2e8f0 !important;margin:0 0 .5rem;
 }
 .ct-form input,.ct-form textarea,.ct-form select{
   width:100%;padding:.75rem 1rem;box-sizing:border-box;
-  background:rgba(248,250,252,.5) !important;border:1px solid #e2e8f0;border-radius:.75rem;
-  color:#0f172a !important;-webkit-text-fill-color:#0f172a !important;
+  background:#020617 !important;border:1px solid #334155;border-radius:.75rem;
+  color:#f8fafc !important;-webkit-text-fill-color:#f8fafc !important;
   font-size:.875rem;font-family:inherit;outline:none;
   transition:border-color .15s,box-shadow .15s,background .15s;
 }
 .ct-form input::placeholder,.ct-form textarea::placeholder{color:#94a3b8 !important;}
 .ct-form input:focus,.ct-form textarea:focus,.ct-form select:focus{
-  background:#fff !important;border-color:#fbbf24 !important;
+  background:#020617 !important;border-color:#fbbf24 !important;
   box-shadow:0 0 0 3px rgba(251,191,36,.2);outline:none;
 }
 .ct-form select{appearance:none;cursor:pointer;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23334155' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23cbd5e1' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 1rem center;padding-right:2.5rem;
 }
 .ct-form select:focus{
-  background-color:#fff !important;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23334155' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-color:#020617 !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 1rem center;
 }
 .ct-form textarea{min-height:7rem;resize:vertical;}
@@ -96,37 +96,38 @@
   width:100%;margin-top:.5rem;padding:.9rem 1.5rem;
   background:#fbbf24 !important;color:#020617 !important;
   font-weight:700;font-size:.95rem;border:none;border-radius:.75rem;cursor:pointer;
-  box-shadow:0 4px 12px rgba(15,23,42,.12);font-family:inherit;
+  box-shadow:0 4px 12px rgba(0,0,0,.35);font-family:inherit;
   transition:background .15s,box-shadow .15s,transform .15s;
 }
 .ct-form button[type=submit]:hover{
   background:#f59e0b !important;
-  box-shadow:0 8px 20px rgba(15,23,42,.16);
+  box-shadow:0 8px 20px rgba(0,0,0,.4);
   transform:translateY(-1px);
 }
 .ct-form button[type=submit]:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 .ct-form-msg{padding:10px 14px;border-radius:8px;font-size:.85rem;margin-top:4px;}
-.ct-form-msg.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;}
-.ct-form-msg.err{background:#fff1f2;color:#9f1239;border:1px solid #fecdd3;}
+.ct-form-msg.ok{background:#064e3b;color:#a7f3d0;border:1px solid #047857;}
+.ct-form-msg.err{background:#4c0519;color:#fecdd3;border:1px solid #9f1239;}
 
-/* Schedule tabs — Book Live Calendar / Send a Message (BR/Pavilion pattern) */
+/* Schedule tabs — Book Live Calendar / Send a Message */
 .ct-schedule-title{
-  font-size:1.5rem;font-weight:800;color:#0f172a !important;letter-spacing:-.02em;margin:0;
+  font-size:1.5rem;font-weight:800;color:#fff !important;-webkit-text-fill-color:#fff !important;letter-spacing:-.02em;margin:0;
 }
 .ct-schedule-sub{
-  font-size:.875rem;font-weight:500;color:#334155 !important;line-height:1.6;margin:.35rem 0 0;
+  font-size:.875rem;font-weight:500;color:#cbd5e1 !important;-webkit-text-fill-color:#cbd5e1 !important;line-height:1.6;margin:.35rem 0 0;
 }
 .ct-tabs{
   display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:1.5rem;
-  background:#f1f5f9;border-radius:.75rem;padding:.25rem;
+  background:#1e293b;border:1px solid #334155;border-radius:.75rem;padding:.25rem;
 }
 .ct-tab{
-  border:none;border-radius:.5rem;padding:.65rem .75rem;cursor:pointer;font-family:inherit;
-  font-size:.875rem;font-weight:600;color:#475569;background:transparent;transition:background .15s,color .15s,box-shadow .15s;
+  border:1px solid transparent;border-radius:.5rem;padding:.65rem .75rem;cursor:pointer;font-family:inherit;
+  font-size:.875rem;font-weight:600;color:#cbd5e1;background:#1e293b;transition:background .15s,color .15s,border-color .15s,box-shadow .15s;
 }
-.ct-tab:hover{color:#0f172a;}
+.ct-tab:hover{color:#f8fafc;border-color:#475569;}
 .ct-tab.is-active{
-  background:#fff !important;color:#0f172a !important;box-shadow:0 1px 2px rgba(15,23,42,.08);
+  background:#334155 !important;color:#f8fafc !important;border-color:#475569 !important;
+  box-shadow:0 1px 2px rgba(0,0,0,.25);
 }
 .ct-panel{margin-top:1.5rem;}
 .ct-panel[hidden]{display:none !important;}
@@ -134,46 +135,46 @@
   display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:.75rem;margin-bottom:1rem;
 }
 .ct-cal-eyebrow{
-  font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b !important;margin:0 0 .25rem;
+  font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e2e8f0 !important;-webkit-text-fill-color:#e2e8f0 !important;margin:0 0 .25rem;
 }
 .ct-cal-head h3{
-  font-size:1.125rem;font-weight:700;color:#0f172a !important;margin:0;letter-spacing:-.015em;
+  font-size:1.125rem;font-weight:700;color:#fff !important;-webkit-text-fill-color:#fff !important;margin:0;letter-spacing:-.015em;
 }
 .ct-cal-open{
-  font-size:.875rem;font-weight:600;color:#0f172a !important;text-decoration:underline;text-underline-offset:2px;
+  font-size:.875rem;font-weight:600;color:#fbbf24 !important;text-decoration:underline;text-underline-offset:2px;
 }
-.ct-cal-open:hover{color:#d97706 !important;}
+.ct-cal-open:hover{color:#fde68a !important;}
 .ct-cal-frame-wrap{
-  width:100%;min-height:680px;overflow:hidden;border-radius:.75rem;border:1px solid #e2e8f0;background:#fff;
+  width:100%;min-height:680px;overflow:hidden;border-radius:.75rem;border:1px solid #334155;background:#020617;
 }
 .ct-cal-frame{
-  width:100%;min-height:650px;height:100%;border:0;background:#fff;display:block;
+  width:100%;min-height:650px;height:100%;border:0;background:#020617;display:block;
 }
 
-/* FAQ — keep below */
-.ct-faq-section{border-top:1px solid #e2e8f0;padding-top:3.5rem;}
+/* FAQ — dark cards */
+.ct-faq-section{border-top:1px solid #1e293b;padding-top:3.5rem;}
 .ct-faq-header{text-align:center;margin-bottom:2.5rem;}
 .ct-faq-eyebrow{
   display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
-  color:#b45309;border:1px solid rgba(245,197,66,.45);background:#fffbeb;
+  color:#fbbf24;border:1px solid rgba(251,191,36,.45);background:rgba(251,191,36,.1);
   padding:4px 14px;border-radius:100px;margin-bottom:14px;
 }
 .ct-faq-header h2{
-  font-size:clamp(1.4rem,3vw,1.8rem);font-weight:800;color:#0f172a !important;
+  font-size:clamp(1.4rem,3vw,1.8rem);font-weight:800;color:#fff !important;-webkit-text-fill-color:#fff !important;
   letter-spacing:-.03em;line-height:1.15;margin:0;
 }
 .ct-faq-grid{display:grid;grid-template-columns:1fr;gap:1rem;}
 @media(min-width:640px){.ct-faq-grid{grid-template-columns:1fr 1fr;}}
 .ct-faq-card{
-  background:#fff;border:1px solid #e2e8f0;border-radius:.875rem;padding:1.5rem 1.25rem;
+  background:#0f172a;border:1px solid #1e293b;border-radius:.875rem;padding:1.5rem 1.25rem;
   transition:border-color .2s;
 }
 .ct-faq-card:hover{border-color:#fbbf24;}
 .ct-faq-card dt{
-  font-size:.95rem;font-weight:700;color:#0f172a !important;margin:0 0 .6rem;line-height:1.3;
+  font-size:.95rem;font-weight:700;color:#fff !important;margin:0 0 .6rem;line-height:1.3;
 }
-.ct-faq-card dd{font-size:.88rem;color:#475569 !important;line-height:1.75;margin:0;}
-.ct-faq-card a{color:#b45309 !important;}
+.ct-faq-card dd{font-size:.88rem;color:#cbd5e1 !important;line-height:1.75;margin:0;}
+.ct-faq-card a{color:#fbbf24 !important;}
 .ct-platform-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
 .ct-badge{
   display:inline-flex;align-items:center;gap:4px;
@@ -238,7 +239,7 @@
           <iframe
             class="ct-cal-frame"
             title="Book a 60-minute AuraFlux demo"
-            src="https://cal.com/auraflux-demo/60min?embed=true&amp;theme=light"
+            src="https://cal.com/auraflux-demo/60min?embed=true&amp;theme=dark"
             loading="lazy"
             allow="camera; microphone; fullscreen"
           ></iframe>
