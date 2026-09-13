@@ -618,18 +618,37 @@ body:has(.art) {
 }
 .art .post-cta-btn:hover { background: #f59e0b !important; }
 
-/* ── API docs: mist page + light endpoint rows (high contrast) ──────────── */
+/* ── API docs: full dark canvas (page-base loads AFTER page <style>) ─────── */
+body.dev-api-page {
+  background: #020617 !important;
+  background-image: none !important;
+  color: #e2e8f0 !important;
+}
+body.dev-api-page h1,
+body.dev-api-page h2,
+body.dev-api-page h3 {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+body.dev-api-page p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
 .dev-wrap,
 .dev-page {
   padding-top: 2.5rem;
 }
+.dev-hero {
+  background: #020617 !important;
+  border: 1px solid #1e293b !important;
+}
 .dev-hero h1 {
-  color: #0f172a !important;
-  -webkit-text-fill-color: #0f172a !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
 }
 .dev-hero p {
-  color: #475569 !important;
-  -webkit-text-fill-color: #475569 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
   font-weight: 500;
 }
 .dev-base {
@@ -637,7 +656,7 @@ body:has(.art) {
   border-color: rgba(245, 197, 66, 0.3) !important;
 }
 .dev-base-label {
-  color: var(--on-dark-muted) !important;
+  color: #cbd5e1 !important;
 }
 .dev-base code {
   color: #fff !important;
@@ -655,74 +674,143 @@ body:has(.art) {
 .dev-auth-banner-meta,
 .dev-auth-banner-meta p {
   color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
 }
 .dev-auth-banner-meta .k {
   color: #fbbf24 !important;
+  -webkit-text-fill-color: #fbbf24 !important;
+}
+.dev-auth-banner-meta .v {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+.dev-auth-banner-meta .v-muted {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
 }
 .dev-auth-card {
-  background: #fffbeb !important;
-  border: 1px solid rgba(245, 197, 66, 0.45) !important;
-  color: var(--ink) !important;
+  background: #0f172a !important;
+  border: 1px solid #1e293b !important;
+  color: #e2e8f0 !important;
 }
 .dev-auth-card p {
-  color: var(--ink-muted) !important;
+  color: #cbd5e1 !important;
 }
 .dev-auth-card strong {
-  color: var(--ink) !important;
+  color: #f8fafc !important;
 }
 .dev-auth-card a,
 .dev-auth-card code {
-  color: var(--brand-primary) !important;
+  color: #fbbf24 !important;
   font-weight: 600;
 }
 .dev-section-title {
-  color: #0f172a !important;
-  -webkit-text-fill-color: #0f172a !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
   border-bottom: none !important;
   letter-spacing: 0.1em !important;
   font-weight: 700 !important;
 }
+.dev-section-heading {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+.dev-section > .dev-desc,
+.dev-page .dev-desc {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+.dev-section > .dev-desc code,
+.dev-page .dev-desc code {
+  color: #fde68a !important;
+  -webkit-text-fill-color: #fde68a !important;
+  background: rgba(15, 23, 42, 0.8) !important;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+}
 .dev-method.m-get {
-  background: #d1fae5 !important;
-  color: #065f46 !important;
-  border: 1px solid #a7f3d0 !important;
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #6ee7b7 !important;
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
 }
 .dev-method.m-post {
-  background: #dbeafe !important;
-  color: #1e40af !important;
-  border: 1px solid #bfdbfe !important;
+  background: rgba(59, 130, 246, 0.18) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(96, 165, 250, 0.35) !important;
 }
 .dev-method.m-delete {
-  background: #ffe4e6 !important;
-  color: #9f1239 !important;
-  border: 1px solid #fecdd3 !important;
+  background: rgba(244, 63, 94, 0.18) !important;
+  color: #fda4af !important;
+  border: 1px solid rgba(251, 113, 133, 0.35) !important;
 }
 .dev-method.m-patch {
-  background: #fef3c7 !important;
-  color: #92400e !important;
-  border: 1px solid #fde68a !important;
+  background: rgba(251, 191, 36, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(251, 191, 36, 0.35) !important;
 }
 .dev-endpoint {
-  background: #fff !important;
-  border-color: #e2e8f0 !important;
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+.dev-endpoint-header {
+  background: #0f172a !important;
 }
 .dev-path {
-  color: #0f172a !important;
-  -webkit-text-fill-color: #0f172a !important;
+  color: #fbbf24 !important;
+  -webkit-text-fill-color: #fbbf24 !important;
   font-weight: 700 !important;
 }
 .dev-endpoint-title {
-  color: #334155 !important;
-  -webkit-text-fill-color: #334155 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
   font-weight: 500 !important;
+}
+.dev-endpoint-body {
+  background: #020617 !important;
+  border-top-color: #1e293b !important;
 }
 .dev-endpoint-body .dev-desc,
 .dev-endpoint-body p {
-  color: var(--on-dark-muted) !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+.dev-code-label {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
 }
 .dev-code {
   background: #060b14 !important;
   color: #fcd34d !important;
+}
+/* Field reference table stays light for dense readability */
+body.dev-api-page .dev-jobs-ref-table,
+body.dev-api-page .dev-jobs-ref-table th,
+body.dev-api-page .dev-jobs-ref-table td {
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
+}
+body.dev-api-page .dev-jobs-ref-table th {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  background: #f1f5f9 !important;
+}
+body.dev-api-page .dev-jobs-ref-table td:first-child {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+body.dev-api-page .dev-fair-use,
+body.dev-api-page .dev-limit-list--rates li,
+body.dev-api-page .dev-limit-list--credits li {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+body.dev-api-page .dev-limit-list--rates li {
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+}
+body.dev-api-page .dev-limit-list--credits strong {
+  color: #fbbf24 !important;
+  -webkit-text-fill-color: #fbbf24 !important;
 }
 
 /* ── 404 ────────────────────────────────────────────────────────────────── */
