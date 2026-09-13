@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 00:25 UTC  
+**Last Updated:** 2026-09-13 00:50 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-How it works: unique step visuals — chart / facecam / captions / dispatch. `iss_leeIqIR6B96R`.
+Hide Roadmap from marketing nav (desktop + mobile). `iss_-7sK6oHv-7cN`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 
