@@ -1,11 +1,11 @@
 # AuraFlux Production Status
 
-**Last Updated:** 2026-09-13 02:30 UTC  
+**Last Updated:** 2026-09-13 02:40 UTC  
 **Branch:** `production`  
 **Deploy Mode:** `dev`
 
 ## Last Agent Action
-Blog post template full dark canvas + amber pill tag. `iss_d-RiXA0E2l45`.
+Blog post: 42rem column + 65ch prose + list spacing. `iss_JNKqslG0ZUcJ`.
 
 ## Worker Memory — C0 vs Render (all agents: read every session)
 

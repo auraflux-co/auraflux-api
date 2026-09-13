@@ -699,7 +699,9 @@ body.blog-post-page {
 .art {
   background: transparent !important;
   padding: 9rem 1rem 4rem !important;
-  max-width: 48rem !important;
+  max-width: 42rem !important; /* ~max-w-2xl — ~70–80ch reading width with padding */
+  margin-left: auto !important;
+  margin-right: auto !important;
   color: #e2e8f0 !important;
 }
 @media (max-width: 899px) {
@@ -742,6 +744,24 @@ body.blog-post-page {
   -webkit-text-fill-color: #cbd5e1 !important;
   font-size: 1rem !important;
   line-height: 1.75 !important;
+}
+.art .post-prose {
+  max-width: 65ch !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 100% !important;
+}
+.art .post-prose ul,
+.art .post-prose ol {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important; /* space-y-2 */
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  margin: 0 0 1.5rem !important;
+}
+.art .post-prose li::marker {
+  color: #94a3b8 !important;
 }
 @media (min-width: 768px) {
   .art .post-prose,
@@ -788,6 +808,9 @@ body.blog-post-page {
 }
 .art .post-cta-wrap {
   border-top-color: #1e293b !important;
+  max-width: 42rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 .art .post-cta {
   background: #0f172a !important;
